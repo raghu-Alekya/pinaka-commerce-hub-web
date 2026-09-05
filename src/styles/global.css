@@ -1,0 +1,2 @@
+@import './dashboard.css';
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Arial,sans-serif;background:#f7f8fb;color:#1e2740} button,input,select{font:inherit} a{text-decoration:none}.page-content{min-height:calc(100vh - 72px)} .table-wrap{overflow:auto}.clickable{cursor:pointer}.status-badge{white-space:nowrap}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}@media(max-width:768px){.form-grid{grid-template-columns:1fr}.topbar{padding:0 16px}.global-search{display:none}.profile-info{display:none}}

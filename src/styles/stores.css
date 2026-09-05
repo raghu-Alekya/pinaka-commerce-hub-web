@@ -1,0 +1,629 @@
+/* =========================================================
+   STORES PAGE
+========================================================= */
+
+.page-content {
+    padding: 18px 24px 0;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.page-header h1 {
+    margin: 0 0 4px;
+    font-size: 21px;
+    font-weight: 700;
+    color: #17233e;
+}
+
+.page-header p {
+    margin: 0;
+    font-size: 10px;
+    color: #7d8697;
+}
+
+.page-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.refresh-btn,
+.add-store-btn {
+    height: 34px;
+    padding: 0 13px;
+    border-radius: 5px;
+
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.refresh-btn {
+    background: #fff;
+    border: 1px solid #dfe3ea;
+    color: #46516a;
+}
+
+.add-store-btn {
+    background: #5547c7;
+    border: 1px solid #5547c7;
+    color: #fff;
+}
+
+.add-store-btn:hover {
+    background: #493bb5;
+}
+
+
+/* =========================================================
+   SUMMARY CARDS
+========================================================= */
+
+.summary-row {
+    margin-bottom: 16px;
+}
+
+.summary-card {
+    background: #fff;
+
+    border: 1px solid #e4e7ed;
+
+    border-radius: 8px;
+
+    min-height: 105px;
+
+    padding: 16px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+.summary-icon {
+    width: 43px;
+    height: 43px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 19px;
+
+    flex-shrink: 0;
+}
+
+.summary-icon.purple {
+    background: #eeeaff;
+    color: #6250cf;
+}
+
+.summary-icon.green {
+    background: #e5f6eb;
+    color: #35a467;
+}
+
+.summary-icon.red {
+    background: #ffe9eb;
+    color: #df5964;
+}
+
+.summary-icon.orange {
+    background: #fff1dc;
+    color: #e59c2d;
+}
+
+.summary-card span {
+    display: block;
+
+    color: #697286;
+
+    font-size: 9px;
+
+    margin-bottom: 3px;
+}
+
+.summary-card strong {
+    display: block;
+
+    color: #1d2942;
+
+    font-size: 20px;
+
+    line-height: 1.1;
+}
+
+.summary-card small {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #8d95a5;
+
+    font-size: 8px;
+}
+
+.green-text {
+    color: #35a467 !important;
+}
+
+.red-text {
+    color: #df5964 !important;
+}
+
+.orange-text {
+    color: #df982d !important;
+}
+
+
+/* =========================================================
+   STORES CARD
+========================================================= */
+
+.stores-card {
+    background: #fff;
+
+    border: 1px solid #e4e7ed;
+
+    border-radius: 8px;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   FILTER TOOLBAR
+========================================================= */
+
+.store-toolbar {
+    min-height: 58px;
+
+    padding: 11px 13px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    border-bottom: 1px solid #eceef2;
+}
+
+.store-search {
+    width: 270px;
+    height: 32px;
+
+    border: 1px solid #dfe3ea;
+
+    border-radius: 5px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 9px;
+
+    color: #929aaa;
+}
+
+.store-search i {
+    font-size: 12px;
+}
+
+.store-search input {
+    width: 100%;
+
+    border: 0;
+    outline: 0;
+
+    padding-left: 8px;
+
+    font-size: 10px;
+
+    color: #3e485d;
+}
+
+.store-search input::placeholder {
+    color: #9ca3b1;
+}
+
+
+.filter-select {
+    height: 32px;
+
+    min-width: 125px;
+
+    border: 1px solid #dfe3ea;
+
+    border-radius: 5px;
+
+    background: #fff;
+
+    color: #596378;
+
+    padding: 0 9px;
+
+    font-size: 9px;
+
+    outline: none;
+}
+
+.filter-button {
+    height: 32px;
+
+    border: 1px solid #dfe3ea;
+
+    border-radius: 5px;
+
+    background: #fff;
+
+    color: #596378;
+
+    padding: 0 11px;
+
+    font-size: 9px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    margin-left: auto;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.stores-table {
+    margin: 0;
+}
+
+.stores-table thead th {
+    background: #fafbfc;
+
+    color: #9199aa;
+
+    font-size: 7px;
+
+    font-weight: 600;
+
+    letter-spacing: .2px;
+
+    padding: 11px 13px;
+
+    border-bottom: 1px solid #e9ebef;
+
+    white-space: nowrap;
+}
+
+.stores-table tbody td {
+    padding: 12px 13px;
+
+    font-size: 9px;
+
+    color: #5e687b;
+
+    vertical-align: middle;
+
+    border-bottom: 1px solid #f0f1f4;
+
+    white-space: nowrap;
+}
+
+.stores-table tbody tr:hover {
+    background: #fafbff;
+}
+
+.stores-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* =========================================================
+   STORE CELL
+========================================================= */
+
+.store-cell {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+}
+
+.store-avatar {
+    width: 32px;
+    height: 32px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 8px;
+
+    font-weight: 600;
+
+    flex-shrink: 0;
+}
+
+.purple-bg {
+    background: #e9e4ff;
+    color: #6550cc;
+}
+
+.blue-bg {
+    background: #e4f0ff;
+    color: #4181d5;
+}
+
+.green-bg {
+    background: #e1f5e8;
+    color: #319a5b;
+}
+
+.yellow-bg {
+    background: #fff0d3;
+    color: #c98a25;
+}
+
+.lavender-bg {
+    background: #eee7ff;
+    color: #7954ca;
+}
+
+.store-cell div:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+.store-cell strong {
+    color: #344057;
+
+    font-size: 9px;
+
+    font-weight: 600;
+}
+
+.store-cell small {
+    color: #979eac;
+
+    font-size: 7px;
+
+    margin-top: 3px;
+}
+
+
+/* =========================================================
+   LOCATION
+========================================================= */
+
+.location-cell {
+    display: flex;
+
+    align-items: center;
+
+    gap: 5px;
+}
+
+.location-cell i {
+    color: #7f899b;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.store-status {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 4px 8px;
+
+    border-radius: 4px;
+
+    font-size: 7px;
+
+    font-weight: 500;
+}
+
+.store-status i {
+    font-size: 5px;
+}
+
+.store-status.active {
+    color: #319a5b;
+    background: #e5f6ea;
+}
+
+.store-status.offline {
+    color: #dc5964;
+    background: #ffe8ea;
+}
+
+.store-status.syncing {
+    color: #477fd2;
+    background: #e8f1ff;
+}
+
+.store-status.maintenance {
+    color: #d18d25;
+    background: #fff0d9;
+}
+
+.store-status.syncing i,
+.store-status.maintenance i {
+    font-size: 8px;
+}
+
+
+/* =========================================================
+   ACTION
+========================================================= */
+
+.action-btn {
+    width: 28px;
+    height: 28px;
+
+    border: 0;
+
+    background: transparent;
+
+    border-radius: 4px;
+
+    color: #788195;
+
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: #f1f2f6;
+}
+
+
+/* =========================================================
+   TABLE FOOTER
+========================================================= */
+
+.table-footer {
+    min-height: 55px;
+
+    border-top: 1px solid #eceef2;
+
+    padding: 0 14px;
+
+    display: flex;
+    align-items: center;
+
+    justify-content: space-between;
+
+    color: #8b93a3;
+
+    font-size: 8px;
+}
+
+.table-footer strong {
+    color: #566176;
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.pagination {
+    display: flex;
+    align-items: center;
+
+    gap: 4px;
+
+    margin: 0;
+}
+
+.pagination button {
+    min-width: 26px;
+    height: 26px;
+
+    border: 1px solid #e0e3e9;
+
+    border-radius: 4px;
+
+    background: #fff;
+
+    color: #667085;
+
+    font-size: 8px;
+}
+
+.pagination button:hover {
+    background: #f5f4ff;
+}
+
+.pagination button.active {
+    background: #5547c7;
+    border-color: #5547c7;
+    color: #fff;
+}
+
+.pagination span {
+    padding: 0 3px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 991px) {
+
+    .store-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .store-search {
+        width: 100%;
+    }
+
+    .filter-button {
+        margin-left: 0;
+    }
+
+}
+
+
+@media (max-width: 767px) {
+
+    .page-content {
+        padding: 12px;
+    }
+
+    .page-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .page-actions {
+        width: 100%;
+    }
+
+    .refresh-btn,
+    .add-store-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .filter-select {
+        flex: 1;
+        min-width: 100px;
+    }
+
+    .table-footer {
+        flex-direction: column;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px;
+    }
+
+}

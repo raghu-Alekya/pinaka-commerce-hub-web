@@ -1,0 +1,552 @@
+/* =========================================================
+   MERCHANT STORE DETAILS
+   Page-specific styles
+   Shared Dashboard styles remain in dashboard.css
+========================================================= */
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", sans-serif;
+    background: #f6f7fb;
+    color: #17233e;
+    font-size: 13px;
+}
+
+.merchant-store-page {
+    padding: 24px 26px 32px;
+    min-height: calc(100vh - 62px);
+    box-sizing: border-box;
+}
+
+/* =========================================================
+   BREADCRUMB
+========================================================= */
+
+.breadcrumb-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #8a94a6;
+    font-size: 12px;
+}
+
+.breadcrumb-area a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #5143bc;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.breadcrumb-area a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-area i {
+    font-size: 12px;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.merchant-store-header {
+    margin-bottom: 20px;
+}
+
+.merchant-store-header h1 {
+    margin: 0;
+    color: #17233e;
+    font-size: 24px;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.merchant-store-header p {
+    margin: 7px 0 0;
+    color: #7c8799;
+    font-size: 13px;
+}
+
+/* =========================================================
+   MERCHANT SUMMARY
+========================================================= */
+
+.merchant-summary-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+    background: #ffffff;
+    border: 1px solid #dfe3eb;
+    border-radius: 9px;
+    box-shadow: 0 1px 2px rgba(17, 31, 55, 0.02);
+}
+
+.merchant-summary-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 240px;
+}
+
+.merchant-avatar {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #e7e3ff;
+    color: #5143bc;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.merchant-summary-left h2 {
+    margin: 0;
+    color: #1c2e4c;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.merchant-summary-left p {
+    margin: 5px 0 0;
+    color: #8a94a6;
+    font-size: 11px;
+}
+
+.merchant-summary-details {
+    display: flex;
+    align-items: center;
+    gap: 48px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.summary-item > span {
+    color: #8b95a7;
+    font-size: 11px;
+}
+
+.summary-item > strong {
+    color: #263957;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge {
+    width: fit-content;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+}
+
+.status-badge.active {
+    background: #e1f5e8;
+    color: #269553;
+}
+
+/* =========================================================
+   STORES CARD
+========================================================= */
+
+.stores-card {
+    background: #ffffff;
+    border: 1px solid #dfe3eb;
+    border-radius: 9px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(17, 31, 55, 0.02);
+}
+
+.stores-card-header {
+    min-height: 76px;
+    padding: 17px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border-bottom: 1px solid #e7eaf0;
+    box-sizing: border-box;
+}
+
+.stores-card-header h2 {
+    margin: 0;
+    color: #1c2e4c;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.stores-card-header p {
+    margin: 5px 0 0;
+    color: #7d8798;
+    font-size: 12px;
+}
+
+/* =========================================================
+   NEW STORE BUTTON
+========================================================= */
+
+.btn-new-store {
+    min-height: 40px;
+    padding: 0 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid #5143bc;
+    border-radius: 7px;
+    background: #5143bc;
+    color: #ffffff;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.btn-new-store:hover {
+    border-color: #4638ad;
+    background: #4638ad;
+    color: #ffffff;
+}
+
+.btn-new-store i {
+    font-size: 11px;
+}
+
+/* =========================================================
+   STORE LIST
+========================================================= */
+
+.stores-list {
+    width: 100%;
+}
+
+.store-item {
+    min-height: 86px;
+    padding: 14px 20px;
+    display: grid;
+    grid-template-columns: 44px minmax(240px, 1fr) auto auto;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid #edf0f4;
+    box-sizing: border-box;
+}
+
+.store-item:last-child {
+    border-bottom: 0;
+}
+
+.store-item:hover {
+    background: #fbfcfe;
+}
+
+.store-item-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #eeecff;
+    color: #5143bc;
+    font-size: 16px;
+}
+
+.store-item-info {
+    min-width: 0;
+}
+
+.store-item-info h3 {
+    margin: 0;
+    color: #263957;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.store-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px 18px;
+    margin-top: 6px;
+    color: #8b95a7;
+    font-size: 11px;
+}
+
+.store-meta span {
+    position: relative;
+}
+
+.store-meta span + span::before {
+    content: "";
+    width: 3px;
+    height: 3px;
+    position: absolute;
+    left: -11px;
+    top: 5px;
+    border-radius: 50%;
+    background: #bdc4cf;
+}
+
+.store-item-status {
+    min-width: 65px;
+}
+
+.store-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.store-status.active {
+    background: #e1f5e8;
+    color: #269553;
+}
+
+.store-status.inactive {
+    background: #f1f2f5;
+    color: #737d8d;
+}
+
+/* =========================================================
+   EDIT BUTTON
+========================================================= */
+
+.store-edit-btn {
+    min-height: 35px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid #d9deea;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #5143bc;
+    font-size: 11px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.store-edit-btn:hover {
+    border-color: #5143bc;
+    background: #f8f7ff;
+    color: #4638ad;
+}
+
+.store-edit-btn i {
+    font-size: 11px;
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-stores-card {
+    min-height: 280px;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1px solid #dfe3eb;
+    border-radius: 9px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.empty-icon {
+    width: 54px;
+    height: 54px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #eeecff;
+    color: #5143bc;
+    font-size: 20px;
+}
+
+.empty-stores-card h2 {
+    margin: 0;
+    color: #263957;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.empty-stores-card p {
+    margin: 7px 0 18px;
+    color: #8a94a6;
+    font-size: 12px;
+}
+
+/* =========================================================
+   EMPLOYEES ACTION
+========================================================= */
+
+.employees-action-card {
+    margin-top: 18px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    background: #ffffff;
+    border: 1px solid #dfe3eb;
+    border-radius: 9px;
+    box-shadow: 0 1px 2px rgba(17, 31, 55, 0.02);
+}
+
+.employees-action-card h2 {
+    margin: 0;
+    color: #263957;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.employees-action-card p {
+    margin: 5px 0 0;
+    color: #8a94a6;
+    font-size: 12px;
+}
+
+.btn-create-employees {
+    min-height: 40px;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid #5143bc;
+    border-radius: 7px;
+    background: #5143bc;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-create-employees:hover {
+    background: #4638ad;
+    border-color: #4638ad;
+    color: #ffffff;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1000px) {
+    .merchant-summary-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .merchant-summary-details {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 35px;
+    }
+
+    .store-item {
+        grid-template-columns: 44px minmax(180px, 1fr) auto auto;
+    }
+}
+
+@media (max-width: 760px) {
+    .merchant-store-page {
+        padding: 20px 16px 28px;
+    }
+
+    .stores-card-header,
+    .employees-action-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .btn-new-store,
+    .btn-create-employees {
+        width: 100%;
+    }
+
+    .store-item {
+        grid-template-columns: 42px 1fr auto;
+        gap: 12px;
+    }
+
+    .store-item-status {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    .store-edit-btn {
+        grid-column: 3;
+        grid-row: 1 / span 2;
+    }
+
+    .merchant-summary-details {
+        flex-wrap: wrap;
+        gap: 18px 30px;
+    }
+}
+
+@media (max-width: 520px) {
+    .merchant-store-header h1 {
+        font-size: 21px;
+    }
+
+    .merchant-summary-card {
+        padding: 16px;
+    }
+
+    .stores-card-header {
+        padding: 16px;
+    }
+
+    .store-item {
+        padding: 14px 16px;
+        grid-template-columns: 40px 1fr;
+    }
+
+    .store-item-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .store-item-status,
+    .store-edit-btn {
+        grid-column: 2;
+        grid-row: auto;
+        justify-self: start;
+    }
+
+    .store-edit-btn {
+        width: fit-content;
+    }
+
+    .store-meta {
+        gap: 5px 14px;
+    }
+}

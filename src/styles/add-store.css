@@ -1,0 +1,456 @@
+/* =========================================================
+   PCH - ADD STORE
+   Page-specific styles
+   Dashboard sidebar/topbar styles come from dashboard.css
+========================================================= */
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", sans-serif;
+    background: #f6f7fb;
+    color: #17233e;
+    font-size: 13px;
+}
+.store-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.remove-store-btn {
+  border: 1px solid #dc3545;
+  background: #fff;
+  color: #dc3545;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.remove-store-btn:hover {
+  background: #dc3545;
+  color: #fff;
+}
+/* =========================================================
+   PAGE
+========================================================= */
+
+.add-store-page {
+    padding: 24px 26px 28px;
+    min-height: calc(100vh - 62px);
+    box-sizing: border-box;
+}
+
+/* =========================================================
+   BREADCRUMB
+========================================================= */
+
+.breadcrumb-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: #8a94a6;
+}
+
+.breadcrumb-area a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #5143bc;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.breadcrumb-area a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-area i {
+    font-size: 12px;
+}
+
+.breadcrumb-area span:last-child {
+    color: #7d8798;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.add-store-header {
+    margin-bottom: 20px;
+}
+
+.add-store-header h1 {
+    margin: 0;
+    color: #17233e;
+    font-size: 24px;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.add-store-header p {
+    margin: 7px 0 0;
+    color: #7c8799;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.store-form {
+    width: 100%;
+    max-width: 100%;
+}
+
+.form-card {
+    background: #ffffff;
+    border: 1px solid #dfe3eb;
+    border-radius: 9px;
+    margin-bottom: 18px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(17, 31, 55, 0.02);
+}
+
+.form-card-header {
+    min-height: 78px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border-bottom: 1px solid #e7eaf0;
+    box-sizing: border-box;
+}
+
+.form-card-header h2 {
+    margin: 0;
+    color: #17233e;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.form-card-header p {
+    margin: 5px 0 0;
+    color: #7d8798;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* =========================================================
+   ADD STORE BUTTON
+========================================================= */
+
+.btn.btn-outline {
+    min-height: 43px;
+    padding: 0 17px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid #d8dced;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #5143bc;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    box-shadow: none;
+}
+
+.btn.btn-outline:hover {
+    border-color: #5143bc;
+    background: #f8f7ff;
+    color: #4638ad;
+}
+
+.btn.btn-outline i {
+    font-size: 12px;
+}
+
+/* =========================================================
+   STORE BLOCK
+========================================================= */
+
+#storesContainer {
+    padding: 20px;
+}
+
+.store-block {
+    border: 1px solid #dfe3eb;
+    border-radius: 8px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.store-block-header {
+    min-height: 63px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fbfcfe;
+    border-bottom: 1px solid #e5e8ee;
+    box-sizing: border-box;
+}
+
+.store-block-header strong {
+    display: block;
+    color: #263753;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.store-block-header span {
+    display: block;
+    margin-top: 4px;
+    color: #8993a5;
+    font-size: 11px;
+}
+
+/* =========================================================
+   FORM GRID
+========================================================= */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 26px;
+    row-gap: 16px;
+    padding: 20px 18px 18px;
+}
+
+.form-group {
+    min-width: 0;
+}
+
+.form-group label {
+    display: block;
+    margin: 0 0 8px;
+    color: #33496d;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.form-group label span {
+    margin-left: 2px;
+    color: #d94b5c;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    height: 48px;
+    padding: 0 13px;
+    border: 1px solid #d9dfe9;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #293957;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.form-group input::placeholder {
+    color: #a0aabc;
+    opacity: 1;
+}
+
+.form-group select {
+    appearance: auto;
+    cursor: pointer;
+}
+
+.form-group input:hover,
+.form-group select:hover {
+    border-color: #c5ccda;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #5143bc;
+    box-shadow: 0 0 0 3px rgba(81, 67, 188, 0.08);
+}
+
+.form-group input[readonly],
+.form-group input:disabled,
+.form-group select:disabled {
+    background: #f5f6f9;
+    color: #7e899b;
+    cursor: not-allowed;
+}
+
+.field-error {
+    display: block;
+    min-height: 0;
+    margin-top: 5px;
+    color: #d94b5c;
+    font-size: 11px;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+    padding-bottom: 4px;
+}
+
+.cancel-btn,
+.create-store-btn {
+    min-height: 43px;
+    padding: 0 18px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.cancel-btn {
+    border: 1px solid #dce1e9;
+    background: #ffffff;
+    color: #344562;
+}
+
+.cancel-btn:hover {
+    background: #f8f9fb;
+    color: #263753;
+}
+
+.create-store-btn {
+    border: 1px solid #5143bc;
+    background: #5143bc;
+    color: #ffffff;
+}
+
+.create-store-btn:hover {
+    border-color: #4638ad;
+    background: #4638ad;
+    color: #ffffff;
+}
+
+.create-store-btn i {
+    font-size: 12px;
+}
+
+/* =========================================================
+   MULTIPLE STORE BLOCKS
+========================================================= */
+
+#storesContainer .store-block + .store-block {
+    margin-top: 16px;
+}
+
+.store-block .remove-store-btn {
+    border: 0;
+    background: transparent;
+    color: #c14a58;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.store-block .remove-store-btn:hover {
+    color: #a93645;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.dashboard-footer {
+    margin-top: 28px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+    .add-store-page {
+        padding: 20px;
+    }
+
+    .form-grid {
+        column-gap: 18px;
+    }
+}
+
+@media (max-width: 700px) {
+    .add-store-page {
+        padding: 18px 14px 24px;
+    }
+
+    .form-card-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .btn.btn-outline {
+        width: 100%;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        padding: 18px 14px;
+    }
+
+    #storesContainer {
+        padding: 14px;
+    }
+
+    .form-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .cancel-btn,
+    .create-store-btn {
+        flex: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .add-store-header h1 {
+        font-size: 21px;
+    }
+
+    .store-block-header {
+        padding: 13px 14px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .cancel-btn,
+    .create-store-btn {
+        width: 100%;
+    }
+}
