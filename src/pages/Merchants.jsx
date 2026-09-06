@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { merchants } from "../data/data";
+import { listMerchants } from "../api/merchants";
+import { ApiError } from "../api/http";
 
 function exportMerchants(rows) {
   if (!rows.length) {
@@ -45,11 +46,53 @@ function exportMerchants(rows) {
   URL.revokeObjectURL(url);
 }
 
+function avatarClass(index) {
+  return ["purple-avatar", "blue-avatar", "green-avatar"][index % 3];
+}
+
+function monthKey(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getFullYear()}-${date.getMonth()}`;
+}
+
 export default function Merchants() {
-  const nav = useNavigate(),
-    [q, setQ] = useState(""),
-    [status, setStatus] = useState(""),
-    [plan, setPlan] = useState("");
+  const nav = useNavigate();
+  const [q, setQ] = useState("");
+  const [status, setStatus] = useState("");
+  const [plan, setPlan] = useState("");
+  const [merchants, setMerchants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadMerchants() {
+      setLoading(true);
+      setError("");
+      try {
+        const rows = await listMerchants();
+        if (!cancelled) setMerchants(rows);
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof ApiError
+              ? err.message
+              : "Unable to load merchants from the API."
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadMerchants();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const rows = useMemo(
     () =>
       merchants.filter(
@@ -59,35 +102,43 @@ export default function Merchants() {
               .toLowerCase()
               .includes(q.toLowerCase())) &&
           (!status || m.status === status) &&
-          (!plan || m.plan === plan),
+          (!plan || m.plan === plan)
       ),
-    [q, status, plan],
+    [merchants, q, status, plan]
   );
+
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${now.getMonth()}`;
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonth = `${lastMonthDate.getFullYear()}-${lastMonthDate.getMonth()}`;
+  const total = merchants.length;
+  const activeCount = merchants.filter((m) => m.status === "Active").length;
+  const suspendedCount = merchants.filter((m) => m.status === "Suspended").length;
+  const inactiveCount = merchants.filter((m) => m.status === "Inactive").length;
+  const newThisMonth = merchants.filter((m) => monthKey(m.createdAt) === thisMonth).length;
+  const newLastMonth = merchants.filter((m) => monthKey(m.createdAt) === lastMonth).length;
+  const monthChange =
+    newLastMonth === 0
+      ? newThisMonth > 0
+        ? "New this month"
+        : "No new merchants"
+      : `${Math.abs(Math.round(((newThisMonth - newLastMonth) / newLastMonth) * 100))}% vs last month`;
+  const activePct = total ? `${((activeCount / total) * 100).toFixed(1)}% of total` : "0% of total";
+  const inactivePct = total ? `${((inactiveCount / total) * 100).toFixed(1)}% of total` : "0% of total";
+
   const stat = [
-    ["purple", "bi-people-fill", "Total Merchants", "148", "12 this month"],
-    [
-      "green",
-      "bi-check-circle-fill",
-      "Active Merchants",
-      "132",
-      "89.2% of total",
-    ],
-    [
-      "orange",
-      "bi-pause-circle-fill",
-      "Suspended Merchants",
-      "8",
-      "1 this month",
-    ],
-    ["red", "bi-x-circle-fill", "Inactive Merchants", "8", "5.4% of total"],
-    [
-      "blue",
-      "bi-person-plus-fill",
-      "New This Month",
-      "12",
-      "33.3% vs last month",
-    ],
+    ["purple", "bi-people-fill", "Total Merchants", String(total), `${newThisMonth} this month`],
+    ["green", "bi-check-circle-fill", "Active Merchants", String(activeCount), activePct],
+    ["orange", "bi-pause-circle-fill", "Suspended Merchants", String(suspendedCount), `${suspendedCount} currently`],
+    ["red", "bi-x-circle-fill", "Inactive Merchants", String(inactiveCount), inactivePct],
+    ["blue", "bi-person-plus-fill", "New This Month", String(newThisMonth), monthChange],
   ];
+
+  const plans = [...new Set(merchants.map((m) => m.plan).filter((value) => value && value !== "—"))];
+  const statuses = [
+    ...new Set(["Active", "Suspended", "Inactive", ...merchants.map((m) => m.status)]),
+  ];
+
   return (
     <div className="page-content">
       <div className="page-header">
@@ -138,7 +189,14 @@ export default function Merchants() {
                 </small>
                 {(i === 1 || i === 3) && (
                   <div className={`progress ${i === 3 ? "red-progress" : ""}`}>
-                    <div style={{ width: i === 1 ? "89.2%" : "5.4%" }} />
+                    <div
+                      style={{
+                        width:
+                          i === 1
+                            ? `${total ? (activeCount / total) * 100 : 0}%`
+                            : `${total ? (inactiveCount / total) * 100 : 0}%`,
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -163,9 +221,9 @@ export default function Merchants() {
             onChange={(e) => setStatus(e.target.value)}
           >
             <option value="">All Statuses</option>
-            <option>Active</option>
-            <option>Suspended</option>
-            <option>Inactive</option>
+            {statuses.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
           </select>
           <select
             id="subscriptionFilter"
@@ -173,14 +231,21 @@ export default function Merchants() {
             onChange={(e) => setPlan(e.target.value)}
           >
             <option value="">All Plans</option>
-            <option>Starter</option>
-            <option>Professional</option>
-            <option>Enterprise</option>
+            {plans.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
           </select>
           <button className="date-filter">
             <i className="bi bi-calendar3" /> Select date range
           </button>
-          <button className="filter-button">
+          <button
+            className="filter-button"
+            onClick={() => {
+              setQ("");
+              setStatus("");
+              setPlan("");
+            }}
+          >
             <i className="bi bi-funnel" /> Filters
           </button>
         </div>
@@ -199,74 +264,86 @@ export default function Merchants() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((m) => (
-                <tr key={m.id}>
-                  <td>
-                    <div
-                      className="merchant-name clickable"
-                      onClick={() => nav(`/merchants/${m.id}/stores`)}
-                    >
-                      <div
-                        className={`merchant-avatar ${m.id === "MER-0001" ? "purple-avatar" : m.id === "MER-0002" ? "blue-avatar" : "green-avatar"}`}
-                      >
-                        {m.initials}
-                      </div>
-                      <div>
-                        <strong>{m.name}</strong>
-                        <small>{m.id}</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="contact-info">
-                      <strong>{m.email}</strong>
-                      <span>{m.phone}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <strong>{m.stores}</strong>
-                    <small> stores</small>
-                  </td>
-                  <td>
-                    <div className="plan-info">
-                      <strong>{m.plan}</strong>
-                      <span>Renews on {m.renewal}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`status ${m.status.toLowerCase()}`}>
-                      {m.status}
-                    </span>
-                  </td>
-                  <td>{m.joined}</td>
-                  <td>
-                    <span className="last-active active-dot">
-                      <i className="bi bi-circle-fill" /> {m.active}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="row-actions">
-                      <button
-                        className="action-btn view-btn"
-                        onClick={() => nav(`/merchants/${m.id}/stores`)}
-                        title="View"
-                      >
-                        <i className="bi bi-eye" />
-                      </button>
-                      <button
-                        className="action-btn edit-btn"
-                        onClick={() => nav(`/merchants/${m.id}/edit`)}
-                        title="Edit"
-                      >
-                        <i className="bi bi-pencil" />
-                      </button>
-                      <button className="action-btn more-btn" title="More">
-                        <i className="bi bi-three-dots-vertical" />
-                      </button>
-                    </div>
-                  </td>
+              {loading ? (
+                <tr>
+                  <td colSpan={8}>Loading merchants...</td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan={8}>{error}</td>
+                </tr>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={8}>No merchants found.</td>
+                </tr>
+              ) : (
+                rows.map((m, index) => (
+                  <tr key={m.id}>
+                    <td>
+                      <div
+                        className="merchant-name clickable"
+                        onClick={() => nav(`/merchants/${m.id}/stores`)}
+                      >
+                        <div className={`merchant-avatar ${avatarClass(index)}`}>
+                          {m.initials}
+                        </div>
+                        <div>
+                          <strong>{m.name}</strong>
+                          <small>{m.id}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="contact-info">
+                        <strong>{m.email || "—"}</strong>
+                        <span>{m.phone || "—"}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <strong>{m.stores}</strong>
+                      <small> stores</small>
+                    </td>
+                    <td>
+                      <div className="plan-info">
+                        <strong>{m.plan}</strong>
+                        {m.renewal ? <span>Renews on {m.renewal}</span> : null}
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`status ${m.status.toLowerCase()}`}>
+                        {m.status}
+                      </span>
+                    </td>
+                    <td>{m.joined}</td>
+                    <td>
+                      <span className="last-active active-dot">
+                        <i className="bi bi-circle-fill" /> {m.active}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        <button
+                          className="action-btn view-btn"
+                          onClick={() => nav(`/merchants/${m.id}/stores`)}
+                          title="View"
+                        >
+                          <i className="bi bi-eye" />
+                        </button>
+                        <button
+                          className="action-btn edit-btn"
+                          onClick={() => nav(`/merchants/${m.id}/edit`)}
+                          title="Edit"
+                        >
+                          <i className="bi bi-pencil" />
+                        </button>
+                        <button className="action-btn more-btn" title="More">
+                          <i className="bi bi-three-dots-vertical" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

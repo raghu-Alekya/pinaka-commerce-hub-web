@@ -4,6 +4,7 @@ export const endpoints = {
   logout: "/auth/logout",
   me: "/auth/me",
   merchants: "/merchants",
+  createMerchant: "/merchants/create-merchant",
   merchant: (id) => `/merchants/${id}`,
   stores: "/stores",
   store: (id) => `/stores/${id}`,
