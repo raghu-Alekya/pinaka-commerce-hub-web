@@ -512,6 +512,22 @@ a {
     color: #71798a;
 }
 
+.logout-btn {
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid #d8deea;
+    border-radius: 6px;
+    background: #fff;
+    color: #4b5670;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background: #f4f6fb;
+}
+
 
 /* =========================================================
    PAGE CONTENT

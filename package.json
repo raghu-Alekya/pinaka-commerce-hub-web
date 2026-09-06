@@ -4,8 +4,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite --mode development",
+    "dev:uat": "vite --mode uat",
+    "dev:prod": "vite --mode production",
+    "build": "vite build --mode production",
+    "build:uat": "vite build --mode uat",
     "preview": "vite preview"
   },
   "dependencies": {

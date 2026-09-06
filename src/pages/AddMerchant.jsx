@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { createMerchant, updateMerchant } from "../api/merchants";
+import { ApiError } from "../api/http";
 import { merchants } from "../data/data";
 
 const steps = [
@@ -36,6 +38,7 @@ export default function AddMerchant() {
   );
 
   const [step, setStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState(() => ({
     businessName: existing?.name || "",
     legalBusinessName: existing?.name || "",
@@ -154,7 +157,7 @@ const removeStore = (index) => {
     setStep(targetStep);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
@@ -162,51 +165,29 @@ const removeStore = (index) => {
     const merchantPayload = {
       ...data,
       onboardingStatus: "Completed",
-      createdAt: new Date().toISOString(),
     };
 
-    // The complete onboarding payload is saved/displayed in the browser console.
-    console.group("Merchant Onboarding - Saved Details");
-    console.log("Merchant ID:", merchantPayload.merchantId);
-    console.log("Business Name:", merchantPayload.businessName);
-    console.log("Legal Business Name:", merchantPayload.legalBusinessName);
-    console.log("Business Type:", merchantPayload.businessType);
-    console.log("Country:", merchantPayload.country);
-    console.log("State / Province:", merchantPayload.state);
-    console.log("City:", merchantPayload.city);
-    console.log("Postal Code:", merchantPayload.postalCode);
-    console.log("Business Address:", merchantPayload.businessAddress);
-    console.log("Primary Contact:", {
-      firstName: merchantPayload.firstName,
-      lastName: merchantPayload.lastName,
-      email: merchantPayload.email,
-      phone: merchantPayload.phone,
-      jobTitle: merchantPayload.jobTitle,
-      alternatePhone: merchantPayload.alternatePhone,
-    });
-    console.log("Stores:", merchantPayload.stores);
-    console.log("Subscription:", {
-      plan: merchantPayload.plan,
-      billingCycle: merchantPayload.billingCycle,
-      trialPeriod: merchantPayload.trialPeriod,
-    });
-    console.log("Complete JSON Payload:", merchantPayload);
-    console.log("JSON:", JSON.stringify(merchantPayload, null, 2));
-    console.groupEnd();
+    setSubmitting(true);
 
-    // Also keep a copy locally so the submitted object can be inspected later.
-    localStorage.setItem(
-      "lastMerchantOnboarding",
-      JSON.stringify(merchantPayload)
-    );
+    try {
+      if (merchantId) {
+        await updateMerchant(merchantId, merchantPayload);
+        alert("Merchant details saved successfully.");
+      } else {
+        await createMerchant(merchantPayload);
+        alert("Merchant created successfully.");
+      }
 
-    alert(
-      merchantId
-        ? "Merchant details saved successfully. Check the browser console."
-        : "Merchant created successfully. Check the browser console."
-    );
-
-    nav("/merchants");
+      nav("/merchants");
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Unable to reach the API. Check the NestJS URL in your .env file.";
+      alert(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -683,8 +664,12 @@ const removeStore = (index) => {
               Continue <i className="bi bi-arrow-right" />
             </button>
           ) : (
-            <button type="submit" className="save-next-btn">
-              {merchantId ? "Save Changes" : "Create Merchant"} 
+            <button type="submit" className="save-next-btn" disabled={submitting}>
+              {submitting
+                ? "Saving..."
+                : merchantId
+                ? "Save Changes"
+                : "Create Merchant"}
               <i className="bi bi-check2" />
             </button>
           )}
