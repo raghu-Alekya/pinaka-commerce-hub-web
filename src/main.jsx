@@ -12,6 +12,9 @@ import "./styles/pos-configuration.css";
 import "./styles/merchant-form.css";
 import "./styles/add-store.css";
 import "./styles/store-configuration.css";
+import "./styles/products.css";
+import "./styles/coupons.css";
+import "./styles/orders.css";
 import "./styles/login.css";
 import "./styles/legal.css";
 

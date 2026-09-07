@@ -15,6 +15,10 @@ import AddStore from "./pages/AddStore";
 import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
+import Products from "./pages/Products";
+import Coupons from "./pages/Coupons";
+import Orders from "./pages/Orders";
+
 
 const placeholders = [
   "Subscriptions",
@@ -81,6 +85,10 @@ export default function App() {
           path="/merchants/:merchantId/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
         />
+        <Route
+          path="/merchants/:merchantId/stores/:storeId/configuration/:section"
+          element={<StoreConfiguration />}
+        />
         <Route path="/stores" element={<Stores />} />
         <Route path="/stores/new" element={<AddStore />} />
         <Route path="/stores/:storeId/edit" element={<AddStore />} />
@@ -88,6 +96,9 @@ export default function App() {
           path="/stores/:storeId/configuration"
           element={<StoreConfiguration />}
         />
+        <Route path="/products" element={<Products />} />
+<Route path="/coupons" element={<Coupons />} />
+<Route path="/orders" element={<Orders />} />
         <Route
           path="/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
