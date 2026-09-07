@@ -173,6 +173,8 @@ function mapStoreToRow(store) {
     status: titleCase(store.status || store.operationalStatus),
     currency: store.currency || "",
     timezone: store.timezone || "",
+    url: store.baseUrl || store.url || store.storeUrl || "",
+    merchantId: store.merchantId || "",
   };
 }
 
