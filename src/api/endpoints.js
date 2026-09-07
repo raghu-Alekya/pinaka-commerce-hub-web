@@ -8,5 +8,6 @@ export const endpoints = {
   merchant: (id) => `/merchants/${id}`,
   stores: "/stores",
   store: (id) => `/stores/${id}`,
+  storeConnector: (id) => `/stores/${id}/connector`,
   merchantStores: (merchantId) => `/merchants/${merchantId}/stores`,
 };

@@ -7,16 +7,21 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    server: proxyTarget
-      ? {
-          proxy: {
-            "/connector": {
-              target: proxyTarget,
-              changeOrigin: true,
-              secure: true,
+    server: {
+      watch: {
+        ignored: ["**/dist/**"],
+      },
+      ...(proxyTarget
+        ? {
+            proxy: {
+              "/connector": {
+                target: proxyTarget,
+                changeOrigin: true,
+                secure: true,
+              },
             },
-          },
-        }
-      : undefined,
+          }
+        : {}),
+    },
   };
 });

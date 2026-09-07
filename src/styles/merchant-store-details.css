@@ -501,6 +501,7 @@ body {
         grid-row: 2;
     }
 
+    .store-item-actions,
     .store-edit-btn {
         grid-column: 3;
         grid-row: 1 / span 2;

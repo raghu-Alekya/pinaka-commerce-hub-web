@@ -12,6 +12,7 @@ import Users from "./pages/Users";
 import PosConfiguration from "./pages/PosConfiguration";
 import AddMerchant from "./pages/AddMerchant";
 import AddStore from "./pages/AddStore";
+import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
 
@@ -72,9 +73,25 @@ export default function App() {
           element={<AddStore />}
         />
         <Route path="/merchants/:merchantId/users" element={<Users />} />
+        <Route
+          path="/merchants/:merchantId/stores/:storeId/configuration"
+          element={<StoreConfiguration />}
+        />
+        <Route
+          path="/merchants/:merchantId/stores/:storeId/configuration/:section"
+          element={<StoreConfiguration />}
+        />
         <Route path="/stores" element={<Stores />} />
         <Route path="/stores/new" element={<AddStore />} />
         <Route path="/stores/:storeId/edit" element={<AddStore />} />
+        <Route
+          path="/stores/:storeId/configuration"
+          element={<StoreConfiguration />}
+        />
+        <Route
+          path="/stores/:storeId/configuration/:section"
+          element={<StoreConfiguration />}
+        />
         <Route path="/users" element={<Users />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
 

@@ -135,14 +135,26 @@ export default function MerchantStores() {
                         {store.status}
                       </span>
                     </div>
-                    <button
-                      className="store-edit-btn"
-                      onClick={() =>
-                        nav(`/merchants/${merchant.id}/stores/edit/${store.id}`)
-                      }
-                    >
-                      <i className="bi bi-pencil" /> Edit
-                    </button>
+                    <div className="store-item-actions">
+                      <button
+                        className="store-config-btn"
+                        onClick={() =>
+                          nav(
+                            `/merchants/${merchant.id}/stores/${store.id}/configuration/website`
+                          )
+                        }
+                      >
+                        <i className="bi bi-sliders" /> Store Configuration
+                      </button>
+                      <button
+                        className="store-edit-btn"
+                        onClick={() =>
+                          nav(`/merchants/${merchant.id}/stores/edit/${store.id}`)
+                        }
+                      >
+                        <i className="bi bi-pencil" /> Edit
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
