@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Merchants from "./pages/Merchants";
 import MerchantStores from "./pages/MerchantStores";
+import Subscriptions from "./pages/Subscriptions";
 import Stores from "./pages/Stores";
 import Users from "./pages/Users";
 import PosConfiguration from "./pages/PosConfiguration";
@@ -25,7 +26,7 @@ import Orders from "./pages/Orders";
 
 
 const placeholders = [
-  "Subscriptions",
+
   "Orders",
   "Cash Management",
   "Employees",
@@ -93,6 +94,7 @@ export default function App() {
           path="/merchants/:merchantId/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
         />
+        <Route path="/subscriptions" element={<Subscriptions />} />
         <Route path="/stores" element={<Stores />} />
         <Route path="/stores/new" element={<AddStore />} />
         <Route path="/stores/:storeId/edit" element={<AddStore />} />
