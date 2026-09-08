@@ -39,8 +39,7 @@ export default function PosConfiguration() {
 
   const [selectedMerchant, setSelectedMerchant] = useState("");
   const [selectedStore, setSelectedStore] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+ 
 
   /* =========================================================
      ROLES
@@ -1800,46 +1799,9 @@ export default function PosConfiguration() {
 
           </div>
 
-          {/* From Date */}
+          
 
-          <div className="pos-filter-field">
-
-            <label>
-              From Date
-            </label>
-
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) =>
-                setFromDate(
-                  e.target.value
-                )
-              }
-            />
-
-          </div>
-
-          {/* To Date */}
-
-          <div className="pos-filter-field">
-
-            <label>
-              To Date
-            </label>
-
-            <input
-              type="date"
-              value={toDate}
-              min={fromDate}
-              onChange={(e) =>
-                setToDate(
-                  e.target.value
-                )
-              }
-            />
-
-          </div>
+          
 
         </div>
 

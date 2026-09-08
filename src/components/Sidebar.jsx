@@ -18,7 +18,7 @@ const sections = [
     {
         title: "OPERATIONS",
         items: [
-            ["/pos-configuration", "bi-cpu", "POS Configuration", true],
+            ["/pos-configuration", "bi-cpu", "POS Configuration"],
             ["/orders", "bi-receipt", "Orders"],
             ["/cash-management", "bi-wallet2", "Cash Management"],
             ["/employees", "bi-people", "Employees", true],
