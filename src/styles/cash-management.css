@@ -1,0 +1,294 @@
+/* =========================================
+   Cash Management Page
+========================================= */
+
+.cash-management-page {
+  width: 100%;
+  color: #172b4d;
+}
+
+/* =========================================
+   Filters
+========================================= */
+
+.cash-filter-card {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(23, 43, 77, 0.04);
+}
+
+.cash-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.cash-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cash-filter-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #344563;
+}
+
+.cash-filter-field select,
+.cash-filter-field input {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #c5ced8;
+  border-radius: 5px;
+  background: #ffffff;
+  color: #172b4d;
+  font-size: 13px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.cash-filter-field select:focus,
+.cash-filter-field input:focus {
+  border-color: #087ea4;
+  box-shadow: 0 0 0 2px rgba(8, 126, 164, 0.08);
+}
+
+.cash-filter-field select:disabled {
+  background: #f5f7f9;
+  color: #9aa5b1;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   Table Card
+========================================= */
+
+.cash-table-card {
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(23, 43, 77, 0.04);
+}
+
+.cash-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* =========================================
+   Table
+========================================= */
+
+.cash-table {
+  width: 100%;
+  min-width: 1000px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* =========================================
+   Header
+========================================= */
+
+.cash-table th {
+  height: 48px;
+  padding: 0 12px;
+  background: #f5f7fa;
+  border-right: 1px solid #e1e6eb;
+  border-bottom: 1px solid #d8dee5;
+  color: #344563;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.cash-table td {
+  min-height: 70px;
+  padding: 12px;
+  border-right: 1px solid #e5e9ee;
+  border-bottom: 1px solid #e5e9ee;
+  color: #42526e;
+  font-size: 13px;
+  vertical-align: middle;
+  line-height: 1.45;
+}
+
+.cash-table th:last-child,
+.cash-table td:last-child {
+  border-right: none;
+}
+
+/* =========================================
+   Column Widths
+========================================= */
+
+.cash-table th:nth-child(1),
+.cash-table td:nth-child(1) {
+  width: 145px;
+}
+
+.cash-table th:nth-child(2),
+.cash-table td:nth-child(2) {
+  width: 90px;
+}
+
+.cash-table th:nth-child(3),
+.cash-table td:nth-child(3) {
+  width: 105px;
+}
+
+.cash-table th:nth-child(4),
+.cash-table td:nth-child(4) {
+  width: 105px;
+}
+
+.cash-table th:nth-child(5),
+.cash-table td:nth-child(5) {
+  width: 105px;
+}
+
+.cash-table th:nth-child(6),
+.cash-table td:nth-child(6) {
+  width: 105px;
+}
+
+.cash-table th:nth-child(7),
+.cash-table td:nth-child(7) {
+  width: 115px;
+}
+
+.cash-table th:nth-child(8),
+.cash-table td:nth-child(8) {
+  width: 125px;
+}
+
+.cash-table th:nth-child(9),
+.cash-table td:nth-child(9) {
+  width: 135px;
+}
+
+/* =========================================
+   Title
+========================================= */
+
+.cash-title-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cash-title {
+  color: #684ee8;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.cash-title:hover {
+  color: #684ee8;
+  text-decoration: underline;
+}
+
+.cash-actions {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.cash-edit {
+  color: #087ea4;
+  text-decoration: none;
+}
+
+.cash-edit:hover {
+  text-decoration: underline;
+}
+
+.cash-trash {
+  color: #d14343;
+  text-decoration: none;
+}
+
+.cash-trash:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
+   Sort Icons
+========================================= */
+
+.cash-sort-icon {
+  margin-left: 5px;
+  color: #8c9aaa;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* =========================================
+   Amounts
+========================================= */
+
+.cash-amount {
+  color: #42526e !important;
+  font-weight: 500;
+}
+
+.cash-change-positive {
+  color: #008000 !important;
+  font-weight: 600;
+}
+
+/* =========================================
+   Date
+========================================= */
+
+.cash-date {
+  color: #42526e !important;
+  line-height: 1.5;
+}
+
+/* =========================================
+   Empty State
+========================================= */
+
+.cash-empty-row {
+  text-align: center;
+  padding: 30px !important;
+  color: #7a869a !important;
+}
+
+/* =========================================
+   Table Hover
+========================================= */
+
+.cash-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* =========================================
+   Responsive
+========================================= */
+
+@media (max-width: 1100px) {
+  .cash-filter-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .cash-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cash-filter-card {
+    padding: 14px;
+  }
+}

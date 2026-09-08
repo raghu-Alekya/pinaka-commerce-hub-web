@@ -15,10 +15,11 @@ import AddStore from "./pages/AddStore";
 import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
+import Orders from "./pages/Orders";
+import CashManagement from "./pages/CashManagement";
 
 const placeholders = [
   "Subscriptions",
-  "Orders",
   "Cash Management",
   "Employees",
   "Devices",
@@ -95,6 +96,15 @@ export default function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
 
+        <Route
+          path="/orders"
+          element={<Orders />}
+        />
+
+        <Route
+          path="/cash-management"
+          element={<CashManagement />}
+        />
         {placeholders.map((title) => {
           const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;
           return (

@@ -14,6 +14,8 @@ import "./styles/add-store.css";
 import "./styles/store-configuration.css";
 import "./styles/login.css";
 import "./styles/legal.css";
+import './styles/orders.css';
+import './styles/cash-management.css';
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
