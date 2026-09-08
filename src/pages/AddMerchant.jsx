@@ -844,7 +844,7 @@ function Card({ title, sub, children }) {
 function Review({ data, setField, setStoreField }) {
   return (
     <>
-      {/* =========================
+      {/* ==========================
           MERCHANT INFORMATION
           ========================= */}
       <Card
