@@ -1272,7 +1272,98 @@ a {
 
     font-weight: 500;
 }
+/* =========================
+   REVIEW & CONFIRM
+   ========================= */
 
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 32px;
+}
+
+.review-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.review-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.review-field label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #244f82;
+}
+
+.review-value {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid #d8e0eb;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #173f70;
+  font-size: 15px;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+
+/* Store review cards */
+
+.review-stores {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.review-store-card {
+  border: 1px solid #dce3ed;
+  border-radius: 10px;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.review-store-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5eaf1;
+}
+
+.review-store-header h3 {
+  margin: 0 0 4px;
+  font-size: 19px;
+  color: #173f70;
+}
+
+.review-store-header span {
+  font-size: 14px;
+  color: #7b8da5;
+}
+
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-field.full-width {
+    grid-column: auto;
+  }
+
+  .review-store-card {
+    padding: 18px;
+  }
+}
 
 /* =========================================================
    REVIEW
