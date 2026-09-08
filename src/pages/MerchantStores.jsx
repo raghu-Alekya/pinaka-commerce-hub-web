@@ -161,7 +161,7 @@ export default function MerchantStores() {
             </div>
           </section>
 
-          <section className="employees-action-card">
+          {/* <section className="employees-action-card">
             <div>
               <h2>Employees</h2>
               <p>Manage employees associated with this merchant.</p>
@@ -178,7 +178,7 @@ export default function MerchantStores() {
             >
               <i className="bi bi-people" /> Create Employees
             </button>
-          </section>
+          </section> */}
         </>
       )}
     </div>
