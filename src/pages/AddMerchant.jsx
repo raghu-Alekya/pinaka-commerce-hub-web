@@ -846,7 +846,7 @@ function Review({ data, setField, setStoreField }) {
     <>
       {/* ==========================
           MERCHANT INFORMATION
-          ========================= */}
+          ========================== */}
       <Card
         title="Review Merchant Information"
         sub="Review and update the merchant information before saving."
@@ -1298,7 +1298,7 @@ function Review({ data, setField, setStoreField }) {
 
       {/* =========================
           PLAN & SUBSCRIPTION
-          ========================= */}
+          ========================== */}
       <Card
         title="Plan & Subscription"
         sub="Review and update the selected subscription details."
