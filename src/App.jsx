@@ -15,6 +15,10 @@ import AddStore from "./pages/AddStore";
 import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
+import Employees from "./pages/Employees";
+import AddEmployee from "./pages/AddEmployee";
+import Devices from "./pages/Devices";
+import AddDevice from "./pages/AddDevice";
 import Products from "./pages/Products";
 import Coupons from "./pages/Coupons";
 import Orders from "./pages/Orders";
@@ -105,6 +109,10 @@ export default function App() {
         />
         <Route path="/users" element={<Users />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
+        <Route path="/employees" element={<Employees />} />
+        <Route path="/devices" element={<Devices />} />
+        <Route path="/devices/add" element={<AddDevice />} />
+        <Route path="/employees/add" element={<AddEmployee />} />
 
         {placeholders.map((title) => {
           const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;

@@ -11,13 +11,29 @@ const steps = [
   ["Review & Confirm", "Verify details"],
 ];
 
-const makeMerchantId = () =>
-  `MER-${Math.floor(100000 + Math.random() * 900000)}`;
+const makeMerchantId = () => {
+  const lastId = Number(localStorage.getItem("lastMerchantId")) || 4000;
+  const nextId = lastId + 1;
 
-const emptyStore = {
+  localStorage.setItem("lastMerchantId", nextId);
+
+  return `MER-${nextId}`;
+};
+
+const makeStoreId = () => {
+  const lastId = Number(localStorage.getItem("lastStoreId")) || 50000;
+  const nextId = lastId + 1;
+
+  localStorage.setItem("lastStoreId", nextId);
+
+  return `STR-${nextId}`;
+};
+
+const createEmptyStore = () => ({
   name: "",
-  id: "",
+  id: makeStoreId(),
   type: "",
+  retailType: "",
   phone: "",
   url: "",
   currency: "",
@@ -27,7 +43,7 @@ const emptyStore = {
   city: "",
   state: "",
   zip: "",
-};
+});
 
 export default function AddMerchant() {
   const nav = useNavigate();
@@ -44,6 +60,7 @@ export default function AddMerchant() {
     legalBusinessName: existing?.name || "",
     merchantId: existing?.id || makeMerchantId(),
     businessType: "",
+    retailType: "",
     country: "",
     state: "",
     city: "",
@@ -57,7 +74,7 @@ export default function AddMerchant() {
     jobTitle: "",
     alternatePhone: "",
     billingContact: true,
-    stores: [emptyStore],
+    stores: [createEmptyStore()],
     plan: existing?.plan || "Professional",
     billingCycle: "Monthly",
     trialPeriod: "14",
@@ -77,28 +94,16 @@ export default function AddMerchant() {
       ),
     }));
   };
-  const addStore = () => {
+const addStore = () => {
   setData((current) => ({
     ...current,
     stores: [
       ...current.stores,
-      {
-        name: "",
-        id: "",
-        type: "",
-        phone: "",
-        url: "",
-        currency: "",
-        status: "",
-        address: "",
-        timezone: "",
-        city: "",
-        state: "",
-        zip: "",
-      },
+      createEmptyStore(),
     ],
   }));
 };
+
 const removeStore = (index) => {
   setData((current) => ({
     ...current,
@@ -269,19 +274,59 @@ const removeStore = (index) => {
                   </div>
                 </div>
 
-                <SelectField
-                  label="Business Type"
-                  value={data.businessType}
-                  required
-                  options={[
-                    "Restaurant",
-                    "Convenience",
-                    "Grocery",
-                    "Retail",
-                    "Other",
-                  ]}
-                  onChange={(value) => setField("businessType", value)}
-                />
+               <SelectField
+                label="Business Type"
+                value={data.businessType}
+                required
+                options={[
+                  "Restaurant",
+                  "Retail",
+                ]}
+                onChange={(value) => {
+                  setField("businessType", value);
+
+                  // Clear retail type if user changes back to Restaurant
+                  if (value !== "Retail") {
+                    setField("retailType", "");
+                  }
+                }}
+              />
+
+              {data.businessType === "Retail" && (
+                <div className="form-group">
+                  <label>
+                    Retail Type <span>*</span>
+                  </label>
+
+                  <div className="radio-group">
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="retailType"
+                        value="Convenience"
+                        checked={data.retailType === "Convenience"}
+                        onChange={(event) =>
+                          setField("retailType", event.target.value)
+                        }
+                      />
+                      <span>Convenience</span>
+                    </label>
+
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="retailType"
+                        value="Grocery"
+                        checked={data.retailType === "Grocery"}
+                        onChange={(event) =>
+                          setField("retailType", event.target.value)
+                        }
+                      />
+                      <span>Grocery</span>
+                    </label>
+                  </div>
+                </div>
+              )}
 
                 <SelectField
                   label="Country"
@@ -442,30 +487,70 @@ const removeStore = (index) => {
             />
 
             {/* Store ID */}
-            <Field
-              label="Store ID"
+           <div className="form-group">
+            <label>
+              Store ID <span>*</span>
+            </label>
+
+            <input
               value={store.id}
-              placeholder="Enter store ID"
-              required
-              onChange={(value) =>
-                setStoreField(index, "id", value)
-              }
+              readOnly
             />
+          </div>
 
             {/* Store Type */}
             <SelectField
-              label="Store Type"
-              value={store.type}
-              options={[
-                "Retail Store",
-                "Restaurant",
-                "Convenience",
-                "Grocery",
-              ]}
-              onChange={(value) =>
-                setStoreField(index, "type", value)
-              }
-            />
+                label="Store Type"
+                value={store.type}
+                options={[
+                  "Retail",
+                  "Restaurant",
+                ]}
+                onChange={(value) => {
+                  setStoreField(index, "type", value);
+
+                  // Clear retail type when Restaurant is selected
+                  if (value !== "Retail") {
+                    setStoreField(index, "retailType", "");
+                  }
+                }}
+              />
+
+              {store.type === "Retail" && (
+                <div className="form-group">
+                  <label>
+                    Retail Type <span>*</span>
+                  </label>
+
+                  <div className="radio-group">
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name={`retailType-${index}`}
+                        value="Convenience"
+                        checked={store.retailType === "Convenience"}
+                        onChange={(event) =>
+                          setStoreField(index, "retailType", event.target.value)
+                        }
+                      />
+                      <span>Convenience</span>
+                    </label>
+
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name={`retailType-${index}`}
+                        value="Grocery"
+                        checked={store.retailType === "Grocery"}
+                        onChange={(event) =>
+                          setStoreField(index, "retailType", event.target.value)
+                        }
+                      />
+                      <span>Grocery</span>
+                    </label>
+                  </div>
+                </div>
+              )}
 
             {/* Phone */}
             <Field
