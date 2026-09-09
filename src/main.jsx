@@ -8,13 +8,13 @@ import "./styles/merchants.css";
 import "./styles/stores.css";
 import "./styles/merchant-store-details.css";
 import "./styles/users.css";
-import "./styles/pos-configuration.css";
+import "./styles/dash-pos-configuration.css";
 import "./styles/merchant-form.css";
 import "./styles/add-store.css";
 import "./styles/store-configuration.css";
 import "./styles/login.css";
 import "./styles/legal.css";
-import './styles/orders.css';
+import './styles/dash-orders.css';
 import './styles/cash-management.css';
 
 ReactDOM.createRoot(document.getElementById("root")).render(

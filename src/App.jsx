@@ -9,13 +9,13 @@ import Merchants from "./pages/Merchants";
 import MerchantStores from "./pages/MerchantStores";
 import Stores from "./pages/Stores";
 import Users from "./pages/Users";
-import PosConfiguration from "./pages/PosConfiguration";
+import PosConfiguration from "./pages/DashPosConfiguration";
 import AddMerchant from "./pages/AddMerchant";
 import AddStore from "./pages/AddStore";
 import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
-import Orders from "./pages/Orders";
+import Orders from "./pages/DashOrders";
 import CashManagement from "./pages/CashManagement";
 
 const placeholders = [
