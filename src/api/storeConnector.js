@@ -46,7 +46,7 @@ export async function saveWordpressConnector(storeId, merchantId, values) {
   return payload;
 }
 
-export async function testWordpressConnection(siteUrl, jwtToken) {
+export async function testWordpressConnection(siteUrl, jwtToken, storeId, merchantId) {
   const base = String(siteUrl || "").replace(/\/+$/, "");
   if (!base || !jwtToken) {
     throw new Error("WordPress site URL and JWT token are required.");

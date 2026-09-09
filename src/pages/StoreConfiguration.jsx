@@ -158,7 +158,7 @@ export default function StoreConfiguration() {
     setTesting(true);
     setMessage("");
     try {
-      const result = await testWordpressConnection(siteUrl, jwtToken);
+      const result = await testWordpressConnection(siteUrl, jwtToken, storeId, merchantId);
       setConnected(result.ok);
       setMessage(result.message);
       await saveWordpressConnector(storeId, merchantId, {
