@@ -1,8 +1,14 @@
-import { useMemo, useState } from "react";
+import { allocateId } from "../api/ids";
+import { useReferenceData } from "../api/referenceData";
+import { listSubscriptionPlans } from "../api/subscriptions";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { createMerchant, updateMerchant } from "../api/merchants";
+import {
+  createMerchant,
+  updateMerchant,
+  getMerchantForm,
+} from "../api/merchants";
 import { ApiError } from "../api/http";
-import { merchants } from "../data/data";
 
 const steps = [
   ["Merchant Details", "Basic information"],
@@ -11,13 +17,11 @@ const steps = [
   ["Review & Confirm", "Verify details"],
 ];
 
-const makeMerchantId = () =>
-  `MER-${Math.floor(100000 + Math.random() * 900000)}`;
-
-const emptyStore = {
+const createEmptyStore = () => ({
   name: "",
   id: "",
   type: "",
+  retailType: "",
   phone: "",
   url: "",
   currency: "",
@@ -27,23 +31,38 @@ const emptyStore = {
   city: "",
   state: "",
   zip: "",
-};
+});
 
 export default function AddMerchant() {
+  const { data: reference, error: referenceError } = useReferenceData();
+  const [plans, setPlans] = useState([]);
+  const [planError, setPlanError] = useState("");
+  useEffect(() => {
+    let active = true;
+    listSubscriptionPlans()
+      .then((d) => {
+        if (active) setPlans(d.plans.filter((p) => p.status === "ACTIVE"));
+      })
+      .catch((e) => {
+        if (active) setPlanError(e.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   const nav = useNavigate();
   const { merchantId } = useParams();
-  const existing = useMemo(
-    () => merchants.find((merchant) => merchant.id === merchantId),
-    [merchantId]
-  );
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState(() => ({
-    businessName: existing?.name || "",
-    legalBusinessName: existing?.name || "",
-    merchantId: existing?.id || makeMerchantId(),
+    businessName: "",
+    legalBusinessName: "",
+    merchantId: merchantId || "",
     businessType: "",
+    retailType: "",
     country: "",
     state: "",
     city: "",
@@ -52,16 +71,57 @@ export default function AddMerchant() {
     taxId: "",
     firstName: "",
     lastName: "",
-    email: existing?.email || "",
-    phone: existing?.phone || "",
+    email: "",
+    phone: "",
     jobTitle: "",
     alternatePhone: "",
     billingContact: true,
-    stores: [emptyStore],
-    plan: existing?.plan || "Professional",
+    stores: [createEmptyStore()],
+    plan: "",
     billingCycle: "Monthly",
     trialPeriod: "14",
   }));
+
+  useEffect(() => {
+    if (!merchantId) {
+      let active = true;
+      Promise.all([allocateId("merchant"), allocateId("store")])
+        .then(([id, store]) => {
+          if (active)
+            setData((d) => ({
+              ...d,
+              merchantId: id,
+              stores: [{ ...createEmptyStore(), id: store }],
+            }));
+        })
+        .catch((e) => {
+          if (active) setLoadError(e.message);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+      return () => {
+        active = false;
+      };
+    }
+    let cancelled = false;
+    setLoading(true);
+    setLoadError("");
+    getMerchantForm(merchantId)
+      .then((value) => {
+        if (!cancelled) setData(value);
+      })
+      .catch((error) => {
+        if (!cancelled)
+          setLoadError(error.message || "Unable to load merchant.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [merchantId]);
 
   const setField = (key, value) => {
     setData((current) => ({ ...current, [key]: value }));
@@ -71,46 +131,33 @@ export default function AddMerchant() {
     setData((current) => ({
       ...current,
       stores: current.stores.map((store, i) =>
-        i === index
-          ? { ...store, [key]: value}
-          : store
+        i === index ? { ...store, [key]: value } : store,
       ),
     }));
   };
-  const addStore = () => {
-  setData((current) => ({
-    ...current,
-    stores: [
-      ...current.stores,
-      {
-        name: "",
-        id: "",
-        type: "",
-        phone: "",
-        url: "",
-        currency: "",
-        status: "",
-        address: "",
-        timezone: "",
-        city: "",
-        state: "",
-        zip: "",
-      },
-    ],
-  }));
-};
-const removeStore = (index) => {
-  setData((current) => ({
-    ...current,
-    stores: current.stores.filter((_, i) => i !== index),
-  }));
-};
+  const addStore = async () => {
+    try {
+      const id = await allocateId("store");
+      setData((current) => ({
+        ...current,
+        stores: [...current.stores, { ...createEmptyStore(), id }],
+      }));
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  const removeStore = (index) => {
+    setData((current) => ({
+      ...current,
+      stores: current.stores.filter((_, i) => i !== index),
+    }));
+  };
   const validateStep = (targetStep = step) => {
     if (targetStep === 1) {
       const required = {
         businessName: "Business Name",
         legalBusinessName: "Legal Business Name",
-        businessType: "Business Type",
         country: "Country",
         state: "State / Province",
         firstName: "First Name",
@@ -128,23 +175,23 @@ const removeStore = (index) => {
     }
 
     if (targetStep === 2) {
-      const store = data.stores[0];
-
-      if (
-        !store.name.trim() ||
-        !store.id.trim() ||
-        !store.url.trim() ||
-        !store.address.trim() ||
-        !store.city.trim() ||
-        !store.state.trim() ||
-        !store.zip.trim()
-      ) {
-        alert("Please complete the required store details.");
-        return false;
+      for (const store of data.stores) {
+        if (
+          !store.name.trim() ||
+          !store.id.trim() ||
+          !store.url.trim() ||
+          !store.address.trim() ||
+          !store.city.trim() ||
+          !store.state.trim() ||
+          !store.zip.trim()
+        ) {
+          alert("Please complete the required store details.");
+          return false;
+        }
       }
     }
 
-    if (targetStep === 3 && !data.plan) {
+    if (targetStep === 3 && !plans.some((p) => p.planCode === data.plan)) {
       alert("Please select a subscription plan.");
       return false;
     }
@@ -157,38 +204,75 @@ const removeStore = (index) => {
     setStep(targetStep);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+const handleSubmit = async (event) => {
+  event.preventDefault();
 
-    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
+  // IMPORTANT:
+  // Do not save anything until the user reaches Review & Confirm.
+  if (step !== 4) {
+    return;
+  }
 
-    const merchantPayload = {
-      ...data,
-      onboardingStatus: "Completed",
-    };
+  // Validate all required data before final save
+  if (!validateStep(1)) {
+    setStep(1);
+    return;
+  }
 
-    setSubmitting(true);
+  if (!validateStep(2)) {
+    setStep(2);
+    return;
+  }
 
-    try {
-      if (merchantId) {
-        await updateMerchant(merchantId, merchantPayload);
-        alert("Merchant details saved successfully.");
-      } else {
-        await createMerchant(merchantPayload);
-        alert("Merchant created successfully.");
-      }
+  if (!validateStep(3)) {
+    setStep(3);
+    return;
+  }
 
-      nav("/merchants");
-    } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? error.message
-          : "Unable to reach the API. Check the NestJS URL in your .env file.";
-      alert(message);
-    } finally {
-      setSubmitting(false);
-    }
+  const merchantPayload = {
+    ...data,
+    onboardingStatus: "Completed",
   };
+
+  setSubmitting(true);
+
+  try {
+    if (merchantId) {
+      await updateMerchant(merchantId, merchantPayload);
+      alert("Merchant details saved successfully.");
+    } else {
+      await createMerchant(merchantPayload);
+      alert("Merchant created successfully.");
+    }
+
+    nav("/merchants");
+
+  } catch (error) {
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : "Unable to reach the API. Check the NestJS URL in your .env file.";
+
+    alert(message);
+
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+  if (loading)
+    return (
+      <div className="page-content" role="status">
+        Loading merchant…
+      </div>
+    );
+  if (loadError)
+    return (
+      <div className="page-content" role="alert">
+        {loadError}{" "}
+        <button onClick={() => nav("/merchants")}>Back to merchants</button>
+      </div>
+    );
 
   return (
     <div className="page-content merchant-onboarding-page">
@@ -273,27 +357,45 @@ const removeStore = (index) => {
                   label="Business Type"
                   value={data.businessType}
                   required
-                  options={[
-                    "Restaurant",
-                    "Convenience",
-                    "Grocery",
-                    "Retail",
-                    "Other",
-                  ]}
-                  onChange={(value) => setField("businessType", value)}
+                  options={reference.businessTypes || []}
+                  onChange={(value) => {
+                    setField("businessType", value);
+
+                    // Clear retail type if user changes back to Restaurant
+                    if (value !== "Retail") {
+                      setField("retailType", "");
+                    }
+                  }}
                 />
+
+                {data.businessType === "Retail" && (
+                  <div className="form-group">
+                    <label>
+                      Retail Type <span>*</span>
+                    </label>
+
+                    <div className="radio-group">
+                      {(reference.retailTypes || []).map((type) => (
+                        <label className="radio-option" key={type}>
+                          <input
+                            type="radio"
+                            name="retailType"
+                            value={type}
+                            checked={data.retailType === type}
+                            onChange={() => setField("retailType", type)}
+                          />
+                          {type}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <SelectField
                   label="Country"
                   value={data.country}
                   required
-                  options={[
-                    "United States",
-                    "Canada",
-                    "India",
-                    "United Kingdom",
-                    "Australia",
-                  ]}
+                  options={reference.countries || []}
                   onChange={(value) => setField("country", value)}
                 />
 
@@ -305,15 +407,12 @@ const removeStore = (index) => {
                   onChange={(value) => setField("state", value)}
                 />
 
-
                 <Field
                   label="Tax ID / EIN"
                   value={data.taxId}
                   placeholder="Enter tax ID or EIN"
                   onChange={(value) => setField("taxId", value)}
                 />
-
-              
               </div>
             </Card>
 
@@ -385,232 +484,230 @@ const removeStore = (index) => {
             sub="Add the store locations belonging to this merchant."
           >
             <div className="store-list">
-
               {data.stores.map((store, index) => (
                 <div className="store-block" key={index}>
-
                   {/* Store Header */}
                   <div className="store-block-header">
-          <div>
-            <strong>Store {index + 1}</strong>
-            <span>
-              {index === 0
-                ? "Primary Location"
-                : "Additional Location"}
-            </span>
-          </div>
+                    <div>
+                      <strong>Store {index + 1}</strong>
+                      <span>
+                        {index === 0
+                          ? "Primary Location"
+                          : "Additional Location"}
+                      </span>
+                    </div>
 
-          <div className="store-header-actions">
+                    <div className="store-header-actions">
+                      {/* Add Store - only on Store 1 */}
+                      {index === 0 && (
+                        <button
+                          type="button"
+                          className="add-store-btn"
+                          onClick={addStore}
+                        >
+                          + Add Store
+                        </button>
+                      )}
 
-            {/* Add Store - only on Store 1 */}
-            {index === 0 && (
-              <button
-                type="button"
-                className="add-store-btn"
-                onClick={addStore}
-              >
-                + Add Store
-              </button>
-            )}
+                      {/* Remove - only on additional stores */}
+                      {index > 0 && !store.persisted && (
+                        <button
+                          type="button"
+                          className="remove-store-btn"
+                          onClick={() => removeStore(index)}
+                        >
+                          Remove Store
+                        </button>
+                      )}
+                    </div>
+                  </div>
 
-            {/* Remove - only on additional stores */}
-            {index > 0 && (
-              <button
-                type="button"
-                className="remove-store-btn"
-                onClick={() => removeStore(index)}
-              >
-                Remove Store
-              </button>
-            )}
+                  {/* Store Fields */}
+                  <div className="form-grid">
+                    {/* Store Name */}
+                    <Field
+                      label="Store Name"
+                      value={store.name}
+                      placeholder="Enter store name"
+                      required
+                      onChange={(value) => setStoreField(index, "name", value)}
+                    />
 
-          </div>
-        </div>
+                    {/* Store ID */}
+                    <div className="form-group">
+                      <label>
+                        Store ID <span>*</span>
+                      </label>
 
-          {/* Store Fields */}
-          <div className="form-grid">
+                      <input value={store.id} readOnly />
+                    </div>
 
-            {/* Store Name */}
-            <Field
-              label="Store Name"
-              value={store.name}
-              placeholder="Enter store name"
-              required
-              onChange={(value) =>
-                setStoreField(index, "name", value)
-              }
-            />
+                    {/* Store Type */}
+                    <SelectField
+                      label="Store Type"
+                      value={store.type}
+                      options={reference.storeTypes || []}
+                      onChange={(value) => {
+                        setStoreField(index, "type", value);
 
-            {/* Store ID */}
-            <Field
-              label="Store ID"
-              value={store.id}
-              placeholder="Enter store ID"
-              required
-              onChange={(value) =>
-                setStoreField(index, "id", value)
-              }
-            />
+                        // Clear retail type when Restaurant is selected
+                        if (value !== "Retail") {
+                          setStoreField(index, "retailType", "");
+                        }
+                      }}
+                    />
 
-            {/* Store Type */}
-            <SelectField
-              label="Store Type"
-              value={store.type}
-              options={[
-                "Retail Store",
-                "Restaurant",
-                "Convenience",
-                "Grocery",
-              ]}
-              onChange={(value) =>
-                setStoreField(index, "type", value)
-              }
-            />
+                    {store.type === "Retail" && (
+                      <div className="form-group">
+                        <label>
+                          Retail Type <span>*</span>
+                        </label>
 
-            {/* Phone */}
-            <Field
-              label="Phone"
-              value={store.phone}
-              placeholder="Store phone"
-              onChange={(value) =>
-                setStoreField(index, "phone", value)
-              }
-            />
+                        <div className="radio-group">
+                          {(reference.retailTypes || []).map((type) => (
+                            <label className="radio-option" key={type}>
+                              <input
+                                type="radio"
+                                name={"retailType-" + index}
+                                value={type}
+                                checked={store.retailType === type}
+                                onChange={() =>
+                                  setStoreField(index, "retailType", type)
+                                }
+                              />
+                              {type}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-            {/* Store Base URL */}
-            <Field
-              label="Store Base Url"
-              value={store.url}
-              placeholder="Store Base url"
-              required
-              onChange={(value) =>
-                setStoreField(index, "url", value)
-              }
-            />
+                    {/* Phone */}
+                    <Field
+                      label="Phone"
+                      value={store.phone}
+                      placeholder="Store phone"
+                      onChange={(value) => setStoreField(index, "phone", value)}
+                    />
 
-            {/* Currency */}
-            <SelectField
-              label="Currency"
-              value={store.currency}
-              options={[
-                "USD",
-                "EUR",
-                "GBP",
-                "INR",
-                "AED",
-              ]}
-              onChange={(value) =>
-                setStoreField(index, "currency", value)
-              }
-            />
+                    {/* Store Base URL */}
+                    <Field
+                      label="Store Base Url"
+                      value={store.url}
+                      placeholder="Store Base url"
+                      required
+                      onChange={(value) => setStoreField(index, "url", value)}
+                    />
 
-            {/* Status */}
-            <SelectField
-              label="Status"
-              value={store.status}
-              options={[
-                "Active",
-                "Inactive",
-                "Pending",
-              ]}
-              onChange={(value) =>
-                setStoreField(index, "status", value)
-              }
-            />
+                    {/* Currency */}
+                    <SelectField
+                      label="Currency"
+                      value={store.currency}
+                      options={reference.currencies || []}
+                      onChange={(value) =>
+                        setStoreField(index, "currency", value)
+                      }
+                    />
 
-            {/* Address */}
-            <Field
-              label="Address"
-              value={store.address}
-              placeholder="Street address"
-              required
-              onChange={(value) =>
-                setStoreField(index, "address", value)
-              }
-            />
+                    {/* Status */}
+                    <SelectField
+                      label="Status"
+                      value={store.status}
+                      options={reference.storeStatuses || []}
+                      onChange={(value) =>
+                        setStoreField(index, "status", value)
+                      }
+                    />
 
-            {/* Timezone */}
-            <SelectField
-              label="Timezone"
-              value={store.timezone}
-              options={[
-                "Asia/Kolkata",
-                "America/New_York",
-                "America/Los_Angeles",
-                "Europe/London",
-                "Asia/Dubai",
-              ]}
-              onChange={(value) =>
-                setStoreField(index, "timezone", value)
-              }
-            />
+                    {/* Address */}
+                    <Field
+                      label="Address"
+                      value={store.address}
+                      placeholder="Street address"
+                      required
+                      onChange={(value) =>
+                        setStoreField(index, "address", value)
+                      }
+                    />
 
-            {/* City */}
-            <Field
-              label="City"
-              value={store.city}
-              placeholder="City"
-              required
-              onChange={(value) =>
-                setStoreField(index, "city", value)
-              }
-            />
+                    {/* Timezone */}
+                    <SelectField
+                      label="Timezone"
+                      value={store.timezone}
+                      options={reference.timezones || []}
+                      onChange={(value) =>
+                        setStoreField(index, "timezone", value)
+                      }
+                    />
 
-            {/* State */}
-            <Field
-              label="State / Province"
-              value={store.state}
-              placeholder="State / Province"
-              required
-              onChange={(value) =>
-                setStoreField(index, "state", value)
-              }
-            />
+                    {/* City */}
+                    <Field
+                      label="City"
+                      value={store.city}
+                      placeholder="City"
+                      required
+                      onChange={(value) => setStoreField(index, "city", value)}
+                    />
 
-            {/* ZIP */}
-            <Field
-              label="ZIP / Postal Code"
-              value={store.zip}
-              placeholder="ZIP / Postal Code"
-              required
-              onChange={(value) =>
-                setStoreField(index, "zip", value)
-              }
-            />
+                    {/* State */}
+                    <Field
+                      label="State / Province"
+                      value={store.state}
+                      placeholder="State / Province"
+                      required
+                      onChange={(value) => setStoreField(index, "state", value)}
+                    />
 
-          </div>
-        </div>
-      ))}
-
-    </div>
-  </Card>
-)}
+                    {/* ZIP */}
+                    <Field
+                      label="ZIP / Postal Code"
+                      value={store.zip}
+                      placeholder="ZIP / Postal Code"
+                      required
+                      onChange={(value) => setStoreField(index, "zip", value)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {step === 3 && (
           <Card
             title="Plan & Subscription"
             sub="Choose the subscription plan for this merchant."
           >
+            {(planError || referenceError) && (
+              <p role="alert">{planError || referenceError}</p>
+            )}
+            {!plans.length && (
+              <p>No active subscription plans are available in the master.</p>
+            )}
             <div className="plan-grid onboarding-plan-grid">
-              {["Starter", "Professional", "Enterprise"].map((plan) => (
+              {plans.map((plan) => (
                 <label
-                  key={plan}
-                  className={`plan-card ${data.plan === plan ? "selected" : ""}`}
+                  key={plan.planCode}
+                  className={`plan-card ${data.plan === plan.planCode ? "selected" : ""}`}
                 >
                   <input
                     type="radio"
                     name="plan"
-                    checked={data.plan === plan}
-                    onChange={() => setField("plan", plan)}
+                    checked={data.plan === plan.planCode}
+                    onChange={() =>
+                      setData((d) => ({
+                        ...d,
+                        plan: plan.planCode,
+                        billingCycle: plan.billingCycle,
+                        trialPeriod: String(plan.trialDays),
+                      }))
+                    }
                   />
                   <div>
-                    <strong>{plan}</strong>
+                    <strong>{plan.planName}</strong>
                     <small>
-                      {plan === "Starter"
-                        ? "Essential tools for small businesses"
-                        : plan === "Professional"
-                        ? "Advanced tools for growing businesses"
-                        : "Complete tools for larger businesses"}
+                      {plan.description} {plan.currency}{" "}
+                      {Number(plan.price).toFixed(2)} / {plan.billingCycle}
                     </small>
                   </div>
                 </label>
@@ -621,20 +718,30 @@ const removeStore = (index) => {
               <SelectField
                 label="Billing Cycle"
                 value={data.billingCycle}
-                options={["Monthly","Free Trial", "Annual"]}
+                options={plans
+                  .filter((p) => p.planCode === data.plan)
+                  .map((p) => p.billingCycle)}
                 onChange={(value) => setField("billingCycle", value)}
               />
               <SelectField
                 label="Trial Period"
                 value={data.trialPeriod}
-                options={["0", "7", "14", "30"]}
+                options={plans
+                  .filter((p) => p.planCode === data.plan)
+                  .map((p) => String(p.trialDays))}
                 onChange={(value) => setField("trialPeriod", value)}
               />
             </div>
           </Card>
         )}
 
-        {step === 4 && <Review data={data} />}
+       {step === 4 && (
+          <Review
+            data={data}
+            setField={setField}
+            setStoreField={setStoreField}
+          />
+        )}
 
         <div className="form-actions">
           <button
@@ -664,12 +771,16 @@ const removeStore = (index) => {
               Continue <i className="bi bi-arrow-right" />
             </button>
           ) : (
-            <button type="submit" className="save-next-btn" disabled={submitting}>
+            <button
+              type="submit"
+              className="save-next-btn"
+              disabled={submitting}
+            >
               {submitting
                 ? "Saving..."
                 : merchantId
-                ? "Save Changes"
-                : "Create Merchant"}
+                  ? "Save Changes"
+                  : "Create Merchant"}
               <i className="bi bi-check2" />
             </button>
           )}
@@ -714,13 +825,7 @@ function Field({
   );
 }
 
-function SelectField({
-  label,
-  value,
-  options,
-  required = false,
-  onChange,
-}) {
+function SelectField({ label, value, options, required = false, onChange }) {
   return (
     <div className="form-group">
       <label>
@@ -756,42 +861,514 @@ function Card({ title, sub, children }) {
   );
 }
 
-function Review({ data }) {
-  const rows = [
-    ["Business Name", data.businessName],
-    ["Legal Business Name", data.legalBusinessName],
-    ["Merchant ID", data.merchantId],
-    ["Business Type", data.businessType],
-    ["Country", data.country],
-    ["State / Province", data.state],
-    ["City", data.city],
-    ["Postal Code", data.postalCode],
-    ["Business Address", data.businessAddress],
-    ["Primary Contact", `${data.firstName} ${data.lastName}`.trim()],
-    ["Email Address", data.email],
-    ["Phone Number", data.phone],
-    ["Store Name", data.stores[0].name],
-    ["Store ID", data.stores[0].id],
-    ["Store Type", data.stores[0].type],
-    ["Store Location", data.stores[0].location],
-    ["Plan", data.plan],
-    ["Billing Cycle", data.billingCycle],
-    ["Trial Period", `${data.trialPeriod} days`],
-  ];
-
+function Review({ data, setField, setStoreField }) {
   return (
-    <Card
-      title="Review & Confirm"
-      sub="Verify the merchant details before creating the account."
-    >
-      <div className="review-grid">
-        {rows.map(([label, value]) => (
-          <div key={label}>
-            <span>{label}</span>
-            <strong>{value || "—"}</strong>
+    <>
+      {/* ==========================
+          MERCHANT INFORMATION
+          ========================== */}
+      <Card
+        title="Review Merchant Information"
+        sub="Review and update the merchant information before saving."
+      >
+        <div className="form-grid">
+
+          <Field
+            label="Business Name"
+            value={data.businessName}
+            required
+            onChange={(value) =>
+              setField("businessName", value)
+            }
+          />
+
+          <Field
+            label="Legal Business Name"
+            value={data.legalBusinessName}
+            required
+            onChange={(value) =>
+              setField("legalBusinessName", value)
+            }
+          />
+
+          <div className="form-group">
+            <label>Merchant ID</label>
+
+            <div className="input-with-prefix">
+              <span>MER-</span>
+
+              <input
+                value={data.merchantId.replace(/^MER-/, "")}
+                readOnly
+              />
+            </div>
           </div>
-        ))}
-      </div>
-    </Card>
+
+          <SelectField
+            label="Country"
+            value={data.country}
+            required
+            options={[
+              "United States",
+              "Canada",
+              "India",
+              "United Kingdom",
+              "Australia",
+            ]}
+            onChange={(value) =>
+              setField("country", value)
+            }
+          />
+
+          <Field
+            label="State / Province"
+            value={data.state}
+            required
+            onChange={(value) =>
+              setField("state", value)
+            }
+          />
+
+          <Field
+            label="Tax ID / EIN"
+            value={data.taxId}
+            onChange={(value) =>
+              setField("taxId", value)
+            }
+          />
+
+          <Field
+            label="Business Address"
+            value={data.businessAddress}
+            fullWidth
+            onChange={(value) =>
+              setField("businessAddress", value)
+            }
+          />
+
+        </div>
+      </Card>
+
+
+      {/* =========================
+          PRIMARY CONTACT
+          ========================= */}
+      <Card
+        title="Primary Contact"
+        sub="Review and update the primary contact information."
+      >
+        <div className="form-grid">
+
+          <Field
+            label="First Name"
+            value={data.firstName}
+            required
+            onChange={(value) =>
+              setField("firstName", value)
+            }
+          />
+
+          <Field
+            label="Last Name"
+            value={data.lastName}
+            required
+            onChange={(value) =>
+              setField("lastName", value)
+            }
+          />
+
+          <Field
+            label="Email Address"
+            value={data.email}
+            type="email"
+            required
+            onChange={(value) =>
+              setField("email", value)
+            }
+          />
+
+          <Field
+            label="Phone Number"
+            value={data.phone}
+            required
+            onChange={(value) =>
+              setField("phone", value)
+            }
+          />
+
+          <Field
+            label="Job Title"
+            value={data.jobTitle}
+            onChange={(value) =>
+              setField("jobTitle", value)
+            }
+          />
+
+          <Field
+            label="Alternate Phone"
+            value={data.alternatePhone}
+            onChange={(value) =>
+              setField("alternatePhone", value)
+            }
+          />
+
+        </div>
+
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={data.billingContact}
+            onChange={(event) =>
+              setField(
+                "billingContact",
+                event.target.checked
+              )
+            }
+          />
+
+          Use this person as the billing contact
+        </label>
+      </Card>
+
+
+      {/* =========================
+          STORE DETAILS
+          ========================= */}
+      <Card
+        title="Store Details"
+        sub="Review and update all store information before saving."
+      >
+        <div className="store-list">
+
+          {data.stores.map((store, index) => (
+
+            <div
+              className="store-block"
+              key={store.id || index}
+            >
+
+              <div className="store-block-header">
+                <div>
+                  <strong>Store {index + 1}</strong>
+
+                  <span>
+                    {index === 0
+                      ? "Primary Location"
+                      : "Additional Location"}
+                  </span>
+                </div>
+              </div>
+
+
+              <div className="form-grid">
+
+                <Field
+                  label="Store Name"
+                  value={store.name}
+                  required
+                  onChange={(value) =>
+                    setStoreField(
+                      index,
+                      "name",
+                      value
+                    )
+                  }
+                />
+
+
+                <div className="form-group">
+                  <label>Store ID</label>
+
+                  <input
+                    value={store.id}
+                    readOnly
+                  />
+                </div>
+
+
+                <SelectField
+                  label="Store Type"
+                  value={store.type}
+                  options={[
+                    "Retail",
+                    "Restaurant",
+                  ]}
+                  onChange={(value) => {
+                    setStoreField(
+                      index,
+                      "type",
+                      value
+                    );
+
+                    if (value !== "Retail") {
+                      setStoreField(
+                        index,
+                        "retailType",
+                        ""
+                      );
+                    }
+                  }}
+                />
+
+
+                {store.type === "Retail" && (
+                  <div className="form-group">
+                    <label>
+                      Retail Type <span>*</span>
+                    </label>
+
+                    <div className="radio-group">
+
+                      <label className="radio-option">
+                        <input
+                          type="radio"
+                          name={`review-retailType-${index}`}
+                          value="Convenience"
+                          checked={
+                            store.retailType ===
+                            "Convenience"
+                          }
+                          onChange={(event) =>
+                            setStoreField(
+                              index,
+                              "retailType",
+                              event.target.value
+                            )
+                          }
+                        />
+
+                        <span>Convenience</span>
+                      </label>
+
+
+                      <label className="radio-option">
+                        <input
+                          type="radio"
+                          name={`review-retailType-${index}`}
+                          value="Grocery"
+                          checked={
+                            store.retailType ===
+                            "Grocery"
+                          }
+                          onChange={(event) =>
+                            setStoreField(
+                              index,
+                              "retailType",
+                              event.target.value
+                            )
+                          }
+                        />
+
+                        <span>Grocery</span>
+                      </label>
+
+                    </div>
+                  </div>
+                )}
+
+
+                <Field
+                  label="Phone"
+                  value={store.phone}
+                  onChange={(value) =>
+                    setStoreField(
+                      index,
+                      "phone",
+                      value
+                    )
+                  }
+                />
+
+
+                <Field
+                  label="Store Base URL"
+                  value={store.url}
+                  required
+                  onChange={(value) =>
+                    setStoreField(
+                      index,
+                      "url",
+                      value
+                    )
+                  }
+                />
+
+
+                <SelectField
+                  label="Currency"
+                  value={store.currency}
+                  options={[
+                    "USD",
+                    "EUR",
+                    "GBP",
+                    "INR",
+                    "AED",
+                  ]}
+                  onChange={(value) =>
+                    setStoreField(
+                      index,
+                      "currency",
+                      value
+                    )
+                  }
+                />
+
+
+                <SelectField
+                  label="Status"
+                  value={store.status}
+                  options={[
+                    "Active",
+                    "Inactive",
+                    "Pending",
+                  ]}
+                  onChange={(value) =>
+                    setStoreField(
+                      index,
+                      "status",
+                      value
+                    )
+                  }
+                />
+
+
+                <Field
+                  label="Address"
+                  value={store.address}
+                  required
+                  onChange={(value) =>
+                    setStoreField(
+                      index,
+                      "address",
+                      value
+                    )
+                  }
+                />
+
+
+                <SelectField
+                  label="Timezone"
+                  value={store.timezone}
+                  options={[
+                    "Asia/Kolkata",
+                    "America/New_York",
+                    "America/Los_Angeles",
+                    "Europe/London",
+                    "Asia/Dubai",
+                  ]}
+                  onChange={(value) =>
+                    setStoreField(
+                      index,
+                      "timezone",
+                      value
+                    )
+                  }
+                />
+
+
+                <Field
+                  label="City"
+                  value={store.city}
+                  required
+                  onChange={(value) =>
+                    setStoreField(
+                      index,
+                      "city",
+                      value
+                    )
+                  }
+                />
+
+
+                <Field
+                  label="State / Province"
+                  value={store.state}
+                  required
+                  onChange={(value) =>
+                    setStoreField(
+                      index,
+                      "state",
+                      value
+                    )
+                  }
+                />
+
+
+                <Field
+                  label="ZIP / Postal Code"
+                  value={store.zip}
+                  required
+                  onChange={(value) =>
+                    setStoreField(
+                      index,
+                      "zip",
+                      value
+                    )
+                  }
+                />
+
+              </div>
+
+            </div>
+          ))}
+
+        </div>
+      </Card>
+
+
+      {/* =========================
+          PLAN & SUBSCRIPTION
+          ========================== */}
+      <Card
+        title="Plan & Subscription"
+        sub="Review and update the selected subscription details."
+      >
+        <div className="form-grid">
+
+          <SelectField
+            label="Plan"
+            value={data.plan}
+            options={[
+              "Starter",
+              "Professional",
+              "Enterprise",
+            ]}
+            onChange={(value) =>
+              setField("plan", value)
+            }
+          />
+
+          <SelectField
+            label="Billing Cycle"
+            value={data.billingCycle}
+            options={[
+              "Monthly",
+              "Free Trial",
+              "Annual",
+            ]}
+            onChange={(value) =>
+              setField("billingCycle", value)
+            }
+          />
+
+          <SelectField
+            label="Trial Period"
+            value={data.trialPeriod}
+            options={[
+              "0",
+              "7",
+              "14",
+              "30",
+            ]}
+            onChange={(value) =>
+              setField("trialPeriod", value)
+            }
+          />
+
+        </div>
+      </Card>
+    </>
   );
 }
+
+

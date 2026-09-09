@@ -1,0 +1,628 @@
+/* =========================================================
+   ADD EMPLOYEE PAGE
+========================================================= */
+
+.add-employee-page {
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  padding: 20px 24px 72px;
+  background: #f5f7fb;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.add-employee-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.add-employee-header h1 {
+  margin: 0;
+  color: #12294b;
+  font-size: 28px;
+  line-height: 32px;
+  font-weight: 750;
+}
+
+.add-employee-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+
+  color: #8a9ab0;
+  font-size: 13px;
+}
+
+.add-employee-breadcrumb strong {
+  color: #3b5577;
+  font-weight: 500;
+}
+
+.breadcrumb-arrow {
+  color: #9aabc0;
+  font-size: 18px;
+}
+
+.back-employees-btn {
+  height: 45px;
+  padding: 0 17px;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  border: 1px solid #d8e1ec;
+  border-radius: 6px;
+
+  background: #fff;
+  color: #294363;
+
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* =========================================================
+   TWO COLUMN LAYOUT
+========================================================= */
+
+.add-employee-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(390px, 0.85fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.add-employee-left,
+.add-employee-right {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.employee-card {
+  background: #fff;
+  border: 1px solid #e5ebf3;
+  border-radius: 8px;
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   CARD HEADER
+========================================================= */
+
+.employee-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.employee-card-icon {
+  width: 43px;
+  height: 43px;
+  min-width: 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: #5b3de1;
+  background: #eeeaff;
+}
+
+.employee-card-header h2 {
+  margin: 0;
+
+  color: #172d4d;
+  font-size: 17px;
+  line-height: 21px;
+  font-weight: 700;
+}
+
+.employee-card-header p {
+  margin: 3px 0 0;
+
+  color: #7c8faa;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* =========================================================
+   FORM GRID
+========================================================= */
+
+.employee-form-grid {
+  display: grid;
+  gap: 17px 18px;
+}
+
+.employee-form-grid.two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.employee-form-grid.three-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* =========================================================
+   FORM FIELD
+========================================================= */
+
+.employee-field {
+  min-width: 0;
+}
+
+.employee-field label {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #162d4e;
+  font-size: 13px;
+  line-height: 17px;
+  font-weight: 500;
+}
+
+.employee-field label span {
+  color: #e6394f;
+}
+
+.employee-field input {
+  width: 100%;
+  height: 42px;
+
+  padding: 0 12px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d7e1ed;
+  border-radius: 6px;
+
+  background: #fff;
+
+  color: #304b6c;
+  font-family: inherit;
+  font-size: 13px;
+
+  outline: none;
+}
+
+.employee-field input::placeholder {
+  color: #8b9bb2;
+}
+
+.employee-field input:focus {
+  border-color: #7256df;
+  box-shadow: 0 0 0 2px rgba(101, 69, 218, 0.08);
+}
+
+/* =========================================================
+   SELECT
+========================================================= */
+
+.employee-select {
+  position: relative;
+  width: 100%;
+  height: 42px;
+}
+
+.employee-select select {
+  width: 100%;
+  height: 100%;
+
+  padding: 0 35px 0 12px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d7e1ed;
+  border-radius: 6px;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  outline: none;
+
+  background: #fff;
+
+  color: #304b6c;
+  font-family: inherit;
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.employee-select select:focus {
+  border-color: #7256df;
+}
+
+.employee-select-arrow {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+
+  transform: translateY(-50%);
+
+  color: #304b6c;
+  pointer-events: none;
+}
+
+/* =========================================================
+   PHONE
+========================================================= */
+
+.phone-input {
+  height: 42px;
+
+  display: flex;
+
+  border: 1px solid #d7e1ed;
+  border-radius: 6px;
+
+  overflow: hidden;
+}
+
+.country-code {
+  width: 84px;
+  min-width: 84px;
+
+  padding: 0 11px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-right: 1px solid #d7e1ed;
+
+  color: #304b6c;
+  font-size: 13px;
+}
+
+.phone-input input {
+  border: none;
+  border-radius: 0;
+  height: 40px;
+}
+
+.phone-input input:focus {
+  box-shadow: none;
+}
+
+/* =========================================================
+   DATE
+========================================================= */
+
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon input {
+  padding-right: 38px;
+}
+
+.input-with-icon svg {
+  position: absolute;
+
+  right: 11px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: #7c8ea8;
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   COUNTRY
+========================================================= */
+
+.country-field {
+  width: 52%;
+  margin-top: 17px;
+}
+
+/* =========================================================
+   PROFILE PHOTO
+========================================================= */
+
+.profile-photo-card {
+  min-height: 194px;
+}
+
+
+
+
+/* =========================================================
+   ADD EMPLOYEE PROFILE AVATAR
+========================================================= */
+
+.add-employee-page .profile-avatar {
+  width: 92px;
+  height: 92px;
+
+  min-width: 92px;
+  max-width: 92px;
+
+  min-height: 92px;
+  max-height: 92px;
+
+  flex: 0 0 92px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  border-radius: 50%;
+
+  overflow: hidden;
+
+  background: #eeeaff;
+  color: #5d3ddd;
+}
+
+.add-employee-page .profile-avatar-image {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+  object-position: center;
+
+  border-radius: 50%;
+}
+.add-employee-page .profile-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 44px;
+  padding-left: 38px;
+}
+
+.upload-photo-btn {
+  width: 175px;
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  border: 1px solid #d4ddef;
+  border-radius: 6px;
+
+  background: #fff;
+  color: #5c3de0;
+
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.upload-help {
+  margin-top: 8px;
+
+  color: #7e8fa8;
+  font-size: 11px;
+}
+
+/* =========================================================
+   PASSWORD
+========================================================= */
+
+.password-input {
+  position: relative;
+}
+
+.password-input input {
+  padding-right: 42px;
+}
+
+.password-input button {
+  position: absolute;
+
+  right: 10px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  padding: 2px;
+
+  border: none;
+  background: transparent;
+
+  color: #687b96;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   CHECKBOX
+========================================================= */
+
+.credentials-checkbox {
+  margin-top: 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  color: #263e60;
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.credentials-checkbox input {
+  display: none;
+}
+
+.custom-checkbox {
+  width: 19px;
+  height: 19px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 4px;
+
+  background: #5d3cdb;
+  color: white;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   BOTTOM ACTIONS
+========================================================= */
+
+.employee-form-actions {
+  margin-top: 24px;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+
+  padding: 20px 0;
+
+  background: transparent;
+  border-top: 1px solid #e5ebf3;
+}
+
+.cancel-employee-btn,
+.save-employee-btn {
+  height: 46px;
+
+  padding: 0 20px;
+
+  border-radius: 6px;
+
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cancel-employee-btn {
+  border: 1px solid #d7e1ed;
+
+  background: #fff;
+
+  color: #304766;
+}
+
+.save-employee-btn {
+  min-width: 145px;
+
+  border: none;
+
+  background: linear-gradient(
+    90deg,
+    #5d38dc,
+    #5b3ddd
+  );
+
+  color: white;
+
+  box-shadow: 0 4px 10px rgba(91, 59, 221, 0.18);
+}
+
+/* =========================================================
+   LAPTOP
+========================================================= */
+@media (max-width: 1200px) {
+
+  .add-employee-page {
+    padding: 16px 18px 68px;
+  }
+
+  .add-employee-layout {
+    grid-template-columns:
+      minmax(0, 1.45fr)
+      minmax(350px, 0.85fr);
+
+    gap: 11px;
+  }
+
+  .employee-card {
+    padding: 15px;
+  }
+
+  .employee-form-grid {
+    gap: 13px;
+  }
+
+
+
+  .add-employee-page .profile-avatar {
+    width: 82px;
+    height: 82px;
+
+    min-width: 82px;
+    max-width: 82px;
+
+    min-height: 82px;
+    max-height: 82px;
+
+    flex: 0 0 82px;
+  }
+
+  .upload-photo-btn {
+    width: 155px;
+  }
+}
+
+@media (max-width: 900px) {
+
+  .add-employee-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-upload-area {
+    padding-left: 0;
+  }
+
+  .country-field {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .add-employee-page {
+    padding: 14px 12px 75px;
+  }
+
+  .add-employee-header {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .employee-form-grid.two-columns,
+  .employee-form-grid.three-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-upload-area {
+    gap: 20px;
+  }
+
+  .employee-form-actions {
+    padding: 0 12px;
+  }
+}

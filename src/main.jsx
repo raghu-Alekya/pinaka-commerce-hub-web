@@ -12,8 +12,15 @@ import "./styles/pos-configuration.css";
 import "./styles/merchant-form.css";
 import "./styles/add-store.css";
 import "./styles/store-configuration.css";
+import "./styles/products.css";
+import "./styles/coupons.css";
+import "./styles/orders.css";
 import "./styles/login.css";
 import "./styles/legal.css";
+import "./styles/devices.css";
+import "./styles/add-device.css";
+import "./styles/employees.css";
+import "./styles/add-employee.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

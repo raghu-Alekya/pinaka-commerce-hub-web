@@ -1,3 +1,5 @@
+import { useReferenceData } from "../api/referenceData";
+import { listSubscriptionPlans } from "../api/subscriptions";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listMerchants } from "../api/merchants";
@@ -58,6 +60,19 @@ function monthKey(value) {
 
 export default function Merchants() {
   const nav = useNavigate();
+  const { data: reference } = useReferenceData();
+  const [masterPlans, setMasterPlans] = useState([]);
+  useEffect(() => {
+    let active = true;
+    listSubscriptionPlans()
+      .then((d) => {
+        if (active) setMasterPlans(d.plans);
+      })
+      .catch(e => { if(active) setError(e.message); });
+    return () => {
+      active = false;
+    };
+  }, []);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [plan, setPlan] = useState("");
@@ -79,7 +94,7 @@ export default function Merchants() {
           setError(
             err instanceof ApiError
               ? err.message
-              : "Unable to load merchants from the API."
+              : "Unable to load merchants from the API.",
           );
         }
       } finally {
@@ -102,9 +117,9 @@ export default function Merchants() {
               .toLowerCase()
               .includes(q.toLowerCase())) &&
           (!status || m.status === status) &&
-          (!plan || m.plan === plan)
+          (!plan || m.plan === plan),
       ),
-    [merchants, q, status, plan]
+    [merchants, q, status, plan],
   );
 
   const now = new Date();
@@ -113,30 +128,73 @@ export default function Merchants() {
   const lastMonth = `${lastMonthDate.getFullYear()}-${lastMonthDate.getMonth()}`;
   const total = merchants.length;
   const activeCount = merchants.filter((m) => m.status === "Active").length;
-  const suspendedCount = merchants.filter((m) => m.status === "Suspended").length;
+  const suspendedCount = merchants.filter(
+    (m) => m.status === "Suspended",
+  ).length;
   const inactiveCount = merchants.filter((m) => m.status === "Inactive").length;
-  const newThisMonth = merchants.filter((m) => monthKey(m.createdAt) === thisMonth).length;
-  const newLastMonth = merchants.filter((m) => monthKey(m.createdAt) === lastMonth).length;
+  const newThisMonth = merchants.filter(
+    (m) => monthKey(m.createdAt) === thisMonth,
+  ).length;
+  const newLastMonth = merchants.filter(
+    (m) => monthKey(m.createdAt) === lastMonth,
+  ).length;
   const monthChange =
     newLastMonth === 0
       ? newThisMonth > 0
         ? "New this month"
         : "No new merchants"
       : `${Math.abs(Math.round(((newThisMonth - newLastMonth) / newLastMonth) * 100))}% vs last month`;
-  const activePct = total ? `${((activeCount / total) * 100).toFixed(1)}% of total` : "0% of total";
-  const inactivePct = total ? `${((inactiveCount / total) * 100).toFixed(1)}% of total` : "0% of total";
+  const activePct = total
+    ? `${((activeCount / total) * 100).toFixed(1)}% of total`
+    : "0% of total";
+  const inactivePct = total
+    ? `${((inactiveCount / total) * 100).toFixed(1)}% of total`
+    : "0% of total";
 
   const stat = [
-    ["purple", "bi-people-fill", "Total Merchants", String(total), `${newThisMonth} this month`],
-    ["green", "bi-check-circle-fill", "Active Merchants", String(activeCount), activePct],
-    ["orange", "bi-pause-circle-fill", "Suspended Merchants", String(suspendedCount), `${suspendedCount} currently`],
-    ["red", "bi-x-circle-fill", "Inactive Merchants", String(inactiveCount), inactivePct],
-    ["blue", "bi-person-plus-fill", "New This Month", String(newThisMonth), monthChange],
+    [
+      "purple",
+      "bi-people-fill",
+      "Total Merchants",
+      String(total),
+      `${newThisMonth} this month`,
+    ],
+    [
+      "green",
+      "bi-check-circle-fill",
+      "Active Merchants",
+      String(activeCount),
+      activePct,
+    ],
+    [
+      "orange",
+      "bi-pause-circle-fill",
+      "Suspended Merchants",
+      String(suspendedCount),
+      `${suspendedCount} currently`,
+    ],
+    [
+      "red",
+      "bi-x-circle-fill",
+      "Inactive Merchants",
+      String(inactiveCount),
+      inactivePct,
+    ],
+    [
+      "blue",
+      "bi-person-plus-fill",
+      "New This Month",
+      String(newThisMonth),
+      monthChange,
+    ],
   ];
 
-  const plans = [...new Set(merchants.map((m) => m.plan).filter((value) => value && value !== "—"))];
+  const plans = [...new Set(masterPlans.map((p) => p.planName))];
   const statuses = [
-    ...new Set(["Active", "Suspended", "Inactive", ...merchants.map((m) => m.status)]),
+    ...new Set([
+      ...(reference.merchantStatuses || []),
+      ...merchants.map((m) => m.status),
+    ]),
   ];
 
   return (
@@ -284,7 +342,9 @@ export default function Merchants() {
                         className="merchant-name clickable"
                         onClick={() => nav(`/merchants/${m.id}/stores`)}
                       >
-                        <div className={`merchant-avatar ${avatarClass(index)}`}>
+                        <div
+                          className={`merchant-avatar ${avatarClass(index)}`}
+                        >
                           {m.initials}
                         </div>
                         <div>

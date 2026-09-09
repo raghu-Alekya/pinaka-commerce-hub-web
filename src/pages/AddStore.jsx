@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { allocateId } from "../api/ids";
+import { useReferenceData } from "../api/referenceData";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { createStores } from "../api/stores";
-import { ApiError } from "../api/http";
+import { listMerchants } from "../api/merchants";
+import { createStores, getStore, updateStore } from "../api/stores";
+
 const empty = {
   merchant: "",
   storeName: "",
@@ -17,10 +20,57 @@ const empty = {
   zip: "",
 };
 export default function AddStore() {
+  const { data: reference, error: referenceError } = useReferenceData();
   const nav = useNavigate(),
-    { merchantId } = useParams(),
-    [blocks, setBlocks] = useState([{ ...empty }]),
+    { merchantId, storeId } = useParams(),
+    [blocks, setBlocks] = useState([{ ...empty, merchant: merchantId || "" }]),
     [submitting, setSubmitting] = useState(false);
+  const [merchants, setMerchants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError("");
+    Promise.all([
+      listMerchants(),
+      storeId
+        ? getStore(storeId)
+        : allocateId("store").then((id) => ({
+            ...empty,
+            merchant: merchantId || "",
+            storeID: id,
+          })),
+    ])
+      .then(([rows, store]) => {
+        if (active) {
+          if (storeId && store && merchantId && store.merchant !== merchantId)
+            throw new Error("Store does not belong to this merchant.");
+          setMerchants(rows);
+          if (store) setBlocks([store]);
+        }
+      })
+      .catch((e) => {
+        if (active) setError(e.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [merchantId, storeId]);
+  const addBlock = async () => {
+    try {
+      const id = await allocateId("store");
+      setBlocks((b) => [
+        ...b,
+        { ...empty, merchant: merchantId || b[0].merchant, storeID: id },
+      ]);
+    } catch (e) {
+      alert(e.message);
+    }
+  };
   const set = (i, k, v) =>
     setBlocks((b) => b.map((x, j) => (j === i ? { ...x, [k]: v } : x)));
   const save = async (e) => {
@@ -42,16 +92,19 @@ export default function AddStore() {
     }
     setSubmitting(true);
     try {
-      await createStores(blocks, merchantId);
+      if (storeId) await updateStore(storeId, blocks[0]);
+      else await createStores(blocks, merchantId);
       alert(
-        blocks.length === 1
-          ? "Store created successfully!"
-          : `${blocks.length} stores created successfully!`,
+        storeId
+          ? "Store updated successfully!"
+          : blocks.length === 1
+            ? "Store created successfully!"
+            : `${blocks.length} stores created successfully!`,
       );
       nav(merchantId ? `/merchants/${merchantId}/stores` : "/stores");
     } catch (error) {
       alert(
-        error instanceof ApiError
+        error instanceof Error
           ? error.message
           : "Unable to reach the API. Check the NestJS URL in your .env file.",
       );
@@ -59,6 +112,18 @@ export default function AddStore() {
       setSubmitting(false);
     }
   };
+  if (loading)
+    return (
+      <div className="page-content" role="status">
+        Loading store form…
+      </div>
+    );
+  if (error)
+    return (
+      <div className="page-content" role="alert">
+        {error}
+      </div>
+    );
   return (
     <div className="page-content add-store-page">
       <div className="breadcrumb-area">
@@ -71,11 +136,11 @@ export default function AddStore() {
           <i className="bi bi-arrow-left" /> Stores
         </button>
         <span>/</span>
-        <span>Add Store</span>
+        <span>{storeId ? "Edit Store" : "Add Store"}</span>
       </div>
       <div className="page-header add-store-header">
         <div>
-          <h1>Add Store</h1>
+          <h1>{storeId ? "Edit Store" : "Add Store"}</h1>
           <p>Create a new store and connect it to Pinaka Commerce Hub</p>
         </div>
       </div>
@@ -87,9 +152,10 @@ export default function AddStore() {
               <p>Add the store locations belonging to this merchant.</p>
             </div>
             <button
+              hidden={Boolean(storeId)}
               className="btn btn-outline"
               type="button"
-              onClick={() => setBlocks((b) => [...b, { ...empty }])}
+              onClick={addBlock}
             >
               <i className="bi bi-plus-lg" /> Add Store
             </button>
@@ -123,13 +189,7 @@ export default function AddStore() {
                     "Merchant",
                     s.merchant,
                     "select",
-                    [
-                      "ABC Retail",
-                      "XYZ Foods",
-                      "Sunshine LLC",
-                      "Retail Corp",
-                      "Westside Market LLC",
-                    ],
+                    merchants.map((m) => ({ value: m.id, label: m.name })),
                     true,
                   )}
                   {f(
@@ -142,29 +202,41 @@ export default function AddStore() {
                     true,
                   )}
                   {f(i, "storeID", "Store ID", s.storeID, "input", [], true)}
-                  {f(i, "storeType", "Store Type", s.storeType, "select", [
-                    "Restaurant",
-                    "Retail Store",
-                    "Warehouse",
-                  ])}
+                  {f(
+                    i,
+                    "storeType",
+                    "Store Type",
+                    s.storeType,
+                    "select",
+                    reference.storeTypes || [],
+                  )}
                   {f(i, "phone", "Phone", s.phone)}
-                  {f(i, "currency", "Currency", s.currency, "select", [
-                    "INR - Indian Rupee",
-                    "USD - United States Dollar",
-                    "EUR - Euro",
-                    "GBP - British Pound",
-                  ])}
+                  {f(i, "url", "Website URL", s.url || "")}
+                  {f(
+                    i,
+                    "currency",
+                    "Currency",
+                    s.currency,
+                    "select",
+                    reference.currencies || [],
+                  )}
                   {f(i, "address", "Address", s.address, "input", [], true)}
-                  {f(i, "status", "Store Status", s.status, "select", [
-                    "Active",
-                    "Inactive",
-                  ])}
-                  {f(i, "timezone", "Timezone", s.timezone, "select", [
-                    "Kolkata",
-                    "Central Time (CT)",
-                    "Eastern Time (ET)",
-                    "Pacific Time (PT)",
-                  ])}
+                  {f(
+                    i,
+                    "status",
+                    "Store Status",
+                    s.status,
+                    "select",
+                    reference.storeStatuses || [],
+                  )}
+                  {f(
+                    i,
+                    "timezone",
+                    "Timezone",
+                    s.timezone,
+                    "select",
+                    reference.timezones || [],
+                  )}
                   {f(i, "city", "City", s.city, "input", [], true)}
                   {f(
                     i,
@@ -210,19 +282,26 @@ export default function AddStore() {
         </label>
         {type === "select" ? (
           <select
-            value={val}
+            value={val || ""}
             required={req}
+            disabled={k === "merchant" && Boolean(merchantId || storeId)}
             onChange={(e) => set(i, k, e.target.value)}
           >
             <option value="">Select {label.toLowerCase()}</option>
-            {opts.map((o) => (
-              <option key={o}>{o}</option>
+            {(k === "merchant"
+              ? opts
+              : [...new Set([...opts, val].filter(Boolean))]
+            ).map((o) => (
+              <option key={o.value || o} value={o.value || o}>
+                {o.label || o}
+              </option>
             ))}
           </select>
         ) : (
           <input
             value={val}
             required={req}
+            readOnly={k === "storeID"}
             placeholder={`Enter ${label.toLowerCase()}`}
             onChange={(e) => set(i, k, e.target.value)}
           />

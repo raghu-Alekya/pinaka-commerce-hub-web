@@ -132,7 +132,7 @@
 
     color: #697286;
 
-    font-size: 9px;
+    font-size: 12px;
 
     margin-bottom: 3px;
 }
@@ -297,7 +297,7 @@
 
     color: #9199aa;
 
-    font-size: 7px;
+    font-size: 12px;
 
     font-weight: 600;
 
@@ -313,7 +313,7 @@
 .stores-table tbody td {
     padding: 12px 13px;
 
-    font-size: 9px;
+    font-size: 12px;
 
     color: #5e687b;
 
@@ -395,7 +395,7 @@
 .store-cell strong {
     color: #344057;
 
-    font-size: 9px;
+    font-size: 12px;
 
     font-weight: 600;
 }
@@ -403,7 +403,7 @@
 .store-cell small {
     color: #979eac;
 
-    font-size: 7px;
+    font-size: 12px;
 
     margin-top: 3px;
 }
@@ -415,10 +415,9 @@
 
 .location-cell {
     display: flex;
-
     align-items: center;
-
     gap: 5px;
+    font-size: 13px;
 }
 
 .location-cell i {
@@ -627,3 +626,9 @@
     }
 
 }
+/* Preserve the original store row appearance with keyboard-accessible actions. */
+.stores-page .stores-name-button { border: 0; background: transparent; padding: 0; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.stores-page .store-toolbar .filter-button { margin-left: auto; }
+.stores-page .stores-feedback { padding: 12px 16px; margin: 0; }
+.stores-page .stores-name-button:focus-visible { outline: 2px solid #6250cf; outline-offset: 4px; }
+@media (max-width: 800px) { .stores-page .store-toolbar { flex-wrap: wrap; } .stores-page .store-search { flex: 1 1 100%; } }
