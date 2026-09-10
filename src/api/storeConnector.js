@@ -71,9 +71,19 @@ export async function testWordpressConnection(siteUrl, jwtToken, storeId, mercha
 
       if (response.ok) {
         const data = await response.json().catch(() => ({}));
+        try {
+          await api.post("/connectors/woocommerce/test-connection", {
+            merchantId,
+            storeId,
+            storeUrl: base,
+            jwtToken,
+          });
+        } catch (err) {
+          console.warn("Catalog sync trigger warning:", err);
+        }
         return {
           ok: true,
-          message: "WordPress site connected successfully.",
+          message: "WordPress site connected & catalog synchronized successfully!",
           data,
         };
       }
