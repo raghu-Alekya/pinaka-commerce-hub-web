@@ -19,14 +19,13 @@ export function getWordpressAuthHeader(storeId) {
 }
 
 export async function saveWordpressConnector(storeId, merchantId, values) {
-  const targetStore = storeId || "STR-50069";
-  const targetMerchant = merchantId || "MER-976045";
+  if (!storeId) throw new Error("Store ID is required");
   const siteUrl = String(values.siteUrl || "").replace(/\/+$/, "");
   const jwtToken = String(values.jwtToken || "").trim();
 
   const payload = {
-    storeId: targetStore,
-    merchantId: targetMerchant,
+    storeId,
+    merchantId: merchantId || "",
     siteUrl,
     jwtToken,
     savedAt: new Date().toISOString(),
@@ -36,84 +35,79 @@ export async function saveWordpressConnector(storeId, merchantId, values) {
   };
 
   const body = {
-    storeId: targetStore,
-    merchantId: targetMerchant,
+    storeId,
+    merchantId,
     wordpressUrl: siteUrl,
     wordpressJwt: jwtToken,
   };
 
-  // 1. Try connector endpoint first: PUT /connector/api/v1/stores/{storeId}/connector
+  // 1. Send dynamic values to PUT /connector/api/v1/stores/{storeId}/connector
   try {
-    await api.put(`/connector/api/v1/stores/${targetStore}/connector`, body);
+    await api.put(`/connector/api/v1/stores/${storeId}/connector`, body);
     payload.syncedToApi = true;
   } catch (err) {
     try {
-      await api.put(endpoints.storeConnector(targetStore), body);
+      await api.put(endpoints.storeConnector(storeId), body);
       payload.syncedToApi = true;
     } catch {
       payload.syncedToApi = false;
     }
   }
 
-  localStorage.setItem(storageKey(targetStore), JSON.stringify(payload));
+  localStorage.setItem(storageKey(storeId), JSON.stringify(payload));
   return payload;
 }
 
 export async function testWordpressConnection(siteUrl, jwtToken, storeId, merchantId) {
   const base = String(siteUrl || "").replace(/\/+$/, "");
-  if (!base || !jwtToken) {
+  const token = String(jwtToken || "").trim();
+  if (!base || !token) {
     throw new Error("WordPress site URL and JWT token are required.");
   }
+  if (!storeId) {
+    throw new Error("Store ID is required.");
+  }
 
-  const targetStore = storeId || "STR-50069";
-  const targetMerchant = merchantId || "MER-976045";
+  const payload = {
+    storeId,
+    merchantId,
+    wordpressUrl: base,
+    wordpressJwt: token,
+  };
 
-  // Step 1: PUT /connector/api/v1/stores/{storeId}/connector
-  let connectorSaved = false;
+  // Step 1: PUT /connector/api/v1/stores/{storeId}/connector with dynamic fields
   try {
-    await api.put(`/connector/api/v1/stores/${targetStore}/connector`, {
-      storeId: targetStore,
-      merchantId: targetMerchant,
-      wordpressUrl: base,
-      wordpressJwt: jwtToken,
-    });
-    connectorSaved = true;
+    await api.put(`/connector/api/v1/stores/${storeId}/connector`, payload);
   } catch (putErr) {
     console.warn("PUT /connector/api/v1/stores fallback attempt:", putErr?.message);
     try {
-      await api.put(endpoints.storeConnector(targetStore), {
-        storeId: targetStore,
-        merchantId: targetMerchant,
-        wordpressUrl: base,
-        wordpressJwt: jwtToken,
-      });
-      connectorSaved = true;
+      await api.put(endpoints.storeConnector(storeId), payload);
     } catch {
-      // Ignore if offline
+      // Continue to test-connection
     }
   }
 
-  // Step 2: Trigger backend live catalog synchronization
+  // Step 2: Trigger WooCommerce test-connection & live sync into product table
   try {
     const result = await api.post("/connectors/woocommerce/test-connection", {
-      merchantId: targetMerchant,
-      storeId: targetStore,
+      merchantId,
+      storeId,
       storeUrl: base,
-      jwtToken,
+      jwtToken: token,
     });
 
     return {
       ok: true,
-      message: result?.message || `WordPress connected & catalog synchronized successfully! Synced ${result?.syncedProductsCount || 10} products into database.`,
+      message: result?.message || `WordPress connected & catalog synchronized successfully! Synced ${result?.syncedProductsCount || 0} products into database.`,
       data: result,
     };
   } catch (err) {
     try {
       const fallbackResult = await api.post("/api/v1/connectors/woocommerce/test-connection", {
-        merchantId: targetMerchant,
-        storeId: targetStore,
+        merchantId,
+        storeId,
         storeUrl: base,
-        jwtToken,
+        jwtToken: token,
       });
       return {
         ok: true,
