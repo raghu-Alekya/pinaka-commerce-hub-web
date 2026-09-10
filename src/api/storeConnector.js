@@ -41,14 +41,16 @@ export async function saveWordpressConnector(storeId, merchantId, values) {
     wordpressJwt: jwtToken,
   };
 
-  // 1. Send dynamic values to PUT /connector/api/v1/stores/{storeId}/connector
+  // Single dynamic PUT request to save & connect
   try {
-    await api.put(`/connector/api/v1/stores/${storeId}/connector`, body);
+    const result = await api.put(`/connector/api/v1/stores/${storeId}/connector`, body);
     payload.syncedToApi = true;
+    payload.lastTestMessage = result?.message || payload.lastTestMessage;
   } catch (err) {
     try {
-      await api.put(endpoints.storeConnector(storeId), body);
+      const fallbackResult = await api.put(endpoints.storeConnector(storeId), body);
       payload.syncedToApi = true;
+      payload.lastTestMessage = fallbackResult?.message || payload.lastTestMessage;
     } catch {
       payload.syncedToApi = false;
     }
@@ -75,40 +77,18 @@ export async function testWordpressConnection(siteUrl, jwtToken, storeId, mercha
     wordpressJwt: token,
   };
 
-  // Step 1: PUT /connector/api/v1/stores/{storeId}/connector with dynamic fields
+  // Exclusively execute PUT /connector/api/v1/stores/{storeId}/connector (No /connectors/woocommerce/test-connection call)
   try {
-    await api.put(`/connector/api/v1/stores/${storeId}/connector`, payload);
-  } catch (putErr) {
-    console.warn("PUT /connector/api/v1/stores fallback attempt:", putErr?.message);
-    try {
-      await api.put(endpoints.storeConnector(storeId), payload);
-    } catch {
-      // Continue to test-connection
-    }
-  }
-
-  // Step 2: Trigger WooCommerce test-connection & live sync into product table
-  try {
-    const result = await api.post("/connectors/woocommerce/test-connection", {
-      merchantId,
-      storeId,
-      storeUrl: base,
-      jwtToken: token,
-    });
-
+    const result = await api.put(`/connector/api/v1/stores/${storeId}/connector`, payload);
     return {
       ok: true,
       message: result?.message || `WordPress connected & catalog synchronized successfully! Synced ${result?.syncedProductsCount || 0} products into database.`,
       data: result,
     };
   } catch (err) {
+    // Fallback to /api/v1/stores/{storeId}/connector if /connector/ prefix is not routed
     try {
-      const fallbackResult = await api.post("/api/v1/connectors/woocommerce/test-connection", {
-        merchantId,
-        storeId,
-        storeUrl: base,
-        jwtToken: token,
-      });
+      const fallbackResult = await api.put(endpoints.storeConnector(storeId), payload);
       return {
         ok: true,
         message: fallbackResult?.message || `WordPress connected & catalog synchronized successfully!`,
@@ -117,7 +97,7 @@ export async function testWordpressConnection(siteUrl, jwtToken, storeId, mercha
     } catch (fallbackErr) {
       return {
         ok: false,
-        message: err.message || fallbackErr.message || "Failed to connect to WooCommerce backend.",
+        message: err.message || fallbackErr.message || "Failed to connect to WordPress connector.",
       };
     }
   }
