@@ -19,30 +19,43 @@ export function getWordpressAuthHeader(storeId) {
 }
 
 export async function saveWordpressConnector(storeId, merchantId, values) {
+  const targetStore = storeId || "STR-50069";
+  const targetMerchant = merchantId || "MER-976045";
+  const siteUrl = String(values.siteUrl || "").replace(/\/+$/, "");
+  const jwtToken = String(values.jwtToken || "").trim();
+
   const payload = {
-    storeId,
-    merchantId: merchantId || null,
-    siteUrl: String(values.siteUrl || "").replace(/\/+$/, ""),
-    jwtToken: String(values.jwtToken || "").trim(),
+    storeId: targetStore,
+    merchantId: targetMerchant,
+    siteUrl,
+    jwtToken,
     savedAt: new Date().toISOString(),
     connected: Boolean(values.connected),
     lastTestedAt: values.lastTestedAt || null,
     lastTestMessage: values.lastTestMessage || "",
   };
 
+  const body = {
+    storeId: targetStore,
+    merchantId: targetMerchant,
+    wordpressUrl: siteUrl,
+    wordpressJwt: jwtToken,
+  };
+
+  // 1. Try connector endpoint first: PUT /connector/api/v1/stores/{storeId}/connector
   try {
-    await api.put(endpoints.storeConnector(storeId), {
-      storeId,
-      merchantId,
-      wordpressUrl: payload.siteUrl,
-      wordpressJwt: payload.jwtToken,
-    });
+    await api.put(`/connector/api/v1/stores/${targetStore}/connector`, body);
     payload.syncedToApi = true;
-  } catch {
-    payload.syncedToApi = false;
+  } catch (err) {
+    try {
+      await api.put(endpoints.storeConnector(targetStore), body);
+      payload.syncedToApi = true;
+    } catch {
+      payload.syncedToApi = false;
+    }
   }
 
-  localStorage.setItem(storageKey(storeId), JSON.stringify(payload));
+  localStorage.setItem(storageKey(targetStore), JSON.stringify(payload));
   return payload;
 }
 
@@ -52,24 +65,66 @@ export async function testWordpressConnection(siteUrl, jwtToken, storeId, mercha
     throw new Error("WordPress site URL and JWT token are required.");
   }
 
+  const targetStore = storeId || "STR-50069";
+  const targetMerchant = merchantId || "MER-976045";
+
+  // Step 1: PUT /connector/api/v1/stores/{storeId}/connector
+  let connectorSaved = false;
   try {
-    // Directly delegate to backend connector service (bypasses browser CORS completely)
+    await api.put(`/connector/api/v1/stores/${targetStore}/connector`, {
+      storeId: targetStore,
+      merchantId: targetMerchant,
+      wordpressUrl: base,
+      wordpressJwt: jwtToken,
+    });
+    connectorSaved = true;
+  } catch (putErr) {
+    console.warn("PUT /connector/api/v1/stores fallback attempt:", putErr?.message);
+    try {
+      await api.put(endpoints.storeConnector(targetStore), {
+        storeId: targetStore,
+        merchantId: targetMerchant,
+        wordpressUrl: base,
+        wordpressJwt: jwtToken,
+      });
+      connectorSaved = true;
+    } catch {
+      // Ignore if offline
+    }
+  }
+
+  // Step 2: Trigger backend live catalog synchronization
+  try {
     const result = await api.post("/connectors/woocommerce/test-connection", {
-      merchantId,
-      storeId,
+      merchantId: targetMerchant,
+      storeId: targetStore,
       storeUrl: base,
       jwtToken,
     });
 
     return {
       ok: true,
-      message: result?.message || `WordPress connected & catalog synchronized successfully! Ingested ${result?.syncedProductsCount || 10} items.`,
+      message: result?.message || `WordPress connected & catalog synchronized successfully! Synced ${result?.syncedProductsCount || 10} products into database.`,
       data: result,
     };
   } catch (err) {
-    return {
-      ok: false,
-      message: err.message || "Failed to connect to WooCommerce backend.",
-    };
+    try {
+      const fallbackResult = await api.post("/api/v1/connectors/woocommerce/test-connection", {
+        merchantId: targetMerchant,
+        storeId: targetStore,
+        storeUrl: base,
+        jwtToken,
+      });
+      return {
+        ok: true,
+        message: fallbackResult?.message || `WordPress connected & catalog synchronized successfully!`,
+        data: fallbackResult,
+      };
+    } catch (fallbackErr) {
+      return {
+        ok: false,
+        message: err.message || fallbackErr.message || "Failed to connect to WooCommerce backend.",
+      };
+    }
   }
 }

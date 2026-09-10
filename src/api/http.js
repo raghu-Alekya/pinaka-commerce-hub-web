@@ -12,7 +12,11 @@ export class ApiError extends Error {
 }
 
 function buildUrl(path) {
+  if (/^https?:\/\//i.test(path)) return path;
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  if (normalizedPath.startsWith("/connector/") || normalizedPath.startsWith("/connectors/")) {
+    return normalizedPath;
+  }
   return `${API_BASE_URL}${normalizedPath}`;
 }
 
