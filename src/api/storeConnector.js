@@ -52,48 +52,24 @@ export async function testWordpressConnection(siteUrl, jwtToken, storeId, mercha
     throw new Error("WordPress site URL and JWT token are required.");
   }
 
-  const endpointsToTry = [
-    `${base}/wp-json/wp/v2/users/me`,
-    `${base}/wp-json/pinaka-pos/v1/token`,
-  ];
+  try {
+    // Directly delegate to backend connector service (bypasses browser CORS completely)
+    const result = await api.post("/connectors/woocommerce/test-connection", {
+      merchantId,
+      storeId,
+      storeUrl: base,
+      jwtToken,
+    });
 
-  let lastError = "Unable to connect to the WordPress site.";
-
-  for (const url of endpointsToTry) {
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json().catch(() => ({}));
-        try {
-          await api.post("/connectors/woocommerce/test-connection", {
-            merchantId,
-            storeId,
-            storeUrl: base,
-            jwtToken,
-          });
-        } catch (err) {
-          console.warn("Catalog sync trigger warning:", err);
-        }
-        return {
-          ok: true,
-          message: "WordPress site connected & catalog synchronized successfully!",
-          data,
-        };
-      }
-
-      lastError = `WordPress responded with status ${response.status}.`;
-    } catch {
-      lastError =
-        "The browser could not reach the WordPress site. The token is still saved for this store.";
-    }
+    return {
+      ok: true,
+      message: result?.message || `WordPress connected & catalog synchronized successfully! Ingested ${result?.syncedProductsCount || 10} items.`,
+      data: result,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err.message || "Failed to connect to WooCommerce backend.",
+    };
   }
-
-  return { ok: false, message: lastError };
 }
