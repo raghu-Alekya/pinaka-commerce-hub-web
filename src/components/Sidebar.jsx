@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 const sections = [
+<<<<<<< Updated upstream
     {
         title: "",
         items: [
@@ -36,6 +37,59 @@ const sections = [
             ["/notifications", "bi-bell", "Notifications"]
         ]
     }
+=======
+  {
+    title: "",
+    items: [["/dashboard", "bi-house-fill", "Dashboard"]],
+  },
+  {
+    title: "MANAGE",
+    items: [
+      ["/merchants", "bi-person-badge", "Merchants"],
+      ["/stores", "bi-shop", "Stores"],
+      ["/merchant-subscriptions", "bi-cart3", "Subscriptions"],
+    ],
+  },
+  {
+    title: "MASTER SETUP",
+    items: [
+      [
+        "/master-setup",
+        "bi-sliders",
+        "Master Setup",
+        true,
+        [
+["/store-types/new", "bi-shop", "Store Types"],
+["/features", "bi-grid-1x2", "Features"],          ["/permissions", "bi-shield-check", "Permissions"],
+          ["/role-templates", "bi-person-badge", "Role Templates"],
+          ["/plans/new", "bi-credit-card", "Plans"],
+        
+        ],
+      ],
+    ],
+  },
+  {
+    title: "OPERATIONS",
+    items: [
+      ["/pos-configuration", "bi-cpu", "POS Configuration", true],
+      ["/orders", "bi-receipt", "Orders"],
+      ["/cash-management", "bi-wallet2", "Cash Management"],
+      ["/employees", "bi-people", "Employees", true],
+      ["/devices", "bi-display", "Devices", true],
+      ["/shifts", "bi-clock", "Shifts"],
+      ["/attendance", "bi-person-check", "Attendance"],
+    ],
+  },
+  {
+    title: "INTEGRATIONS",
+    items: [
+      ["/integrations", "bi-diagram-3", "Integrations", true],
+      ["/synchronization", "bi-arrow-repeat", "Synchronization"],
+      ["/reconciliation", "bi-arrow-left-right", "Reconciliation"],
+      ["/notifications", "bi-bell", "Notifications"],
+    ],
+  },
+>>>>>>> Stashed changes
 ];
 
 export default function Sidebar({

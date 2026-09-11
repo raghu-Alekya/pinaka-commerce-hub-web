@@ -14,6 +14,16 @@ import "./styles/add-store.css";
 import "./styles/store-configuration.css";
 import "./styles/login.css";
 import "./styles/legal.css";
+<<<<<<< Updated upstream
+=======
+import "./styles/SubscriptionPlans.css";
+import "./styles/Merchant-subscriptions.css";
+import "./styles/CreateNewSubscription.css";
+import "./styles/ReviewSubscription.css";
+import "./styles/CreateStoreType.css";
+import "./styles/CreatePlan.css";
+
+>>>>>>> Stashed changes
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
