@@ -142,7 +142,45 @@
 
 .token-input {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+}
+
+.token-toggle-btn {
+  width: 100%;
+  min-height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  border: 1px solid #5143bc;
+  border-radius: 8px;
+
+  background: #f7f5ff;
+  color: #5143bc;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.token-toggle-btn i {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.token-toggle-btn:hover {
+  background: #efedff;
+  border-color: #4638ad;
+  color: #4638ad;
+}
+
+.token-toggle-btn:focus-visible {
+  outline: 2px solid #5143bc;
+  outline-offset: 2px;
 }
 
 .store-form-actions {
@@ -237,4 +275,64 @@
   .store-item-actions {
     justify-content: flex-start;
   }
+}
+/* Store configuration back navigation */
+.store-workspace-page .breadcrumb-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+/* Clean back navigation */
+.store-workspace-page .breadcrumb-area .link-button,
+.store-workspace-page .store-workspace-main .link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #5143bc;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  text-decoration: none;
+
+  transition: color 0.2s ease;
+}
+
+.store-workspace-page .breadcrumb-area .link-button:hover,
+.store-workspace-page .store-workspace-main .link-button:hover {
+  color: #3f32a3;
+  text-decoration: underline;
+}
+
+.store-workspace-page .breadcrumb-area .link-button i,
+.store-workspace-page .store-workspace-main .link-button i {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.store-workspace-page .breadcrumb-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.store-workspace-page .breadcrumb-area > span {
+  color: #9aa3b5;
+  font-size: 14px;
+}
+
+.store-workspace-page .store-workspace-main .link-button:hover {
+  background: #f4f3ff;
+  border-color: #5143bc;
+  color: #4638ad;
 }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { listStores } from "../api/stores";
 import { listMerchants } from "../api/merchants";
 import { useReferenceData } from "../api/referenceData";
+
 const title = (value) =>
   String(value || "")
     .toLowerCase()
@@ -17,16 +18,28 @@ const initials = (name) =>
     .map((s) => s[0])
     .join("")
     .toUpperCase();
-function lastSync(value) {
-  if (!value) return "—";
-  const time = new Date(value).getTime();
-  if (!Number.isFinite(time)) return "—";
-  const minutes = Math.max(0, Math.floor((Date.now() - time) / 60000));
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes} mins ago`;
-  if (minutes < 1440) return `${Math.floor(minutes / 60)} hours ago`;
-  return new Date(time).toLocaleDateString();
-}
+
+const merchantNameOf = (store, merchants) => {
+  const merchant = merchants.find(
+    (m) => String(m.id) === String(store.merchantId),
+  );
+  return (
+    store.merchantName ||
+    merchant?.name ||
+    merchant?.merchantName ||
+    store.merchantId ||
+    "—"
+  );
+};
+
+// Static POS device counts for UI display.
+// Update these values when the real POS-device API is connected.
+const staticPosDeviceCounts = {
+  "STR-50069": 3,
+  "STR-50021": 2,
+  "STR-50007": 4,
+  store1: 1,
+};
 export default function Stores() {
   const nav = useNavigate();
   const { data: reference, error: referenceError } = useReferenceData();
@@ -36,9 +49,12 @@ export default function Stores() {
     [merchant, setMerchant] = useState(""),
     [status, setStatus] = useState(""),
     [location, setLocation] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
   const [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
     [version, setVersion] = useState(0);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -64,10 +80,21 @@ export default function Stores() {
     (s) =>
       (!query ||
         `${s.storeName} ${s.id}`.toLowerCase().includes(query.toLowerCase())) &&
-      (!merchant || s.merchantId === merchant) &&
+      (!merchant || String(s.merchantId) === String(merchant)) &&
       (!status || s.status === status) &&
       (!location || locationOf(s) === location),
   );
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * rowsPerPage;
+  const paginatedRows = rows.slice(startIndex, startIndex + rowsPerPage);
+  const showingFrom = rows.length === 0 ? 0 : startIndex + 1;
+  const showingTo = Math.min(startIndex + rowsPerPage, rows.length);
+
+  const goToPage = (page) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
   const activeCount = stores.filter((s) => s.status === "ACTIVE").length;
   const recent = stores.filter(
     (s) => new Date(s.createdAt).getTime() >= Date.now() - 7 * 86400000,
@@ -171,14 +198,20 @@ export default function Stores() {
               aria-label="Search stores"
               placeholder="Search stores..."
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
           <select
             aria-label="Merchant"
             className="filter-select"
             value={merchant}
-            onChange={(e) => setMerchant(e.target.value)}
+            onChange={(e) => {
+              setMerchant(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="">All Merchants</option>
             {merchants.map((m) => (
@@ -191,7 +224,10 @@ export default function Stores() {
             aria-label="Status"
             className="filter-select"
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="">All Status</option>
             {statuses.filter(Boolean).map((s) => (
@@ -204,7 +240,10 @@ export default function Stores() {
             aria-label="Location"
             className="filter-select"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => {
+              setLocation(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="">All Locations</option>
             {[...new Set(stores.map(locationOf).filter(Boolean))]
@@ -220,6 +259,7 @@ export default function Stores() {
               setMerchant("");
               setStatus("");
               setLocation("");
+              setCurrentPage(1);
             }}
           >
             <i className="bi bi-funnel" /> Clear
@@ -240,7 +280,6 @@ export default function Stores() {
                   "LOCATION",
                   "POS DEVICES",
                   "STATUS",
-                  "LAST SYNC",
                   "ACTION",
                 ].map((h) => (
                   <th key={h}>{h}</th>
@@ -250,18 +289,18 @@ export default function Stores() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} role="status">
+                  <td colSpan={6} role="status">
                     Loading stores…
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={7} role="alert">
+                  <td colSpan={6} role="alert">
                     {error}
                   </td>
                 </tr>
-              ) : rows.length ? (
-                rows.map((s) => (
+              ) : paginatedRows.length ? (
+                paginatedRows.map((s) => (
                   <tr key={s.id}>
                     <td>
                       <button
@@ -281,18 +320,11 @@ export default function Stores() {
                       </button>
                     </td>
                     <td>
-                      <button
-                        className="link-button"
-                        onClick={() =>
-                          nav(
-                            `/merchants/${encodeURIComponent(s.merchantId)}/stores`,
-                          )
-                        }
-                      >
-                        {s.merchantName ||
-                          merchants.find((m) => m.id === s.merchantId)?.name ||
-                          s.merchantId}
-                      </button>
+                      <div className="store-cell merchant-name-cell">
+                        <div>
+                          <strong>{merchantNameOf(s, merchants)}</strong>
+                        </div>
+                      </div>
                     </td>
                     <td>
                       <div className="location-cell">
@@ -300,7 +332,9 @@ export default function Stores() {
                         <span>{locationOf(s) || "—"}</span>
                       </div>
                     </td>
-                    <td>{s.deviceCount ?? "—"}</td>
+                    <td>
+                      {staticPosDeviceCounts[s.id] ?? 0}
+                    </td>
                     <td>
                       <span
                         className={`store-status ${String(s.status).toLowerCase()}`}
@@ -308,10 +342,22 @@ export default function Stores() {
                         <i className="bi bi-circle-fill" /> {title(s.status)}
                       </span>
                     </td>
-                    <td>{lastSync(s.lastSyncAt)}</td>
                     <td>
                       <div className="store-item-actions">
+                       <button
+                          type="button"
+                          className="action-btn"
+                          aria-label={`View ${s.storeName}`}
+                          title="View store"
+                          onClick={() =>
+                            nav(`/stores/${encodeURIComponent(s.id)}/configuration`)
+                          }
+                        >
+                          <i className="bi bi-eye" />
+                        </button>
+
                         <button
+                          type="button"
                           className="action-btn"
                           aria-label={`Edit ${s.storeName}`}
                           title="Edit store"
@@ -319,7 +365,17 @@ export default function Stores() {
                             nav(`/stores/${encodeURIComponent(s.id)}/edit`)
                           }
                         >
-                          <i className="bi bi-three-dots" />
+                          <i className="bi bi-pencil" />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="action-btn delete-action-btn"
+                          aria-label={`Delete ${s.storeName}`}
+                          title="Delete store"
+                          onClick={() => setDeleteTarget(s)}
+                        >
+                          <i className="bi bi-trash3" />
                         </button>
                       </div>
                     </td>
@@ -327,13 +383,120 @@ export default function Stores() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7}>No stores found.</td>
+                  <td colSpan={6}>No stores found.</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+
+        <div className="stores-pagination">
+          <div className="pagination-info">
+            Showing <strong>{showingFrom}</strong> to{" "}
+            <strong>{showingTo}</strong> of <strong>{rows.length}</strong>{" "}
+            stores
+          </div>
+
+          <div className="pagination-controls">
+            <button
+              type="button"
+              className="pagination-arrow"
+              aria-label="Previous page"
+              disabled={safeCurrentPage === 1}
+              onClick={() => goToPage(safeCurrentPage - 1)}
+            >
+              <i className="bi bi-chevron-left" />
+            </button>
+
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (page) => (
+                <button
+                  type="button"
+                  key={page}
+                  className={`pagination-page ${page === safeCurrentPage ? "active" : ""
+                    }`}
+                  onClick={() => goToPage(page)}
+                >
+                  {page}
+                </button>
+              ),
+            )}
+
+            <button
+              type="button"
+              className="pagination-arrow"
+              aria-label="Next page"
+              disabled={safeCurrentPage === totalPages}
+              onClick={() => goToPage(safeCurrentPage + 1)}
+            >
+              <i className="bi bi-chevron-right" />
+            </button>
+          </div>
+        </div>
       </div>
+
+     {deleteTarget && (
+  <div
+    className="pch-delete-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="delete-store-title"
+    onClick={(event) => {
+      if (event.target === event.currentTarget) {
+        setDeleteTarget(null);
+      }
+    }}
+  >
+    <div className="pch-delete-modal">
+      <div className="pch-delete-icon" aria-hidden="true">
+        <i className="bi bi-trash3" />
+      </div>
+
+      <h2 id="delete-store-title">Delete Store?</h2>
+
+      <p className="pch-delete-message">
+        Are you sure you want to delete{" "}
+        <strong>
+          {deleteTarget.storeName || deleteTarget.name || "this store"}
+        </strong>
+        ?
+      </p>
+
+      <p className="pch-delete-warning">
+        This action cannot be undone.
+      </p>
+
+      <div className="pch-delete-actions">
+        <button
+          type="button"
+          className="pch-delete-cancel"
+          onClick={() => setDeleteTarget(null)}
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          className="pch-delete-confirm"
+          onClick={() => {
+            const deletedId = String(deleteTarget.id);
+
+            setStores((currentStores) =>
+              currentStores.filter(
+                (store) => String(store.id) !== deletedId
+              )
+            );
+
+            setDeleteTarget(null);
+          }}
+        >
+          Delete Store
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

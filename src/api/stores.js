@@ -16,6 +16,9 @@ export function toStorePayload(store, merchantId) {
     city: store.city,
     state: store.state,
     zip: store.zip,
+    devices: store.devices || [],
+    features: store.features || [],
+    roles: store.roles || [],
   };
 }
 
@@ -59,6 +62,9 @@ export async function getStore(id) {
     city: store.address?.city || "",
     state: store.address?.state || "",
     zip: store.address?.zipCode || "",
+    devices: store.devices || store.registeredDevices || [],
+    features: store.features || store.enabledFeatures || [],
+    roles: store.roles || store.merchantRoles || [],
   };
 }
 export function updateStore(id, store) {
