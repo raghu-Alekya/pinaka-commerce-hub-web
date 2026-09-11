@@ -1,0 +1,522 @@
+.merchant-subscriptions-page {
+  flex: 1;
+  min-height: calc(100vh - 82px);
+  padding: 28px 32px 50px;
+  color: #102a52;
+  background: #f6f7fb;
+}
+
+.merchant-subscriptions-heading {
+  margin-bottom: 25px;
+}
+
+.merchant-subscriptions-heading h1 {
+  margin: 0 0 7px;
+  color: #081d42;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.merchant-subscriptions-heading p {
+  margin: 0;
+  color: #5472a3;
+  font-size: 12px;
+}
+
+.merchant-subscriptions-table-frame {
+  overflow: hidden;
+  border: 1px solid #e1eaf4;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.merchant-subscriptions-table {
+  overflow-x: auto;
+}
+
+.merchant-subscription-row {
+  display: grid;
+  min-width: 1280px;
+  min-height: 90px;
+  grid-template-columns: 2.3fr 1fr 1.4fr 1.4fr 1.3fr 1.3fr 0.8fr 0.8fr 1fr;
+  align-items: center;
+  gap: 5px;
+  padding: 0 22px;
+  border-bottom: 1px solid #e5edf5;
+  color: #173a66;
+  font-size: 12px;
+}
+
+.merchant-subscription-row:last-child {
+  border-bottom: 0;
+}
+
+.merchant-subscription-row-head {
+  min-height: 50px;
+  color: #36598a;
+  background: linear-gradient(180deg, #f8fbff, #f5f9fd);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.merchant-subscription-merchant {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.merchant-store-id {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.merchant-subscription-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 12px;
+  color: #1474f5;
+  background: #e7f2ff;
+  font-size: 20px;
+}
+
+.merchant-subscription-merchant strong,
+.merchant-subscription-merchant span {
+  display: block;
+}
+
+.merchant-subscription-merchant strong {
+  margin-bottom: 7px;
+  color: #091d40;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.merchant-subscription-merchant span {
+  color: #6c89b3;
+  font-size: 14px;
+}
+
+.merchant-subscription-status {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: 18px;
+  color: #09ae70;
+  background: #e3faef;
+  font-weight: 600;
+}
+
+.merchant-subscription-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.merchant-subscription-status-expired {
+  color: #fa2d5c;
+  background: #ffe7ed;
+}
+
+.merchant-subscription-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.merchant-subscription-actions-heading {
+  text-align: center;
+}
+
+.merchant-subscription-menu-button {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #385e91;
+  background: #f4f8fc;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.merchant-subscription-menu-button:hover {
+  color: #fff;
+  background: #684ee8;
+}
+
+.merchant-subscription-menu {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  z-index: 10;
+  display: grid;
+  width: 175px;
+  padding: 5px;
+  border: 1px solid #e1eaf4;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(19, 52, 94, 0.16);
+}
+
+.merchant-subscription-menu button {
+  padding: 10px;
+  border: 0;
+  border-radius: 5px;
+  color: #18375f;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.merchant-subscription-menu button:hover {
+  color: #684ee8;
+  background: #f1edff;
+}
+
+.merchant-subscription-toast {
+  position: fixed;
+  right: 28px;
+  bottom: 26px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  color: #fff;
+  background: #102a54;
+  box-shadow: 0 12px 28px rgba(10, 30, 65, 0.2);
+}
+
+.merchant-subscription-toast button {
+  border: 0;
+  color: #fff;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  .merchant-subscriptions-page {
+    padding: 22px 16px;
+  }
+
+  .merchant-subscriptions-heading h1 {
+    font-size: 25px;
+  }
+
+  .merchant-subscriptions-heading p {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.merchant-subscription-menu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.merchant-subscription-delete-action {
+  color: #ef3b5c !important;
+}
+
+.merchant-subscription-delete-action:hover {
+  color: #dc2046 !important;
+  background: #fff0f3 !important;
+}
+
+.merchant-subscription-empty {
+  padding: 55px 20px;
+  color: #6783aa;
+  text-align: center;
+  font-size: 16px;
+}
+
+.delete-subscription-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(6, 24, 55, 0.48);
+}
+
+.delete-subscription-modal {
+  width: min(100%, 410px);
+  padding: 30px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(4, 28, 64, 0.28);
+  text-align: center;
+}
+
+.delete-subscription-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  color: #ef3b5c;
+  background: #ffe9ee;
+  font-size: 26px;
+}
+
+.delete-subscription-modal h2 {
+  margin: 0 0 10px;
+  color: #10254a;
+  font-size: 22px;
+}
+
+.delete-subscription-modal p {
+  margin: 0;
+  color: #5b78a9;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.delete-subscription-modal p strong {
+  color: #173761;
+}
+
+.delete-subscription-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.delete-keep-button,
+.delete-confirm-button {
+  height: 43px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delete-keep-button {
+  border: 1.5px solid #0873f9;
+  color: #0873f9;
+  background: #fff;
+}
+
+.delete-confirm-button {
+  border: 0;
+  color: #fff;
+  background: #ef3b5c;
+}
+
+.delete-confirm-button:hover {
+  background: #d92649;
+}
+
+.merchant-subscription-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.merchant-subscription-actions-heading {
+  text-align: right;
+}
+
+.merchant-subscription-icon-action {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  color: #5273a5;
+  background: #f4f8fc;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.merchant-subscription-edit-action:hover {
+  color: #0873f9;
+  background: #e7f2ff;
+}
+
+.merchant-subscription-delete-action {
+  color: #ef3b5c !important;
+}
+
+.merchant-subscription-delete-action:hover {
+  color: #dc2046 !important;
+  background: #fff0f3 !important;
+}
+
+.merchant-subscription-filter-card {
+  margin-bottom: 20px;
+  padding: 14px;
+  border: 1px solid #e0eaf5;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.merchant-filter-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.merchant-filter-card-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #10254a;
+}
+
+.merchant-filter-card-heading > div i {
+  color: #0873f9;
+  font-size: 17px;
+}
+
+.merchant-filter-card-heading button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  color: #0873f9;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.merchant-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(145px, 1fr));
+  gap: 13px;
+}
+
+.merchant-filter-field {
+  display: grid;
+  gap: 7px;
+}
+
+.merchant-filter-field > span {
+  color: #466799;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.merchant-filter-field input,
+.merchant-filter-field select,
+.merchant-filter-input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #d8e5f4;
+  border-radius: 7px;
+  outline: 0;
+  color: #173761;
+  background: #fff;
+  font-size: 13px;
+}
+
+.merchant-filter-field input,
+.merchant-filter-field select {
+  padding: 0 10px;
+}
+
+.merchant-filter-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  color: #6d89b3;
+}
+
+.merchant-filter-input input {
+  height: auto;
+  padding: 0;
+  border: 0;
+}
+
+.merchant-filter-result-count {
+  margin: 14px 0 0;
+  color: #6683ad;
+  font-size: 12px;
+}
+
+.merchant-subscription-actions-heading {
+  text-align: right;
+}
+
+@media (max-width: 1250px) {
+  .merchant-filter-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .merchant-filter-card-heading {
+    align-items: flex-start;
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  .merchant-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.merchant-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(160px, 1fr)) 48px;
+  gap: 16px;
+  align-items: end;
+}
+
+.merchant-filter-reset-icon {
+  width: 48px;
+  height: 48px;
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  align-self: end;
+  margin-bottom: 0;
+}
+
+.merchant-filter-reset-icon:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.merchant-filter-reset-icon i {
+  font-size: 18px;
+  color: #475569;
+}
+
+.merchant-store-id {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.merchant-subscription-merchant {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

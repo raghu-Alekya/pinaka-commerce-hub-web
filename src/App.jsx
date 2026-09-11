@@ -16,6 +16,17 @@ import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
 
+<<<<<<< Updated upstream
+=======
+import Subscriptions from "./pages/SubscriptionPlans";
+import MerchantSubscriptions from "./pages/MerchantSubscriptions";
+import CreateNewSubscription from "./pages/CreateNewSubscription";
+import ReviewSubscription from "./pages/ReviewSubscription";
+
+import CreateStoreType from "./pages/CreateStoreType";
+import CreatePlan from "./pages/CreatePlan";
+
+>>>>>>> Stashed changes
 const placeholders = [
   "Subscriptions",
   "Orders",
@@ -94,6 +105,10 @@ export default function App() {
         />
         <Route path="/users" element={<Users />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
+
+        <Route path="/plans/new" element={<CreatePlan />} />
+
+        <Route path="/plans/new" element={<CreatePlan />} />
 
         {placeholders.map((title) => {
           const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;
