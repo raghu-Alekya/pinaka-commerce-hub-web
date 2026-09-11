@@ -62,11 +62,9 @@ a {
     left: 0;
     top: 0;
 
-    background: linear-gradient(
-        180deg,
-        #0b1837 0%,
-        #071832 100%
-    );
+    background: linear-gradient(180deg,
+            #0b1837 0%,
+            #071832 100%);
 
     color: #fff;
 
@@ -719,7 +717,7 @@ a {
     min-width: 0;
 }
 
-.stat-content > span {
+.stat-content>span {
     color: #596276;
 
     font-size: 12px;
@@ -729,7 +727,7 @@ a {
     white-space: nowrap;
 }
 
-.stat-content > strong {
+.stat-content>strong {
     font-size: 16px;
 
     color: #1c2741;
@@ -737,7 +735,7 @@ a {
     line-height: 1.1;
 }
 
-.stat-content > small {
+.stat-content>small {
     font-size: 8px;
 
     margin-top: 4px;
@@ -776,7 +774,7 @@ a {
     overflow: hidden;
 }
 
-.progress > div {
+.progress>div {
     height: 100%;
 
     background: #35a467;
@@ -784,7 +782,7 @@ a {
     border-radius: 5px;
 }
 
-.red-progress > div {
+.red-progress>div {
     background: #df5964;
 }
 
@@ -1060,7 +1058,7 @@ a {
     color: #d75c65;
 }
 
-.merchant-name > div:last-child {
+.merchant-name>div:last-child {
     display: flex;
 
     flex-direction: column;
@@ -1203,6 +1201,23 @@ a {
     background: #eef0f3;
 
     color: #858d9d;
+}
+
+.location-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: left;
+}
+
+.location-info strong {
+    font-weight: 600;
+    color: #263552;
+}
+
+.location-info span {
+    font-size: 12px;
+    color: #7c8495;
 }
 
 
@@ -1436,6 +1451,83 @@ a {
     color: #5143bc;
 }
 
+dialog.merchant-delete-dialog {
+    position: fixed;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    width: min(480px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    margin: 0;
+    border: 1px solid #e1e4eb;
+    border-radius: 12px;
+    padding: 24px;
+    background: #fff;
+    box-shadow: 0 18px 60px rgba(23, 35, 62, .22);
+}
+
+dialog.merchant-delete-dialog::backdrop {
+    background: rgba(23, 35, 62, .42);
+}
+
+.merchant-table th,
+.merchant-table td {
+    text-align: left !important;
+    vertical-align: middle
+}
+
+.merchant-table th:last-child,
+.merchant-table td:last-child {
+    text-align: left !important
+}
+
+.merchant-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    border-top: 1px solid #edf0f4;
+    color: #697285;
+    font-size: 13px
+}
+
+.merchant-pagination>div {
+    display: flex;
+    gap: 6px;
+    align-items: center
+}
+
+.merchant-pagination button {
+    border: 1px solid #dfe3ea;
+    background: #fff;
+    border-radius: 6px;
+    padding: 7px 11px;
+    color: #3c465a;
+    cursor: pointer
+}
+
+.merchant-pagination button.active {
+    background: #5143bc;
+    border-color: #5143bc;
+    color: #fff
+}
+
+.merchant-pagination button:disabled {
+    opacity: .5;
+    cursor: not-allowed
+}
+
+@media(max-width:700px) {
+    .merchant-pagination {
+        align-items: flex-start;
+        flex-direction: column
+    }
+
+    .merchant-pagination>div {
+        flex-wrap: wrap
+    }
+}
+
 
 /* =========================================================
    SIDEBAR COLLAPSED
@@ -1550,6 +1642,7 @@ a {
 
         width: 100%;
     }
+    
 
     .global-search {
         width: 250px;
@@ -1684,4 +1777,37 @@ a {
         flex: none;
     }
 
+}
+/* Append to the END of src/styles/merchants.css. */
+/* Scoped to the merchant list; onboarding and store pages keep their spacing. */
+.page-content:has(> .merchant-table-card) {
+  padding: 8px 16px 0;
+}
+.page-content:has(> .merchant-table-card) > .page-header {
+  margin-bottom: 8px;
+}
+.page-content:has(> .merchant-table-card) > .stats-grid {
+  --bs-gutter-x: 10px;
+  --bs-gutter-y: 10px;
+  margin-bottom: 10px;
+}
+.page-content:has(> .merchant-table-card) .stat-card {
+  min-height: 88px;
+  padding: 10px;
+}
+.page-content > .merchant-table-card {
+  margin-bottom: 8px;
+}
+.merchant-table-card > .filter-bar {
+  min-height: 48px;
+  padding: 8px 10px;
+  gap: 6px;
+}
+.merchant-table-card > .merchant-pagination {
+  padding: 10px 12px;
+}
+@media (max-width: 600px) {
+  .page-content:has(> .merchant-table-card) {
+    padding: 8px 10px 0;
+  }
 }

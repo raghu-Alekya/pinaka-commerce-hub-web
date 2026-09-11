@@ -156,7 +156,11 @@
 }
 
 .employee-form-grid.three-columns {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+  margin-top: 16px;
 }
 
 /* =========================================================
@@ -259,48 +263,62 @@
   color: #304b6c;
   pointer-events: none;
 }
-
 /* =========================================================
    PHONE
 ========================================================= */
 
-.phone-input {
-  height: 42px;
-
-  display: flex;
-
-  border: 1px solid #d7e1ed;
-  border-radius: 6px;
-
-  overflow: hidden;
+.employee-phone-field {
+  min-width: 0;
 }
 
-.country-code {
-  width: 84px;
-  min-width: 84px;
+.employee-phone-field .react-tel-input {
+  width: 100%;
+  height: 42px;
+  position: relative;
+}
 
-  padding: 0 11px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  border-right: 1px solid #d7e1ed;
-
+.employee-phone-field .react-tel-input .form-control {
+  width: 100%;
+  height: 42px !important;
+  padding-left: 82px !important;
+  box-sizing: border-box;
+  border: 1px solid #d7e1ed;
+  border-radius: 6px;
+  background: #fff;
   color: #304b6c;
+  font-family: inherit;
   font-size: 13px;
 }
 
-.phone-input input {
+.employee-phone-field .react-tel-input .flag-dropdown {
+  width: 70px !important;
+  height: 40px !important;
+  top: 1px;
+  left: 1px;
   border: none;
-  border-radius: 0;
-  height: 40px;
+  border-right: 1px solid #d7e1ed;
+  border-radius: 5px 0 0 5px;
+  background: #fff;
 }
 
-.phone-input input:focus {
-  box-shadow: none;
+.employee-phone-field .react-tel-input .selected-flag {
+  width: 70px !important;
+  height: 40px !important;
+  padding-left: 12px;
+  border-radius: 5px 0 0 5px;
+  box-sizing: border-box;
 }
 
+.employee-phone-field .react-tel-input .country-list {
+  width: 300px;
+  max-height: 260px;
+  border-radius: 8px;
+}
+
+.employee-phone-field .react-tel-input .form-control:focus {
+  border-color: #7256df;
+  box-shadow: 0 0 0 2px rgba(101, 69, 218, 0.08);
+}
 /* =========================================================
    DATE
 ========================================================= */
@@ -563,9 +581,10 @@
     padding: 15px;
   }
 
-  .employee-form-grid {
-    gap: 13px;
-  }
+.employee-form-grid {
+  display: grid;
+  gap: 10px 18px;
+}
 
 
 
@@ -625,4 +644,26 @@
   .employee-form-actions {
     padding: 0 12px;
   }
+}
+/* Fix Personal Information row alignment */
+.employee-form-grid.two-columns {
+  row-gap: 14px;
+}
+
+.employee-phone-field {
+  height: 65px;
+}
+
+.employee-phone-field .react-tel-input {
+  height: 42px !important;
+  margin: 0 !important;
+}
+
+.employee-phone-field .react-tel-input .form-control {
+  height: 42px !important;
+}
+
+.employee-phone-field .react-tel-input .flag-dropdown,
+.employee-phone-field .react-tel-input .selected-flag {
+  height: 40px !important;
 }

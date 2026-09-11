@@ -17,7 +17,7 @@ import { stores as mockStores } from "../data/data";
 const navItems = [
   ["website", "bi-globe2", "Website Connection"],
   ["overview", "bi-shop", "Store Overview"],
-  ["details", "bi-pencil-square", "Store Details"],
+  // ["details", "bi-pencil-square", "Store Details"],
   ["users", "bi-people", "Users"],
   ["pos", "bi-phone", "POS Settings"],
   ["products", "bi-box-seam", "Products"],
@@ -357,10 +357,11 @@ export default function StoreConfiguration() {
                         />
                         <button
                           type="button"
-                          className="link-button"
+                          className="token-toggle-btn"
                           onClick={() => setShowToken((current) => !current)}
                         >
-                          {showToken ? "Hide token" : "Show token"}
+                          <i className={`bi ${showToken ? "bi-eye-slash" : "bi-eye"}`} />
+                          {showToken ? "Hide Token" : "Show Token"}
                         </button>
                       </div>
                     </label>
