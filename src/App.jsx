@@ -108,6 +108,8 @@ export default function App() {
 
         <Route path="/plans/new" element={<CreatePlan />} />
 
+        <Route path="/plans/new" element={<CreatePlan />} />
+
         {placeholders.map((title) => {
           const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;
           return (
