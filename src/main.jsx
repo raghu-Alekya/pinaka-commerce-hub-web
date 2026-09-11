@@ -1,8 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+
 import App from "./App";
 import { AuthProvider } from "./auth/AuthContext";
+
 import "./styles/global.css";
 import "./styles/merchants.css";
 import "./styles/stores.css";
@@ -14,8 +16,6 @@ import "./styles/add-store.css";
 import "./styles/store-configuration.css";
 import "./styles/login.css";
 import "./styles/legal.css";
-<<<<<<< Updated upstream
-=======
 import "./styles/SubscriptionPlans.css";
 import "./styles/Merchant-subscriptions.css";
 import "./styles/CreateNewSubscription.css";
@@ -23,7 +23,6 @@ import "./styles/ReviewSubscription.css";
 import "./styles/CreateStoreType.css";
 import "./styles/CreatePlan.css";
 
->>>>>>> Stashed changes
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
