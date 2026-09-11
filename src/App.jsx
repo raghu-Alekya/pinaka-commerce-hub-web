@@ -25,6 +25,7 @@ import Coupons from "./pages/Coupons";
 import Orders from "./pages/Orders";
 
 
+
 const placeholders = [
 
   "Orders",
@@ -103,12 +104,19 @@ export default function App() {
           element={<StoreConfiguration />}
         />
         <Route path="/products" element={<Products />} />
-<Route path="/coupons" element={<Coupons />} />
-<Route path="/orders" element={<Orders />} />
+        <Route path="/coupons" element={<Coupons />} />
+        <Route path="/orders" element={<Orders />} />
         <Route
           path="/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
         />
+        import MerchantSubscriptions from "./pages/MerchantSubscriptions";
+
+        <Route
+          path="/merchant-subscriptions"
+          element={<subscriptions />}
+        />
+
         <Route path="/users" element={<Users />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
         <Route path="/employees" element={<Employees />} />

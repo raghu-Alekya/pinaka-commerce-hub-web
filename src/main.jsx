@@ -21,6 +21,8 @@ import "./styles/devices.css";
 import "./styles/add-device.css";
 import "./styles/employees.css";
 import "./styles/add-employee.css";
+import "./styles/Merchant-subscriptions.css";
+
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

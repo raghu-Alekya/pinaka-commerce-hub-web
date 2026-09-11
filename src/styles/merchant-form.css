@@ -895,9 +895,39 @@
 #pch-new .pch-panel>.pch-tablewrap+button{margin:14px 16px;}
 #pch-new .pch-review-details{padding:14px 16px;border-top:1px solid #e6e8ef;}
 #pch-new summary{cursor:pointer;font-size:13px;line-height:1.6;}
-#pch-new .pch-review-
+#pch-new .pch-review-body { padding-top: 12px; }
 #pch-new .pch-rule{gap:16px;overflow-wrap:anywhere;}
 #pch-new .pch-rail-description{display:block;}
 #pch-new .pch-layout,#pch-new main,#pch-new .pch-field{min-width:0;}
 #pch-new button:focus-visible,#pch-new summary:focus-visible{outline:2px solid #5143bc;outline-offset:3px;}
 @media(max-width:600px){#pch-new .pch-panel-heading{align-items:flex-start;flex-wrap:wrap;}#pch-new .pch-context-toolbar>.pch-field{max-width:none;}#pch-new .pch-context-toolbar>button{width:100%;}}
+
+/* Match panel headings to the onboarding typography. */
+#pch-new .pch-panel-heading h2 { font-size: 16px; font-weight: 600; line-height: 1.4; }
+
+/* Add and edit merchant breadcrumb. */
+#pch-new .pch-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 14px;
+  color: #7c8495;
+}
+
+#pch-new .pch-breadcrumb button {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  min-height: auto;
+  width: auto;
+  color: #5143bc;
+  font: inherit;
+  cursor: pointer;
+}
+#pch-new .pch-breadcrumb button:hover { text-decoration: underline; }
+#pch-new .pch-breadcrumb button:focus-visible {
+  outline: 2px solid #5143bc;
+  outline-offset: 4px;
+}
