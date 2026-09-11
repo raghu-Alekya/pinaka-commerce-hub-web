@@ -1,0 +1,968 @@
+/* =========================================================
+   EMPLOYEES PAGE
+   Content only - Sidebar and Header come from AppLayout
+========================================================= */
+
+.employees-page {
+  width: 100%;
+  height: calc(100vh - 64px);
+  min-height: 0;
+  padding: 18px 22px 14px;
+  background: #f5f7fb;
+  overflow: hidden;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.employees-page-header {
+  height: 55px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 13px;
+}
+
+.employees-page-header h1 {
+  margin: 0;
+  color: #142a4b;
+  font-size: 27px;
+  line-height: 31px;
+  font-weight: 750;
+}
+
+.employees-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: #8a9ab0;
+  font-size: 12px;
+}
+
+.employees-breadcrumb strong {
+  color: #385477;
+  font-weight: 500;
+}
+
+.employees-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.employees-add-btn,
+.employees-export-btn {
+  height: 38px;
+  padding: 0 15px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.employees-add-btn {
+  border: none;
+  color: #fff;
+  background: linear-gradient(90deg, #5d35dd, #5b40df);
+  box-shadow: 0 4px 10px rgba(89, 58, 220, 0.2);
+}
+
+.employees-export-btn {
+  color: #294363;
+  background: #fff;
+  border: 1px solid #d8e1ed;
+}
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
+.employees-stats {
+  width: 100%;
+  display: grid;
+
+  /* ALWAYS 5 CARDS ON LAPTOP */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.employees-stat-card {
+  min-width: 0;
+  height: 104px;
+  padding: 14px 12px;
+
+  background: #fff;
+  border: 1px solid #edf0f5;
+  border-radius: 8px;
+
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  overflow: hidden;
+}
+
+.employees-stat-icon {
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+
+  border-radius: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.employees-stat-icon.purple {
+  color: #6041da;
+  background: #eeeaff;
+}
+
+.employees-stat-icon.green {
+  color: #09a969;
+  background: #e4f8ed;
+}
+
+.employees-stat-icon.orange {
+  color: #ef9900;
+  background: #fff2dc;
+}
+
+.employees-stat-icon.red {
+  color: #e63850;
+  background: #ffeaee;
+}
+
+.employees-stat-icon.blue {
+  color: #167ad5;
+  background: #e5f2ff;
+}
+
+.employees-stat-content {
+  min-width: 0;
+}
+
+.employees-stat-title {
+  color: #536b8c;
+  font-size: 11px;
+  line-height: 15px;
+  white-space: nowrap;
+}
+
+.employees-stat-value {
+  color: #152d4e;
+  font-size: 22px;
+  line-height: 25px;
+  font-weight: 750;
+}
+
+.employees-stat-change {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.employees-stat-change.purple,
+.employees-stat-change.green,
+.employees-stat-change.blue {
+  color: #06a866;
+}
+
+.employees-stat-change.orange,
+.employees-stat-change.red {
+  color: #ea354d;
+}
+
+.employees-progress-track {
+  width: 100%;
+  max-width: 110px;
+  height: 6px;
+  margin-top: 5px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #e7ecf3;
+}
+
+.employees-progress-bar {
+  height: 100%;
+  border-radius: 10px;
+}
+
+.employees-progress-bar.green {
+  background: #09aa68;
+}
+
+.employees-progress-bar.orange {
+  background: #f2a000;
+}
+
+.employees-progress-bar.red {
+  background: #eb3a52;
+}
+
+/* =========================================================
+   EMPLOYEE LIST
+========================================================= */
+
+.employees-list-card {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #edf0f5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* =========================================================
+   FILTER BAR
+========================================================= */
+
+.employees-filter-bar {
+  height: 57px;
+  padding: 8px;
+  display: grid;
+
+  /*
+    Search gets more space.
+    Other controls remain compact so everything
+    fits on laptop width.
+  */
+  grid-template-columns:
+    minmax(220px, 1fr)
+    112px
+    112px
+    112px
+    112px
+    150px
+    78px;
+
+  gap: 8px;
+
+  border-bottom: 1px solid #e6ebf2;
+}
+
+.employees-search,
+.employees-select,
+.employees-date,
+.employees-filter-btn {
+  min-width: 0;
+  height: 40px;
+}
+
+.employees-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 0 10px;
+
+  border: 1px solid #d7e0ec;
+  border-radius: 6px;
+
+  color: #4c6584;
+}
+
+.employees-search input {
+  width: 100%;
+  min-width: 0;
+
+  border: none;
+  outline: none;
+
+  font-size: 11px;
+  color: #304b6d;
+  background: transparent;
+}
+
+.employees-search input::placeholder {
+  color: #8999af;
+}
+
+.employees-row-select {
+  position: relative;
+
+  width: 55px;
+  height: 30px;
+
+  border: 1px solid #d8e1ec;
+  border-radius: 5px;
+
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+
+  color: #304a6b;
+}
+
+/* =========================================================
+   FILTER DROPDOWNS
+========================================================= */
+
+.employees-select {
+  position: relative;
+  width: 100%;
+  height: 40px;
+
+  border: 1px solid #d7e0ec;
+  border-radius: 6px;
+
+  background: #ffffff;
+
+  overflow: hidden;
+}
+
+.employees-select select {
+  width: 100%;
+  height: 100%;
+
+  padding: 0 28px 0 11px;
+
+  border: none;
+  outline: none;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background: transparent;
+
+  color: #304a6b;
+  font-family: inherit;
+  font-size: 11px;
+
+  cursor: pointer;
+}
+
+.employees-select select:focus {
+  outline: none;
+}
+
+.employees-select-icon {
+  position: absolute;
+
+  right: 9px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: #304a6b;
+
+  pointer-events: none;
+}
+
+.employees-row-select select {
+  width: 100%;
+  height: 100%;
+
+  padding: 0 20px 0 8px;
+
+  border: none;
+  outline: none;
+
+  appearance: none;
+
+  background: transparent;
+
+  color: #304a6b;
+  font-size: 10px;
+
+  cursor: pointer;
+}
+
+.employees-row-select svg {
+  position: absolute;
+  right: 6px;
+
+  pointer-events: none;
+}
+.employees-pages button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.employees-no-results {
+  height: 120px !important;
+  text-align: center !important;
+  color: #71829a !important;
+  font-size: 13px !important;
+}
+
+.employees-date {
+  padding: 0 9px;
+
+  border: 1px solid #d7e0ec;
+  border-radius: 6px;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #627894;
+  font-size: 11px;
+
+  white-space: nowrap;
+}
+
+.employees-filter-btn {
+  border: 1px solid #d7e0ec;
+  border-radius: 6px;
+
+  background: #fff;
+  color: #304a6b;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.employees-table-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+
+.employees-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+/* Column widths */
+
+.employees-table th:nth-child(1),
+.employees-table td:nth-child(1) {
+  width: 17%;
+}
+
+.employees-table th:nth-child(2),
+.employees-table td:nth-child(2) {
+  width: 17%;
+}
+
+.employees-table th:nth-child(3),
+.employees-table td:nth-child(3) {
+  width: 12%;
+}
+
+.employees-table th:nth-child(4),
+.employees-table td:nth-child(4) {
+  width: 10%;
+}
+
+.employees-table th:nth-child(5),
+.employees-table td:nth-child(5) {
+  width: 10%;
+}
+
+.employees-table th:nth-child(6),
+.employees-table td:nth-child(6) {
+  width: 8%;
+}
+
+.employees-table th:nth-child(7),
+.employees-table td:nth-child(7) {
+  width: 9%;
+}
+
+.employees-table th:nth-child(8),
+.employees-table td:nth-child(8) {
+  width: 10%;
+}
+
+.employees-table th:nth-child(9),
+.employees-table td:nth-child(9) {
+  width: 7%;
+}
+
+.employees-table th {
+  height: 30px;
+  padding: 0 10px;
+
+  background: #fbfcfe;
+  border-bottom: 1px solid #e6ebf2;
+
+  text-align: left;
+
+  color: #526a89;
+  font-size: 8px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.employees-table td {
+  height: 42px;
+  padding: 4px 10px;
+
+  border-bottom: 1px solid #edf0f4;
+
+  color: #344e70;
+  font-size: 9px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   EMPLOYEE
+========================================================= */
+
+.employee-person {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.employee-avatar {
+  width: 27px;
+  height: 27px;
+  min-width: 27px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.employee-avatar.purple {
+  color: #5d3dda;
+  background: #eee9ff;
+}
+
+.employee-avatar.pink {
+  color: #e84b60;
+  background: #ffecef;
+}
+
+.employee-avatar.green {
+  color: #08a469;
+  background: #e4f8ee;
+}
+
+.employee-avatar.orange {
+  color: #ec9b10;
+  background: #fff2da;
+}
+
+.employee-avatar.blue {
+  color: #197ad3;
+  background: #e5f2ff;
+}
+
+.employee-name {
+  margin-bottom: 1px;
+
+  color: #263f60;
+  font-size: 9px;
+  font-weight: 650;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.employee-id {
+  color: #7084a0;
+  font-size: 8px;
+}
+
+/* =========================================================
+   CONTACT
+========================================================= */
+
+.employee-contact {
+  line-height: 1.3;
+
+  color: #405a7c;
+  font-size: 8px;
+
+  overflow: hidden;
+}
+
+.employee-contact div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.employee-contact div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.employee-status {
+  min-width: 38px;
+  height: 18px;
+
+  padding: 0 6px;
+
+  border-radius: 4px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 8px;
+  font-weight: 650;
+}
+
+.employee-status.active {
+  color: #079e60;
+  background: #dcf6e8;
+}
+
+.employee-status.inactive {
+  color: #e9445b;
+  background: #ffe5ea;
+}
+
+/* =========================================================
+   LAST ACTIVE
+========================================================= */
+
+.employee-last-active {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  font-size: 8px;
+}
+
+.employee-last-active span {
+  width: 5px;
+  height: 5px;
+  min-width: 5px;
+
+  border-radius: 50%;
+}
+
+.employee-last-active.green {
+  color: #079e60;
+}
+
+.employee-last-active.red {
+  color: #e84259;
+}
+
+.employee-last-active span {
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+
+  border-radius: 50%;
+}
+
+.employee-last-active.green span {
+  background: #08aa66;
+}
+
+.employee-last-active.red span {
+  background: #e83d55;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.employee-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.employee-actions button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #536b8b;
+  cursor: pointer;
+}
+
+.employee-actions button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.employee-actions button:hover {
+  color: #5b3ddd;
+}
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+.employees-pagination {
+  height: 38px;
+  padding: 0 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.employees-showing {
+  color: #5c7190;
+  font-size: 8px;
+}
+
+.employees-pages {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.employees-pages button {
+  width: 24px;
+  height: 24px;
+
+  border: 1px solid #d8e1ec;
+  border-radius: 4px;
+
+  background: #fff;
+  color: #354e70;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.employees-rows {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  color: #637895;
+  font-size: 8px;
+}
+
+
+
+.employees-pages button.employees-page-active {
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    #613de0,
+    #5337d0
+  );
+
+  border-color: #5d3bd8;
+}
+
+.employees-rows {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #637895;
+  font-size: 10px;
+}
+
+.employees-row-select {
+  width: 55px;
+  height: 30px;
+
+  padding: 0 8px;
+
+  border: 1px solid #d8e1ec;
+  border-radius: 5px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  color: #304a6b;
+}
+
+/* =========================================================
+   LAPTOP WIDTH ADJUSTMENTS
+========================================================= */
+
+/*
+   1366px / 1440px laptops:
+   Keep all five cards and all filters in one row.
+*/
+
+@media (max-width: 1200px) {
+
+  .employees-page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .employees-stats {
+    gap: 7px;
+  }
+
+  .employees-stat-card {
+    padding-left: 9px;
+    padding-right: 9px;
+    gap: 8px;
+  }
+
+  .employees-stat-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+  }
+
+  .employees-stat-title {
+    font-size: 10px;
+  }
+
+  .employees-stat-value {
+    font-size: 20px;
+  }
+
+  .employees-stat-change {
+    font-size: 9px;
+  }
+
+  .employees-filter-bar {
+    grid-template-columns:
+      minmax(180px, 1fr)
+      100px
+      100px
+      100px
+      100px
+      135px
+      70px;
+  }
+
+  .employees-table th {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .employees-table td {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+/*
+   Smaller laptop screens.
+   We still keep the five cards in one row.
+*/
+
+@media (max-width: 1050px) {
+
+  .employees-page {
+    padding: 14px 12px 10px;
+  }
+
+  .employees-page-header {
+    margin-bottom: 9px;
+  }
+
+  .employees-page-header h1 {
+    font-size: 24px;
+  }
+
+  .employees-stats {
+    gap: 5px;
+  }
+
+  .employees-stat-card {
+    height: 94px;
+    padding: 9px 7px;
+    gap: 6px;
+  }
+
+  .employees-stat-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 12px;
+  }
+
+  .employees-stat-icon svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .employees-stat-title {
+    font-size: 9px;
+  }
+
+  .employees-stat-value {
+    font-size: 18px;
+  }
+
+  .employees-stat-change {
+    font-size: 8px;
+  }
+
+  .employees-progress-track {
+    max-width: 80px;
+  }
+
+  .employees-filter-bar {
+    grid-template-columns:
+      minmax(150px, 1fr)
+      88px
+      88px
+      88px
+      88px
+      120px
+      65px;
+
+    gap: 5px;
+  }
+
+  .employees-select,
+  .employees-date,
+  .employees-filter-btn {
+    font-size: 9px;
+  }
+
+  .employees-search input {
+    font-size: 9px;
+  }
+}
+/* =========================================================
+   COMPACT EMPLOYEE TABLE - LAPTOP VIEW
+========================================================= */
+
+.employees-list-card {
+  width: 100%;
+  max-height: none;
+}
+
+.employees-table-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+
+.employees-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}

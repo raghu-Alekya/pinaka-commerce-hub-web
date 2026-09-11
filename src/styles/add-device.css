@@ -1,0 +1,673 @@
+/* =========================================================
+   ADD DEVICE PAGE
+========================================================= */
+
+.add-device-page {
+  width: 100%;
+  min-height: calc(100vh - 64px);
+
+  box-sizing: border-box;
+
+  padding: 18px 24px 24px;
+
+  background: #f5f7fb;
+
+  color: #183354;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.add-device-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 20px;
+}
+
+.add-device-header h1 {
+  margin: 0;
+
+  color: #132d50;
+
+  font-size: 27px;
+  line-height: 32px;
+
+  font-weight: 750;
+}
+
+.add-device-breadcrumb {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-top: 5px;
+
+  color: #8193ad;
+
+  font-size: 12px;
+}
+
+.add-device-breadcrumb strong {
+  color: #405b7d;
+
+  font-weight: 500;
+}
+
+.back-devices-btn {
+  height: 42px;
+
+  padding: 0 17px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  border: 1px solid #d7e1ed;
+
+  border-radius: 6px;
+
+  background: #fff;
+
+  color: #294466;
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+.back-devices-btn:hover {
+  border-color: #6845dc;
+  color: #5c3ddd;
+}
+
+/* =========================================================
+   TWO COLUMN LAYOUT
+========================================================= */
+
+.add-device-layout {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.45fr)
+    minmax(350px, 0.85fr);
+
+  gap: 12px;
+
+  box-sizing: border-box;
+}
+
+.add-device-left,
+.add-device-right {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.device-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 15px;
+
+  background: #fff;
+
+  border: 1px solid #e1e8f1;
+
+  border-radius: 8px;
+}
+
+.device-card-header {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  margin-bottom: 15px;
+}
+
+.device-card-icon {
+  width: 38px;
+  height: 38px;
+
+  min-width: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #eeeaff;
+
+  color: #5d3ddd;
+}
+
+.device-card-header h2 {
+  margin: 0 0 2px;
+
+  color: #183354;
+
+  font-size: 15px;
+
+  font-weight: 700;
+}
+
+.device-card-header p {
+  margin: 0;
+
+  color: #8194ae;
+
+  font-size: 10px;
+}
+
+/* =========================================================
+   FORM GRID
+========================================================= */
+
+.device-form-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 11px 12px;
+}
+
+.device-single-column {
+  display: flex;
+  flex-direction: column;
+
+  gap: 11px;
+}
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+.device-field {
+  min-width: 0;
+
+  position: relative;
+}
+
+.device-field label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #243e60;
+
+  font-size: 10px;
+
+  font-weight: 600;
+}
+
+.required-star {
+  margin-left: 3px;
+
+  color: #ed4052;
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.device-field input,
+.device-field textarea,
+.device-select-wrapper select {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d5e0ed;
+
+  border-radius: 5px;
+
+  background: #fff;
+
+  color: #294668;
+
+  outline: none;
+
+  font-family: inherit;
+
+  font-size: 10px;
+}
+
+.device-field input,
+.device-select-wrapper select {
+  height: 35px;
+
+  padding: 0 10px;
+}
+
+.device-field textarea {
+  min-height: 70px;
+
+  padding: 9px 10px;
+
+  resize: vertical;
+}
+
+.device-field input::placeholder,
+.device-field textarea::placeholder {
+  color: #8ca0b9;
+}
+
+.device-field input:focus,
+.device-field textarea:focus,
+.device-select-wrapper select:focus {
+  border-color: #6744dc;
+
+  box-shadow:
+    0 0 0 2px rgba(103, 68, 220, 0.08);
+}
+
+/* =========================================================
+   SELECT
+========================================================= */
+
+.device-select-wrapper {
+  position: relative;
+
+  width: 100%;
+}
+
+.device-select-wrapper select {
+  appearance: none;
+  -webkit-appearance: none;
+
+  padding-right: 32px;
+
+  cursor: pointer;
+}
+
+.device-select-arrow {
+  position: absolute;
+
+  right: 10px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  pointer-events: none;
+
+  color: #425b79;
+}
+
+/* =========================================================
+   CHECKBOX
+========================================================= */
+
+.device-checkbox {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin-top: 10px;
+
+  color: #344e70;
+
+  font-size: 10px;
+
+  cursor: pointer;
+}
+
+.device-checkbox input {
+  width: 14px;
+  height: 14px;
+
+  margin: 0;
+
+  accent-color: #5d3ddd;
+}
+
+/* =========================================================
+   IMAGE UPLOAD
+========================================================= */
+
+.device-upload-box {
+  min-height: 105px;
+
+  box-sizing: border-box;
+
+  padding: 12px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px dashed #d4ddeb;
+
+  border-radius: 6px;
+
+  background: #fbfcfe;
+
+  cursor: pointer;
+}
+
+.upload-cloud-icon {
+  margin-bottom: 5px;
+
+  color: #647e9f;
+}
+
+.upload-main-text {
+  margin-bottom: 6px;
+
+  color: #6d819d;
+
+  font-size: 9px;
+}
+
+.choose-file-btn {
+  height: 27px;
+
+  padding: 0 14px;
+
+  border: 1px solid #6744dc;
+
+  border-radius: 4px;
+
+  background: #fff;
+
+  color: #5d3ddd;
+
+  font-family: inherit;
+
+  font-size: 9px;
+
+  cursor: pointer;
+}
+
+.upload-hint {
+  margin-top: 5px;
+
+  color: #8b9bb0;
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   UPLOADED IMAGE
+========================================================= */
+
+.uploaded-device-image {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 15px;
+}
+
+.uploaded-device-image img {
+  width: 90px;
+  height: 70px;
+
+  object-fit: cover;
+
+  border-radius: 5px;
+
+  border: 1px solid #dce4ef;
+}
+
+.change-image-btn {
+  height: 30px;
+
+  padding: 0 12px;
+
+  border: 1px solid #6744dc;
+
+  border-radius: 5px;
+
+  background: #fff;
+
+  color: #5d3ddd;
+
+  font-family: inherit;
+
+  font-size: 9px;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   NOTES
+========================================================= */
+
+.notes-counter {
+  position: absolute;
+
+  right: 7px;
+  bottom: 5px;
+
+  color: #91a0b3;
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.add-device-actions {
+  width: 100%;
+
+  margin-top: 14px;
+
+  padding-top: 13px;
+
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  border-top: 1px solid #e2e8f0;
+}
+
+.device-cancel-btn,
+.device-save-btn {
+  height: 39px;
+
+  padding: 0 19px;
+
+  border-radius: 6px;
+
+  font-family: inherit;
+
+  font-size: 11px;
+
+  cursor: pointer;
+}
+
+.device-cancel-btn {
+  border: 1px solid #d6e0ec;
+
+  background: #fff;
+
+  color: #334e70;
+}
+
+.device-save-btn {
+  border: none;
+
+  background: linear-gradient(
+    90deg,
+    #5d3ddd,
+    #6740e5
+  );
+
+  color: #fff;
+
+  box-shadow:
+    0 4px 10px
+    rgba(93, 61, 221, 0.18);
+}
+
+/* =========================================================
+   LAPTOP
+========================================================= */
+
+@media (max-width: 1300px) {
+
+  .add-device-page {
+    padding: 15px 18px 20px;
+  }
+
+  .device-card {
+    padding: 13px;
+  }
+
+  .device-card-header {
+    margin-bottom: 12px;
+  }
+
+  .device-card-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+
+  .device-card-header h2 {
+    font-size: 13px;
+  }
+
+  .device-card-header p {
+    font-size: 9px;
+  }
+
+  .device-field label {
+    font-size: 9px;
+  }
+
+  .device-field input,
+  .device-select-wrapper select {
+    height: 32px;
+
+    font-size: 9px;
+  }
+
+  .device-upload-box {
+    min-height: 94px;
+  }
+
+}
+
+/* =========================================================
+   SMALL LAPTOP
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .add-device-page {
+    padding: 13px 14px 18px;
+  }
+
+  .add-device-layout {
+    grid-template-columns:
+      minmax(0, 1.35fr)
+      minmax(310px, 0.85fr);
+
+    gap: 9px;
+  }
+
+  .add-device-left,
+  .add-device-right {
+    gap: 9px;
+  }
+
+  .device-card {
+    padding: 11px;
+  }
+
+  .device-form-grid {
+    gap: 8px 10px;
+  }
+
+  .device-card-header {
+    gap: 8px;
+  }
+
+  .device-card-icon {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+  }
+
+  .device-card-header h2 {
+    font-size: 12px;
+  }
+
+  .device-card-header p {
+    font-size: 8px;
+  }
+
+  .device-field label {
+    margin-bottom: 4px;
+
+    font-size: 8px;
+  }
+
+  .device-field input,
+  .device-select-wrapper select {
+    height: 30px;
+
+    padding: 0 8px;
+
+    font-size: 8px;
+  }
+
+  .device-field textarea {
+    min-height: 58px;
+
+    font-size: 8px;
+  }
+
+  .device-checkbox {
+    font-size: 8px;
+  }
+
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 800px) {
+
+  .add-device-header {
+    flex-direction: column;
+
+    gap: 12px;
+  }
+
+  .add-device-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .device-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
