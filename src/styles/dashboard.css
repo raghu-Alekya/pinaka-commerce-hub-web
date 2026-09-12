@@ -154,6 +154,8 @@ a {
     transition: 0.2s;
 }
 
+
+
 .menu-item i:first-child {
     width: 20px;
 
@@ -200,6 +202,41 @@ a {
 
 .collapse-btn i {
     margin-right: 8px;
+}
+
+.master-setup-button {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.master-setup-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0 8px 48px;
+}
+
+.master-setup-submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.master-setup-submenu-item:hover,
+.master-setup-submenu-item.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 

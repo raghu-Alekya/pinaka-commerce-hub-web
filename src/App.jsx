@@ -15,18 +15,12 @@ import AddStore from "./pages/AddStore";
 import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
-
-<<<<<<< Updated upstream
-=======
-import Subscriptions from "./pages/SubscriptionPlans";
-import MerchantSubscriptions from "./pages/MerchantSubscriptions";
-import CreateNewSubscription from "./pages/CreateNewSubscription";
-import ReviewSubscription from "./pages/ReviewSubscription";
-
 import CreateStoreType from "./pages/CreateStoreType";
 import CreatePlan from "./pages/CreatePlan";
+import StoreTypeDetails from "./pages/StoreTypeDetails";
+import StoreTypeFeatures from "./pages/StoreTypeFeatures";
+import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 
->>>>>>> Stashed changes
 const placeholders = [
   "Subscriptions",
   "Orders",
@@ -59,13 +53,7 @@ export default function App() {
       <Route path="/privacy" element={<Legal privacy />} />
       <Route path="/terms" element={<Legal />} />
 
-      <Route
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
+      <Route element={<ProtectedRoute>  <AppLayout /> </ProtectedRoute>} >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/merchants" element={<Merchants />} />
@@ -108,7 +96,13 @@ export default function App() {
 
         <Route path="/plans/new" element={<CreatePlan />} />
 
-        <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/store-types/new" element={<CreateStoreType />} />
+
+        <Route path="/store-types/:storeTypeId" element={<StoreTypeDetails />} />
+
+        <Route path="/store-types/:storeTypeId/features" element={<StoreTypeFeatures />} /> 
+
+        <Route path="/store-types/:storeTypeId/role-templates" element={<StoreTypeRoleTemplates />} />     
 
         {placeholders.map((title) => {
           const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;

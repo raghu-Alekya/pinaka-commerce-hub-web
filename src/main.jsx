@@ -16,12 +16,12 @@ import "./styles/add-store.css";
 import "./styles/store-configuration.css";
 import "./styles/login.css";
 import "./styles/legal.css";
-import "./styles/SubscriptionPlans.css";
 import "./styles/Merchant-subscriptions.css";
-import "./styles/CreateNewSubscription.css";
-import "./styles/ReviewSubscription.css";
 import "./styles/CreateStoreType.css";
 import "./styles/CreatePlan.css";
+import "./styles/StoreTypeDetails.css";
+import "./styles/StoreTypeFeatures.css";
+import "./styles/StoreTypeRoleTemplates.css";
 
 
 ReactDOM.createRoot(document.getElementById("root")).render(

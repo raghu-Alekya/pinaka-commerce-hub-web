@@ -564,3 +564,12 @@
     grid-template-columns: 1fr;
   }
 }
+
+.store-type-name-clickable {
+  cursor: pointer;
+}
+
+.store-type-name-clickable:hover strong {
+  color: #0873f9;
+  text-decoration: underline;
+}
