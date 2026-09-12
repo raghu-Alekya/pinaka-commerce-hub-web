@@ -22,6 +22,8 @@ import "./styles/CreatePlan.css";
 import "./styles/StoreTypeDetails.css";
 import "./styles/StoreTypeFeatures.css";
 import "./styles/StoreTypeRoleTemplates.css";
+import "./styles/features.css";
+import "./styles/featurepermissions.css";
 
 
 ReactDOM.createRoot(document.getElementById("root")).render(
