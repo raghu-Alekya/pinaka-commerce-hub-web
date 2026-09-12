@@ -20,6 +20,7 @@ import CreatePlan from "./pages/CreatePlan";
 import StoreTypeDetails from "./pages/StoreTypeDetails";
 import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
+import RoleTemplates from "./pages/Roletemplates";
 
 const placeholders = [
   "Subscriptions",
@@ -95,6 +96,7 @@ export default function App() {
         <Route path="/pos-configuration" element={<PosConfiguration />} />
 
         <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/role-templates" element={<RoleTemplates />} />
 
         <Route path="/store-types/new" element={<CreateStoreType />} />
 
