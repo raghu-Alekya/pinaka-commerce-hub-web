@@ -22,6 +22,7 @@ import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
+import RoleTemplates from "./pages/Roletemplates";
 
 const placeholders = [
   "Subscriptions",
@@ -100,6 +101,7 @@ export default function App() {
         <Route path="/permissions" element={<FeaturePermissions />} />
 
         <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/role-templates" element={<RoleTemplates />} />
 
         <Route path="/store-types/new" element={<CreateStoreType />} />
 
