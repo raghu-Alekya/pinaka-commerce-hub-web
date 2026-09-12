@@ -15,6 +15,16 @@ import AddStore from "./pages/AddStore";
 import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
+<<<<<<< Updated upstream
+=======
+import CreateStoreType from "./pages/CreateStoreType";
+import CreatePlan from "./pages/CreatePlan";
+import StoreTypeDetails from "./pages/StoreTypeDetails";
+import StoreTypeFeatures from "./pages/StoreTypeFeatures";
+import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
+import Features from "./pages/Features";
+import FeaturePermissions from "./pages/FeaturePermissions";
+>>>>>>> Stashed changes
 
 const placeholders = [
   "Subscriptions",
@@ -95,6 +105,22 @@ export default function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
 
+<<<<<<< Updated upstream
+=======
+        <Route path="/features" element={<Features />} />
+        <Route path="/permissions" element={<FeaturePermissions />} />
+
+        <Route path="/plans/new" element={<CreatePlan />} />
+
+        <Route path="/store-types/new" element={<CreateStoreType />} />
+
+        <Route path="/store-types/:storeTypeId" element={<StoreTypeDetails />} />
+
+        <Route path="/store-types/:storeTypeId/features" element={<StoreTypeFeatures />} /> 
+
+        <Route path="/store-types/:storeTypeId/role-templates" element={<StoreTypeRoleTemplates />} />     
+
+>>>>>>> Stashed changes
         {placeholders.map((title) => {
           const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;
           return (
