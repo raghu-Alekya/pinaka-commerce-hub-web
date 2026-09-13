@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import Pagination from "../components/Pagination";
+import Pagination from "../components/pagination";
 import { couponsSeed } from "../data/data";
 import "../styles/coupons.css";
 
