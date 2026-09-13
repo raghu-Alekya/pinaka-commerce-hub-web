@@ -23,6 +23,7 @@ import AddDevice from "./pages/AddDevice";
 import Products from "./pages/Products";
 import Coupons from "./pages/Coupons";
 import Orders from "./pages/Orders";
+import EditEmployee from "./pages/EditEmployee";
 
 
 
@@ -106,11 +107,11 @@ export default function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/coupons" element={<Coupons />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/editemployee" element={<EditEmployee />} />
         <Route
           path="/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
         />
-        import MerchantSubscriptions from "./pages/MerchantSubscriptions";
 
         <Route
           path="/merchant-subscriptions"
@@ -122,7 +123,7 @@ export default function App() {
         <Route path="/employees" element={<Employees />} />
         <Route path="/devices" element={<Devices />} />
         <Route path="/devices/add" element={<AddDevice />} />
-        <Route path="/employees/add" element={<AddEmployee />} />
+        <Route path="/employees/edit" element={<EditEmployee />} />
 
         {placeholders.map((title) => {
           const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;

@@ -591,3 +591,205 @@
 .no-tags {
     color: #a0a8b6;
 }
+/* =========================================================
+   PRODUCTS HEADER ACTIONS
+========================================================= */
+
+.products-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+
+/* =========================================================
+   PRODUCT SYNC BUTTONS
+========================================================= */
+
+.product-sync-btn {
+    height: 42px;
+    padding: 0 16px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    border-radius: 8px;
+    border: 1px solid transparent;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.product-sync-btn i {
+    font-size: 15px;
+}
+
+
+/* FAST IMPORT */
+
+.product-sync-import {
+    background: #6c4cff;
+    color: #ffffff;
+    border-color: #6c4cff;
+}
+
+.product-sync-import:hover:not(:disabled) {
+    background: #5b3fe0;
+    border-color: #5b3fe0;
+    box-shadow: 0 4px 12px rgba(108, 76, 255, 0.20);
+}
+
+
+/* LATEST UPDATES */
+
+.product-sync-update {
+    background: #ffffff;
+    color: #333333;
+    border-color: #dcdcdc;
+}
+
+.product-sync-update:hover:not(:disabled) {
+    background: #f7f7f9;
+    border-color: #c8c8c8;
+}
+
+
+/* DISABLED */
+
+.product-sync-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SYNC SPINNER
+========================================================= */
+
+.sync-spinner {
+    width: 14px;
+    height: 14px;
+
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+
+    border-radius: 50%;
+
+    animation: productSyncSpin 0.7s linear infinite;
+}
+
+@keyframes productSyncSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   SYNC MESSAGE
+========================================================= */
+
+.products-sync-message {
+    margin-top: 14px;
+
+    min-height: 44px;
+    padding: 10px 14px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.products-sync-message i:first-child {
+    font-size: 17px;
+}
+
+.products-sync-message span {
+    flex: 1;
+}
+
+.products-sync-message button {
+    border: none;
+    background: transparent;
+
+    padding: 2px;
+
+    font-size: 18px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.products-sync-message.success {
+    background: #eefaf2;
+    border: 1px solid #ccebd5;
+    color: #247a3b;
+}
+
+.products-sync-message.error {
+    background: #fff1f1;
+    border: 1px solid #f1cccc;
+    color: #b42323;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .products-header {
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .products-header-actions {
+        justify-content: flex-start;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .products-header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .product-sync-btn {
+        width: 100%;
+    }
+
+    .products-store-context {
+        grid-column: 1 / -1;
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .products-header-actions {
+        grid-template-columns: 1fr;
+    }
+
+}

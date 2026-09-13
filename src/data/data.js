@@ -9,22 +9,124 @@ export const merchants = [
  {id:"MER-0008", initials:"GV", name:"Green Valley Stores", email:"hello@greenvalley.com", phone:"+1 (830) 555-0122", stores:3, plan:"Starter", renewal:"Mar 15, 2025", status:"Suspended", joined:"Jun 2, 2024", active:"3 days ago"},
 ]
 export const stores = [
- {id:"ST-00123", initials:"DS", name:"Downtown Store", merchant:"ABC Retail", location:"Dallas, TX", devices:12,status:"Active",sync:"2 mins ago",type:"Retail Store"},
- {id:"ST-00124", initials:"WM", name:"Westside Market", merchant:"XYZ Foods", location:"Austin, TX", devices:8,status:"Active",sync:"5 mins ago",type:"Retail Store"},
- {id:"ST-00125", initials:"SM", name:"Sunshine Mart", merchant:"Sunshine LLC", location:"Houston, TX", devices:6,status:"Offline",sync:"15 mins ago",type:"Retail Store"},
- {id:"ST-00126", initials:"AE", name:"Airport Express", merchant:"ABC Retail", location:"Dallas, TX", devices:4,status:"Active",sync:"8 mins ago",type:"Retail Store"},
- {id:"ST-00127", initials:"LS", name:"Lakeside Store", merchant:"Retail Corp", location:"Plano, TX", devices:5,status:"Syncing",sync:"Syncing now",type:"Retail Store"},
- {id:"ST-00128", initials:"GM", name:"Green Market", merchant:"XYZ Foods", location:"Austin, TX", devices:3,status:"Maintenance",sync:"Yesterday",type:"Retail Store"},
- {id:"STR-0004", initials:"WM", name:"Westside Market", merchant:"Westside Market LLC", location:"Hyderabad, Telangana", devices:8,status:"Active",sync:"5 mins ago",type:"Retail Store"},
- {id:"STR-0005", initials:"WM", name:"Westside Market North", merchant:"Westside Market LLC", location:"Hyderabad, Telangana", devices:5,status:"Active",sync:"8 mins ago",type:"Retail Store"},
-]
+  {
+    id: "ST-00123",
+    initials: "DS",
+    name: "Downtown Store",
+    merchant: "ABC Retail",
+    location: "Dallas, TX",
+    devices: 12,
+    status: "Active",
+    sync: "2 mins ago",
+    type: "Retail Store",
+  },
+
+  {
+    id: "ST-00124",
+    initials: "WM",
+    name: "Westside Market",
+    merchant: "XYZ Foods",
+    location: "Austin, TX",
+    devices: 8,
+    status: "Active",
+    sync: "5 mins ago",
+    type: "Retail Store",
+  },
+
+  // existing stores...
+
+  {
+    id: "STR-0001",
+    initials: "DS",
+    name: "Downtown Main Store",
+    merchant: "Downtown Solutions",
+    location: "Dallas, TX",
+    devices: 12,
+    status: "Active",
+    sync: "2 mins ago",
+    type: "Retail Store",
+  },
+
+  {
+    id: "STR-0002",
+    initials: "DS",
+    name: "Downtown North Store",
+    merchant: "Downtown Solutions",
+    location: "Dallas, TX",
+    devices: 8,
+    status: "Active",
+    sync: "5 mins ago",
+    type: "Retail Store",
+  },
+
+  {
+    id: "STR-0003",
+    initials: "DS",
+    name: "Downtown Airport Store",
+    merchant: "Downtown Solutions",
+    location: "Dallas, TX",
+    devices: 6,
+    status: "Active",
+    sync: "10 mins ago",
+    type: "Retail Store",
+  },
+
+  {
+    id: "STR-0004",
+    initials: "WM",
+    name: "Westside Market",
+    merchant: "Westside Market LLC",
+    location: "Hyderabad, Telangana",
+    devices: 8,
+    status: "Active",
+    sync: "5 mins ago",
+    type: "Retail Store",
+  },
+
+  {
+    id: "STR-0005",
+    initials: "WM",
+    name: "Westside Market North",
+    merchant: "Westside Market LLC",
+    location: "Hyderabad, Telangana",
+    devices: 5,
+    status: "Active",
+    sync: "8 mins ago",
+    type: "Retail Store",
+  },
+];
 export const usersSeed = [
- {id:"USR-0001",storeId:"STR-0004",storeName:"Westside Market",username:"james.wilson",firstName:"James",lastName:"Wilson",role:"Admin",email:"james.wilson@westside.com",phone:"+91 98765 43210",cashboxAccess:true,status:"Active"},
- {id:"USR-0002",storeId:"STR-0004",storeName:"Westside Market",username:"sarah.johnson",firstName:"Sarah",lastName:"Johnson",role:"Manager",email:"sarah.johnson@westside.com",phone:"+91 98765 43211",cashboxAccess:true,status:"Active"},
- {id:"USR-0003",storeId:"STR-0004",storeName:"Westside Market",username:"mike.brown",firstName:"Mike",lastName:"Brown",role:"Cashier",email:"mike.brown@westside.com",phone:"+91 98765 43212",cashboxAccess:true,status:"Active"},
- {id:"USR-0004",storeId:"STR-0005",storeName:"Westside Market North",username:"emma.davis",firstName:"Emma",lastName:"Davis",role:"Shop manager",email:"emma.davis@westside.com",phone:"+91 98765 43213",cashboxAccess:true,status:"Active"},
- {id:"USR-0005",storeId:"STR-0005",storeName:"Westside Market North",username:"alex.miller",firstName:"Alex",lastName:"Miller",role:"Cashier",email:"alex.miller@westside.com",phone:"+91 98765 43214",cashboxAccess:false,status:"Active"},
+    {
+  id: "USR-001",
+  username: "ravi.kumar",
+  firstName: "Ravi",
+  lastName: "Kumar",
+  email: "ravi.kumar@example.com",
+  phone: "+91 90000 00001",
+  merchantName: "Downtown Solutions",
+  status: "Active",
+  profilePhoto: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='96' height='96' rx='48' fill='%23e0e7ff'/%3E%3Ctext x='48' y='60' text-anchor='middle' font-family='Arial' font-size='34' fill='%233730a3'%3ERK%3C/text%3E%3C/svg%3E",
+  merchantId: "MER-0001",
+  storeRoleAssignments: [
+    {
+      storeId: "STR-0001",
+      storeName: "Downtown Main Store",
+      role: "Manager"
+    },
+    {
+      storeId: "STR-0002",
+      storeName: "Downtown North Store",
+      role: "Cashier"
+    },
+    {
+      storeId: "STR-0003",
+      storeName: "Downtown Airport Store",
+      role: "Shopkeeper"
+    }
+  ]
+}
 ]
+
 export const orders = [
  {id:"#ORD-1048",store:"Downtown Store",customer:"Olivia Smith",amount:"$248.00",status:"Completed",time:"2 mins ago"},
  {id:"#ORD-1047",store:"Westside Market",customer:"Daniel Brown",amount:"$128.50",status:"Processing",time:"8 mins ago"},
@@ -353,4 +455,68 @@ export const ordersSeed = [
         totalValue: 25,
         salesChannel: "POS",
     },
+];
+export const storeDevicesSeed = [
+    {
+        id: "DEV-001",
+        name: "POS Terminal 01",
+        deviceId: "POS-001",
+        type: "POS Terminal",
+        status: "Active",
+        updatedAt: "Sep 10, 2026",
+    },
+    {
+        id: "DEV-002",
+        name: "Receipt Printer 01",
+        deviceId: "PRT-001",
+        type: "Printer",
+        status: "Active",
+        updatedAt: "Sep 09, 2026",
+    },
+    {
+        id: "DEV-003",
+        name: "Barcode Scanner 01",
+        deviceId: "SCN-001",
+        type: "Scanner",
+        status: "Inactive",
+        updatedAt: "Sep 08, 2026",
+    },
+];
+export const customersSeed = [
+  {
+    id: "CUS-001",
+    customerId: "CUS-001",
+    name: "John Smith",
+    email: "john.smith@example.com",
+    phone: "+91 98765 43210",
+    type: "Regular",
+    ordersCount: 12,
+    totalSpent: "₹12,450.50",
+    status: "Active",
+    updatedAt: "Sep 10, 2026",
+  },
+  {
+    id: "CUS-002",
+    customerId: "CUS-002",
+    name: "Sarah Johnson",
+    email: "sarah.johnson@example.com",
+    phone: "+91 98765 12345",
+    type: "Regular",
+    ordersCount: 8,
+    totalSpent: "₹8,240.00",
+    status: "Active",
+    updatedAt: "Sep 09, 2026",
+  },
+  {
+    id: "CUS-003",
+    customerId: "CUS-003",
+    name: "Michael Brown",
+    email: "michael.brown@example.com",
+    phone: "+91 99887 66554",
+    type: "Guest",
+    ordersCount: 3,
+    totalSpent: "₹2,850.00",
+    status: "Inactive",
+    updatedAt: "Sep 07, 2026",
+  },
 ];

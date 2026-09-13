@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Pagination from "../components/pagination";
 import { ordersSeed } from "../data/data";
+import "../styles/orders.css";
 
 export default function Orders({
     embedded = false,
@@ -13,15 +15,36 @@ export default function Orders({
     const [salesChannel, setSalesChannel] = useState("");
     const [authorFilter, setAuthorFilter] = useState("");
 
+    // =========================================================
+    // PAGINATION
+    // =========================================================
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    // =========================================================
+    // ORDERS
+    // =========================================================
+
     const orders = ordersSeed || [];
 
-    const authors = [
-        ...new Set(
-            orders
-                .map((order) => order.author)
-                .filter(Boolean)
-        ),
-    ];
+    // =========================================================
+    // AUTHORS
+    // =========================================================
+
+    const authors = useMemo(() => {
+        return [
+            ...new Set(
+                orders
+                    .map((order) => order.author)
+                    .filter(Boolean)
+            ),
+        ];
+    }, [orders]);
+
+    // =========================================================
+    // FILTER ORDERS
+    // =========================================================
 
     const filteredOrders = useMemo(() => {
         return orders.filter((order) => {
@@ -107,31 +130,105 @@ export default function Orders({
         authorFilter,
     ]);
 
+    // =========================================================
+    // PAGINATION
+    // =========================================================
+
+    const totalItems = filteredOrders.length;
+
+    const totalPages = Math.ceil(
+        totalItems / pageSize
+    );
+
+    const paginatedOrders = useMemo(() => {
+        const startIndex =
+            (currentPage - 1) * pageSize;
+
+        const endIndex =
+            startIndex + pageSize;
+
+        return filteredOrders.slice(
+            startIndex,
+            endIndex
+        );
+    }, [
+        filteredOrders,
+        currentPage,
+        pageSize,
+    ]);
+
+    // =========================================================
+    // RESET PAGE WHEN FILTERS CHANGE
+    // =========================================================
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [
+        search,
+        statusFilter,
+        dateFilter,
+        salesChannel,
+        authorFilter,
+    ]);
+
+    // =========================================================
+    // KEEP CURRENT PAGE VALID
+    // =========================================================
+
+    useEffect(() => {
+        if (
+            totalPages > 0 &&
+            currentPage > totalPages
+        ) {
+            setCurrentPage(totalPages);
+        }
+    }, [
+        currentPage,
+        totalPages,
+    ]);
+
+    // =========================================================
+    // CLEAR FILTERS
+    // =========================================================
+
     const clearFilters = () => {
         setSearch("");
         setStatusFilter("");
         setDateFilter("");
         setSalesChannel("");
         setAuthorFilter("");
+        setCurrentPage(1);
     };
 
+    // =========================================================
+    // SUMMARY
+    // =========================================================
+
     const completedCount = orders.filter(
-        (order) => order.status === "Completed"
+        (order) =>
+            order.status === "Completed"
     ).length;
 
     const pendingCount = orders.filter(
-        (order) => order.status === "Pending payment"
+        (order) =>
+            order.status === "Pending payment"
     ).length;
 
     const cancelledCount = orders.filter(
-        (order) => order.status === "Cancelled"
+        (order) =>
+            order.status === "Cancelled"
     ).length;
 
     const totalAmount = orders.reduce(
         (sum, order) =>
-            sum + Number(order.totalValue || 0),
+            sum +
+            Number(order.totalValue || 0),
         0
     );
+
+    // =========================================================
+    // RENDER
+    // =========================================================
 
     return (
         <div className="orders-page">
@@ -141,7 +238,9 @@ export default function Orders({
             ================================================= */}
 
             <div className="orders-header">
+
                 <div className="orders-title-area">
+
                     <div className="orders-title-icon">
                         <i className="bi bi-receipt" />
                     </div>
@@ -154,13 +253,18 @@ export default function Orders({
                             information for this store.
                         </p>
                     </div>
+
                 </div>
+
+                {/* STORE CONTEXT */}
 
                 {store && (
                     <div className="orders-store-context">
+
                         <i className="bi bi-shop" />
 
                         <div>
+
                             <span>STORE</span>
 
                             <strong>
@@ -170,9 +274,12 @@ export default function Orders({
                             <small>
                                 {store.id}
                             </small>
+
                         </div>
+
                     </div>
                 )}
+
             </div>
 
             {/* =================================================
@@ -181,56 +288,76 @@ export default function Orders({
 
             <div className="orders-summary">
 
+                {/* TOTAL ORDERS */}
+
                 <div className="order-summary-card">
+
                     <div className="order-summary-icon purple">
                         <i className="bi bi-receipt" />
                     </div>
 
                     <div>
                         <span>Total Orders</span>
+
                         <strong>
                             {orders.length}
                         </strong>
                     </div>
+
                 </div>
 
+                {/* COMPLETED */}
+
                 <div className="order-summary-card">
+
                     <div className="order-summary-icon green">
                         <i className="bi bi-check-circle" />
                     </div>
 
                     <div>
                         <span>Completed</span>
+
                         <strong>
                             {completedCount}
                         </strong>
                     </div>
+
                 </div>
 
+                {/* PENDING */}
+
                 <div className="order-summary-card">
+
                     <div className="order-summary-icon orange">
                         <i className="bi bi-clock" />
                     </div>
 
                     <div>
                         <span>Pending Payment</span>
+
                         <strong>
                             {pendingCount}
                         </strong>
                     </div>
+
                 </div>
 
+                {/* TOTAL VALUE */}
+
                 <div className="order-summary-card">
+
                     <div className="order-summary-icon blue">
                         <i className="bi bi-currency-dollar" />
                     </div>
 
                     <div>
                         <span>Total Value</span>
+
                         <strong>
                             ${totalAmount.toFixed(2)}
                         </strong>
                     </div>
+
                 </div>
 
             </div>
@@ -247,7 +374,10 @@ export default function Orders({
 
                 <div className="orders-toolbar">
 
+                    {/* SEARCH */}
+
                     <div className="orders-search">
+
                         <i className="bi bi-search" />
 
                         <input
@@ -258,7 +388,10 @@ export default function Orders({
                                 setSearch(e.target.value)
                             }
                         />
+
                     </div>
+
+                    {/* DATE */}
 
                     <select
                         value={dateFilter}
@@ -266,6 +399,7 @@ export default function Orders({
                             setDateFilter(e.target.value)
                         }
                     >
+
                         <option value="">
                             All Dates
                         </option>
@@ -281,7 +415,10 @@ export default function Orders({
                         <option value="30days">
                             Last 30 Days
                         </option>
+
                     </select>
+
+                    {/* SALES CHANNEL */}
 
                     <select
                         value={salesChannel}
@@ -289,6 +426,7 @@ export default function Orders({
                             setSalesChannel(e.target.value)
                         }
                     >
+
                         <option value="">
                             All Sales Channels
                         </option>
@@ -304,7 +442,10 @@ export default function Orders({
                         <option value="WooCommerce">
                             WooCommerce
                         </option>
+
                     </select>
+
+                    {/* AUTHOR */}
 
                     <select
                         value={authorFilter}
@@ -312,6 +453,7 @@ export default function Orders({
                             setAuthorFilter(e.target.value)
                         }
                     >
+
                         <option value="">
                             All Authors
                         </option>
@@ -324,7 +466,10 @@ export default function Orders({
                                 {author}
                             </option>
                         ))}
+
                     </select>
+
+                    {/* STATUS */}
 
                     <select
                         value={statusFilter}
@@ -332,6 +477,7 @@ export default function Orders({
                             setStatusFilter(e.target.value)
                         }
                     >
+
                         <option value="">
                             All Status
                         </option>
@@ -359,7 +505,10 @@ export default function Orders({
                         <option value="Partially Refunded">
                             Partially Refunded
                         </option>
+
                     </select>
+
+                    {/* CLEAR */}
 
                     <button
                         type="button"
@@ -379,16 +528,21 @@ export default function Orders({
                 <div className="orders-table-heading">
 
                     <div>
+
                         Orders
 
                         <span>
                             {filteredOrders.length}
                         </span>
+
                     </div>
 
                     <div className="orders-read-only">
+
                         <i className="bi bi-lock" />
+
                         Read Only
+
                     </div>
 
                 </div>
@@ -402,19 +556,23 @@ export default function Orders({
                     <table className="orders-table">
 
                         <thead>
+
                             <tr>
+
                                 <th>WOO ORDER ID</th>
                                 <th>OFFLINE ORDER ID</th>
                                 <th>DATE</th>
                                 <th>STATUS</th>
                                 <th>AUTHOR</th>
                                 <th>TOTAL</th>
+
                             </tr>
+
                         </thead>
 
                         <tbody>
 
-                            {filteredOrders.map(
+                            {paginatedOrders.map(
                                 (order) => (
                                     <OrderRow
                                         key={order.id}
@@ -437,7 +595,9 @@ export default function Orders({
                     <div className="orders-empty">
 
                         <div className="orders-empty-icon">
+
                             <i className="bi bi-receipt" />
+
                         </div>
 
                         <h3>
@@ -460,61 +620,75 @@ export default function Orders({
                 )}
 
                 {/* =================================================
+                    PAGINATION
+                ================================================= */}
+
+                {filteredOrders.length > 0 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={(size) => {
+                            setPageSize(size);
+                            setCurrentPage(1);
+                        }}
+                    />
+                )}
+
+                {/* =================================================
                     FOOTER
                 ================================================= */}
 
                 {filteredOrders.length > 0 && (
                     <div className="orders-footer">
 
-                        <span>
-                            Showing{" "}
-                            <strong>
-                                {filteredOrders.length}
-                            </strong>{" "}
-                            of{" "}
-                            <strong>
-                                {orders.length}
-                            </strong>{" "}
-                            orders
-                        </span>
-
                         <span className="orders-source">
+
                             <i className="bi bi-arrow-repeat" />
+
                             Synced from WooCommerce
+
                         </span>
 
                     </div>
                 )}
 
             </div>
+
         </div>
     );
 }
 
-/* =========================================================
-   ORDER ROW
-========================================================= */
+// =========================================================
+// ORDER ROW
+// =========================================================
 
 function OrderRow({ order }) {
+
     const statusClass =
         order.status === "Completed"
             ? "completed"
             : order.status === "Pending payment"
-            ? "pending"
-            : order.status === "Processing"
-            ? "processing"
-            : order.status === "Cancelled"
-            ? "cancelled"
-            : order.status === "Refunded"
-            ? "refunded"
-            : "partial";
+                ? "pending"
+                : order.status === "Processing"
+                    ? "processing"
+                    : order.status === "Cancelled"
+                        ? "cancelled"
+                        : order.status === "Refunded"
+                            ? "refunded"
+                            : "partial";
 
     return (
         <tr>
 
-            {/* WOO ORDER ID */}
+            {/* =================================================
+                WOO ORDER ID
+            ================================================= */}
 
             <td>
+
                 <div className="order-id-cell">
 
                     <div className="order-icon">
@@ -522,6 +696,7 @@ function OrderRow({ order }) {
                     </div>
 
                     <div>
+
                         <strong>
                             {order.wooOrderId}
                         </strong>
@@ -529,23 +704,33 @@ function OrderRow({ order }) {
                         <small>
                             WooCommerce
                         </small>
+
                     </div>
 
                 </div>
+
             </td>
 
-            {/* OFFLINE ORDER ID */}
+            {/* =================================================
+                OFFLINE ORDER ID
+            ================================================= */}
 
             <td>
+
                 <span className="offline-order-id">
                     {order.offlineOrderId || "—"}
                 </span>
+
             </td>
 
-            {/* DATE */}
+            {/* =================================================
+                DATE
+            ================================================= */}
 
             <td>
+
                 <div className="order-date">
+
                     <strong>
                         {order.date}
                     </strong>
@@ -555,27 +740,43 @@ function OrderRow({ order }) {
                             {order.time}
                         </small>
                     )}
+
                 </div>
+
             </td>
 
-            {/* STATUS */}
+            {/* =================================================
+                STATUS
+            ================================================= */}
 
             <td>
+
                 <span
                     className={`order-status ${statusClass}`}
                 >
+
                     <i className="bi bi-circle-fill" />
+
                     {order.status}
+
                 </span>
+
             </td>
 
-            {/* AUTHOR */}
+            {/* =================================================
+                AUTHOR
+            ================================================= */}
 
             <td>
+
                 <div className="order-author">
 
                     <div className="author-avatar">
-                        {getInitials(order.author)}
+
+                        {getInitials(
+                            order.author
+                        )}
+
                     </div>
 
                     <span>
@@ -583,25 +784,31 @@ function OrderRow({ order }) {
                     </span>
 
                 </div>
+
             </td>
 
-            {/* TOTAL */}
+            {/* =================================================
+                TOTAL
+            ================================================= */}
 
             <td>
+
                 <strong className="order-total">
                     {order.total}
                 </strong>
+
             </td>
 
         </tr>
     );
 }
 
-/* =========================================================
-   INITIALS
-========================================================= */
+// =========================================================
+// INITIALS
+// =========================================================
 
 function getInitials(name = "") {
+
     return name
         .split(" ")
         .filter(Boolean)

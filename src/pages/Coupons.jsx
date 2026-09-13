@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Pagination from "../components/Pagination";
 import { couponsSeed } from "../data/data";
+import "../styles/coupons.css";
 
 export default function Coupons({
     embedded = false,
@@ -11,15 +13,44 @@ export default function Coupons({
     const [typeFilter, setTypeFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
 
+    // =========================================================
+    // PAGINATION
+    // =========================================================
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    // =========================================================
+    // COUPON SYNC STATES
+    // =========================================================
+
+    const [syncing, setSyncing] = useState("");
+    const [syncMessage, setSyncMessage] = useState("");
+    const [syncError, setSyncError] = useState("");
+
+    // =========================================================
+    // COUPONS
+    // =========================================================
+
     const coupons = couponsSeed || [];
 
-    const couponTypes = [
-        ...new Set(
-            coupons
-                .map((coupon) => coupon.type)
-                .filter(Boolean)
-        ),
-    ];
+    // =========================================================
+    // COUPON TYPES
+    // =========================================================
+
+    const couponTypes = useMemo(() => {
+        return [
+            ...new Set(
+                coupons
+                    .map((coupon) => coupon.type)
+                    .filter(Boolean)
+            ),
+        ];
+    }, [coupons]);
+
+    // =========================================================
+    // FILTER COUPONS
+    // =========================================================
 
     const filteredCoupons = useMemo(() => {
         return coupons.filter((coupon) => {
@@ -59,11 +90,75 @@ export default function Coupons({
         statusFilter,
     ]);
 
+    // =========================================================
+    // PAGINATION
+    // =========================================================
+
+    const totalItems = filteredCoupons.length;
+
+    const totalPages = Math.ceil(
+        totalItems / pageSize
+    );
+
+    const paginatedCoupons = useMemo(() => {
+        const startIndex =
+            (currentPage - 1) * pageSize;
+
+        const endIndex =
+            startIndex + pageSize;
+
+        return filteredCoupons.slice(
+            startIndex,
+            endIndex
+        );
+    }, [
+        filteredCoupons,
+        currentPage,
+        pageSize,
+    ]);
+
+    // =========================================================
+    // RESET PAGE WHEN FILTERS CHANGE
+    // =========================================================
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [
+        search,
+        typeFilter,
+        statusFilter,
+    ]);
+
+    // =========================================================
+    // KEEP CURRENT PAGE VALID
+    // =========================================================
+
+    useEffect(() => {
+        if (
+            totalPages > 0 &&
+            currentPage > totalPages
+        ) {
+            setCurrentPage(totalPages);
+        }
+    }, [
+        currentPage,
+        totalPages,
+    ]);
+
+    // =========================================================
+    // CLEAR FILTERS
+    // =========================================================
+
     const clearFilters = () => {
         setSearch("");
         setTypeFilter("");
         setStatusFilter("");
+        setCurrentPage(1);
     };
+
+    // =========================================================
+    // SUMMARY
+    // =========================================================
 
     const activeCount = coupons.filter(
         (coupon) => coupon.status === "Active"
@@ -73,6 +168,97 @@ export default function Coupons({
         (coupon) => coupon.status === "Expired"
     ).length;
 
+    const usedCount = coupons.filter(
+        (coupon) =>
+            Number(coupon.usedCount || 0) > 0
+    ).length;
+
+    // =========================================================
+    // FAST COUPON IMPORT
+    // =========================================================
+
+    const handleFastCouponImport = async () => {
+        if (syncing) return;
+
+        setSyncing("fast");
+        setSyncMessage("");
+        setSyncError("");
+
+        try {
+            /*
+             * API WILL BE CONNECTED HERE
+             *
+             * Example later:
+             *
+             * await importCoupons({
+             *     merchantId,
+             *     storeId,
+             * });
+             */
+
+            // Temporary simulation until API is ready
+            await new Promise((resolve) =>
+                setTimeout(resolve, 1200)
+            );
+
+            setSyncMessage(
+                "Coupons imported successfully."
+            );
+        } catch (error) {
+            setSyncError(
+                error?.message ||
+                "Failed to import coupons."
+            );
+        } finally {
+            setSyncing("");
+        }
+    };
+
+    // =========================================================
+    // LATEST COUPON UPDATES
+    // =========================================================
+
+    const handleLatestCouponUpdates = async () => {
+        if (syncing) return;
+
+        setSyncing("latest");
+        setSyncMessage("");
+        setSyncError("");
+
+        try {
+            /*
+             * API WILL BE CONNECTED HERE
+             *
+             * Example later:
+             *
+             * await updateLatestCoupons({
+             *     merchantId,
+             *     storeId,
+             * });
+             */
+
+            // Temporary simulation until API is ready
+            await new Promise((resolve) =>
+                setTimeout(resolve, 1000)
+            );
+
+            setSyncMessage(
+                "Latest coupon updates completed successfully."
+            );
+        } catch (error) {
+            setSyncError(
+                error?.message ||
+                "Failed to update latest coupons."
+            );
+        } finally {
+            setSyncing("");
+        }
+    };
+
+    // =========================================================
+    // RENDER
+    // =========================================================
+
     return (
         <div className="coupons-page">
 
@@ -81,7 +267,9 @@ export default function Coupons({
             ================================================= */}
 
             <div className="coupons-header">
+
                 <div className="coupons-title-area">
+
                     <div className="coupons-title-icon">
                         <i className="bi bi-ticket-perforated" />
                     </div>
@@ -94,26 +282,117 @@ export default function Coupons({
                             store.
                         </p>
                     </div>
+
                 </div>
 
-                {store && (
-                    <div className="coupons-store-context">
-                        <i className="bi bi-shop" />
+                <div className="coupons-header-actions">
 
-                        <div>
-                            <span>STORE</span>
+                    {/* FAST COUPON IMPORT */}
 
-                            <strong>
-                                {store.name}
-                            </strong>
+                    <button
+                        type="button"
+                        className="coupon-sync-btn coupon-sync-import"
+                        onClick={handleFastCouponImport}
+                        disabled={Boolean(syncing)}
+                    >
+                        {syncing === "fast" ? (
+                            <>
+                                <span className="coupon-sync-spinner" />
+                                Importing...
+                            </>
+                        ) : (
+                            <>
+                                <i className="bi bi-lightning-charge-fill" />
+                                Fast Coupon Import
+                            </>
+                        )}
+                    </button>
 
-                            <small>
-                                {store.id}
-                            </small>
+                    {/* LATEST UPDATES */}
+
+                    <button
+                        type="button"
+                        className="coupon-sync-btn coupon-sync-update"
+                        onClick={handleLatestCouponUpdates}
+                        disabled={Boolean(syncing)}
+                    >
+                        {syncing === "latest" ? (
+                            <>
+                                <span className="coupon-sync-spinner" />
+                                Updating...
+                            </>
+                        ) : (
+                            <>
+                                <i className="bi bi-arrow-repeat" />
+                                Latest Updates
+                            </>
+                        )}
+                    </button>
+
+                    {/* STORE CONTEXT */}
+
+                    {store && (
+                        <div className="coupons-store-context">
+
+                            <i className="bi bi-shop" />
+
+                            <div>
+                                <span>STORE</span>
+
+                                <strong>
+                                    {store.name}
+                                </strong>
+
+                                <small>
+                                    {store.id}
+                                </small>
+                            </div>
+
                         </div>
-                    </div>
-                )}
+                    )}
+
+                </div>
+
             </div>
+
+            {/* =================================================
+                SYNC MESSAGE
+            ================================================= */}
+
+            {(syncMessage || syncError) && (
+                <div
+                    className={
+                        syncError
+                            ? "coupons-sync-message error"
+                            : "coupons-sync-message success"
+                    }
+                >
+
+                    <i
+                        className={
+                            syncError
+                                ? "bi bi-exclamation-circle"
+                                : "bi bi-check-circle"
+                        }
+                    />
+
+                    <span>
+                        {syncError || syncMessage}
+                    </span>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setSyncMessage("");
+                            setSyncError("");
+                        }}
+                        aria-label="Close"
+                    >
+                        <i className="bi bi-x" />
+                    </button>
+
+                </div>
+            )}
 
             {/* =================================================
                 SUMMARY
@@ -121,61 +400,76 @@ export default function Coupons({
 
             <div className="coupons-summary">
 
+                {/* TOTAL */}
+
                 <div className="coupon-summary-card">
+
                     <div className="coupon-summary-icon purple">
                         <i className="bi bi-ticket-perforated" />
                     </div>
 
                     <div>
                         <span>Total Coupons</span>
+
                         <strong>
                             {coupons.length}
                         </strong>
                     </div>
+
                 </div>
 
+                {/* ACTIVE */}
+
                 <div className="coupon-summary-card">
+
                     <div className="coupon-summary-icon green">
                         <i className="bi bi-check-circle" />
                     </div>
 
                     <div>
                         <span>Active</span>
+
                         <strong>
                             {activeCount}
                         </strong>
                     </div>
+
                 </div>
 
+                {/* USED */}
+
                 <div className="coupon-summary-card">
+
                     <div className="coupon-summary-icon orange">
                         <i className="bi bi-clock-history" />
                     </div>
 
                     <div>
                         <span>Used</span>
+
                         <strong>
-                            {coupons.filter(
-                                (coupon) =>
-                                    Number(
-                                        coupon.usedCount || 0
-                                    ) > 0
-                            ).length}
+                            {usedCount}
                         </strong>
                     </div>
+
                 </div>
 
+                {/* EXPIRED */}
+
                 <div className="coupon-summary-card">
+
                     <div className="coupon-summary-icon red">
                         <i className="bi bi-calendar-x" />
                     </div>
 
                     <div>
                         <span>Expired</span>
+
                         <strong>
                             {expiredCount}
                         </strong>
                     </div>
+
                 </div>
 
             </div>
@@ -192,7 +486,10 @@ export default function Coupons({
 
                 <div className="coupons-toolbar">
 
+                    {/* SEARCH */}
+
                     <div className="coupons-search">
+
                         <i className="bi bi-search" />
 
                         <input
@@ -203,7 +500,10 @@ export default function Coupons({
                                 setSearch(e.target.value)
                             }
                         />
+
                     </div>
+
+                    {/* TYPE */}
 
                     <select
                         value={typeFilter}
@@ -223,7 +523,10 @@ export default function Coupons({
                                 {type}
                             </option>
                         ))}
+
                     </select>
+
+                    {/* STATUS */}
 
                     <select
                         value={statusFilter}
@@ -246,7 +549,10 @@ export default function Coupons({
                         <option value="Used">
                             Used
                         </option>
+
                     </select>
+
+                    {/* CLEAR */}
 
                     <button
                         type="button"
@@ -256,6 +562,7 @@ export default function Coupons({
                         <i className="bi bi-arrow-counterclockwise" />
                         Clear
                     </button>
+
                 </div>
 
                 {/* =================================================
@@ -263,6 +570,7 @@ export default function Coupons({
                 ================================================= */}
 
                 <div className="coupons-table-heading">
+
                     <div>
                         Coupons
 
@@ -272,9 +580,13 @@ export default function Coupons({
                     </div>
 
                     <div className="coupon-read-only">
+
                         <i className="bi bi-lock" />
+
                         Read Only
+
                     </div>
+
                 </div>
 
                 {/* =================================================
@@ -282,10 +594,13 @@ export default function Coupons({
                 ================================================= */}
 
                 <div className="coupons-table-wrapper">
+
                     <table className="coupons-table">
 
                         <thead>
+
                             <tr>
+
                                 <th>CODE</th>
                                 <th>ISSUED ORDER ID</th>
                                 <th>USED ORDER ID</th>
@@ -296,11 +611,14 @@ export default function Coupons({
                                 <th>USAGE / LIMIT</th>
                                 <th>EXPIRY DATE</th>
                                 <th>BARCODE</th>
+
                             </tr>
+
                         </thead>
 
                         <tbody>
-                            {filteredCoupons.map(
+
+                            {paginatedCoupons.map(
                                 (coupon) => (
                                     <CouponRow
                                         key={coupon.id}
@@ -308,9 +626,11 @@ export default function Coupons({
                                     />
                                 )
                             )}
+
                         </tbody>
 
                     </table>
+
                 </div>
 
                 {/* =================================================
@@ -344,55 +664,69 @@ export default function Coupons({
                 )}
 
                 {/* =================================================
+                    PAGINATION
+                ================================================= */}
+
+                {filteredCoupons.length > 0 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={(size) => {
+                            setPageSize(size);
+                            setCurrentPage(1);
+                        }}
+                    />
+                )}
+
+                {/* =================================================
                     FOOTER
                 ================================================= */}
 
                 {filteredCoupons.length > 0 && (
                     <div className="coupons-footer">
 
-                        <span>
-                            Showing{" "}
-                            <strong>
-                                {filteredCoupons.length}
-                            </strong>{" "}
-                            of{" "}
-                            <strong>
-                                {coupons.length}
-                            </strong>{" "}
-                            coupons
-                        </span>
-
                         <span className="coupons-source">
+
                             <i className="bi bi-arrow-repeat" />
+
                             Synced from WooCommerce
+
                         </span>
 
                     </div>
                 )}
 
             </div>
+
         </div>
     );
 }
 
-/* =========================================================
-   COUPON ROW
-========================================================= */
+// =========================================================
+// COUPON ROW
+// =========================================================
 
 function CouponRow({ coupon }) {
+
     const statusClass =
         coupon.status === "Active"
             ? "active"
             : coupon.status === "Expired"
-            ? "expired"
-            : "used";
+                ? "expired"
+                : "used";
 
     return (
         <tr>
 
-            {/* CODE */}
+            {/* =================================================
+                CODE
+            ================================================= */}
 
             <td>
+
                 <div className="coupon-code-cell">
 
                     <div className="coupon-code-icon">
@@ -400,6 +734,7 @@ function CouponRow({ coupon }) {
                     </div>
 
                     <div>
+
                         <strong>
                             {coupon.code}
                         </strong>
@@ -410,104 +745,141 @@ function CouponRow({ coupon }) {
                             <i className="bi bi-circle-fill" />
                             {coupon.status}
                         </span>
+
                     </div>
 
                 </div>
+
             </td>
 
-            {/* ISSUED ORDER ID */}
+            {/* =================================================
+                ISSUED ORDER ID
+            ================================================= */}
 
             <td>
+
                 <OrderList
                     values={coupon.issuedOrderIds}
                 />
+
             </td>
 
-            {/* USED ORDER ID */}
+            {/* =================================================
+                USED ORDER ID
+            ================================================= */}
 
             <td>
+
                 <OrderList
                     values={coupon.usedOrderIds}
                 />
+
             </td>
 
-            {/* COUPON TYPE */}
+            {/* =================================================
+                COUPON TYPE
+            ================================================= */}
 
             <td>
+
                 <span className="coupon-type">
                     {coupon.type}
                 </span>
+
             </td>
 
-            {/* COUPON AMOUNT */}
+            {/* =================================================
+                COUPON AMOUNT
+            ================================================= */}
 
             <td>
+
                 <strong className="coupon-amount">
                     {coupon.amount}
                 </strong>
+
             </td>
 
-            {/* DESCRIPTION */}
+            {/* =================================================
+                DESCRIPTION
+            ================================================= */}
 
             <td>
+
                 <span className="coupon-description">
                     {coupon.description || "—"}
                 </span>
+
             </td>
 
-            {/* PRODUCT IDS */}
+            {/* =================================================
+                PRODUCT IDS
+            ================================================= */}
 
             <td>
+
                 <ProductIds
                     values={coupon.productIds}
                 />
+
             </td>
 
-            {/* USAGE / LIMIT */}
+            {/* =================================================
+                USAGE / LIMIT
+            ================================================= */}
 
             <td>
+
                 <div className="coupon-usage">
 
                     <strong>
                         {coupon.usedCount || 0}
                     </strong>
 
-                    <span>
-                        /
-                    </span>
+                    <span>/</span>
 
                     <span>
                         {coupon.usageLimit || "∞"}
                     </span>
 
                 </div>
+
             </td>
 
-            {/* EXPIRY DATE */}
+            {/* =================================================
+                EXPIRY DATE
+            ================================================= */}
 
             <td>
+
                 <span className="coupon-expiry">
                     {coupon.expiryDate || "—"}
                 </span>
+
             </td>
 
-            {/* BARCODE */}
+            {/* =================================================
+                BARCODE
+            ================================================= */}
 
             <td>
+
                 <Barcode
                     value={coupon.code}
                 />
+
             </td>
 
         </tr>
     );
 }
 
-/* =========================================================
-   ORDER LIST
-========================================================= */
+// =========================================================
+// ORDER LIST
+// =========================================================
 
 function OrderList({ values }) {
+
     if (!values || values.length === 0) {
         return (
             <span className="empty-value">
@@ -520,6 +892,7 @@ function OrderList({ values }) {
 
     return (
         <div className="coupon-order-list">
+
             {visible.map((order) => (
                 <span key={order}>
                     {order}
@@ -531,15 +904,17 @@ function OrderList({ values }) {
                     +{values.length - 2} more
                 </small>
             )}
+
         </div>
     );
 }
 
-/* =========================================================
-   PRODUCT IDS
-========================================================= */
+// =========================================================
+// PRODUCT IDS
+// =========================================================
 
 function ProductIds({ values }) {
+
     if (!values || values.length === 0) {
         return (
             <span className="empty-value">
@@ -550,6 +925,7 @@ function ProductIds({ values }) {
 
     return (
         <div className="coupon-product-ids">
+
             {values.slice(0, 3).map((id) => (
                 <span key={id}>
                     {id}
@@ -561,19 +937,22 @@ function ProductIds({ values }) {
                     +{values.length - 3} more
                 </small>
             )}
+
         </div>
     );
 }
 
-/* =========================================================
-   BARCODE
-========================================================= */
+// =========================================================
+// BARCODE
+// =========================================================
 
 function Barcode({ value }) {
+
     return (
         <div className="coupon-barcode-cell">
 
             <div className="barcode">
+
                 {Array.from(
                     { length: 24 },
                     (_, index) => (
@@ -584,12 +963,13 @@ function Barcode({ value }) {
                                     index % 4 === 0
                                         ? "3px"
                                         : index % 2 === 0
-                                        ? "2px"
-                                        : "1px",
+                                            ? "2px"
+                                            : "1px",
                             }}
                         />
                     )
                 )}
+
             </div>
 
             <small>
