@@ -19,7 +19,6 @@ import "./styles/coupons.css";
 import "./styles/orders.css";
 import "./styles/login.css";
 import "./styles/legal.css";
-<<<<<<< HEAD
 import "./styles/Merchant-subscriptions.css";
 import "./styles/CreateStoreType.css";
 import "./styles/CreatePlan.css";
@@ -29,13 +28,11 @@ import "./styles/StoreTypeRoleTemplates.css";
 import "./styles/features.css";
 import "./styles/featurepermissions.css";
 import "./styles/Roletemplates.css";
-=======
 import "./styles/devices.css";
 import "./styles/add-device.css";
 import "./styles/employees.css";
 import "./styles/add-employee.css";
 import "./styles/Merchant-subscriptions.css";
->>>>>>> dev
 
 
 ReactDOM.createRoot(document.getElementById("root")).render(
