@@ -1,13 +1,36 @@
 /* =========================================================
-   POS CONFIGURATION PAGE
-   Uses the same Inter font, sizing and color language as
-   Stores / Merchants pages.
+   POS CONFIGURATION
 ========================================================= */
 
 .pos-page-content {
-    padding: 18px 24px 0;
+    padding: 24px 26px 40px;
+    background: #f6f7fb;
+    min-height: calc(100vh - 60px);
+    box-sizing: border-box;
 }
 
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.pos-page-content .page-header {
+    margin-bottom: 18px;
+}
+
+.pos-page-content .page-header h1 {
+    margin: 0;
+    color: #17233e;
+    font-size: 25px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.pos-page-content .page-header p {
+    margin: 6px 0 0;
+    color: #748198;
+    font-size: 12px;
+    line-height: 1.5;
+}
 
 /* =========================================================
    MERCHANT CARD
@@ -15,585 +38,830 @@
 
 .pos-merchant-card {
     width: 100%;
-    min-height: 68px;
-
-    margin-bottom: 14px;
-    padding: 12px 15px;
+    min-height: 82px;
+    padding: 18px 22px;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
 
-    background: #fff;
-    border: 1px solid #e4e7ed;
+    background: #ffffff;
+    border: 1px solid #e0e4ec;
     border-radius: 8px;
+
+    box-sizing: border-box;
+    margin-bottom: 20px;
 }
 
 .pos-merchant-main {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
 }
 
 .pos-merchant-avatar {
-    width: 36px;
-    height: 36px;
+    width: 50px;
+    height: 50px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
     border-radius: 50%;
-    background: #eeeaff;
-    color: #5547c7;
+    background: #eee9ff;
+    color: #5946c9;
 
-    font-size: 10px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 .pos-merchant-details h3 {
-    margin: 0 0 3px;
-
-    color: #1d2942;
-    font-size: 12px;
+    margin: 0 0 5px;
+    color: #17233e;
+    font-size: 17px;
     font-weight: 600;
 }
 
 .pos-merchant-details p {
     margin: 0;
-
-    color: #7d8697;
-    font-size: 9px;
+    color: #7d899d;
+    font-size: 11px;
 }
 
 .pos-merchant-details p span {
-    margin: 0 4px;
-    color: #b0b6c1;
+    margin: 0 7px;
+    color: #b0b7c3;
 }
 
 .pos-merchant-status {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
 
-    padding: 5px 9px;
+    padding: 7px 12px;
 
-    border-radius: 14px;
-    background: #e8f6ed;
-    color: #319a5b;
+    background: #e8f7ee;
+    color: #16834d;
 
-    font-size: 8px;
-    font-weight: 600;
+    border-radius: 6px;
+
+    font-size: 11px;
+    font-weight: 500;
 }
 
 .pos-merchant-status span {
-    width: 5px;
-    height: 5px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    background: #319a5b;
+    background: #25a55f;
 }
 
-
 /* =========================================================
-   POS CONFIGURATION CARD
+   MAIN CONFIGURATION CARD
 ========================================================= */
 
 .pos-config-card {
     width: 100%;
-
-    background: #fff;
-    border: 1px solid #e4e7ed;
+    background: #ffffff;
+    border: 1px solid #dfe3ea;
     border-radius: 8px;
     overflow: hidden;
 }
 
-
 /* =========================================================
    TABS
-   General Settings intentionally NOT included.
 ========================================================= */
 
 .pos-tabs {
-    min-height: 58px;
+    width: 100%;
 
     display: flex;
     align-items: stretch;
 
-    padding: 0 12px;
+    padding: 0 10px;
 
-    border-bottom: 1px solid #e4e7ed;
+    background: #ffffff;
+    border-bottom: 1px solid #d5dae2;
+
     overflow-x: auto;
+    box-sizing: border-box;
 }
 
 .pos-tab {
-    position: relative;
+    min-height: 48px;
 
-    height: 58px;
-    padding: 0 15px;
+    padding: 0 18px;
 
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 7px;
+    justify-content: center;
+    gap: 8px;
 
     border: 0;
-    background: transparent;
+    border-bottom: 3px solid transparent;
 
-    color: #657087;
+    background: #ffffff;
+    color: #637087;
+
     font-family: "Inter", sans-serif;
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
 
     white-space: nowrap;
     cursor: pointer;
+
+    transition:
+        color 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease;
 }
 
 .pos-tab i {
-    font-size: 11px;
+    font-size: 13px;
 }
 
 .pos-tab:hover {
-    color: #5547c7;
+    color: #5143bc;
+    background: #faf9ff;
 }
 
 .pos-tab.active {
-    color: #5547c7;
+    color: #5143bc;
+    border-bottom-color: #5143bc;
+    background: #ffffff;
 }
-
-.pos-tab.active::after {
-    content: "";
-
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    bottom: 0;
-
-    height: 3px;
-    border-radius: 3px 3px 0 0;
-
-    background: #5547c7;
-}
-
 
 /* =========================================================
    PANEL
 ========================================================= */
 
 .pos-panel {
-    padding: 30px 34px 34px;
-}
-
-.hidden-panel {
-    display: none;
+    padding: 26px 28px 30px;
+    box-sizing: border-box;
 }
 
 .pos-panel-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 }
 
-.pos-panel-heading h2 {
-    margin: 0 0 5px;
-
+.pos-panel-heading h2,
+.pos-panel > h2 {
+    margin: 0;
     color: #17233e;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 600;
 }
 
 .pos-panel-heading p {
-    margin: 0;
-
-    color: #7d8697;
-    font-size: 10px;
+    margin: 6px 0 0;
+    color: #718097;
+    font-size: 12px;
 }
 
-
 /* =========================================================
-   BUTTONS
-   Matched to Stores / Merchants button language.
+   SETTINGS FORM
 ========================================================= */
 
-.pos-outline-button,
-.pos-primary-button,
-.role-action {
+.settings-form {
+    width: 100%;
+}
+
+.settings-row {
+    display: grid;
+    grid-template-columns: 245px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 18px;
+
+    margin-bottom: 28px;
+}
+
+.settings-label {
+    padding-top: 9px;
+
+    color: #17233e;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.settings-field {
+    width: 100%;
+    max-width: 580px;
+}
+
+.settings-field > input,
+.settings-field > select {
+    width: 100%;
+    height: 46px;
+
+    padding: 0 14px;
+
+    border: 1px solid #bfc4cc;
+    border-radius: 2px;
+
+    background: #ffffff;
+    color: #26344d;
+
     font-family: "Inter", sans-serif;
+    font-size: 13px;
+
+    box-sizing: border-box;
+    outline: none;
+}
+
+.settings-field > input:focus,
+.settings-field > select:focus {
+    border-color: #5143bc;
+    box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.08);
+}
+
+/* =========================================================
+   CHECKBOX
+========================================================= */
+
+.settings-checkbox {
+    min-height: 34px;
+
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    color: #586981;
+
+    font-size: 12px;
     cursor: pointer;
 }
 
-.pos-outline-button {
-    height: 34px;
-    padding: 0 13px;
+.settings-checkbox input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
 
-    display: inline-flex;
+.settings-checkbox-box {
+    width: 19px;
+    height: 19px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #aeb6c3;
+    border-radius: 3px;
+
+    background: #ffffff;
+    color: transparent;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.settings-checkbox input:checked + .settings-checkbox-box {
+    background: #4b83b4;
+    border-color: #4b83b4;
+    color: #ffffff;
+}
+
+/* =========================================================
+   HELP TEXT
+========================================================= */
+
+.settings-help {
+    margin: 7px 0 0;
+
+    color: #647590;
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   RADIO BUTTONS
+========================================================= */
+
+.radio-group {
+    min-height: 34px;
+
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.radio-group label {
+    display: flex;
     align-items: center;
     gap: 7px;
 
-    border: 1px solid #dfe3ea;
-    border-radius: 5px;
-    background: #fff;
+    color: #52637b;
 
-    color: #46516a;
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
 }
 
-.pos-outline-button:hover {
-    background: #fafbfc;
-    border-color: #d3d7e0;
-    color: #5143bc;
+.radio-group input {
+    width: 18px;
+    height: 18px;
+    accent-color: #4b83b4;
 }
-
-.pos-outline-button i {
-    font-size: 11px;
-}
-
 
 /* =========================================================
-   CREATE ROLE BOX
+   TIER SECTION
 ========================================================= */
 
-.create-role-box {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    margin-bottom: 20px;
-    padding: 16px;
-
-    background: #f8f9fb;
-    border: 1px solid #e3e7ed;
-    border-radius: 8px;
+.tier-setting-row {
+    margin-top: 4px;
 }
 
-.create-role-box input {
-    height: 34px;
-    flex: 1;
-
-    min-width: 0;
-    padding: 0 12px;
-
-    border: 1px solid #dfe3ea;
-    border-radius: 5px;
-    outline: none;
-    background: #fff;
-
-    color: #3e485d;
-    font-family: "Inter", sans-serif;
-    font-size: 10px;
-}
-
-.create-role-box input::placeholder {
-    color: #9ca3b1;
-}
-
-.create-role-box input:focus {
-    border-color: #c8c1f2;
-    box-shadow: 0 0 0 2px rgba(85, 71, 199, 0.06);
-}
-
-.pos-primary-button {
-    height: 34px;
-    padding: 0 15px;
-
-    border: 1px solid #1483a0;
-    border-radius: 5px;
-    background: #1483a0;
-
-    color: #fff;
-    font-size: 10px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.pos-primary-button:hover {
-    background: #0f718b;
-    border-color: #0f718b;
-}
-
-
-/* =========================================================
-   ROLES TABLE
-========================================================= */
-
-.roles-table-card {
+.tier-area {
     width: 100%;
-
-    border: 1px solid #e4e7ed;
-    border-radius: 8px;
-    overflow: hidden;
+    max-width: 960px;
 }
 
-.roles-table {
+.tier-area > .settings-help {
+    margin: 0 0 12px;
+}
+
+/* =========================================================
+   SETTINGS TABLE
+========================================================= */
+
+.settings-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.settings-table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+
+    border: 1px solid #d8dce3;
+
+    background: #ffffff;
 }
 
-.roles-table thead {
-    background: #f8f9fb;
-}
+.settings-table th {
+    height: 48px;
+    padding: 0 13px;
 
-.roles-table th {
-    height: 43px;
-    padding: 0 15px;
+    background: #f5f6f8;
+    border-right: 1px solid #d8dce3;
+    border-bottom: 1px solid #d8dce3;
 
-    text-align: left;
+    color: #26344d;
 
-    color: #7c8495;
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: .3px;
-}
-
-.roles-table td {
-    height: 59px;
-    padding: 0 15px;
-
-    border-top: 1px solid #eceef2;
-
-    color: #344057;
-    font-size: 10px;
-}
-
-.roles-table th:nth-child(1),
-.roles-table td:nth-child(1) {
-    width: 29%;
-}
-
-.roles-table th:nth-child(2),
-.roles-table td:nth-child(2) {
-    width: 18%;
-}
-
-.roles-table th:nth-child(3),
-.roles-table td:nth-child(3) {
-    width: 25%;
-}
-
-.roles-table th:nth-child(4),
-.roles-table td:nth-child(4) {
-    width: 28%;
-}
-
-.access-pill {
-    display: inline-flex;
-    align-items: center;
-
-    min-height: 27px;
-    padding: 0 11px;
-
-    border-radius: 14px;
-    background: #edf5f7;
-    color: #31788a;
-
-    font-size: 8px;
-}
-
-.role-action {
-    height: 31px;
-    padding: 0 11px;
-
-    border: 1px solid #dfe3ea;
-    border-radius: 5px;
-    background: #fff;
-
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 600;
+    text-align: left;
 }
 
-.edit-role {
-    color: #344057;
-    margin-right: 5px;
+.settings-table td {
+    padding: 12px 13px;
+
+    border-right: 1px solid #d8dce3;
+    border-bottom: 1px solid #d8dce3;
+
+    background: #ffffff;
 }
 
-.delete-role {
-    color: #df5964;
+.settings-table th:last-child,
+.settings-table td:last-child {
+    border-right: 0;
 }
 
-.role-action:hover {
-    background: #fafbfc;
+.settings-table tr:last-child td {
+    border-bottom: 0;
 }
 
+.settings-table td input,
+.settings-table td select {
+    width: 100%;
+    height: 48px;
+
+    padding: 0 13px;
+
+    border: 1px solid #aeb4bc;
+    border-radius: 2px;
+
+    background: #ffffff;
+    color: #26344d;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+
+    box-sizing: border-box;
+    outline: none;
+}
+
+.settings-table td input:focus,
+.settings-table td select:focus {
+    border-color: #4b83b4;
+}
 
 /* =========================================================
-   OTHER TAB PLACEHOLDER
+   POS BUTTONS
+========================================================= */
+
+.pos-primary-button {
+    min-height: 46px;
+
+    padding: 0 20px;
+
+    border: 0;
+    border-radius: 3px;
+
+    background: #4b83b4;
+    color: #ffffff;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.pos-primary-button:hover {
+    background: #3f739f;
+}
+
+.pos-outline-button {
+    min-height: 40px;
+
+    padding: 0 16px;
+
+    border: 1px solid #4b83b4;
+    border-radius: 3px;
+
+    background: #ffffff;
+    color: #4b83b4;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+.pos-outline-button:hover {
+    background: #f3f7fa;
+}
+
+.pos-remove-button {
+    min-height: 48px;
+
+    padding: 0 18px;
+
+    border: 1px solid #4b83b4;
+    border-radius: 2px;
+
+    background: #ffffff;
+    color: #3475aa;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+.pos-remove-button:hover {
+    background: #f2f7fb;
+}
+
+.pos-add-button {
+    width: 100%;
+    min-height: 48px;
+
+    margin-top: 12px;
+
+    border: 1px solid #4b83b4;
+    border-radius: 2px;
+
+    background: #ffffff;
+    color: #3475aa;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+.pos-add-button:hover {
+    background: #f2f7fb;
+}
+
+/* =========================================================
+   SAVE AREA
+========================================================= */
+
+.pos-save-area {
+    margin-top: 25px;
+
+    display: flex;
+    justify-content: flex-start;
+}
+
+/* =========================================================
+   DENOMINATIONS
+========================================================= */
+
+.opening-denominations-panel {
+    padding-bottom: 35px;
+}
+
+.opening-settings {
+    margin-bottom: 34px;
+}
+
+.denomination-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+
+    column-gap: 55px;
+    row-gap: 45px;
+}
+
+.denomination-section {
+    min-width: 0;
+}
+
+.denomination-section h2 {
+    margin: 0 0 13px;
+
+    color: #17233e;
+
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.denomination-list {
+    width: 100%;
+}
+
+.denomination-row {
+    display: grid;
+    grid-template-columns: 105px minmax(0, 1fr) 78px;
+
+    gap: 12px;
+
+    margin-bottom: 12px;
+}
+
+.denomination-row input,
+.tube-denomination-row input {
+    width: 100%;
+    height: 48px;
+
+    padding: 0 12px;
+
+    border: 1px solid #aeb4bc;
+    border-radius: 2px;
+
+    background: #ffffff;
+    color: #26344d;
+
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+
+    box-sizing: border-box;
+    outline: none;
+}
+
+.denomination-row input:focus,
+.tube-denomination-row input:focus {
+    border-color: #4b83b4;
+}
+
+.denomination-row .pos-remove-button {
+    width: 100%;
+}
+
+.tube-denomination-row {
+    display: grid;
+    grid-template-columns: 105px 95px 78px minmax(75px, 1fr);
+
+    gap: 12px;
+
+    margin-bottom: 12px;
+}
+
+.tube-denomination-row .pos-remove-button {
+    width: 100%;
+}
+
+.denomination-save-button {
+    margin-top: 15px;
+}
+
+/* =========================================================
+   CASHBACK / SERVICE SETTINGS
+========================================================= */
+
+.settings-panel {
+    min-height: 620px;
+}
+
+.settings-panel > h2 {
+    margin-bottom: 30px;
+}
+
+.settings-panel .settings-row {
+    max-width: 1100px;
+}
+
+/* =========================================================
+   EMPTY CONFIGURATION
 ========================================================= */
 
 .empty-config-box {
-    min-height: 220px;
+    min-height: 260px;
 
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 
-    border: 1px dashed #dfe3ea;
-    border-radius: 8px;
-    background: #fafbfc;
+    border: 1px dashed #d3d8e0;
+    border-radius: 6px;
 
     text-align: center;
 }
 
 .empty-config-box i {
-    margin-bottom: 10px;
-    color: #6250cf;
-    font-size: 25px;
+    margin-bottom: 12px;
+
+    color: #8a94a6;
+    font-size: 30px;
 }
 
 .empty-config-box h3 {
-    margin: 0 0 5px;
-    color: #1d2942;
-    font-size: 13px;
+    margin: 0;
+
+    color: #26344d;
+
+    font-size: 16px;
     font-weight: 600;
 }
 
 .empty-config-box p {
-    margin: 0;
-    color: #8d95a5;
-    font-size: 9px;
+    margin: 7px 0 0;
+
+    color: #7b879a;
+
+    font-size: 12px;
 }
-
-
-/* =========================================================
-   SIDEBAR MERCHANT DROPDOWN
-========================================================= */
-
-.sidebar-merchant {
-    position: relative;
-}
-
-.sidebar-merchant-toggle {
-    width: 100%;
-
-    border: 0;
-    outline: 0;
-    text-align: left;
-}
-
-.sidebar-merchant-toggle .arrow {
-    transition: transform .2s ease;
-}
-
-.sidebar-merchant.is-closed .sidebar-merchant-toggle .arrow {
-    transform: rotate(-90deg);
-}
-
-.sidebar-merchant-dropdown {
-    padding: 2px 0 5px 28px;
-}
-
-.sidebar-merchant.is-closed .sidebar-merchant-dropdown {
-    display: none;
-}
-
-.sidebar-merchant-option {
-    width: calc(100% - 8px);
-    min-height: 27px;
-
-    display: flex;
-    align-items: center;
-    gap: 7px;
-
-    padding: 0 7px;
-
-    border: 0;
-    border-radius: 4px;
-    background: transparent;
-
-    color: #aeb9cf;
-    font-family: "Inter", sans-serif;
-    font-size: 9px;
-    text-align: left;
-
-    cursor: pointer;
-}
-
-.sidebar-merchant-option:hover {
-    background: rgba(255,255,255,0.07);
-    color: #fff;
-}
-
-.sidebar-merchant-option.active {
-    color: #fff;
-    background: rgba(255,255,255,0.10);
-}
-
-.merchant-dot {
-    width: 5px;
-    height: 5px;
-    flex: 0 0 5px;
-
-    border-radius: 50%;
-    background: #6b5bdd;
-}
-
 
 /* =========================================================
    RESPONSIVE
 ========================================================= */
 
-@media (max-width: 900px) {
-
-    .pos-panel {
-        padding: 24px 20px 28px;
+@media (max-width: 1100px) {
+    .pos-page-content {
+        padding: 20px;
     }
 
-    .create-role-box {
-        flex-wrap: wrap;
+    .denomination-grid {
+        column-gap: 25px;
     }
 
-    .create-role-box input {
-        min-width: calc(50% - 6px);
-    }
-
-    .pos-primary-button {
-        width: 100%;
+    .settings-row {
+        grid-template-columns: 210px minmax(0, 1fr);
     }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 900px) {
+    .pos-tabs {
+        overflow-x: auto;
+    }
 
+    .pos-tab {
+        padding: 0 14px;
+    }
+
+    .denomination-grid {
+        grid-template-columns: 1fr;
+        row-gap: 35px;
+    }
+
+    .settings-row {
+        grid-template-columns: 1fr;
+        row-gap: 8px;
+    }
+
+    .settings-label {
+        padding-top: 0;
+    }
+
+    .settings-field {
+        max-width: 100%;
+    }
+
+    .tier-area {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 650px) {
     .pos-page-content {
-        padding: 12px;
+        padding: 15px;
     }
 
     .pos-merchant-card {
         align-items: flex-start;
-        gap: 10px;
+        flex-direction: column;
+        gap: 15px;
     }
 
     .pos-merchant-status {
-        margin-top: 2px;
+        align-self: flex-start;
     }
 
-    .pos-panel-heading {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 12px;
+    .pos-panel {
+        padding: 20px 16px 25px;
     }
 
-    .pos-outline-button {
-        width: 100%;
-        justify-content: center;
+    .pos-tabs {
+        padding: 0 5px;
     }
 
-    .create-role-box {
-        flex-direction: column;
+    .pos-tab {
+        min-height: 44px;
+        padding: 0 12px;
+        font-size: 11px;
     }
 
-    .create-role-box input,
-    .pos-primary-button {
-        width: 100%;
-        min-width: 100%;
+    .denomination-row {
+        grid-template-columns: 1fr;
     }
 
-    .roles-table-card {
-        overflow-x: auto;
+    .tube-denomination-row {
+        grid-template-columns: 1fr;
     }
 
-    .roles-table {
-        min-width: 720px;
+    .settings-table {
+        min-width: 700px;
     }
+
+    .radio-group {
+        flex-wrap: wrap;
+    }
+}
+/* =========================================================
+   TAX CONFIGURATION
+========================================================= */
+
+.tax-readonly-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.tax-readonly-badge i {
+    font-size: 13px;
+}
+
+.tax-info-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    border: 1px solid #dbeafe;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #334155;
+}
+
+.tax-info-box > i {
+    color: #2563eb;
+    font-size: 18px;
+    margin-top: 1px;
+}
+
+.tax-info-box strong {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 14px;
+}
+
+.tax-info-box p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #64748b;
+}
+
+.pos-panel .settings-field input:disabled {
+    background: #f8fafc;
+    color: #475569;
+    cursor: not-allowed;
+    opacity: 1;
 }

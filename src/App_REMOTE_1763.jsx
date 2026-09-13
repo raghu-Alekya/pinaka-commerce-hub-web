@@ -25,14 +25,6 @@ import Coupons from "./pages/Coupons";
 import Orders from "./pages/Orders";
 
 
-import CreateStoreType from "./pages/CreateStoreType";
-import CreatePlan from "./pages/CreatePlan";
-import StoreTypeDetails from "./pages/StoreTypeDetails";
-import StoreTypeFeatures from "./pages/StoreTypeFeatures";
-import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
-import Features from "./pages/Features";
-import FeaturePermissions from "./pages/FeaturePermissions";
-import RoleTemplates from "./pages/Roletemplates";
 
 const placeholders = [
 
@@ -66,7 +58,13 @@ export default function App() {
       <Route path="/privacy" element={<Legal privacy />} />
       <Route path="/terms" element={<Legal />} />
 
-      <Route element={<ProtectedRoute>  <AppLayout /> </ProtectedRoute>} >
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/merchants" element={<Merchants />} />
@@ -125,20 +123,6 @@ export default function App() {
         <Route path="/devices" element={<Devices />} />
         <Route path="/devices/add" element={<AddDevice />} />
         <Route path="/employees/add" element={<AddEmployee />} />
-
-        <Route path="/features" element={<Features />} />
-        <Route path="/permissions" element={<FeaturePermissions />} />
-
-        <Route path="/plans/new" element={<CreatePlan />} />
-        <Route path="/role-templates" element={<RoleTemplates />} />
-
-        <Route path="/store-types/new" element={<CreateStoreType />} />
-
-        <Route path="/store-types/:storeTypeId" element={<StoreTypeDetails />} />
-
-        <Route path="/store-types/:storeTypeId/features" element={<StoreTypeFeatures />} /> 
-
-        <Route path="/store-types/:storeTypeId/role-templates" element={<StoreTypeRoleTemplates />} />     
 
         {placeholders.map((title) => {
           const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;

@@ -16,6 +16,9 @@ export function toStorePayload(store, merchantId) {
     city: store.city,
     state: store.state,
     zip: store.zip,
+    devices: store.devices || [],
+    features: store.features || [],
+    roles: store.roles || [],
   };
 }
 
@@ -31,5 +34,42 @@ export function createStore(store, merchantId) {
 }
 
 export function createStores(stores, merchantId) {
-  return Promise.all(stores.map((store) => createStore(store, merchantId)));
+  const owner = merchantId || stores[0]?.merchant;
+  if (
+    !owner ||
+    stores.some((store) => (merchantId || store.merchant) !== owner)
+  ) {
+    throw new Error("Choose the same merchant for all stores in a batch.");
+  }
+  return api.post(endpoints.merchantStores(owner) + "/bulk", {
+    stores: stores.map((store) => toStorePayload(store, owner)),
+  });
+}
+
+export async function getStore(id) {
+  const { store } = await api.get(endpoints.store(encodeURIComponent(id)));
+  return {
+    merchant: store.merchantId,
+    storeID: store.id,
+    storeName: store.storeName,
+    storeType: store.storeType,
+    phone: store.phone || "",
+    url: store.baseUrl || "",
+    currency: store.currency,
+    status: store.status,
+    timezone: store.timezone,
+    address: store.address?.street || "",
+    city: store.address?.city || "",
+    state: store.address?.state || "",
+    zip: store.address?.zipCode || "",
+    devices: store.devices || store.registeredDevices || [],
+    features: store.features || store.enabledFeatures || [],
+    roles: store.roles || store.merchantRoles || [],
+  };
+}
+export function updateStore(id, store) {
+  return api.put(
+    endpoints.store(encodeURIComponent(id)),
+    toStorePayload(store),
+  );
 }

@@ -16,6 +16,16 @@ import AddStore from "./pages/AddStore";
 import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
+<<<<<<< HEAD
+import CreateStoreType from "./pages/CreateStoreType";
+import CreatePlan from "./pages/CreatePlan";
+import StoreTypeDetails from "./pages/StoreTypeDetails";
+import StoreTypeFeatures from "./pages/StoreTypeFeatures";
+import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
+import Features from "./pages/Features";
+import FeaturePermissions from "./pages/FeaturePermissions";
+import RoleTemplates from "./pages/Roletemplates";
+=======
 import Employees from "./pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
 import Devices from "./pages/Devices";
@@ -25,14 +35,7 @@ import Coupons from "./pages/Coupons";
 import Orders from "./pages/Orders";
 
 
-import CreateStoreType from "./pages/CreateStoreType";
-import CreatePlan from "./pages/CreatePlan";
-import StoreTypeDetails from "./pages/StoreTypeDetails";
-import StoreTypeFeatures from "./pages/StoreTypeFeatures";
-import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
-import Features from "./pages/Features";
-import FeaturePermissions from "./pages/FeaturePermissions";
-import RoleTemplates from "./pages/Roletemplates";
+>>>>>>> dev
 
 const placeholders = [
 
