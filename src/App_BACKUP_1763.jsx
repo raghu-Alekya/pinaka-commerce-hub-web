@@ -16,16 +16,7 @@ import AddStore from "./pages/AddStore";
 import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
-import Employees from "./pages/Employees";
-import AddEmployee from "./pages/AddEmployee";
-import Devices from "./pages/Devices";
-import AddDevice from "./pages/AddDevice";
-import Products from "./pages/Products";
-import Coupons from "./pages/Coupons";
-import Orders from "./pages/Orders";
-import EditEmployee from "./pages/EditEmployee";
-
-
+<<<<<<< HEAD
 import CreateStoreType from "./pages/CreateStoreType";
 import CreatePlan from "./pages/CreatePlan";
 import StoreTypeDetails from "./pages/StoreTypeDetails";
@@ -34,6 +25,17 @@ import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
 import RoleTemplates from "./pages/Roletemplates";
+=======
+import Employees from "./pages/Employees";
+import AddEmployee from "./pages/AddEmployee";
+import Devices from "./pages/Devices";
+import AddDevice from "./pages/AddDevice";
+import Products from "./pages/Products";
+import Coupons from "./pages/Coupons";
+import Orders from "./pages/Orders";
+
+
+>>>>>>> dev
 
 const placeholders = [
 
@@ -109,11 +111,11 @@ export default function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/coupons" element={<Coupons />} />
         <Route path="/orders" element={<Orders />} />
-        <Route path="/editemployee" element={<EditEmployee />} />
         <Route
           path="/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
         />
+        import MerchantSubscriptions from "./pages/MerchantSubscriptions";
 
         <Route
           path="/merchant-subscriptions"
@@ -125,7 +127,7 @@ export default function App() {
         <Route path="/employees" element={<Employees />} />
         <Route path="/devices" element={<Devices />} />
         <Route path="/devices/add" element={<AddDevice />} />
-        <Route path="/employees/edit" element={<EditEmployee />} />
+        <Route path="/employees/add" element={<AddEmployee />} />
 
         <Route path="/features" element={<Features />} />
         <Route path="/permissions" element={<FeaturePermissions />} />

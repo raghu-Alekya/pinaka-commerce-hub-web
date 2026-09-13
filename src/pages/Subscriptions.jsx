@@ -1,234 +1,189 @@
-
-import { useMemo, useState } from "react";
-import {
-  Eye,
-  Search,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Store,
-  CheckCircle2,
-  XCircle,
-  Clock3,
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  ArrowLeftRight,
-  Info,
-  CreditCard,
-  Lock,
-  Smartphone,
-  Landmark,
-  CircleCheck,
-} from "lucide-react";
-
-import "../styles/Merchant-subscriptions.css";
-
-/* ========================================
-   MERCHANT DATA
-======================================== */
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const initialSubscriptions = [
   {
-    id: "MID001",
+    id: "M001",
     merchant: "Pinaka Mart LLC",
     plan: "Pro Plan",
+    status: "Active",
+    startDate: "12 Apr 2025",
+    startDateValue: "2025-04-12",
+    endDate: "12 Apr 2026",
     stores: 2,
     devices: 5,
-    start: "12 Apr 2025",
-    end: "12 Apr 2026",
-    status: "Active",
   },
+  
   {
-    id: "MID002",
+    id: "M002",
     merchant: "Sunshine Market",
     plan: "Pro Plan",
+    status: "Active",
+    startDate: "18 Apr 2025",
+    startDateValue: "2025-04-18",
+    endDate: "18 Apr 2026",
     stores: 4,
     devices: 10,
-    start: "18 Apr 2025",
-    end: "18 Apr 2026",
-    status: "Active",
   },
   {
-    id: "MID003",
+    id: "M003",
     merchant: "GreenLeaf Store",
     plan: "Basic Plan",
+    status: "Active",
+    startDate: "01 May 2025",
+    startDateValue: "2025-05-01",
+    endDate: "01 May 2026",
     stores: 1,
     devices: 3,
-    start: "01 May 2025",
-    end: "01 May 2026",
-    status: "Active",
   },
   {
-    id: "MID004",
-    merchant: "Urban Eats",
+    id: "M004",
+    merchant: "Foodies Corner",
+    plan: "Pro Plan",
+    status: "Active",
+    startDate: "05 Apr 2025",
+    startDateValue: "2025-04-05",
+    endDate: "05 Apr 2026",
+    stores: 3,
+    devices: 7,
+  },
+  {
+    id: "M005",
+    merchant: "WaveMart Stores",
     plan: "Enterprise Plan",
+    status: "Expired",
+    startDate: "10 Jan 2025",
+    startDateValue: "2025-01-10",
+    endDate: "10 Jan 2026",
     stores: 5,
     devices: 12,
-    start: "20 Apr 2025",
-    end: "20 Apr 2026",
-    status: "Expiring Soon",
-  },
-  {
-    id: "MID005",
-    merchant: "Tasty Bites",
-    plan: "Basic Plan",
-    stores: 3,
-    devices: 6,
-    start: "15 Mar 2024",
-    end: "15 Mar 2025",
-    status: "Inactive",
   },
 ];
 
-/* ========================================
-   SUBSCRIPTION PLANS
-======================================== */
+export default function MerchantSubscriptions() {
+  const navigate = useNavigate();
 
-const plans = [
-  {
-    name: "Basic Plan",
-    description: "Starter plan for small businesses",
-    price: 999,
-    yearly: 9990,
-    stores: 2,
-    devices: 5,
-    features: [
-      "Store Management",
-      "Device Management",
-      "Basic Reports",
-      "Email Support",
-    ],
-  },
-  {
-    name: "Pro Plan",
-    description: "Most popular for growing businesses",
-    price: 2499,
-    yearly: 24990,
-    stores: 5,
-    devices: 10,
-    features: [
-      "Store Management",
-      "Device Management",
-      "Advanced Reports",
-      "Priority Support",
-      "Email & Chat Support",
-    ],
-  },
-  {
-    name: "Enterprise Plan",
-    description: "For large businesses",
-    price: 4999,
-    yearly: 49990,
-    stores: 10,
-    devices: 25,
-    features: [
-      "All Pro Features",
-      "Multi-location Support",
-      "Custom Integrations",
-      "Dedicated Support",
-    ],
-  },
-];
+  const [subscriptions, setSubscriptions] = useState(initialSubscriptions);
+  const [merchantFilter, setMerchantFilter] = useState("");
+  const [planFilter, setPlanFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [storeFilter, setStoreFilter] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [message, setMessage] = useState("");
 
-const planData = Object.fromEntries(
-  plans.map((plan) => [plan.name, plan])
-);
+  const merchantNames = useMemo(() => {
+    return [...new Set(subscriptions.map((item) => item.merchant))];
+  }, [subscriptions]);
 
-const formatPrice = (amount) =>
-  `₹${Number(amount).toLocaleString("en-IN")}`;
+  const merchantScopedSubscriptions = useMemo(() => {
+    return subscriptions.filter((item) =>
+      item.merchant.toLowerCase().includes(merchantFilter.toLowerCase())
+    );
+  }, [subscriptions, merchantFilter]);
 
-/* ========================================
-   COMMON COMPONENTS
-======================================== */
+  const availablePlans = useMemo(() => {
+    return [...new Set(merchantScopedSubscriptions.map((item) => item.plan))];
+  }, [merchantScopedSubscriptions]);
 
-function StatusBadge({ status }) {
-  return (
-    <span
-      className={`status-badge ${status
-        .toLowerCase()
-        .replaceAll(" ", "-")}`}
-    >
-      <i />
-      {status}
-    </span>
-  );
-}
+  const availableStatuses = useMemo(() => {
+    return [
+      ...new Set(merchantScopedSubscriptions.map((item) => item.status)),
+    ];
+  }, [merchantScopedSubscriptions]);
 
-function PageBack({ label, onClick }) {
-  return (
-    <button className="page-back" onClick={onClick}>
-      <ArrowLeft size={17} />
-      {label}
-    </button>
-  );
-}
+  const availableStoreCounts = useMemo(() => {
+    return [
+      ...new Set(merchantScopedSubscriptions.map((item) => item.stores)),
+    ].sort((a, b) => a - b);
+  }, [merchantScopedSubscriptions]);
 
-function SelectField({ value, onChange, children }) {
-  return (
-    <div className="select-field">
-      <select value={value} onChange={onChange}>
-        {children}
-      </select>
-      <ChevronDown size={16} />
-    </div>
-  );
-}
+  const availableStartDates = useMemo(() => {
+    return merchantScopedSubscriptions
+      .map((item) => item.startDateValue)
+      .sort();
+  }, [merchantScopedSubscriptions]);
 
-function DetailRow({ label, value }) {
-  return (
-    <div className="detail-row">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
+  const merchantMinDate = availableStartDates[0] || "";
+  const merchantMaxDate = availableStartDates.at(-1) || "";
 
-/* ========================================
-   LIST SCREEN
-======================================== */
+  useEffect(() => {
+    if (planFilter && !availablePlans.includes(planFilter)) {
+      setPlanFilter("");
+    }
 
-function SubscriptionList({ subscriptions, onView }) {
-  const [search, setSearch] = useState("");
-  const [plan, setPlan] = useState("");
-  const [status, setStatus] = useState("");
-  const [stores, setStores] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [page, setPage] = useState(1);
+    if (statusFilter && !availableStatuses.includes(statusFilter)) {
+      setStatusFilter("");
+    }
 
-  const filtered = useMemo(() => {
-    return subscriptions.filter((item) => {
-      const searchValue = search.toLowerCase();
+    if (storeFilter && !availableStoreCounts.includes(Number(storeFilter))) {
+      setStoreFilter("");
+    }
 
-      const matchesSearch =
-        item.merchant.toLowerCase().includes(searchValue) ||
-        item.id.toLowerCase().includes(searchValue);
+    if (fromDate && merchantMinDate && fromDate < merchantMinDate) {
+      setFromDate("");
+    }
 
-      const matchesPlan = !plan || item.plan === plan;
-      const matchesStatus = !status || item.status === status;
-      const matchesStores =
-        !stores || String(item.stores) === stores;
+    if (toDate && merchantMaxDate && toDate > merchantMaxDate) {
+      setToDate("");
+    }
+  }, [
+    planFilter,
+    statusFilter,
+    storeFilter,
+    fromDate,
+    toDate,
+    availablePlans,
+    availableStatuses,
+    availableStoreCounts,
+    merchantMinDate,
+    merchantMaxDate,
+  ]);
+
+  const filteredSubscriptions = useMemo(() => {
+    return merchantScopedSubscriptions.filter((item) => {
+      const planMatches = !planFilter || item.plan === planFilter;
+      const statusMatches = !statusFilter || item.status === statusFilter;
+      const storeMatches = !storeFilter || item.stores === Number(storeFilter);
+
+      const fromDateMatches =
+        !fromDate || item.startDateValue >= fromDate;
+
+      const toDateMatches =
+        !toDate || item.startDateValue <= toDate;
 
       return (
-        matchesSearch &&
-        matchesPlan &&
-        matchesStatus &&
-        matchesStores
+        planMatches &&
+        statusMatches &&
+        storeMatches &&
+        fromDateMatches &&
+        toDateMatches
       );
     });
-  }, [subscriptions, search, plan, status, stores]);
+  }, [
+    merchantScopedSubscriptions,
+    planFilter,
+    statusFilter,
+    storeFilter,
+    fromDate,
+    toDate,
+  ]);
 
-  const resetFilters = () => {
-    setSearch("");
-    setPlan("");
-    setStatus("");
-    setStores("");
-    setStartDate("");
-    setEndDate("");
-    setPage(1);
-  };
+  function editSubscription(subscription) {
+    navigate("/subscriptions", {
+      state: { subscription },
+    });
+  }
+
+  function confirmDelete() {
+    setSubscriptions((current) =>
+      current.filter((item) => item.id !== deleteTarget.id)
+    );
+
+    setMessage(`${deleteTarget.merchant} subscription deleted.`);
+    setDeleteTarget(null);
+  }
 
   return (
     <section className="merchant-subscriptions-page">
@@ -245,6 +200,227 @@ function SubscriptionList({ subscriptions, onView }) {
           Export
         </button>
       </div>
+      {(error || referenceError) && (
+        <p role="alert">{error || referenceError}</p>
+      )}
+      {!loading && !plans.some((p) => p.status === "ACTIVE") && (
+        <p>
+          No active plans are available in the subscription master. Add or
+          activate a master plan before creating a subscription.
+        </p>
+      )}
+      {form && (
+        <form className="form-card" onSubmit={save}>
+          <h2>{editing ? "Edit" : "Add"} Subscription</h2>
+          <fieldset disabled={busy}>
+            <div className="form-grid">
+              <label className="form-group">
+                Merchant
+                <select
+                  required
+                  disabled={Boolean(editing)}
+                  value={form.merchantId}
+                  onChange={(e) => field("merchantId", e.target.value)}
+                >
+                  <option value="">Select merchant</option>
+                  {merchants.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.id})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="form-group">
+                Plan
+                <select
+                  required
+                  value={form.planCode}
+                  onChange={(e) => choosePlan(e.target.value)}
+                >
+                  <option value="">Select plan</option>
+                  {[
+                    ...new Set(
+                      [
+                        ...plans
+                          .filter((p) => p.status === "ACTIVE")
+                          .map((p) => p.planCode),
+                        form.planCode,
+                      ].filter(Boolean),
+                    ),
+                  ].map((code) => (
+                    <option key={code} value={code}>
+                      {plans.find((p) => p.planCode === code)?.planName || code}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="form-group">
+                Plan name
+                <input
+                  required
+                  readOnly
+                  value={form.planName}
+                  onChange={(e) => field("planName", e.target.value)}
+                />
+              </label>
+              {["maxStoresAllowed", "trialDays", "price"].map((key) => (
+                <label className="form-group" key={key}>
+                  {
+                    {
+                      maxStoresAllowed: "Maximum stores",
+                      trialDays: "Trial days",
+                      price: "Price",
+                    }[key]
+                  }
+                  <input
+                    required
+                    type="number"
+                    min={key === "maxStoresAllowed" ? 1 : 0}
+                    step={key === "price" ? "0.01" : "1"}
+                    readOnly
+                    value={form[key]}
+                    onChange={(e) => field(key, e.target.value)}
+                  />
+                </label>
+              ))}
+              <label className="form-group">
+                Billing cycle
+                <select
+                  disabled
+                  value={form.billingCycle}
+                  onChange={(e) => field("billingCycle", e.target.value)}
+                >
+                  {(reference.billingCycles || []).map((v) => (
+                    <option key={v}>{v}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="form-group">
+                Status
+                <select
+                  value={form.status}
+                  onChange={(e) => field("status", e.target.value)}
+                >
+                  {(reference.subscriptionStatuses || []).map((v) => (
+                    <option key={v}>{v}</option>
+                  ))}
+                </select>
+              </label>
+              {["currentPeriodStart", "currentPeriodEnd"].map((key) => (
+                <label className="form-group" key={key}>
+                  {key === "currentPeriodStart"
+                    ? "Period start (UTC)"
+                    : "Period end (UTC)"}
+                  <input
+                    type="datetime-local"
+                    value={form[key] ? form[key].slice(0, 16) : ""}
+                    onChange={(e) =>
+                      field(key, e.target.value ? e.target.value + "Z" : "")
+                    }
+                  />
+                </label>
+              ))}
+              <label className="form-group">
+                Entitlements (comma-separated)
+                <input
+                  readOnly
+                  value={form.entitlements}
+                  onChange={(e) => field("entitlements", e.target.value)}
+                />
+              </label>
+            </div>
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setForm(null)}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-primary" type="submit">
+                {busy ? "Saving…" : "Save subscription"}
+              </button>
+            </div>
+          </fieldset>
+        </form>
+      )}
+      <div className="stores-card">
+        <div className="store-toolbar">
+          <input
+            aria-label="Search subscriptions"
+            placeholder="Search merchant or plan…"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+        </div>
+        {loading ? (
+          <p role="status">Loading subscriptions…</p>
+        ) : (
+          <div className="table-responsive">
+            <table className="table">
+              <thead>
+                <tr>
+                  {[
+                    "Merchant",
+                    "Plan",
+                    "Billing cycle",
+                    "Price",
+                    "Status",
+                    "Period end",
+                    "Actions",
+                  ].map((h) => (
+                    <th key={h}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows
+                  .filter((s) =>
+                    `${names.get(s.merchantId)} ${s.merchantId} ${s.planName}`
+                      .toLowerCase()
+                      .includes(filter.toLowerCase()),
+                  )
+                  .map((s) => (
+                    <tr key={s.id}>
+                      <td>{names.get(s.merchantId) || s.merchantId}</td>
+                      <td>{s.planName}</td>
+                      <td>{s.billingCycle}</td>
+                      <td>{Number(s.price).toFixed(2)}</td>
+                      <td>{s.status}</td>
+                      <td>
+                        {s.currentPeriodEnd
+                          ? new Date(s.currentPeriodEnd).toLocaleDateString()
+                          : "—"}
+                      </td>
+                      <td>
+                        <button
+                          disabled={busy}
+                          className="btn btn-secondary"
+                          onClick={() => edit(s.id)}
+                        >
+                          Edit
+                        </button>{" "}
+                        <button
+                          disabled={busy}
+                          className="btn btn-secondary"
+                          onClick={() => remove(s)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                {!rows.length && (
+                  <tr>
+                    <td colSpan={7}>No subscriptions found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
 
       {/* OVERVIEW */}
 

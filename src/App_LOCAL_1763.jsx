@@ -7,7 +7,6 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Merchants from "./pages/Merchants";
 import MerchantStores from "./pages/MerchantStores";
-import Subscriptions from "./pages/Subscriptions";
 import Stores from "./pages/Stores";
 import Users from "./pages/Users";
 import PosConfiguration from "./pages/PosConfiguration";
@@ -16,16 +15,6 @@ import AddStore from "./pages/AddStore";
 import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
-import Employees from "./pages/Employees";
-import AddEmployee from "./pages/AddEmployee";
-import Devices from "./pages/Devices";
-import AddDevice from "./pages/AddDevice";
-import Products from "./pages/Products";
-import Coupons from "./pages/Coupons";
-import Orders from "./pages/Orders";
-import EditEmployee from "./pages/EditEmployee";
-
-
 import CreateStoreType from "./pages/CreateStoreType";
 import CreatePlan from "./pages/CreatePlan";
 import StoreTypeDetails from "./pages/StoreTypeDetails";
@@ -36,7 +25,7 @@ import FeaturePermissions from "./pages/FeaturePermissions";
 import RoleTemplates from "./pages/Roletemplates";
 
 const placeholders = [
-
+  "Subscriptions",
   "Orders",
   "Cash Management",
   "Employees",
@@ -94,11 +83,6 @@ export default function App() {
           path="/merchants/:merchantId/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
         />
-        <Route
-          path="/merchants/:merchantId/stores/:storeId/configuration/:section"
-          element={<StoreConfiguration />}
-        />
-        <Route path="/subscriptions" element={<Subscriptions />} />
         <Route path="/stores" element={<Stores />} />
         <Route path="/stores/new" element={<AddStore />} />
         <Route path="/stores/:storeId/edit" element={<AddStore />} />
@@ -106,26 +90,12 @@ export default function App() {
           path="/stores/:storeId/configuration"
           element={<StoreConfiguration />}
         />
-        <Route path="/products" element={<Products />} />
-        <Route path="/coupons" element={<Coupons />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/editemployee" element={<EditEmployee />} />
         <Route
           path="/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
         />
-
-        <Route
-          path="/merchant-subscriptions"
-          element={<subscriptions />}
-        />
-
         <Route path="/users" element={<Users />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
-        <Route path="/employees" element={<Employees />} />
-        <Route path="/devices" element={<Devices />} />
-        <Route path="/devices/add" element={<AddDevice />} />
-        <Route path="/employees/edit" element={<EditEmployee />} />
 
         <Route path="/features" element={<Features />} />
         <Route path="/permissions" element={<FeaturePermissions />} />

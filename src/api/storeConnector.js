@@ -19,71 +19,86 @@ export function getWordpressAuthHeader(storeId) {
 }
 
 export async function saveWordpressConnector(storeId, merchantId, values) {
+  if (!storeId) throw new Error("Store ID is required");
+  const siteUrl = String(values.siteUrl || "").replace(/\/+$/, "");
+  const jwtToken = String(values.jwtToken || "").trim();
+
   const payload = {
     storeId,
-    merchantId: merchantId || null,
-    siteUrl: String(values.siteUrl || "").replace(/\/+$/, ""),
-    jwtToken: String(values.jwtToken || "").trim(),
+    merchantId: merchantId || "",
+    siteUrl,
+    jwtToken,
     savedAt: new Date().toISOString(),
     connected: Boolean(values.connected),
     lastTestedAt: values.lastTestedAt || null,
     lastTestMessage: values.lastTestMessage || "",
   };
 
+  const body = {
+    storeId,
+    merchantId,
+    wordpressUrl: siteUrl,
+    wordpressJwt: jwtToken,
+  };
+
+  // Single dynamic PUT request to save & connect
   try {
-    await api.put(endpoints.storeConnector(storeId), {
-      storeId,
-      merchantId,
-      wordpressUrl: payload.siteUrl,
-      wordpressJwt: payload.jwtToken,
-    });
+    const result = await api.put(`/connector/api/v1/stores/${storeId}/connector`, body);
     payload.syncedToApi = true;
-  } catch {
-    payload.syncedToApi = false;
+    payload.lastTestMessage = result?.message || payload.lastTestMessage;
+  } catch (err) {
+    try {
+      const fallbackResult = await api.put(endpoints.storeConnector(storeId), body);
+      payload.syncedToApi = true;
+      payload.lastTestMessage = fallbackResult?.message || payload.lastTestMessage;
+    } catch {
+      payload.syncedToApi = false;
+    }
   }
 
   localStorage.setItem(storageKey(storeId), JSON.stringify(payload));
   return payload;
 }
 
-export async function testWordpressConnection(siteUrl, jwtToken) {
+export async function testWordpressConnection(siteUrl, jwtToken, storeId, merchantId) {
   const base = String(siteUrl || "").replace(/\/+$/, "");
-  if (!base || !jwtToken) {
+  const token = String(jwtToken || "").trim();
+  if (!base || !token) {
     throw new Error("WordPress site URL and JWT token are required.");
   }
-
-  const endpointsToTry = [
-    `${base}/wp-json/wp/v2/users/me`,
-    `${base}/wp-json/pinaka-pos/v1/token`,
-  ];
-
-  let lastError = "Unable to connect to the WordPress site.";
-
-  for (const url of endpointsToTry) {
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json().catch(() => ({}));
-        return {
-          ok: true,
-          message: "WordPress site connected successfully.",
-          data,
-        };
-      }
-
-      lastError = `WordPress responded with status ${response.status}.`;
-    } catch {
-      lastError =
-        "The browser could not reach the WordPress site. The token is still saved for this store.";
-    }
+  if (!storeId) {
+    throw new Error("Store ID is required.");
   }
 
-  return { ok: false, message: lastError };
+  const payload = {
+    storeId,
+    merchantId,
+    wordpressUrl: base,
+    wordpressJwt: token,
+  };
+
+  // Exclusively execute PUT /connector/api/v1/stores/{storeId}/connector (No /connectors/woocommerce/test-connection call)
+  try {
+    const result = await api.put(`/connector/api/v1/stores/${storeId}/connector`, payload);
+    return {
+      ok: true,
+      message: result?.message || `WordPress connected & catalog synchronized successfully! Synced ${result?.syncedProductsCount || 0} products into database.`,
+      data: result,
+    };
+  } catch (err) {
+    // Fallback to /api/v1/stores/{storeId}/connector if /connector/ prefix is not routed
+    try {
+      const fallbackResult = await api.put(endpoints.storeConnector(storeId), payload);
+      return {
+        ok: true,
+        message: fallbackResult?.message || `WordPress connected & catalog synchronized successfully!`,
+        data: fallbackResult,
+      };
+    } catch (fallbackErr) {
+      return {
+        ok: false,
+        message: err.message || fallbackErr.message || "Failed to connect to WordPress connector.",
+      };
+    }
+  }
 }
