@@ -11,7 +11,7 @@ const sections = [
     items: [
       ["/merchants", "bi-person-badge", "Merchants"],
       ["/stores", "bi-shop", "Stores"],
-      ["/merchant-subscriptions", "bi-cart3", "Subscriptions"],
+      ["/subscriptions", "bi-cart3", "Subscriptions"],
     ],
   },
   {
