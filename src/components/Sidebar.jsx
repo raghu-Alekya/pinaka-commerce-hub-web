@@ -11,7 +11,7 @@ const sections = [
     items: [
       ["/merchants", "bi-person-badge", "Merchants"],
       ["/stores", "bi-shop", "Stores"],
-      ["/merchant-subscriptions", "bi-cart3", "Subscriptions"],
+      ["/subscriptions", "bi-cart3", "Subscriptions"],
     ],
   },
   {
@@ -53,6 +53,7 @@ const sections = [
       ["/notifications", "bi-bell", "Notifications"],
     ],
   },
+<<<<<<< HEAD
     {
         title: "",
         items: [
@@ -88,6 +89,8 @@ const sections = [
             ["/notifications", "bi-bell", "Notifications"]
         ]
     }
+=======
+>>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
 ];
 
 export default function Sidebar({
@@ -134,9 +137,17 @@ export default function Sidebar({
                       <button
                         type="button"
                         className="menu-item master-setup-button"
-                        onClick={() =>
-                          setMasterSetupOpen((current) => !current)
-                        }
+                        aria-label={label}
+                        aria-expanded={!collapsed && masterSetupOpen}
+                        aria-controls="master-setup-submenu"
+                        onClick={() => {
+                          if (collapsed) {
+                            setCollapsed(false);
+                            setMasterSetupOpen(true);
+                          } else {
+                            setMasterSetupOpen((current) => !current);
+                          }
+                        }}
                       >
                         <i className={`bi ${icon}`} />
 
@@ -154,7 +165,7 @@ export default function Sidebar({
                       </button>
 
                       {!collapsed && masterSetupOpen && (
-                        <div className="master-setup-submenu">
+                        <div id="master-setup-submenu" className="master-setup-submenu">
                           {subItems.map(([subTo, subIcon, subLabel]) => (
                             <NavLink
                               key={subTo}

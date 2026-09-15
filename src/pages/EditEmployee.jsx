@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import PhoneInputModule from "react-phone-input-2";
 
 const PhoneInput = PhoneInputModule.default || PhoneInputModule;
 import "react-phone-input-2/lib/style.css";
-<<<<<<< HEAD
-=======
 
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
 import {
   User,
   Camera,
@@ -22,10 +20,7 @@ import {
 } from "lucide-react";
 
 import "../styles/add-employee.css";
-<<<<<<< HEAD
-=======
 
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
 /*
  * Store Role Assignment UI styles.
  * Kept here so the new Work Information UI works without requiring
@@ -401,21 +396,20 @@ const storeRoleStyles = `
 function StoreRoleAssignmentStyles() {
   return <style>{storeRoleStyles}</style>;
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
-export default function AddEmployee() {
+export default function EditEmployee() {
+  const location = useLocation();
+  const employee = location.state?.employee || {};
   const [showPassword, setShowPassword] = useState(false);
 
   // Profile image preview
   const [profileImage, setProfileImage] = useState(null);
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
+    firstName: employee.name?.split(" ")[0] || "",
+    lastName: employee.name?.split(" ").slice(1).join(" ") || "",
+    email: employee.email || "",
+    phone: employee.phone || "",
     dob: "",
     gender: "",
     address1: "",
@@ -424,16 +418,10 @@ export default function AddEmployee() {
     state: "",
     pinCode: "",
     country: "India",
-<<<<<<< HEAD
-    role: "",
-    merchant: "",
-    store: "",
-=======
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
-    merchant: "",
+    merchant: employee.merchant || "",
     employeeLoginPin: "",
     manager: "",
-    username: "",
+    username: employee.id || "",
     password: "",
     sendCredentials: true,
   });
@@ -697,14 +685,6 @@ export default function AddEmployee() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-<<<<<<< HEAD
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-
-=======
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
     const nextValue =
       name === "employeeLoginPin"
         ? value.replace(/\D/g, "").slice(0, 6)
@@ -777,11 +757,6 @@ export default function AddEmployee() {
   const handleSave = (e) => {
     e.preventDefault();
 
-<<<<<<< HEAD
-    console.log("Employee details:", formData);
-
-=======
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
     if (!validateForm()) {
       requestAnimationFrame(() => {
         const firstInvalid = document.querySelector(
@@ -796,7 +771,7 @@ export default function AddEmployee() {
     console.log("Store role assignments:", storeAssignments);
     console.log("Profile image:", profileImage);
 
-    alert("Employee saved successfully");
+    alert("Employee updated successfully");
   };
 
   /* =========================================================
@@ -809,10 +784,6 @@ export default function AddEmployee() {
 
   return (
     <div className="add-employee-page">
-<<<<<<< HEAD
-
-=======
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
       <StoreRoleAssignmentStyles />
 
       {/* =====================================================
@@ -821,7 +792,7 @@ export default function AddEmployee() {
 
       <div className="add-employee-header">
         <div>
-          <h1>Add Employee</h1>
+          <h1>Edit Employee</h1>
 
           <div className="add-employee-breadcrumb">
             <span>Home</span>
@@ -832,7 +803,7 @@ export default function AddEmployee() {
 
             <span className="breadcrumb-arrow">›</span>
 
-            <strong>Add Employee</strong>
+            <strong>Edit Employee</strong>
           </div>
         </div>
 
@@ -850,12 +821,7 @@ export default function AddEmployee() {
           FORM
       ===================================================== */}
 
-<<<<<<< HEAD
-
-      <form onSubmit={handleSave}>
-=======
       <form onSubmit={handleSave} autoComplete="off">
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
         <div className="add-employee-layout">
           {/* =================================================
               LEFT COLUMN
@@ -907,30 +873,6 @@ export default function AddEmployee() {
 
                 {/* PHONE */}
 
-<<<<<<< HEAD
-                <div className="employee-field">
-                  <label>
-                    Phone Number <span>*</span>
-                  </label>
-
-                  <div className="phone-input">
-                    <div className="country-code">
-                      <span>+91</span>
-
-                      <ChevronDown size={15} />
-                    </div>
-
-                    <input
-                      type="tel"
-                      name="phone"
-                      placeholder="Enter phone number"
-                      value={formData.phone}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-=======
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
                 
               <div className="employee-field employee-phone-field">
                 <label>
@@ -962,11 +904,6 @@ export default function AddEmployee() {
                 {/* DATE OF BIRTH */}
 
                 <div className="employee-field">
-<<<<<<< HEAD
-
-                  <label>Date of Birth</label>
-=======
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
                   <label>
                     Date of Birth <span>*</span>
                   </label>
@@ -1072,12 +1009,8 @@ export default function AddEmployee() {
                   label="Country"
                   name="country"
                   value={formData.country}
-<<<<<<< HEAD
-                  onChange={handleChange}                  error={errors.country}
-=======
                   onChange={handleChange}
                   error={errors.country}
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
                   options={[
                     "India",
                     "United States",
@@ -1152,75 +1085,7 @@ export default function AddEmployee() {
                 WORK INFORMATION
             ================================================= */}
 
-<<<<<<< HEAD
-            <section className="employee-card">
-              <CardHeader
-                icon={<BriefcaseBusiness size={21} />}
-                title="Work Information"
-                description="Assign role, merchant and store for the employee."
-              />
-
-              <div className="employee-form-grid two-columns">
-                <SelectField
-                  label="Role"
-                  required
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  placeholder="Select role"
-                  options={[
-                    "Admin",
-                    "Store Manager",
-                    "Cashier",
-                    "Sales Associate",
-                  ]}
-                />
-
-                <SelectField
-                  label="Merchant"
-                  required
-                  name="merchant"
-                  value={formData.merchant}
-                  onChange={handleChange}
-                  placeholder="Select merchant"
-                  options={[
-                    "FreshMart",
-                    "TechWorld",
-                    "FashionHub",
-                    "ElectroPlus",
-                  ]}
-                />
-
-                <SelectField
-                  label="Store"
-                  required
-                  name="store"
-                  value={formData.store}
-                  onChange={handleChange}
-                  placeholder="Select store"
-                  options={[
-                    "Banjara Hills",
-                    "Jubilee Hills",
-                    "Madhapur",
-                    "Hitech City",
-                    "Gachibowli",
-                  ]}
-                />
-
-                <SelectField
-                  label="Reporting Manager"
-                  name="manager"
-                  value={formData.manager}
-                  onChange={handleChange}
-                  placeholder="Select manager (optional)"
-                  options={["Santhosh Kumar", "Priya Desai", "Arjun Reddy"]}
-                />
-              </div>
-             </section>
-
-=======
             <section className="employee-card work-information-card">
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
               <CardHeader
                 icon={<BriefcaseBusiness size={21} />}
                 title="Work Information"
@@ -1319,6 +1184,7 @@ export default function AddEmployee() {
                   Add Another Store
                 </button>
               </div>
+            </section>
 
             {/* =================================================
                 ACCOUNT SETTINGS
@@ -1350,11 +1216,7 @@ export default function AddEmployee() {
                   </label>
 
                   <div className="password-input">
-<<<<<<< HEAD
-                    <input
-=======
                    <input
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
                       type={showPassword ? "text" : "password"}
                       name="password"
                       placeholder="Enter temporary password"
@@ -1394,21 +1256,17 @@ export default function AddEmployee() {
           </button>
 
           <button type="submit" className="save-employee-btn">
-            Save Employee
+            Update Employee
           </button>
         </div>
       </form>
     </div>
   );
 }
-<<<<<<< HEAD
- {/* ========================================================
-=======
 
 /* =========================================================
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
    STORE + ROLE ASSIGNMENT
-========================================================= */}
+========================================================= */
 
 function StoreRoleAssignment({
   assignment,
@@ -1585,10 +1443,6 @@ function FormField({
   value,
   onChange,
   error,
-<<<<<<< HEAD
-
-=======
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
 }) {
   return (
     <div className="employee-field">
@@ -1598,22 +1452,15 @@ function FormField({
         {required && <span> *</span>}
       </label>
 
-<<<<<<< HEAD
-      <input
-=======
     <input
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
         type={type}
         name={name}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-<<<<<<< HEAD
-      />
-=======
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
         autoComplete={name === "username" ? "off" : undefined}
         className={error ? "field-invalid" : ""}
+      />
    
       {error && <span className="field-error">{error}</span>}
     </div>
@@ -1643,19 +1490,12 @@ function SelectField({
       </label>
 
       <div className="employee-select">
-<<<<<<< HEAD
-        <select name={name} value={value} onChange={onChange}>
-=======
         <select
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
           name={name}
           value={value}
           onChange={onChange}
           className={error ? "field-invalid" : ""}
-<<<<<<< HEAD
-=======
         >
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
           {!value && <option value="">{placeholder}</option>}
 
           {options.map((option) => (
@@ -1668,10 +1508,6 @@ function SelectField({
         <ChevronDown size={17} className="employee-select-arrow" />
       </div>
       {error && <span className="field-error">{error}</span>}
-<<<<<<< HEAD
-
-=======
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
     </div>
   );
 }

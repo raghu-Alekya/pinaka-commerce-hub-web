@@ -583,6 +583,206 @@
     color: #5942d6;
     cursor: pointer;
 }
+/* =========================================================
+   COUPON HEADER ACTIONS
+========================================================= */
+
+.coupons-header {
+    align-items: flex-start;
+}
+
+.coupons-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+
+/* =========================================================
+   COUPON SYNC BUTTONS
+========================================================= */
+
+.coupon-sync-btn {
+    height: 42px;
+    padding: 0 16px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    border-radius: 8px;
+    border: 1px solid transparent;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.coupon-sync-btn i {
+    font-size: 15px;
+}
+
+
+/* FAST IMPORT */
+
+.coupon-sync-import {
+    background: #6c4cff;
+    color: #ffffff;
+    border-color: #6c4cff;
+}
+
+.coupon-sync-import:hover:not(:disabled) {
+    background: #5b3fe0;
+    border-color: #5b3fe0;
+    box-shadow: 0 4px 12px rgba(108, 76, 255, 0.20);
+}
+
+
+/* LATEST UPDATES */
+
+.coupon-sync-update {
+    background: #ffffff;
+    color: #333333;
+    border-color: #dcdcdc;
+}
+
+.coupon-sync-update:hover:not(:disabled) {
+    background: #f7f7f9;
+    border-color: #c8c8c8;
+}
+
+
+/* DISABLED */
+
+.coupon-sync-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SYNC SPINNER
+========================================================= */
+
+.coupon-sync-spinner {
+    width: 14px;
+    height: 14px;
+
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+
+    border-radius: 50%;
+
+    animation: couponSyncSpin 0.7s linear infinite;
+}
+
+@keyframes couponSyncSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   SYNC MESSAGE
+========================================================= */
+
+.coupons-sync-message {
+    margin-bottom: 16px;
+
+    min-height: 44px;
+    padding: 10px 14px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.coupons-sync-message > i {
+    font-size: 17px;
+}
+
+.coupons-sync-message span {
+    flex: 1;
+}
+
+.coupons-sync-message button {
+    border: 0;
+    background: transparent;
+
+    padding: 2px;
+
+    color: inherit;
+    font-size: 18px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.coupons-sync-message.success {
+    background: #eefaf2;
+    border: 1px solid #ccebd5;
+    color: #247a3b;
+}
+
+.coupons-sync-message.error {
+    background: #fff1f1;
+    border: 1px solid #f1cccc;
+    color: #b42323;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .coupons-header-actions {
+        justify-content: flex-start;
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .coupons-header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .coupon-sync-btn {
+        width: 100%;
+    }
+
+    .coupons-store-context {
+        grid-column: 1 / -1;
+    }
+
+}
+
+@media (max-width: 480px) {
+
+    .coupons-header-actions {
+        grid-template-columns: 1fr;
+    }
+
+}
 
 /* =========================================================
    RESPONSIVE
