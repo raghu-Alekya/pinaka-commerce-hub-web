@@ -76,13 +76,6 @@ export default function StoreTypeDetails() {
           Role Templates
         </button>
 
-        <button
-          type="button"
-          className={activeTab === "configuration" ? "active" : ""}
-          onClick={() => setActiveTab("configuration")}
-        >
-          Configuration Defaults
-        </button>
       </nav>
 
       {activeTab === "overview" ? (
@@ -156,7 +149,6 @@ export default function StoreTypeDetails() {
           <h2>
             {activeTab === "features" && "Features"}
             {activeTab === "roles" && "Role Templates"}
-            {activeTab === "configuration" && "Configuration Defaults"}
           </h2>
           <p>
             Configure this store type section here.
