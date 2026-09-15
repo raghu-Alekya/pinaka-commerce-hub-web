@@ -79,26 +79,24 @@ export default function StoreTypeRoleTemplates() {
       </div>
 
       <div className="role-templates-tabs">
-        <button
-          type="button"
-          onClick={() => navigate(`/store-types/${storeTypeId}`)}
-        >
-          Overview
-        </button>
+  <button
+    type="button"
+    onClick={() => navigate(`/store-types/${storeTypeId}`)}
+  >
+    Overview
+  </button>
 
-        <button
-          type="button"
-          onClick={() => navigate(`/store-types/${storeTypeId}/features`)}
-        >
-          Features
-        </button>
+  <button
+    type="button"
+    onClick={() => navigate(`/store-types/${storeTypeId}/features`)}
+  >
+    Features
+  </button>
 
-        <button type="button" className="active">
-          Role Templates
-        </button>
-
-        <button type="button">Configuration Defaults</button>
-      </div>
+  <button type="button" className="active">
+    Role Templates
+  </button>
+</div>
 
       <section className="role-templates-card">
         <div className="role-templates-card-header">
@@ -140,54 +138,42 @@ export default function StoreTypeRoleTemplates() {
 
         <div className="role-templates-table">
           <div className="role-template-row role-template-row-head">
-            <div>Role Template</div>
-            <div>Scope</div>
-            <div>Default</div>
-            <div>Required</div>
-            <div>Action</div>
-          </div>
+             <div>Role Template</div>
+             <div>Scope</div>
+             <div>Active</div>
+             <div>Action</div>
+           </div>
 
           {filteredRoles.map((role) => (
             <div className="role-template-row" key={role.id}>
-              <div className="role-template-name">
-                <span className={`role-template-icon ${role.color}`}>
-                  <i className={`bi ${role.icon}`} />
-                </span>
-                {role.name}
-              </div>
+  <div className="role-template-name">
+    <span className={`role-template-icon ${role.color}`}>
+      <i className={`bi ${role.icon}`} />
+    </span>
+    {role.name}
+  </div>
 
-              <div>{role.scope}</div>
+  <div>{role.scope}</div>
 
-              <div>
-                <button
-                  type="button"
-                  className={`role-template-switch ${
-                    role.defaultEnabled ? "enabled" : ""
-                  }`}
-                  onClick={() => toggleRole(role.id, "defaultEnabled")}
-                >
-                  <span />
-                </button>
-              </div>
+  <div>
+    <button
+      type="button"
+      className={`role-template-switch ${
+        role.defaultEnabled ? "enabled" : ""
+      }`}
+      onClick={() => toggleRole(role.id, "defaultEnabled")}
+      aria-label={`Toggle ${role.name} active`}
+    >
+      <span />
+    </button>
+  </div>
 
-              <div>
-                <button
-                  type="button"
-                  className={`role-template-switch ${
-                    role.required ? "enabled" : ""
-                  }`}
-                  onClick={() => toggleRole(role.id, "required")}
-                >
-                  <span />
-                </button>
-              </div>
-
-              <div>
-                <button type="button" className="role-template-more-button">
-                  <i className="bi bi-three-dots-vertical" />
-                </button>
-              </div>
-            </div>
+  <div>
+    <button type="button" className="role-template-more-button">
+      <i className="bi bi-three-dots-vertical" />
+    </button>
+  </div>
+</div>
           ))}
         </div>
 
