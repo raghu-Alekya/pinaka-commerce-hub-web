@@ -43,7 +43,28 @@ export default function MerchantStores() {
   }, [merchantId]);
 
   const statusClass = (merchant?.status || "active").toLowerCase().replace(/\s+/g, "-");
+  // Merchant dashboard card statistics
+const totalStores = stores.length;
 
+const activeStores = stores.filter(
+  (store) => (store.status || "").toLowerCase() === "active"
+).length;
+
+const inactiveStores = totalStores - activeStores;
+
+const totalPosDevices = stores.reduce(
+  (total, store) =>
+    total + Number(store.posDevices || store.pos_devices || 0),
+  0
+);
+
+const totalEmployees = stores.reduce(
+  (total, store) =>
+    total + Number(store.employees || store.employeeCount || 0),
+  0
+);
+
+const subscriptionPlan = merchant?.plan || "—";
   return (
     <div className="page-content merchant-store-page">
       <div className="breadcrumb-area">
@@ -54,12 +75,6 @@ export default function MerchantStores() {
         <span>Merchant Stores</span>
       </div>
 
-      <div className="page-header merchant-store-header">
-        <div>
-          <h1>Merchant Stores</h1>
-          <p>View and manage stores belonging to this merchant.</p>
-        </div>
-      </div>
 
       {loading ? (
         <section className="merchant-summary-card">Loading merchant details...</section>
@@ -93,6 +108,81 @@ export default function MerchantStores() {
             </div>
           </section>
 
+          {/* Merchant Dashboard Cards */}
+        <section className="merchant-dashboard-cards">
+
+          {/* Total Stores */}
+          <div className="merchant-dashboard-card">
+            <div className="dashboard-card-icon purple">
+              <i className="bi bi-shop" />
+            </div>
+            <div className="dashboard-card-content">
+              <span>Total Stores</span>
+              <h3>{totalStores}</h3>
+            </div>
+          </div>
+
+          {/* Active Stores */}
+          <div className="merchant-dashboard-card">
+            <div className="dashboard-card-icon green">
+              <i className="bi bi-check-circle" />
+            </div>
+            <div className="dashboard-card-content">
+              <span>Active Stores</span>
+              <h3>{activeStores}</h3>
+            </div>
+          </div>
+
+          {/* Inactive Stores */}
+          <div className="merchant-dashboard-card">
+            <div className="dashboard-card-icon red">
+              <i className="bi bi-wifi-off" />
+            </div>
+            <div className="dashboard-card-content">
+              <span>Inactive Stores</span>
+              <h3>{inactiveStores}</h3>
+            </div>
+          </div>
+
+          {/* Total POS Devices */}
+          <div className="merchant-dashboard-card">
+            <div className="dashboard-card-icon blue">
+              <i className="bi bi-display" />
+            </div>
+            <div className="dashboard-card-content">
+              <span>Total POS Devices</span>
+              <h3>{totalPosDevices}</h3>
+            </div>
+          </div>
+
+          {/* Total Employees */}
+          <div className="merchant-dashboard-card">
+            <div className="dashboard-card-icon green">
+              <i className="bi bi-people" />
+            </div>
+            <div className="dashboard-card-content">
+              <span>Total Employees</span>
+              <h3>{totalEmployees}</h3>
+            </div>
+          </div>
+
+          {/* Subscription Plan */}
+          <div className="merchant-dashboard-card">
+            <div className="dashboard-card-icon orange">
+              <i className="bi bi-award" />
+            </div>
+            <div className="dashboard-card-content">
+              <span>Subscription Plan</span>
+              <h3 className="subscription-plan-text">
+                {subscriptionPlan}
+              </h3>
+              <small className="subscription-active">
+                ● Active
+              </small>
+            </div>
+          </div>
+
+        </section>
           <section className="stores-card">
             <div className="stores-card-header">
               <div>
