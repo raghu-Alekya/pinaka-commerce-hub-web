@@ -355,9 +355,6 @@ export default function Features() {
                   <td className="check-col"><input type="checkbox" /></td>
                   <td>
                     <div className="feature-name">
-                      <span className={`row-icon ${item.tone}`}>
-                        <i className={`bi ${item.icon}`} />
-                      </span>
                       {item.name}
                     </div>
                   </td>
