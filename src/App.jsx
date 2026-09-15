@@ -31,6 +31,7 @@ import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
+import ConfigurePermissions from "./pages/ConfigurePermissions";
 import RoleTemplates from "./pages/Roletemplates";
 
 
@@ -134,6 +135,7 @@ export default function App() {
         <Route path="/employees/edit" element={<EditEmployee />} />
         <Route path="/employees/add" element={<AddEmployee />} />
         <Route path="/features" element={<Features />} />
+        <Route path="/features/:featureId/permissions" element={<ConfigurePermissions />} />
         <Route path="/permissions" element={<FeaturePermissions />} />
         <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
