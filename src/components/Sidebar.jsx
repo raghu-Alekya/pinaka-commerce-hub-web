@@ -100,9 +100,17 @@ export default function Sidebar({
                       <button
                         type="button"
                         className="menu-item master-setup-button"
-                        onClick={() =>
-                          setMasterSetupOpen((current) => !current)
-                        }
+                        aria-label={label}
+                        aria-expanded={!collapsed && masterSetupOpen}
+                        aria-controls="master-setup-submenu"
+                        onClick={() => {
+                          if (collapsed) {
+                            setCollapsed(false);
+                            setMasterSetupOpen(true);
+                          } else {
+                            setMasterSetupOpen((current) => !current);
+                          }
+                        }}
                       >
                         <i className={`bi ${icon}`} />
 
@@ -120,7 +128,7 @@ export default function Sidebar({
                       </button>
 
                       {!collapsed && masterSetupOpen && (
-                        <div className="master-setup-submenu">
+                        <div id="master-setup-submenu" className="master-setup-submenu">
                           {subItems.map(([subTo, subIcon, subLabel]) => (
                             <NavLink
                               key={subTo}

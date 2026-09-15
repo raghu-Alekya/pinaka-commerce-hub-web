@@ -31,7 +31,10 @@ import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
+<<<<<<< HEAD
 import ConfigurePermissions from "./pages/ConfigurePermissions";
+=======
+>>>>>>> 1f058f5 (test)
 import RoleTemplates from "./pages/Roletemplates";
 
 
@@ -144,6 +147,21 @@ export default function App() {
           path="/store-types/:storeTypeId"
           element={<StoreTypeDetails />}
         />
+        <Route
+          path="/store-types/:storeTypeId/features"
+          element={<StoreTypeFeatures />}
+        />
+        <Route
+          path="/store-types/:storeTypeId/role-templates"
+          element={<StoreTypeRoleTemplates />}
+        />
+
+        <Route path="/features" element={<Features />} />
+        <Route path="/permissions" element={<FeaturePermissions />} />
+        <Route path="/role-templates" element={<RoleTemplates />} />
+        <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/store-types/new" element={<CreateStoreType />} />
+        <Route path="/store-types/:storeTypeId" element={<StoreTypeDetails />} />
         <Route
           path="/store-types/:storeTypeId/features"
           element={<StoreTypeFeatures />}
