@@ -93,7 +93,7 @@ function createStore(code='') {
 function initialState() {
   return {step:0,furthest:0,done:false,store:0,plan:-1,cycle:'',start:'',enterpriseStores:'',enterpriseDevices:'',
     merchant:{code:'',name:'',business:'',display:'',email:'',phone:'',country:'',city:'',state:'',address:'',postal:''},
-    stores:[createStore()],roles:[],activeRole:0,devices:[]};
+    phase:'merchant',subscriptionStatus:'Pending activation',stores:[],roles:[],activeRole:0,devices:[]};
 }
 
 function featureReason(state, index, store = state.stores[state.store]) {
@@ -119,9 +119,41 @@ function renewalDate(start, cycle) {
   return date.toISOString().slice(0, 10);
 }
 
-function validate(state) {
+export function validateSchedule(hours = []) {
+  for (const day of hours) {
+    if (day.status && !['Open','Closed','24 hours'].includes(day.status)) return 'Select a valid day status.';
+    if (day.status === 'Closed') continue;
+    if (String(day.shifts ?? '').trim() && (!Number.isInteger(Number(day.shifts)) || Number(day.shifts) < 1)) return 'Shift counts must be positive whole numbers when entered.';
+    if (day.status === '24 hours') continue;
+    for (const key of ['open','close']) if (day[key] && !/^([01]\d|2[0-3]):[0-5]\d$/.test(day[key])) return 'Enter a valid opening or closing time.';
+    if (day.open && day.close && day.open === day.close) return 'Opening and closing times must differ; use 24 hours for all-day operation.';
+  }
+  return '';
+}
+
+export function validate(state) {
   const stage = state.step;
-  if(!state.merchant.code || state.stores.some(store=>!store.code)) return 'Wait for automatic code generation.';
+  if(!state.merchant.code || (state.phase === 'store' && state.stores.some(store=>!store.code))) return 'Wait for automatic code generation.';
+  if (state.phase !== 'store') {
+    if (stage === 0 || stage === 6) {
+      const addressError = validateAddress(state.merchant, 'Primary contact');
+      if (addressError) return addressError;
+      const phoneError = validatePhone(state.merchant.phone, state.merchant.country);
+      if (phoneError) return phoneError;
+      if (Object.values(state.merchant).some(value => !String(value).trim())) return 'Complete all merchant and primary contact fields.';
+      if (!validEmail(state.merchant.email)) return 'Enter a valid email such as name@example.com.';
+    }
+    if (stage === 2 || stage === 6) {
+      const selectedPlan = packages[state.plan];
+      if (!selectedPlan) return 'Select a subscription plan.';
+      if (!['Monthly','Annual'].includes(state.cycle)) return 'Select a billing cycle.';
+      if (!renewalDate(state.start, state.cycle)) return 'Enter a valid subscription start date.';
+      const limits = [selectedPlan.stores ?? +state.enterpriseStores, selectedPlan.devices ?? +state.enterpriseDevices];
+      if (!limits.every(value => Number.isInteger(value) && value > 0)) return 'License limits must be positive whole numbers.';
+      if (state.stores.length > limits[0] || state.devices.length > limits[1]) return 'The selected plan cannot accommodate existing stores or devices.';
+    }
+    return '';
+  }
   if (!state.stores.length) return 'Add at least one store.';
   if (stage === 0 || stage === 6) {
     const addressError=validateAddress(state.merchant,'Primary contact');
@@ -142,9 +174,8 @@ function validate(state) {
         try { const url = new URL(store.url); if (url.protocol !== 'https:' || url.username || url.password) throw Error(); }
         catch { return `${store.name}: enter a valid HTTPS base URL.`; }
       }
-      if(store.hours.length!==7 || new Set(store.hours.map(day=>day.day)).size!==7 || store.hours.some(day=>!['Open','Closed','24 hours'].includes(day.status))) return store.name+': complete the seven-day schedule.';
-      if (store.hours.some(day => day.status !== 'Closed' && (!Number.isInteger(+day.shifts) || +day.shifts < 1 ||
-        (day.status === 'Open' && (!/^([01]\d|2[0-3]):[0-5]\d$/.test(day.open) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(day.close) || day.open === day.close))))) return `${store.name}: check opening times and shift counts.`;
+      const scheduleError = validateSchedule(store.hours);
+      if (scheduleError) return store.name + ': ' + scheduleError;
     }
   }
   const plan = packages[state.plan];
@@ -173,7 +204,6 @@ function validate(state) {
 
 
 // Static UI flow. Never fetched from master data.
-const ONBOARDING_STEPS=[['Merchant details','Tenant & commercial identity'],['Store locations','Type defaults & operations'],['Merchant subscription','Package & location licenses'],['Devices','Register & allocate licenses'],['Effective features','Relevance × entitlement'],['Merchant roles','Templates & permissions'],['Review & provision','Connected records']];
 
 function Field({ label, value, onChange, type = 'text', required = true, ...props }) {
   return <label className="pch-field">{label}{required && !props.readOnly ? ' *' : ''}
@@ -186,8 +216,8 @@ function Field({ label, value, onChange, type = 'text', required = true, ...prop
       onChange={onChange ? event => { event.target.setCustomValidity(''); onChange(event.target.value); } : undefined} />
   </label>;
 }
-function Select({ label, value, onChange, options }) {
-  return <label className="pch-field">{label}<select required value={value} onChange={event => onChange(event.target.value)}><option value="" disabled>Select {label.replace(/\s*\*$/, "")}</option>
+function Select({ label, value, onChange, options, required = true }) {
+  return <label className="pch-field">{label}<select required={required} value={value} onChange={event => onChange(event.target.value)}><option value="" disabled={required}>Select {label.replace(/\s*\*$/, "")}</option>
     {options.map(option => typeof option === 'string'
       ? <option key={option} value={option}>{option}</option>
       : <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -221,9 +251,14 @@ function MerchantPageHeader({ editing = false, code = '', onBack }) {
   );
 }
 
-function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequence = reserveLocalSequence }) {
+function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, getNextSequence = reserveLocalSequence }) {
   const editing=Boolean(initialValue);
-  const [state, setState] = useState(()=>initialValue?{...structuredClone(initialValue),step:0,furthest:6,done:false,store:0,activeRole:0}:initialState());
+  const [paymentPreview,setPaymentPreview]=useState('card');
+  const [historyStatus,setHistoryStatus]=useState('All');
+  const [historyDetails,setHistoryDetails]=useState(null);
+  const [manageSubscription,setManageSubscription]=useState(false);
+  const [cancelRequested,setCancelRequested]=useState(false);
+  const [state, setState] = useState(()=>initialValue?{...structuredClone(initialValue),step:0,furthest:6,done:false,store:0,activeRole:0,phase:'merchant'}:initialState());
   const [codesReady,setCodesReady]=useState(Boolean(initialValue));
   const [codeError,setCodeError]=useState('');
   const [codeAttempt,setCodeAttempt]=useState(0);
@@ -234,8 +269,8 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
   useEffect(()=>{
     if(initialValue) return;
     let active=true;
-    if(!requestKeys.current) requestKeys.current={merchant:crypto.randomUUID(),store:crypto.randomUUID()};
-    if(!initialCodes.current) initialCodes.current=Promise.all(['merchant','store'].map(async kind=>{
+    if(!requestKeys.current) requestKeys.current={merchant:crypto.randomUUID()};
+    if(!initialCodes.current) initialCodes.current=Promise.all(['merchant'].map(async kind=>{
       if(typeof getNextSequence!=='function') throw new Error('Connect getNextSequence to your backend code reservation service.');
       return formatGeneratedCode(kind,await getNextSequence({kind,requestId:requestKeys.current[kind]}));
     }));
@@ -254,11 +289,20 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
   const storeLimit = plan.stores ?? Number(state.enterpriseStores);
   const deviceLimit = plan.devices ?? Number(state.enterpriseDevices);
   const licensed = state.stores.filter(item => item.licensed).length;
-  const region = regions[state.stores[0]?.country] || {currency:'',prices:[]};
-  const formatPrice = amount => !region.currency || !Number.isFinite(amount) ? '—' : new Intl.NumberFormat('en', { style: 'currency', currency: region.currency, maximumFractionDigits: 0 }).format(amount);
+  const region = regions[state.merchant.country] || {currency:'',prices:[]};
+  const formatPrice = amount => !region.currency || !Number.isFinite(amount) ? '—' : new Intl.NumberFormat('en', { style: 'currency', currency: region.currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
   const price = formatPrice(region.prices[state.plan] * (state.cycle === 'Annual' ? 12 : 1));
+  const subtotal = Math.round((region.prices[state.plan] || 0) * (state.cycle === 'Annual' ? 12 : 1) * 100) / 100;
+  const sampleTax = Math.round(subtotal * 0.086 * 100) / 100;
+  const sampleTotal = Math.round((subtotal + sampleTax) * 100) / 100;
   const roleTemplates = [...new Set([...state.stores.flatMap(item => (verticals[item.type]?.r || [])), ...state.roles.filter(role=>role.source!=='Custom').map(role=>role.source)])];
   const currentRole = state.roles[state.activeRole];
+  const storePhase = state.phase === 'store';
+  const journey = storePhase ? [1,4,3,5,6] : [0,2,6];
+  const stepLabels = storePhase
+    ? [['Store details','Location & optional operating schedule'],['Subscription & features','Inherited plan and store enablement'],['Devices','Register & allocate licenses'],['Roles & permissions','Templates and custom roles'],['Review & save','Review store configuration']]
+    : [['Merchant details','Business & primary contact'],['Choose plan','Country pricing & subscription limits'],['Review Plan & Subscribe','Merchant review and billing summary'],['Subscription Confirmed','Subscription details saved']];
+  const position = journey.indexOf(state.step);
   const patch = values => { setError(''); setState(previous => ({ ...previous, ...values })); };
   const changeMerchant = (key, value) => { setError(''); setState(previous => ({ ...previous, merchant: { ...previous.merchant, [key]: value } })); };
   const changeStore = (key, value, index = state.store) => { setError(''); setState(previous => ({ ...previous,
@@ -271,23 +315,25 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
   const storeField = (label, key, type = 'text', required = true) => <Field label={label} value={store[key]} type={type} required={required} onChange={value => changeStore(key, value)} />;
 
   function goTo(step) {
-    if (submitting) return;
-    if (step > state.step && !editing) {
-      if (custom.open) return setError('Save or cancel the custom role before continuing.');
+    if (submitting || !journey.includes(step)) return;
+    if (custom.open) return setError('Save or cancel the custom role before continuing.');
+    const target = journey.indexOf(step);
+    if (target > position) {
       if (!formRef.current?.reportValidity()) return;
-      for (let current = 0; current < step; current++) {
-        const message = validate({ ...state, step: current });
+      for (const current of journey.slice(0, target)) {
+        const message = validate({...state, step: current});
         if (message) return setError(message);
       }
     }
-    patch({ step, done: false });
+    setReturnToReview(false);
+    patch({step, done:false});
   }
   function editSection(step, values = {}) {
     setReturnToReview(true);
     setCustom({ open: false, name: '', scope: 'Store', id: null });
     patch({ ...values, step, done: false });
   }
-  const editButton = (label, step, values) => <button type="button" onClick={() => editSection(step, values)}>{label}</button>;
+  const editButton = (label, step, values) => journey.includes(step) ? <button type="button" onClick={() => editSection(step, values)}>{label}</button> : null;
   async function submit(event) {
     event.preventDefault();
     if (submitting) return;
@@ -297,14 +343,28 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
     if (state.step === 6) {
       setSubmitting(true);
       try {
-        await onComplete?.(structuredClone({ ...state, done: true }));
-        patch({ done: true });
+        const historyEntry = {
+          id:'BILL-' + crypto.randomUUID(), createdAt:new Date().toISOString(),
+          plan:plan.name, cycle:state.cycle, currency:region.currency,
+          subtotal, tax:sampleTax, amount:sampleTotal,
+          method:paymentPreview === 'card' ? 'Credit / Debit Card' : 'ACH (Bank Transfer)',
+          status:'Pending integration', transactionId:null,
+        };
+        const previousHistory = state.paymentHistory || [];
+        const lastBilling = previousHistory[0];
+        const billingChanged = !lastBilling || lastBilling.plan !== historyEntry.plan ||
+          lastBilling.cycle !== historyEntry.cycle || lastBilling.currency !== historyEntry.currency ||
+          lastBilling.amount !== historyEntry.amount;
+        const saved = {...state, done:true, merchantSaved:true,
+          paymentHistory:!storePhase && billingChanged ? [historyEntry,...previousHistory] : previousHistory};
+        await onComplete?.(structuredClone(saved));
+        patch(saved);
       } catch (failure) { setError(failure instanceof Error ? failure.message : 'Unable to provision. Please try again.'); }
       finally { setSubmitting(false); }
     } else if (returnToReview) {
       setReturnToReview(false);
       patch({ step: 6 });
-    } else patch({ step: state.step + 1, furthest: Math.max(state.furthest, state.step + 1) });
+    } else patch({ step: journey[position + 1], furthest: Math.max(state.furthest, position + 1) });
   }
   function addRole(name, source, scope = 'Store') {
     setState(previous => ({ ...previous, activeRole: previous.roles.length, roles: [...previous.roles, {
@@ -328,6 +388,44 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
   }
 
   function review() {
+    if (!storePhase) return <div className="pch-subscribe-grid">
+      <section className="pch-selected-summary">
+        <h2>Selected Plan</h2>
+        <div className="pch-selected-identity">
+          <span className="pch-plan-bars" aria-hidden="true"><i/><i/><i/></span>
+          <div><strong>{plan.name}</strong><span>{price} / {state.cycle === 'Annual' ? 'year' : 'month'}</span></div>
+        </div>
+        <ul className="pch-feature-checklist">
+          {[storeLimit + ' Store' + (storeLimit === 1 ? '' : 's'), 'Up to ' + deviceLimit + ' Devices', ...plan.f.slice(0,4).map(index=>catalog[index].n)].map(item=><li key={item}><span aria-hidden="true">✓</span>{item}</li>)}
+        </ul>
+        <details className="pch-all-features"><summary>View all features</summary><ul>{plan.f.map(index=><li key={index}>{catalog[index].n}</li>)}</ul></details>
+        <div className="pch-review-links">{editButton('Change plan',2)}{editButton('Edit merchant details',0)}</div>
+        <details className="pch-all-features"><summary>Review merchant details</summary>
+          <p>{state.merchant.business}<br/>{state.merchant.name}<br/>{state.merchant.email}<br/>{state.merchant.phone}</p>
+          <p>{['country','city','state','address','postal'].map(key=>state.merchant[key]).join(', ')}</p>
+        </details>
+      </section>
+      <section className="pch-billing-summary">
+        <h2>Billing Summary</h2>
+        <div className="pch-billing-line"><span>Plan</span><span>{plan.name}</span><strong>{formatPrice(subtotal)}</strong></div>
+        <div className="pch-billing-line"><span>Billing Cycle</span><strong>{state.cycle}</strong></div>
+        <div className="pch-billing-line"><span>Subtotal</span><strong>{formatPrice(subtotal)}</strong></div>
+        <div className="pch-billing-line"><span>Tax (8.6% · sample)</span><strong>{formatPrice(sampleTax)}</strong></div>
+        <div className="pch-billing-line pch-total"><strong>Total Due Today</strong><strong>{formatPrice(sampleTotal)}</strong></div>
+        <h2 className="pch-payment-heading">Payment Method</h2>
+        <div className="pch-payment-options">
+          <label><input type="radio" name="payment-preview" checked={paymentPreview==='card'} onChange={()=>setPaymentPreview('card')}/> Credit / Debit Card</label>
+          <label><input type="radio" name="payment-preview" checked={paymentPreview==='ach'} onChange={()=>setPaymentPreview('ach')}/> ACH (Bank Transfer)</label>
+        </div>
+        {paymentPreview==='card'?<div className="pch-card-preview" aria-label="Card payment preview">
+          <span aria-hidden="true">▣</span><input aria-label="Card number preview" placeholder="Card number" readOnly autoComplete="off"/>
+          <input aria-label="Expiry preview" placeholder="MM / YY" readOnly autoComplete="off"/><input aria-label="CVC preview" placeholder="CVC" readOnly autoComplete="off"/>
+        </div>:<div className="pch-card-preview pch-ach-preview"><input aria-label="Bank account preview" placeholder="Bank account" readOnly autoComplete="off"/><input aria-label="Routing number preview" placeholder="Routing number" readOnly autoComplete="off"/></div>}
+        <p className="pch-payment-caption">▣ Payment details are shown for preview only.</p>
+        <button type="submit" className="pch-subscribe-now" disabled={submitting}>{submitting?'Saving…':(editing || state.merchantSaved)?'Save Subscription':'Subscribe Now'}</button>
+        <p className="pch-preview-note">Static preview: 8.6% is an illustrative tax, not a country tax calculation. No payment details are collected and no charge is made.</p>
+      </section>
+    </div>;
     return <>
       <Panel title="Business & primary contact" action={editButton('Edit merchant', 0)}><div className="pch-grid"><div>
         <Detail label="Merchant code" value={state.merchant.code} />
@@ -366,17 +464,17 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
         rows={state.roles.map((role,index) => [role.name, role.source, role.scope, role.perms.reduce((total, actions) => total + actions.length, 0),editButton('Edit permissions',5,{activeRole:index})])} />
         {state.roles.map(role=><details className="pch-review-details" key={role.id}><summary>{role.name} · defined permissions</summary><div className="pch-review-body"><Table headings={['Feature','Actions']} rows={catalog.map((feature,index)=>[feature.n,role.perms[index].join(', ')||'No permission'])}/></div></details>)}
       </Panel>
-      <div className="pch-note">{state.done ? onComplete ? 'Merchant submitted successfully.' : 'Preview completed. No live records were created.' : 'Creates merchant, stores, subscription, licenses, device registrations, settings and roles. Employee assignments are handled later.'}</div>
+      <div className="pch-note">{state.done ? onComplete ? 'Merchant submitted successfully.' : 'Preview completed. No live records were created.' : 'Saves store configuration, device registrations and roles for this merchant.'}</div>
     </>;
   }
 
   function content() {
-    if (state.done || state.step === 6) return review();
+    if (state.step === 6) return review();
     switch (state.step) {
       case 0: return <>
         <Panel title="Business Details"><div className="pch-grid">
           {merchantField('Legal / Business Name','business')}{merchantField('Business Display Name','display')}
-          <Field label="Merchant code" value={state.merchant.code} readOnly /><Field label="Initial status" value="Pending activation" readOnly />
+          <Field label="Merchant code" value={state.merchant.code} readOnly /><Field label="Initial status" value={state.subscriptionStatus || 'Pending activation'} readOnly />
         </div></Panel>
         <Panel title="Primary Contact"><div className="pch-grid">
           {merchantField('Merchant Name','name')}{merchantField('Merchant Email','email','email')}{merchantField('Merchant Phone Number','phone','tel')}
@@ -384,17 +482,18 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
           {merchantField('City','city')}{merchantField('State / Province','state')}{merchantField('Address','address')}{merchantField((countryRules[state.merchant.country]?.postalLabel || 'Postal Code'),'postal')}<p className="pch-small pch-muted">{(countryRules[state.merchant.country]?.hint || 'Select a country to see its format requirements.')} Phone: national format or {(countryRules[state.merchant.country]?.dial || '')} international format.</p>
         </div></Panel>
       </>;
-      case 1: if(!state.stores.length) return <Panel title="Store locations"><p className="pch-note">No store details were returned. Add a location to enter its details.</p><button type="button" disabled={submitting} onClick={async()=>{setSubmitting(true);try{const code=formatGeneratedCode('store',await getNextSequence({kind:'store',requestId:crypto.randomUUID()}));patch({stores:[createStore(code)],store:0});}catch(error){setError(error.message);}finally{setSubmitting(false);}}}>+ Add location</button></Panel>;
+      case 1: if(!state.stores.length) return <Panel title="Store locations"><p className="pch-note">No store details were returned. Add a location to enter its details.</p><button type="button" disabled={submitting} onClick={async()=>{setSubmitting(true);try{const code=formatGeneratedCode('store',await getNextSequence({kind:'store',requestId:crypto.randomUUID()}));patch({stores:[{...createStore(code),country:state.merchant.country,licensed:true}],store:0});}catch(error){setError(error.message);}finally{setSubmitting(false);}}}>+ Add location</button></Panel>;
       return <>
         <div className="pch-context-toolbar">{storePicker}<button type="button" disabled={submitting} onClick={async () => {
           if(addingStore.current) return;
+          if(state.stores.length >= storeLimit) return setError('Store limit reached. Update the merchant plan before adding another store.');
           const message = validate(state); if (message) return setError(message);
           addingStore.current=true;setSubmitting(true);
           try {
             pendingStoreKey.current ||= crypto.randomUUID();
             const code=formatGeneratedCode('store',await getNextSequence({kind:'store',requestId:pendingStoreKey.current}));
             if(state.stores.some(item=>item.code===code)) throw new Error('The backend returned an existing store code.');
-            const location=createStore(code);
+            const location={...createStore(code),country:state.merchant.country,licensed:true};
             patch({stores:[...state.stores,location],store:state.stores.length});pendingStoreKey.current=null;
           } catch(error) {setError(error.message||'Unable to generate store code.');}
           finally {addingStore.current=false;setSubmitting(false);}
@@ -412,14 +511,14 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
         </div></Panel>
         <Panel title="Operating schedule"><Table headings={['Day','Status','Opens','Closes','Shifts']} rows={store.hours.map((day, index) => {
           const update = (key, value) => changeStore('hours', store.hours.map((item, i) => i === index ? { ...item, [key]: value } : item));
-          return [day.day, <Select label={`${day.day} status`} value={day.status} options={['Open','Closed','24 hours']} onChange={value => update('status', value)} />,
-            ...['open','close','shifts'].map(key => <Field label={key} value={day.status === 'Closed' && key === 'shifts' ? 0 : day[key]}
+          return [day.day, <Select required={false} label={`${day.day} status`} value={day.status} options={['Open','Closed','24 hours']} onChange={value => update('status', value)} />,
+            ...['open','close','shifts'].map(key => <Field required={false} label={key} value={day.status === 'Closed' && key === 'shifts' ? 0 : day[key]}
               type={key === 'shifts' ? 'number' : 'time'} min={key === 'shifts' ? 1 : undefined} step={key === 'shifts' ? 1 : undefined}
               disabled={day.status === 'Closed' || day.status === '24 hours' && key !== 'shifts'} onChange={value => update(key, value)} />)];
-        })} /><p className="pch-small pch-muted">Earlier closing times mean next-day closing.</p></Panel>
+        })} /><p className="pch-small pch-muted">Timings and shift counts are optional. Earlier closing times mean next-day closing.</p></Panel>
       </>;
       case 2: return <>
-        <Panel title="Merchant subscription"><div className="pch-row pch-between"><h3>{state.merchant.display}</h3><span className="pch-pill">{(state.stores[0]?.country || '')} · {region.currency}</span></div>
+        <Panel title="Merchant subscription"><div className="pch-row pch-between"><h3>{state.merchant.display}</h3><span className="pch-pill">{state.merchant.country} · {region.currency}</span></div>
           <div className="pch-plans">{packages.map((item, index) => <div key={item.name} className={`pch-plan ${state.plan === index ? 'pch-selected' : ''}`}>
             <h2>{item.name}</h2><div className="pch-price">{formatPrice(region.prices[index])}</div><span className="pch-small pch-muted">per merchant / month</span>
             <div>{item.stores ?? 'Custom'} stores<br />{item.devices ?? 'Custom'} devices</div><details><summary>Included features ({item.f.length})</summary><ul>{item.f.map(i=><li key={i}>{catalog[i].n}</li>)}</ul></details>
@@ -433,14 +532,11 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
           {state.plan >= 0 && plan.stores == null && <Field label="Licensed stores" value={state.enterpriseStores} type="number" min="1" step="1" onChange={value => patch({ enterpriseStores: value })} />}
           {state.plan >= 0 && plan.devices == null && <Field label="Licensed devices" value={state.enterpriseDevices} type="number" min="1" step="1" onChange={value => patch({ enterpriseDevices: value })} />}
         </div><div className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</div></Panel>
-        <Panel title="Assign stores to subscription"><Table headings={['Store ID','Location','Type','License']} rows={state.stores.map((item, index) => [item.code,item.name,item.type,
-          <label className="pch-check"><input type="checkbox" checked={item.licensed} onChange={event => changeStore('licensed', event.target.checked, index)} />Licensed</label>])} />
-          <div className="pch-note">{licensed} / {storeLimit} store licenses selected · {deviceLimit} device licenses.</div>
-        </Panel>
+
       </>;
       case 3: return <>
         <Panel title="Device license allocation"><div className="pch-grid"><div>Registered devices<div className="pch-price">{state.devices.length} / {deviceLimit}</div></div><div>Remaining<div className="pch-price">{Math.max(0,deviceLimit-state.devices.length)}</div></div></div>
-          <div className="pch-note">Each registered device consumes one license.<div className="pch-row">{deviceTypes.map(type=><span key={type} className="pch-pill">{type}: {state.devices.filter(device=>device.type===type).length}</span>)}</div></div></Panel>
+          <div className="pch-note">Current sample plans use one shared device allowance across POS, KDS, printers and scanners.<div className="pch-row">{deviceTypes.map(type=><span key={type} className="pch-pill">{type}: {state.devices.filter(device=>device.type===type).length}</span>)}</div></div></Panel>
         <Panel title="Merchant devices"><Table headings={['Name','Type','Licensed store','Identifier','Action']} rows={state.devices.map((device, index) => [
           <Field label="Device name" value={device.name} onChange={value => changeDevice(index,'name',value)} />,
           <Select label="Type" value={device.type} options={deviceTypes} onChange={value => changeDevice(index,'type',value)} />,
@@ -449,7 +545,13 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
           <button type="button" onClick={() => patch({ devices: state.devices.filter((_,i)=>i!==index) })}>Remove</button>,
         ])} /><button type="button" disabled={state.devices.length >= deviceLimit} onClick={() => patch({ devices:[...state.devices,{name:'',type:'',store:-1,serial:''}] })}>+ Register device</button></Panel>
       </>;
-      case 4: return <><div className="pch-context-toolbar">{storePicker}</div><Panel title="Effective feature resolution"><Table headings={['Feature','Type relevance','Plan entitlement','Store setting','Effective']} rows={catalog.map((feature,index)=>{
+      case 4: return <>
+        <Panel title="Inherited merchant subscription"><div className="pch-note">{plan.name} · {state.cycle} · {state.merchant.country}. Configure store access now; operational access requires an active subscription.</div></Panel>
+        <Panel title="Assign stores to subscription"><Table headings={['Store ID','Location','Type','License']} rows={state.stores.map((item, index) => [item.code,item.name,item.type,
+          <label className="pch-check"><input type="checkbox" checked={item.licensed} onChange={event => changeStore('licensed', event.target.checked, index)} />Licensed</label>])} />
+          <div className="pch-note">{licensed} / {storeLimit} store licenses selected · {deviceLimit} device licenses.</div>
+        </Panel>
+        <div className="pch-context-toolbar">{storePicker}</div><Panel title="Effective feature resolution"><Table headings={['Feature','Type relevance','Plan entitlement','Store setting','Effective']} rows={catalog.map((feature,index)=>{
         const relevant=(verticals[store.type]?.f || []).includes(index), entitled=plan.f.includes(index);
         return [feature.n,relevant?'Relevant':'Not relevant',entitled?'Included':'Excluded',
           <input aria-label={`Enable ${feature.n}`} type="checkbox" checked={!store.off.includes(index)&&relevant&&entitled&&store.licensed} disabled={!relevant||!entitled||!store.licensed}
@@ -499,26 +601,191 @@ function MerchantOnboarding({ onComplete, onCancel, initialValue, getNextSequenc
     );
   }
 
-  return <div id="pch-new">
-    <MerchantPageHeader editing={editing} code={state.merchant.code} onBack={onCancel} />
-    <div className="pch-layout"><aside><div className="pch-eyebrow pch-aside-note">Provision a merchant</div><nav className="pch-rail" aria-label="Onboarding journey">
-      {ONBOARDING_STEPS.map(([name,description],index)=><button type="button" key={name} disabled={submitting||index>state.furthest} onClick={()=>goTo(index)} className={index===state.step?'pch-current':''} aria-current={index===state.step?'step':undefined}>
-        <span className="pch-number">{index<state.step?'✓':index+1}</span><span>{name}<small className="pch-muted pch-rail-description">{description}</small></span>
-      </button>)}</nav><div className="pch-note pch-aside-note"></div></aside>
-      <main><div ref={headingRef} className="pch-eyebrow">{state.done?'Provisioning summary':`Step ${state.step+1} of 7`}</div><h1>{state.done?'Merchant ready for activation':ONBOARDING_STEPS[state.step][0]}</h1>
-        <p className="pch-muted">{ONBOARDING_STEPS[state.step][1]}</p><form ref={formRef} onSubmit={submit}><fieldset className="pch-form-content" disabled={submitting}>{content()}{error&&<div className="pch-error" role="alert">{error}</div>}
-          <div className="pch-footerbar">{onCancel&&<button type="button" disabled={submitting} onClick={onCancel}>Cancel & return to merchants</button>}{state.done?<button type="button" onClick={()=>goTo(0)}>Edit onboarding</button>:<><button type="button" disabled={state.step===0} onClick={()=>goTo(state.step-1)}>← Back</button><button className="pch-primary" type="submit">{submitting?'Saving…':state.step===6?(editing?'Save changes':onComplete?'Create merchant':'Complete preview'):returnToReview?'Save & return to review':'Continue →'}</button></>}</div>
-        </fieldset></form></main></div><footer>Merchant onboarding</footer>
+  if (manageSubscription) return <div id="pch-new">
+    <MerchantPageHeader editing={editing} code={state.merchant.code} onBack={onCancel}/>
+    <main className="pch-confirmation">
+      <div className="pch-eyebrow">Merchant subscription</div>
+      <h1>Manage Subscription</h1>
+      <p className="pch-muted">{state.merchant.business} · {state.merchant.code}</p>
+      <Panel title="Subscription Details"><div className="pch-grid"><div>
+        <Detail label="Plan" value={plan.name}/>
+        <Detail label="Subscription reference" value={state.subscriptionId || 'Assigned after backend subscription creation'}/>
+        <Detail label="Status" value={state.subscriptionStatus || 'Pending activation'}/>
+        <Detail label="Start date" value={state.start}/>
+      </div><div>
+        <Detail label="Billing cycle" value={state.cycle}/>
+        <Detail label="Sample agreement amount" value={price}/>
+        <Detail label="Next renewal date" value={state.subscriptionStatus === 'Cancelled' ? 'Not renewing' : renewalDate(state.start,state.cycle)}/>
+        <Detail label="Payment" value="Not collected in this flow"/>
+      </div></div></Panel>
+      <Panel title="Usage & Limits"><div className="pch-grid">
+        <div className="pch-usage"><Detail label="Registered stores" value={state.stores.length+' / '+storeLimit}/>
+          <progress aria-label="Store usage" value={state.stores.length} max={storeLimit || 1}/></div>
+        <div className="pch-usage"><Detail label="Registered devices" value={state.devices.length+' / '+deviceLimit}/>
+          <progress aria-label="Device usage" value={state.devices.length} max={deviceLimit || 1}/></div>
+      </div><div className="pch-note">Current sample plans use a shared device allowance. Store types control relevance; the subscription controls entitlement.</div></Panel>
+      <Panel title="Included Features"><div className="pch-row">{plan.f.map(index=><span className="pch-pill" key={index}>{catalog[index].n}</span>)}</div></Panel>
+      <Panel title="Payment History">
+        <div className="pch-row pch-between"><span>Billing records and payment status</span>
+          <label className="pch-history-filter">Status <select value={historyStatus} onChange={event=>setHistoryStatus(event.target.value)}>
+            {['All',...new Set((state.paymentHistory || []).map(item=>item.status))].map(status=><option key={status}>{status}</option>)}
+          </select></label>
+        </div>
+        <Table headings={['Date','Plan / Cycle','Amount','Payment Method','Status','Actions']} rows={(state.paymentHistory || []).filter(item=>historyStatus==='All'||item.status===historyStatus).map(item=>[
+          new Date(item.createdAt).toLocaleDateString(), item.plan+' / '+item.cycle,
+          new Intl.NumberFormat('en',{style:'currency',currency:item.currency}).format(item.amount),item.method,
+          <span className="pch-subscription-status">{item.status}</span>,
+          <button type="button" onClick={()=>setHistoryDetails(item)}>View Details</button>
+        ])}/>
+        {!(state.paymentHistory || []).some(item=>historyStatus==='All'||item.status===historyStatus)&&<p className="pch-note">No payment records to show.</p>}
+        <div className="pch-note">Pending integration records are local billing previews, not payment receipts. Payment status and transaction references must come from the payment API.</div>
+      </Panel>
+      {historyDetails && <Panel title="Payment Record Details" action={<button type="button" onClick={()=>setHistoryDetails(null)}>Close Details</button>}>
+        <div className="pch-grid"><div>
+          <Detail label="Record reference" value={historyDetails.id}/><Detail label="Date" value={new Date(historyDetails.createdAt).toLocaleString()}/>
+          <Detail label="Plan" value={historyDetails.plan}/><Detail label="Billing cycle" value={historyDetails.cycle}/>
+          <Detail label="Payment method" value={historyDetails.method}/>
+        </div><div>
+          <Detail label="Currency" value={historyDetails.currency}/><Detail label="Subtotal" value={Number(historyDetails.subtotal).toFixed(2)}/>
+          <Detail label="Sample tax" value={Number(historyDetails.tax).toFixed(2)}/><Detail label="Total" value={Number(historyDetails.amount).toFixed(2)}/>
+          <Detail label="Status" value={historyDetails.status}/><Detail label="Transaction ID" value={historyDetails.transactionId || 'Not available — payment not processed'}/>
+        </div></div>
+      </Panel>}
+      <Panel title="Plan Actions"><div className="pch-row">
+        <button type="button" className="pch-primary" disabled={submitting || state.subscriptionStatus === 'Cancelled'} onClick={()=>{
+          setManageSubscription(false);setCancelRequested(false);setReturnToReview(false);
+          patch({phase:'merchant',step:2,furthest:2,done:false,merchantSaved:true});
+        }}>Change Plan / Billing Cycle</button>
+        <button type="button" disabled={submitting || state.subscriptionStatus === 'Cancelled'} onClick={()=>setCancelRequested(true)}>Cancel Subscription</button>
+      </div><div className="pch-note">Upgrade or downgrade through Change Plan. Selected limits must accommodate registered stores and devices. Changes are saved locally through the existing handler.</div></Panel>
+      {cancelRequested && <Panel title="Cancel this subscription?">
+        <div className="pch-note">This changes the local subscription status to Cancelled. It does not delete the merchant or stores, or contact a billing provider.</div>
+        <div className="pch-row"><button type="button" disabled={submitting} onClick={()=>setCancelRequested(false)}>Keep Subscription</button>
+          <button type="button" disabled={submitting} onClick={async()=>{
+            if(submitting)return;
+            setSubmitting(true);setError('');
+            try {
+              const saved={...state,subscriptionStatus:'Cancelled',done:true,merchantSaved:true};
+              await onComplete?.(structuredClone(saved));
+              patch(saved);setCancelRequested(false);
+            } catch(failure){setError(failure.message || 'Unable to save subscription status.');}
+            finally{setSubmitting(false);}
+          }}>{submitting?'Saving…':'Confirm Cancellation'}</button>
+        </div>
+      </Panel>}
+      {error && <div className="pch-error" role="alert">{error}</div>}
+      <div className="pch-footerbar"><button type="button" disabled={submitting} onClick={onCancel}>Back to Merchants</button>
+        <button type="button" disabled={submitting} onClick={()=>{setCancelRequested(false);setManageSubscription(false);setError('');}}>Back to Confirmation</button>
+      </div>
+    </main>
+  </div>;
+
+  if (state.done && !storePhase) return <div id="pch-new">
+    <MerchantPageHeader editing={editing} code={state.merchant.code} onBack={onCancel}/>
+    <main className="pch-success-screen">
+      <div className="pch-success-art" aria-hidden="true"><span>✓</span><i/><i/><i/><i/><i/><i/></div>
+      <h1>Subscription Successful!</h1>
+      <p>Welcome to Pinaka Commerce Hub, {state.merchant.business}.</p>
+      <div className="pch-success-details">
+        <Detail label="Plan" value={<strong>{plan.name}</strong>}/>
+        <Detail label="Billing Cycle" value={state.cycle}/>
+        <Detail label="Amount" value={<strong>{price} / {state.cycle==='Annual'?'year':'month'}</strong>}/>
+        <Detail label="Subscription ID" value={state.subscriptionId || 'Pending assignment'}/>
+        <Detail label="Start Date" value={state.start}/>
+        <Detail label="Next Billing Date" value={renewalDate(state.start,state.cycle)}/>
+        <Detail label="Status" value={<span className="pch-subscription-status">{state.subscriptionStatus || 'Pending activation'}</span>}/>
+      </div>
+      {error && <div className="pch-error" role="alert">{error}</div>}
+      <div className="pch-success-actions">
+        <button type="button" className="pch-subscribe-now" onClick={onDashboard}>Go to Dashboard</button>
+        <button type="button" disabled={submitting} onClick={async()=>{
+          if(submitting)return;
+          if(state.stores.length){onCancel();return;}
+          setSubmitting(true);
+          try {
+            pendingStoreKey.current ||= crypto.randomUUID();
+            const code=formatGeneratedCode('store',await getNextSequence({kind:'store',requestId:pendingStoreKey.current}));
+            pendingStoreKey.current=null;
+            setReturnToReview(false);
+            patch({phase:'store',stores:[{...createStore(code),country:state.merchant.country,licensed:true}],store:0,step:1,furthest:0,done:false});
+          }catch(failure){setError(failure.message || 'Unable to begin store setup.');}
+          finally{setSubmitting(false);}
+        }}>{submitting?'Preparing…':state.stores.length?'Manage Store Setup':'Add Your First Store'}</button>
+      </div>
+      <div className="pch-success-secondary"><button type="button" onClick={()=>setManageSubscription(true)}>Manage Subscription</button><button type="button" onClick={onCancel}>Back to Merchants</button></div>
+      <p className="pch-preview-note">Subscription selection saved. Payment and activation have not been performed.</p>
+    </main>
+  </div>;
+
+  if (state.done) return <div id="pch-new">
+    <MerchantPageHeader editing={editing} code={state.merchant.code} onBack={onCancel}/>
+    <main className="pch-confirmation">
+      <div className="pch-eyebrow">{storePhase ? 'Store setup complete' : 'Step 4 of 4 · Subscription Confirmed'}</div>
+      <h1>{storePhase ? 'Store configuration saved' : 'Subscription Confirmed'}</h1>
+      <Panel title={state.merchant.business}><div className="pch-grid"><div>
+        <Detail label="Merchant code" value={state.merchant.code}/><Detail label="Plan" value={plan.name}/>
+        <Detail label="Billing cycle" value={state.cycle}/><Detail label="Sample amount" value={price}/><Detail label="Start date" value={state.start}/><Detail label="Next renewal date" value={renewalDate(state.start,state.cycle)}/><Detail label="Subscription reference" value={state.subscriptionId || 'Assigned after backend subscription creation'}/>
+      </div><div><Detail label="Registered stores" value={state.stores.length + ' / ' + storeLimit}/>
+        <Detail label="Subscription status" value={state.subscriptionStatus || 'Pending activation'}/>
+      </div></div><div className="pch-note">Your subscription details have been saved. This confirmation does not indicate payment or activation.</div></Panel>
+      {error && <div className="pch-error" role="alert">{error}</div>}
+      <div className="pch-footerbar">
+        <button type="button" onClick={onCancel}>Back to Merchants</button>
+        <button type="button" disabled={submitting} onClick={()=>{setCancelRequested(false);setManageSubscription(true);}}>Manage Subscription</button>
+        <button type="button" onClick={()=>{setReturnToReview(false);patch({phase:'merchant',step:0,furthest:2,done:false});}}>Edit merchant</button>
+        <button type="button" className="pch-primary" disabled={submitting} onClick={async()=>{
+          if(submitting)return;
+          if (state.stores.length > 0) {
+            onCancel();
+            return;
+          }
+          setSubmitting(true);
+          try {
+            let stores=state.stores;
+            if(!stores.length){
+              pendingStoreKey.current ||= crypto.randomUUID();
+              const code=formatGeneratedCode('store',await getNextSequence({kind:'store',requestId:pendingStoreKey.current}));
+              stores=[{...createStore(code),country:state.merchant.country,licensed:true}];
+              pendingStoreKey.current=null;
+            }
+            setReturnToReview(false);
+            patch({phase:'store',stores,store:0,step:1,furthest:0,done:false});
+          } catch(failure){setError(failure.message || 'Unable to begin store setup.');}
+          finally{setSubmitting(false);}
+        }}>{submitting?'Preparing…':state.stores.length?'Manage Store Setup':'Add First Store'}</button>
+      </div>
+    </main>
+  </div>;
+
+  return <div id="pch-new" className={!storePhase && state.step===6 ? "pch-checkout-mode" : undefined}>
+    <MerchantPageHeader editing={editing} code={state.merchant.code} onBack={onCancel}/>
+    <div className="pch-layout"><aside><div className="pch-eyebrow pch-aside-note">{storePhase?'Configure stores':'Add merchant'}</div>
+      <nav className="pch-rail" aria-label="Setup steps">{stepLabels.map(([name,description],index)=><button type="button" key={name}
+        disabled={submitting || index>=journey.length || (index>state.furthest && index>position)}
+        onClick={()=>goTo(journey[index])} className={index===position?'pch-current':''} aria-current={index===position?'step':undefined}>
+        <span className="pch-number">{index<position?'✓':index+1}</span><span>{name}<small className="pch-muted pch-rail-description">{description}</small></span>
+      </button>)}</nav>
+    </aside><main>
+      <div ref={headingRef} className="pch-eyebrow">Step {position+1} of {stepLabels.length}</div>
+      <h1>{!storePhase && state.step===6 ? 'Review & Subscribe' : stepLabels[position]?.[0]}</h1><p className="pch-muted">{!storePhase && state.step===6 ? 'Please review your plan details before subscribing.' : stepLabels[position]?.[1]}</p>
+      <form ref={formRef} onSubmit={submit}><fieldset className="pch-form-content" disabled={submitting}>
+        {content()}{error&&<div className="pch-error" role="alert">{error}</div>}
+        <div className={!storePhase && state.step===6 ? "pch-footerbar pch-review-navigation" : "pch-footerbar"}><button type="button" onClick={onCancel}>Back to Merchants</button>
+          <button type="button" disabled={position===0} onClick={()=>goTo(journey[position-1])}>← Back</button>
+          <button hidden={!storePhase && state.step===6} className="pch-primary" type="submit">{submitting?'Saving…':state.step===6?(storePhase?'Save store setup':(editing || state.merchantSaved)?'Save subscription changes':'Subscribe & Create Merchant'):returnToReview?'Save & return to review':'Continue →'}</button>
+        </div>
+      </fieldset></form>
+    </main></div><footer>{storePhase?'Store setup':'Merchant creation'}</footer>
   </div>;
 }
 
 
 
-// Keep the full draft on locally created rows so Edit can reopen all seven steps.
+// Keep the full draft so merchant edits preserve existing stores, devices and roles.
 export function onboardingToRow(data) {
   const now=new Date();
   return {id:data.merchant.code,name:data.merchant.business,email:data.merchant.email,phone:data.merchant.phone,
-    stores:data.stores.length,plan:packages[data.plan]?.name||'',status:'Inactive',createdAt:now.toISOString(),joined:now.toLocaleDateString(),active:'—',
+    country:data.merchant.country,state:data.merchant.state,storeLimit:packages[data.plan]?.stores ?? Number(data.enterpriseStores),stores:data.stores.length,plan:packages[data.plan]?.name||'',status:'Inactive',createdAt:now.toISOString(),joined:now.toLocaleDateString(),active:'—',
     initials:data.merchant.business.trim().split(/\s+/).map(word=>word[0]).slice(0,2).join('').toUpperCase(),_onboarding:structuredClone(data)};
 }
 
@@ -539,6 +806,9 @@ export function merchantDetailToDraft(result, fallback={}) {
   const matchPlan=String(subscription.planName||subscription.planCode||raw.plan||fallback.plan||'').toLowerCase().replace(/[^a-z]/g,'').replace(/plan$/,'');
   draft.plan=packages.findIndex(plan=>plan.name.toLowerCase()===matchPlan);
   const cycle=String(subscription.billingCycle||raw.billingCycle||'').toLowerCase();draft.cycle=cycle==='monthly'?'Monthly':cycle==='annual'||cycle==='yearly'?'Annual':'';
+  draft.subscriptionStatus=subscription.status || 'Pending activation';
+  draft.paymentHistory=Array.isArray(raw.paymentHistory)?raw.paymentHistory:[];
+  draft.subscriptionId=subscription.id || subscription.subscriptionId || '';
   draft.start=String(subscription.startDate||subscription.start||'').slice(0,10);
   draft.merchant={code:String(raw.merchantCode||raw.merchantId||raw.id||fallback.id||''),business:raw.legalBusinessName||raw.businessName||fallback.name||'',display:raw.businessName||raw.name||fallback.name||'',name:raw.ownerName||[raw.firstName,raw.lastName].filter(Boolean).join(' ')||'',email:raw.email||fallback.email||'',phone:raw.phone||fallback.phone||'',country:raw.country||'',city:raw.city||address.city||'',state:raw.state||address.state||'',address:typeof address==='string'?address:address.street||'',postal:raw.postalCode||address.zipCode||''};
   const stores=response.stores||raw.stores||[];
@@ -566,7 +836,16 @@ function MerchantRouteEditor({merchantId,localMerchants,onSave}) {
     return()=>{active=false;};
   },[merchantId,attempt]);
   const cancel=()=>nav('/merchants');
-  function saveFull(data){const summary=onboardingToRow(data);if(!merchantId&&localMerchants.some(row=>String(row.id)===String(summary.id)))throw new Error('Merchant code already exists.');onSave({...loaded.row,...summary,id:loaded.row?.id||summary.id,createdAt:loaded.row?.createdAt||summary.createdAt,joined:loaded.row?.joined||summary.joined,status:loaded.row?.status||summary.status});nav('/merchants');}
+  const savedRow=useRef(null);
+  async function saveFull(data) {
+    if(typeof onSave !== 'function') throw new Error('Connect the existing onSave handler in App.jsx before saving.');
+    const summary=onboardingToRow(data);
+    if(!merchantId && !savedRow.current && localMerchants.some(row=>String(row.id)===String(summary.id))) throw new Error('Merchant code already exists.');
+    const existing=savedRow.current || loaded.row;
+    const row={...existing,...summary,id:existing?.id||summary.id,createdAt:existing?.createdAt||summary.createdAt,joined:existing?.joined||summary.joined,status:existing?.status||summary.status};
+    await onSave(row);
+    savedRow.current=row;
+  }
   if (loaded.loading) return (
     <div id="pch-new">
       <MerchantPageHeader editing onBack={cancel} />
@@ -583,5 +862,5 @@ function MerchantRouteEditor({merchantId,localMerchants,onSave}) {
       </div>
     </div>
   );
-  return <MerchantOnboarding initialValue={merchantId?loaded.draft:undefined} onComplete={saveFull} onCancel={cancel}/>;
+  return <MerchantOnboarding initialValue={merchantId?loaded.draft:undefined} onComplete={saveFull} onCancel={cancel} onDashboard={()=>nav('/dashboard')}/>;
 }

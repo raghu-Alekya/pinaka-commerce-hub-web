@@ -8,6 +8,7 @@ import Coupons from "./Coupons";
 import Orders from "./Orders";
 import StoreDevices from "./StoreDevices";
 import StoreCustomers from "./StoreCustomers";
+import FastKeys from "./FastKeys";
 import { ApiError } from "../api/http";
 import {
   getWordpressConnector,
@@ -27,6 +28,7 @@ const navItems = [
   ["orders", "bi-receipt", "Orders"],
   ["devices", "bi-pc-display", "Devices"],
   ["customers", "bi-person-lines-fill", "Customers"],
+  ["fastkeys", "bi-key-fill", "Fast Keys"],
 
 
 
@@ -326,7 +328,9 @@ export default function StoreConfiguration() {
                       embedded
                     />
 
-                  ) : section === "customers" ? (
+                  ) : section === "fastkeys" ? (
+                <FastKeys />
+              ) : section === "customers" ? (
                     <StoreCustomers
                       merchantId={merchantId}
                       storeId={storeId}
