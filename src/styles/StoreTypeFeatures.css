@@ -15,11 +15,11 @@
   color: #076cf0;
   background: transparent;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .store-features-heading {
-  margin: 8px 0 14px;
+  margin: 8px 0 20px;
 }
 
 .store-features-title-row {
@@ -37,11 +37,11 @@
 .store-features-heading p {
   margin: 5px 0 0;
   color: #5676aa;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .store-features-status {
-  display: inline-flex;
+   display: inline-flex;
   height: 23px;
   align-items: center;
   gap: 5px;
@@ -72,7 +72,7 @@
   color: #5878ab;
   background: transparent;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -138,12 +138,12 @@
 .store-features-search {
   display: flex;
   width: 170px;
-  height: 30px;
+  height: 40px;
   align-items: center;
-  gap: 7px;
+  gap: 9px;
   padding: 0 9px;
   border: 1px solid #d9e6f4;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #6380b0;
 }
 
@@ -153,22 +153,22 @@
   outline: 0;
   color: #163762;
   background: transparent;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .store-features-add-button {
   display: inline-flex;
-  height: 30px;
+  height: 40px;
   align-items: center;
   gap: 6px;
-  padding: 0 11px;
+  padding: 10px 11px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #fff;
   background: #0873f9;
   cursor: pointer;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .store-features-table-wrap {
@@ -179,13 +179,13 @@
 
 .store-features-row {
   display: grid;
-  grid-template-columns: minmax(160px, 1.7fr) 1.25fr 90px 95px 65px 60px;
-  min-height: 41px;
+  grid-template-columns: minmax(160px, 1.8fr) 1.3fr 90px 65px 60px;
+  min-height: 50px;
   align-items: center;
-  padding: 0 10px;
+  padding: 0 20px;
   border-bottom: 1px solid #e6eef6;
   color: #163762;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .store-features-row:last-child {
@@ -193,11 +193,11 @@
 }
 
 .store-features-row-head {
-  min-height: 30px;
+  min-height: 45px;
   color: #102d59;
   background: #f2f8ff;
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .store-feature-name {
@@ -497,12 +497,12 @@
 
 .add-features-group-title i {
   color: #0878ff;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .add-features-group-title small {
   color: #5b7bab;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -534,7 +534,7 @@
   height: 34px;
   padding: 0 15px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -579,7 +579,7 @@
   border-radius: 12px;
   color: #0aa763;
   background: #dff9eb;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -604,7 +604,7 @@
   color: #5878ab;
   background: transparent;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -629,7 +629,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 13px;
+  margin-bottom: 20px;
 }
 
 .store-features-card-title {
@@ -652,13 +652,13 @@
 .store-features-card-title h2 {
   margin: 0 0 3px;
   color: #10254a;
-  font-size: 15px;
+  font-size: 20px;
 }
 
 .store-features-card-title p {
   margin: 0;
   color: #5b79ad;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .store-features-table {
@@ -677,8 +677,8 @@
 
 .feature-toggle {
   position: relative;
-  width: 24px;
-  height: 13px;
+  width: 40px;
+  height: 20px;
   padding: 0;
   border: 0;
   border-radius: 20px;
@@ -689,9 +689,9 @@
 .feature-toggle span {
   position: absolute;
   top: 2px;
-  left: 2px;
-  width: 9px;
-  height: 9px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #fff;
   transition: 0.2s;
@@ -702,7 +702,7 @@
 }
 
 .feature-toggle.enabled span {
-  left: 13px;
+  left: 22px;
 }
 
 .feature-more-button {
@@ -716,7 +716,7 @@
 .store-features-count {
   margin: 10px 0 0;
   color: #5878a9;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 @media (max-width: 700px) {

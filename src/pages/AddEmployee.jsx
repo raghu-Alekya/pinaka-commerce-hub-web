@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from "react";
-<<<<<<< HEAD
-=======
 import PhoneInputModule from "react-phone-input-2";
 
 const PhoneInput = PhoneInputModule.default || PhoneInputModule;
 import "react-phone-input-2/lib/style.css";
->>>>>>> dev
-
 import {
   User,
   Camera,
@@ -22,9 +18,6 @@ import {
 } from "lucide-react";
 
 import "../styles/add-employee.css";
-
-<<<<<<< HEAD
-=======
 /*
  * Store Role Assignment UI styles.
  * Kept here so the new Work Information UI works without requiring
@@ -400,8 +393,6 @@ const storeRoleStyles = `
 function StoreRoleAssignmentStyles() {
   return <style>{storeRoleStyles}</style>;
 }
-
->>>>>>> dev
 export default function AddEmployee() {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -421,22 +412,17 @@ export default function AddEmployee() {
     state: "",
     pinCode: "",
     country: "India",
-<<<<<<< HEAD
     role: "",
     merchant: "",
     store: "",
-=======
     merchant: "",
     employeeLoginPin: "",
->>>>>>> dev
     manager: "",
     username: "",
     password: "",
     sendCredentials: true,
   });
 
-<<<<<<< HEAD
-=======
   // Store + role assignments.
   // Nothing is pre-populated: the user adds a store and then selects
   // one or more roles for that store.
@@ -689,7 +675,6 @@ export default function AddEmployee() {
     );
   };
 
->>>>>>> dev
   /* =========================================================
      INPUT CHANGE
   ========================================================= */
@@ -697,12 +682,11 @@ export default function AddEmployee() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-<<<<<<< HEAD
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-=======
+
     const nextValue =
       name === "employeeLoginPin"
         ? value.replace(/\D/g, "").slice(0, 6)
@@ -723,7 +707,6 @@ export default function AddEmployee() {
         [name]: validateField(name, nextValue),
       }));
     }
->>>>>>> dev
   };
 
   /* =========================================================
@@ -776,10 +759,8 @@ export default function AddEmployee() {
   const handleSave = (e) => {
     e.preventDefault();
 
-<<<<<<< HEAD
     console.log("Employee details:", formData);
 
-=======
     if (!validateForm()) {
       requestAnimationFrame(() => {
         const firstInvalid = document.querySelector(
@@ -792,7 +773,6 @@ export default function AddEmployee() {
 
     console.log("Employee details:", formData);
     console.log("Store role assignments:", storeAssignments);
->>>>>>> dev
     console.log("Profile image:", profileImage);
 
     alert("Employee saved successfully");
@@ -808,11 +788,9 @@ export default function AddEmployee() {
 
   return (
     <div className="add-employee-page">
-<<<<<<< HEAD
-=======
+
       <StoreRoleAssignmentStyles />
 
->>>>>>> dev
       {/* =====================================================
           PAGE HEADER
       ===================================================== */}
@@ -848,11 +826,8 @@ export default function AddEmployee() {
           FORM
       ===================================================== */}
 
-<<<<<<< HEAD
+
       <form onSubmit={handleSave}>
-=======
-      <form onSubmit={handleSave} autoComplete="off">
->>>>>>> dev
         <div className="add-employee-layout">
           {/* =================================================
               LEFT COLUMN
@@ -878,10 +853,7 @@ export default function AddEmployee() {
                   placeholder="Enter first name"
                   value={formData.firstName}
                   onChange={handleChange}
-<<<<<<< HEAD
-=======
                   error={errors.firstName}
->>>>>>> dev
                 />
 
                 <FormField
@@ -891,10 +863,7 @@ export default function AddEmployee() {
                   placeholder="Enter last name"
                   value={formData.lastName}
                   onChange={handleChange}
-<<<<<<< HEAD
-=======
                   error={errors.lastName}
->>>>>>> dev
                 />
 
                 <FormField
@@ -905,15 +874,11 @@ export default function AddEmployee() {
                   placeholder="Enter email address"
                   value={formData.email}
                   onChange={handleChange}
-<<<<<<< HEAD
-=======
                   error={errors.email}
->>>>>>> dev
                 />
 
                 {/* PHONE */}
 
-<<<<<<< HEAD
                 <div className="employee-field">
                   <label>
                     Phone Number <span>*</span>
@@ -935,7 +900,6 @@ export default function AddEmployee() {
                     />
                   </div>
                 </div>
-=======
                 
               <div className="employee-field employee-phone-field">
                 <label>
@@ -963,18 +927,15 @@ export default function AddEmployee() {
                 />
                 {errors.phone && <span className="field-error">{errors.phone}</span>}
               </div>
->>>>>>> dev
 
                 {/* DATE OF BIRTH */}
 
                 <div className="employee-field">
-<<<<<<< HEAD
+
                   <label>Date of Birth</label>
-=======
                   <label>
                     Date of Birth <span>*</span>
                   </label>
->>>>>>> dev
 
                   <div className="input-with-icon">
                     <input
@@ -982,18 +943,12 @@ export default function AddEmployee() {
                       name="dob"
                       value={formData.dob}
                       onChange={handleChange}
-<<<<<<< HEAD
-=======
                       className={errors.dob ? "field-invalid" : ""}
->>>>>>> dev
                     />
 
                     <CalendarDays size={17} />
                   </div>
-<<<<<<< HEAD
-=======
                   {errors.dob && <span className="field-error">{errors.dob}</span>}
->>>>>>> dev
                 </div>
 
                 {/* GENDER */}
@@ -1003,10 +958,7 @@ export default function AddEmployee() {
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-<<<<<<< HEAD
-=======
                   error={errors.gender}
->>>>>>> dev
                   placeholder="Select gender"
                   options={["Male", "Female", "Other"]}
                 />
@@ -1031,10 +983,7 @@ export default function AddEmployee() {
                   placeholder="Enter address line 1"
                   value={formData.address1}
                   onChange={handleChange}
-<<<<<<< HEAD
-=======
                   error={errors.address1}
->>>>>>> dev
                 />
 
                 <FormField
@@ -1043,10 +992,7 @@ export default function AddEmployee() {
                   placeholder="Enter address line 2 (optional)"
                   value={formData.address2}
                   onChange={handleChange}
-<<<<<<< HEAD
-=======
                   error={errors.address2}
->>>>>>> dev
                 />
               </div>
 
@@ -1057,10 +1003,7 @@ export default function AddEmployee() {
                   placeholder="Enter city"
                   value={formData.city}
                   onChange={handleChange}
-<<<<<<< HEAD
-=======
                   error={errors.city}
->>>>>>> dev
                 />
 
                 <SelectField
@@ -1068,10 +1011,7 @@ export default function AddEmployee() {
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
-<<<<<<< HEAD
-=======
                   error={errors.state}
->>>>>>> dev
                   placeholder="Select state"
                   options={[
                     "Telangana",
@@ -1089,10 +1029,7 @@ export default function AddEmployee() {
                   placeholder="Enter PIN code"
                   value={formData.pinCode}
                   onChange={handleChange}
-<<<<<<< HEAD
-=======
                   error={errors.pinCode}
->>>>>>> dev
                 />
               </div>
 
@@ -1101,11 +1038,7 @@ export default function AddEmployee() {
                   label="Country"
                   name="country"
                   value={formData.country}
-                  onChange={handleChange}
-<<<<<<< HEAD
-=======
-                  error={errors.country}
->>>>>>> dev
+                  onChange={handleChange}                  error={errors.country}
                   options={[
                     "India",
                     "United States",
@@ -1180,7 +1113,6 @@ export default function AddEmployee() {
                 WORK INFORMATION
             ================================================= */}
 
-<<<<<<< HEAD
             <section className="employee-card">
               <CardHeader
                 icon={<BriefcaseBusiness size={21} />}
@@ -1243,8 +1175,9 @@ export default function AddEmployee() {
                   placeholder="Select manager (optional)"
                   options={["Santhosh Kumar", "Priya Desai", "Arjun Reddy"]}
                 />
-=======
-            <section className="employee-card work-information-card">
+              </div>
+             </section>
+
               <CardHeader
                 icon={<BriefcaseBusiness size={21} />}
                 title="Work Information"
@@ -1342,9 +1275,7 @@ export default function AddEmployee() {
                   <span className="add-store-plus">+</span>
                   Add Another Store
                 </button>
->>>>>>> dev
               </div>
-            </section>
 
             {/* =================================================
                 ACCOUNT SETTINGS
@@ -1365,10 +1296,7 @@ export default function AddEmployee() {
                   placeholder="Enter username"
                   value={formData.username}
                   onChange={handleChange}
-<<<<<<< HEAD
-=======
                   error={errors.username}
->>>>>>> dev
                 />
 
                 {/* PASSWORD */}
@@ -1379,21 +1307,14 @@ export default function AddEmployee() {
                   </label>
 
                   <div className="password-input">
-<<<<<<< HEAD
                     <input
-=======
-                   <input
->>>>>>> dev
                       type={showPassword ? "text" : "password"}
                       name="password"
                       placeholder="Enter temporary password"
                       value={formData.password}
                       onChange={handleChange}
-<<<<<<< HEAD
-=======
                       autoComplete="new-password"
                       className={errors.password ? "field-invalid" : ""}
->>>>>>> dev
                     />
 
                     <button
@@ -1403,12 +1324,9 @@ export default function AddEmployee() {
                       {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                     </button>
                   </div>
-<<<<<<< HEAD
-=======
                   {errors.password && (
                     <span className="field-error">{errors.password}</span>
                   )}
->>>>>>> dev
                 </div>
               </div>
             </section>
@@ -1436,12 +1354,9 @@ export default function AddEmployee() {
     </div>
   );
 }
-
-/* =========================================================
-<<<<<<< HEAD
-=======
+ {/* ========================================================
    STORE + ROLE ASSIGNMENT
-========================================================= */
+========================================================= */}
 
 function StoreRoleAssignment({
   assignment,
@@ -1618,10 +1533,8 @@ function FormField({
   placeholder,
   value,
   onChange,
-<<<<<<< HEAD
-=======
   error,
->>>>>>> dev
+
 }) {
   return (
     <div className="employee-field">
@@ -1631,25 +1544,17 @@ function FormField({
         {required && <span> *</span>}
       </label>
 
-<<<<<<< HEAD
       <input
-=======
-    <input
->>>>>>> dev
         type={type}
         name={name}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-<<<<<<< HEAD
       />
-=======
         autoComplete={name === "username" ? "off" : undefined}
         className={error ? "field-invalid" : ""}
-      />
    
       {error && <span className="field-error">{error}</span>}
->>>>>>> dev
     </div>
   );
 }
@@ -1666,10 +1571,7 @@ function SelectField({
   onChange,
   placeholder,
   options = [],
-<<<<<<< HEAD
-=======
   error,
->>>>>>> dev
 }) {
   return (
     <div className="employee-field">
@@ -1680,16 +1582,11 @@ function SelectField({
       </label>
 
       <div className="employee-select">
-<<<<<<< HEAD
         <select name={name} value={value} onChange={onChange}>
-=======
-        <select
           name={name}
           value={value}
           onChange={onChange}
           className={error ? "field-invalid" : ""}
-        >
->>>>>>> dev
           {!value && <option value="">{placeholder}</option>}
 
           {options.map((option) => (
@@ -1701,10 +1598,8 @@ function SelectField({
 
         <ChevronDown size={17} className="employee-select-arrow" />
       </div>
-<<<<<<< HEAD
-=======
       {error && <span className="field-error">{error}</span>}
->>>>>>> dev
+
     </div>
   );
 }

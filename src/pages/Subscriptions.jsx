@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useReferenceData } from "../api/referenceData";
 import { useEffect, useState } from "react";
 import { listMerchants } from "../api/merchants";
@@ -22,6 +21,7 @@ const empty = {
   price: 0,
   status: "ACTIVE",
 };
+
 export default function Subscriptions() {
   const { data: reference, error: referenceError } = useReferenceData();
   const [rows, setRows] = useState([]),
@@ -375,9 +375,6 @@ export default function Subscriptions() {
     </div>
   );
 }
-=======
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const initialSubscriptions = [
   {
@@ -438,7 +435,7 @@ const initialSubscriptions = [
   },
 ];
 
-export default function MerchantSubscriptions() {
+ function MerchantSubscriptions() {
   const navigate = useNavigate();
 
   const [subscriptions, setSubscriptions] = useState(initialSubscriptions);
@@ -820,4 +817,3 @@ export default function MerchantSubscriptions() {
     </section>
   );
 }
->>>>>>> dev

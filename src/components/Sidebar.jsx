@@ -2,7 +2,6 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
 const sections = [
-<<<<<<< HEAD
   {
     title: "",
     items: [["/dashboard", "bi-house-fill", "Dashboard"]],
@@ -54,7 +53,6 @@ const sections = [
       ["/notifications", "bi-bell", "Notifications"],
     ],
   },
-=======
     {
         title: "",
         items: [
@@ -90,7 +88,6 @@ const sections = [
             ["/notifications", "bi-bell", "Notifications"]
         ]
     }
->>>>>>> dev
 ];
 
 export default function Sidebar({
