@@ -26,7 +26,6 @@ import AddDevice from "./pages/AddDevice";
 import Products from "./pages/Products";
 import Coupons from "./pages/Coupons";
 import Orders from "./pages/Orders";
-import EditEmployee from "./pages/EditEmployee";
 import CreateStoreType from "./pages/CreateStoreType";
 import CreatePlan from "./pages/CreatePlan";
 import StoreTypeDetails from "./pages/StoreTypeDetails";
