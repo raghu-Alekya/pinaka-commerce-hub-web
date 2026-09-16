@@ -144,15 +144,11 @@ export default function RoleTemplates() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function duplicateTemplate(template) {
-    const copy = {
-      ...template,
-      id: Date.now(),
-      key: `${template.key}_COPY`,
-      name: `${template.name} Copy`,
-      createdOn: "Today",
-    };
-    setTemplates((current) => [copy, ...current]);
+  function deleteTemplate(template) {
+    setTemplates((current) =>
+      current.filter((item) => item.id !== template.id)
+    );
+    setSelectedIds((current) => current.filter((id) => id !== template.id));
   }
 
   function toggleSelection(id) {
@@ -237,13 +233,13 @@ export default function RoleTemplates() {
 
           <label className="role-field">
             <span>
-              Template Name <b>*</b>
+              Role Template Name <b>*</b>
             </span>
             <input
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="Enter template name"
+              placeholder="Enter Role Template name"
               maxLength={100}
             />
             <small>Display name for the role template.</small>
@@ -324,8 +320,8 @@ export default function RoleTemplates() {
                     aria-label="Select all role templates"
                   />
                 </th>
-                <th>Template Key <span>↕</span></th>
-                <th>Template Name <span>↕</span></th>
+                <th>Role Code <span>↕</span></th>
+                <th>Role Template Name <span>↕</span></th>
                 <th>Description <span>↕</span></th>
                 <th>Status <span>↕</span></th>
                 <th>Created On <span>↕</span></th>
@@ -370,17 +366,10 @@ export default function RoleTemplates() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => duplicateTemplate(template)}
-                      aria-label={`Duplicate ${template.name}`}
-                    >
-                      <i className="bi bi-copy" />
-                    </button>
-                    <button
-                      type="button"
                       aria-label={`More options for ${template.name}`}
                       onClick={() => window.alert(`More options for ${template.name}`)}
                     >
-                      <i className="bi bi-three-dots-vertical" />
+                      <i className="bi bi-trash" />
                     </button>
                   </td>
                 </tr>

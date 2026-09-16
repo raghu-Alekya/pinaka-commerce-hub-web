@@ -26,7 +26,6 @@ import AddDevice from "./pages/AddDevice";
 import Products from "./pages/Products";
 import Coupons from "./pages/Coupons";
 import Orders from "./pages/Orders";
-import EditEmployee from "./pages/EditEmployee";
 import CreateStoreType from "./pages/CreateStoreType";
 import CreatePlan from "./pages/CreatePlan";
 import StoreTypeDetails from "./pages/StoreTypeDetails";
@@ -35,8 +34,8 @@ import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
 import RoleTemplates from "./pages/Roletemplates";
-
-
+import Vendors from "./pages/Vendors";
+import Tenders from "./pages/Tenders";
 
 const placeholders = [
   "Cash Management",
@@ -247,6 +246,10 @@ export default function App() {
 
         <Route path="/features" element={<Features />} />
         <Route path="/permissions" element={<FeaturePermissions />} />
+
+        <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/vendors" element={<Vendors />} />
+        <Route path="/tenders" element={<Tenders />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
