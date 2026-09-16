@@ -53,7 +53,6 @@ const sections = [
       ["/notifications", "bi-bell", "Notifications"],
     ],
   },
-<<<<<<< HEAD
     {
         title: "",
         items: [
@@ -89,8 +88,6 @@ const sections = [
             ["/notifications", "bi-bell", "Notifications"]
         ]
     }
-=======
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
 ];
 
 export default function Sidebar({

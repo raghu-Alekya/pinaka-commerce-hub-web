@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useReferenceData } from "../api/referenceData";
 import { useEffect, useState } from "react";
 import { listMerchants } from "../api/merchants";
@@ -376,8 +375,7 @@ export default function Subscriptions() {
     </div>
   );
 }
-=======
-import { useMemo, useState } from "react";
+
 import {
   Eye,
   Search,
@@ -406,7 +404,6 @@ import "../styles/Merchant-subscriptions.css";
 /* ========================================
    MERCHANT DATA
 ======================================== */
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
 
 const initialSubscriptions = [
   {
@@ -461,14 +458,9 @@ const initialSubscriptions = [
   },
 ];
 
-<<<<<<< HEAD
- function MerchantSubscriptions() {
-  const navigate = useNavigate();
-=======
 /* ========================================
    SUBSCRIPTION PLANS
 ======================================== */
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
 
 const plans = [
   {
@@ -904,8 +896,6 @@ function SubscriptionList({ subscriptions, onView }) {
     </section>
   );
 }
-<<<<<<< HEAD
-=======
 
 /* ========================================
    DETAILS SCREEN
@@ -1517,7 +1507,7 @@ function PaymentSuccess({
    MAIN COMPONENT
 ======================================== */
 
-export default function MerchantSubscriptions() {
+function MerchantSubscriptions() {
   const [subscriptions, setSubscriptions] = useState(initialSubscriptions);
 
   const [screen, setScreen] = useState("list");
@@ -1676,4 +1666,3 @@ export default function MerchantSubscriptions() {
     <SubscriptionList subscriptions={subscriptions} onView={openDetails} />
   );
 }
->>>>>>> 4cefd039ab78ef6438d7c897b58c01866655dd51
