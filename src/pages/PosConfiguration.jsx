@@ -1590,26 +1590,65 @@ function ServiceChargeSettings() {
 ========================================================= */
 
 function PaymentSettings() {
-    const [provider, setProvider] =
-        useState("");
+    const [provider, setProvider] = useState("");
 
-    const [deviceId, setDeviceId] =
-        useState("");
+    const [deviceId, setDeviceId] = useState("");
+    const [merchantId, setMerchantId] = useState("");
+    const [terminalId, setTerminalId] = useState("");
+    const [secretKey, setSecretKey] = useState("");
+    const [webhookUrl, setWebhookUrl] = useState("");
 
-    const [merchantId, setMerchantId] =
-        useState("");
+    const handleProviderChange = (value) => {
+        setProvider(value);
 
-    const [secretKey, setSecretKey] =
-        useState("");
+        if (value !== "Payroc") {
+            setTerminalId("");
+        }
+    };
 
-    const [webhookUrl, setWebhookUrl] =
-        useState("");
+    const savePaymentSettings = () => {
+        /* API integration will be added here. */
+
+        if (!provider) {
+            alert("Please select a payment gateway provider.");
+            return;
+        }
+
+        if (!deviceId.trim()) {
+            alert("Please enter Device ID.");
+            return;
+        }
+
+        if (!merchantId.trim()) {
+            alert("Please enter Merchant ID.");
+            return;
+        }
+
+        if (provider === "Payroc" && !terminalId.trim()) {
+            alert("Please enter Terminal ID.");
+            return;
+        }
+
+        if (!secretKey.trim()) {
+            alert("Please enter Secret Key.");
+            return;
+        }
+
+        if (!webhookUrl.trim()) {
+            alert("Please enter Webhook URL.");
+            return;
+        }
+
+        alert(
+            `${provider} payment settings saved successfully.`
+        );
+    };
 
     return (
         <div className="pos-panel">
             <div className="pos-panel-heading">
                 <div>
-                    <h2>Payments</h2>
+                    <h2>Payment Settings</h2>
 
                     <p>
                         Configure the payment gateway
@@ -1619,6 +1658,9 @@ function PaymentSettings() {
             </div>
 
             <div className="settings-form">
+
+                {/* PAYMENT GATEWAY PROVIDER */}
+
                 <div className="settings-row">
                     <div className="settings-label">
                         <label>
@@ -1628,19 +1670,18 @@ function PaymentSettings() {
 
                     <div className="settings-field">
                         <div className="radio-group">
+
                             <label>
                                 <input
                                     type="radio"
                                     name="provider"
                                     value="Kickback"
                                     checked={
-                                        provider ===
-                                        "Kickback"
+                                        provider === "Kickback"
                                     }
                                     onChange={(event) =>
-                                        setProvider(
-                                            event.target
-                                                .value
+                                        handleProviderChange(
+                                            event.target.value
                                         )
                                     }
                                 />
@@ -1656,13 +1697,11 @@ function PaymentSettings() {
                                     name="provider"
                                     value="Payroc"
                                     checked={
-                                        provider ===
-                                        "Payroc"
+                                        provider === "Payroc"
                                     }
                                     onChange={(event) =>
-                                        setProvider(
-                                            event.target
-                                                .value
+                                        handleProviderChange(
+                                            event.target.value
                                         )
                                     }
                                 />
@@ -1671,9 +1710,13 @@ function PaymentSettings() {
                                     Payroc
                                 </span>
                             </label>
+
                         </div>
                     </div>
                 </div>
+
+
+                {/* DEVICE ID */}
 
                 <SettingInput
                     label="Device ID"
@@ -1682,12 +1725,30 @@ function PaymentSettings() {
                     placeholder="Enter device ID"
                 />
 
+
+                {/* MERCHANT ID */}
+
                 <SettingInput
                     label="Merchant ID"
                     value={merchantId}
                     onChange={setMerchantId}
                     placeholder="Enter merchant ID"
                 />
+
+
+                {/* TERMINAL ID - PAYROC ONLY */}
+
+                {provider === "Payroc" && (
+                    <SettingInput
+                        label="Terminal ID"
+                        value={terminalId}
+                        onChange={setTerminalId}
+                        placeholder="Enter terminal ID"
+                    />
+                )}
+
+
+                {/* SECRET KEY */}
 
                 <SettingInput
                     label="Secret Key"
@@ -1697,6 +1758,9 @@ function PaymentSettings() {
                     type="password"
                 />
 
+
+                {/* WEBHOOK URL */}
+
                 <SettingInput
                     label="Webhook URL"
                     value={webhookUrl}
@@ -1704,18 +1768,24 @@ function PaymentSettings() {
                     placeholder="Enter webhook URL"
                 />
 
+
+                {/* SAVE */}
+
                 <div className="settings-actions">
                     <button
                         type="button"
                         className="pos-primary-button"
+                        onClick={savePaymentSettings}
                     >
                         Save Settings
                     </button>
                 </div>
+
             </div>
         </div>
     );
 }
+
 
 /* =========================================================
    MAIN COMPONENT

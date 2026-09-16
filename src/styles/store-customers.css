@@ -555,6 +555,17 @@
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
+.store-customer-row-clickable {
+    cursor: pointer;
+}
+
+.store-customer-row-clickable:hover {
+    background: #faf9ff;
+}
+
+.store-customer-row-clickable td {
+    transition: background 0.15s ease;
+}
 
 /* =========================================================
    RESPONSIVE

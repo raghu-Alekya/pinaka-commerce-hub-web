@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import Pagination from "../components/pagination";
+import Pagination from "../components/Pagination";
 import { customersSeed } from "../data/data";
+import ViewDetailsModal from "../components/ViewDetailsModal";
 import "../styles/store-customers.css";
 
 export default function StoreCustomers({
@@ -16,6 +17,7 @@ export default function StoreCustomers({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [customerTypeFilter, setCustomerTypeFilter] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   // =========================================================
   // PAGINATION
@@ -441,6 +443,7 @@ export default function StoreCustomers({
                         customer.customerId
                       }
                       customer={customer}
+                      onView={() => setSelectedCustomer(customer)}
                     />
                   )
                 )}
@@ -518,6 +521,52 @@ export default function StoreCustomers({
 
       </div>
 
+      <ViewDetailsModal
+        open={Boolean(selectedCustomer)}
+        title="Customer Details"
+        subtitle={
+          selectedCustomer
+            ? selectedCustomer.name ||
+              `${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}`.trim()
+            : ""
+        }
+        data={selectedCustomer}
+        onClose={() => setSelectedCustomer(null)}
+        fields={[
+          {
+            key: "customerId",
+            label: "Customer ID",
+            value: (customer) =>
+              customer.customerId || customer.id || "",
+          },
+          {
+            key: "name",
+            label: "Customer Name",
+            value: (customer) =>
+              customer.name ||
+              `${customer.firstName || ""} ${customer.lastName || ""}`.trim(),
+          },
+          { key: "email", label: "Email" },
+          { key: "phone", label: "Phone" },
+          { key: "type", label: "Customer Type" },
+          {
+            key: "status",
+            label: "Status",
+            render: (value) => (
+              <span
+                className={`detail-status ${
+                  value === "Active" ? "active" : "inactive"
+                }`}
+              >
+                {value || "—"}
+              </span>
+            ),
+          },
+          { key: "ordersCount", label: "Total Orders" },
+          { key: "totalSpent", label: "Total Spent" },
+          { key: "updatedAt", label: "Last Updated" },
+        ]}
+      />
     </div>
   );
 }
@@ -527,7 +576,7 @@ export default function StoreCustomers({
 // CUSTOMER ROW
 // =========================================================
 
-function CustomerRow({ customer }) {
+function CustomerRow({ customer, onView }) {
   const displayName =
     customer.name ||
     `${customer.firstName || ""} ${
@@ -543,7 +592,18 @@ function CustomerRow({ customer }) {
       : "inactive";
 
   return (
-    <tr>
+    <tr
+      className="store-customer-row-clickable"
+      onClick={onView}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onView?.();
+        }
+      }}
+    >
 
       {/* CUSTOMER */}
 
