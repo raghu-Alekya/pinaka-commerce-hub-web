@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import Pagination from "../components/pagination";
+import Pagination from "../components/Pagination";
+import ViewDetailsModal from "../components/ViewDetailsModal";
 import { couponsSeed } from "../data/data";
 import "../styles/coupons.css";
 
@@ -19,6 +20,12 @@ export default function Coupons({
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+
+    // =========================================================
+    // VIEW DETAILS
+    // =========================================================
+
+    const [selectedCoupon, setSelectedCoupon] = useState(null);
 
     // =========================================================
     // COUPON SYNC STATES
@@ -174,47 +181,6 @@ export default function Coupons({
     ).length;
 
     // =========================================================
-    // FAST COUPON IMPORT
-    // =========================================================
-
-    const handleFastCouponImport = async () => {
-        if (syncing) return;
-
-        setSyncing("fast");
-        setSyncMessage("");
-        setSyncError("");
-
-        try {
-            /*
-             * API WILL BE CONNECTED HERE
-             *
-             * Example later:
-             *
-             * await importCoupons({
-             *     merchantId,
-             *     storeId,
-             * });
-             */
-
-            // Temporary simulation until API is ready
-            await new Promise((resolve) =>
-                setTimeout(resolve, 1200)
-            );
-
-            setSyncMessage(
-                "Coupons imported successfully."
-            );
-        } catch (error) {
-            setSyncError(
-                error?.message ||
-                "Failed to import coupons."
-            );
-        } finally {
-            setSyncing("");
-        }
-    };
-
-    // =========================================================
     // LATEST COUPON UPDATES
     // =========================================================
 
@@ -286,27 +252,6 @@ export default function Coupons({
                 </div>
 
                 <div className="coupons-header-actions">
-
-                    {/* FAST COUPON IMPORT */}
-
-                    <button
-                        type="button"
-                        className="coupon-sync-btn coupon-sync-import"
-                        onClick={handleFastCouponImport}
-                        disabled={Boolean(syncing)}
-                    >
-                        {syncing === "fast" ? (
-                            <>
-                                <span className="coupon-sync-spinner" />
-                                Importing...
-                            </>
-                        ) : (
-                            <>
-                                <i className="bi bi-lightning-charge-fill" />
-                                Fast Coupon Import
-                            </>
-                        )}
-                    </button>
 
                     {/* LATEST UPDATES */}
 
@@ -623,6 +568,9 @@ export default function Coupons({
                                     <CouponRow
                                         key={coupon.id}
                                         coupon={coupon}
+                                        onView={() =>
+                                            setSelectedCoupon(coupon)
+                                        }
                                     />
                                 )
                             )}
@@ -701,6 +649,135 @@ export default function Coupons({
 
             </div>
 
+            {/* =================================================
+                VIEW COUPON DETAILS
+            ================================================= */}
+
+            <ViewDetailsModal
+                open={Boolean(selectedCoupon)}
+                title="Coupon Details"
+                subtitle={
+                    selectedCoupon?.code
+                        ? `Coupon Code: ${selectedCoupon.code}`
+                        : ""
+                }
+                data={selectedCoupon}
+                fields={[
+                    {
+                        label: "Coupon Code",
+                        key: "code",
+                        fullWidth: true,
+                    },
+                    {
+                        label: "Coupon Type",
+                        key: "type",
+                    },
+                    {
+                        label: "Coupon Amount",
+                        key: "amount",
+                    },
+                    {
+                        label: "Status",
+                        key: "status",
+                        render: (value) => {
+                            const status = value || "—";
+
+                            const statusClass =
+                                status === "Active"
+                                    ? "active"
+                                    : status === "Expired"
+                                        ? "inactive"
+                                        : "pending";
+
+                            return (
+                                <span
+                                    className={`detail-status ${statusClass}`}
+                                >
+                                    {status}
+                                </span>
+                            );
+                        },
+                    },
+                    {
+                        label: "Usage",
+                        value: (coupon) =>
+                            `${coupon?.usedCount || 0} / ${
+                                coupon?.usageLimit || "∞"
+                            }`,
+                    },
+                    {
+                        label: "Expiry Date",
+                        key: "expiryDate",
+                    },
+                    {
+                        label: "Description",
+                        key: "description",
+                        fullWidth: true,
+                    },
+                    {
+                        label: "Issued Order IDs",
+                        key: "issuedOrderIds",
+                        fullWidth: true,
+                        render: (values) =>
+                            values?.length ? (
+                                <div className="view-details-list">
+                                    {values.map((orderId) => (
+                                        <div
+                                            key={orderId}
+                                            className="view-details-list-item"
+                                        >
+                                            <strong>{orderId}</strong>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <span>—</span>
+                            ),
+                    },
+                    {
+                        label: "Used Order IDs",
+                        key: "usedOrderIds",
+                        fullWidth: true,
+                        render: (values) =>
+                            values?.length ? (
+                                <div className="view-details-list">
+                                    {values.map((orderId) => (
+                                        <div
+                                            key={orderId}
+                                            className="view-details-list-item"
+                                        >
+                                            <strong>{orderId}</strong>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <span>—</span>
+                            ),
+                    },
+                    {
+                        label: "Product IDs",
+                        key: "productIds",
+                        fullWidth: true,
+                        render: (values) =>
+                            values?.length ? (
+                                <div className="view-details-list">
+                                    {values.map((productId) => (
+                                        <div
+                                            key={productId}
+                                            className="view-details-list-item"
+                                        >
+                                            <strong>{productId}</strong>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <span>—</span>
+                            ),
+                    },
+                ]}
+                onClose={() => setSelectedCoupon(null)}
+            />
+
         </div>
     );
 }
@@ -709,7 +786,7 @@ export default function Coupons({
 // COUPON ROW
 // =========================================================
 
-function CouponRow({ coupon }) {
+function CouponRow({ coupon, onView }) {
 
     const statusClass =
         coupon.status === "Active"
@@ -719,7 +796,21 @@ function CouponRow({ coupon }) {
                 : "used";
 
     return (
-        <tr>
+        <tr
+            className="coupon-row-clickable"
+            onClick={onView}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+                if (
+                    event.key === "Enter" ||
+                    event.key === " "
+                ) {
+                    event.preventDefault();
+                    onView?.();
+                }
+            }}
+        >
 
             {/* =================================================
                 CODE
@@ -869,6 +960,7 @@ function CouponRow({ coupon }) {
                 />
 
             </td>
+
 
         </tr>
     );

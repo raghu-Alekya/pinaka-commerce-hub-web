@@ -462,6 +462,21 @@
 .product-status i {
     font-size: 8px;
 }
+/* =========================================================
+   CLICKABLE PRODUCT ROW
+========================================================= */
+
+.product-row-clickable {
+    cursor: pointer;
+}
+
+.product-row-clickable:hover {
+    background: #faf9ff;
+}
+
+.product-row-clickable td {
+    transition: background 0.15s ease;
+}
 
 /* =========================================================
    FOOTER
@@ -635,22 +650,6 @@
     font-size: 15px;
 }
 
-
-/* FAST IMPORT */
-
-.product-sync-import {
-    background: #6c4cff;
-    color: #ffffff;
-    border-color: #6c4cff;
-}
-
-.product-sync-import:hover:not(:disabled) {
-    background: #5b3fe0;
-    border-color: #5b3fe0;
-    box-shadow: 0 4px 12px rgba(108, 76, 255, 0.20);
-}
-
-
 /* LATEST UPDATES */
 
 .product-sync-update {
@@ -746,6 +745,17 @@
     background: #fff1f1;
     border: 1px solid #f1cccc;
     color: #b42323;
+}
+/* =========================================================
+   PRODUCT TABLE → PAGINATION SPACING
+========================================================= */
+
+.products-table-wrapper {
+    padding-bottom: 10px;
+}
+
+.pagination-container {
+    margin: 10px;
 }
 
 
