@@ -1287,5 +1287,6 @@ export default function MerchantSubscriptions() {
 
   return (
     <SubscriptionList subscriptions={subscriptions} onView={openDetails} />
+    
   );
 }
