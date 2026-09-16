@@ -113,18 +113,6 @@ export default function Vendors() {
 
       <form className="vendors-form" onSubmit={saveVendor}>
         <div className="vendors-form-heading">
-          <h2>{editingId ? "Update Vendor" : "Add Vendor"}</h2>
-          {editingId && <button type="button" className="vendors-link-button" onClick={resetForm}>Cancel edit</button>}
-        </div>
-        <div className="vendors-form-grid">
-          <label>Vendor Name *<input name="name" value={form.name} onChange={handleChange} placeholder="Enter vendor name" required /></label>
-          <label>Unique Code *<input name="code" value={form.code} onChange={handleChange} placeholder="e.g. VEN-003" required /></label>
-          <label>Contact Person<input name="contact" value={form.contact} onChange={handleChange} placeholder="Contact person" /></label>
-          <label>Phone<input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone number" /></label>
-          <label>Email<input type="email" name="email" value={form.email} onChange={handleChange} placeholder="Email address" /></label>
-          <label>Product / Category<input name="category" value={form.category} onChange={handleChange} placeholder="e.g. Food & Beverage" /></label>
-          <label className="vendors-wide-field">Address<textarea name="address" value={form.address} onChange={handleChange} placeholder="Vendor address" rows="2" /></label>
-          <label>Status<select name="status" value={form.status} onChange={handleChange}><option>Active</option><option>Inactive</option></select></label>
           <div className="vendors-heading-content">
             <div className="vendors-heading-icon">
               <i className="bi bi-truck" />
@@ -134,8 +122,13 @@ export default function Vendors() {
               <p>Provide the vendor contact and business details.</p>
             </div>
           </div>
-          {editingId && <button type="button" className="vendors-link-button" onClick={resetForm}>Cancel edit</button>}
+          {editingId && (
+            <button type="button" className="vendors-link-button" onClick={resetForm}>
+              Cancel edit
+            </button>
+          )}
         </div>
+
         <div className="vendors-form-grid">
           <label><span>Vendor Name <b>*</b></span><input name="name" value={form.name} onChange={handleChange} placeholder="Enter vendor name" required /></label>
           <label><span>Unique Code <b>*</b></span><input name="code" value={form.code} onChange={handleChange} placeholder="e.g. VEN-003" required /></label>
