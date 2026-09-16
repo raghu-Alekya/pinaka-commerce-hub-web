@@ -21,15 +21,37 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+<<<<<<< HEAD
   margin-bottom: 10px;
+=======
+  margin-bottom: 14px;
+  padding: 0 18px;
+>>>>>>> 775cf052e551fc35e410591331c1df2261ab66a0
 }
 
 .feature-permissions-page .fp-title-wrap {
   display: flex;
   align-items: center;
+  gap: 16px;
   min-width: 0;
 }
 
+<<<<<<< HEAD
+=======
+.feature-permissions-page .fp-title-icon {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #f0efff;
+  color: #463cff;
+  font-size: 28px;
+}
+
+>>>>>>> 775cf052e551fc35e410591331c1df2261ab66a0
 .feature-permissions-page .fp-title-wrap h1 {
   margin: 0 0 3px;
   color: #18213c;
@@ -39,6 +61,12 @@
   letter-spacing: 0;
 }
 
+.feature-permissions-page .fp-feature-name {
+  margin-left: 8px;
+  color: #4f42f5;
+  font-weight: 600;
+}
+
 .feature-permissions-page .fp-title-wrap p {
   margin: 0;
   color: #778198;
@@ -46,12 +74,30 @@
   line-height: normal;
 }
 
+<<<<<<< HEAD
 .feature-permissions-page .fp-info-card,
 .feature-permissions-page .fp-list-card {
   background: #fff;
   border: 1px solid #edf0f5;
   border-radius: 9px;
   box-shadow: 0 2px 9px rgba(28, 54, 105, 0.035);
+=======
+.feature-permissions-page .fp-back-btn {
+  height: 44px;
+  padding: 0 18px;
+  border: 1px solid #d7dfed;
+  border-radius: 8px;
+  background: #fff;
+  color: #3f36ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+>>>>>>> 775cf052e551fc35e410591331c1df2261ab66a0
 }
 
 .feature-permissions-page .fp-info-card {
@@ -538,6 +584,7 @@
   color: #fff;
 }
 
+<<<<<<< HEAD
 .feature-permissions-page .fp-feature-context {
   display: none;
 }
@@ -556,6 +603,9 @@
 }
 
 @media (max-width: 1100px) {
+=======
+@media (max-width: 1180px) {
+>>>>>>> 775cf052e551fc35e410591331c1df2261ab66a0
   .feature-permissions-page .fp-list-toolbar {
     align-items: flex-start;
     flex-direction: column;
@@ -606,6 +656,15 @@
   .feature-permissions-page .fp-page-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .feature-permissions-page .fp-feature-name {
+    display: block;
+    margin: 6px 0 0;
+  }
+
+  .feature-permissions-page .fp-back-btn {
+    width: 100%;
   }
 
   .feature-permissions-page .fp-list-filters {

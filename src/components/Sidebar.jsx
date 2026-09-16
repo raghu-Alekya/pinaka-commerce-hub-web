@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
 const sections = [
@@ -64,8 +64,15 @@ export default function Sidebar({
   mobileOpen,
   setMobileOpen,
 }) {
-  const [masterSetupOpen, setMasterSetupOpen] = useState(false);
   const location = useLocation();
+  const isPermissionsRoute = location.pathname.startsWith("/permissions");
+  const [masterSetupOpen, setMasterSetupOpen] = useState(isPermissionsRoute);
+
+  useEffect(() => {
+    if (isPermissionsRoute) {
+      setMasterSetupOpen(true);
+    }
+  }, [isPermissionsRoute]);
 
   return (
     <aside
@@ -137,15 +144,11 @@ export default function Sidebar({
                               key={subTo}
                               to={subTo}
                               onClick={() => setMobileOpen(false)}
-                              className={({ isActive }) => {
-                                const featureChildActive =
-                                  subTo === "/features" &&
-                                  location.pathname.startsWith("/features/");
-
-                                return `master-setup-submenu-item ${
-                                  isActive || featureChildActive ? "active" : ""
-                                }`;
-                              }}
+                              className={({ isActive }) =>
+                                `master-setup-submenu-item ${
+                                  isActive ? "active" : ""
+                                }`
+                              }
                             >
                               <i className={`bi ${subIcon}`} />
                               <span>{subLabel}</span>
