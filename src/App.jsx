@@ -30,6 +30,10 @@ import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
+<<<<<<< HEAD
+import ConfigurePermissions from "./pages/ConfigurePermissions";
+=======
+>>>>>>> 74a402cded990c9e9384cb7359f56a361c2ce042
 import RoleTemplates from "./pages/Roletemplates";
 
 
@@ -132,6 +136,24 @@ export default function App() {
         <Route path="/devices/add" element={<AddDevice />} />
         <Route path="/employees/edit" element={<EditEmployee />} />
         <Route path="/employees/add" element={<AddEmployee />} />
+        <Route path="/features" element={<Features />} />
+        <Route path="/features/:featureId/permissions" element={<ConfigurePermissions />} />
+        <Route path="/permissions" element={<FeaturePermissions />} />
+        <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/role-templates" element={<RoleTemplates />} />
+        <Route path="/store-types/new" element={<CreateStoreType />} />
+        <Route
+          path="/store-types/:storeTypeId"
+          element={<StoreTypeDetails />}
+        />
+        <Route
+          path="/store-types/:storeTypeId/features"
+          element={<StoreTypeFeatures />}
+        />
+        <Route
+          path="/store-types/:storeTypeId/role-templates"
+          element={<StoreTypeRoleTemplates />}
+        />
 
         <Route path="/features" element={<Features />} />
         <Route path="/permissions" element={<FeaturePermissions />} />

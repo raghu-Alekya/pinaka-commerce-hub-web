@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 const sections = [
   {
@@ -23,11 +23,11 @@ const sections = [
         "Master Setup",
         true,
         [
-["/store-types/new", "bi-shop", "Store Types"],
-["/features", "bi-grid-1x2", "Features"],          ["/permissions", "bi-shield-check", "Permissions"],
+          ["/store-types/new", "bi-shop", "Store Types"],
+          ["/features", "bi-grid-1x2", "Features"],
+          ["/permissions", "bi-shield-check", "Feature Permissions"],
           ["/role-templates", "bi-person-badge", "Role Templates"],
           ["/plans/new", "bi-credit-card", "Plans"],
-        
         ],
       ],
     ],
@@ -97,6 +97,7 @@ export default function Sidebar({
   setMobileOpen,
 }) {
   const [masterSetupOpen, setMasterSetupOpen] = useState(false);
+  const location = useLocation();
 
   return (
     <aside
@@ -168,11 +169,15 @@ export default function Sidebar({
                               key={subTo}
                               to={subTo}
                               onClick={() => setMobileOpen(false)}
-                              className={({ isActive }) =>
-                                `master-setup-submenu-item ${
-                                  isActive ? "active" : ""
-                                }`
-                              }
+                              className={({ isActive }) => {
+                                const featureChildActive =
+                                  subTo === "/features" &&
+                                  location.pathname.startsWith("/features/");
+
+                                return `master-setup-submenu-item ${
+                                  isActive || featureChildActive ? "active" : ""
+                                }`;
+                              }}
                             >
                               <i className={`bi ${subIcon}`} />
                               <span>{subLabel}</span>

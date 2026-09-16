@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/featurepermissions.css";
 
 const initialPermissions = [
@@ -41,14 +40,6 @@ const emptyForm = {
 };
 
 export default function FeaturePermissions() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const selectedFeatureName =
-    location.state?.featureName ||
-    location.state?.feature?.name ||
-    "Feature";
-
   const [permissions, setPermissions] = useState(initialPermissions);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
@@ -168,26 +159,11 @@ export default function FeaturePermissions() {
     <div className="feature-permissions-page">
       <div className="fp-page-head">
         <div className="fp-title-wrap">
-          <div className="fp-title-icon">
-            <i className="bi bi-arrow-repeat" />
-          </div>
-
           <div>
             <h1>Feature Permissions</h1>
-            <p>
-              Manage permissions for the selected feature.
-            </p>
+            <p>Manage feature permissions and permission access.</p>
           </div>
         </div>
-
-        <button
-          type="button"
-          className="fp-back-btn"
-          onClick={() => navigate("/features")}
-        >
-          <i className="bi bi-arrow-left" />
-          Back to Features
-        </button>
       </div>
 
       <section className="fp-info-card">
@@ -195,7 +171,7 @@ export default function FeaturePermissions() {
           <div>
             <h2>Permission Information</h2>
             <p>
-              Create a new permission for this feature or edit an existing one.
+              Create a new permission or edit an existing permission.
             </p>
           </div>
 
@@ -290,7 +266,7 @@ export default function FeaturePermissions() {
             onClick={clearForm}
           >
             <i className="bi bi-arrow-counterclockwise" />
-            Clear
+            Reset
           </button>
 
           <button
@@ -470,10 +446,6 @@ export default function FeaturePermissions() {
           </div>
         </div>
       </section>
-
-      <div className="fp-feature-context" aria-hidden="true">
-        {selectedFeatureName}
-      </div>
     </div>
   );
 }

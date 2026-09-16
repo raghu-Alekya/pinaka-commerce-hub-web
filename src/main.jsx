@@ -27,6 +27,7 @@ import "./styles/StoreTypeFeatures.css";
 import "./styles/StoreTypeRoleTemplates.css";
 import "./styles/features.css";
 import "./styles/featurepermissions.css";
+import "./styles/configurepermissions.css";
 import "./styles/Roletemplates.css";
 import "./styles/devices.css";
 import "./styles/add-device.css";

@@ -58,6 +58,7 @@ const emptyForm = {
   code: "",
   name: "",
   description: "",
+  category: "",
   status: "Active",
 };
 
