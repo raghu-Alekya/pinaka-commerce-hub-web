@@ -1,5 +1,5 @@
 .role-templates-page {
-  flex: 1;
+ flex: 1;
   min-height: calc(100vh - 72px);
   padding: 18px 20px 30px;
   color: #10264d;
@@ -15,29 +15,33 @@
   color: #076cf0;
   background: transparent;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .role-templates-title {
-  margin: 8px 0 14px;
+  margin: 8px 0 20px;
 }
 
 .role-templates-title h1 {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   margin: 0;
   color: #10254a;
   font-size: 25px;
 }
 
 .role-templates-title h1 span {
-  padding: 5px 10px;
-  border-radius: 14px;
+  display: inline-flex;
+  height: 23px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border-radius: 12px;
   color: #0aa763;
   background: #dff9eb;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .role-templates-title p {
@@ -49,7 +53,7 @@
 .role-templates-tabs {
   display: flex;
   gap: 37px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   border-bottom: 1px solid #d9e7f6;
 }
 
@@ -61,7 +65,8 @@
   color: #5878ab;
   background: transparent;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .role-templates-tabs button.active {
@@ -170,7 +175,7 @@
 
 .role-template-row {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) 1.3fr 90px 95px 55px;
+  grid-template-columns: minmax(220px, 2fr) 1.3fr 90px 55px; 
   min-height: 41px;
   align-items: center;
   padding: 0 10px;
@@ -212,9 +217,9 @@
 .role-template-icon.purple { color: #894bea; background: #f0e4ff; }
 
 .role-template-switch {
-  position: relative;
-  width: 24px;
-  height: 13px;
+ position: relative;
+  width: 40px;
+  height: 20px;
   padding: 0;
   border: 0;
   border-radius: 20px;
@@ -225,11 +230,12 @@
 .role-template-switch span {
   position: absolute;
   top: 2px;
-  left: 2px;
-  width: 9px;
-  height: 9px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #fff;
+  transition: 0.2s;
 }
 
 .role-template-switch.enabled {
@@ -237,7 +243,7 @@
 }
 
 .role-template-switch.enabled span {
-  left: 13px;
+  left: 22px;
 }
 
 .role-template-more-button {

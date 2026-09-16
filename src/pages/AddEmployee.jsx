@@ -415,7 +415,9 @@ export default function AddEmployee() {
     state: "",
     pinCode: "",
     country: "India",
+    role: "",
     merchant: "",
+    store: "",
     employeeLoginPin: "",
     manager: "",
     username: "",
@@ -682,6 +684,11 @@ export default function AddEmployee() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+
     const nextValue =
       name === "employeeLoginPin"
         ? value.replace(/\D/g, "").slice(0, 6)
@@ -753,6 +760,8 @@ export default function AddEmployee() {
 
   const handleSave = (e) => {
     e.preventDefault();
+
+    console.log("Employee details:", formData);
 
     if (!validateForm()) {
       requestAnimationFrame(() => {
@@ -870,6 +879,27 @@ export default function AddEmployee() {
 
                 {/* PHONE */}
 
+                <div className="employee-field">
+                  <label>
+                    Phone Number <span>*</span>
+                  </label>
+
+                  <div className="phone-input">
+                    <div className="country-code">
+                      <span>+91</span>
+
+                      <ChevronDown size={15} />
+                    </div>
+
+                    <input
+                      type="tel"
+                      name="phone"
+                      placeholder="Enter phone number"
+                      value={formData.phone}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
                 
               <div className="employee-field employee-phone-field">
                 <label>
@@ -901,6 +931,8 @@ export default function AddEmployee() {
                 {/* DATE OF BIRTH */}
 
                 <div className="employee-field">
+
+                  <label>Date of Birth</label>
                   <label>
                     Date of Birth <span>*</span>
                   </label>
@@ -1455,9 +1487,9 @@ function FormField({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+      />
         autoComplete={name === "username" ? "off" : undefined}
         className={error ? "field-invalid" : ""}
-      />
    
       {error && <span className="field-error">{error}</span>}
     </div>

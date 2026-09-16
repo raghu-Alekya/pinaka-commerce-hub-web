@@ -58,7 +58,6 @@ const featureOptions = {
 export default function StoreTypeFeatures() {
   const navigate = useNavigate();
   const { storeTypeId } = useParams();
-
   const [features, setFeatures] = useState(initialFeatures);
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -154,7 +153,7 @@ export default function StoreTypeFeatures() {
         </div>
       </div>
 
-      <div className="store-type-tabs">
+     <div className="store-type-tabs">
   <button
     type="button"
     onClick={() => navigate(`/store-types/${storeTypeId}`)}
@@ -173,10 +172,6 @@ export default function StoreTypeFeatures() {
     }
   >
     Role Templates
-  </button>
-
-  <button type="button">
-    Configuration Defaults
   </button>
 </div>
 
@@ -216,61 +211,44 @@ export default function StoreTypeFeatures() {
         </div>
 
         <div className="store-features-table">
-          <div className="store-features-row store-features-row-head">
-            <div>Feature</div>
-            <div>Category</div>
-            <div>Default</div>
-            <div>Required</div>
-            <div>Order</div>
-            <div>Action</div>
-          </div>
+         <div className="store-features-row store-features-row-head">
+           <div>Feature</div>
+           <div>Category</div>
+           <div>Active</div>
+           <div>Order</div>
+           <div>Action</div>
+        </div>
 
           {filteredFeatures.map((feature) => (
             <div className="store-features-row" key={feature.id}>
-              <div className="store-features-name">
-                <span className="store-feature-icon">
-                  <i className={`bi ${feature.icon}`} />
-                </span>
-                {feature.name}
-              </div>
+               <div className="store-features-name">
+                 <span className="store-feature-icon">
+                 <i className={`bi ${feature.icon}`} />
+                 </span>
+                 {feature.name}
+               </div>
+                <div>{feature.category}</div>
 
-              <div>{feature.category}</div>
+                 <div>
+                    <button
+                     type="button"
+                     className={`feature-toggle ${feature.defaultEnabled ? "enabled" : ""}`}
+                     onClick={() => toggleFeature(feature.id, "defaultEnabled")}
+                     aria-label={`Toggle ${feature.name} active`}
+                      >
+                     <span />
+                   </button>
+                 </div>
 
-              <div>
-                <button
-                  type="button"
-                  className={`feature-toggle ${
-                    feature.defaultEnabled ? "enabled" : ""
-                  }`}
-                  onClick={() => toggleFeature(feature.id, "defaultEnabled")}
-                  aria-label={`Toggle ${feature.name} default`}
-                >
-                  <span />
-                </button>
-              </div>
+                   <div>{feature.order}</div>
 
-              <div>
-                <button
-                  type="button"
-                  className={`feature-toggle ${
-                    feature.required ? "enabled" : ""
-                  }`}
-                  onClick={() => toggleFeature(feature.id, "required")}
-                  aria-label={`Toggle ${feature.name} required`}
-                >
-                  <span />
-                </button>
-              </div>
-
-              <div>{feature.order}</div>
-
-              <div>
-                <button type="button" className="feature-more-button">
-                  <i className="bi bi-three-dots-vertical" />
-                </button>
-              </div>
+                    <div>
+                      <button type="button" className="feature-more-button">
+                      <i className="bi bi-three-dots-vertical" />
+                      </button>
+                   </div>
             </div>
-          ))}
+           ))}
         </div>
 
         <p className="store-features-count">
