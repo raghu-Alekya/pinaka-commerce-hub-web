@@ -34,6 +34,8 @@ import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
 import RoleTemplates from "./pages/Roletemplates";
+import Vendors from "./pages/Vendors";
+import Tenders from "./pages/Tenders";
 
 
 
@@ -246,6 +248,13 @@ export default function App() {
 
         <Route path="/features" element={<Features />} />
         <Route path="/permissions" element={<FeaturePermissions />} />
+<<<<<<< HEAD
+=======
+
+        <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/vendors" element={<Vendors />} />
+        <Route path="/tenders" element={<Tenders />} />
+>>>>>>> 472c643 (Adding vendor and tendors screens)
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
