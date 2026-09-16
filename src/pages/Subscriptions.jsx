@@ -1128,7 +1128,7 @@ function PaymentSuccess({
 
 /* ========================================
    MAIN COMPONENT
-======================================== */
+========================================= */
 
 export default function MerchantSubscriptions() {
   const [subscriptions, setSubscriptions] = useState(initialSubscriptions);
