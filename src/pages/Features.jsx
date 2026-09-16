@@ -3,14 +3,14 @@ import { useNavigate } from "react-router-dom";
 import "../styles/features.css";
 
 const initialFeatures = [
-  { id: 1, name: "Loyalty", category: "Customer Engagement", description: "Manage loyalty programs and rewards.", status: "Active", createdAt: "Apr 10, 2026 02:15 PM", type: "BOOLEAN", icon: "bi-diamond", tone: "purple" },
-  { id: 2, name: "KDS", category: "Restaurant", description: "Kitchen Display System for order management.", status: "Active", createdAt: "Apr 08, 2026 11:42 AM", type: "BOOLEAN", icon: "bi-display", tone: "amber" },
-  { id: 3, name: "Delivery", category: "Orders", description: "Manage delivery orders and logistics.", status: "Active", createdAt: "Apr 05, 2026 09:30 AM", type: "BOOLEAN", icon: "bi-truck", tone: "blue" },
-  { id: 4, name: "Safe Drop", category: "Cash Management", description: "Secure cash drop and pickup management.", status: "Inactive", createdAt: "Apr 02, 2026 04:12 PM", type: "BOOLEAN", icon: "bi-shield-check", tone: "red" },
-  { id: 5, name: "Inventory", category: "Stock Control", description: "Track and manage inventory levels in real-time.", status: "Active", createdAt: "Apr 12, 2026 10:00 AM", type: "BOOLEAN", icon: "bi-diamond", tone: "purple" },
+  { id: 1, code: "LOYALTY", name: "Loyalty", category: "Customer Engagement", description: "Manage loyalty programs and rewards.", status: "Active", createdAt: "Apr 10, 2026 02:15 PM", type: "BOOLEAN", icon: "bi-diamond", tone: "purple" },
+  { id: 2, code: "KDS", name: "KDS", category: "Restaurant", description: "Kitchen Display System for order management.", status: "Active", createdAt: "Apr 08, 2026 11:42 AM", type: "BOOLEAN", icon: "bi-display", tone: "amber" },
+  { id: 3, code: "DELIVERY", name: "Delivery", category: "Orders", description: "Manage delivery orders and logistics.", status: "Active", createdAt: "Apr 05, 2026 09:30 AM", type: "BOOLEAN", icon: "bi-truck", tone: "blue" },
+  { id: 4, code: "SAFE_DROP", name: "Safe Drop", category: "Cash Management", description: "Secure cash drop and pickup management.", status: "Inactive", createdAt: "Apr 02, 2026 04:12 PM", type: "BOOLEAN", icon: "bi-shield-check", tone: "red" },
+  { id: 5, code: "INVENTORY", name: "Inventory", category: "Stock Control", description: "Track and manage inventory levels in real-time.", status: "Active", createdAt: "Apr 12, 2026 10:00 AM", type: "BOOLEAN", icon: "bi-diamond", tone: "purple" },
 ];
 
-const emptyForm = { name: "", description: "", category: "", type: "", status: "Active" };
+const emptyForm = { code: "", name: "", description: "", category: "", status: "Active" };
 
 export default function Features() {
   const navigate = useNavigate();
@@ -23,6 +23,7 @@ export default function Features() {
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [actionMenu, setActionMenu] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
 
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
@@ -30,27 +31,60 @@ export default function Features() {
   const updateField = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateFeature = () => {
+    const errors = {};
+    const code = form.code.trim();
+    const name = form.name.trim();
+
+    if (!code) errors.code = "Feature Code is required.";
+    if (!name) errors.name = "Feature Name is required.";
+
+    if (code && features.some(
+      (item) =>
+        item.id !== editingId &&
+        (item.code || "").trim().toLowerCase() === code.toLowerCase()
+    )) {
+      errors.code = "Feature Code already exists. Enter a unique code.";
+    }
+
+    if (name && features.some(
+      (item) =>
+        item.id !== editingId &&
+        item.name.trim().toLowerCase() === name.toLowerCase()
+    )) {
+      errors.name = "Feature Name already exists. Enter a unique name.";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const clearForm = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setFormErrors({});
   };
 
   const editFeature = (feature) => {
     setEditingId(feature.id);
     setForm({
+      code: feature.code || feature.name.toUpperCase().replace(/\s+/g, "_"),
       name: feature.name,
       description: feature.description,
       category: feature.category,
-      type: feature.type,
       status: feature.status,
     });
+    setFormErrors({});
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const saveFeature = () => {
-    if (!form.name.trim()) return;
+    if (!validateFeature()) return;
     setFeatures((prev) => [
       {
         id: Date.now(),
@@ -66,6 +100,7 @@ export default function Features() {
   };
 
   const updateFeature = () => {
+    if (!validateFeature()) return;
     setFeatures((prev) =>
       prev.map((item) =>
         item.id === editingId ? { ...item, ...form } : item
@@ -185,58 +220,68 @@ export default function Features() {
 
   return (
     <div className="features-page">
-      <section className="feature-details-card">
-        <div className="feature-header-row">
-          <div className="feature-title-wrap">
-            <div className="feature-title-icon">
-              <i className="bi bi-grid-1x2" />
-            </div>
-            <div>
-              <h1>Features</h1>
-              <p>Manage platform features and their details.</p>
-            </div>
-          </div>
+      <header className="features-page-heading">
+        <h1>Features</h1>
+        <p>Manage platform features and their details.</p>
+      </header>
 
-          <div className="feature-header-actions">
-            {isEditing ? (
-              <>
-                <span className="editing-chip">Editing: {editingFeature?.name}</span>
-                <button className="feature-action secondary" type="button" onClick={clearForm}>
-                  Cancel
-                </button>
-                <button className="feature-action primary" type="button" onClick={updateFeature}>
-                  <i className="bi bi-floppy" />
-                  Update Feature
-                </button>
-              </>
-            ) : (
-              <>
-                <button className="feature-action secondary blue-text" type="button" onClick={clearForm}>
-                  <i className="bi bi-arrow-repeat" />
-                  Clear
-                </button>
-                <button className="feature-action primary" type="button" onClick={saveFeature}>
-                  <i className="bi bi-floppy" />
-                  Save Feature
-                </button>
-              </>
-            )}
+      <section className="feature-details-card">
+        <div className="feature-section-heading">
+          <div className="feature-title-icon">
+            <i className="bi bi-grid-1x2" />
+          </div>
+          <div>
+            <h2>Feature Details</h2>
+            <p>Provide the basic details and configuration for this feature.</p>
           </div>
         </div>
 
-        <h2 className="feature-details-heading">Feature Details</h2>
-
         <div className="feature-form-grid">
           <div className="feature-field">
-            <label>Name:</label>
-            <input name="name" value={form.name} onChange={updateField} placeholder="e.g. REFUNDS" />
-            <small>Unique key (e.g. REFUNDS / KDS / LOYALTY)</small>
+            <label>Feature Code<span>*</span></label>
+            <input
+              name="code"
+              value={form.code}
+              onChange={updateField}
+              placeholder="e.g. INVENTORY_MANAGEMENT"
+              className={formErrors.code ? "feature-input-error" : ""}
+            />
+            {formErrors.code ? (
+              <small className="feature-error-text">{formErrors.code}</small>
+            ) : (
+              <small>Unique system key (e.g. REFUNDS / KDS / LOYALTY)</small>
+            )}
           </div>
 
           <div className="feature-field">
-            <label>Description:</label>
-            <input name="description" value={form.description} onChange={updateField} placeholder="Enter feature name" />
-            <small>Feature metadata or display name</small>
+            <label>Feature Name<span>*</span></label>
+            <input
+              name="name"
+              value={form.name}
+              onChange={updateField}
+              placeholder="e.g. Inventory Management"
+              className={formErrors.name ? "feature-input-error" : ""}
+            />
+            {formErrors.name ? (
+              <small className="feature-error-text">{formErrors.name}</small>
+            ) : (
+              <small>Name shown in the system</small>
+            )}
+          </div>
+
+          <div className="feature-field feature-description-field">
+            <label>Description</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={updateField}
+              placeholder="Describe what this feature does, where it is used, and its purpose..."
+              maxLength={500}
+            />
+            <div className="feature-description-meta">
+              <small>Briefly explain the feature and its intended use.</small>
+              <span>{form.description.length}/500</span>
+            </div>
           </div>
 
           <div className="feature-field">
@@ -252,16 +297,10 @@ export default function Features() {
               </select>
               <i className="bi bi-chevron-down" />
             </div>
-            <small>e.g. POS / Orders / Cash / Workforce / etc.</small>
+            <small>Select the product area this feature belongs to.</small>
           </div>
 
-          <div className="feature-field">
-            <label>Feature Type<span>*</span></label>
-            <input name="type" value={form.type} onChange={updateField} placeholder="Enter feature type" />
-            <small>BOOLEAN / LIMIT / CONFIG</small>
-          </div>
-
-          <div className="feature-field">
+          <div className="feature-field feature-status-field">
             <label>Status<span>*</span></label>
             <div className="select-shell">
               <select name="status" value={form.status} onChange={updateField}>
@@ -270,7 +309,26 @@ export default function Features() {
               </select>
               <i className="bi bi-chevron-down" />
             </div>
-            <small>Active or Inactive</small>
+            <small>Active or Inactive.</small>
+          </div>
+        </div>
+
+        <div className="feature-form-footer">
+          {isEditing && (
+            <span className="editing-chip">Editing: {editingFeature?.name}</span>
+          )}
+
+          <div className="feature-footer-actions">
+            <button className="feature-action secondary" type="button" onClick={clearForm}>
+              {isEditing ? "Cancel" : "Clear"}
+            </button>
+            <button
+              className="feature-action primary"
+              type="button"
+              onClick={isEditing ? updateFeature : saveFeature}
+            >
+              {isEditing ? "Update Feature" : "Save Feature"}
+            </button>
           </div>
         </div>
       </section>

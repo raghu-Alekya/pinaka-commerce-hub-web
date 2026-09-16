@@ -33,10 +33,7 @@ import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
-<<<<<<< HEAD
 import ConfigurePermissions from "./pages/ConfigurePermissions";
-=======
->>>>>>> 74a402cded990c9e9384cb7359f56a361c2ce042
 import RoleTemplates from "./pages/Roletemplates";
 import Vendors from "./pages/Vendors";
 import Tenders from "./pages/Tenders";
