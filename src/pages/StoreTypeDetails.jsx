@@ -1,19 +1,35 @@
-import { useState } from "react";
+import StoreTypeDialog from "../components/StoreTypeDialog";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-const storeType = {
-  code: "RESTAURANT",
-  name: "Restaurant",
-  status: "Active",
-  description:
-    "Full-service and quick service restaurant vertical with kitchen and dining operations.",
-};
+import { getStoreType, updateStoreType } from "../api/storeTypes";
 
 export default function StoreTypeDetails() {
   const navigate = useNavigate();
   const { storeTypeId } = useParams();
   const [activeTab, setActiveTab] = useState("overview");
-  const [form, setForm] = useState(storeType);
+  const [form, setForm] = useState({ code: "", name: "", description: "", status: "Active" });
+
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let active = true;
+    setLoading(true); setError(""); setMessage("");
+    getStoreType(storeTypeId).then(item => { if (active) setForm(item); })
+      .catch(e => { if (active) setError(e.message); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [storeTypeId, attempt]);
+  async function save() {
+    if (busy || !form.id) return;
+    if (!form.code.trim() || !form.name.trim()) { setError("Code and name are required."); return; }
+    setBusy(true); setError(""); setMessage(""); setMessage("");
+    try { setForm(await updateStoreType(form.id, form)); setMessage("Store type updated."); }
+    catch (e) { setError(e.message); } finally { setBusy(false); }
+  }
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -26,6 +42,7 @@ export default function StoreTypeDetails() {
 
   return (
     <section className="store-type-details-page">
+      {loading && <p role="status">Loading store type...</p>}
       <button
         type="button"
         className="store-type-details-back"
@@ -46,8 +63,7 @@ export default function StoreTypeDetails() {
           </div>
 
           <p>
-            Store type for restaurant vertical with full service and quick
-            service operations.
+            {form.description}
           </p>
         </div>
       </div>
@@ -88,6 +104,7 @@ export default function StoreTypeDetails() {
             <h2>Basic Information</h2>
           </div>
 
+          <fieldset disabled={loading || busy || !form.id} style={{ border: 0, padding: 0, margin: 0 }}>
           <div className="store-type-details-grid">
             <label className="store-type-details-field">
               <span>
@@ -142,6 +159,8 @@ export default function StoreTypeDetails() {
 
             <small>{form.description.length}/500</small>
           </label>
+          <button type="button" className="store-type-submit-button" onClick={save}>{busy ? "Saving..." : "Save changes"}</button>
+          </fieldset>
         </section>
       ) : (
         <section className="store-type-details-card store-type-empty-tab">
@@ -155,6 +174,8 @@ export default function StoreTypeDetails() {
           </p>
         </section>
       )}
+      {error && <StoreTypeDialog title="Unable to Complete Request" variant="error" confirmLabel={form.id ? "OK" : "Retry"} onConfirm={() => { setError(""); if (!form.id) setAttempt(n => n + 1); }} onClose={() => setError("")}>{error}</StoreTypeDialog>}
+      {message && !error && <StoreTypeDialog title="Store Type Saved" onClose={() => setMessage("")}>{message}</StoreTypeDialog>}
     </section>
   );
 }

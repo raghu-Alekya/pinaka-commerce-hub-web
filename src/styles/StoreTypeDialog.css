@@ -1,0 +1,15 @@
+.store-master-dialog-overlay { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 20px; background: rgba(5,24,55,.48); }
+.store-master-dialog { width: min(100%,410px); max-height: calc(100dvh - 40px); overflow: auto; box-sizing: border-box; padding: 30px; border-radius: 14px; background: #fff; box-shadow: 0 20px 50px rgba(4,28,64,.28); text-align: center; }
+.store-master-dialog-icon { display: grid; place-items: center; width: 58px; height: 58px; margin: 0 auto 16px; border-radius: 50%; font-size: 26px; color: #12834b; background: #e6f7ed; }
+.store-master-dialog.confirm .store-master-dialog-icon, .store-master-dialog.error .store-master-dialog-icon { color: #ef3b5c; background: #ffe9ee; }
+.store-master-dialog h2 { margin: 0 0 10px; color: #10254a; font-size: 22px; }
+.store-master-dialog-message { color: #5b78a9; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.store-master-dialog-message strong { color: #173761; }
+.store-master-dialog-actions { display: flex; gap: 12px; margin-top: 24px; }
+.store-master-dialog-actions button { flex: 1; min-height: 43px; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.store-master-dialog-actions .secondary { border: 1.5px solid #0873f9; color: #0873f9; background: #fff; }
+.store-master-dialog-actions .primary { border: 0; color: #fff; background: #0873f9; }
+.store-master-dialog.confirm .primary { background: #ef3b5c; }
+.store-master-dialog-actions button:disabled { opacity: .6; cursor: wait; }
+.store-master-dialog-actions button:focus-visible { outline: 3px solid #10254a; outline-offset: 3px; }
+@media(max-width:480px) { .store-master-dialog-actions { flex-direction: column; } }

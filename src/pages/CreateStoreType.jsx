@@ -1,63 +1,8 @@
-import { useMemo, useState } from "react";
+import StoreTypeDialog from "../components/StoreTypeDialog";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const initialStoreTypes = [
-  {
-    id: 1,
-    code: "GROCERY",
-    name: "Grocery",
-    description: "Retail grocery stores and supermarkets.",
-    category: "POS",
-    status: "Active",
-    createdOn: "Sep 10, 2025",
-    icon: "bi-shop",
-    tone: "green",
-  },
-  {
-    id: 2,
-    code: "RESTAURANT",
-    name: "Restaurant / F&B",
-    description: "Dine-in, takeaway and delivery restaurants.",
-    category: "Orders",
-    status: "Active",
-    createdOn: "Sep 08, 2025",
-    icon: "bi-fork-knife",
-    tone: "orange",
-  },
-  {
-    id: 3,
-    code: "SPA",
-    name: "Spa & Wellness",
-    description: "Spa, salon and wellness services.",
-    category: "Customer",
-    status: "Active",
-    createdOn: "Sep 05, 2025",
-    icon: "bi-flower1",
-    tone: "purple",
-  },
-  {
-    id: 4,
-    code: "DELIVERY",
-    name: "Delivery",
-    description: "Manage delivery orders and logistics.",
-    category: "Orders",
-    status: "Active",
-    createdOn: "Sep 03, 2025",
-    icon: "bi-truck",
-    tone: "blue",
-  },
-  {
-    id: 5,
-    code: "SAFE_DROP",
-    name: "Safe Drop",
-    description: "Secure cash drop and pickup management.",
-    category: "Cash",
-    status: "Inactive",
-    createdOn: "Aug 28, 2025",
-    icon: "bi-shield",
-    tone: "red",
-  },
-];
+import { listStoreTypes, createStoreType, updateStoreType, deleteStoreType } from "../api/storeTypes";
 
 const emptyForm = {
   code: "",
@@ -68,13 +13,26 @@ const emptyForm = {
 
 export default function CreateStoreType() {
   const navigate = useNavigate();
-  const [storeTypes, setStoreTypes] = useState(initialStoreTypes);
+  const [storeTypes, setStoreTypes] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [message, setMessage] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let active = true;
+    setLoading(true); setError("");
+    listStoreTypes().then(items => { if (active) setStoreTypes(items); })
+      .catch(e => { if (active) setError(e.message); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [attempt]);
 
   const filteredStoreTypes = useMemo(() => {
     const value = search.toLowerCase();
@@ -106,62 +64,20 @@ export default function CreateStoreType() {
 
   function resetFilters() {
     setSearch("");
-    setCategoryFilter("");
     setStatusFilter("");
   }
 
-  function submitForm(event) {
+  async function submitForm(event) {
     event.preventDefault();
-
-    if (
-      !form.code.trim() ||
-      !form.name.trim() ||
-      !form.description.trim()
-    ) {
-      setMessage("Please complete all required fields.");
-      return;
-    }
-
-    if (editingId) {
-      setStoreTypes((current) =>
-        current.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                code: form.code.trim().toUpperCase(),
-                name: form.name.trim(),
-                description: form.description.trim(),
-                status: form.status,
-              }
-            : item
-        )
-      );
-
-      setMessage("Store type updated successfully.");
-    } else {
-      setStoreTypes((current) => [
-        {
-          id: Date.now(),
-          code: form.code.trim().toUpperCase(),
-          name: form.name.trim(),
-          category: form.category,
-          description: form.description.trim(),
-          status: form.status,
-          createdOn: new Date().toLocaleDateString("en-US", {
-            month: "short",
-            day: "2-digit",
-            year: "numeric",
-          }),
-          icon: "bi-grid",
-          tone: "blue",
-        },
-        ...current,
-      ]);
-
-      setMessage("Store type created successfully.");
-    }
-
-    resetForm();
+    if (busy) return;
+    if (!form.code.trim() || !form.name.trim()) { setError("Code and name are required."); return; }
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const saved = editingId ? await updateStoreType(editingId, form) : await createStoreType(form);
+      setStoreTypes(items => editingId ? items.map(item => item.id === editingId ? saved : item) : [saved, ...items]);
+      setMessage(editingId ? "Store type updated." : "Store type created.");
+      resetForm();
+    } catch (e) { setError(e.message); } finally { setBusy(false); }
   }
 
   function editStoreType(item) {
@@ -177,13 +93,16 @@ export default function CreateStoreType() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function confirmDelete() {
-    setStoreTypes((current) =>
-      current.filter((item) => item.id !== deleteTarget.id)
-    );
-
-    setMessage(`${deleteTarget.name} store type deleted.`);
-    setDeleteTarget(null);
+  async function confirmDelete() {
+    if (busy || !deleteTarget) return;
+    setBusy(true); setError(""); setMessage("");
+    try {
+      await deleteStoreType(deleteTarget.id);
+      setStoreTypes(items => items.map(item => item.id === deleteTarget.id ? { ...item, status: "Inactive" } : item));
+      if (editingId === deleteTarget.id) resetForm();
+      setMessage("Store type deactivated.");
+      setDeleteTarget(null);
+    } catch (e) { setError(e.message); } finally { setBusy(false); }
   }
 
   return (
@@ -207,6 +126,7 @@ export default function CreateStoreType() {
           </div>
         </div>
 
+        <fieldset disabled={busy || loading} style={{ border: 0, padding: 0, margin: 0 }}>
         <div className="store-type-form-grid">
           <label className="store-type-field">
             <span>
@@ -292,10 +212,12 @@ export default function CreateStoreType() {
             {editingId ? "Update store type" : "Create store type"}
           </button>
         </div>
+        </fieldset>
       </form>
 
       <section className="store-types-list-card">
         <h2>Store Types List</h2>
+        <button type="button" className="store-type-reset-button" disabled={loading || busy} onClick={() => setAttempt(n => n + 1)}>Refresh list</button>
 
         <div className="store-types-filters">
           <label className="store-type-search">
@@ -340,6 +262,8 @@ export default function CreateStoreType() {
               <div>Actions</div>
             </div>
 
+            {loading && <p role="status">Loading store types...</p>}
+            {!loading && !error && !filteredStoreTypes.length && <p>No store types found.</p>}
             {filteredStoreTypes.map((item) => (
               <div className="store-types-row" key={item.id}>
                 <div>
@@ -377,7 +301,7 @@ export default function CreateStoreType() {
                 <div className="store-type-table-actions">
                   <button
                     type="button"
-                    title="Edit store type"
+                    disabled={busy} title="Edit store type"
                     onClick={() => editStoreType(item)}
                   >
                     <i className="bi bi-pencil" />
@@ -386,7 +310,7 @@ export default function CreateStoreType() {
                   <button
                     type="button"
                     className="store-type-delete-icon"
-                    title="Delete store type"
+                    disabled={busy || item.status === "Inactive"} title="Deactivate store type"
                     onClick={() => setDeleteTarget(item)}
                   >
                     <i className="bi bi-trash3" />
@@ -399,12 +323,12 @@ export default function CreateStoreType() {
 
         <div className="store-types-pagination">
           <span>
-            Showing 1 to {filteredStoreTypes.length} of{" "}
+            Showing {filteredStoreTypes.length ? 1 : 0} to {filteredStoreTypes.length} of{" "}
             {filteredStoreTypes.length} entries
           </span>
 
           <div>
-            <button type="button">
+            <button type="button" disabled>
               <i className="bi bi-chevron-left" />
             </button>
             <button type="button" className="active">
@@ -417,55 +341,14 @@ export default function CreateStoreType() {
         </div>
       </section>
 
-      {deleteTarget && (
-        <div
-          className="delete-storetype-overlay"
-          onClick={() => setDeleteTarget(null)}
-        >
-          <div
-            className="delete-storetype-modal"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="delete-storetype-icon">
-              <i className="bi bi-trash3" />
-            </div>
-
-            <h2>Delete Store Type?</h2>
-
-            <p>
-              Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
-              This action cannot be undone.
-            </p>
-
-            <div className="delete-storetype-actions">
-              <button
-                type="button"
-                className="delete-keep-button"
-                onClick={() => setDeleteTarget(null)}
-              >
-                No, Keep It
-              </button>
-
-              <button
-                type="button"
-                className="delete-confirm-button"
-                onClick={confirmDelete}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
+      {deleteTarget && !error && !message && (
+        <StoreTypeDialog title="Deactivate Store Type?" variant="confirm" confirmLabel="Deactivate" busy={busy} onConfirm={confirmDelete} onClose={() => setDeleteTarget(null)}>
+          Are you sure you want to deactivate <strong>{deleteTarget.name}</strong>? The record will remain available with inactive status.
+        </StoreTypeDialog>
       )}
+      {error && <StoreTypeDialog title="Unable to Complete Request" variant="error" onClose={() => setError("")}>{error}</StoreTypeDialog>}
+      {message && !error && <StoreTypeDialog title={message.includes("deactivated") ? "Store Type Deactivated" : "Store Type Saved"} onClose={() => setMessage("")}>{message}</StoreTypeDialog>}
 
-      {message && (
-        <div className="store-type-toast">
-          <span>{message}</span>
-          <button type="button" onClick={() => setMessage("")}>
-            ×
-          </button>
-        </div>
-      )}
     </section>
   );
 }
