@@ -65,14 +65,23 @@ export default function Sidebar({
   setMobileOpen,
 }) {
   const location = useLocation();
-  const isPermissionsRoute = location.pathname.startsWith("/permissions");
-  const [masterSetupOpen, setMasterSetupOpen] = useState(isPermissionsRoute);
+
+  const isMasterSetupRoute =
+    location.pathname.startsWith("/store-types") ||
+    location.pathname.startsWith("/features") ||
+    location.pathname.startsWith("/permissions") ||
+    location.pathname.startsWith("/role-templates") ||
+    location.pathname.startsWith("/plans") ||
+    location.pathname.startsWith("/vendors") ||
+    location.pathname.startsWith("/tenders");
+
+  const [masterSetupOpen, setMasterSetupOpen] = useState(isMasterSetupRoute);
 
   useEffect(() => {
-    if (isPermissionsRoute) {
+    if (isMasterSetupRoute) {
       setMasterSetupOpen(true);
     }
-  }, [isPermissionsRoute]);
+  }, [isMasterSetupRoute]);
 
   return (
     <aside
@@ -144,11 +153,15 @@ export default function Sidebar({
                               key={subTo}
                               to={subTo}
                               onClick={() => setMobileOpen(false)}
-                              className={({ isActive }) =>
-                                `master-setup-submenu-item ${
-                                  isActive ? "active" : ""
-                                }`
-                              }
+                              className={({ isActive }) => {
+                                const featureChildActive =
+                                  subTo === "/features" &&
+                                  location.pathname.startsWith("/features/");
+
+                                return `master-setup-submenu-item ${
+                                  isActive || featureChildActive ? "active" : ""
+                                }`;
+                              }}
                             >
                               <i className={`bi ${subIcon}`} />
                               <span>{subLabel}</span>
