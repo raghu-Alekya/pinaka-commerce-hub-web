@@ -27,7 +27,8 @@ const sections = [
 ["/features", "bi-grid-1x2", "Features"],          ["/permissions", "bi-shield-check", "Permissions"],
           ["/role-templates", "bi-person-badge", "Role Templates"],
           ["/plans/new", "bi-credit-card", "Plans"],
-        
+          ["/vendors", "bi-truck", "Vendors"],
+          ["/tenders", "bi-cash-coin", "Tenders"],
         ],
       ],
     ],
