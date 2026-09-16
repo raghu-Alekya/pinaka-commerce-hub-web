@@ -12,9 +12,7 @@ import {
   Download,
   CalendarDays,
   Filter,
-  Eye,
   Pencil,
-  MoreVertical,
   Users,
   Check,
   Pause,
@@ -629,25 +627,12 @@ export default function Employees() {
                     <td>
                       <div className="employee-actions">
                         <button
-                          title="View employee"
-                          onClick={() => console.log("View:", employee)}
-                        >
-                          <Eye size={17} />
-                        </button>
-
-                        <button
                           title="Edit employee"
-                          onClick={() => console.log("Edit:", employee)}
+                          onClick={() => navigate("/employees/edit", { state: { employee } })}
                         >
                           <Pencil size={17} />
                         </button>
 
-                        <button
-                          title="More actions"
-                          onClick={() => console.log("More:", employee)}
-                        >
-                          <MoreVertical size={18} />
-                        </button>
                       </div>
                     </td>
                   </tr>

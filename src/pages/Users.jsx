@@ -1,21 +1,1989 @@
-import {useEffect,useMemo,useRef,useState} from "react";import {useNavigate,useParams} from "react-router-dom";import {usersSeed,stores} from "../data/data";
-export default function Users(){const nav=useNavigate(),{merchantId}=useParams(),[list,setList]=useState(()=>JSON.parse(localStorage.getItem("pchUsers")||"null")||usersSeed),[adding,setAdding]=useState(false),[editing,setEditing]=useState(null),[q,setQ]=useState(""),[roleFilter,setRoleFilter]=useState(""),[storeFilter,setStoreFilter]=useState("all");const currentStore=JSON.parse(localStorage.getItem("pchCurrentStore")||"null")||stores.find(s=>s.id==="STR-0004")||stores[0];const [form,setForm]=useState({username:"",role:"",firstName:"",lastName:"",email:"",phone:"",storeId:currentStore.id,cashboxAccess:true,newPassword:"",resetPassword:"",loginPin:""});const photo=useRef();
-const filtered=useMemo(()=>list.filter(u=>(!q||`${u.username} ${u.firstName} ${u.lastName} ${u.email} ${u.storeName}`.toLowerCase().includes(q.toLowerCase()))&&(!roleFilter||u.role===roleFilter)&&(storeFilter==="all"||String(u.storeId)===storeFilter)),[list,q,roleFilter,storeFilter]);
-useEffect(()=>localStorage.setItem("pchUsers",JSON.stringify(list)),[list]);
-const start=(u=null)=>{setEditing(u?.id||null);setForm(u?{...form,...u,newPassword:"",resetPassword:"",loginPin:""}:{username:"",role:"",firstName:"",lastName:"",email:"",phone:"",storeId:currentStore.id,cashboxAccess:true,newPassword:"",resetPassword:"",loginPin:""});setAdding(true)};
-const save=e=>{e.preventDefault();if(!form.username||!form.firstName||!form.lastName||!form.role||!form.email||!form.storeId||(!editing&&form.newPassword.length<8)||(!editing&&!/^\d{6}$/.test(form.loginPin))){alert("Please complete all required fields. Password must be 8+ characters and PIN exactly 6 digits.");return}if(form.resetPassword&&form.resetPassword!==form.newPassword){alert("Reset Password must match Set New Password.");return}const st=stores.find(s=>s.id===form.storeId)||currentStore;const u={id:editing||"USR-"+Date.now(),storeId:st.id,storeName:st.name,username:form.username,firstName:form.firstName,lastName:form.lastName,role:form.role,email:form.email,phone:form.phone,cashboxAccess:form.cashboxAccess,status:"Active"};setList(x=>editing?x.map(v=>v.id===editing?{...v,...u}:v):[...x,u]);localStorage.setItem("pchCurrentUser",JSON.stringify(u));setAdding(false);nav(`/pos-configuration?storeId=${encodeURIComponent(st.id)}&userId=${encodeURIComponent(u.id)}`)};
-if(adding)return <UserForm form={form} setForm={setForm} onSubmit={save} onCancel={()=>setAdding(false)} photo={photo} onAddAnother={()=>start()} editing={!!editing}/>;
-return <div className="page-content users-page"><section><div className="page-header users-header"><div><div className="breadcrumb-area"><button className="link-button" onClick={()=>nav(merchantId?`/merchants/${merchantId}/stores`:"/stores")}><i className="bi bi-arrow-left"/> Stores</button><span>/</span><span>Users</span></div><h1>Users</h1><p>Manage users associated with the selected store.</p></div><button className="primary-button" onClick={()=>start()}><i className="bi bi-plus-lg"/> Add User</button></div>
-<div className="selected-store-card"><div className="selected-store-main"><div className="selected-store-icon"><i className="bi bi-shop"/></div><div className="selected-store-info"><h3>{currentStore.name}</h3><div className="selected-store-meta"><span>Store ID: {currentStore.id}</span><span className="meta-dot">•</span><span>{currentStore.type}</span><span className="meta-dot">•</span><span>{currentStore.location}</span></div></div></div><div className="selected-store-status"><span className="status-title">Status</span><span className="store-active-badge">{currentStore.status||"Active"}</span></div></div>
-<div className="users-toolbar"><div className="users-toolbar-left"><div className="user-search"><i className="bi bi-search"/><input placeholder="Search users..." value={q} onChange={e=>setQ(e.target.value)}/></div><select className="store-filter" value={storeFilter} onChange={e=>setStoreFilter(e.target.value)}><option value="all">All Stores</option><option value="STR-0004">Westside Market</option><option value="STR-0005">Westside Market North</option></select></div><select className="role-filter" value={roleFilter} onChange={e=>setRoleFilter(e.target.value)}><option value="">All Roles</option>{["Admin","Shop manager","Manager","Cashier","Staff"].map(r=><option key={r}>{r}</option>)}</select></div>
-<div className="users-table-card"><div className="table-wrapper"><table className="users-table"><thead><tr><th>User</th><th>Name</th><th>Role</th><th>Store</th><th>Email</th><th>Phone</th><th>Cashdrawer</th><th>Status</th><th>Action</th></tr></thead><tbody>{filtered.map(u=><tr key={u.id}><td><div className="user-cell"><div className="user-avatar">{u.firstName?.[0]}{u.lastName?.[0]}</div><span className="user-username">{u.username}</span></div></td><td>{u.firstName} {u.lastName}</td><td><span className="role-badge">{u.role}</span></td><td><div className="store-table-cell"><i className="bi bi-shop"/>{u.storeName}</div></td><td>{u.email}</td><td>{u.phone}</td><td>{u.cashboxAccess?<span className="cashbox-enabled">Allowed</span>:<span className="cashbox-disabled">No Access</span>}</td><td><span className="status-badge"><span className="status-dot"/>{u.status}</span></td><td><button className="table-action" onClick={()=>start(u)}><i className="bi bi-pencil"/></button></td></tr>)}</tbody></table></div>{filtered.length===0&&<div className="empty-users"><div className="empty-icon"><i className="bi bi-people"/></div><h3>No users found</h3><p>Add a user to this store to get started.</p><button className="primary-button" onClick={()=>start()}><i className="bi bi-plus-lg"/> Add User</button></div>}</div></section></div>}
-function UserForm({form,setForm,onSubmit,onCancel,onAddAnother,photo,editing}){const [showPass,setShowPass]=useState(false),[showPin,setShowPin]=useState(false);const set=(k,v)=>setForm(x=>({...x,[k]:v}));return <div className="page-content users-page"><div className="page-header users-header"><div><div className="breadcrumb-area"><button className="link-button" onClick={onCancel}><i className="bi bi-arrow-left"/> Users</button><span>/</span><span>{editing?"Edit User":"Add User"}</span></div><h1>{editing?"Edit User":"Add User"}</h1><p>Create a user and assign access to the selected store.</p></div><button className="primary-button" onClick={onAddAnother}><i className="bi bi-plus-lg"/> Add User</button></div><form className="user-form" onSubmit={onSubmit}>
-<Card icon="person" color="purple" title="User Information" sub="Enter the user's account details."><div className="form-grid two-columns">{field("Username","username","Enter username",true)}<Select label="Role" value={form.role} set={v=>set("role",v)} options={["Admin","Shop manager","Manager","Cashier","Staff"]}/>{field("First Name","firstName","Enter first name",true)}{field("Last Name","lastName","Enter last name",true)}{field("Email","email","name@example.com",true,"email")}{field("User Phone","phone","Enter phone number")}</div></Card>
-<Card icon="shop" color="orange" title="Store Access" sub="Define the store and cashdrawer access for this user."><div className="form-grid two-columns"><Select label="Store Name" value={form.storeId} set={v=>set("storeId",v)} options={stores.filter(s=>s.id==="STR-0004"||s.id==="STR-0005").map(s=>`${s.id}||${s.name}`)} values={stores.filter(s=>s.id==="STR-0004"||s.id==="STR-0005").map(s=>s.id)}/><div className="cashbox-access-box"><label className="checkbox-label"><input type="checkbox" checked={form.cashboxAccess} onChange={e=>set("cashboxAccess",e.target.checked)}/><span className="custom-checkbox"/><span className="checkbox-text"><strong>Cashdrawer Access</strong><small>Allow this user to access cashdrawer operations for this store.</small></span></label></div></div></Card>
-<Card icon="image" color="blue" title="Profile Photo" sub="Upload a profile image for this user."><div className="profile-upload"><div className="profile-preview"><i className="bi bi-person"/></div><div className="upload-content"><label className="upload-button" htmlFor="profilePhoto"><i className="bi bi-upload"/> Choose Photo</label><input ref={photo} accept="image/png,image/jpeg,image/webp" id="profilePhoto" type="file"/><span className="file-name">JPG, PNG or WEBP · Recommended 200 × 200 px</span></div></div></Card>
-<Card icon="shield-lock" color="green" title="Password & Login PIN" sub="Set credentials for the user."><div className="form-grid two-columns">{passwordField("Set New Password","newPassword","Enter new password",form.newPassword,v=>set("newPassword",v),showPass,()=>setShowPass(!showPass),true)}{passwordField("Reset Password","resetPassword","Re-enter password",form.resetPassword,v=>set("resetPassword",v),showPass,()=>setShowPass(!showPass))}{passwordField("Login PIN","loginPin","Enter 6-digit PIN",form.loginPin,v=>set("loginPin",v.replace(/\D/g,"").slice(0,6)),showPin,()=>setShowPin(!showPin),true)}</div></Card>
-<div className="form-actions"><button className="cancel-btn" type="button" onClick={onCancel}>Cancel</button><button className="save-next-btn" type="submit">{editing?"Save & Next":"Save & Next"} <i className="bi bi-arrow-right"/></button></div></form></div>;
-function field(label,k,ph,req=false,type="text"){return <div className="field"><label>{label} {req&&<span>*</span>}</label><input type={type} value={form[k]} placeholder={ph} required={req} onChange={e=>set(k,e.target.value)}/></div>}
-function passwordField(label,k,ph,val,onChange,show,toggle,req){return <div className="field"><label>{label} {req&&<span>*</span>}</label><div className="input-with-action"><input type={show?"text":"password"} value={val} placeholder={ph} required={req} onChange={e=>onChange(e.target.value)}/><button className="input-action" type="button" onClick={toggle}><i className={`bi ${show?"bi-eye-slash":"bi-eye"}`}/></button></div>{k==="newPassword"&&<small className="field-help">Use at least 8 characters.</small>}{k==="loginPin"&&<small className="field-help">Enter exactly 6 digits.</small>}</div>}
-function Select({label,value,set,options,values=[]}){return <div className="field"><label>{label} <span>*</span></label><select value={value} onChange={e=>set(e.target.value)} required><option value="">Select {label.toLowerCase()}</option>{options.map((o,i)=>{let [v,t]=o.includes("||")?o.split("||"):[values[i]||o,o];return <option value={v} key={v}>{t}</option>})}</select></div>}
-function Card({icon,color,title,sub,children}){return <section className="form-card"><div className="form-card-header"><div className={`section-icon ${color}`}><i className={`bi bi-${icon}`}/></div><div><h2>{title}</h2><p>{sub}</p></div></div><div className="form-card-body">{children}</div></section>}}
+import {
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+
+import {
+    useNavigate,
+    useParams,
+} from "react-router-dom";
+
+import {
+    usersSeed,
+    stores,
+    merchantStores,
+} from "../data/data";
+
+import "../styles/users.css";
+import Pagination from "../components/pagination";
+
+
+/* =========================================================
+   ROLES
+========================================================= */
+
+const USER_ROLES = [
+    "Merchant",
+    "Manager",
+    "Cashier",
+    "Shopkeeper",
+    "Super-visor",
+];
+
+
+/* =========================================================
+   EMPTY FORM
+========================================================= */
+
+const EMPTY_FORM = {
+    username: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    role: "",
+    loginPin: "",
+    profilePhoto: "",
+};
+
+
+/* =========================================================
+   USERS
+========================================================= */
+
+export default function Users({
+    embedded = false,
+    merchantId: merchantIdProp,
+    storeId: storeIdProp,
+    store: storeProp,
+}) {
+    const navigate = useNavigate();
+    const params = useParams();
+
+
+    /* =====================================================
+       ROUTE CONTEXT
+    ===================================================== */
+
+    const merchantId =
+        merchantIdProp ||
+        storeProp?.merchantId ||
+        params.merchantId ||
+        "";
+
+    const storeId =
+        storeIdProp ||
+        storeProp?.id ||
+        params.storeId ||
+        "";
+
+
+    /* =====================================================
+       CURRENT STORE
+
+       Priority:
+       1. Store passed from StoreConfiguration
+       2. merchantStores
+       3. global stores
+    ===================================================== */
+
+    const currentStore = useMemo(() => {
+
+        /* -------------------------------------------------
+           StoreConfiguration already provides the store
+        ------------------------------------------------- */
+
+        if (storeProp) {
+            return storeProp;
+        }
+
+
+        /* -------------------------------------------------
+           Merchant → Store
+        ------------------------------------------------- */
+
+        if (
+            merchantId &&
+            merchantStores?.[merchantId]
+        ) {
+            const merchantStore =
+                merchantStores[merchantId].find(
+                    (item) =>
+                        String(item.id) ===
+                        String(storeId)
+                );
+
+            if (merchantStore) {
+                return merchantStore;
+            }
+        }
+
+
+        /* -------------------------------------------------
+           Global Stores
+        ------------------------------------------------- */
+
+        if (storeId) {
+            const globalStore =
+                stores.find(
+                    (item) =>
+                        String(item.id) ===
+                        String(storeId)
+                );
+
+            if (globalStore) {
+                return globalStore;
+            }
+        }
+
+        return null;
+
+    }, [
+        merchantId,
+        storeId,
+        storeProp,
+    ]);
+
+
+    /* =====================================================
+       USERS
+
+       For now usersSeed is used because the
+       Users API is still in progress.
+    ===================================================== */
+
+    const [list, setList] = useState(() => {
+        return Array.isArray(usersSeed)
+            ? usersSeed
+            : [];
+    });
+
+
+    /* =====================================================
+       EDIT STATE
+    ===================================================== */
+
+    const [editing, setEditing] =
+        useState(null);
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    const [q, setQ] =
+        useState("");
+
+
+    /* =====================================================
+       ROLE FILTER
+    ===================================================== */
+
+    const [roleFilter, setRoleFilter] =
+        useState("");
+
+
+    /* =====================================================
+       PAGINATION
+    ===================================================== */
+
+    const [currentPage, setCurrentPage] =
+        useState(1);
+
+    const [pageSize, setPageSize] =
+        useState(10);
+
+
+    /* =====================================================
+       FORM
+    ===================================================== */
+
+    const [form, setForm] =
+        useState(EMPTY_FORM);
+
+
+    /* =====================================================
+       PIN VISIBILITY
+    ===================================================== */
+
+    const [showPin, setShowPin] =
+        useState(false);
+
+
+    /* =====================================================
+       PHOTO REF
+    ===================================================== */
+
+    const photo =
+        useRef(null);
+
+
+    /* =========================================================
+       GET STORE ROLE ASSIGNMENT
+    ========================================================= */
+
+    const getStoreAssignment = (user) => {
+
+        if (!user) {
+            return null;
+        }
+
+
+        /* -------------------------------------------------
+           New employee structure
+        ------------------------------------------------- */
+
+        if (
+            Array.isArray(
+                user.storeRoleAssignments
+            )
+        ) {
+            return (
+                user.storeRoleAssignments.find(
+                    (assignment) =>
+                        String(
+                            assignment.storeId
+                        ) ===
+                        String(storeId)
+                ) || null
+            );
+        }
+
+
+        /* -------------------------------------------------
+           Legacy single-store structure
+        ------------------------------------------------- */
+
+        if (
+            user.storeId &&
+            String(user.storeId) ===
+                String(storeId)
+        ) {
+            return {
+                storeId:
+                    user.storeId,
+
+                storeName:
+                    user.storeName,
+
+                role:
+                    user.role,
+            };
+        }
+
+        return null;
+    };
+
+
+    /* =========================================================
+       USERS FOR SELECTED STORE
+    ========================================================= */
+
+    const storeUsers = useMemo(() => {
+
+        /*
+         * Users page is store-specific.
+         *
+         * If no store has been selected,
+         * don't display employee records.
+         */
+
+        if (!storeId) {
+            return [];
+        }
+
+        return list.filter((user) => {
+            return (
+                getStoreAssignment(user) !==
+                null
+            );
+        });
+
+    }, [
+        list,
+        storeId,
+    ]);
+
+
+    /* =========================================================
+       SEARCH + ROLE FILTER
+    ========================================================= */
+
+    const filteredUsers = useMemo(() => {
+
+        return storeUsers.filter(
+            (user) => {
+
+                const assignment =
+                    getStoreAssignment(
+                        user
+                    );
+
+                const role =
+                    assignment?.role ||
+                    "";
+
+                const searchText = [
+                    user.username,
+                    user.firstName,
+                    user.lastName,
+                    user.email,
+                    user.phone,
+                    role,
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
+
+                const matchesSearch =
+                    !q ||
+                    searchText.includes(
+                        q.toLowerCase()
+                    );
+
+                const matchesRole =
+                    !roleFilter ||
+                    role === roleFilter;
+
+                return (
+                    matchesSearch &&
+                    matchesRole
+                );
+            }
+        );
+
+    }, [
+        storeUsers,
+        q,
+        roleFilter,
+        storeId,
+    ]);
+
+
+    /* =========================================================
+       PAGINATION LOGIC
+    ========================================================= */
+
+    const totalItems =
+        filteredUsers.length;
+
+    const totalPages =
+        Math.ceil(
+            totalItems / pageSize
+        );
+
+    const paginatedUsers =
+        filteredUsers.slice(
+            (currentPage - 1) * pageSize,
+            currentPage * pageSize
+        );
+
+
+    /* =========================================================
+       RESET PAGINATION
+
+       When search, role filter or store changes,
+       always start from page 1.
+    ========================================================= */
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [
+        q,
+        roleFilter,
+        storeId,
+    ]);
+
+
+    /* =========================================================
+       KEEP PAGE VALID
+
+       Example:
+       Page 3 has 10 records.
+       User changes filter and now only
+       1 page remains.
+    ========================================================= */
+
+    useEffect(() => {
+
+        if (
+            totalPages > 0 &&
+            currentPage > totalPages
+        ) {
+            setCurrentPage(
+                totalPages
+            );
+        }
+
+    }, [
+        currentPage,
+        totalPages,
+    ]);
+
+
+    /* =========================================================
+       START EDIT
+    ========================================================= */
+
+    const startEdit = (user) => {
+
+        const assignment =
+            getStoreAssignment(
+                user
+            );
+
+        if (!assignment) {
+            return;
+        }
+
+        setEditing(user.id);
+
+        setForm({
+            username:
+                user.username || "",
+
+            firstName:
+                user.firstName || "",
+
+            lastName:
+                user.lastName || "",
+
+            email:
+                user.email || "",
+
+            phone:
+                user.phone || "",
+
+            role:
+                assignment.role ||
+                user.role ||
+                "",
+
+            loginPin:
+                "",
+
+            profilePhoto:
+                user.profilePhoto ||
+                "",
+        });
+
+        setShowPin(false);
+    };
+
+
+    /* =========================================================
+       CANCEL EDIT
+    ========================================================= */
+
+    const cancelEdit = () => {
+
+        setEditing(null);
+
+        setForm(
+            EMPTY_FORM
+        );
+
+        setShowPin(false);
+    };
+
+
+    /* =========================================================
+       FORM SETTER
+    ========================================================= */
+
+    const set = (
+        key,
+        value
+    ) => {
+
+        setForm(
+            (previous) => ({
+                ...previous,
+                [key]: value,
+            })
+        );
+    };
+
+
+    /* =========================================================
+       PROFILE PHOTO
+    ========================================================= */
+
+    const handlePhotoChange = (
+        event
+    ) => {
+
+        const file =
+            event.target
+                .files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+        ];
+
+        if (
+            !allowedTypes.includes(
+                file.type
+            )
+        ) {
+            alert(
+                "Please select a JPG, PNG or WEBP image."
+            );
+
+            event.target.value =
+                "";
+
+            return;
+        }
+
+        if (
+            file.size >
+            2 *
+                1024 *
+                1024
+        ) {
+            alert(
+                "Profile photo must be smaller than 2 MB."
+            );
+
+            event.target.value =
+                "";
+
+            return;
+        }
+
+        const imageUrl =
+            URL.createObjectURL(
+                file
+            );
+
+        set(
+            "profilePhoto",
+            imageUrl
+        );
+    };
+
+
+    /* =========================================================
+       SAVE EDIT
+    ========================================================= */
+
+    const save = (
+        event
+    ) => {
+
+        event.preventDefault();
+
+        if (!editing) {
+            return;
+        }
+
+
+        /* -------------------------------------------------
+           Required fields
+        ------------------------------------------------- */
+
+        if (
+            !form.username.trim() ||
+            !form.firstName.trim() ||
+            !form.lastName.trim() ||
+            !form.email.trim() ||
+            !form.role
+        ) {
+            alert(
+                "Please complete all required fields."
+            );
+
+            return;
+        }
+
+
+        /* -------------------------------------------------
+           Profile photo mandatory
+        ------------------------------------------------- */
+
+        if (!form.profilePhoto) {
+            alert(
+                "Profile photo is mandatory."
+            );
+
+            return;
+        }
+
+
+        /* -------------------------------------------------
+           Validate PIN only when entered
+        ------------------------------------------------- */
+
+        if (
+            form.loginPin &&
+            !/^\d{6}$/.test(
+                form.loginPin
+            )
+        ) {
+            alert(
+                "Login PIN must contain exactly 6 digits."
+            );
+
+            return;
+        }
+
+
+        /* -------------------------------------------------
+           Update employee
+        ------------------------------------------------- */
+
+        const updatedList =
+            list.map(
+                (user) => {
+
+                    if (
+                        String(
+                            user.id
+                        ) !==
+                        String(
+                            editing
+                        )
+                    ) {
+                        return user;
+                    }
+
+
+                    /* -------------------------------------
+                       Copy existing assignments
+                    ------------------------------------- */
+
+                    let assignments =
+                        Array.isArray(
+                            user.storeRoleAssignments
+                        )
+                            ? [
+                                  ...user.storeRoleAssignments,
+                              ]
+                            : [];
+
+
+                    /* -------------------------------------
+                       Legacy user support
+                    ------------------------------------- */
+
+                    if (
+                        assignments.length ===
+                            0 &&
+                        user.storeId
+                    ) {
+                        assignments = [
+                            {
+                                storeId:
+                                    user.storeId,
+
+                                storeName:
+                                    user.storeName,
+
+                                role:
+                                    user.role,
+                            },
+                        ];
+                    }
+
+
+                    /* -------------------------------------
+                       Find selected store assignment
+                    ------------------------------------- */
+
+                    const assignmentIndex =
+                        assignments.findIndex(
+                            (
+                                assignment
+                            ) =>
+                                String(
+                                    assignment.storeId
+                                ) ===
+                                String(
+                                    storeId
+                                )
+                        );
+
+
+                    /* -------------------------------------
+                       Change ONLY selected store role
+                    ------------------------------------- */
+
+                    if (
+                        assignmentIndex !==
+                        -1
+                    ) {
+                        assignments[
+                            assignmentIndex
+                        ] = {
+                            ...assignments[
+                                assignmentIndex
+                            ],
+
+                            role:
+                                form.role,
+                        };
+                    }
+
+
+                    /* -------------------------------------
+                       Updated employee
+                    ------------------------------------- */
+
+                    const updatedUser =
+                        {
+                            ...user,
+
+                            username:
+                                form.username.trim(),
+
+                            firstName:
+                                form.firstName.trim(),
+
+                            lastName:
+                                form.lastName.trim(),
+
+                            email:
+                                form.email.trim(),
+
+                            phone:
+                                form.phone.trim(),
+
+                            profilePhoto:
+                                form.profilePhoto,
+
+                            storeRoleAssignments:
+                                assignments,
+
+                            /*
+                             * Legacy fields retained
+                             * for compatibility.
+                             */
+
+                            storeId:
+                                storeId,
+
+                            storeName:
+                                currentStore?.name ||
+                                user.storeName,
+
+                            role:
+                                form.role,
+
+                            merchantId:
+                                user.merchantId ||
+                                merchantId,
+
+                            merchantName:
+                                user.merchantName,
+
+                            status:
+                                user.status ||
+                                "Active",
+                        };
+
+
+                    /* -------------------------------------
+                       Update PIN only if entered
+                    ------------------------------------- */
+
+                    if (
+                        form.loginPin
+                    ) {
+                        updatedUser.loginPin =
+                            form.loginPin;
+                    }
+
+                    return updatedUser;
+                }
+            );
+
+
+        /* -------------------------------------------------
+           Update state
+        ------------------------------------------------- */
+
+        setList(
+            updatedList
+        );
+
+        /*
+         * Demo:
+         * edits live in React state and reset
+         * when this page remounts.
+         */
+
+
+        /* -------------------------------------------------
+           Close edit
+        ------------------------------------------------- */
+
+        setEditing(null);
+
+        setForm(
+            EMPTY_FORM
+        );
+
+        setShowPin(false);
+
+        alert(
+            "User updated successfully."
+        );
+    };
+
+
+    /* =========================================================
+       EDIT SCREEN
+    ========================================================= */
+
+    if (editing) {
+        return (
+            <UserEditForm
+                form={form}
+                set={set}
+                onSubmit={save}
+                onCancel={
+                    cancelEdit
+                }
+                photo={photo}
+                onPhotoChange={
+                    handlePhotoChange
+                }
+                showPin={
+                    showPin
+                }
+                setShowPin={
+                    setShowPin
+                }
+                currentStore={
+                    currentStore
+                }
+            />
+        );
+    }
+
+
+    /* =========================================================
+       USERS LIST
+    ========================================================= */
+
+    return (
+        <div
+            className={`page-content users-page ${
+                embedded
+                    ? "users-page-embedded"
+                    : ""
+            }`}
+        >
+
+            <section>
+
+                {/* =================================================
+                   HEADER
+                ================================================= */}
+
+                <div className="page-header users-header">
+
+                    <div>
+
+                        {!embedded && (
+                            <div className="breadcrumb-area">
+
+                                <button
+                                    type="button"
+                                    className="link-button"
+                                    onClick={() =>
+                                        navigate(
+                                            merchantId
+                                                ? `/merchants/${merchantId}/stores`
+                                                : "/stores"
+                                        )
+                                    }
+                                >
+                                    <i className="bi bi-arrow-left" />
+
+                                    Stores
+                                </button>
+
+                                <span>
+                                    /
+                                </span>
+
+                                <span>
+                                    Users
+                                </span>
+
+                            </div>
+                        )}
+
+                        <h1>
+                            Users
+                        </h1>
+
+                        <p>
+                            View and edit users
+                            assigned to this
+                            store.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                {/* =================================================
+                   STORE CARD
+
+                   Only show in standalone Users page.
+
+                   StoreConfiguration already has the
+                   selected store card when embedded.
+                ================================================= */}
+
+                {!embedded &&
+                    currentStore && (
+                        <div className="selected-store-card">
+
+                            <div className="selected-store-main">
+
+                                <div className="selected-store-icon">
+                                    <i className="bi bi-shop" />
+                                </div>
+
+                                <div className="selected-store-info">
+
+                                    <h3>
+                                        {
+                                            currentStore.name
+                                        }
+                                    </h3>
+
+                                    <div className="selected-store-meta">
+
+                                        <span>
+                                            Store ID:{" "}
+                                            {
+                                                currentStore.id
+                                            }
+                                        </span>
+
+                                        <span className="meta-dot">
+                                            •
+                                        </span>
+
+                                        <span>
+                                            {
+                                                currentStore.type ||
+                                                "Retail Store"
+                                            }
+                                        </span>
+
+                                        <span className="meta-dot">
+                                            •
+                                        </span>
+
+                                        <span>
+                                            {
+                                                currentStore.location ||
+                                                "—"
+                                            }
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div className="selected-store-status">
+
+                                <span className="status-title">
+                                    Status
+                                </span>
+
+                                <span className="store-active-badge">
+                                    {
+                                        currentStore.status ||
+                                        "Active"
+                                    }
+                                </span>
+
+                            </div>
+
+                        </div>
+                    )}
+
+
+                {/* =================================================
+                   TOOLBAR
+                ================================================= */}
+
+                <div className="users-toolbar">
+
+                    <div className="users-toolbar-left">
+
+                        <div className="user-search">
+
+                            <i className="bi bi-search" />
+
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                value={q}
+                                onChange={(
+                                    event
+                                ) =>
+                                    setQ(
+                                        event
+                                            .target
+                                            .value
+                                    )
+                                }
+                            />
+
+                        </div>
+
+                    </div>
+
+                    <select
+                        className="role-filter"
+                        value={
+                            roleFilter
+                        }
+                        onChange={(
+                            event
+                        ) =>
+                            setRoleFilter(
+                                event
+                                    .target
+                                    .value
+                            )
+                        }
+                    >
+
+                        <option value="">
+                            All Roles
+                        </option>
+
+                        {USER_ROLES.map(
+                            (
+                                role
+                            ) => (
+                                <option
+                                    key={
+                                        role
+                                    }
+                                    value={
+                                        role
+                                    }
+                                >
+                                    {
+                                        role
+                                    }
+                                </option>
+                            )
+                        )}
+
+                    </select>
+
+                </div>
+
+
+                {/* =================================================
+                   TABLE
+                ================================================= */}
+
+                <div className="users-table-card">
+
+                    <div className="table-wrapper">
+
+                        <table className="users-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        User
+                                    </th>
+
+                                    <th>
+                                        Name
+                                    </th>
+
+                                    <th>
+                                        Role
+                                    </th>
+
+                                    <th>
+                                        Email
+                                    </th>
+
+                                    <th>
+                                        Phone
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                {paginatedUsers.map(
+                                    (
+                                        user
+                                    ) => {
+
+                                        const assignment =
+                                            getStoreAssignment(
+                                                user
+                                            );
+
+                                        const role =
+                                            assignment?.role ||
+                                            "—";
+
+                                        const initials =
+                                            `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`
+                                                .toUpperCase();
+
+                                        return (
+                                            <tr
+                                                key={
+                                                    user.id
+                                                }
+                                            >
+
+                                                {/* USER */}
+
+                                                <td>
+
+                                                    <div className="user-cell">
+
+                                                        <div className="user-avatar">
+
+                                                            {user.profilePhoto ? (
+                                                                <img
+                                                                    src={
+                                                                        user.profilePhoto
+                                                                    }
+                                                                    alt={`${user.firstName || ""} ${user.lastName || ""}`}
+                                                                />
+                                                            ) : (
+                                                                initials ||
+                                                                <i className="bi bi-person" />
+                                                            )}
+
+                                                        </div>
+
+                                                        <span className="user-username">
+                                                            {
+                                                                user.username
+                                                            }
+                                                        </span>
+
+                                                    </div>
+
+                                                </td>
+
+
+                                                {/* NAME */}
+
+                                                <td>
+                                                    {
+                                                        user.firstName
+                                                    }{" "}
+                                                    {
+                                                        user.lastName
+                                                    }
+                                                </td>
+
+
+                                                {/* ROLE */}
+
+                                                <td>
+
+                                                    <span className="role-badge">
+                                                        {
+                                                            role
+                                                        }
+                                                    </span>
+
+                                                </td>
+
+
+                                                {/* EMAIL */}
+
+                                                <td>
+                                                    {
+                                                        user.email
+                                                    }
+                                                </td>
+
+
+                                                {/* PHONE */}
+
+                                                <td>
+                                                    {
+                                                        user.phone ||
+                                                        "—"
+                                                    }
+                                                </td>
+
+
+                                                {/* STATUS */}
+
+                                                <td>
+
+                                                    <span className="status-badge">
+
+                                                        <span className="status-dot" />
+
+                                                        {
+                                                            user.status ||
+                                                            "Active"
+                                                        }
+
+                                                    </span>
+
+                                                </td>
+
+
+                                                {/* ACTION */}
+
+                                                <td>
+
+                                                    <button
+                                                        type="button"
+                                                        className="table-action"
+                                                        title="Edit User"
+                                                        onClick={() =>
+                                                            startEdit(
+                                                                user
+                                                            )
+                                                        }
+                                                    >
+                                                        <i className="bi bi-pencil" />
+                                                    </button>
+
+                                                </td>
+
+                                            </tr>
+                                        );
+                                    }
+                                )}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    {/* =================================================
+                       EMPTY STATE
+                    ================================================= */}
+
+                    {filteredUsers.length ===
+                        0 && (
+                        <div className="empty-users">
+
+                            <div className="empty-icon">
+                                <i className="bi bi-people" />
+                            </div>
+
+                            <h3>
+                                No users found
+                            </h3>
+
+                            <p>
+                                {!storeId
+                                    ? "No store selected. Pass storeId or store, or use a route with :storeId."
+                                    : storeUsers.length === 0
+                                        ? `No employees are assigned to store ${storeId}.`
+                                        : "No users match the search or role filter."}
+                            </p>
+
+                        </div>
+                    )}
+
+
+                    {/* =================================================
+                       PAGINATION
+                    ================================================= */}
+
+                    {totalItems > 0 && (
+                        <Pagination
+                            currentPage={
+                                currentPage
+                            }
+                            totalPages={
+                                totalPages
+                            }
+                            totalItems={
+                                totalItems
+                            }
+                            pageSize={
+                                pageSize
+                            }
+                            onPageChange={
+                                setCurrentPage
+                            }
+                            onPageSizeChange={(
+                                size
+                            ) => {
+                                setPageSize(
+                                    size
+                                );
+                                setCurrentPage(
+                                    1
+                                );
+                            }}
+                        />
+                    )}
+
+                </div>
+
+            </section>
+
+        </div>
+    );
+}
+
+
+/* =========================================================
+   EDIT FORM
+========================================================= */
+
+function UserEditForm({
+    form,
+    set,
+    onSubmit,
+    onCancel,
+    photo,
+    onPhotoChange,
+    showPin,
+    setShowPin,
+    currentStore,
+}) {
+
+    return (
+        <div className="page-content users-page">
+
+            {/* =================================================
+               HEADER
+            ================================================= */}
+
+            <div className="page-header users-header">
+
+                <div>
+
+                    <div className="breadcrumb-area">
+
+                        <button
+                            type="button"
+                            className="link-button"
+                            onClick={
+                                onCancel
+                            }
+                        >
+                            <i className="bi bi-arrow-left" />
+
+                            Users
+                        </button>
+
+                        <span>
+                            /
+                        </span>
+
+                        <span>
+                            Edit User
+                        </span>
+
+                    </div>
+
+                    <h1>
+                        Edit User
+                    </h1>
+
+                    <p>
+                        Update user details,
+                        role, PIN and profile
+                        photo.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            {/* =================================================
+               FORM
+            ================================================= */}
+
+            <form
+                className="user-form"
+                onSubmit={
+                    onSubmit
+                }
+            >
+
+                {/* =================================================
+                   USER INFORMATION
+                ================================================= */}
+
+                <Card
+                    icon="person"
+                    color="purple"
+                    title="User Information"
+                    sub="Update the user's personal and account details."
+                >
+
+                    <div className="form-grid two-columns">
+
+                        <Field
+                            label="Username"
+                            value={
+                                form.username
+                            }
+                            placeholder="Enter username"
+                            required
+                            onChange={(
+                                value
+                            ) =>
+                                set(
+                                    "username",
+                                    value
+                                )
+                            }
+                        />
+
+                        <Select
+                            label="Role"
+                            value={
+                                form.role
+                            }
+                            set={(
+                                value
+                            ) =>
+                                set(
+                                    "role",
+                                    value
+                                )
+                            }
+                            options={
+                                USER_ROLES
+                            }
+                        />
+
+                        <Field
+                            label="First Name"
+                            value={
+                                form.firstName
+                            }
+                            placeholder="Enter first name"
+                            required
+                            onChange={(
+                                value
+                            ) =>
+                                set(
+                                    "firstName",
+                                    value
+                                )
+                            }
+                        />
+
+                        <Field
+                            label="Last Name"
+                            value={
+                                form.lastName
+                            }
+                            placeholder="Enter last name"
+                            required
+                            onChange={(
+                                value
+                            ) =>
+                                set(
+                                    "lastName",
+                                    value
+                                )
+                            }
+                        />
+
+                        <Field
+                            label="Email"
+                            type="email"
+                            value={
+                                form.email
+                            }
+                            placeholder="name@example.com"
+                            required
+                            onChange={(
+                                value
+                            ) =>
+                                set(
+                                    "email",
+                                    value
+                                )
+                            }
+                        />
+
+                        <Field
+                            label="Phone"
+                            type="tel"
+                            value={
+                                form.phone
+                            }
+                            placeholder="Enter phone number"
+                            onChange={(
+                                value
+                            ) =>
+                                set(
+                                    "phone",
+                                    value
+                                )
+                            }
+                        />
+
+                    </div>
+
+                </Card>
+
+
+                {/* =================================================
+                   STORE
+                ================================================= */}
+
+                <Card
+                    icon="shop"
+                    color="orange"
+                    title="Store"
+                    sub="Current store context for this user."
+                >
+
+                    <div className="form-grid two-columns">
+
+                        <Field
+                            label="Store Name"
+                            value={
+                                currentStore?.name ||
+                                ""
+                            }
+                            readOnly
+                        />
+
+                        <Field
+                            label="Store ID"
+                            value={
+                                currentStore?.id ||
+                                ""
+                            }
+                            readOnly
+                        />
+
+                    </div>
+
+                    <div className="store-edit-note">
+
+                        <i className="bi bi-info-circle" />
+
+                        <span>
+                            Store assignment is
+                            managed from
+                            Dashboard →
+                            Employees. The role
+                            can be changed here
+                            for this store.
+                        </span>
+
+                    </div>
+
+                </Card>
+
+
+                {/* =================================================
+                   LOGIN PIN
+                ================================================= */}
+
+                <Card
+                    icon="shield-lock"
+                    color="green"
+                    title="Login PIN"
+                    sub="Update the user's 6-digit login PIN."
+                >
+
+                    <div className="form-grid two-columns">
+
+                        <div className="field">
+
+                            <label>
+                                New Login PIN
+                            </label>
+
+                            <div className="input-with-action">
+
+                                <input
+                                    type={
+                                        showPin
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    value={
+                                        form.loginPin
+                                    }
+                                    placeholder="Enter 6-digit PIN"
+                                    maxLength={
+                                        6
+                                    }
+                                    inputMode="numeric"
+                                    autoComplete="off"
+                                    onChange={(
+                                        event
+                                    ) =>
+                                        set(
+                                            "loginPin",
+                                            event
+                                                .target
+                                                .value
+                                                .replace(
+                                                    /\D/g,
+                                                    ""
+                                                )
+                                        )
+                                    }
+                                />
+
+                                <button
+                                    type="button"
+                                    className="input-action"
+                                    onClick={() =>
+                                        setShowPin(
+                                            (
+                                                previous
+                                            ) =>
+                                                !previous
+                                        )
+                                    }
+                                >
+                                    <i
+                                        className={`bi ${
+                                            showPin
+                                                ? "bi-eye-slash"
+                                                : "bi-eye"
+                                        }`}
+                                    />
+                                </button>
+
+                            </div>
+
+                            <small className="field-help">
+                                Leave blank to keep
+                                the existing PIN.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </Card>
+
+
+                {/* =================================================
+                   PROFILE PHOTO
+                ================================================= */}
+
+                <Card
+                    icon="image"
+                    color="blue"
+                    title="Profile Photo"
+                    sub="Profile photo is mandatory."
+                >
+
+                    <div className="profile-upload">
+
+                        <div className="profile-preview">
+
+                            {form.profilePhoto ? (
+                                <img
+                                    src={
+                                        form.profilePhoto
+                                    }
+                                    alt="User profile"
+                                />
+                            ) : (
+                                <i className="bi bi-person" />
+                            )}
+
+                        </div>
+
+                        <div className="upload-content">
+
+                            <label
+                                className="upload-button"
+                                htmlFor="profilePhoto"
+                            >
+                                <i className="bi bi-upload" />
+
+                                Change Photo
+                            </label>
+
+                            <input
+                                ref={
+                                    photo
+                                }
+                                id="profilePhoto"
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                required={
+                                    !form.profilePhoto
+                                }
+                                onChange={
+                                    onPhotoChange
+                                }
+                            />
+
+                            <span className="file-name">
+                                JPG, PNG or WEBP ·
+                                Maximum 2 MB
+                            </span>
+
+                            <small className="field-help">
+                                Profile photo is
+                                mandatory.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </Card>
+
+
+                {/* =================================================
+                   ACTIONS
+                ================================================= */}
+
+                <div className="form-actions">
+
+                    <button
+                        type="button"
+                        className="cancel-btn"
+                        onClick={
+                            onCancel
+                        }
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        className="save-next-btn"
+                    >
+                        Save Changes
+
+                        <i className="bi bi-check-lg" />
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    );
+}
+
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+function Field({
+    label,
+    value,
+    placeholder = "",
+    required = false,
+    type = "text",
+    readOnly = false,
+    onChange,
+}) {
+
+    return (
+        <div className="field">
+
+            <label>
+
+                {label}
+
+                {required && (
+                    <span>
+                        *
+                    </span>
+                )}
+
+            </label>
+
+            <input
+                type={type}
+                value={
+                    value || ""
+                }
+                placeholder={
+                    placeholder
+                }
+                required={
+                    required &&
+                    !readOnly
+                }
+                readOnly={
+                    readOnly
+                }
+                onChange={(
+                    event
+                ) =>
+                    onChange?.(
+                        event
+                            .target
+                            .value
+                    )
+                }
+            />
+
+        </div>
+    );
+}
+
+
+/* =========================================================
+   SELECT
+========================================================= */
+
+function Select({
+    label,
+    value,
+    set,
+    options,
+}) {
+
+    return (
+        <div className="field">
+
+            <label>
+
+                {label}
+
+                <span>
+                    *
+                </span>
+
+            </label>
+
+            <select
+                value={
+                    value
+                }
+                required
+                onChange={(
+                    event
+                ) =>
+                    set(
+                        event
+                            .target
+                            .value
+                    )
+                }
+            >
+
+                <option value="">
+                    Select{" "}
+                    {label.toLowerCase()}
+                </option>
+
+                {options.map(
+                    (
+                        option
+                    ) => (
+                        <option
+                            key={
+                                option
+                            }
+                            value={
+                                option
+                            }
+                        >
+                            {
+                                option
+                            }
+                        </option>
+                    )
+                )}
+
+            </select>
+
+        </div>
+    );
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+function Card({
+    icon,
+    color,
+    title,
+    sub,
+    children,
+}) {
+
+    return (
+        <section className="form-card">
+
+            <div className="form-card-header">
+
+                <div
+                    className={`section-icon ${color}`}
+                >
+                    <i
+                        className={`bi bi-${icon}`}
+                    />
+                </div>
+
+                <div>
+
+                    <h2>
+                        {title}
+                    </h2>
+
+                    <p>
+                        {sub}
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div className="form-card-body">
+                {children}
+            </div>
+
+        </section>
+    );
+}

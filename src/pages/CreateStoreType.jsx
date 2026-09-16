@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const initialStoreTypes = [
   {
@@ -66,6 +67,7 @@ const emptyForm = {
 };
 
 export default function CreateStoreType() {
+  const navigate = useNavigate();
   const [storeTypes, setStoreTypes] = useState(initialStoreTypes);
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
@@ -351,10 +353,13 @@ export default function CreateStoreType() {
                   <strong>{item.code}</strong>
                 </div>
 
-                <div className="store-type-name-cell">
-                  <strong>{item.name}</strong>
-                  <span>{item.description}</span>
-                </div>
+                <div
+                   className="store-type-name-cell store-type-name-clickable"
+                     onClick={() => navigate(`/store-types/${item.id}`)}
+                   >
+                        <strong>{item.name}</strong>
+                       <span>{item.description}</span>
+                    </div>
 
                 <div>
                   <span

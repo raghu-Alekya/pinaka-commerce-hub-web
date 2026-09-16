@@ -142,7 +142,45 @@
 
 .token-input {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+}
+
+.token-toggle-btn {
+  width: 100%;
+  min-height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  border: 1px solid #5143bc;
+  border-radius: 8px;
+
+  background: #f7f5ff;
+  color: #5143bc;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.token-toggle-btn i {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.token-toggle-btn:hover {
+  background: #efedff;
+  border-color: #4638ad;
+  color: #4638ad;
+}
+
+.token-toggle-btn:focus-visible {
+  outline: 2px solid #5143bc;
+  outline-offset: 2px;
 }
 
 .store-form-actions {
@@ -237,4 +275,252 @@
   .store-item-actions {
     justify-content: flex-start;
   }
+}
+/* Store configuration back navigation */
+.store-workspace-page .breadcrumb-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+/* Clean back navigation */
+.store-workspace-page .breadcrumb-area .link-button,
+.store-workspace-page .store-workspace-main .link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #5143bc;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  text-decoration: none;
+
+  transition: color 0.2s ease;
+}
+
+.store-workspace-page .breadcrumb-area .link-button:hover,
+.store-workspace-page .store-workspace-main .link-button:hover {
+  color: #3f32a3;
+  text-decoration: underline;
+}
+
+.store-workspace-page .breadcrumb-area .link-button i,
+.store-workspace-page .store-workspace-main .link-button i {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.store-workspace-page .breadcrumb-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.store-workspace-page .breadcrumb-area > span {
+  color: #9aa3b5;
+  font-size: 14px;
+}
+
+.store-workspace-page .store-workspace-main .link-button:hover {
+  background: #f4f3ff;
+  border-color: #5143bc;
+  color: #4638ad;
+}
+.fast-keys-panel { padding: 24px; min-width: 0; }
+.fast-keys-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:22px; }
+.fast-keys-heading h2 { margin:0 0 6px; font-size:26px; color:#17233e; }
+.fast-keys-heading p { margin:0; color:#7c8799; font-size:13px; }
+.fast-key-tabs { display:flex; gap:28px; border-bottom:1px solid #e5e8f0; margin-bottom:20px; }
+.fast-key-tabs button { border:0; background:transparent; padding:12px 2px; color:#7c8799; font-weight:700; cursor:pointer; border-bottom:2px solid transparent; }
+.fast-key-tabs button.active { color:#5143bc; border-bottom-color:#5143bc; }
+.fast-key-toolbar { display:flex; gap:12px; margin-bottom:18px; }
+.fast-key-toolbar input { flex:1; min-width:0; border:1px solid #d9e1f0; border-radius:8px; padding:12px 14px; font:inherit; }
+.fast-key-table-wrap { overflow-x:auto; border:1px solid #e4e8f0; border-radius:10px; }
+.fast-key-table { width:100%; min-width:920px; border-collapse:collapse; font-size:12px; color:#4b5670; }
+.fast-key-table th { background:#f5f7fb; color:#53617b; text-align:left; padding:13px 12px; font-weight:700; border-bottom:1px solid #e4e8f0; }
+.fast-key-table td { padding:14px 12px; border-bottom:1px solid #edf0f5; vertical-align:top; }
+.fast-key-table tr:last-child td { border-bottom:0; }
+.fast-key-table strong { color:#1475cf; font-size:14px; }
+.fast-key-image { width:48px; height:48px; display:grid; place-items:center; background:#f5f6f8; border-radius:7px; font-size:27px; }
+.fast-key-products { display:flex; flex-direction:column; gap:4px; max-width:320px; }
+.fast-key-products b { color:#5143bc; }
+.fast-key-status { display:inline-flex; padding:8px 12px; border-radius:8px; background:#e1f5e8; color:#269553; font-weight:700; }
+.fast-key-actions { display:flex; gap:8px; }
+.fast-key-actions button { width:38px; height:36px; border:1px solid #5143bc; border-radius:7px; background:#fff; color:#5143bc; cursor:pointer; }
+.fast-key-actions button.danger { border-color:#ef4444; color:#ef4444; }
+.fast-key-empty { padding:30px; text-align:center; color:#7c8799; }
+.fast-key-footer { display:flex; justify-content:space-between; padding-top:18px; color:#7c8799; font-size:12px; }
+.fast-key-modal-backdrop { position:fixed; inset:0; background:rgba(17,24,39,.38); display:grid; place-items:center; padding:20px; z-index:20; }
+.fast-key-modal { width:min(560px,100%); max-height:90vh; overflow:auto; background:#fff; border-radius:14px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+.fast-key-modal label { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; color:#24314a; font-size:13px; font-weight:700; }
+.fast-key-modal label span { color:#7c8799; font-weight:400; }
+.fast-key-modal input,.fast-key-modal textarea { width:100%; box-sizing:border-box; border:1px solid #d9e1f0; border-radius:8px; padding:12px 14px; font:inherit; resize:vertical; }
+.modal-close { border:0; background:transparent; font-size:28px; color:#7c8799; cursor:pointer; }
+@media (max-width:700px) { .fast-keys-panel { padding:16px; } .fast-keys-heading { flex-direction:column; } .fast-key-toolbar { flex-direction:column; } }
+
+/* Fast Keys modal - matches the Add Device popup pattern */
+.fast-key-modal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,.43); display:grid; place-items:center; padding:20px; z-index:1000; }
+.fast-key-modal { width:min(810px,100%); max-height:calc(100vh - 40px); overflow:auto; background:#fff; border-radius:16px; padding:0; box-shadow:0 24px 70px rgba(15,23,42,.22); }
+.fast-key-modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding:28px 34px 26px; border-bottom:1px solid #e7ebf2; }
+.fast-key-modal-header h2 { margin:0 0 8px; color:#27344f; font-size:28px; font-weight:700; }
+.fast-key-modal-header p { margin:0; color:#8a96aa; font-size:16px; }
+.modal-close { width:48px; height:48px; border:0; border-radius:11px; background:#f4f6fa; color:#7d899d; font-size:31px; line-height:1; cursor:pointer; }
+.fast-key-modal-body { padding:36px 34px 22px; }
+.fast-key-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:26px 26px; }
+.fast-key-form-grid label { display:flex; flex-direction:column; gap:11px; color:#52617b; font-size:16px; font-weight:700; }
+.fast-key-form-grid label em { color:#ef4444; font-style:normal; display:inline; }
+.fast-key-form-grid label span { color:#8a96aa; font-weight:400; }
+.fast-key-form-grid input,.fast-key-form-grid textarea { width:100%; box-sizing:border-box; border:1px solid #d9e1ee; border-radius:11px; padding:15px 16px; color:#52617b; font:inherit; font-weight:400; outline:none; background:#fff; }
+.fast-key-form-grid textarea { resize:vertical; min-height:112px; }
+.fast-key-form-grid input:focus,.fast-key-form-grid textarea:focus { border-color:#6955df; box-shadow:0 0 0 3px rgba(105,85,223,.10); }
+.fast-key-modal-footer { display:flex; justify-content:flex-end; gap:13px; padding:22px 34px; border-top:1px solid #e7ebf2; background:#fbfcfe; }
+.fast-key-modal-footer button { min-height:54px; padding:0 24px; border-radius:11px; font-size:16px; font-weight:700; }
+@media (max-width:700px) { .fast-key-form-grid { grid-template-columns:1fr; gap:20px; } .fast-key-modal-header,.fast-key-modal-body,.fast-key-modal-footer { padding-left:20px; padding-right:20px; } .fast-key-modal-header h2 { font-size:24px; } }
+
+/* Fast Keys create/edit popup - compact size matching Add Device */
+.fast-key-modal {
+  width: min(750px, calc(100vw - 40px));
+  max-height: 505px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.fast-key-modal-header {
+  padding: 24px 30px 22px;
+}
+
+.fast-key-modal-header h2 {
+  font-size: 26px;
+  margin-bottom: 6px;
+}
+
+.fast-key-modal-header p {
+  font-size: 15px;
+}
+
+.fast-key-modal-body {
+  padding: 26px 30px 20px;
+  overflow-y: auto;
+}
+
+.fast-key-form-grid {
+  gap: 22px 24px;
+}
+
+.fast-key-form-grid label {
+  gap: 8px;
+  font-size: 14px;
+}
+
+.fast-key-form-grid input,
+.fast-key-form-grid textarea {
+  padding: 12px 14px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+
+.fast-key-form-grid input {
+  height: 44px;
+}
+
+.fast-key-form-grid textarea {
+  height: 92px;
+  min-height: 92px;
+  resize: none;
+}
+
+.fast-key-modal-footer {
+  padding: 16px 30px;
+  gap: 12px;
+}
+
+.fast-key-modal-footer button {
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+@media (max-width: 700px) {
+  .fast-key-modal {
+    width: calc(100vw - 28px);
+    max-height: calc(100vh - 28px);
+  }
+
+  .fast-key-modal-header,
+  .fast-key-modal-body,
+  .fast-key-modal-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+/* Final smaller Fast Keys popup and delete confirmation */
+.fast-key-modal { width: min(650px, calc(100vw - 32px)); max-height: 470px; }
+.fast-key-modal-header { padding: 18px 24px 16px; }
+.fast-key-modal-header h2 { font-size: 24px; margin-bottom: 4px; }
+.fast-key-modal-header p { font-size: 14px; }
+.modal-close { width: 42px; height: 42px; font-size: 28px; }
+.fast-key-modal-body { padding: 20px 24px 16px; }
+.fast-key-form-grid { gap: 16px 20px; }
+.fast-key-form-grid label { gap: 6px; font-size: 13px; }
+.fast-key-form-grid input, .fast-key-form-grid textarea { padding: 10px 12px; font-size: 13px; border-radius: 8px; }
+.fast-key-form-grid input { height: 40px; }
+.fast-key-form-grid textarea { height: 78px; min-height: 78px; resize: none; }
+.fast-key-modal-footer { padding: 12px 24px; gap: 10px; }
+.fast-key-modal-footer button { min-height: 42px; padding: 0 18px; font-size: 14px; }
+.fast-key-delete-modal { width: min(380px, calc(100vw - 32px)); background: #fff; border-radius: 14px; padding: 26px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+.delete-icon { width: 48px; height: 48px; margin: 0 auto 12px; display: grid; place-items: center; border-radius: 50%; background: #fff1f2; color: #dc2626; font-size: 22px; }
+.fast-key-delete-modal h2 { margin: 0 0 8px; color: #27344f; font-size: 22px; }
+.fast-key-delete-modal p { margin: 0; color: #7c8799; font-size: 14px; line-height: 1.5; }
+.delete-actions { display: flex; justify-content: center; gap: 10px; margin-top: 22px; }
+.delete-actions button { min-height: 42px; padding: 0 20px; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.delete-confirm-btn { border: 1px solid #dc2626; background: #dc2626; color: #fff; }
+/* Image upload field */
+
+.fast-key-image-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fast-key-image-upload input[type="file"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d9dff0;
+  border-radius: 10px;
+  background: #fff;
+  color: #52617d;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Image preview */
+
+.fast-key-image-preview {
+  width: 80px;
+  height: 80px;
+  border: 1px solid #d9dff0;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fc;
+}
+
+.fast-key-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

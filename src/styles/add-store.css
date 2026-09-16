@@ -454,3 +454,92 @@ body {
         width: 100%;
     }
 }
+/* =========================================================
+   EDIT / ADD STORE BREADCRUMB
+========================================================= */
+
+.pch-store-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 7px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 0 0 30px !important;
+    box-sizing: border-box !important;
+}
+
+/* Stores - plain navigation link */
+.pch-store-header .pch-store-back {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: none !important;
+    border-width: 0 !important;
+    border-radius: 0 !important;
+
+    background: transparent !important;
+    box-shadow: none !important;
+
+    color: #5143bc !important;
+
+    font-family: "Inter", sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+
+    cursor: pointer !important;
+    text-decoration: none !important;
+}
+
+/* Arrow */
+.pch-store-header .pch-store-back i {
+    font-size: 18px !important;
+    line-height: 1 !important;
+    color: #5143bc !important;
+}
+
+/* Hover */
+.pch-store-header .pch-store-back:hover {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #4638ad !important;
+    text-decoration: none !important;
+}
+
+.pch-store-header .pch-store-back:hover i {
+    color: #4638ad !important;
+}
+
+/* Slash */
+.pch-store-breadcrumb-separator {
+    display: inline-block !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    color: #9aa3b5 !important;
+    font-size: 20px !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+}
+
+/* Edit store / Add store */
+.pch-store-header .pch-small {
+    margin: 0 !important;
+    padding: 0 !important;
+
+    color: #8791a3 !important;
+
+    font-family: "Inter", sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 400 !important;
+}

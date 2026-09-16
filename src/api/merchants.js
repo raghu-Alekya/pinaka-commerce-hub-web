@@ -9,6 +9,7 @@ export function toMerchantPayload(data) {
     businessName: data.businessName,
     legalBusinessName: data.legalBusinessName,
     businessType: data.businessType,
+    retailSubCategory: data.retailType,
     country: data.country,
     state: data.state || primaryStore.state || "",
     city: data.city || primaryStore.city || "",
@@ -117,7 +118,7 @@ export function mapMerchantToRow(merchant) {
     email: merchant.email || "",
     phone: merchant.phone || "",
     stores,
-    plan: merchant.plan || merchant.subscriptionPlan || "—",
+    plan: merchant.subscription?.planName || merchant.plan || merchant.subscriptionPlan || "—",
     renewal: merchant.renewal || merchant.renewsOn || "",
     status: titleCase(merchant.status || merchant.onboardingStatus),
     joined: formatDate(merchant.createdAt || merchant.joined),
@@ -193,4 +194,27 @@ export async function createMerchant(data) {
 
 export function updateMerchant(id, data) {
   return api.put(endpoints.merchant(id), toMerchantPayload(data));
+}
+
+export async function getMerchantForm(id) {
+  const { raw } = await getMerchant(id);
+  const merchant = raw.merchant;
+  const subscription = raw.subscription;
+  return {
+    ...merchant, merchantId: merchant.id,
+    businessType: titleCase(merchant.businessType),
+    retailType: titleCase(merchant.retailSubCategory),
+    firstName: merchant.firstName || merchant.ownerName?.split(" ")[0] || "",
+    lastName: merchant.lastName || merchant.ownerName?.split(" ").slice(1).join(" ") || "",
+    plan: subscription?.planCode || "",
+    billingCycle: subscription?.billingCycle || "",
+    trialPeriod: String(subscription?.trialDays ?? 0),
+    stores: (raw.stores || []).map(store => ({
+      persisted: true, id: store.id, name: store.storeName, type: titleCase(store.storeType),
+      phone: store.phone || "", url: store.baseUrl || "", currency: store.currency,
+      status: titleCase(store.status), timezone: store.timezone,
+      address: store.address?.street || "", city: store.address?.city || "",
+      state: store.address?.state || "", zip: store.address?.zipCode || "",
+    })),
+  };
 }

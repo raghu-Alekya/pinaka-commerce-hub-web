@@ -20,6 +20,107 @@ body {
     box-sizing: border-box;
 }
 
+/* Merchant Dashboard Cards */
+
+.merchant-dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.merchant-dashboard-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 125px;
+}
+
+.dashboard-card-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.dashboard-card-icon.purple {
+  background: #ede9fe;
+  color: #6352d9;
+}
+
+.dashboard-card-icon.green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.dashboard-card-icon.red {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.dashboard-card-icon.blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.dashboard-card-icon.orange {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.dashboard-card-content {
+  min-width: 0;
+}
+
+.dashboard-card-content span {
+  display: block;
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.dashboard-card-content h3 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f2747;
+}
+
+.subscription-plan-text {
+  font-size: 21px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subscription-active {
+  display: block;
+  color: #16a34a;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .merchant-dashboard-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .merchant-dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+}
 /* =========================================================
    BREADCRUMB
 ========================================================= */
@@ -550,4 +651,24 @@ body {
     .store-meta {
         gap: 5px 14px;
     }
+}
+.radio-group {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 400;
+}
+
+.radio-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
 }
