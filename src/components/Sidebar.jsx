@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 
 const sections = [
   {
@@ -23,8 +23,9 @@ const sections = [
         "Master Setup",
         true,
         [
-["/store-types/new", "bi-shop", "Store Types"],
-["/features", "bi-grid-1x2", "Features"],          ["/permissions", "bi-shield-check", "Permissions"],
+          ["/store-types/new", "bi-shop", "Store Types"],
+          ["/features", "bi-grid-1x2", "Features"],
+          ["/permissions", "bi-shield-check", "Feature Permissions"],
           ["/role-templates", "bi-person-badge", "Role Templates"],
           ["/plans/new", "bi-credit-card", "Plans"],
           ["/vendors", "bi-truck", "Vendors"],
@@ -63,7 +64,15 @@ export default function Sidebar({
   mobileOpen,
   setMobileOpen,
 }) {
-  const [masterSetupOpen, setMasterSetupOpen] = useState(false);
+  const location = useLocation();
+  const isPermissionsRoute = location.pathname.startsWith("/permissions");
+  const [masterSetupOpen, setMasterSetupOpen] = useState(isPermissionsRoute);
+
+  useEffect(() => {
+    if (isPermissionsRoute) {
+      setMasterSetupOpen(true);
+    }
+  }, [isPermissionsRoute]);
 
   return (
     <aside

@@ -241,13 +241,13 @@ export default function App() {
             element={<Placeholder title={title} />}
           />
         ))}
-        <Route path="/employees/edit" element={<EditEmployee />} />
-        <Route path="/employees/add" element={<AddEmployee />} />
-
         <Route path="/features" element={<Features />} />
         <Route path="/permissions" element={<FeaturePermissions />} />
+        <Route
+          path="/permissions/:featureId"
+          element={<FeaturePermissions />}
+        />
 
-        <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/vendors" element={<Vendors />} />
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
@@ -263,16 +263,6 @@ export default function App() {
           element={<StoreTypeRoleTemplates />}
         />
 
-        {placeholders.map((title) => {
-          const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;
-          return (
-            <Route
-              key={title}
-              path={path}
-              element={<Placeholder title={title} />}
-            />
-          );
-        })}
       </Route>
 
       <Route

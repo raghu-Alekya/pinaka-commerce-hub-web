@@ -54,6 +54,12 @@
   letter-spacing: -0.4px;
 }
 
+.feature-permissions-page .fp-feature-name {
+  margin-left: 8px;
+  color: #4f42f5;
+  font-weight: 600;
+}
+
 .feature-permissions-page .fp-title-wrap p {
   margin: 5px 0 0;
   color: #7083ad;
@@ -512,10 +518,6 @@
   color: #fff;
 }
 
-.feature-permissions-page .fp-feature-context {
-  display: none;
-}
-
 @media (max-width: 1180px) {
   .feature-permissions-page .fp-list-toolbar {
     align-items: flex-start;
@@ -555,6 +557,11 @@
   .feature-permissions-page .fp-page-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .feature-permissions-page .fp-feature-name {
+    display: block;
+    margin: 6px 0 0;
   }
 
   .feature-permissions-page .fp-back-btn {
