@@ -410,7 +410,7 @@ export default function StoreConfiguration() {
                           onClick={handleTest}
                           disabled={testing || saving}
                         >
-                          {testing ? "Testing..." : "Test Connection"}
+                          {testing ? "Connecting & Loading..." : "Connect & Load Data"}
                         </button>
                         <button
                           type="submit"
