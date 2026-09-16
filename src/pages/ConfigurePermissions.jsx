@@ -8,7 +8,6 @@ const fallbackFeature = {
   category: "Orders",
   description: "Allows user to process and manage refund requests for orders.",
   status: "Active",
-  type: "Feature",
 };
 
 const initialPermissions = [
@@ -89,10 +88,6 @@ export default function ConfigurePermissions() {
               <b /> {feature.status || "Inactive"}
             </span>
           </div>
-          <div className="cp-detail-box">
-            <span>Feature Type</span>
-            <strong>{feature.type || "Feature"}</strong>
-          </div>
           <div className="cp-detail-box cp-description-box">
             <span>Description</span>
             <strong>{feature.description || "No description available."}</strong>
@@ -102,7 +97,10 @@ export default function ConfigurePermissions() {
 
       <section className="cp-list-card">
         <div className="cp-list-toolbar">
-          <h2>Permissions List ({filteredPermissions.length})</h2>
+          <div>
+            <h2>Permissions List ({filteredPermissions.length})</h2>
+            <p>Manage permissions assigned to this feature.</p>
+          </div>
           <div className="cp-list-filters">
             <div className="cp-search">
               <i className="bi bi-search" />
@@ -128,23 +126,33 @@ export default function ConfigurePermissions() {
               <col className="cp-col-key" /><col className="cp-col-name" /><col className="cp-col-description" />
               <col className="cp-col-status" /><col className="cp-col-actions" />
             </colgroup>
-            <thead><tr>
-              <th>Permission Key <i className="bi bi-chevron-expand" /></th>
-              <th>Permission Name <i className="bi bi-chevron-expand" /></th>
-              <th>Description <i className="bi bi-chevron-expand" /></th>
-              <th>Status <i className="bi bi-chevron-expand" /></th>
-              <th>Actions</th>
-            </tr></thead>
+            <thead>
+              <tr>
+                <th>Permission Key <i className="bi bi-chevron-expand" /></th>
+                <th>Permission Name <i className="bi bi-chevron-expand" /></th>
+                <th>Description <i className="bi bi-chevron-expand" /></th>
+                <th>Status <i className="bi bi-chevron-expand" /></th>
+                <th>Actions</th>
+              </tr>
+            </thead>
             <tbody>
               {filteredPermissions.map((permission) => (
                 <tr key={permission.id}>
-                  <td>{permission.key}</td><td>{permission.name}</td><td className="cp-description-cell">{permission.description}</td>
-                  <td><span className={`cp-status-pill ${permission.status.toLowerCase()}`}><b />{permission.status}</span></td>
-                  <td><div className="cp-row-actions">
-                    <button className="edit" type="button" aria-label={`Edit ${permission.name}`}><i className="bi bi-pencil" /></button>
-                    <button className="copy" type="button" onClick={() => duplicatePermission(permission)} aria-label={`Duplicate ${permission.name}`}><i className="bi bi-copy" /></button>
-                    <button className="delete" type="button" onClick={() => deletePermission(permission.id)} aria-label={`Delete ${permission.name}`}><i className="bi bi-trash" /></button>
-                  </div></td>
+                  <td>{permission.key}</td>
+                  <td>{permission.name}</td>
+                  <td className="cp-description-cell">{permission.description}</td>
+                  <td>
+                    <span className={`cp-status-pill ${permission.status.toLowerCase()}`}>
+                      <b />{permission.status}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="cp-row-actions">
+                      <button className="edit" type="button" aria-label={`Edit ${permission.name}`}><i className="bi bi-pencil" /></button>
+                      <button className="copy" type="button" onClick={() => duplicatePermission(permission)} aria-label={`Duplicate ${permission.name}`}><i className="bi bi-copy" /></button>
+                      <button className="delete" type="button" onClick={() => deletePermission(permission.id)} aria-label={`Delete ${permission.name}`}><i className="bi bi-trash" /></button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -154,7 +162,9 @@ export default function ConfigurePermissions() {
         <footer className="cp-list-footer">
           <span>Showing {filteredPermissions.length ? 1 : 0} to {filteredPermissions.length} of {filteredPermissions.length} entries</span>
           <div className="cp-pagination">
-            <button type="button"><i className="bi bi-chevron-left" /></button><button type="button" className="current">1</button><button type="button"><i className="bi bi-chevron-right" /></button>
+            <button type="button"><i className="bi bi-chevron-left" /></button>
+            <button type="button" className="current">1</button>
+            <button type="button"><i className="bi bi-chevron-right" /></button>
           </div>
         </footer>
       </section>

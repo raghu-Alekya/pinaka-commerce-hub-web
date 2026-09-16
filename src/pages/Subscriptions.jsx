@@ -376,6 +376,8 @@ export default function Subscriptions() {
   );
 }
 
+
+import { useMemo, useState } from "react";
 import {
   Eye,
   Search,
@@ -508,9 +510,12 @@ const plans = [
   },
 ];
 
-const planData = Object.fromEntries(plans.map((plan) => [plan.name, plan]));
+const planData = Object.fromEntries(
+  plans.map((plan) => [plan.name, plan])
+);
 
-const formatPrice = (amount) => `₹${Number(amount).toLocaleString("en-IN")}`;
+const formatPrice = (amount) =>
+  `₹${Number(amount).toLocaleString("en-IN")}`;
 
 /* ========================================
    COMMON COMPONENTS
@@ -519,7 +524,9 @@ const formatPrice = (amount) => `₹${Number(amount).toLocaleString("en-IN")}`;
 function StatusBadge({ status }) {
   return (
     <span
-      className={`status-badge ${status.toLowerCase().replaceAll(" ", "-")}`}
+      className={`status-badge ${status
+        .toLowerCase()
+        .replaceAll(" ", "-")}`}
     >
       <i />
       {status}
@@ -579,9 +586,15 @@ function SubscriptionList({ subscriptions, onView }) {
 
       const matchesPlan = !plan || item.plan === plan;
       const matchesStatus = !status || item.status === status;
-      const matchesStores = !stores || String(item.stores) === stores;
+      const matchesStores =
+        !stores || String(item.stores) === stores;
 
-      return matchesSearch && matchesPlan && matchesStatus && matchesStores;
+      return (
+        matchesSearch &&
+        matchesPlan &&
+        matchesStatus &&
+        matchesStores
+      );
     });
   }, [subscriptions, search, plan, status, stores]);
 
@@ -600,7 +613,9 @@ function SubscriptionList({ subscriptions, onView }) {
       <div className="subscriptions-heading-row">
         <div>
           <h1>Merchant Subscriptions</h1>
-          <p>View and manage subscription details for all merchants.</p>
+          <p>
+            View and manage subscription details for all merchants.
+          </p>
         </div>
 
         <button className="export-button">
@@ -613,6 +628,7 @@ function SubscriptionList({ subscriptions, onView }) {
 
       <div className="subscription-overview">
         <div className="overview-cards">
+
           <div className="overview-card">
             <span className="overview-icon purple">
               <Store size={24} />
@@ -620,7 +636,9 @@ function SubscriptionList({ subscriptions, onView }) {
             <div>
               <p>Total Merchants</p>
               <strong>24</strong>
-              <small className="positive">+3 this month</small>
+              <small className="positive">
+                +3 this month
+              </small>
             </div>
           </div>
 
@@ -635,7 +653,9 @@ function SubscriptionList({ subscriptions, onView }) {
                 Subscriptions
               </p>
               <strong>20</strong>
-              <small className="positive">83.3% of total</small>
+              <small className="positive">
+                83.3% of total
+              </small>
             </div>
           </div>
 
@@ -650,7 +670,9 @@ function SubscriptionList({ subscriptions, onView }) {
                 Subscriptions
               </p>
               <strong>2</strong>
-              <small className="negative">8.3% of total</small>
+              <small className="negative">
+                8.3% of total
+              </small>
             </div>
           </div>
 
@@ -661,9 +683,12 @@ function SubscriptionList({ subscriptions, onView }) {
             <div>
               <p>Expiring Soon</p>
               <strong>2</strong>
-              <small className="warning">Within 30 days</small>
+              <small className="warning">
+                Within 30 days
+              </small>
             </div>
           </div>
+
         </div>
 
         {/* PLAN DISTRIBUTION */}
@@ -681,6 +706,7 @@ function SubscriptionList({ subscriptions, onView }) {
             </div>
 
             <div className="plan-legend">
+
               <div className="legend-row">
                 <span className="legend-name">
                   <i className="legend-dot purple" />
@@ -707,6 +733,7 @@ function SubscriptionList({ subscriptions, onView }) {
                 <b>6</b>
                 <span>25.0%</span>
               </div>
+
             </div>
           </div>
         </div>
@@ -715,6 +742,7 @@ function SubscriptionList({ subscriptions, onView }) {
       {/* FILTERS */}
 
       <div className="subscription-filter-card">
+
         <div className="search-field">
           <Search size={18} />
           <input
@@ -723,7 +751,7 @@ function SubscriptionList({ subscriptions, onView }) {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Search merchant name"
+            placeholder="Search merchant name or ID..."
           />
         </div>
 
@@ -787,6 +815,7 @@ function SubscriptionList({ subscriptions, onView }) {
         </label>
 
         {/* Reset removed from visible UI as requested */}
+
       </div>
 
       {/* TABLE */}
@@ -864,7 +893,9 @@ function SubscriptionList({ subscriptions, onView }) {
         </div>
 
         <div className="table-footer">
-          <span>Showing 1 to {filtered.length} of 24 results</span>
+          <span>
+            Showing 1 to {filtered.length} of 24 results
+          </span>
 
           <div className="pagination">
             <button
@@ -901,12 +932,20 @@ function SubscriptionList({ subscriptions, onView }) {
    DETAILS SCREEN
 ======================================== */
 
-function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
+function SubscriptionDetails({
+  merchant,
+  onBack,
+  onChangePlan,
+}) {
   const currentPlan = planData[merchant.plan];
 
   return (
     <section className="subscription-flow-page">
-      <PageBack label="Back to Subscriptions" onClick={onBack} />
+
+      <PageBack
+        label="Back to Subscriptions"
+        onClick={onBack}
+      />
 
       <h1>Subscription Details</h1>
       <p className="flow-subtitle">
@@ -930,14 +969,26 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
         <h3>Subscription Information</h3>
 
         <div className="details-grid">
-          <DetailRow label="Merchant Name" value={merchant.merchant} />
-          <DetailRow label="Current Plan" value={merchant.plan} />
+          <DetailRow
+            label="Merchant Name"
+            value={merchant.merchant}
+          />
+          <DetailRow
+            label="Current Plan"
+            value={merchant.plan}
+          />
           <DetailRow
             label="Status"
             value={<StatusBadge status={merchant.status} />}
           />
-          <DetailRow label="Start Date" value={merchant.start} />
-          <DetailRow label="End Date" value={merchant.end} />
+          <DetailRow
+            label="Start Date"
+            value={merchant.start}
+          />
+          <DetailRow
+            label="End Date"
+            value={merchant.end}
+          />
           <DetailRow
             label="Stores"
             value={`${merchant.stores} (of ${currentPlan?.stores} allowed)`}
@@ -963,12 +1014,13 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
       </div>
 
       <button
-        className="primary-flow-button change-plan-action"
+        className="primary-flow-button"
         onClick={onChangePlan}
       >
         <ArrowLeftRight size={17} />
         Change Subscription Plan
       </button>
+
     </section>
   );
 }
@@ -986,7 +1038,11 @@ function ChoosePlan({
 }) {
   return (
     <section className="subscription-flow-page">
-      <PageBack label="Back to Subscription Details" onClick={onBack} />
+
+      <PageBack
+        label="Back to Subscription Details"
+        onClick={onBack}
+      />
 
       <h1>Choose Subscription Plan</h1>
       <p className="flow-subtitle">
@@ -994,26 +1050,34 @@ function ChoosePlan({
       </p>
 
       <div className="plans-grid">
+
         {plans.map((plan) => {
           const isSelected = selectedPlan === plan.name;
           const isCurrent = merchant.plan === plan.name;
 
           return (
             <div
-              className={`plan-card ${isSelected ? "selected" : ""}`}
+              className={`plan-card ${
+                isSelected ? "selected" : ""
+              }`}
               key={plan.name}
-              onClick={() => {
-                if (!isCurrent) {
-                  setSelectedPlan(plan.name);
-                }
-              }}
+             onClick={() => {
+              if (!isCurrent) {
+                setSelectedPlan(plan.name);
+              }
+            }}
             >
+
               {isCurrent && (
-                <span className="current-plan-badge">Current Plan</span>
+                <span className="current-plan-badge">
+                  Current Plan
+                </span>
               )}
 
               {plan.name === "Pro Plan" && (
-                <span className="popular-badge">Most Popular</span>
+                <span className="popular-badge">
+                  Most Popular
+                </span>
               )}
 
               <div className="plan-card-header">
@@ -1056,37 +1120,39 @@ function ChoosePlan({
                 ))}
               </ul>
 
-              <button
-                className={`select-plan-btn ${isSelected ? "chosen" : ""}`}
-                disabled={isCurrent}
-                onClick={(e) => {
-                  e.stopPropagation();
+          
+                <button
+                  className={`select-plan-btn ${
+                    isSelected ? "chosen" : ""
+                  }`}
+                  disabled={isCurrent}
+                  onClick={(e) => {
+                    e.stopPropagation();
 
-                  if (!isCurrent) {
-                    setSelectedPlan(plan.name);
-                  }
-                }}
-              >
-                {isCurrent
-                  ? "Current Plan"
-                  : isSelected
-                    ? "Selected"
-                    : "Select Plan"}
-              </button>
+                    if (!isCurrent) {
+                      setSelectedPlan(plan.name);
+                    }
+                  }}
+                >
+                  {isCurrent ? "Current Plan" : isSelected ? "Selected" : "Select Plan"}
+                </button>
+
             </div>
           );
         })}
+
       </div>
 
       <div className="info-banner">
         <Info size={21} />
         <div>
           <strong>
-            You are changing the subscription plan for {merchant.merchant}.
+            You are changing the subscription plan for{" "}
+            {merchant.merchant}.
           </strong>
           <p>
-            After selecting a plan, you will be able to review the changes
-            before proceeding to payment.
+            After selecting a plan, you will be able to review
+            the changes before proceeding to payment.
           </p>
         </div>
       </div>
@@ -1101,6 +1167,7 @@ function ChoosePlan({
           <ArrowRight size={17} />
         </button>
       </div>
+
     </section>
   );
 }
@@ -1109,7 +1176,12 @@ function ChoosePlan({
    CONFIRM PLAN CHANGE
 ======================================== */
 
-function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
+function ConfirmPlanChange({
+  merchant,
+  selectedPlan,
+  onBack,
+  onNext,
+}) {
   const current = planData[merchant.plan];
   const next = planData[selectedPlan];
 
@@ -1117,7 +1189,11 @@ function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
 
   return (
     <section className="subscription-flow-page">
-      <PageBack label="Back to Choose Plan" onClick={onBack} />
+
+      <PageBack
+        label="Back to Choose Plan"
+        onClick={onBack}
+      />
 
       <h1>Confirm Plan Change</h1>
       <p className="flow-subtitle">
@@ -1125,12 +1201,16 @@ function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
       </p>
 
       <div className="flow-card">
+
         <div className="change-summary">
+
           <div className="change-plan">
             <span>Current Plan</span>
             <h3>{current.name}</h3>
 
-            <strong>{formatPrice(current.price)} / month</strong>
+            <strong>
+              {formatPrice(current.price)} / month
+            </strong>
 
             <p>Up to {current.stores} Stores</p>
             <p>Up to {current.devices} Devices</p>
@@ -1144,14 +1224,19 @@ function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
             <span>New Plan</span>
             <h3>{next.name}</h3>
 
-            <strong>{formatPrice(next.price)} / month</strong>
+            <strong>
+              {formatPrice(next.price)} / month
+            </strong>
 
             <p>Up to {next.stores} Stores</p>
             <p>Up to {next.devices} Devices</p>
           </div>
+
         </div>
 
-        <h3 className="change-title">What will change?</h3>
+        <h3 className="change-title">
+          What will change?
+        </h3>
 
         <div className="comparison-table-wrapper">
           <table className="comparison-table">
@@ -1205,11 +1290,12 @@ function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
               {formatPrice(difference)}.
             </strong>
             <p>
-              The new plan supports {next.stores} stores and {next.devices}{" "}
-              devices.
+              The new plan supports {next.stores} stores and{" "}
+              {next.devices} devices.
             </p>
           </div>
         </div>
+
       </div>
 
       <div className="flow-bottom-actions">
@@ -1222,6 +1308,7 @@ function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
           <ArrowRight size={17} />
         </button>
       </div>
+
     </section>
   );
 }
@@ -1253,7 +1340,11 @@ function PaymentScreen({
 
   return (
     <section className="subscription-flow-page payment-page">
-      <PageBack label="Back to Confirm Plan Change" onClick={onBack} />
+
+      <PageBack
+        label="Back to Confirm Plan Change"
+        onClick={onBack}
+      />
 
       <h1>Payment</h1>
       <p className="flow-subtitle">
@@ -1261,6 +1352,7 @@ function PaymentScreen({
       </p>
 
       <div className="payment-summary">
+
         <h3>Subscription Summary</h3>
 
         <DetailRow
@@ -1295,10 +1387,14 @@ function PaymentScreen({
           <strong>{formatPrice(amount)}.00</strong>
         </div>
 
-        <small className="payment-note">Prorated amount for plan upgrade</small>
+        <small className="payment-note">
+          Prorated amount for plan upgrade
+        </small>
+
       </div>
 
       <div className="payment-card">
+
         <h3>Select Payment Method</h3>
 
         <div className="payment-tabs">
@@ -1329,6 +1425,7 @@ function PaymentScreen({
 
         {paymentMethod === "Card" && (
           <div className="payment-form">
+
             <label>
               Card Number
               <input
@@ -1357,7 +1454,9 @@ function PaymentScreen({
                 Expiry Date
                 <input
                   value={paymentDetails.expiry}
-                  onChange={(e) => updatePaymentField("expiry", e.target.value)}
+                  onChange={(e) =>
+                    updatePaymentField("expiry", e.target.value)
+                  }
                   placeholder="MM/YY"
                 />
               </label>
@@ -1366,7 +1465,9 @@ function PaymentScreen({
                 CVV
                 <input
                   value={paymentDetails.cvv}
-                  onChange={(e) => updatePaymentField("cvv", e.target.value)}
+                  onChange={(e) =>
+                    updatePaymentField("cvv", e.target.value)
+                  }
                   placeholder="123"
                   maxLength={4}
                 />
@@ -1383,6 +1484,7 @@ function PaymentScreen({
               />
               Save this card for future payments
             </label>
+
           </div>
         )}
 
@@ -1392,7 +1494,9 @@ function PaymentScreen({
               UPI ID
               <input
                 value={paymentDetails.upi}
-                onChange={(e) => updatePaymentField("upi", e.target.value)}
+                onChange={(e) =>
+                  updatePaymentField("upi", e.target.value)
+                }
                 placeholder="example@upi"
               />
             </label>
@@ -1405,7 +1509,9 @@ function PaymentScreen({
               Select Bank
               <select
                 value={paymentDetails.bank}
-                onChange={(e) => updatePaymentField("bank", e.target.value)}
+                onChange={(e) =>
+                  updatePaymentField("bank", e.target.value)
+                }
               >
                 <option value="">Select your bank</option>
                 <option>State Bank of India</option>
@@ -1417,10 +1523,17 @@ function PaymentScreen({
           </div>
         )}
 
-        {paymentError && <div className="payment-error">{paymentError}</div>}
+        {paymentError && (
+          <div className="payment-error">
+            {paymentError}
+          </div>
+        )}
 
         <div className="payment-actions">
-          <button className="secondary-flow-button" onClick={onBack}>
+          <button
+            className="secondary-flow-button"
+            onClick={onBack}
+          >
             Cancel
           </button>
 
@@ -1432,7 +1545,9 @@ function PaymentScreen({
             Pay {formatPrice(amount)}.00
           </button>
         </div>
+
       </div>
+
     </section>
   );
 }
@@ -1452,6 +1567,7 @@ function PaymentSuccess({
 
   return (
     <section className="subscription-flow-page success-page">
+
       <div className="success-icon">
         <Check size={45} />
       </div>
@@ -1459,26 +1575,36 @@ function PaymentSuccess({
       <h1>Subscription Plan Updated</h1>
 
       <p className="flow-subtitle">
-        The subscription plan for {merchant.merchant} has been successfully
-        updated.
+        The subscription plan for {merchant.merchant} has
+        been successfully updated.
       </p>
 
       <div className="flow-card success-details">
+
         <DetailRow
           label="Merchant"
           value={`${merchant.merchant} (${merchant.id})`}
         />
 
-        <DetailRow label="New Plan" value={next.name} />
+        <DetailRow
+          label="New Plan"
+          value={next.name}
+        />
 
         <DetailRow
           label="Amount Paid"
           value={`${formatPrice(amountPaid)}.00`}
         />
 
-        <DetailRow label="Billing Cycle" value={billingCycle} />
+        <DetailRow
+          label="Billing Cycle"
+          value={billingCycle}
+        />
 
-        <DetailRow label="Effective From" value={merchant.start} />
+        <DetailRow
+          label="Effective From"
+          value={merchant.start}
+        />
 
         <DetailRow
           label="Status"
@@ -1489,16 +1615,19 @@ function PaymentSuccess({
             </span>
           }
         />
+
       </div>
 
       <div className="success-banner">
         <CircleCheck size={18} />
-        The merchant can now use the features of the {next.name}.
+        The merchant can now use the features of the{" "}
+        {next.name}.
       </div>
 
       <button className="primary-flow-button" onClick={onBack}>
         Back to Subscription Details
       </button>
+
     </section>
   );
 }
@@ -1573,7 +1702,10 @@ function MerchantSubscriptions() {
       return;
     }
 
-    if (paymentMethod === "Net Banking" && !paymentDetails.bank) {
+    if (
+      paymentMethod === "Net Banking" &&
+      !paymentDetails.bank
+    ) {
       setPaymentError("Please select your bank.");
       return;
     }
@@ -1587,8 +1719,8 @@ function MerchantSubscriptions() {
               ...item,
               plan: selectedPlan,
             }
-          : item,
-      ),
+          : item
+      )
     );
 
     setSelectedMerchant((previous) => ({
@@ -1663,6 +1795,9 @@ function MerchantSubscriptions() {
   }
 
   return (
-    <SubscriptionList subscriptions={subscriptions} onView={openDetails} />
+    <SubscriptionList
+      subscriptions={subscriptions}
+      onView={openDetails}
+    />
   );
 }

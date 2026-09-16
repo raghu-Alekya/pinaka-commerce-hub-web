@@ -21,8 +21,10 @@
 ========================================================= */
 .features-page .feature-details-card {
   width: 100%;
-  height: 307px;
+  min-height: 420px;
   padding: 26px 25px 22px;
+  display: flex;
+  flex-direction: column;
   background: #ffffff;
   border-radius: 9px;
 }
@@ -756,4 +758,853 @@
   .features-page .feature-header-actions { width: 100%; justify-content: flex-end; }
   .features-page .feature-form-grid { grid-template-columns: 1fr; }
   .features-page .feature-search { width: 100%; flex: 1 1 100%; }
+}
+
+
+/* =========================================================
+   FEATURE FORM FOOTER / VALIDATION
+========================================================= */
+.features-page .feature-form-footer {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.features-page .feature-footer-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.features-page .feature-form-footer .feature-action {
+  width: 190px;
+  height: 48px;
+  padding: 0 22px;
+  gap: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.features-page .feature-form-footer .feature-action.secondary {
+  border: 1px solid #d7deea;
+  background: #ffffff;
+  color: #27446f;
+}
+
+.features-page .feature-form-footer .feature-action.primary {
+  border: 1px solid #6548e8;
+  background: #6548e8;
+  color: #ffffff;
+  box-shadow: 0 5px 12px rgba(101, 72, 232, 0.18);
+}
+
+.features-page .feature-field input.feature-input-error {
+  border-color: #dc3545;
+}
+
+.features-page .feature-field small.feature-error-text {
+  color: #dc3545;
+  font-size: 9px;
+}
+
+@media (max-width: 900px) {
+  .features-page .feature-details-card {
+    min-height: 0;
+  }
+
+  .features-page .feature-form-footer {
+    margin-top: 28px;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .features-page .feature-footer-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .features-page .feature-form-footer .feature-action {
+    width: 100%;
+  }
+
+  .features-page .feature-form-footer .editing-chip {
+    align-self: flex-start;
+  }
+}
+
+
+/* =========================================================
+   CREATE STORE TYPE VISUAL ALIGNMENT — FEATURES FORM ONLY
+========================================================= */
+.features-page {
+  padding: 24px 32px 32px;
+  background: #f5f7fb;
+  color: #10254a;
+}
+
+.features-page .features-page-heading {
+  margin: 0 0 20px;
+}
+
+.features-page .features-page-heading h1 {
+  margin: 0;
+  color: #10254a;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+
+.features-page .features-page-heading p {
+  margin: 8px 0 0;
+  color: #5c7db9;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.features-page .feature-details-card {
+  min-height: 650px;
+  padding: 24px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.features-page .feature-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.features-page .feature-section-heading .feature-title-icon {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #6548e8;
+}
+
+.features-page .feature-section-heading .feature-title-icon i {
+  font-size: 23px;
+}
+
+.features-page .feature-section-heading h2 {
+  margin: 0;
+  color: #17345f;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+.features-page .feature-section-heading p {
+  margin: 5px 0 0;
+  color: #5c7db9;
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+.features-page .feature-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 28px;
+  row-gap: 24px;
+}
+
+.features-page .feature-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.features-page .feature-field label {
+  margin: 0 0 9px;
+  color: #244675;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.features-page .feature-field label span {
+  margin-left: 4px;
+  color: #e23d55;
+}
+
+.features-page .feature-field input,
+.features-page .feature-field textarea,
+.features-page .feature-field .select-shell {
+  width: 100%;
+}
+
+.features-page .feature-field input,
+.features-page .feature-field select,
+.features-page .feature-field textarea {
+  font-family: inherit;
+  font-size: 14px;
+  color: #18345d;
+}
+
+.features-page .feature-field input,
+.features-page .feature-field .select-shell {
+  height: 48px;
+}
+
+.features-page .feature-field input,
+.features-page .feature-field textarea,
+.features-page .feature-field .select-shell {
+  border: 1px solid #d5e0ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.features-page .feature-field input {
+  padding: 0 14px;
+}
+
+.features-page .feature-field input::placeholder,
+.features-page .feature-field textarea::placeholder {
+  color: #8da0bd;
+  opacity: 1;
+}
+
+.features-page .feature-field .select-shell {
+  position: relative;
+  overflow: hidden;
+}
+
+.features-page .feature-field .select-shell select {
+  width: 100%;
+  height: 100%;
+  padding: 0 40px 0 14px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  appearance: none;
+}
+
+.features-page .feature-field .select-shell > i {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7290bd;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.features-page .feature-field small {
+  margin-top: 8px;
+  color: #6382b5;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+.features-page .feature-description-field {
+  grid-column: 1 / -1;
+}
+
+.features-page .feature-description-field textarea {
+  min-height: 104px;
+  padding: 14px;
+  resize: vertical;
+  outline: none;
+}
+
+.features-page .feature-description-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.features-page .feature-description-meta span {
+  margin-top: 8px;
+  flex: 0 0 auto;
+  color: #6382b5;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.features-page .feature-status-field {
+  max-width: 360px;
+}
+
+.features-page .feature-field input:focus,
+.features-page .feature-field textarea:focus,
+.features-page .feature-field .select-shell:focus-within {
+  border-color: #9bb7df;
+  outline: none;
+}
+
+.features-page .feature-field input.feature-input-error {
+  border-color: #dc3545;
+}
+
+.features-page .feature-field small.feature-error-text {
+  color: #dc3545;
+}
+
+.features-page .feature-form-footer {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.features-page .feature-footer-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.features-page .feature-form-footer .feature-action {
+  width: 220px;
+  height: 52px;
+  margin: 0;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.features-page .feature-form-footer .feature-action.secondary {
+  border: 1px solid #d5e0ef;
+  background: #ffffff;
+  color: #274b78;
+  box-shadow: none;
+}
+
+.features-page .feature-form-footer .feature-action.primary {
+  border: 1px solid #6548e8;
+  background: #6548e8;
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(101, 72, 232, 0.18);
+}
+
+.features-page .feature-form-footer .editing-chip {
+  margin-right: auto;
+}
+
+@media (max-width: 900px) {
+  .features-page {
+    padding: 18px;
+  }
+
+  .features-page .feature-details-card {
+    min-height: 0;
+    padding: 22px 20px;
+  }
+
+  .features-page .feature-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features-page .feature-description-field {
+    grid-column: auto;
+  }
+
+  .features-page .feature-status-field {
+    max-width: none;
+  }
+
+  .features-page .feature-form-footer {
+    margin-top: 28px;
+  }
+
+  .features-page .feature-footer-actions {
+    width: 100%;
+  }
+
+  .features-page .feature-form-footer .feature-action {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   ROLE TEMPLATES EXACT SIZE / SPACING REFERENCE
+   Applied only to Features form/card; Features behavior unchanged.
+========================================================= */
+.features-page {
+  flex: 1;
+  min-height: calc(100vh - 62px);
+  padding: 4px 10px 22px;
+  background: #f5f6fa;
+  color: #16213d;
+}
+
+.features-page .features-page-heading {
+  margin: 0 0 10px;
+}
+
+.features-page .features-page-heading h1 {
+  margin: 0 0 3px;
+  font-size: 22px;
+  line-height: 1;
+  color: #18213c;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.features-page .features-page-heading p {
+  margin: 0;
+  color: #778198;
+  font-size: 11px;
+  line-height: normal;
+}
+
+.features-page .feature-details-card {
+  min-height: 390px;
+  padding: 20px 23px 21px;
+  margin-bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #edf0f5;
+  border-radius: 9px;
+  box-shadow: 0 2px 9px rgba(28, 54, 105, 0.035);
+}
+
+.features-page .feature-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 17px;
+}
+
+.features-page .feature-section-heading .feature-title-icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #eef0ff;
+  color: #565de8;
+  font-size: 20px;
+}
+
+.features-page .feature-section-heading .feature-title-icon i {
+  font-size: 20px;
+}
+
+.features-page .feature-section-heading h2 {
+  margin: 0 0 3px;
+  color: #18213c;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.features-page .feature-section-heading p {
+  margin: 0;
+  color: #778198;
+  font-size: 11px;
+  line-height: normal;
+}
+
+.features-page .feature-form-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.1fr 0.8fr;
+  column-gap: 13px;
+  row-gap: 11px;
+}
+
+.features-page .feature-field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.features-page .feature-field label {
+  margin: 0;
+  color: #2656c5;
+  font-size: 11px;
+  line-height: normal;
+  font-weight: 700;
+}
+
+.features-page .feature-field label span {
+  margin-left: 3px;
+  color: #ef4b64;
+}
+
+.features-page .feature-field input,
+.features-page .feature-field select,
+.features-page .feature-field textarea {
+  width: 100%;
+  border: 1px solid #dce3ed;
+  border-radius: 5px;
+  outline: none;
+  background: #fff;
+  color: #252d42;
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.features-page .feature-field input,
+.features-page .feature-field .select-shell {
+  height: 34px;
+}
+
+.features-page .feature-field input {
+  padding: 0 9px;
+}
+
+.features-page .feature-field .select-shell {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #dce3ed;
+  border-radius: 5px;
+  background: #fff;
+}
+
+.features-page .feature-field .select-shell select {
+  width: 100%;
+  height: 100%;
+  padding: 0 30px 0 9px;
+  border: 0;
+  border-radius: 5px;
+  outline: 0;
+  appearance: none;
+  background: transparent;
+}
+
+.features-page .feature-field .select-shell > i {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  color: #75819a;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.features-page .feature-field textarea {
+  min-height: 70px;
+  padding: 9px;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.features-page .feature-field input::placeholder,
+.features-page .feature-field textarea::placeholder {
+  color: #9ba5b8;
+}
+
+.features-page .feature-field input:focus,
+.features-page .feature-field textarea:focus,
+.features-page .feature-field .select-shell:focus-within {
+  border-color: #aeb7ff;
+  box-shadow: 0 0 0 2px rgba(86, 96, 232, 0.06);
+}
+
+.features-page .feature-field small,
+.features-page .feature-description-meta span {
+  margin-top: 0;
+  color: #8994aa;
+  font-size: 8px;
+  line-height: 1.1;
+}
+
+.features-page .feature-description-field {
+  grid-column: 1 / 3;
+}
+
+.features-page .feature-description-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.features-page .feature-status-field {
+  max-width: none;
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* Category occupies the third column on the second row so the form
+   retains the compact Role Templates proportions. */
+.features-page .feature-form-grid > .feature-field:nth-child(4) {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.features-page .feature-form-grid > .feature-field:nth-child(1) {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.features-page .feature-form-grid > .feature-field:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.features-page .feature-description-field {
+  grid-row: 2;
+}
+
+.features-page .feature-field input.feature-input-error {
+  border-color: #ef4b64;
+}
+
+.features-page .feature-field small.feature-error-text {
+  color: #ef4b64;
+  font-size: 8px;
+}
+
+/* Keep requested bottom-right action placement, but use exact reference sizes. */
+.features-page .feature-form-footer {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.features-page .feature-footer-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.features-page .feature-form-footer .feature-action {
+  width: auto;
+  min-width: 105px;
+  height: 34px;
+  margin: 0;
+  padding: 0 14px;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.features-page .feature-form-footer .feature-action.secondary {
+  border: 1px solid #dfe4ed;
+  background: #fff;
+  color: #25314c;
+  box-shadow: none;
+}
+
+.features-page .feature-form-footer .feature-action.primary {
+  padding: 0 15px;
+  border: 0;
+  background: #5660e8;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(86, 96, 232, 0.16);
+}
+
+.features-page .feature-form-footer .editing-chip {
+  margin-right: auto;
+  padding: 8px 12px;
+  border: 1px solid #9be5bd;
+  border-radius: 18px;
+  color: #16a15d;
+  background: #effcf5;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .features-page {
+    padding: 4px 8px 16px;
+  }
+
+  .features-page .feature-details-card {
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .features-page .feature-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features-page .feature-form-grid > .feature-field,
+  .features-page .feature-description-field,
+  .features-page .feature-status-field {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
+  .features-page .feature-form-footer {
+    margin-top: 17px;
+  }
+
+  .features-page .feature-footer-actions {
+    width: auto;
+  }
+
+  .features-page .feature-form-footer .feature-action {
+    width: auto;
+  }
+}
+
+
+/* =========================================================
+   FINAL ALIGNMENT — Create Plan reference
+   Keeps existing Features functionality unchanged.
+   ========================================================= */
+.features-page .feature-details-card {
+  padding: 28px 34px 30px;
+}
+
+.features-page .feature-title-wrap {
+  margin-bottom: 28px;
+}
+
+.features-page .feature-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 34px;
+  row-gap: 24px;
+  align-items: start;
+}
+
+/* Row 1: Code | Name | Status */
+.features-page .feature-form-grid > .feature-field:nth-child(1) {
+  grid-column: 1;
+  grid-row: 1;
+}
+.features-page .feature-form-grid > .feature-field:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+}
+.features-page .feature-form-grid > .feature-field:nth-child(5) {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* Row 2: Description spans 2 columns | Category */
+.features-page .feature-form-grid > .feature-field:nth-child(3) {
+  grid-column: 1 / 3;
+  grid-row: 2;
+}
+.features-page .feature-form-grid > .feature-field:nth-child(4) {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.features-page .feature-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.features-page .feature-field input,
+.features-page .feature-field select {
+  height: 42px;
+}
+
+.features-page .feature-field textarea {
+  min-height: 92px;
+  height: 92px;
+}
+
+.features-page .feature-description-meta {
+  margin-top: 0;
+}
+
+.features-page .feature-form-footer {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid #e8ecf3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.features-page .feature-footer-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.features-page .feature-action {
+  min-width: 126px;
+  height: 42px;
+}
+
+.features-page .feature-action.primary {
+  min-width: 148px;
+}
+
+.features-page .features-list-card {
+  margin-top: 10px;
+  padding: 26px 34px 22px;
+}
+
+.features-page .features-list-toolbar {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1050px) {
+  .features-page .feature-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .features-page .feature-form-grid > .feature-field {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+  .features-page .feature-description-field {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .features-page .feature-details-card,
+  .features-page .features-list-card {
+    padding: 20px;
+  }
+  .features-page .feature-form-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .features-page .feature-description-field {
+    grid-column: auto !important;
+  }
+  .features-page .feature-form-footer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .features-page .feature-footer-actions {
+    width: 100%;
+  }
+  .features-page .feature-action {
+    flex: 1;
+  }
 }

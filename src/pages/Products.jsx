@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import Pagination from "../components/pagination";
+import Pagination from "../components/Pagination";
+import ViewDetailsModal from "../components/ViewDetailsModal";
 import { productsSeed } from "../data/data";
 import "../styles/products.css";
 
@@ -28,6 +29,12 @@ export default function Products({
     const [syncing, setSyncing] = useState("");
     const [syncMessage, setSyncMessage] = useState("");
     const [syncError, setSyncError] = useState("");
+
+    // =========================================================
+    // VIEW PRODUCT MODAL
+    // =========================================================
+
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
     // =========================================================
     // PRODUCTS
@@ -176,47 +183,6 @@ export default function Products({
     };
 
     // =========================================================
-    // FAST PRODUCT IMPORT
-    // =========================================================
-
-    const handleFastProductImport = async () => {
-        if (syncing) return;
-
-        setSyncing("fast");
-        setSyncMessage("");
-        setSyncError("");
-
-        try {
-            /*
-             * API WILL BE CONNECTED HERE
-             *
-             * Example later:
-             *
-             * await importProducts({
-             *     merchantId,
-             *     storeId,
-             * });
-             */
-
-            // Temporary simulation until API is ready
-            await new Promise((resolve) =>
-                setTimeout(resolve, 1200)
-            );
-
-            setSyncMessage(
-                "Products imported successfully."
-            );
-        } catch (error) {
-            setSyncError(
-                error?.message ||
-                "Failed to import products."
-            );
-        } finally {
-            setSyncing("");
-        }
-    };
-
-    // =========================================================
     // LATEST PRODUCT UPDATES
     // =========================================================
 
@@ -258,6 +224,108 @@ export default function Products({
     };
 
     // =========================================================
+    // PRODUCT DETAILS FIELDS
+    // =========================================================
+
+    const productDetailsFields = [
+        {
+            key: "name",
+            label: "Product Name",
+            fullWidth: true,
+        },
+        {
+            key: "sku",
+            label: "SKU",
+        },
+        {
+            key: "type",
+            label: "Product Type",
+        },
+        {
+            key: "category",
+            label: "Category",
+        },
+        {
+            key: "brand",
+            label: "Brand",
+        },
+        {
+            key: "price",
+            label: "Price",
+        },
+        {
+            key: "quantity",
+            label: "Quantity",
+            format: (value) =>
+                value === undefined ||
+                value === null ||
+                value === ""
+                    ? "—"
+                    : `${value} units`,
+        },
+        {
+            key: "stockStatus",
+            label: "Stock Status",
+            render: (value) => {
+                const status = String(
+                    value || ""
+                ).toLowerCase();
+
+                let className = "detail-status";
+
+                if (status === "in stock") {
+                    className += " active";
+                } else if (status === "out of stock") {
+                    className += " inactive";
+                } else if (status === "low stock") {
+                    className += " pending";
+                }
+
+                return (
+                    <span className={className}>
+                        {value || "—"}
+                    </span>
+                );
+            },
+        },
+        {
+            key: "tags",
+            label: "Tags",
+            fullWidth: true,
+            render: (value) => {
+                if (!Array.isArray(value) || value.length === 0) {
+                    return "—";
+                }
+
+                return (
+                    <div className="view-details-list">
+                        {value.map((tag) => (
+                            <span
+                                key={tag}
+                                className="view-details-list-item"
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                );
+            },
+        },
+        {
+            key: "taxStatus",
+            label: "Tax Status",
+        },
+        {
+            key: "taxClass",
+            label: "Tax Class",
+        },
+        {
+            key: "updatedAt",
+            label: "Last Updated",
+        },
+    ];
+
+    // =========================================================
     // RENDER
     // =========================================================
 
@@ -290,27 +358,6 @@ export default function Products({
                 </div>
 
                 <div className="products-header-actions">
-
-                    {/* FAST PRODUCT IMPORT */}
-
-                    <button
-                        type="button"
-                        className="product-sync-btn product-sync-import"
-                        onClick={handleFastProductImport}
-                        disabled={Boolean(syncing)}
-                    >
-                        {syncing === "fast" ? (
-                            <>
-                                <span className="sync-spinner" />
-                                Importing...
-                            </>
-                        ) : (
-                            <>
-                                <i className="bi bi-lightning-charge-fill" />
-                                Fast Product Import
-                            </>
-                        )}
-                    </button>
 
                     {/* LATEST PRODUCT UPDATES */}
 
@@ -659,6 +706,9 @@ export default function Products({
                                     <ProductRow
                                         key={product.id}
                                         product={product}
+                                        onClick={() =>
+                                            setSelectedProduct(product)
+                                        }
                                     />
                                 )
                             )}
@@ -737,15 +787,36 @@ export default function Products({
 
             </div>
 
+            {/* =================================================
+                VIEW PRODUCT DETAILS
+            ================================================= */}
+
+            <ViewDetailsModal
+                open={Boolean(selectedProduct)}
+                title="Product Details"
+                subtitle={
+                    selectedProduct?.sku
+                        ? `SKU: ${selectedProduct.sku}`
+                        : ""
+                }
+                data={selectedProduct}
+                fields={productDetailsFields}
+                onClose={() => setSelectedProduct(null)}
+            />
+
         </div>
     );
 }
+
 
 // =========================================================
 // PRODUCT ROW
 // =========================================================
 
-function ProductRow({ product }) {
+function ProductRow({
+    product,
+    onClick,
+}) {
 
     const stockClass =
         product.stockStatus === "In stock"
@@ -755,7 +826,11 @@ function ProductRow({ product }) {
                 : "out-stock";
 
     return (
-        <tr>
+        <tr
+            className="product-row-clickable"
+            onClick={onClick}
+            title="Click to view product details"
+        >
 
             {/* =================================================
                 PRODUCT

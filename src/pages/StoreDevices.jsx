@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import Pagination from "../components/pagination";
+import Pagination from "../components/Pagination";
 import { storeDevicesSeed } from "../data/data";
 import "../styles/store-devices.css";
 
@@ -30,6 +30,7 @@ export default function StoreDevices({
 
     const [showForm, setShowForm] = useState(false);
     const [editingDevice, setEditingDevice] = useState(null);
+    const [viewingDevice, setViewingDevice] = useState(null);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -689,6 +690,7 @@ export default function StoreDevices({
                                     <DeviceRow
                                         key={device.id}
                                         device={device}
+                                        onView={setViewingDevice}
                                         onEdit={
                                             handleEditDevice
                                         }
@@ -1026,6 +1028,105 @@ export default function StoreDevices({
                 </div>
             )}
 
+            {viewingDevice && (
+                <div
+                    className="store-device-modal-overlay"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                            setViewingDevice(null);
+                        }
+                    }}
+                >
+                    <div
+                        className="store-device-modal store-device-view-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        onMouseDown={(event) => event.stopPropagation()}
+                    >
+                        <div className="store-device-modal-header">
+                            <div>
+                                <h2>Device Details</h2>
+                                <p>
+                                    View device information for{" "}
+                                    <strong>{viewingDevice.name}</strong>.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="store-device-modal-close"
+                                onClick={() => setViewingDevice(null)}
+                                aria-label="Close"
+                            >
+                                <i className="bi bi-x-lg" />
+                            </button>
+                        </div>
+
+                        <div className="store-device-view-body">
+                            <div className="store-device-view-identity">
+                                <div className="store-device-view-icon">
+                                    <i className="bi bi-pc-display" />
+                                </div>
+
+                                <div>
+                                    <strong>{viewingDevice.name}</strong>
+                                    <span>
+                                        {viewingDevice.deviceId || viewingDevice.id}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="store-device-view-grid">
+                                <div className="store-device-view-field">
+                                    <span>Device Name</span>
+                                    <strong>{viewingDevice.name || "—"}</strong>
+                                </div>
+
+                                <div className="store-device-view-field">
+                                    <span>Device ID</span>
+                                    <strong>{viewingDevice.deviceId || "—"}</strong>
+                                </div>
+
+                                <div className="store-device-view-field">
+                                    <span>Device Type</span>
+                                    <strong>{viewingDevice.type || "—"}</strong>
+                                </div>
+
+                                <div className="store-device-view-field">
+                                    <span>Status</span>
+                                    <strong
+                                        className={`store-device-view-status ${
+                                            viewingDevice.status === "Active"
+                                                ? "active"
+                                                : "inactive"
+                                        }`}
+                                    >
+                                        {viewingDevice.status || "—"}
+                                    </strong>
+                                </div>
+
+                                <div className="store-device-view-field full">
+                                    <span>Last Updated</span>
+                                    <strong>
+                                        {viewingDevice.updatedAt || "Recently"}
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="store-device-modal-footer">
+                            <button
+                                type="button"
+                                className="store-device-cancel-btn"
+                                onClick={() => setViewingDevice(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
@@ -1036,6 +1137,7 @@ export default function StoreDevices({
 
 function DeviceRow({
     device,
+    onView,
     onEdit,
 }) {
     const statusClass =
@@ -1129,16 +1231,27 @@ function DeviceRow({
 
             <td>
 
-                <button
-                    type="button"
-                    className="store-device-edit-btn"
-                    onClick={() =>
-                        onEdit(device)
-                    }
-                >
-                    <i className="bi bi-pencil" />
-                    Edit
-                </button>
+                <div className="store-device-actions">
+                    <button
+                        type="button"
+                        className="store-device-action-btn"
+                        title="View"
+                        aria-label={`View ${device.name}`}
+                        onClick={() => onView(device)}
+                    >
+                        <i className="bi bi-eye" />
+                    </button>
+
+                    <button
+                        type="button"
+                        className="store-device-action-btn edit"
+                        title="Edit"
+                        aria-label={`Edit ${device.name}`}
+                        onClick={() => onEdit(device)}
+                    >
+                        <i className="bi bi-pencil" />
+                    </button>
+                </div>
 
             </td>
 

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import "../styles/add-employee.css";
+
 /*
  * Store Role Assignment UI styles.
  * Kept here so the new Work Information UI works without requiring
@@ -760,6 +761,9 @@ export default function AddEmployee() {
   const handleSave = (e) => {
     e.preventDefault();
     console.log("Employee details:", formData);
+
+    console.log("Employee details:", formData);
+
     if (!validateForm()) {
       requestAnimationFrame(() => {
         const firstInvalid = document.querySelector(
@@ -1275,6 +1279,7 @@ export default function AddEmployee() {
                   Add Another Store
                 </button>
               </div>
+            </section>
 
             </section>
 
@@ -1309,6 +1314,7 @@ export default function AddEmployee() {
 
                   <div className="password-input">
                     <input
+                   <input
                       type={showPassword ? "text" : "password"}
                       name="password"
                       placeholder="Enter temporary password"
@@ -1356,11 +1362,10 @@ export default function AddEmployee() {
   );
 }
  {/* ========================================================
-=======
 
 /* =========================================================
    STORE + ROLE ASSIGNMENT
-========================================================= */}
+========================================================= */
 
 function StoreRoleAssignment({
   assignment,
