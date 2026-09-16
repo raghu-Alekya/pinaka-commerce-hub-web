@@ -17,7 +17,8 @@ import {
 } from "../data/data";
 
 import "../styles/users.css";
-import Pagination from "../components/pagination";
+import Pagination from "../components/Pagination";
+import ViewDetailsModal from "../components/ViewDetailsModal";
 
 
 /* =========================================================
@@ -138,6 +139,7 @@ export default function Users({
             }
         }
 
+
         return null;
 
     }, [
@@ -166,6 +168,14 @@ export default function Users({
     ===================================================== */
 
     const [editing, setEditing] =
+        useState(null);
+
+
+    /* =====================================================
+       VIEW STATE
+    ===================================================== */
+
+    const [selectedUser, setSelectedUser] =
         useState(null);
 
 
@@ -259,7 +269,7 @@ export default function Users({
         if (
             user.storeId &&
             String(user.storeId) ===
-                String(storeId)
+            String(storeId)
         ) {
             return {
                 storeId:
@@ -272,6 +282,7 @@ export default function Users({
                     user.role,
             };
         }
+
 
         return null;
     };
@@ -293,6 +304,7 @@ export default function Users({
         if (!storeId) {
             return [];
         }
+
 
         return list.filter((user) => {
             return (
@@ -438,6 +450,7 @@ export default function Users({
             return;
         }
 
+
         setEditing(user.id);
 
         setForm({
@@ -523,6 +536,7 @@ export default function Users({
             return;
         }
 
+
         const allowedTypes = [
             "image/jpeg",
             "image/png",
@@ -544,6 +558,7 @@ export default function Users({
             return;
         }
 
+
         if (
             file.size >
             2 *
@@ -559,6 +574,7 @@ export default function Users({
 
             return;
         }
+
 
         const imageUrl =
             URL.createObjectURL(
@@ -792,7 +808,7 @@ export default function Users({
 
 
                     /* -------------------------------------
-                       Update PIN only if entered
+                       Updated PIN only if entered
                     ------------------------------------- */
 
                     if (
@@ -801,6 +817,7 @@ export default function Users({
                         updatedUser.loginPin =
                             form.loginPin;
                     }
+
 
                     return updatedUser;
                 }
@@ -838,6 +855,255 @@ export default function Users({
             "User updated successfully."
         );
     };
+
+
+    /* =========================================================
+       VIEW USER DETAILS
+    ========================================================= */
+
+    const userDetailsFields = [
+        {
+            label: "Profile Photo",
+            key: "profilePhoto",
+            fullWidth: true,
+
+            render: (value) =>
+                value ? (
+                    <img
+                        src={value}
+                        alt="User profile"
+                        className="view-details-image"
+                    />
+                ) : (
+                    <span>—</span>
+                ),
+        },
+
+        {
+            label: "Username",
+            key: "username",
+        },
+
+        {
+            label: "First Name",
+            key: "firstName",
+        },
+
+        {
+            label: "Last Name",
+            key: "lastName",
+        },
+
+        {
+            label: "Email",
+            key: "email",
+        },
+
+        {
+            label: "Phone",
+            key: "phone",
+        },
+
+        {
+            label: "Status",
+            key: "status",
+
+            render: (value) => {
+                const status =
+                    value ||
+                    "Active";
+
+                const statusClass =
+                    String(
+                        status
+                    )
+                        .toLowerCase()
+                        .replace(
+                            /\s+/g,
+                            "-"
+                        );
+
+                return (
+                    <span
+                        className={`detail-status ${statusClass}`}
+                    >
+                        {status}
+                    </span>
+                );
+            },
+        },
+
+        {
+            label: "Merchant",
+            key: "merchantName",
+        },
+
+        {
+            label: "Store",
+
+            value: (user) =>
+                getStoreAssignment(
+                    user
+                )?.storeName ||
+                user.storeName ||
+                currentStore?.name ||
+                "—",
+        },
+
+        {
+            label: "Store ID",
+
+            value: (user) =>
+                getStoreAssignment(
+                    user
+                )?.storeId ||
+                user.storeId ||
+                storeId ||
+                "—",
+        },
+
+        {
+            label: "Role",
+
+            value: (user) =>
+                getStoreAssignment(
+                    user
+                )?.role ||
+                user.role ||
+                "—",
+        },
+
+        {
+            label: "Login PIN",
+
+            render: () => (
+                <span>
+                    ••••••
+                </span>
+            ),
+        },
+
+        {
+            label: "Store Assignments",
+            key: "storeRoleAssignments",
+            fullWidth: true,
+
+            render: (
+                assignments
+            ) => {
+
+                /*
+                 * New multi-store structure
+                 */
+
+                if (
+                    Array.isArray(
+                        assignments
+                    ) &&
+                    assignments.length >
+                        0
+                ) {
+                    return (
+                        <div className="view-details-list">
+
+                            {assignments.map(
+                                (
+                                    assignment,
+                                    index
+                                ) => (
+                                    <div
+                                        key={`${assignment.storeId || "store"}-${index}`}
+                                        className="view-details-list-item"
+                                    >
+
+                                        <div>
+
+                                            <strong>
+                                                {
+                                                    assignment.storeName ||
+                                                    assignment.storeId ||
+                                                    "Store"
+                                                }
+                                            </strong>
+
+                                            {assignment.storeId && (
+                                                <small>
+                                                    {
+                                                        assignment.storeId
+                                                    }
+                                                </small>
+                                            )}
+
+                                        </div>
+
+                                        <span className="detail-status active">
+                                            {
+                                                assignment.role ||
+                                                "—"
+                                            }
+                                        </span>
+
+                                    </div>
+                                )
+                            )}
+
+                        </div>
+                    );
+                }
+
+
+                /*
+                 * Legacy single-store structure
+                 */
+
+                if (
+                    selectedUser?.storeId
+                ) {
+                    return (
+                        <div className="view-details-list">
+
+                            <div className="view-details-list-item">
+
+                                <div>
+
+                                    <strong>
+                                        {
+                                            selectedUser.storeName ||
+                                            currentStore?.name ||
+                                            "Store"
+                                        }
+                                    </strong>
+
+                                    <small>
+                                        {
+                                            selectedUser.storeId
+                                        }
+                                    </small>
+
+                                </div>
+
+                                <span className="detail-status active">
+                                    {
+                                        selectedUser.role ||
+                                        "—"
+                                    }
+                                </span>
+
+                            </div>
+
+                        </div>
+                    );
+                }
+
+
+                return (
+                    <span>
+                        —
+                    </span>
+                );
+            },
+        },
+    ];
 
 
     /* =========================================================
@@ -1270,18 +1536,40 @@ export default function Users({
 
                                                 <td>
 
-                                                    <button
-                                                        type="button"
-                                                        className="table-action"
-                                                        title="Edit User"
-                                                        onClick={() =>
-                                                            startEdit(
-                                                                user
-                                                            )
-                                                        }
-                                                    >
-                                                        <i className="bi bi-pencil" />
-                                                    </button>
+                                                    <div className="table-actions">
+
+                                                        {/* VIEW */}
+
+                                                        <button
+                                                            type="button"
+                                                            className="table-action"
+                                                            title="View User"
+                                                            onClick={() =>
+                                                                setSelectedUser(
+                                                                    user
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-eye" />
+                                                        </button>
+
+
+                                                        {/* EDIT */}
+
+                                                        <button
+                                                            type="button"
+                                                            className="table-action"
+                                                            title="Edit User"
+                                                            onClick={() =>
+                                                                startEdit(
+                                                                    user
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-pencil" />
+                                                        </button>
+
+                                                    </div>
 
                                                 </td>
 
@@ -1316,7 +1604,8 @@ export default function Users({
                             <p>
                                 {!storeId
                                     ? "No store selected. Pass storeId or store, or use a route with :storeId."
-                                    : storeUsers.length === 0
+                                    : storeUsers.length ===
+                                      0
                                         ? `No employees are assigned to store ${storeId}.`
                                         : "No users match the search or role filter."}
                             </p>
@@ -1352,6 +1641,7 @@ export default function Users({
                                 setPageSize(
                                     size
                                 );
+
                                 setCurrentPage(
                                     1
                                 );
@@ -1360,6 +1650,36 @@ export default function Users({
                     )}
 
                 </div>
+
+
+                {/* =================================================
+                   VIEW DETAILS MODAL
+                ================================================= */}
+
+                <ViewDetailsModal
+                    open={
+                        Boolean(
+                            selectedUser
+                        )
+                    }
+                    title="User Details"
+                    subtitle={
+                        selectedUser?.username
+                            ? `Username: ${selectedUser.username}`
+                            : ""
+                    }
+                    data={
+                        selectedUser
+                    }
+                    fields={
+                        userDetailsFields
+                    }
+                    onClose={() =>
+                        setSelectedUser(
+                            null
+                        )
+                    }
+                />
 
             </section>
 

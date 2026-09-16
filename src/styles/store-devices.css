@@ -178,6 +178,13 @@
     color: #263047;
     font-size: 21px;
 }
+.store-device-modal form {
+    margin-top: 0;
+}
+
+.store-device-form-body {
+    padding-top: 10px;
+}
 
 /* =========================================================
    MAIN CARD
@@ -586,7 +593,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 17px;
-    padding: 18px 22px 14px;
+    padding: 10px 22px 14px;
 }
 
 .store-device-form-group {
@@ -737,3 +744,228 @@
     }
 
 }
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.store-device-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.store-device-action-btn {
+    width: 31px;
+    height: 31px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #dddfea;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #6f788a;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.store-device-action-btn:hover {
+    border-color: #cfc7f7;
+    background: #f7f5ff;
+    color: #5c45d5;
+}
+
+.store-device-action-btn.edit:hover {
+    border-color: #cfc7f7;
+    background: #f7f5ff;
+    color: #5c45d5;
+}
+
+
+/* =========================================================
+   ADD / EDIT MODAL REFINEMENT
+========================================================= */
+
+.store-device-modal {
+    max-width: 520px;
+    border: 1px solid #e4e7ed;
+    border-radius: 10px;
+}
+
+.store-device-modal-header {
+    padding: 22px 24px 19px;
+}
+
+.store-device-modal-header h2 {
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+.store-device-modal-header p {
+    margin-top: 9px;
+    line-height: 1.5;
+}
+
+.store-device-form-body {
+    padding: 25px 24px 22px;
+    gap: 21px;
+}
+
+.store-device-form-group label {
+    margin-bottom: 10px;
+}
+
+.store-device-form-group input,
+.store-device-form-group select {
+    height: 40px;
+    border-radius: 7px;
+}
+
+.store-device-modal-footer {
+    padding: 16px 24px 18px;
+}
+
+.store-device-cancel-btn,
+.store-device-save-btn {
+    height: 37px;
+    min-width: 90px;
+}
+
+
+/* =========================================================
+   VIEW MODAL
+========================================================= */
+
+.store-device-view-modal {
+    max-width: 520px;
+}
+
+.store-device-view-body {
+    padding: 24px;
+}
+
+.store-device-view-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 20px;
+    margin-bottom: 21px;
+    border-bottom: 1px solid #e8ebf0;
+}
+
+.store-device-view-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: #f0edff;
+    color: #6953d8;
+    font-size: 18px;
+}
+
+.store-device-view-identity > div:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+.store-device-view-identity strong {
+    color: #303a51;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.store-device-view-identity span {
+    margin-top: 4px;
+    color: #929baa;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.store-device-view-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 13px;
+}
+
+.store-device-view-field {
+    min-height: 63px;
+    padding: 13px 14px;
+    border: 1px solid #e8ebf0;
+    border-radius: 8px;
+    background: #fafbfc;
+}
+
+.store-device-view-field.full {
+    grid-column: 1 / -1;
+}
+
+.store-device-view-field span {
+    display: block;
+    margin-bottom: 8px;
+    color: #8993a4;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.store-device-view-field strong {
+    display: block;
+    color: #3b455a;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.store-device-view-status {
+    width: fit-content;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 10px !important;
+}
+
+.store-device-view-status.active {
+    background: #eaf8f0;
+    color: #29985c !important;
+}
+
+.store-device-view-status.inactive {
+    background: #fff4e6;
+    color: #a27a2d !important;
+}
+
+
+/* =========================================================
+   MODAL RESPONSIVE
+========================================================= */
+
+@media (max-width: 600px) {
+    .store-device-modal {
+        max-width: 100%;
+        border-radius: 10px;
+    }
+
+    .store-device-modal-header {
+        padding: 19px 18px 17px;
+    }
+
+    .store-device-form-body,
+    .store-device-view-body {
+        padding: 20px 18px;
+    }
+
+    .store-device-modal-footer {
+        padding: 14px 18px 16px;
+    }
+
+    .store-device-view-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .store-device-view-field.full {
+        grid-column: auto;
+    }
+}
+
