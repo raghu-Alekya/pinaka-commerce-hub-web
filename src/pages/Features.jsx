@@ -109,7 +109,7 @@ export default function Features() {
     if (!actionMenu?.feature) return;
     const selectedFeature = actionMenu.feature;
     closeActionMenu();
-    navigate("/permissions", {
+    navigate(`/permissions/${selectedFeature.id}`, {
       state: {
         featureId: selectedFeature.id,
         featureName: selectedFeature.name,

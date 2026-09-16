@@ -63,6 +63,7 @@ const emptyForm = {
   code: "",
   name: "",
   description: "",
+  category: "",
   status: "Active",
 };
 
@@ -106,7 +107,6 @@ export default function CreateStoreType() {
 
   function resetFilters() {
     setSearch("");
-    setCategoryFilter("");
     setStatusFilter("");
   }
 

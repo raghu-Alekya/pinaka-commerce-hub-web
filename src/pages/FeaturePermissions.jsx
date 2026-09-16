@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../styles/featurepermissions.css";
 
 const initialPermissions = [
@@ -43,19 +43,57 @@ const emptyForm = {
 export default function FeaturePermissions() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { featureId } = useParams();
 
   const selectedFeatureName =
     location.state?.featureName ||
     location.state?.feature?.name ||
-    "Feature";
+    (featureId ? `Feature ${featureId}` : "Feature");
+  const selectedFeatureId =
+    location.state?.featureId || location.state?.feature?.id || featureId || "default";
+  const featureStorageKey = `feature-permissions:${selectedFeatureId}`;
 
-  const [permissions, setPermissions] = useState(initialPermissions);
+  const [permissions, setPermissions] = useState(() => {
+    const storedPermissions = window.localStorage.getItem(featureStorageKey);
+
+    if (storedPermissions) {
+      try {
+        return JSON.parse(storedPermissions);
+      } catch {
+        window.localStorage.removeItem(featureStorageKey);
+      }
+    }
+
+    return selectedFeatureId === "default" ? initialPermissions : [];
+  });
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
 
   const isEditing = editingId !== null;
+
+  useEffect(() => {
+    const storedPermissions = window.localStorage.getItem(featureStorageKey);
+
+    if (storedPermissions) {
+      try {
+        setPermissions(JSON.parse(storedPermissions));
+        return;
+      } catch {
+        window.localStorage.removeItem(featureStorageKey);
+      }
+    }
+
+    setPermissions(selectedFeatureId === "default" ? initialPermissions : []);
+  }, [featureStorageKey, selectedFeatureId]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      featureStorageKey,
+      JSON.stringify(permissions)
+    );
+  }, [featureStorageKey, permissions]);
 
   const updateField = (event) => {
     const { name, value } = event.target;
@@ -173,7 +211,10 @@ export default function FeaturePermissions() {
           </div>
 
           <div>
-            <h1>Feature Permissions</h1>
+            <h1>
+              Feature Permissions
+              <span className="fp-feature-name">{selectedFeatureName}</span>
+            </h1>
             <p>
               Manage permissions for the selected feature.
             </p>
@@ -471,9 +512,6 @@ export default function FeaturePermissions() {
         </div>
       </section>
 
-      <div className="fp-feature-context" aria-hidden="true">
-        {selectedFeatureName}
-      </div>
     </div>
   );
 }

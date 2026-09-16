@@ -1,0 +1,395 @@
+.configure-permissions-page {
+    width:100%;
+    min-height:calc(100vh - 72px);
+    padding:24px 18px 22px;
+    background:#f7f8fb;
+    color:#071a43;
+    font-family:Inter,Arial,sans-serif;
+    box-sizing:border-box
+}
+
+.configure-permissions-page * {
+    box-sizing:border-box
+}
+
+.cp-page-head {
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:20px;
+    padding:0 18px;
+    margin-bottom:18px
+}
+
+.cp-page-head h1 {
+    margin:0;
+    font-size:28px;
+    line-height:1.15;
+    font-weight:700;
+    letter-spacing:-.4px
+}
+
+.cp-page-head p {
+    margin:6px 0 0;
+    color:#7083ad;
+    font-size:15px
+}
+
+.cp-back-btn {
+    height:44px;
+    padding:0 18px;
+    border:1px solid #d7dfed;
+    border-radius:8px;
+    background:#fff;
+    color:#3f36ff;
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer
+}
+
+.cp-details-card,.cp-list-card {
+    border:1px solid #dbe2ee;
+    border-radius:8px;
+    background:#fff
+}
+
+.cp-details-card {
+    padding:26px 26px 24px;
+    margin-bottom:16px
+}
+
+.cp-details-card h2,.cp-list-toolbar h2 {
+    margin:0;
+    color:#071a43;
+    font-size:20px;
+    line-height:1.2;
+    font-weight:700
+}
+
+.cp-details-grid {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:14px;
+    margin-top:22px
+}
+
+.cp-detail-box {
+    min-height:76px;
+    padding:14px 16px;
+    border-radius:7px;
+    background:#f8faff;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:flex-start
+}
+
+.cp-detail-box>span:first-child {
+    margin-bottom:7px;
+    color:#6e83ad;
+    font-size:13px
+}
+
+.cp-detail-box strong {
+    color:#0b1738;
+    font-size:15px;
+    font-weight:600
+}
+
+.cp-description-box {
+    grid-column:span 3
+}
+
+.cp-status-pill {
+    min-width:72px;
+    height:28px;
+    padding:0 11px;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    white-space:nowrap;
+    font-size:12px;
+    font-weight:500
+}
+
+.cp-status-pill b {
+    width:7px;
+    height:7px;
+    border-radius:50%
+}
+
+.cp-status-pill.active {
+    background:#dff5ea;
+    color:#07864e
+}
+
+.cp-status-pill.active b {
+    background:#0b9b5d
+}
+
+.cp-status-pill.inactive {
+    background:#fde7e9;
+    color:#ef2837
+}
+
+.cp-status-pill.inactive b {
+    background:#ff2d3b
+}
+
+.cp-list-card {
+    padding:16px 26px 18px
+}
+
+.cp-list-toolbar {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    margin-bottom:16px
+}
+
+.cp-list-filters {
+    display:grid;
+    grid-template-columns:286px 214px 118px;
+    gap:12px;
+    align-items:center
+}
+
+.cp-search,.cp-select-wrap {
+    position:relative
+}
+
+.cp-search i {
+    position:absolute;
+    left:14px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#8496b7
+}
+
+.cp-search input,.cp-select-wrap select,.cp-reset-btn {
+    width:100%;
+    height:44px;
+    border:1px solid #d4ddeb;
+    border-radius:7px;
+    background:#fff;
+    font:inherit;
+    font-size:13px
+}
+
+.cp-search input {
+    padding:0 13px 0 42px;
+    outline:none
+}
+
+.cp-select-wrap select {
+    appearance:none;
+    padding:0 38px 0 14px;
+    outline:none
+}
+
+.cp-select-wrap i {
+    position:absolute;
+    right:14px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#5370a6;
+    font-size:12px;
+    pointer-events:none
+}
+
+.cp-reset-btn {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    color:#332cff;
+    font-weight:600;
+    cursor:pointer
+}
+
+.cp-table-wrap {
+    overflow-x:auto;
+    border:1px solid #d4ddeb;
+    border-radius:7px
+}
+
+.cp-table {
+    width:100%;
+    min-width:900px;
+    border-collapse:collapse;
+    table-layout:fixed
+}
+
+.cp-col-key {
+    width:17%
+}
+
+.cp-col-name {
+    width:20%
+}
+
+.cp-col-description {
+    width:35%
+}
+
+.cp-col-status {
+    width:14%
+}
+
+.cp-col-actions {
+    width:14%
+}
+
+.cp-table th {
+    height:44px;
+    padding:0 14px;
+    border-bottom:1px solid #d4ddeb;
+    background:#f7f8fa;
+    text-align:left;
+    font-size:12px;
+    font-weight:700
+}
+
+.cp-table th i {
+    margin-left:6px;
+    color:#5470a2;
+    font-size:10px
+}
+
+.cp-table td {
+    height:52px;
+    padding:0 14px;
+    border-bottom:1px solid #dde4ee;
+    color:#10172d;
+    font-size:12px
+}
+
+.cp-table tbody tr:last-child td {
+    border-bottom:0
+}
+
+.cp-description-cell {
+    color:#6e83ad!important
+}
+
+.cp-row-actions {
+    display:flex;
+    align-items:center;
+    gap:12px
+}
+
+.cp-row-actions button {
+    width:38px;
+    height:36px;
+    border:1px solid #d4ddeb;
+    border-radius:6px;
+    background:#fff;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:15px
+}
+
+.cp-row-actions .edit {
+    color:#315cff
+}
+
+.cp-row-actions .copy {
+    color:#253451
+}
+
+.cp-row-actions .delete {
+    border-color:#ffd0d5;
+    background:#fff6f7;
+    color:#ff2738
+}
+
+.cp-list-footer {
+    min-height:92px;
+    padding-top:16px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between
+}
+
+.cp-list-footer>span {
+    color:#6c80aa;
+    font-size:12px
+}
+
+.cp-pagination {
+    display:flex;
+    align-items:center;
+    gap:10px
+}
+
+.cp-pagination button {
+    width:42px;
+    height:42px;
+    border:0;
+    border-radius:7px;
+    background:#f6f7f9;
+    color:#5874a7;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer
+}
+
+.cp-pagination .current {
+    background:#4438ff;
+    color:#fff
+}
+
+@media(max-width:1180px) {
+    .cp-list-toolbar {
+        align-items:flex-start;
+        flex-direction:column
+    }
+
+    .cp-list-filters {
+        width:100%;
+        grid-template-columns:minmax(220px,1fr) 210px 118px
+    }
+
+    .cp-details-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr))
+    }
+
+    .cp-description-box {
+        grid-column:span 1
+    }
+
+}
+
+@media(max-width:700px) {
+    .configure-permissions-page {
+        padding:18px 14px
+    }
+
+    .cp-page-head {
+        padding:0;
+        flex-direction:column
+    }
+
+    .cp-back-btn {
+        width:100%;
+        justify-content:center
+    }
+
+    .cp-details-grid {
+        grid-template-columns:1fr
+    }
+
+    .cp-list-filters {
+        grid-template-columns:1fr
+    }
+
+}
