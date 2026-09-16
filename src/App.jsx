@@ -33,6 +33,7 @@ import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
+import ConfigurePermissions from "./pages/ConfigurePermissions";
 import RoleTemplates from "./pages/Roletemplates";
 import Vendors from "./pages/Vendors";
 import Tenders from "./pages/Tenders";
@@ -241,19 +242,31 @@ export default function App() {
             element={<Placeholder title={title} />}
           />
         ))}
+
+        {/* Features */}
         <Route path="/features" element={<Features />} />
+        <Route
+          path="/features/:featureId/permissions"
+          element={<ConfigurePermissions />}
+        />
+
+        {/* Feature Permissions */}
         <Route path="/permissions" element={<FeaturePermissions />} />
         <Route
           path="/permissions/:featureId"
           element={<FeaturePermissions />}
         />
 
+        {/* Master Setup */}
         <Route path="/vendors" element={<Vendors />} />
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
-        <Route path="/store-types/:storeTypeId" element={<StoreTypeDetails />} />
+        <Route
+          path="/store-types/:storeTypeId"
+          element={<StoreTypeDetails />}
+        />
         <Route
           path="/store-types/:storeTypeId/features"
           element={<StoreTypeFeatures />}
