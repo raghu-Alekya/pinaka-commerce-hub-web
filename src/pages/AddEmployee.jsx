@@ -3,7 +3,6 @@ import PhoneInputModule from "react-phone-input-2";
 
 const PhoneInput = PhoneInputModule.default || PhoneInputModule;
 import "react-phone-input-2/lib/style.css";
-
 import {
   User,
   Camera,
@@ -418,6 +417,7 @@ export default function AddEmployee() {
     role: "",
     merchant: "",
     store: "",
+    merchant: "",
     employeeLoginPin: "",
     manager: "",
     username: "",
@@ -760,6 +760,7 @@ export default function AddEmployee() {
 
   const handleSave = (e) => {
     e.preventDefault();
+    console.log("Employee details:", formData);
 
     console.log("Employee details:", formData);
 
@@ -1114,6 +1115,71 @@ export default function AddEmployee() {
                 WORK INFORMATION
             ================================================= */}
 
+            <section className="employee-card">
+              <CardHeader
+                icon={<BriefcaseBusiness size={21} />}
+                title="Work Information"
+                description="Assign role, merchant and store for the employee."
+              />
+
+              <div className="employee-form-grid two-columns">
+                <SelectField
+                  label="Role"
+                  required
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  placeholder="Select role"
+                  options={[
+                    "Admin",
+                    "Store Manager",
+                    "Cashier",
+                    "Sales Associate",
+                  ]}
+                />
+
+                <SelectField
+                  label="Merchant"
+                  required
+                  name="merchant"
+                  value={formData.merchant}
+                  onChange={handleChange}
+                  placeholder="Select merchant"
+                  options={[
+                    "FreshMart",
+                    "TechWorld",
+                    "FashionHub",
+                    "ElectroPlus",
+                  ]}
+                />
+
+                <SelectField
+                  label="Store"
+                  required
+                  name="store"
+                  value={formData.store}
+                  onChange={handleChange}
+                  placeholder="Select store"
+                  options={[
+                    "Banjara Hills",
+                    "Jubilee Hills",
+                    "Madhapur",
+                    "Hitech City",
+                    "Gachibowli",
+                  ]}
+                />
+
+                <SelectField
+                  label="Reporting Manager"
+                  name="manager"
+                  value={formData.manager}
+                  onChange={handleChange}
+                  placeholder="Select manager (optional)"
+                  options={["Santhosh Kumar", "Priya Desai", "Arjun Reddy"]}
+                />
+              </div>
+             </section>
+
             <section className="employee-card work-information-card">
               <CardHeader
                 icon={<BriefcaseBusiness size={21} />}
@@ -1215,6 +1281,8 @@ export default function AddEmployee() {
               </div>
             </section>
 
+            </section>
+
             {/* =================================================
                 ACCOUNT SETTINGS
             ================================================= */}
@@ -1245,6 +1313,7 @@ export default function AddEmployee() {
                   </label>
 
                   <div className="password-input">
+                    <input
                    <input
                       type={showPassword ? "text" : "password"}
                       name="password"
@@ -1292,6 +1361,7 @@ export default function AddEmployee() {
     </div>
   );
 }
+ {/* ========================================================
 
 /* =========================================================
    STORE + ROLE ASSIGNMENT
@@ -1480,8 +1550,7 @@ function FormField({
 
         {required && <span> *</span>}
       </label>
-
-    <input
+      <input
         type={type}
         name={name}
         placeholder={placeholder}
@@ -1519,12 +1588,11 @@ function SelectField({
       </label>
 
       <div className="employee-select">
-        <select
+        <select name={name} value={value} onChange={onChange}>
           name={name}
           value={value}
           onChange={onChange}
           className={error ? "field-invalid" : ""}
-        >
           {!value && <option value="">{placeholder}</option>}
 
           {options.map((option) => (
