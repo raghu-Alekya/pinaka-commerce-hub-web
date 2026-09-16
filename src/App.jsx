@@ -36,11 +36,6 @@ import FeaturePermissions from "./pages/FeaturePermissions";
 import RoleTemplates from "./pages/Roletemplates";
 import Vendors from "./pages/Vendors";
 import Tenders from "./pages/Tenders";
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 472c643c00101756878555fcf35243c29654264e
 
 const placeholders = [
   "Cash Management",
@@ -251,16 +246,10 @@ export default function App() {
 
         <Route path="/features" element={<Features />} />
         <Route path="/permissions" element={<FeaturePermissions />} />
-<<<<<<< HEAD
-=======
 
         <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/vendors" element={<Vendors />} />
         <Route path="/tenders" element={<Tenders />} />
-<<<<<<< HEAD
->>>>>>> 472c643 (Adding vendor and tendors screens)
-=======
->>>>>>> 472c643c00101756878555fcf35243c29654264e
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
