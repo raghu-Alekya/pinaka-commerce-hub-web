@@ -3,7 +3,6 @@ import PhoneInputModule from "react-phone-input-2";
 
 const PhoneInput = PhoneInputModule.default || PhoneInputModule;
 import "react-phone-input-2/lib/style.css";
-
 import {
   User,
   Camera,
@@ -418,6 +417,7 @@ export default function AddEmployee() {
     role: "",
     merchant: "",
     store: "",
+    merchant: "",
     employeeLoginPin: "",
     manager: "",
     username: "",
@@ -760,6 +760,7 @@ export default function AddEmployee() {
 
   const handleSave = (e) => {
     e.preventDefault();
+    console.log("Employee details:", formData);
 
     console.log("Employee details:", formData);
 
@@ -1245,7 +1246,7 @@ export default function AddEmployee() {
                   </label>
 
                   <div className="password-input">
-                   <input
+                    <input
                       type={showPassword ? "text" : "password"}
                       name="password"
                       placeholder="Enter temporary password"
@@ -1357,86 +1358,53 @@ function StoreRoleAssignment({
 
         <div className="role-multi-select-wrapper">
           <div
-            className={`role-multi-select ${roleError ? "field-invalid" : ""}`}
-            onClick={() => setOpen((prev) => !prev)}
-            role="button"
-            tabIndex={0}
-            aria-expanded={open}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                setOpen((prev) => !prev);
-              }
-            }}
+            className={`role-multi-select ${open ? "open" : ""} ${
+              roleError ? "field-invalid" : ""
+            }`}
+            onClick={() => setOpen(!open)}
           >
-            <div className="selected-role-chips">
-              {assignment.roles.length > 0 ? (
-                assignment.roles.map((role) => (
-                  <span className="role-chip" key={role}>
-                    {role}
+            <span>
+              {assignment.roles.length === 0
+                ? "Select role(s)"
+                : assignment.roles.join(", ")}
+            </span>
 
-                    <button
-                      type="button"
-                      className="remove-role-chip"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        toggleRole(role);
-                      }}
-                      aria-label={`Remove ${role}`}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))
-              ) : (
-                <span className="role-placeholder">Select role(s)</span>
-              )}
-            </div>
-
-            <ChevronDown
-              size={17}
-              className={
-                open
-                  ? "role-select-chevron open"
-                  : "role-select-chevron"
-              }
-            />
+            <ChevronDown size={17} />
           </div>
 
-          {roleError && <span className="field-error">{roleError}</span>}
-
           {open && (
-            <div className="role-options-menu">
-              {availableRoles.map((role) => (
-                <button
-                  type="button"
-                  key={role}
-                  className={
-                    assignment.roles.includes(role)
-                      ? "role-option selected"
-                      : "role-option"
-                  }
-                  onClick={() => toggleRole(role)}
-                >
-                  <span>{role}</span>
+            <div className="role-dropdown">
+              {availableRoles.map((role) => {
+                const checked = assignment.roles.includes(role);
 
-                  {assignment.roles.includes(role) && <span>✓</span>}
-                </button>
-              ))}
+                return (
+                  <label key={role} className="role-checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleRole(role)}
+                    />
+
+                    <span>{role}</span>
+                  </label>
+                );
+              })}
             </div>
           )}
         </div>
+
+        {roleError && <span className="field-error">{roleError}</span>}
       </div>
 
       <button
         type="button"
-        className="delete-store-assignment-btn"
+        className="remove-assignment-btn"
         onClick={() => onRemove(assignment.id)}
-        aria-label="Remove store assignment"
-        title="Remove store assignment"
       >
-        🗑
+        Remove
       </button>
+
+      {storeError && <span className="field-error">{storeError}</span>}
     </div>
   );
 }
@@ -1447,8 +1415,8 @@ function StoreRoleAssignment({
 
 function CardHeader({ icon, title, description }) {
   return (
-    <div className="employee-card-header">
-      <div className="employee-card-icon">{icon}</div>
+    <div className="card-header">
+      <div className="card-icon">{icon}</div>
 
       <div>
         <h2>{title}</h2>
@@ -1460,7 +1428,7 @@ function CardHeader({ icon, title, description }) {
 }
 
 /* =========================================================
-   INPUT FIELD
+   FORM FIELD
 ========================================================= */
 
 function FormField({
@@ -1476,21 +1444,18 @@ function FormField({
   return (
     <div className="employee-field">
       <label>
-        {label}
-
-        {required && <span> *</span>}
+        {label} {required && <span>*</span>}
       </label>
 
-    <input
+      <input
         type={type}
         name={name}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-      />
-        autoComplete={name === "username" ? "off" : undefined}
         className={error ? "field-invalid" : ""}
-   
+      />
+
       {error && <span className="field-error">{error}</span>}
     </div>
   );
@@ -1506,16 +1471,14 @@ function SelectField({
   name,
   value,
   onChange,
+  options,
   placeholder,
-  options = [],
   error,
 }) {
   return (
     <div className="employee-field">
       <label>
-        {label}
-
-        {required && <span> *</span>}
+        {label} {required && <span>*</span>}
       </label>
 
       <div className="employee-select">
@@ -1525,17 +1488,18 @@ function SelectField({
           onChange={onChange}
           className={error ? "field-invalid" : ""}
         >
-          {!value && <option value="">{placeholder}</option>}
+          <option value="">{placeholder}</option>
 
-          {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
             </option>
           ))}
         </select>
 
         <ChevronDown size={17} className="employee-select-arrow" />
       </div>
+
       {error && <span className="field-error">{error}</span>}
     </div>
   );

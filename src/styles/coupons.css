@@ -632,20 +632,17 @@
 }
 
 
-/* FAST IMPORT */
-
-.coupon-sync-import {
-    background: #6c4cff;
-    color: #ffffff;
-    border-color: #6c4cff;
+.coupon-row-clickable {
+    cursor: pointer;
 }
 
-.coupon-sync-import:hover:not(:disabled) {
-    background: #5b3fe0;
-    border-color: #5b3fe0;
-    box-shadow: 0 4px 12px rgba(108, 76, 255, 0.20);
+.coupon-row-clickable:hover {
+    background: #faf9ff;
 }
 
+.coupon-row-clickable td {
+    transition: background 0.15s ease;
+}
 
 /* LATEST UPDATES */
 

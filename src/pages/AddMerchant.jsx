@@ -15,7 +15,7 @@ export function formatGeneratedCode(kind, sequence) {
 // Sample master data. Replace with your API catalog.
 const catalog=[{n:'Fastkeys',a:['View','Use']},{n:'Refunds',a:['View','Create','Approve','Override']},{n:'Safe Drop',a:['View','Create']},{n:'Loyalty',a:['View','Enroll','Redeem']},{n:'Delivery',a:['View','Manage']},{n:'Weighing Scale',a:['Use']},{n:'Payroll',a:['View','Manage']},{n:'KDS',a:['View','Manage']},{n:'Service Charges',a:['View','Configure']}];
 const verticals={Grocery:{f:[0,1,2,3,4,5,6],r:['Store Manager','Shift Manager','Cashier','Inventory Clerk','Receiving Clerk']},Convenience:{f:[0,1,2,3,6],r:['Store Manager','Shift Manager','Cashier','Inventory Clerk']},Restaurant:{f:[0,1,3,4,6,7,8],r:['Restaurant Manager','Shift Manager','Cashier','Server','Kitchen Manager','Kitchen Staff']},Liquor:{f:[0,1,2,3,6],r:['Store Manager','Cashier']},Kiosk:{f:[0,1,3],r:['Store Manager','Cashier']},Fuel:{f:[0,1,2,3],r:['Store Manager','Shift Manager','Cashier','Fuel Attendant']}};
-const packages=[{name:'Starter',f:[0,1,2,5],stores:1,devices:3},{name:'Pro',f:[0,1,2,3,4,5,7,8],stores:5,devices:15},{name:'Enterprise',f:[0,1,2,3,4,5,6,7,8],stores:null,devices:null}];const regions={'United States':{currency:'USD',prices:[29,99,249]},India:{currency:'INR',prices:[999,3499,8999]},Canada:{currency:'CAD',prices:[39,129,329]},'United Kingdom':{currency:'GBP',prices:[25,85,219]},Australia:{currency:'AUD',prices:[45,149,379]}};
+const packages=[{name:'Starter',f:[0,1,2,5],stores:1,devices:3,employees:5},{name:'Pro',f:[0,1,2,3,4,5,7,8],stores:5,devices:15,employees:50},{name:'Enterprise',f:[0,1,2,3,4,5,6,7,8],stores:null,devices:null,employees:null}];const regions={'United States':{currency:'USD',prices:[29,99,249]},India:{currency:'INR',prices:[999,3499,8999]},Canada:{currency:'CAD',prices:[39,129,329]},'United Kingdom':{currency:'GBP',prices:[25,85,219]},Australia:{currency:'AUD',prices:[45,149,379]}};
 
 
 
@@ -51,6 +51,11 @@ function reserveLocalSequence({kind,requestId}) {
   const next=codeQueue.then(reserve);codeQueue=next.catch(()=>{});return next;
 }
 
+function employeeCountFor(state) {
+  if (Array.isArray(state.employees)) return state.employees.length;
+  const count = state.employeeCount;
+  return count !== null && count !== undefined && count !== '' && Number.isInteger(Number(count)) && Number(count) >= 0 ? Number(count) : null;
+}
 function validateAddress(value, label) {
   const rule=countryRules[value.country];
   if(!rule) return label+': select a supported country.';
@@ -91,7 +96,7 @@ function createStore(code='') {
     off:catalog.map((_,index)=>index),hours:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(day=>({day,status:'',open:'',close:'',shifts:''}))};
 }
 function initialState() {
-  return {step:0,furthest:0,done:false,store:0,plan:-1,cycle:'',start:'',enterpriseStores:'',enterpriseDevices:'',
+  return {step:0,furthest:0,done:false,store:0,plan:-1,cycle:'',start:'',enterpriseStores:'',enterpriseDevices:'',enterpriseEmployees:'',employeeCount:0,
     merchant:{code:'',name:'',business:'',display:'',email:'',phone:'',country:'',city:'',state:'',address:'',postal:''},
     phase:'merchant',subscriptionStatus:'Pending activation',stores:[],roles:[],activeRole:0,devices:[]};
 }
@@ -148,8 +153,9 @@ export function validate(state) {
       if (!selectedPlan) return 'Select a subscription plan.';
       if (!['Monthly','Annual'].includes(state.cycle)) return 'Select a billing cycle.';
       if (!renewalDate(state.start, state.cycle)) return 'Enter a valid subscription start date.';
-      const limits = [selectedPlan.stores ?? +state.enterpriseStores, selectedPlan.devices ?? +state.enterpriseDevices];
+      const limits = [selectedPlan.stores ?? +state.enterpriseStores, selectedPlan.devices ?? +state.enterpriseDevices, selectedPlan.employees ?? +state.enterpriseEmployees];
       if (!limits.every(value => Number.isInteger(value) && value > 0)) return 'License limits must be positive whole numbers.';
+      if (employeeCountFor(state) !== null && employeeCountFor(state) > limits[2]) return 'The selected plan cannot accommodate registered employees.';
       if (state.stores.length > limits[0] || state.devices.length > limits[1]) return 'The selected plan cannot accommodate existing stores or devices.';
     }
     return '';
@@ -183,8 +189,10 @@ export function validate(state) {
   if(stage>=2 && !['Monthly','Annual'].includes(state.cycle)) return 'Select a billing cycle.';
   const storeLimit = plan?.stores ?? +state.enterpriseStores;
   const deviceLimit = plan?.devices ?? +state.enterpriseDevices;
+  const employeeLimit = plan?.employees ?? +state.enterpriseEmployees;
   if (stage >= 2) {
-    if (![storeLimit, deviceLimit].every(value => Number.isInteger(value) && value > 0)) return 'License limits must be positive whole numbers.';
+    if (![storeLimit, deviceLimit, employeeLimit].every(value => Number.isInteger(value) && value > 0)) return 'License limits must be positive whole numbers.';
+    if (employeeCountFor(state) !== null && employeeCountFor(state) > employeeLimit) return 'Employee limit exceeded for the selected plan.';
     const licensed = state.stores.filter(store => store.licensed).length;
     if (!licensed || licensed > storeLimit) return `Select between 1 and ${storeLimit} store licenses.`;
     if (!renewalDate(state.start, state.cycle)) return 'Enter a valid subscription start date.';
@@ -288,6 +296,9 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   const plan = packages[state.plan] || {name:'',f:[],stores:0,devices:0};
   const storeLimit = plan.stores ?? Number(state.enterpriseStores);
   const deviceLimit = plan.devices ?? Number(state.enterpriseDevices);
+  const employeeLimit = plan.employees ?? Number(state.enterpriseEmployees);
+  const employeeCount = employeeCountFor(state);
+  const employeeUsage = `${employeeCount ?? '—'} / ${employeeLimit || 'Not set'}`;
   const licensed = state.stores.filter(item => item.licensed).length;
   const region = regions[state.merchant.country] || {currency:'',prices:[]};
   const formatPrice = amount => !region.currency || !Number.isFinite(amount) ? '—' : new Intl.NumberFormat('en', { style: 'currency', currency: region.currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
@@ -396,7 +407,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
           <div><strong>{plan.name}</strong><span>{price} / {state.cycle === 'Annual' ? 'year' : 'month'}</span></div>
         </div>
         <ul className="pch-feature-checklist">
-          {[storeLimit + ' Store' + (storeLimit === 1 ? '' : 's'), 'Up to ' + deviceLimit + ' Devices', ...plan.f.slice(0,4).map(index=>catalog[index].n)].map(item=><li key={item}><span aria-hidden="true">✓</span>{item}</li>)}
+          {[storeLimit + ' Store' + (storeLimit === 1 ? '' : 's'), 'Up to ' + deviceLimit + ' Devices', 'Up to ' + employeeLimit + ' Employees', ...plan.f.slice(0,4).map(index=>catalog[index].n)].map(item=><li key={item}><span aria-hidden="true">✓</span>{item}</li>)}
         </ul>
         <details className="pch-all-features"><summary>View all features</summary><ul>{plan.f.map(index=><li key={index}>{catalog[index].n}</li>)}</ul></details>
         <div className="pch-review-links">{editButton('Change plan',2)}{editButton('Edit merchant details',0)}</div>
@@ -445,7 +456,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
         <Detail label="Contract amount" value={price} />
         <Detail label="Renewal" value={renewalDate(state.start, state.cycle)} />
         <Detail label="Licensed stores" value={`${licensed} / ${storeLimit}`} />
-        <Detail label="Devices" value={`${state.devices.length} / ${deviceLimit}`} />
+        <Detail label="Devices" value={`${state.devices.length} / ${deviceLimit}`} /><Detail label="Employees" value={employeeUsage}/>
         <Detail label="Merchant roles" value={state.roles.length} />
       </div><div><Detail label="Start date" value={state.start} /><Detail label="Currency" value={region.currency} /><Detail label="Remaining device licenses" value={Math.max(0,deviceLimit-state.devices.length)} /></div></div></Panel>
       <Panel title="Store locations" action={editButton('Edit locations', 1)}><Table headings={['Store ID','Store','Template','License','Action']}
@@ -521,7 +532,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
         <Panel title="Merchant subscription"><div className="pch-row pch-between"><h3>{state.merchant.display}</h3><span className="pch-pill">{state.merchant.country} · {region.currency}</span></div>
           <div className="pch-plans">{packages.map((item, index) => <div key={item.name} className={`pch-plan ${state.plan === index ? 'pch-selected' : ''}`}>
             <h2>{item.name}</h2><div className="pch-price">{formatPrice(region.prices[index])}</div><span className="pch-small pch-muted">per merchant / month</span>
-            <div>{item.stores ?? 'Custom'} stores<br />{item.devices ?? 'Custom'} devices</div><details><summary>Included features ({item.f.length})</summary><ul>{item.f.map(i=><li key={i}>{catalog[i].n}</li>)}</ul></details>
+            <div>{item.stores ?? 'Custom'} stores<br />{item.devices ?? 'Custom'} devices<br />{item.employees ?? 'Custom'} employees</div><details><summary>Included features ({item.f.length})</summary><ul>{item.f.map(i=><li key={i}>{catalog[i].n}</li>)}</ul></details>
             <button type="button" onClick={() => patch({ plan: index })}>{state.plan === index ? '✓ Selected' : `Select ${item.name}`}</button>
           </div>)}</div>
         </Panel>
@@ -531,6 +542,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
           <Field label="Renewal date" value={renewalDate(state.start, state.cycle)} readOnly /><Field label="Agreement price" value={`${price} / ${state.cycle === 'Annual' ? 'year' : 'month'}`} readOnly />
           {state.plan >= 0 && plan.stores == null && <Field label="Licensed stores" value={state.enterpriseStores} type="number" min="1" step="1" onChange={value => patch({ enterpriseStores: value })} />}
           {state.plan >= 0 && plan.devices == null && <Field label="Licensed devices" value={state.enterpriseDevices} type="number" min="1" step="1" onChange={value => patch({ enterpriseDevices: value })} />}
+          {state.plan >= 0 && plan.employees == null && <Field label="Licensed employees" value={state.enterpriseEmployees} type="number" min="1" step="1" onChange={value => patch({ enterpriseEmployees: value })} />}
         </div><div className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</div></Panel>
 
       </>;
@@ -616,13 +628,16 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
         <Detail label="Billing cycle" value={state.cycle}/>
         <Detail label="Sample agreement amount" value={price}/>
         <Detail label="Next renewal date" value={state.subscriptionStatus === 'Cancelled' ? 'Not renewing' : renewalDate(state.start,state.cycle)}/>
-        <Detail label="Payment" value="Not collected in this flow"/>
+        <Detail label="Payment" value="Not collected in this flow"/><Detail label="Employee allowance" value={employeeLimit || 'Not set'}/>
       </div></div></Panel>
       <Panel title="Usage & Limits"><div className="pch-grid">
         <div className="pch-usage"><Detail label="Registered stores" value={state.stores.length+' / '+storeLimit}/>
           <progress aria-label="Store usage" value={state.stores.length} max={storeLimit || 1}/></div>
         <div className="pch-usage"><Detail label="Registered devices" value={state.devices.length+' / '+deviceLimit}/>
           <progress aria-label="Device usage" value={state.devices.length} max={deviceLimit || 1}/></div>
+        <div className="pch-usage"><Detail label="Registered employees" value={employeeUsage}/>
+          {employeeCount !== null && employeeLimit > 0 ? <progress aria-label="Employee usage" value={employeeCount} max={employeeLimit}/> : <p className="pch-muted">Employee usage is not available.</p>}
+        </div>
       </div><div className="pch-note">Current sample plans use a shared device allowance. Store types control relevance; the subscription controls entitlement.</div></Panel>
       <Panel title="Included Features"><div className="pch-row">{plan.f.map(index=><span className="pch-pill" key={index}>{catalog[index].n}</span>)}</div></Panel>
       <Panel title="Payment History">
@@ -688,7 +703,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
       <p>Welcome to Pinaka Commerce Hub, {state.merchant.business}.</p>
       <div className="pch-success-details">
         <Detail label="Plan" value={<strong>{plan.name}</strong>}/>
-        <Detail label="Billing Cycle" value={state.cycle}/>
+        <Detail label="Billing Cycle" value={state.cycle}/><Detail label="Employees" value={employeeUsage}/>
         <Detail label="Amount" value={<strong>{price} / {state.cycle==='Annual'?'year':'month'}</strong>}/>
         <Detail label="Subscription ID" value={state.subscriptionId || 'Pending assignment'}/>
         <Detail label="Start Date" value={state.start}/>
@@ -785,7 +800,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
 export function onboardingToRow(data) {
   const now=new Date();
   return {id:data.merchant.code,name:data.merchant.business,email:data.merchant.email,phone:data.merchant.phone,
-    country:data.merchant.country,state:data.merchant.state,storeLimit:packages[data.plan]?.stores ?? Number(data.enterpriseStores),stores:data.stores.length,plan:packages[data.plan]?.name||'',status:'Inactive',createdAt:now.toISOString(),joined:now.toLocaleDateString(),active:'—',
+    employeeCount:employeeCountFor(data),employeeLimit:packages[data.plan]?.employees ?? Number(data.enterpriseEmployees),country:data.merchant.country,state:data.merchant.state,storeLimit:packages[data.plan]?.stores ?? Number(data.enterpriseStores),stores:data.stores.length,plan:packages[data.plan]?.name||'',status:'Inactive',createdAt:now.toISOString(),joined:now.toLocaleDateString(),active:'—',
     initials:data.merchant.business.trim().split(/\s+/).map(word=>word[0]).slice(0,2).join('').toUpperCase(),_onboarding:structuredClone(data)};
 }
 
@@ -818,6 +833,8 @@ export function merchantDetailToDraft(result, fallback={}) {
     return {...store,name:item.storeName||item.name||'',type:Object.keys(verticals).find(name=>name.toLowerCase()===type)||'',country:item.country||raw.country||'',city:item.city||a.city||'',state:item.state||a.state||'',address:typeof a==='string'?a:a.street||'',postal:item.postalCode||item.zip||a.zipCode||'',timezone:item.timezone||'',url:item.baseUrl||item.url||'',logo:item.logo||'',licensed:item.licensed===true,off:Array.isArray(item.off)?item.off:store.off,hours:Array.isArray(item.hours)&&item.hours.length===7?item.hours:store.hours};
   });
   draft.roles=Array.isArray(raw.roles)?raw.roles.filter(role=>role.name&&Array.isArray(role.perms)&&role.perms.length===catalog.length).map((role,index)=>({...role,id:role.id||'saved-role-'+index,source:role.source||'Custom',scope:role.scope||'Store'})):[];
+  draft.employeeCount=raw.employeeCount ?? result.merchant?.employeeCount ?? fallback.employeeCount ?? (Array.isArray(raw.employees)?raw.employees.length:null);
+  draft.enterpriseEmployees=raw.enterpriseEmployees ?? subscription.employeeLimit ?? '';
   draft.devices=Array.isArray(raw.devices)?raw.devices.map(device=>({...device,store:typeof device.store==='number'?device.store:draft.stores.findIndex(store=>store.code===String(device.storeId))})):[];
   return draft;
 }

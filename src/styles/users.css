@@ -943,3 +943,103 @@
         justify-content: center;
     }
 }
+/* =========================================================
+   USER TABLE ACTIONS
+========================================================= */
+
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* =========================================================
+   VIEW DETAILS - PROFILE PHOTO
+========================================================= */
+
+.view-details-image {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 1px solid #e5e7eb;
+}
+
+
+/* =========================================================
+   VIEW DETAILS - STORE ASSIGNMENTS
+========================================================= */
+
+.view-details-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.view-details-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+.view-details-list-item > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.view-details-list-item strong {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.view-details-list-item small {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   VIEW DETAILS - STATUS
+========================================================= */
+
+.detail-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.detail-status.active {
+    color: #166534;
+    background: #dcfce7;
+}
+
+.detail-status.inactive {
+    color: #991b1b;
+    background: #fee2e2;
+}
+
+.detail-status.pending {
+    color: #92400e;
+    background: #fef3c7;
+}

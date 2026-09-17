@@ -3,11 +3,14 @@ const REFRESH_KEY = "pch.refreshToken";
 const USER_KEY = "pch.sessionUser";
 const REMEMBER_KEY = "pch.rememberMe";
 
-let accessToken =
-  sessionStorage.getItem(ACCESS_KEY) || localStorage.getItem(ACCESS_KEY);
+let accessToken = null;
+
+function getStoredValue(key) {
+  return sessionStorage.getItem(key) || localStorage.getItem(key) || null;
+}
 
 export function getAccessToken() {
-  return accessToken;
+  return accessToken || getStoredValue(ACCESS_KEY);
 }
 
 export function setAccessToken(token, remember = getRememberMe()) {
@@ -22,7 +25,7 @@ export function setAccessToken(token, remember = getRememberMe()) {
 }
 
 export function getRefreshToken() {
-  return sessionStorage.getItem(REFRESH_KEY) || localStorage.getItem(REFRESH_KEY);
+  return getStoredValue(REFRESH_KEY);
 }
 
 export function setRefreshToken(token, remember = false) {

@@ -27,6 +27,7 @@ import "./styles/StoreTypeFeatures.css";
 import "./styles/StoreTypeRoleTemplates.css";
 import "./styles/features.css";
 import "./styles/featurepermissions.css";
+import "./styles/configurepermissions.css";
 import "./styles/Roletemplates.css";
 import "./styles/vendors.css";
 import "./styles/tenders.css";

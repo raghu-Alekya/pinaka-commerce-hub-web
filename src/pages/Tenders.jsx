@@ -134,7 +134,15 @@ export default function Tenders() {
 
       <form className="tenders-form" onSubmit={saveTender}>
         <div className="tenders-form-heading">
-          <h2>{editingId ? "Edit Tender" : "Add Tender"}</h2>
+          <div className="tenders-heading-content">
+            <div className="tenders-heading-icon">
+              <i className="bi bi-cash-coin" />
+            </div>
+            <div>
+              <h2>{editingId ? "Edit Tender" : "Add Tender"}</h2>
+              <p>Provide the tender details and payment rules.</p>
+            </div>
+          </div>
           {editingId && (
             <button type="button" className="tenders-link-button" onClick={resetForm}>
               Cancel edit
@@ -142,11 +150,11 @@ export default function Tenders() {
           )}
         </div>
         <div className="tenders-form-grid">
-          <label>Tender Name *<input name="name" value={form.name} onChange={handleChange} placeholder="e.g. Store Credit" required /></label>
-          <label>Tender Code *<input name="code" value={form.code} onChange={handleChange} placeholder="e.g. TND-CREDIT" required /></label>
-          <label>Type<select name="type" value={form.type} onChange={handleChange}><option>Cash</option><option>Card</option><option>EBT</option><option>Wallet</option></select></label>
-          <label>Availability<select name="availability" value={form.availability} onChange={handleChange}><option>All stores</option><option>Selected store types</option><option>Selected merchants</option><option>Selected stores</option></select></label>
-          <label>Status<select name="status" value={form.status} onChange={handleChange}><option>Active</option><option>Inactive</option></select></label>
+          <label><span>Tender Name <b>*</b></span><input name="name" value={form.name} onChange={handleChange} placeholder="e.g. Store Credit" required /></label>
+          <label><span>Tender Code <b>*</b></span><input name="code" value={form.code} onChange={handleChange} placeholder="e.g. TND-CREDIT" required /></label>
+          <label><span>Type</span><select name="type" value={form.type} onChange={handleChange}><option>Cash</option><option>Card</option><option>EBT</option><option>Wallet</option></select></label>
+          <label><span>Availability</span><select name="availability" value={form.availability} onChange={handleChange}><option>All stores</option><option>Selected store types</option><option>Selected merchants</option><option>Selected stores</option></select></label>
+          <label><span>Status</span><select name="status" value={form.status} onChange={handleChange}><option>Active</option><option>Inactive</option></select></label>
         </div>
         <div className="tenders-rules">
           <span>Payment Rules</span>

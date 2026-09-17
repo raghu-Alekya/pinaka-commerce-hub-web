@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-const storeType = {
+const initialStoreType = {
   code: "RESTAURANT",
   name: "Restaurant",
   status: "Active",
@@ -12,17 +12,8 @@ const storeType = {
 export default function StoreTypeDetails() {
   const navigate = useNavigate();
   const { storeTypeId } = useParams();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [form, setForm] = useState(storeType);
 
-  function updateField(event) {
-    const { name, value } = event.target;
-
-    setForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
-  }
+  const [form, setForm] = useState(initialStoreType);
 
   return (
     <section className="store-type-details-page">
@@ -36,125 +27,119 @@ export default function StoreTypeDetails() {
       </button>
 
       <div className="store-type-details-heading">
-        <div>
-          <div className="store-type-title-line">
-            <h1>{form.name}</h1>
-            <span className="store-type-active-badge">
-              <i className="bi bi-circle-fill" />
-              {form.status}
-            </span>
-          </div>
+        <div className="store-type-title-line">
+          <h1>{form.name}</h1>
 
-          <p>
-            Store type for restaurant vertical with full service and quick
-            service operations.
-          </p>
+          <span
+            className={`store-type-active-badge ${
+              form.status === "Inactive" ? "inactive" : ""
+            }`}
+          >
+            <i className="bi bi-circle-fill" />
+            {form.status}
+          </span>
         </div>
+
+        <p>
+          Store type for restaurant vertical with full service and quick
+          service operations.
+        </p>
       </div>
 
       <nav className="store-type-tabs" aria-label="Store type sections">
-        <button
-          type="button"
-          className={activeTab === "overview" ? "active" : ""}
-          onClick={() => setActiveTab("overview")}
-        >
+        <button type="button" className="active">
           Overview
         </button>
 
-       <button
+        <button
           type="button"
-         onClick={() => navigate(`/store-types/${storeTypeId}/features`)}
->
+          onClick={() => navigate(`/store-types/${storeTypeId}/features`)}
+        >
           Features
         </button>
 
         <button
           type="button"
-          className={activeTab === "roles" ? "active" : ""}
-          onClick={() => setActiveTab("roles")}
+          onClick={() =>
+            navigate(`/store-types/${storeTypeId}/role-templates`)
+          }
         >
           Role Templates
         </button>
-
       </nav>
 
-      {activeTab === "overview" ? (
-        <section className="store-type-details-card">
-          <div className="store-type-details-card-heading">
-            <div className="store-type-details-icon">
-              <i className="bi bi-record-circle" />
-            </div>
+      <section className="store-type-details-card">
+        <div className="store-type-details-card-heading">
+          <div className="store-type-details-icon">
+            <i className="bi bi-info-circle" />
+          </div>
 
+          <div>
             <h2>Basic Information</h2>
+            <p>View and update the core store type details.</p>
           </div>
+        </div>
 
-          <div className="store-type-details-grid">
-            <label className="store-type-details-field">
-              <span>
-                Store Type Code <b>*</b>
-              </span>
-
-              <input
-                name="code"
-                value={form.code}
-                onChange={updateField}
-              />
-            </label>
-
-            <label className="store-type-details-field">
-              <span>Status</span>
-
-              <select
-                name="status"
-                value={form.status}
-                onChange={updateField}
-                className="store-type-details-status"
-              >
-                <option value="Active">● Active</option>
-                <option value="Inactive">● Inactive</option>
-              </select>
-            </label>
-          </div>
-
-          <label className="store-type-details-field store-type-details-name">
+        <div className="store-type-details-grid">
+          <label className="store-type-details-field">
             <span>
-              Store Type Name <b>*</b>
+              Store Type Code <b>*</b>
+            </span>
+            <input
+             name="code"
+              value={form.code}
+               readOnly
+               />
+            <small>
+              Use uppercase letters, numbers, and underscores only.
+            </small>
+          </label>
+
+          <label className="store-type-details-field">
+            <span>
+              Status <b>*</b>
             </span>
 
             <input
-              name="name"
-              value={form.name}
-              onChange={updateField}
-            />
-          </label>
-
-          <label className="store-type-details-field store-type-details-description">
-            <span>
-              Description <b>*</b>
-            </span>
-
-            <textarea
-              name="description"
-              maxLength="500"
-              value={form.description}
-              onChange={updateField}
+              name="status"
+              value={form.status}
+              readOnly
+              className="store-type-details-status"
             />
 
-            <small>{form.description.length}/500</small>
+            <small>Inactive types cannot be used for new stores.</small>
           </label>
-        </section>
-      ) : (
-        <section className="store-type-details-card store-type-empty-tab">
-          <i className="bi bi-gear" />
-          <h2>
-            {activeTab === "features" && "Features"}
-            {activeTab === "roles" && "Role Templates"}
-          </h2>
-          <p>
-            Configure this store type section here.
-          </p>
-        </section>
-      )}
+        </div>
+
+        <label className="store-type-details-field store-type-details-name">
+          <span>
+            Store Type Name <b>*</b>
+          </span>
+
+          <input
+            name="name"
+            value={form.name}
+            readOnly
+            maxLength="80"
+          />
+        </label>
+
+        <label className="store-type-details-field store-type-details-description">
+          <span>
+            Description
+          </span>
+
+          <textarea
+            name="description"
+            value={form.description}
+            readOnly
+            maxLength="500"
+          />
+
+          <small>{form.description.length}/500</small>
+        </label>
+
+      </section>
     </section>
   );
 }
