@@ -116,7 +116,7 @@ export default function FeaturePermissions() {
     const name = String(form.name || "").trim();
     const description = String(form.description || "").trim();
     const status = String(form.status || "ACTIVE").trim().toUpperCase();
-
+//
     if (!featureId) return setError("Please select a feature.");
     if (!permissionKey) return setError("Permission key is required.");
     if (!name) return setError("Permission name is required.");

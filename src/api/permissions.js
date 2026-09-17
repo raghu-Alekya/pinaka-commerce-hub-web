@@ -13,6 +13,7 @@ export async function listPermissions(params = {}) {
       query.append(key, value);
     }
   });
+  //
 
   const queryString = query.toString();
 

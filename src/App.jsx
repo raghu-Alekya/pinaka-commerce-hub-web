@@ -255,7 +255,7 @@ export default function App() {
           path="/permissions/:featureId"
           element={<FeaturePermissions />}
         />
-
+//
         {/* Master Setup */}
         <Route path="/vendors" element={<Vendors />} />
         <Route path="/tenders" element={<Tenders />} />

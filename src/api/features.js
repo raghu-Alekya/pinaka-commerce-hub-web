@@ -11,7 +11,7 @@ const toFeaturePayload = (form) => ({
   status: (form.status || "ACTIVE").toUpperCase(),
 });
 
-// Normalize API response item into React state format
+// Normalize API response item into React state formats
 const normalizeFeature = (item) => {
   if (!item) return null;
   return {
