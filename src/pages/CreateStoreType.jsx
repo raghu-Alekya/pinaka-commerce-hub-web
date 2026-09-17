@@ -1,58 +1,25 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { storeTypesApi } from "../api/storeTypes";
 
-const initialStoreTypes = [
-  {
-    id: 1,
-    code: "GROCERY",
-    name: "Grocery",
-    description: "Retail grocery stores and supermarkets.",
-    status: "Active",
-    createdOn: "Sep 10, 2025",
-    updatedOn: "Sep 10, 2025",
-    assignedStores: 4,
-  },
-  {
-    id: 2,
-    code: "RESTAURANT",
-    name: "Restaurant / F&B",
-    description: "Dine-in, takeaway and delivery restaurants.",
-    status: "Active",
-    createdOn: "Sep 08, 2025",
-    updatedOn: "Sep 12, 2025",
-    assignedStores: 8,
-  },
-  {
-    id: 3,
-    code: "SPA",
-    name: "Spa & Wellness",
-    description: "Spa, salon and wellness services.",
-    status: "Active",
-    createdOn: "Sep 05, 2025",
-    updatedOn: "Sep 05, 2025",
-    assignedStores: 2,
-  },
-  {
-    id: 4,
-    code: "DELIVERY",
-    name: "Delivery",
-    description: "Manage delivery orders and logistics.",
-    status: "Active",
-    createdOn: "Sep 03, 2025",
-    updatedOn: "Sep 07, 2025",
-    assignedStores: 3,
-  },
-  {
-    id: 5,
-    code: "SAFE_DROP",
-    name: "Safe Drop",
-    description: "Secure cash drop and pickup management.",
-    status: "Inactive",
-    createdOn: "Aug 28, 2025",
-    updatedOn: "Sep 01, 2025",
-    assignedStores: 0,
-  },
-];
+function toRow(item) {
+  return {
+    id: item.id,
+    code: item.storeTypeCode ?? "",
+    name: item.name ?? "",
+    description: item.description ?? "",
+    status: item.status === "INACTIVE" ? "Inactive" : "Active",
+    createdOn: item.createdAt
+      ? new Date(item.createdAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        })
+      : "—",
+    icon: "bi-shop",
+    tone: "green",
+  };
+}
 
 const emptyForm = {
   code: "",
@@ -72,15 +39,42 @@ function formatToday() {
 
 export default function CreateStoreType() {
   const navigate = useNavigate();
-
-  const [storeTypes, setStoreTypes] = useState(initialStoreTypes);
+  const [storeTypes, setStoreTypes] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [message, setMessage] = useState("");
-  const [errors, setErrors] = useState({});
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  async function loadStoreTypes() {
+    const response = await storeTypesApi.getAll();
+    if (!Array.isArray(response?.storeTypes)) {
+      throw new Error("GET /store-types did not return a storeTypes array.");
+    }
+    setStoreTypes(response.storeTypes.map(toRow));
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    storeTypesApi.getAll()
+      .then((response) => {
+        if (!Array.isArray(response?.storeTypes)) {
+          throw new Error("GET /store-types did not return a storeTypes array.");
+        }
+        if (!cancelled) setStoreTypes(response.storeTypes.map(toRow));
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredStoreTypes = useMemo(() => {
     const searchValue = search.trim().toLowerCase();
@@ -120,91 +114,48 @@ export default function CreateStoreType() {
     setStatusFilter("");
   }
 
-  function validateForm() {
-    const nextErrors = {};
-    const code = form.code.trim().toUpperCase();
-    const name = form.name.trim();
-    const description = form.description.trim();
-
-    if (!code) {
-      nextErrors.code = "Store type code is required.";
-    } else if (!/^[A-Z][A-Z0-9_]{2,29}$/.test(code)) {
-      nextErrors.code =
-        "Use 3–30 uppercase letters, numbers, or underscores only.";
-    } else if (
-      storeTypes.some(
-        (item) => item.code.toLowerCase() === code.toLowerCase() &&
-          item.id !== editingId
-      )
-    ) {
-      nextErrors.code = "This store type code already exists.";
-    }
-
-    if (!name) {
-      nextErrors.name = "Display name is required.";
-    } else if (
-      storeTypes.some(
-        (item) => item.name.toLowerCase() === name.toLowerCase() &&
-          item.id !== editingId
-      )
-    ) {
-      nextErrors.name = "This display name already exists.";
-    }
-
-    if (!description) {
-      nextErrors.description = "Description is required.";
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  }
-
-  function submitForm(event) {
+  async function submitForm(event) {
     event.preventDefault();
 
-    if (!validateForm()) {
-      setMessage("Please resolve the validation errors.");
+    if (
+      !form.code.trim() ||
+      !form.name.trim() ||
+      !form.description.trim()
+    ) {
+      setError("Please complete all required fields.");
       return;
     }
 
-    const updatedOn = formatToday();
+    const values = {
+      storeTypeCode: form.code.trim().toUpperCase(),
+      name: form.name.trim(),
+      description: form.description.trim(),
+      status: form.status === "Inactive" ? "INACTIVE" : "ACTIVE",
+    };
 
-    if (editingId) {
-      setStoreTypes((current) =>
-        current.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                code: form.code.trim().toUpperCase(),
-                name: form.name.trim(),
-                description: form.description.trim(),
-                status: form.status,
-                updatedOn,
-              }
-            : item
-        )
-      );
-
-      setMessage("Store type updated successfully.");
-    } else {
-      setStoreTypes((current) => [
-        {
-          id: Date.now(),
-          code: form.code.trim().toUpperCase(),
-          name: form.name.trim(),
-          description: form.description.trim(),
-          status: form.status,
-          createdOn: updatedOn,
-          updatedOn,
-          assignedStores: 0,
-        },
-        ...current,
-      ]);
-
-      setMessage("Store type created successfully.");
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      if (editingId !== null) {
+        await storeTypesApi.update(editingId, values);
+      } else {
+        await storeTypesApi.create(values);
+      }
+      setMessage(editingId !== null
+        ? "Store type updated successfully."
+        : "Store type created successfully.");
+      resetForm();
+      try {
+        await loadStoreTypes();
+      } catch (refreshError) {
+        setError(`Saved, but the list could not refresh: ${refreshError.message}`);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-
-    resetForm();
   }
 
   function editStoreType(item) {
@@ -224,13 +175,22 @@ setFormSnapshot(nextForm);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function confirmDelete() {
-    setStoreTypes((current) =>
-      current.filter((item) => item.id !== deleteTarget.id)
-    );
-
-    setMessage(`${deleteTarget.name} store type deleted.`);
-    setDeleteTarget(null);
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setSaving(true);
+    setError("");
+    try {
+      await storeTypesApi.remove(deleteTarget.id);
+      await loadStoreTypes();
+      if (editingId === deleteTarget.id) resetForm();
+      setMessage(`${deleteTarget.name} store type deleted.`);
+      setDeleteTarget(null);
+    } catch (err) {
+      setError(err.message);
+      setDeleteTarget(null);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -241,6 +201,8 @@ setFormSnapshot(nextForm);
           <p>Define a business vertical and its baseline configuration.</p>
         </div>
       </div>
+
+      {error && <p role="alert" className="store-type-error">{error}</p>}
 
       <form className="store-type-form-card" onSubmit={submitForm}>
         <div className="store-type-card-heading">
@@ -351,12 +313,13 @@ setFormSnapshot(nextForm);
             type="button"
             className="store-type-cancel-button"
             onClick={resetForm}
+            disabled={saving}
           >
             Cancel
           </button>
 
-          <button type="submit" className="store-type-submit-button">
-            {editingId ? "Update Store Type" : "Create Store Type"}
+          <button type="submit" className="store-type-submit-button" disabled={saving}>
+            {saving ? "Saving..." : editingId ? "Update store type" : "Create store type"}
           </button>
         </div>
       </form>
@@ -463,13 +426,17 @@ setFormSnapshot(nextForm);
                 </div>
               </div>
             ))}
+            {loading && <div className="store-types-row">Loading store types...</div>}
+            {!loading && filteredStoreTypes.length === 0 && (
+              <div className="store-types-row">No store types found.</div>
+            )}
           </div>
         </div>
 
         <div className="store-types-pagination">
           <span>
-            Showing 1 to {filteredStoreTypes.length} of {storeTypes.length}{" "}
-            entries
+            Showing {filteredStoreTypes.length ? 1 : 0} to {filteredStoreTypes.length} of{" "}
+            {filteredStoreTypes.length} entries
           </span>
 
           <div>
@@ -531,6 +498,7 @@ setFormSnapshot(nextForm);
                 type="button"
                 className="delete-confirm-button"
                 onClick={confirmDelete}
+                disabled={saving}
               >
                 Yes, Delete
               </button>
