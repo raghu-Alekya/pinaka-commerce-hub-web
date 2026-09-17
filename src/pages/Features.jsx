@@ -321,27 +321,7 @@ const handleUpdateFeature = async () => {
     };
   }, [hasUnsavedChanges, navigate]);
 
-  const handleToggleFeatureStatus = () => {
-    if (!actionMenu?.feature) return;
-
-    const selectedFeature = actionMenu.feature;
-    const nextStatus = selectedFeature.status === "Active" ? "Inactive" : "Active";
-
-    setFeatures((prev) =>
-      prev.map((item) =>
-        item.id === selectedFeature.id
-          ? { ...item, status: nextStatus }
-          : item
-      )
-    );
-
-    // Keep the edit form in sync if the same feature is currently being edited.
-    if (editingId === selectedFeature.id) {
-      setForm((prev) => ({ ...prev, status: nextStatus }));
-    }
-
-    closeActionMenu();
-  };
+  
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -401,22 +381,9 @@ const handleUpdateFeature = async () => {
           <div className="feature-title-icon">
             <i className="bi bi-grid-1x2" />
           </div>
-
-        <div className="feature-form-grid">
-          <div className="feature-field">
-            <label>Feature Code<span>*</span></label>
-            <input
-              name="code"
-              value={form.code}
-              onChange={updateField}
-              placeholder="Enter a unique code, e.g. INVENTORY_MANAGEMENT"
-              className={formErrors.code ? "feature-input-error" : ""}
-            />
-            {formErrors.code ? (
-              <small className="feature-error-text">{formErrors.code}</small>
-            ) : (
-              <small></small>
-            )}
+          <div>
+            <h2>Feature Details</h2>
+            <p>Provide the basic details about the platform feature.</p>
           </div>
         </div>
 
@@ -436,9 +403,23 @@ const handleUpdateFeature = async () => {
           </div>
         )}
 
-        <h2 className="feature-details-heading">Feature Details</h2>
-
         <div className="feature-form-grid">
+          <div className="feature-field">
+            <label>Feature Code<span>*</span></label>
+            <input
+              name="code"
+              value={form.code}
+              onChange={updateField}
+              placeholder="Enter a unique code, e.g. INVENTORY_MANAGEMENT"
+              className={formErrors.code ? "feature-input-error" : ""}
+            />
+            {formErrors.code ? (
+              <small className="feature-error-text">{formErrors.code}</small>
+            ) : (
+              <small></small>
+            )}
+          </div>
+
           <div className="feature-field">
             <label>Name<span>*</span>:</label>
             <input
@@ -453,34 +434,6 @@ const handleUpdateFeature = async () => {
             ) : (
               <small> </small>
             )}
-          </div>
-
-          <div className="feature-field">
-            <label>Price</label>
-            <input
-              name="price"
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.price}
-              onChange={updateField}
-              placeholder="Enter price e.g. $29.92"
-            />
-          </div>
-
-          <div className="feature-field feature-description-field">
-            <label>Description</label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={updateField}
-              placeholder="Explain what the feature does, where it is used, and its purpose."
-              maxLength={500}
-            />
-            <div className="feature-description-meta">
-              <small></small>
-              <span>{form.description.length}/500</span>
-            </div>
           </div>
 
           <div className="feature-field">
@@ -501,7 +454,40 @@ const handleUpdateFeature = async () => {
               </select>
               <i className="bi bi-chevron-down" />
             </div>
+            {formErrors.category ? (
+              <small className="feature-error-text">{formErrors.category}</small>
+            ) : (
+              <small></small>
+            )}
+          </div>
+
+          <div className="feature-field">
+            <label>Price</label>
+            <input
+              name="price"
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
+              onChange={updateField}
+              placeholder="Enter price e.g. $29.92"
+            />
             <small></small>
+          </div>
+
+          <div className="feature-field feature-description-field">
+            <label>Description</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={updateField}
+              placeholder="Explain what the feature does, where it is used, and its purpose."
+              maxLength={500}
+            />
+            <div className="feature-description-meta">
+              <small></small>
+              <span>{form.description.length}/500</span>
+            </div>
           </div>
 
           <div className="feature-field feature-status-field">
@@ -617,101 +603,64 @@ const handleUpdateFeature = async () => {
             </thead>
 
             <tbody>
-              {filteredFeatures.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div className="feature-name">
-                      {item.name}
-                    </div>
-                  </td>
-                  <td>{item.category}</td>
-                  <td className="feature-price">
-                    {item.price !== "" && item.price !== undefined
-                      ? `$${Number(item.price).toFixed(2)}`
-                      : "-"}
-                  </td>
-                  <td className="feature-description">{item.description}</td>
-                  <td>
-                    <span className={`feature-status ${item.status.toLowerCase()}`}>
-                      <b />{item.status}
-                    </span>
-                  </td>
-                  <td className="feature-created">{item.createdAt}</td>
-                  <td className="actions-col">
-                    <div className="feature-row-actions">
-                      <button type="button" className="edit-button" onClick={() => editFeature(item)} aria-label={`Edit ${item.name}`}>
-                        <i className="bi bi-pencil" />
-                      </button>
-                      <button
-                        type="button"
-                        className={`more-action-button ${actionMenu?.feature?.id === item.id ? "active" : ""}`}
-                        onClick={(event) => openActionMenu(event, item)}
-                        aria-label={`More options for ${item.name}`}
-                        aria-expanded={actionMenu?.feature?.id === item.id}
-                      >
-                        <i className="bi bi-three-dots-vertical" />
-                      </button>
-                    </div>
+              {filteredFeatures.length === 0 ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
+                    No features found.
                   </td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {filteredFeatures.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
-                      No features found.
+              ) : (
+                filteredFeatures.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="feature-name">
+                        <span className={`row-icon ${item.tone || "purple"}`}>
+                          <i className={`bi ${item.icon || "bi-diamond"}`} />
+                        </span>
+                        {item.name}
+                      </div>
+                    </td>
+                    <td>{item.category}</td>
+                    <td className="feature-price">
+                      {item.price !== "" && item.price !== undefined
+                        ? `${Number(item.price).toFixed(2)}`
+                        : "-"}
+                    </td>
+                    <td className="feature-description">{item.description}</td>
+                    <td>
+                      <span className={`feature-status ${(item.status || "").toLowerCase()}`}>
+                        <b />{item.status}
+                      </span>
+                    </td>
+                    <td className="feature-created">{item.createdAt}</td>
+                    <td className="actions-col">
+                      <div className="feature-row-actions">
+                        <button
+                          type="button"
+                          className="edit-button"
+                          onClick={() => editFeature(item)}
+                          aria-label={`Edit ${item.name}`}
+                        >
+                          <i className="bi bi-pencil" />
+                        </button>
+                        <button
+                          type="button"
+                          className={`more-action-button ${
+                            actionMenu?.feature?.id === item.id ? "active" : ""
+                          }`}
+                          onClick={(event) => openActionMenu(event, item)}
+                          aria-label={`More options for ${item.name}`}
+                          aria-expanded={actionMenu?.feature?.id === item.id}
+                        >
+                          <i className="bi bi-three-dots-vertical" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ) : (
-                  filteredFeatures.map((item) => (
-                    <tr key={item.id}>
-                      <td className="check-col"><input type="checkbox" /></td>
-                      <td>
-                        <div className="feature-name">
-                          <span className={`row-icon ${item.tone || "purple"}`}>
-                            <i className={`bi ${item.icon || "bi-diamond"}`} />
-                          </span>
-                          {item.name}
-                        </div>
-                      </td>
-                      <td>{item.category}</td>
-                      <td className="feature-description">{item.description}</td>
-                      <td>
-                        <span className={`feature-status ${(item.status || "").toLowerCase()}`}>
-                          <b />{item.status}
-                        </span>
-                      </td>
-                      <td className="feature-created">{item.createdAt}</td>
-                      <td className="actions-col">
-                        <div className="feature-row-actions">
-                          <button
-                            type="button"
-                            className="edit-button"
-                            onClick={() => editFeature(item)}
-                            aria-label={`Edit ${item.name}`}
-                          >
-                            <i className="bi bi-pencil" />
-                          </button>
-                          <button
-                            type="button"
-                            className={`more-action-button ${
-                              actionMenu?.feature?.id === item.id ? "active" : ""
-                            }`}
-                            onClick={(event) => openActionMenu(event, item)}
-                            aria-label={`More options for ${item.name}`}
-                            aria-expanded={actionMenu?.feature?.id === item.id}
-                          >
-                            <i className="bi bi-three-dots-vertical" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
         <div className="feature-pagination-row">
