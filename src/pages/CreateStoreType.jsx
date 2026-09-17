@@ -114,7 +114,42 @@ export default function CreateStoreType() {
     setStatusFilter("");
   }
 
-  async function submitForm(event) {
+  function validateForm() {
+    const nextErrors = {};
+    const code = form.code.trim().toUpperCase();
+    const name = form.name.trim();
+    const description = form.description.trim();
+
+    if (!code) {
+      nextErrors.code = "Store type code is required.";
+    } else if (!/^[A-Z][A-Z0-9_]{2,29}$/.test(code)) {
+      nextErrors.code =
+        "Use 3–30 uppercase letters, numbers, or underscores only.";
+    } else if (
+      storeTypes.some(
+        (item) => item.code.toLowerCase() === code.toLowerCase() &&
+          item.id !== editingId
+      )
+    ) {
+      nextErrors.code = "This store type code already exists.";
+    }
+
+    if (!name) {
+      nextErrors.name = "Display name is required.";
+    } else if (
+      storeTypes.some(
+        (item) => item.name.toLowerCase() === name.toLowerCase() &&
+          item.id !== editingId
+      )
+    ) {
+      nextErrors.name = "This display name already exists.";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
+
+  function submitForm(event) {
     event.preventDefault();
 
     if (
@@ -266,7 +301,7 @@ setFormSnapshot(nextForm);
         <div className="store-type-bottom-grid">
           <label className="store-type-field store-type-description-field">
             <span>
-              Description <b>*</b>
+              Description
             </span>
 
             <div
@@ -325,43 +360,42 @@ setFormSnapshot(nextForm);
       </form>
 
       <section className="store-types-list-card">
-        <h2>Store Types List</h2>
+        <div className="store-types-list-header">
+          <h2>Store Types List</h2>
 
-        <div className="store-types-filters">
-          <label className="store-type-search">
-            <i className="bi bi-search" />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search store types..."
-            />
-          </label>
+          <div className="store-types-filters">
+            <label className="store-type-search">
+              <i className="bi bi-search" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search store types..."
+              />
+            </label>
 
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-          >
-            <option value="">All Statuses</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
 
-          <button
-            type="button"
-            className="store-type-reset-button"
-            onClick={resetFilters}
-          >
-            <i className="bi bi-arrow-counterclockwise" />
-            Reset
-          </button>
+            <button
+              type="button"
+              className="store-type-reset-button"
+              onClick={resetFilters}
+            >
+              <i className="bi bi-arrow-counterclockwise" />
+              Reset
+            </button>
+          </div>
         </div>
 
         <div className="store-types-table-wrap">
           <div className="store-types-table">
             <div className="store-types-row store-types-row-head">
-              <div>
-                <input type="checkbox" aria-label="Select all store types" />
-              </div>
               <div>Store Type Code</div>
               <div>Name / Description</div>
               <div>Status</div>
@@ -372,13 +406,6 @@ setFormSnapshot(nextForm);
 
             {filteredStoreTypes.map((item) => (
               <div className="store-types-row" key={item.id}>
-                <div>
-                  <input
-                    type="checkbox"
-                    aria-label={`Select ${item.name}`}
-                  />
-                </div>
-
                 <div className="store-type-code-cell">
                   <strong>{item.code}</strong>
                 </div>

@@ -135,12 +135,14 @@
 }
 
 .plan-create-grid,
-.plan-pricing-grid {
+.plan-pricing-grid,
+.plan-bottom-grid {
   display: grid;
   gap: 14px 18px;
 }
 
 .plan-create-grid,
+.plan-bottom-grid,
 .plan-pricing-grid.two-columns {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -178,7 +180,8 @@
   color: #183963;
   background: #fff;
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .plan-input-wrap {
@@ -194,6 +197,8 @@
   height: auto;
   padding: 0;
   border: 0;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .plan-field input,
@@ -202,16 +207,20 @@
   height: 34px;
   padding: 0 10px;
   outline: 0;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .plan-description-field {
   position: relative;
+  width: 50%;
+  max-width: 50%;
   margin-top: 14px;
 }
 
 .plan-textarea-wrap {
   display: flex;
-  min-height: 60px;
+  min-height: 54px;
   gap: 9px;
   padding: 10px;
   color: #6380b0;
@@ -219,14 +228,15 @@
 
 .plan-textarea-wrap textarea {
   width: 100%;
-  min-height: 38px;
+  min-height: 28px;
   border: 0;
   outline: 0;
   resize: vertical;
   color: #163762;
   background: transparent;
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .plan-character-count {
@@ -238,6 +248,7 @@
 }
 
 .plan-bottom-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 14px;
 }
 

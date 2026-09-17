@@ -22,6 +22,12 @@
   margin: 8px 0 20px;
 }
 
+.store-type-title-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .store-features-title h1 {
   display: flex;
   align-items: center;
@@ -32,13 +38,7 @@
   font-weight: 600;
 }
 
-.store-features-title p {
-  margin: 5px 0 0;
-  color: #5676aa;
-  font-size: 14px;
-}
-
-.store-features-status {
+.store-type-active-badge {
   display: inline-flex;
   height: 23px;
   align-items: center;
@@ -51,8 +51,19 @@
   font-weight: 700;
 }
 
-.store-features-status i {
+.store-type-active-badge i {
   font-size: 6px;
+}
+
+.store-type-active-badge.inactive {
+  color: #ed304d;
+  background: #ffe2e7;
+}
+
+.store-features-title p {
+  margin: 5px 0 0;
+  color: #5676aa;
+  font-size: 14px;
 }
 
 .store-type-tabs {
@@ -182,7 +193,7 @@
 
 .store-features-row {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) 1.3fr 90px 65px 55px;
+  grid-template-columns: minmax(220px, 2fr) 1.3fr 65px;
   min-height: 45px;
   align-items: center;
   padding: 0 10px;
@@ -209,42 +220,17 @@
   font-weight: 600;
 }
 
-.feature-toggle {
-  position: relative;
-  width: 40px;
-  height: 20px;
-  padding: 0;
-  border: 0;
-  border-radius: 20px;
-  background: #d7e5f6;
+.feature-delete-button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #fcd8df;
+  border-radius: 7px;
+  color: #ef3b5c;
+  background: #fff5f7;
   cursor: pointer;
-}
-
-.feature-toggle span {
-  position: absolute;
-  top: 2px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  transition: 0.2s;
-}
-
-.feature-toggle.enabled {
-  background: #0873f9;
-}
-
-.feature-toggle.enabled span {
-  left: 21px;
-}
-
-.feature-more-button {
-  border: 0;
-  color: #075fd3;
-  background: transparent;
-  cursor: pointer;
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .store-features-footer {
@@ -277,6 +263,82 @@
 .store-features-pagination button.active {
   color: #fff;
   background: #146ff1;
+}
+
+.delete-feature-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(5, 24, 55, 0.48);
+}
+
+.delete-feature-modal {
+  width: min(100%, 410px);
+  padding: 30px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(4, 28, 64, 0.28);
+  text-align: center;
+}
+
+.delete-feature-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  color: #ef3b5c;
+  background: #ffe9ee;
+  font-size: 26px;
+}
+
+.delete-feature-modal h2 {
+  margin: 0 0 10px;
+  color: #10254a;
+  font-size: 22px;
+}
+
+.delete-feature-modal p {
+  margin: 0;
+  color: #5b78a9;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.delete-feature-warning {
+  margin-top: 12px !important;
+}
+
+.delete-feature-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.delete-feature-keep-button,
+.delete-feature-confirm-button {
+  height: 43px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delete-feature-keep-button {
+  border: 1.5px solid #0873f9;
+  color: #0873f9;
+  background: #fff;
+}
+
+.delete-feature-confirm-button {
+  border: 0;
+  color: #fff;
+  background: #ef3b5c;
 }
 
 .add-features-overlay {

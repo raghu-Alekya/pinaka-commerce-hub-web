@@ -15,14 +15,6 @@ export default function StoreTypeDetails() {
 
   const [form, setForm] = useState(initialStoreType);
 
-  function saveChanges() {
-    setMessage("Store type details updated successfully.");
-
-    window.setTimeout(() => {
-      setMessage("");
-    }, 2500);
-  }
-
   return (
     <section className="store-type-details-page">
       <button

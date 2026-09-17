@@ -275,15 +275,6 @@ export default function CreatePlan() {
 
   return (
     <section className="plans-page">
-      <button
-        type="button"
-        className="plans-create-back"
-        onClick={() => navigate("/plans/new")}
-      >
-        <i className="bi bi-arrow-left" />
-        Back to Plans
-      </button>
-
       <div className="plans-page-heading">
         <h1>{editingId ? "Edit Plan" : "Create Plan"}</h1>
         <p>
@@ -367,7 +358,7 @@ export default function CreatePlan() {
 
           <label className="plan-field plan-description-field">
             <span>
-              Description <b>*</b>
+              Description
             </span>
 
             <div className="plan-textarea-wrap">

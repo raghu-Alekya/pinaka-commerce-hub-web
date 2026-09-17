@@ -76,7 +76,7 @@
 }
 
 .store-type-bottom-grid {
-  grid-template-columns: minmax(0, 2.25fr) minmax(250px, 0.75fr);
+  grid-template-columns: minmax(0, 2.2fr) minmax(220px, 0.8fr);
   align-items: start;
   margin-top: 14px;
 }
@@ -102,6 +102,7 @@
 .store-type-input-wrap,
 .store-type-textarea-wrap,
 .store-type-field select {
+  box-sizing: border-box;
   border: 1px solid #d9e6f4;
   border-radius: 7px;
   background: #fff;
@@ -114,7 +115,7 @@
 
 .store-type-input-wrap {
   display: flex;
-  height: 34px;
+  height: 40px;
   align-items: center;
   gap: 9px;
   padding: 0 10px;
@@ -129,17 +130,18 @@
   color: #163762;
   background: transparent;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .store-type-field select {
   width: 100%;
-  height: 34px;
+  height: 40px;
   padding: 0 10px;
   outline: 0;
-  color: #14ae70;
+  color: #23426e;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .store-type-description-field {
@@ -148,15 +150,15 @@
 
 .store-type-textarea-wrap {
   display: flex;
-  min-height: 62px;
+  min-height: 90px;
   align-items: flex-start;
   gap: 9px;
-  padding: 10px;
+  padding: 10px 12px;
   color: #6380b0;
 }
 
 .store-type-textarea-wrap textarea {
-  min-height: 38px;
+  min-height: 58px;
   resize: vertical;
 }
 
@@ -203,8 +205,16 @@
   box-shadow: 0 4px 10px rgba(104, 78, 227, 0.2);
 }
 
+.store-types-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 15px;
+}
+
 .store-types-list-card h2 {
-  margin-bottom: 13px;
+  margin: 0;
   font-size: 18px;
 }
 
@@ -212,7 +222,8 @@
   display: grid;
   grid-template-columns: minmax(230px, 1fr) 170px 105px;
   gap: 13px;
-  margin-bottom: 15px;
+  width: min(100%, 560px);
+  margin-left: auto;
 }
 
 .store-type-search {
@@ -267,7 +278,7 @@
 
 .store-types-row {
   display: grid;
-  grid-template-columns: 42px 185px minmax(255px, 2fr) 125px 130px 130px 100px;
+  grid-template-columns: 185px minmax(255px, 2fr) 125px 130px 130px 100px;
   min-height: 57px;
   align-items: center;
   padding: 0 12px;
@@ -286,12 +297,6 @@
   background: #f2f8ff;
   font-size: 12px;
   font-weight: 600;
-}
-
-.store-types-row input {
-  width: 13px;
-  height: 13px;
-  accent-color: #684ee3;
 }
 
 .store-type-code-cell strong,

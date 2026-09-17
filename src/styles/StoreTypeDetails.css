@@ -242,21 +242,6 @@
   box-shadow: none;
 }
 
-.store-type-details-toast {
-  position: fixed;
-  right: 25px;
-  bottom: 25px;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 13px 16px;
-  border-radius: 8px;
-  color: #fff;
-  background: #102a54;
-  font-size: 13px;
-}
-
 .store-type-details-toast i {
   color: #32d583;
 }
@@ -284,4 +269,18 @@
     flex: 1;
     width: auto;
   }
+}
+
+.store-type-details-field input[readonly],
+.store-type-details-field textarea[readonly] {
+  background: #F8FAFC;
+  color: #475569;
+  cursor: default;
+}
+
+.store-type-details-field select:disabled {
+  background: #F8FAFC;
+  color: #475569;
+  opacity: 1;
+  cursor: default;
 }
