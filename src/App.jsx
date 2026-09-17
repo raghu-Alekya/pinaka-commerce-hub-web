@@ -246,7 +246,7 @@ export default function App() {
         <Route path="/features" element={<Features />} />
         <Route
           path="/features/:featureId/permissions"
-          element={<ConfigurePermissions />}
+          element={<FeaturePermissions />}
         />
 
         {/* Feature Permissions */}
