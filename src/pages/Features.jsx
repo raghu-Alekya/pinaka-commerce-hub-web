@@ -8,13 +8,15 @@ import {
 } from "../api/features";
 import "../styles/features.css";
 
-const emptyForm = {
-  name: "",
-  description: "",
-  category: "",
-  type: "",
-  status: "Active",
-};
+const initialFeatures = [
+  { id: 1, code: "LOYALTY", name: "Loyalty", price: 19.99, category: "Customer Engagement", description: "Manage loyalty programs and rewards.", status: "Active", createdAt: "Apr 10, 2026 02:15 PM", type: "BOOLEAN", icon: "bi-diamond", tone: "purple" },
+  { id: 2, code: "KDS", name: "KDS", price: 29.5, category: "Restaurant", description: "Kitchen Display System for order management.", status: "Active", createdAt: "Apr 08, 2026 11:42 AM", type: "BOOLEAN", icon: "bi-display", tone: "amber" },
+  { id: 3, code: "DELIVERY", name: "Delivery", price: 14.75, category: "Orders", description: "Manage delivery orders and logistics.", status: "Active", createdAt: "Apr 05, 2026 09:30 AM", type: "BOOLEAN", icon: "bi-truck", tone: "blue" },
+  { id: 4, code: "SAFE_DROP", name: "Safe Drop", price: 24, category: "Cash Management", description: "Secure cash drop and pickup management.", status: "Inactive", createdAt: "Apr 02, 2026 04:12 PM", type: "BOOLEAN", icon: "bi-shield-check", tone: "red" },
+  { id: 5, code: "INVENTORY", name: "Inventory", price: 34.99, category: "Stock Control", description: "Track and manage inventory levels in real-time.", status: "Active", createdAt: "Apr 12, 2026 10:00 AM", type: "BOOLEAN", icon: "bi-diamond", tone: "purple" },
+];
+
+const emptyForm = { code: "", name: "", price: "", description: "", category: "", status: "Active" };
 
 export default function Features() {
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ export default function Features() {
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState(emptyForm);
+  const [savedForm, setSavedForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
 
   const [search, setSearch] = useState("");
@@ -36,29 +39,10 @@ export default function Features() {
   const [formErrors, setFormErrors] = useState({});
 
   const isEditing = editingId !== null;
-  const editingFeature = Array.isArray(features)
-    ? features.find((item) => item.id === editingId)
-    : null;
-
-  // 1. Dynamic API Fetching
-  const fetchFeatures = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await listFeatures();
-      setFeatures(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Failed to load features:", err);
-      setError(err.message || "Failed to load features from server.");
-      setFeatures([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchFeatures();
-  }, []);
+  const editingFeature = features.find((item) => item.id === editingId);
+  const hasUnsavedChanges = Object.keys(emptyForm).some(
+    (field) => form[field] !== savedForm[field]
+  );
 
   const updateField = (event) => {
     const { name, value } = event.target;
@@ -99,18 +83,22 @@ export default function Features() {
   const clearForm = () => {
     setEditingId(null);
     setForm(emptyForm);
-    setError(null);
+    setSavedForm(emptyForm);
+    setFormErrors({});
   };
 
   const editFeature = (feature) => {
     setEditingId(feature.id);
-    setForm({
-      name: feature.name || "",
-      description: feature.description || "",
-      category: feature.category || "",
-      type: feature.type || "",
-      status: feature.status || "Active",
-    });
+    const nextForm = {
+      code: feature.code || feature.name.toUpperCase().replace(/\s+/g, "_"),
+      name: feature.name,
+      price: feature.price || "",
+      description: feature.description,
+      category: feature.category,
+      status: feature.status,
+    };
+    setForm(nextForm);
+    setSavedForm(nextForm);
     setFormErrors({});
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -283,6 +271,9 @@ const handleUpdateFeature = async () => {
 
   const handleConfigurePermissions = () => {
     if (!actionMenu?.feature) return;
+    if (hasUnsavedChanges && !window.confirm("You have unsaved changes. Leave without saving?")) {
+      return;
+    }
     const selectedFeature = actionMenu.feature;
     closeActionMenu();
     navigate(`/features/${selectedFeature.id}/permissions`, {
@@ -292,6 +283,64 @@ const handleUpdateFeature = async () => {
         feature: selectedFeature,
       },
     });
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (!hasUnsavedChanges) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    const handleNavigationClick = (event) => {
+      if (!hasUnsavedChanges) return;
+
+      const link = event.target.closest("a[href]");
+      if (!link || link.target === "_blank") return;
+
+      const href = link.getAttribute("href");
+      if (!href || href.startsWith("#") || href === window.location.pathname) return;
+
+      if (!window.confirm("You have unsaved changes. Leave without saving?")) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      navigate(href);
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("click", handleNavigationClick, true);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("click", handleNavigationClick, true);
+    };
+  }, [hasUnsavedChanges, navigate]);
+
+  const handleToggleFeatureStatus = () => {
+    if (!actionMenu?.feature) return;
+
+    const selectedFeature = actionMenu.feature;
+    const nextStatus = selectedFeature.status === "Active" ? "Inactive" : "Active";
+
+    setFeatures((prev) =>
+      prev.map((item) =>
+        item.id === selectedFeature.id
+          ? { ...item, status: nextStatus }
+          : item
+      )
+    );
+
+    // Keep the edit form in sync if the same feature is currently being edited.
+    if (editingId === selectedFeature.id) {
+      setForm((prev) => ({ ...prev, status: nextStatus }));
+    }
+
+    closeActionMenu();
   };
 
   useEffect(() => {
@@ -353,49 +402,20 @@ const handleUpdateFeature = async () => {
             <i className="bi bi-grid-1x2" />
           </div>
 
-          <div className="feature-header-actions">
-            {isEditing ? (
-              <>
-                <span className="editing-chip">Editing: {editingFeature?.name}</span>
-                <button
-                  className="feature-action secondary"
-                  type="button"
-                  onClick={clearForm}
-                  disabled={submitting}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="feature-action primary"
-                  type="button"
-                  onClick={handleUpdateFeature}
-                  disabled={submitting}
-                >
-                  <i className="bi bi-floppy" />
-                  {submitting ? "Updating..." : "Update Feature"}
-                </button>
-              </>
+        <div className="feature-form-grid">
+          <div className="feature-field">
+            <label>Feature Code<span>*</span></label>
+            <input
+              name="code"
+              value={form.code}
+              onChange={updateField}
+              placeholder="Enter a unique code, e.g. INVENTORY_MANAGEMENT"
+              className={formErrors.code ? "feature-input-error" : ""}
+            />
+            {formErrors.code ? (
+              <small className="feature-error-text">{formErrors.code}</small>
             ) : (
-              <>
-                <button
-                  className="feature-action secondary blue-text"
-                  type="button"
-                  onClick={clearForm}
-                  disabled={submitting}
-                >
-                  <i className="bi bi-arrow-repeat" />
-                  Clear
-                </button>
-                <button
-                  className="feature-action primary"
-                  type="button"
-                  onClick={saveFeature}
-                  disabled={submitting}
-                >
-                  <i className="bi bi-floppy" />
-                  {submitting ? "Saving..." : "Save Feature"}
-                </button>
-              </>
+              <small></small>
             )}
           </div>
         </div>
@@ -425,22 +445,42 @@ const handleUpdateFeature = async () => {
               name="name"
               value={form.name}
               onChange={updateField}
-              placeholder="e.g. REFUNDS"
-              disabled={submitting}
+              placeholder="Enter a unique feature name, e.g. Inventory Management"
+              className={formErrors.name ? "feature-input-error" : ""}
             />
-            <small>Unique key (e.g. REFUNDS / KDS / LOYALTY)</small>
+            {formErrors.name ? (
+              <small className="feature-error-text">{formErrors.name}</small>
+            ) : (
+              <small> </small>
+            )}
           </div>
 
           <div className="feature-field">
-            <label>Description:</label>
+            <label>Price</label>
             <input
+              name="price"
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
+              onChange={updateField}
+              placeholder="Enter price e.g. $29.92"
+            />
+          </div>
+
+          <div className="feature-field feature-description-field">
+            <label>Description</label>
+            <textarea
               name="description"
               value={form.description}
               onChange={updateField}
-              placeholder="Enter feature name"
-              disabled={submitting}
+              placeholder="Explain what the feature does, where it is used, and its purpose."
+              maxLength={500}
             />
-            <small>Feature metadata or display name</small>
+            <div className="feature-description-meta">
+              <small></small>
+              <span>{form.description.length}/500</span>
+            </div>
           </div>
 
           <div className="feature-field">
@@ -461,23 +501,11 @@ const handleUpdateFeature = async () => {
               </select>
               <i className="bi bi-chevron-down" />
             </div>
-            <small>e.g. POS / Orders / Cash / Workforce / etc.</small>
-          </div>
-
-          <div className="feature-field">
-            <label>Feature Type<span>*</span></label>
-            <input
-              name="type"
-              value={form.type}
-              onChange={updateField}
-              placeholder="Enter feature type"
-              disabled={submitting}
-            />
-            <small>BOOLEAN / LIMIT / CONFIG</small>
+            <small></small>
           </div>
 
           <div className="feature-field feature-status-field">
-            <label>Status<span>*</span></label>
+            <label>Status</label>
             <div className="select-shell">
               <select
                 name="status"
@@ -490,7 +518,7 @@ const handleUpdateFeature = async () => {
               </select>
               <i className="bi bi-chevron-down" />
             </div>
-            <small>Active or Inactive.</small>
+            <small> </small>
           </div>
         </div>
 
@@ -565,31 +593,66 @@ const handleUpdateFeature = async () => {
         </div>
 
         <div className="features-table-wrap">
-          {loading ? (
-            <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
-              Loading features...
-            </div>
-          ) : (
-            <table className="features-table">
-              <colgroup>
-                <col className="col-check" />
-                <col className="col-name" />
-                <col className="col-category" />
-                <col className="col-description" />
-                <col className="col-status" />
-                <col className="col-created" />
-                <col className="col-actions" />
-              </colgroup>
+          <table className="features-table">
+            <colgroup>
+              <col className="col-name" />
+              <col className="col-category" />
+              <col className="col-price" />
+              <col className="col-description" />
+              <col className="col-status" />
+              <col className="col-created" />
+              <col className="col-actions" />
+            </colgroup>
 
-              <thead>
-                <tr>
-                  <th className="check-col"><input type="checkbox" /></th>
-                  <th>Feature Name <i className="bi bi-arrow-down-up" /></th>
-                  <th>Category <i className="bi bi-arrow-down-up" /></th>
-                  <th>Description <i className="bi bi-arrow-down-up" /></th>
-                  <th>Status <i className="bi bi-arrow-down-up" /></th>
-                  <th>Created At <i className="bi bi-arrow-down-up" /></th>
-                  <th className="actions-col">Actions</th>
+            <thead>
+              <tr>
+                <th>Feature Name <i className="bi bi-arrow-down-up" /></th>
+                <th>Category <i className="bi bi-arrow-down-up" /></th>
+                <th>Price <i className="bi bi-arrow-down-up" /></th>
+                <th>Description <i className="bi bi-arrow-down-up" /></th>
+                <th>Status <i className="bi bi-arrow-down-up" /></th>
+                <th>Created At <i className="bi bi-arrow-down-up" /></th>
+                <th className="actions-col">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredFeatures.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <div className="feature-name">
+                      {item.name}
+                    </div>
+                  </td>
+                  <td>{item.category}</td>
+                  <td className="feature-price">
+                    {item.price !== "" && item.price !== undefined
+                      ? `$${Number(item.price).toFixed(2)}`
+                      : "-"}
+                  </td>
+                  <td className="feature-description">{item.description}</td>
+                  <td>
+                    <span className={`feature-status ${item.status.toLowerCase()}`}>
+                      <b />{item.status}
+                    </span>
+                  </td>
+                  <td className="feature-created">{item.createdAt}</td>
+                  <td className="actions-col">
+                    <div className="feature-row-actions">
+                      <button type="button" className="edit-button" onClick={() => editFeature(item)} aria-label={`Edit ${item.name}`}>
+                        <i className="bi bi-pencil" />
+                      </button>
+                      <button
+                        type="button"
+                        className={`more-action-button ${actionMenu?.feature?.id === item.id ? "active" : ""}`}
+                        onClick={(event) => openActionMenu(event, item)}
+                        aria-label={`More options for ${item.name}`}
+                        aria-expanded={actionMenu?.feature?.id === item.id}
+                      >
+                        <i className="bi bi-three-dots-vertical" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </thead>
 
