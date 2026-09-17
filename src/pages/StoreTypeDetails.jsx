@@ -14,24 +14,6 @@ export default function StoreTypeDetails() {
   const { storeTypeId } = useParams();
 
   const [form, setForm] = useState(initialStoreType);
-  const [message, setMessage] = useState("");
-
-  function updateField(event) {
-    const { name, value } = event.target;
-
-    setForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
-  }
-
-  function saveChanges() {
-    setMessage("Store type details updated successfully.");
-
-    window.setTimeout(() => {
-      setMessage("");
-    }, 2500);
-  }
 
   return (
     <section className="store-type-details-page">
@@ -103,14 +85,11 @@ export default function StoreTypeDetails() {
             <span>
               Store Type Code <b>*</b>
             </span>
-
             <input
-              name="code"
+             name="code"
               value={form.code}
-              onChange={updateField}
-              maxLength="30"
-            />
-
+               readOnly
+               />
             <small>
               Use uppercase letters, numbers, and underscores only.
             </small>
@@ -121,15 +100,12 @@ export default function StoreTypeDetails() {
               Status <b>*</b>
             </span>
 
-            <select
+            <input
               name="status"
               value={form.status}
-              onChange={updateField}
+              readOnly
               className="store-type-details-status"
-            >
-              <option value="Active">● Active</option>
-              <option value="Inactive">● Inactive</option>
-            </select>
+            />
 
             <small>Inactive types cannot be used for new stores.</small>
           </label>
@@ -143,56 +119,27 @@ export default function StoreTypeDetails() {
           <input
             name="name"
             value={form.name}
-            onChange={updateField}
+            readOnly
             maxLength="80"
           />
         </label>
 
         <label className="store-type-details-field store-type-details-description">
           <span>
-            Description <b>*</b>
+            Description
           </span>
 
           <textarea
             name="description"
             value={form.description}
-            onChange={updateField}
+            readOnly
             maxLength="500"
           />
 
           <small>{form.description.length}/500</small>
         </label>
 
-        <div className="store-type-details-actions">
-          <button
-            type="button"
-            className="store-type-details-cancel"
-            onClick={() => navigate("/store-types/new")}
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            className="store-type-details-save"
-            onClick={saveChanges}
-            disabled={
-              !form.code.trim() ||
-              !form.name.trim() ||
-              !form.description.trim()
-            }
-          >
-            Save Changes
-          </button>
-        </div>
       </section>
-
-      {message && (
-        <div className="store-type-details-toast">
-          <i className="bi bi-check-circle-fill" />
-          {message}
-        </div>
-      )}
     </section>
   );
 }

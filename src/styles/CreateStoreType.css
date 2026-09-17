@@ -27,6 +27,7 @@
 .store-type-form-card,
 .store-types-list-card {
   margin-bottom: 20px;
+  margin-top: 10px;
   border: 1px solid #e1ebf5;
   border-radius: 11px;
   background: rgba(255, 255, 255, 0.94);
@@ -55,7 +56,7 @@
   place-items: center;
   border-radius: 50%;
   color: #684ee3;
-  background: #e6f2ff;
+  background: #eff0ff;
   font-size: 20px;
 }
 
@@ -68,7 +69,7 @@
 .store-type-form-grid,
 .store-type-bottom-grid {
   display: grid;
-  gap: 18px 23px;
+  gap: 18px 24px;
 }
 
 .store-type-form-grid {
@@ -76,8 +77,9 @@
 }
 
 .store-type-bottom-grid {
-  grid-template-columns: minmax(0, 2.25fr) minmax(250px, 0.75fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
+  gap: 18px 23px;
   margin-top: 14px;
 }
 
@@ -102,6 +104,7 @@
 .store-type-input-wrap,
 .store-type-textarea-wrap,
 .store-type-field select {
+  box-sizing: border-box;
   border: 1px solid #d9e6f4;
   border-radius: 7px;
   background: #fff;
@@ -114,7 +117,7 @@
 
 .store-type-input-wrap {
   display: flex;
-  height: 34px;
+  height: 40px;
   align-items: center;
   gap: 9px;
   padding: 0 10px;
@@ -126,51 +129,72 @@
   width: 100%;
   border: 0;
   outline: 0;
-  color: #163762;
+  color: #d0d0d0;
   background: transparent;
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .store-type-field select {
   width: 100%;
-  height: 34px;
+  height: 40px;
   padding: 0 10px;
   outline: 0;
-  color: #14ae70;
+  color:#29ad3f;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .store-type-description-field {
-  position: relative;
+   display: flex;
+  flex-direction: column;
 }
 
 .store-type-textarea-wrap {
   display: flex;
-  min-height: 62px;
   align-items: flex-start;
   gap: 9px;
-  padding: 10px;
+  padding: 10px 12px;
+  min-height: 38px;
   color: #6380b0;
 }
 
 .store-type-textarea-wrap textarea {
-  min-height: 38px;
-  resize: vertical;
+  min-height: 24px;
+  height: 24px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+
+}
+
+.store-type-status-field {
+  width: 100%;
+}
+
+.store-type-status-field select {
+  width: 100%;
+  height: 40px;
 }
 
 .store-type-character-count {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
+  position: static;
+  text-align: right;
+  margin-top: 4px;
   color: #7892b8 !important;
   font-size: 9px !important;
 }
 
 .field-error {
   color: #dc2649 !important;
-  font-size: 10px !important;
+  font-size: 10px !important;  
 }
 
 .store-type-actions {
@@ -203,8 +227,16 @@
   box-shadow: 0 4px 10px rgba(104, 78, 227, 0.2);
 }
 
+.store-types-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 15px;
+}
+
 .store-types-list-card h2 {
-  margin-bottom: 13px;
+  margin: 0;
   font-size: 18px;
 }
 
@@ -212,7 +244,8 @@
   display: grid;
   grid-template-columns: minmax(230px, 1fr) 170px 105px;
   gap: 13px;
-  margin-bottom: 15px;
+  width: min(100%, 560px);
+  margin-left: auto;
 }
 
 .store-type-search {
@@ -267,7 +300,7 @@
 
 .store-types-row {
   display: grid;
-  grid-template-columns: 42px 185px minmax(255px, 2fr) 125px 130px 130px 100px;
+  grid-template-columns: 185px minmax(255px, 2fr) 125px 130px 130px 100px;
   min-height: 57px;
   align-items: center;
   padding: 0 12px;
@@ -286,12 +319,6 @@
   background: #f2f8ff;
   font-size: 12px;
   font-weight: 600;
-}
-
-.store-types-row input {
-  width: 13px;
-  height: 13px;
-  accent-color: #684ee3;
 }
 
 .store-type-code-cell strong,

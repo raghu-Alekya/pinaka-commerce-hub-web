@@ -17,6 +17,7 @@ export default function StoreTypeRoleTemplates() {
   const [roles, setRoles] = useState(initialRoles);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [newRoleName, setNewRoleName] = useState("");
 
   const filteredRoles = useMemo(() => {
@@ -67,6 +68,13 @@ export default function StoreTypeRoleTemplates() {
     setShowModal(false);
   }
 
+  function confirmDeleteRole() {
+    if (!deleteTarget) return;
+
+    setRoles((current) => current.filter((role) => role.id !== deleteTarget.id));
+    setDeleteTarget(null);
+  }
+
   return (
     <section className="role-templates-page">
       <button
@@ -79,13 +87,14 @@ export default function StoreTypeRoleTemplates() {
       </button>
 
       <div className="role-templates-title">
-        <h1>
-          Restaurant
-          <span className="role-templates-status">
+        <div className="store-type-title-line">
+          <h1>Restaurant</h1>
+
+          <span className="store-type-active-badge">
             <i className="bi bi-circle-fill" />
             Active
           </span>
-        </h1>
+        </div>
 
         <p>
           Store type for restaurant vertical with full service and quick
@@ -155,7 +164,6 @@ export default function StoreTypeRoleTemplates() {
           <div className="role-template-row role-template-row-head">
             <div>Role Template</div>
             <div>Scope</div>
-            <div>Active</div>
             <div>Action</div>
           </div>
 
@@ -168,23 +176,12 @@ export default function StoreTypeRoleTemplates() {
               <div>
                 <button
                   type="button"
-                  className={`role-template-switch ${
-                    role.active ? "enabled" : ""
-                  }`}
-                  onClick={() => toggleRole(role.id)}
-                  aria-label={`Toggle ${role.name} active status`}
+                  className="role-template-delete-button"
+                  title={`Delete ${role.name}`}
+                  aria-label={`Delete ${role.name}`}
+                  onClick={() => setDeleteTarget(role)}
                 >
-                  <span />
-                </button>
-              </div>
-
-              <div>
-                <button
-                  type="button"
-                  className="role-template-more-button"
-                  title={`Actions for ${role.name}`}
-                >
-                  <i className="bi bi-three-dots-vertical" />
+                  <i className="bi bi-trash3" />
                 </button>
               </div>
             </div>
@@ -264,6 +261,50 @@ export default function StoreTypeRoleTemplates() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="delete-roletemplate-overlay"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div
+            className="delete-roletemplate-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="delete-roletemplate-icon">
+              <i className="bi bi-exclamation-triangle" />
+            </div>
+
+            <h2>Delete Role Template?</h2>
+
+            <p>
+              Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
+            </p>
+
+            <p className="delete-roletemplate-warning">
+              This action cannot be undone.
+            </p>
+
+            <div className="delete-roletemplate-actions">
+              <button
+                type="button"
+                className="delete-roletemplate-keep-button"
+                onClick={() => setDeleteTarget(null)}
+              >
+                No, Keep It
+              </button>
+
+              <button
+                type="button"
+                className="delete-roletemplate-confirm-button"
+                onClick={confirmDeleteRole}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>

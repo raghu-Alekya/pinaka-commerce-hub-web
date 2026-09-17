@@ -12,7 +12,7 @@
   gap: 6px;
   padding: 0;
   border: 0;
-  color: #076cf0;
+  color: #684ee3;
   background: transparent;
   cursor: pointer;
   font-size: 14px;
@@ -22,13 +22,21 @@
   margin: 8px 0 20px;
 }
 
-.store-type-title-line {
+.store-type-details-page .store-type-details-heading,
+.store-features-page .store-features-title,
+.role-templates-page .role-templates-title {
+  margin: 8px 0 20px;
+}
+
+.store-type-details-page .store-type-title-line,
+.store-features-page .store-type-title-line,
+.role-templates-page .store-type-title-line {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.store-type-title-line h1 {
+.store-type-details-page .store-type-title-line h1 {
   margin: 0;
   color: #10254a;
   font-size: 25px;
@@ -41,7 +49,7 @@
   font-size: 14px;
 }
 
-.store-type-active-badge {
+.store-type-details-page .store-type-active-badge {
   display: inline-flex;
   height: 23px;
   align-items: center;
@@ -54,23 +62,23 @@
   font-weight: 700;
 }
 
-.store-type-active-badge i {
+.store-type-details-page .store-type-active-badge i {
   font-size: 6px;
 }
 
-.store-type-active-badge.inactive {
+.store-type-details-page .store-type-active-badge.inactive {
   color: #ed304d;
   background: #ffe2e7;
 }
 
-.store-type-tabs {
+.store-type-details-page .store-type-tabs {
   display: flex;
   gap: 37px;
   margin-bottom: 10px;
   border-bottom: 1px solid #d9e7f6;
 }
 
-.store-type-tabs button {
+.store-type-details-page .store-type-tabs button {
   position: relative;
   height: 32px;
   padding: 0 0 9px;
@@ -82,20 +90,21 @@
   font-weight: 500;
 }
 
-.store-type-tabs button.active {
-  color: #0873f9;
+.store-type-details-page .store-type-tabs button.active {
+  color: #684ee3 !important;
   font-weight: 700;
 }
 
-.store-type-tabs button.active::after {
+.store-type-details-page .store-type-tabs button.active::after {
   position: absolute;
   right: 0;
   bottom: -1px;
   left: 0;
+  display: block;
   height: 2px;
   border-radius: 2px;
   content: "";
-  background: #0873f9;
+  background: #684ee3 !important;
 }
 
 .store-type-details-card {
@@ -119,8 +128,8 @@
   height: 36px;
   place-items: center;
   border-radius: 50%;
-  color: #0873f9;
-  background: #e7f2ff;
+  color: #684ee3;
+  background: #eff0ff;
   font-size: 18px;
 }
 
@@ -242,21 +251,6 @@
   box-shadow: none;
 }
 
-.store-type-details-toast {
-  position: fixed;
-  right: 25px;
-  bottom: 25px;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 13px 16px;
-  border-radius: 8px;
-  color: #fff;
-  background: #102a54;
-  font-size: 13px;
-}
-
 .store-type-details-toast i {
   color: #32d583;
 }
@@ -284,4 +278,18 @@
     flex: 1;
     width: auto;
   }
+}
+
+.store-type-details-field input[readonly],
+.store-type-details-field textarea[readonly] {
+  background: #F8FAFC;
+  color: #475569;
+  cursor: default;
+}
+
+.store-type-details-field select:disabled {
+  background: #F8FAFC;
+  color: #475569;
+  opacity: 1;
+  cursor: default;
 }

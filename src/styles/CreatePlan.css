@@ -135,12 +135,14 @@
 }
 
 .plan-create-grid,
-.plan-pricing-grid {
+.plan-pricing-grid,
+.plan-bottom-grid {
   display: grid;
   gap: 14px 18px;
 }
 
 .plan-create-grid,
+.plan-bottom-grid,
 .plan-pricing-grid.two-columns {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -178,7 +180,8 @@
   color: #183963;
   background: #fff;
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .plan-input-wrap {
@@ -194,6 +197,8 @@
   height: auto;
   padding: 0;
   border: 0;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .plan-field input,
@@ -202,16 +207,20 @@
   height: 34px;
   padding: 0 10px;
   outline: 0;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .plan-description-field {
   position: relative;
+  width: 50%;
+  max-width: 50%;
   margin-top: 14px;
 }
 
 .plan-textarea-wrap {
   display: flex;
-  min-height: 60px;
+  min-height: 54px;
   gap: 9px;
   padding: 10px;
   color: #6380b0;
@@ -219,14 +228,15 @@
 
 .plan-textarea-wrap textarea {
   width: 100%;
-  min-height: 38px;
+  min-height: 28px;
   border: 0;
   outline: 0;
   resize: vertical;
   color: #163762;
   background: transparent;
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .plan-character-count {
@@ -238,6 +248,7 @@
 }
 
 .plan-bottom-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 14px;
 }
 
@@ -438,6 +449,47 @@
   font-size: 10px;
 }
 
+.plan-feature-summary {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #edf2fb;
+}
+
+.plan-feature-summary-label {
+  color: #23426e;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.plan-review-feature-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.plan-review-feature-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid #dfe5ff;
+  border-radius: 999px;
+  color: #3d2bb0;
+  background: #eef2ff;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.plan-review-empty {
+  color: #6380ae;
+  font-size: 10px;
+}
+
+.plan-review-feature-container {
+  min-width: 0;
+}
+
 .plan-review-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -513,21 +565,33 @@
   padding: 20px 22px;
 }
 
+.plans-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 15px;
+}
+
 .plans-list-card h2 {
-  margin: 0 0 13px;
+  margin: 0;
   color: #10254a;
   font-size: 18px;
 }
 
 .plans-filters {
-  display: grid;
-  grid-template-columns: minmax(230px, 1fr) 170px 170px 105px;
-  gap: 13px;
-  margin-bottom: 15px;
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: auto;
 }
 
 .plan-search {
   display: flex;
+  flex: 1 1 230px;
+  max-width: 310px;
   height: 34px;
   align-items: center;
   gap: 9px;
@@ -557,8 +621,13 @@
   font-size: 12px;
 }
 
+.plans-filters select {
+  flex: 0 0 170px;
+}
+
 .plan-reset-button {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   gap: 7px;
@@ -578,7 +647,7 @@
 
 .plans-row {
   display: grid;
-  grid-template-columns: 160px minmax(245px, 2fr) 130px 130px 120px 125px 100px;
+  grid-template-columns: 150px minmax(220px, 2fr) 150px 130px 120px 120px 110px 80px;
   min-height: 62px;
   align-items: center;
   padding: 0 12px;
@@ -589,6 +658,19 @@
 
 .plans-row:last-child {
   border-bottom: 0;
+}
+
+.plan-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #3f2cac;
+  background: #eef2ff;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .plans-row-head {
@@ -800,8 +882,21 @@
     grid-template-columns: 1fr;
   }
 
+  .plans-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .plans-filters {
-    grid-template-columns: 1fr 1fr;
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .plan-search,
+  .plans-filters select,
+  .plan-reset-button {
+    flex: 1 1 180px;
+    max-width: none;
   }
 }
 

@@ -53,6 +53,7 @@ export default function StoreTypeFeatures() {
   const [search, setSearch] = useState("");
   const [modalSearch, setModalSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [selectedFeatures, setSelectedFeatures] = useState([]);
 
   const filteredFeatures = useMemo(() => {
@@ -75,6 +76,10 @@ export default function StoreTypeFeatures() {
       }))
       .filter((group) => group.options.length > 0);
   }, [modalSearch]);
+
+  const addFeatureModalStyle = {
+    maxHeight: `${Math.min(78, 40 + selectedFeatures.length * 4 + filteredGroups.length * 5)}vh`,
+  };
 
   function toggleFeature(id) {
     setFeatures((current) =>
@@ -124,6 +129,15 @@ export default function StoreTypeFeatures() {
     setSelectedFeatures([]);
   }
 
+  function confirmDeleteFeature() {
+    if (!deleteTarget) return;
+
+    setFeatures((current) =>
+      current.filter((feature) => feature.id !== deleteTarget.id)
+    );
+    setDeleteTarget(null);
+  }
+
   return (
     <section className="store-features-page">
       <button
@@ -136,13 +150,14 @@ export default function StoreTypeFeatures() {
       </button>
 
       <div className="store-features-title">
-        <h1>
-          Restaurant
-          <span className="store-features-status">
+        <div className="store-type-title-line">
+          <h1>Restaurant</h1>
+
+          <span className="store-type-active-badge">
             <i className="bi bi-circle-fill" />
             Active
           </span>
-        </h1>
+        </div>
 
         <p>
           Store type for restaurant vertical with full service and quick
@@ -211,7 +226,6 @@ export default function StoreTypeFeatures() {
           <div className="store-features-row store-features-row-head">
             <div>Feature</div>
             <div>Category</div>
-            <div>Active</div>
             <div>Action</div>
           </div>
 
@@ -224,23 +238,12 @@ export default function StoreTypeFeatures() {
               <div>
                 <button
                   type="button"
-                  className={`feature-toggle ${
-                    feature.active ? "enabled" : ""
-                  }`}
-                  onClick={() => toggleFeature(feature.id)}
-                  aria-label={`Toggle ${feature.name} active status`}
+                  className="feature-delete-button"
+                  title={`Delete ${feature.name}`}
+                  aria-label={`Delete ${feature.name}`}
+                  onClick={() => setDeleteTarget(feature)}
                 >
-                  <span />
-                </button>
-              </div>
-
-              <div>
-                <button
-                  type="button"
-                  className="feature-more-button"
-                  title={`Actions for ${feature.name}`}
-                >
-                  <i className="bi bi-three-dots-vertical" />
+                  <i className="bi bi-trash3" />
                 </button>
               </div>
             </div>
@@ -275,6 +278,7 @@ export default function StoreTypeFeatures() {
         >
           <div
             className="add-features-modal"
+            style={addFeatureModalStyle}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="add-features-modal-header">
@@ -334,6 +338,27 @@ export default function StoreTypeFeatures() {
               ))}
             </div>
 
+            <div className="add-features-preview">
+              <div className="add-features-preview-header">
+                <span>Selected Features</span>
+                <strong>{selectedFeatures.length}</strong>
+              </div>
+
+              <div className="add-features-preview-list">
+                {selectedFeatures.length > 0 ? (
+                  selectedFeatures.map((featureName) => (
+                    <span className="add-features-preview-pill" key={featureName}>
+                      {featureName}
+                    </span>
+                  ))
+                ) : (
+                  <span className="add-features-preview-empty">
+                    No features selected yet
+                  </span>
+                )}
+              </div>
+            </div>
+
             <div className="add-features-modal-actions">
               <button
                 type="button"
@@ -349,7 +374,51 @@ export default function StoreTypeFeatures() {
                 onClick={addSelectedFeatures}
                 disabled={selectedFeatures.length === 0}
               >
-                Add Selected
+                Add Selected ({selectedFeatures.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="delete-feature-overlay"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div
+            className="delete-feature-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="delete-feature-icon">
+              <i className="bi bi-exclamation-triangle" />
+            </div>
+
+            <h2>Delete Feature?</h2>
+
+            <p>
+              Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
+            </p>
+
+            <p className="delete-feature-warning">
+              This action cannot be undone.
+            </p>
+
+            <div className="delete-feature-actions">
+              <button
+                type="button"
+                className="delete-feature-keep-button"
+                onClick={() => setDeleteTarget(null)}
+              >
+                No, Keep It
+              </button>
+
+              <button
+                type="button"
+                className="delete-feature-confirm-button"
+                onClick={confirmDeleteFeature}
+              >
+                Yes, Delete
               </button>
             </div>
           </div>
