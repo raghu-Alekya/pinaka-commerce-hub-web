@@ -270,10 +270,10 @@
 }
 
 .role-table {
-  width: 100%;
+  width: max-content;
+  min-width: 1120px;
   border-collapse: collapse;
-  min-width: 980px;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .role-table th,
@@ -309,12 +309,77 @@
   text-align: center;
 }
 
-.role-table th:nth-child(2) { width: 165px; }
-.role-table th:nth-child(3) { width: 175px; }
-.role-table th:nth-child(4) { width: 280px; }
-.role-table th:nth-child(5) { width: 105px; }
-.role-table th:nth-child(6) { width: 165px; }
-.role-table .role-actions-col { width: 115px; }
+/* Table column alignment */
+.role-table th:nth-child(1),
+.role-table td:nth-child(1) {
+  width: 43px;
+  min-width: 43px;
+}
+
+.role-table th:nth-child(2),
+.role-table td:nth-child(2) {
+  width: 165px;
+  min-width: 165px;
+}
+
+.role-table th:nth-child(3),
+.role-table td:nth-child(3) {
+  width: 175px;
+  min-width: 175px;
+}
+
+.role-table th:nth-child(4),
+.role-table td:nth-child(4) {
+  width: 280px;
+  min-width: 280px;
+}
+
+.role-table th:nth-child(5),
+.role-table td:nth-child(5) {
+  width: 105px;
+  min-width: 105px;
+}
+
+/* Created On column */
+.role-table th:nth-child(6),
+.role-table td:nth-child(6) {
+  width: 150px;
+  min-width: 150px;
+  white-space: nowrap;
+  padding-left: 16px;
+  padding-right: 16px;
+  text-align: left;
+}
+
+/* Actions column */
+.role-table th:nth-child(7),
+.role-table td:nth-child(7) {
+  width: 125px;
+  min-width: 125px;
+  text-align: center;
+}
+.role-table .role-actions-col {
+  width: 125px;
+  min-width: 125px;
+  text-align: center;
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  background: #fbfcfe;
+  white-space: nowrap;
+}
+
+.role-table td.role-actions {
+  width: 125px;
+  min-width: 125px;
+  text-align: center;
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background: #ffffff;
+  white-space: nowrap;
+  box-shadow: -6px 0 10px rgba(28, 43, 78, 0.06);
+}
 
 .role-table input[type="checkbox"] {
   appearance: none;
@@ -536,4 +601,255 @@
     flex-direction: column;
     align-items: flex-start;
   }
+}
+/* Fix Created On header and column */
+.role-table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Created On column */
+.role-table th:nth-child(6),
+.role-table td:nth-child(6) {
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: visible;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+/* Actions column */
+.role-table th:nth-child(7),
+.role-table td:nth-child(7),
+.role-table .role-actions-col,
+.role-table td.role-actions {
+  width: 125px;
+  min-width: 125px;
+  max-width: 125px;
+}
+
+/* Keep Actions column visible while scrolling */
+.role-table .role-actions-col {
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  text-align: center;
+  background: #fbfcfe;
+}
+
+.role-table td.role-actions {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  text-align: center;
+  white-space: nowrap;
+  background: #ffffff;
+  box-shadow: -6px 0 10px rgba(28, 43, 78, 0.06);
+}
+
+/* Prevent table headings from being cut */
+.role-table th {
+  white-space: nowrap;
+  overflow: visible;
+}
+
+
+/* Created date text */
+.role-table td:nth-child(6) {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+  color: #2b354d;
+}
+/* Created On column */
+.role-table th.role-created-col,
+.role-table td.role-created-cell {
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  padding: 0 16px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+/* Actions column */
+.role-table th.role-actions-col,
+.role-table td.role-actions {
+  width: 125px;
+  min-width: 125px;
+  max-width: 125px;
+}
+
+/* Keep Created On text aligned */
+.role-created-cell {
+  color: #2b354d;
+  font-size: 10px;
+  white-space: nowrap;
+}
+/* Delete popup overlay */
+.role-delete-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 27, 55, 0.45);
+}
+
+/* Delete popup box */
+.role-delete-modal {
+  width: 100%;
+  max-width: 390px;
+  padding: 28px 30px 25px;
+  border: 1px solid #edf0f5;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 55px rgba(20, 35, 75, 0.2);
+  text-align: center;
+  animation: roleDeletePopupIn 0.18s ease-out;
+}
+
+.role-delete-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fff0f0;
+  color: #e34d5b;
+  font-size: 23px;
+}
+
+.role-delete-modal h3 {
+  margin: 0 0 10px;
+  color: #18213c;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.role-delete-modal p {
+  margin: 0;
+  color: #687691;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.role-delete-modal p strong {
+  color: #25314c;
+  font-weight: 700;
+}
+
+.role-delete-warning {
+  display: block;
+  margin-top: 8px;
+  color: #e34d5b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.role-delete-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.role-cancel-delete-btn,
+.role-confirm-delete-btn {
+  min-width: 105px;
+  height: 36px;
+  padding: 0 17px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.role-cancel-delete-btn {
+  border: 1px solid #dce3ed;
+  background: #ffffff;
+  color: #52617d;
+}
+
+.role-confirm-delete-btn {
+  border: 1px solid #e34d5b;
+  background: #e34d5b;
+  color: #ffffff;
+}
+
+.role-cancel-delete-btn:hover {
+  border-color: #b9c5d8;
+  background: #f7f9fc;
+}
+
+.role-confirm-delete-btn:hover {
+  background: #cc3f4d;
+  border-color: #cc3f4d;
+}
+
+.role-cancel-delete-btn:disabled,
+.role-confirm-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes roleDeletePopupIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .role-delete-modal {
+    max-width: 100%;
+    padding: 24px 20px;
+  }
+
+  .role-delete-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .role-cancel-delete-btn,
+  .role-confirm-delete-btn {
+    width: 100%;
+  }
+}
+/* Delete button in confirmation popup */
+.role-delete-confirm-btn {
+  min-width: 105px;
+  height: 36px;
+  padding: 0 17px;
+  border: 1px solid #e34d5b;
+  border-radius: 7px;
+  background: #e34d5b;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.role-delete-confirm-btn:hover {
+  background: #cc3f4d;
+  border-color: #cc3f4d;
+}
+
+.role-delete-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
