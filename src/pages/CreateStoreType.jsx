@@ -49,6 +49,8 @@ export default function CreateStoreType() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [formSnapshot, setFormSnapshot] = useState(emptyForm);
 
   async function loadStoreTypes() {
     const response = await storeTypesApi.getAll();
@@ -149,15 +151,10 @@ export default function CreateStoreType() {
     return Object.keys(nextErrors).length === 0;
   }
 
-  function submitForm(event) {
+    async function submitForm(event) {
     event.preventDefault();
 
-    if (
-      !form.code.trim() ||
-      !form.name.trim() ||
-      !form.description.trim()
-    ) {
-      setError("Please complete all required fields.");
+    if (!validateForm()) {
       return;
     }
 
