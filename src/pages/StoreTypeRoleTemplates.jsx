@@ -2,12 +2,12 @@ import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const initialRoles = [
-  { id: 1, name: "Restaurant Manager", icon: "bi-person-workspace", scope: "Store", defaultEnabled: true, required: false, color: "orange" },
-  { id: 2, name: "Shift Manager", icon: "bi-person-badge", scope: "Store", defaultEnabled: true, required: false, color: "blue" },
-  { id: 3, name: "Cashier", icon: "bi-person", scope: "Store", defaultEnabled: true, required: false, color: "blue" },
-  { id: 4, name: "Server", icon: "bi-person", scope: "Store", defaultEnabled: true, required: false, color: "purple" },
-  { id: 5, name: "Kitchen Manager", icon: "bi-person-workspace", scope: "Store", defaultEnabled: true, required: false, color: "purple" },
-  { id: 6, name: "Kitchen Staff", icon: "bi-person", scope: "Store", defaultEnabled: true, required: false, color: "purple" },
+  { id: 1, name: "Restaurant Manager", scope: "Store", active: true },
+  { id: 2, name: "Shift Manager", scope: "Store", active: true },
+  { id: 3, name: "Cashier", scope: "Store", active: true },
+  { id: 4, name: "Server", scope: "Store", active: true },
+  { id: 5, name: "Kitchen Manager", scope: "Store", active: true },
+  { id: 6, name: "Kitchen Staff", scope: "Store", active: true },
 ];
 
 export default function StoreTypeRoleTemplates() {
@@ -20,15 +20,19 @@ export default function StoreTypeRoleTemplates() {
   const [newRoleName, setNewRoleName] = useState("");
 
   const filteredRoles = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
     return roles.filter((role) =>
-      role.name.toLowerCase().includes(search.toLowerCase())
+      role.name.toLowerCase().includes(query)
     );
   }, [roles, search]);
 
-  function toggleRole(id, property) {
+  function toggleRole(id) {
     setRoles((current) =>
       current.map((role) =>
-        role.id === id ? { ...role, [property]: !role[property] } : role
+        role.id === id
+          ? { ...role, active: !role.active }
+          : role
       )
     );
   }
@@ -37,18 +41,25 @@ export default function StoreTypeRoleTemplates() {
     event.preventDefault();
 
     const name = newRoleName.trim();
+
     if (!name) return;
+
+    const duplicate = roles.some(
+      (role) => role.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if (duplicate) {
+      window.alert("This role template already exists.");
+      return;
+    }
 
     setRoles((current) => [
       ...current,
       {
         id: Date.now(),
         name,
-        icon: "bi-person",
         scope: "Store",
-        defaultEnabled: true,
-        required: false,
-        color: "blue",
+        active: true,
       },
     ]);
 
@@ -69,34 +80,38 @@ export default function StoreTypeRoleTemplates() {
 
       <div className="role-templates-title">
         <h1>
-          Restaurant <span>Active</span>
-          
+          Restaurant
+          <span className="role-templates-status">
+            <i className="bi bi-circle-fill" />
+            Active
+          </span>
         </h1>
+
         <p>
-          Store type for restaurant vertical with full service and quick service
-          operations.
+          Store type for restaurant vertical with full service and quick
+          service operations.
         </p>
       </div>
 
-      <div className="role-templates-tabs">
-  <button
-    type="button"
-    onClick={() => navigate(`/store-types/${storeTypeId}`)}
-  >
-    Overview
-  </button>
+      <nav className="role-templates-tabs">
+        <button
+          type="button"
+          onClick={() => navigate(`/store-types/${storeTypeId}`)}
+        >
+          Overview
+        </button>
 
-  <button
-    type="button"
-    onClick={() => navigate(`/store-types/${storeTypeId}/features`)}
-  >
-    Features
-  </button>
+        <button
+          type="button"
+          onClick={() => navigate(`/store-types/${storeTypeId}/features`)}
+        >
+          Features
+        </button>
 
-  <button type="button" className="active">
-    Role Templates
-  </button>
-</div>
+        <button type="button" className="active">
+          Role Templates
+        </button>
+      </nav>
 
       <section className="role-templates-card">
         <div className="role-templates-card-header">
@@ -138,58 +153,61 @@ export default function StoreTypeRoleTemplates() {
 
         <div className="role-templates-table">
           <div className="role-template-row role-template-row-head">
-             <div>Role Template</div>
-             <div>Scope</div>
-             <div>Active</div>
-             <div>Action</div>
-           </div>
+            <div>Role Template</div>
+            <div>Scope</div>
+            <div>Active</div>
+            <div>Action</div>
+          </div>
 
           {filteredRoles.map((role) => (
             <div className="role-template-row" key={role.id}>
-  <div className="role-template-name">
-    <span className={`role-template-icon ${role.color}`}>
-      <i className={`bi ${role.icon}`} />
-    </span>
-    {role.name}
-  </div>
+              <div className="role-template-name">{role.name}</div>
 
-  <div>{role.scope}</div>
+              <div>{role.scope}</div>
 
-  <div>
-    <button
-      type="button"
-      className={`role-template-switch ${
-        role.defaultEnabled ? "enabled" : ""
-      }`}
-      onClick={() => toggleRole(role.id, "defaultEnabled")}
-      aria-label={`Toggle ${role.name} active`}
-    >
-      <span />
-    </button>
-  </div>
+              <div>
+                <button
+                  type="button"
+                  className={`role-template-switch ${
+                    role.active ? "enabled" : ""
+                  }`}
+                  onClick={() => toggleRole(role.id)}
+                  aria-label={`Toggle ${role.name} active status`}
+                >
+                  <span />
+                </button>
+              </div>
 
-  <div>
-    <button type="button" className="role-template-more-button">
-      <i className="bi bi-three-dots-vertical" />
-    </button>
-  </div>
-</div>
+              <div>
+                <button
+                  type="button"
+                  className="role-template-more-button"
+                  title={`Actions for ${role.name}`}
+                >
+                  <i className="bi bi-three-dots-vertical" />
+                </button>
+              </div>
+            </div>
           ))}
         </div>
 
         <div className="role-templates-footer">
-          <div>
+          <div className="role-templates-info">
             <i className="bi bi-info-circle-fill" />
             Role templates are reusable defaults. They are not assigned to
             employees here.
           </div>
 
           <div className="role-templates-pagination">
-            <button type="button">
+            <button type="button" aria-label="Previous page">
               <i className="bi bi-chevron-left" />
             </button>
-            <button type="button" className="active">1</button>
-            <button type="button">
+
+            <button type="button" className="active">
+              1
+            </button>
+
+            <button type="button" aria-label="Next page">
               <i className="bi bi-chevron-right" />
             </button>
           </div>
@@ -208,13 +226,18 @@ export default function StoreTypeRoleTemplates() {
           >
             <div className="role-template-modal-heading">
               <h2>Add Role Template</h2>
-              <button type="button" onClick={() => setShowModal(false)}>
+
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                aria-label="Close dialog"
+              >
                 <i className="bi bi-x-lg" />
               </button>
             </div>
 
             <label>
-              Role template name
+              Role Template Name
               <input
                 value={newRoleName}
                 onChange={(event) => setNewRoleName(event.target.value)}
@@ -231,7 +254,12 @@ export default function StoreTypeRoleTemplates() {
               >
                 Cancel
               </button>
-              <button type="submit" className="role-template-create-button">
+
+              <button
+                type="submit"
+                className="role-template-create-button"
+                disabled={!newRoleName.trim()}
+              >
                 Add Role
               </button>
             </div>

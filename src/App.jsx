@@ -4,7 +4,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import GuestRoute from "./auth/GuestRoute";
 import AppLayout from "./layouts/AppLayout";
-
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Merchants from "./pages/Merchants";
@@ -33,6 +32,7 @@ import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
+import ConfigurePermissions from "./pages/ConfigurePermissions";
 import RoleTemplates from "./pages/Roletemplates";
 import Vendors from "./pages/Vendors";
 import Tenders from "./pages/Tenders";
@@ -241,19 +241,31 @@ export default function App() {
             element={<Placeholder title={title} />}
           />
         ))}
-        <Route path="/employees/edit" element={<EditEmployee />} />
-        <Route path="/employees/add" element={<AddEmployee />} />
 
+        {/* Features */}
         <Route path="/features" element={<Features />} />
-        <Route path="/permissions" element={<FeaturePermissions />} />
+        <Route
+          path="/features/:featureId/permissions"
+          element={<ConfigurePermissions />}
+        />
 
-        <Route path="/plans/new" element={<CreatePlan />} />
+        {/* Feature Permissions */}
+        <Route path="/permissions" element={<FeaturePermissions />} />
+        <Route
+          path="/permissions/:featureId"
+          element={<FeaturePermissions />}
+        />
+
+        {/* Master Setup */}
         <Route path="/vendors" element={<Vendors />} />
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
-        <Route path="/store-types/:storeTypeId" element={<StoreTypeDetails />} />
+        <Route
+          path="/store-types/:storeTypeId"
+          element={<StoreTypeDetails />}
+        />
         <Route
           path="/store-types/:storeTypeId/features"
           element={<StoreTypeFeatures />}
@@ -263,16 +275,6 @@ export default function App() {
           element={<StoreTypeRoleTemplates />}
         />
 
-        {placeholders.map((title) => {
-          const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;
-          return (
-            <Route
-              key={title}
-              path={path}
-              element={<Placeholder title={title} />}
-            />
-          );
-        })}
       </Route>
 
       <Route

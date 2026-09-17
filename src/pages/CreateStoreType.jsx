@@ -25,8 +25,17 @@ const emptyForm = {
   code: "",
   name: "",
   description: "",
+  category: "",
   status: "Active",
 };
+
+function formatToday() {
+  return new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
 
 export default function CreateStoreType() {
   const navigate = useNavigate();
@@ -68,16 +77,14 @@ export default function CreateStoreType() {
   }, []);
 
   const filteredStoreTypes = useMemo(() => {
-    const value = search.toLowerCase();
+    const searchValue = search.trim().toLowerCase();
 
     return storeTypes.filter((item) => {
       const matchesSearch = `${item.code} ${item.name} ${item.description}`
         .toLowerCase()
-        .includes(value);
+        .includes(searchValue);
 
-      const matchesStatus = !statusFilter || item.status === statusFilter;
-
-      return matchesSearch && matchesStatus;
+      return matchesSearch && (!statusFilter || item.status === statusFilter);
     });
   }, [storeTypes, search, statusFilter]);
 
@@ -86,14 +93,21 @@ export default function CreateStoreType() {
 
     setForm((current) => ({
       ...current,
-      [name]: value,
+      [name]: name === "code" ? value.toUpperCase() : value,
+    }));
+
+    setErrors((current) => ({
+      ...current,
+      [name]: "",
     }));
   }
 
   function resetForm() {
-    setForm(emptyForm);
-    setEditingId(null);
-  }
+  setForm(emptyForm);
+  setFormSnapshot(emptyForm);
+  setEditingId(null);
+  setErrors({});
+}
 
   function resetFilters() {
     setSearch("");
@@ -146,13 +160,17 @@ export default function CreateStoreType() {
 
   function editStoreType(item) {
     setEditingId(item.id);
+    setErrors({});
 
-    setForm({
-      code: item.code,
-      name: item.name,
-      description: item.description,
-      status: item.status,
-    });
+   const nextForm = {
+  code: item.code,
+  name: item.name,
+  description: item.description,
+  status: item.status,
+};
+
+setForm(nextForm);
+setFormSnapshot(nextForm);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -204,17 +222,23 @@ export default function CreateStoreType() {
               Store Type Code <b>*</b>
             </span>
 
-            <div className="store-type-input-wrap">
+            <div className={`store-type-input-wrap ${errors.code ? "has-error" : ""}`}>
               <i className="bi bi-tag" />
               <input
                 name="code"
                 value={form.code}
                 onChange={updateField}
                 placeholder="e.g. GROCERY"
+                maxLength="30"
               />
             </div>
 
-            <small>Unique key (e.g. REFUNDS / KIDS / LOYALTY)</small>
+            <small>
+              Use 3–30 uppercase letters, numbers, or underscores. Example:
+              GROCERY, RESTAURANT_FNB.
+            </small>
+
+            {errors.code && <em className="field-error">{errors.code}</em>}
           </label>
 
           <label className="store-type-field">
@@ -222,53 +246,67 @@ export default function CreateStoreType() {
               Display Name <b>*</b>
             </span>
 
-            <div className="store-type-input-wrap">
+            <div className={`store-type-input-wrap ${errors.name ? "has-error" : ""}`}>
               <i className="bi bi-type" />
               <input
                 name="name"
                 value={form.name}
                 onChange={updateField}
                 placeholder="e.g. Grocery"
+                maxLength="80"
               />
             </div>
 
-            <small>Name shown in the system</small>
+            <small>Name displayed throughout the system.</small>
+
+            {errors.name && <em className="field-error">{errors.name}</em>}
           </label>
         </div>
 
-        <label className="store-type-field store-type-description-field">
-          <span>
-            Description <b>*</b>
-          </span>
+        <div className="store-type-bottom-grid">
+          <label className="store-type-field store-type-description-field">
+            <span>
+              Description <b>*</b>
+            </span>
 
-          <div className="store-type-textarea-wrap">
-            <i className="bi bi-file-earmark-text" />
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={updateField}
-              maxLength="500"
-              placeholder="Describe the vertical, its operating model, and configuration needs..."
-            />
-          </div>
+            <div
+              className={`store-type-textarea-wrap ${
+                errors.description ? "has-error" : ""
+              }`}
+            >
+              <i className="bi bi-file-earmark-text" />
 
-          <small className="store-type-character-count">
-            {form.description.length}/500
-          </small>
-        </label>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={updateField}
+                maxLength="500"
+                placeholder="Describe the vertical, its operating model, and configuration needs..."
+              />
+            </div>
 
-        <label className="store-type-field store-type-status-field">
-          <span>
-            Status <b>*</b>
-          </span>
+            <small className="store-type-character-count">
+              {form.description.length}/500
+            </small>
 
-          <select name="status" value={form.status} onChange={updateField}>
-            <option value="Active">● Active</option>
-            <option value="Inactive">● Inactive</option>
-          </select>
+            {errors.description && (
+              <em className="field-error">{errors.description}</em>
+            )}
+          </label>
 
-          <small>Active or Inactive.</small>
-        </label>
+          <label className="store-type-field store-type-status-field">
+            <span>
+              Status <b>*</b>
+            </span>
+
+            <select name="status" value={form.status} onChange={updateField}>
+              <option value="Active">● Active</option>
+              <option value="Inactive">● Inactive</option>
+            </select>
+
+            <small>Inactive types cannot be selected for new stores.</small>
+          </label>
+        </div>
 
         <div className="store-type-actions">
           <button
@@ -311,10 +349,9 @@ export default function CreateStoreType() {
           <button
             type="button"
             className="store-type-reset-button"
-            title="Reset filters"
             onClick={resetFilters}
           >
-            <i className="bi bi-arrow-clockwise" />
+            <i className="bi bi-arrow-counterclockwise" />
             Reset
           </button>
         </div>
@@ -323,35 +360,37 @@ export default function CreateStoreType() {
           <div className="store-types-table">
             <div className="store-types-row store-types-row-head">
               <div>
-                <input type="checkbox" aria-label="Select all" />
+                <input type="checkbox" aria-label="Select all store types" />
               </div>
               <div>Store Type Code</div>
               <div>Name / Description</div>
               <div>Status</div>
               <div>Created On</div>
+              <div>Updated On</div>
               <div>Actions</div>
             </div>
 
             {filteredStoreTypes.map((item) => (
               <div className="store-types-row" key={item.id}>
                 <div>
-                  <input type="checkbox" aria-label={`Select ${item.name}`} />
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${item.name}`}
+                  />
                 </div>
 
                 <div className="store-type-code-cell">
-                  <span className={`store-type-item-icon ${item.tone}`}>
-                    <i className={`bi ${item.icon}`} />
-                  </span>
                   <strong>{item.code}</strong>
                 </div>
 
-                <div
-                   className="store-type-name-cell store-type-name-clickable"
-                     onClick={() => navigate(`/store-types/${item.id}`)}
-                   >
-                        <strong>{item.name}</strong>
-                       <span>{item.description}</span>
-                    </div>
+                <button
+                  type="button"
+                  className="store-type-name-cell store-type-name-clickable"
+                  onClick={() => navigate(`/store-types/${item.id}`)}
+                >
+                  <strong>{item.name}</strong>
+                  <span>{item.description}</span>
+                </button>
 
                 <div>
                   <span
@@ -365,6 +404,7 @@ export default function CreateStoreType() {
                 </div>
 
                 <div>{item.createdOn}</div>
+                <div>{item.updatedOn}</div>
 
                 <div className="store-type-table-actions">
                   <button
@@ -400,13 +440,11 @@ export default function CreateStoreType() {
           </span>
 
           <div>
-            <button type="button">
+            <button type="button" aria-label="Previous page">
               <i className="bi bi-chevron-left" />
             </button>
-            <button type="button" className="active">
-              1
-            </button>
-            <button type="button">
+            <button type="button" className="active">1</button>
+            <button type="button" aria-label="Next page">
               <i className="bi bi-chevron-right" />
             </button>
           </div>
@@ -423,13 +461,27 @@ export default function CreateStoreType() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="delete-storetype-icon">
-              <i className="bi bi-trash3" />
+              <i className="bi bi-exclamation-triangle" />
             </div>
 
             <h2>Delete Store Type?</h2>
 
             <p>
-              Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
+              Are you sure you want to delete{" "}
+              <strong>{deleteTarget.name}</strong>?
+            </p>
+
+            {deleteTarget.assignedStores > 0 && (
+              <div className="delete-impact-warning">
+                <i className="bi bi-exclamation-circle-fill" />
+                This store type is assigned to{" "}
+                <strong>{deleteTarget.assignedStores}</strong>{" "}
+                {deleteTarget.assignedStores === 1 ? "store" : "stores"}.
+                Deleting it may affect their configuration.
+              </div>
+            )}
+
+            <p className="delete-final-warning">
               This action cannot be undone.
             </p>
 

@@ -33,6 +33,7 @@ export default function Features() {
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [actionMenu, setActionMenu] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
 
   const isEditing = editingId !== null;
   const editingFeature = Array.isArray(features)
@@ -62,6 +63,37 @@ export default function Features() {
   const updateField = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateFeature = () => {
+    const errors = {};
+    const code = form.code.trim();
+    const name = form.name.trim();
+
+    if (!code) errors.code = "Feature Code is required.";
+    if (!name) errors.name = "Feature Name is required.";
+
+    if (code && features.some(
+      (item) =>
+        item.id !== editingId &&
+        (item.code || "").trim().toLowerCase() === code.toLowerCase()
+    )) {
+      errors.code = "Feature Code already exists. Enter a unique code.";
+    }
+
+    if (name && features.some(
+      (item) =>
+        item.id !== editingId &&
+        item.name.trim().toLowerCase() === name.toLowerCase()
+    )) {
+      errors.name = "Feature Name already exists. Enter a unique name.";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const clearForm = () => {
@@ -79,6 +111,7 @@ export default function Features() {
       type: feature.type || "",
       status: feature.status || "Active",
     });
+    setFormErrors({});
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -252,7 +285,7 @@ const handleUpdateFeature = async () => {
     if (!actionMenu?.feature) return;
     const selectedFeature = actionMenu.feature;
     closeActionMenu();
-    navigate("/permissions", {
+    navigate(`/features/${selectedFeature.id}/permissions`, {
       state: {
         featureId: selectedFeature.id,
         featureName: selectedFeature.name,
@@ -309,16 +342,15 @@ const handleUpdateFeature = async () => {
 
   return (
     <div className="features-page">
+      <header className="features-page-heading">
+        <h1>Features</h1>
+        <p>Manage platform features and their details.</p>
+      </header>
+
       <section className="feature-details-card">
-        <div className="feature-header-row">
-          <div className="feature-title-wrap">
-            <div className="feature-title-icon">
-              <i className="bi bi-grid-1x2" />
-            </div>
-            <div>
-              <h1>Features</h1>
-              <p>Manage platform features and their details.</p>
-            </div>
+        <div className="feature-section-heading">
+          <div className="feature-title-icon">
+            <i className="bi bi-grid-1x2" />
           </div>
 
           <div className="feature-header-actions">
@@ -444,7 +476,7 @@ const handleUpdateFeature = async () => {
             <small>BOOLEAN / LIMIT / CONFIG</small>
           </div>
 
-          <div className="feature-field">
+          <div className="feature-field feature-status-field">
             <label>Status<span>*</span></label>
             <div className="select-shell">
               <select
@@ -458,7 +490,26 @@ const handleUpdateFeature = async () => {
               </select>
               <i className="bi bi-chevron-down" />
             </div>
-            <small>Active or Inactive</small>
+            <small>Active or Inactive.</small>
+          </div>
+        </div>
+
+        <div className="feature-form-footer">
+          {isEditing && (
+            <span className="editing-chip">Editing: {editingFeature?.name}</span>
+          )}
+
+          <div className="feature-footer-actions">
+            <button className="feature-action secondary" type="button" onClick={clearForm}>
+              {isEditing ? "Cancel" : "Clear"}
+            </button>
+            <button
+              className="feature-action primary"
+              type="button"
+              onClick={isEditing ? updateFeature : saveFeature}
+            >
+              {isEditing ? "Update Feature" : "Save Feature"}
+            </button>
           </div>
         </div>
       </section>
