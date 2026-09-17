@@ -110,7 +110,6 @@ export default function CreateStoreType() {
 
   function resetForm() {
   setForm(emptyForm);
-  setFormSnapshot(emptyForm);
   setEditingId(null);
   setErrors({});
 }
@@ -215,7 +214,6 @@ export default function CreateStoreType() {
 };
 
 setForm(nextForm);
-setFormSnapshot(nextForm);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -326,9 +324,9 @@ setFormSnapshot(nextForm);
             {errors.description && (
               <em className="field-error">{errors.description}</em>
             )}
-          </label>
+           </label>
 
-          <label className="store-type-field store-type-status-field">
+           <label className="store-type-field store-type-status-field">
             <span>
               Status <b>*</b>
             </span>
@@ -339,7 +337,7 @@ setFormSnapshot(nextForm);
             </select>
 
             <small>Inactive types cannot be selected for new stores.</small>
-          </label>
+           </label>
         </div>
 
         <div className="store-type-actions">
