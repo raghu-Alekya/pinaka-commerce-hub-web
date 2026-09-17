@@ -10,4 +10,7 @@ export const endpoints = {
   store: (id) => `/stores/${id}`,
   storeConnector: (id) => `/stores/${id}/connector`,
   merchantStores: (merchantId) => `/merchants/${merchantId}/stores`,
+  features: "/features",
+  feature: (id) => `/features/${id}`,
+  featureStatus: (id) => `/features/${id}/status`,
 };

@@ -11,13 +11,17 @@ export class ApiError extends Error {
   }
 }
 
+// Fixed buildUrl with safety checks
 function buildUrl(path) {
+  if (!path || typeof path !== "string") {
+    return API_BASE_URL || "/";
+  }
   if (/^https?:\/\//i.test(path)) return path;
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   if (normalizedPath.startsWith("/connector/") || normalizedPath.startsWith("/connectors/")) {
     return normalizedPath;
   }
-  return `${API_BASE_URL}${normalizedPath}`;
+  return `${API_BASE_URL || ""}${normalizedPath}`;
 }
 
 async function parseBody(response) {
