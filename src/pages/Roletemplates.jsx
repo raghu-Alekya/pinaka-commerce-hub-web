@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   roleTemplatesApi,
   readRoleTemplatesList,
@@ -28,6 +29,7 @@ function displayDate(value) {
 }
 
 export default function RoleTemplates() {
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
   const [form, setForm] = useState(initialForm);
 
@@ -512,8 +514,13 @@ export default function RoleTemplates() {
                     </td>
 
                     <td className="role-name-cell">
-                      {template.name || "—"}
-                    </td>
+                      <button
+                        type="button"
+                        className="role-name-link"
+                        onClick={() => navigate(`/role-templates/${template.id}`)} >
+                        {template.name || "—"}
+                      </button>
+                   </td>
 
                     <td className="role-description-cell">
                       {template.description || "-"}

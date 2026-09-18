@@ -1160,3 +1160,19 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.role-name-link {
+  padding: 0;
+  border: 0;
+  color: #173861;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.role-name-link:hover {
+  color: #0873f9;
+  text-decoration: underline;
+}
