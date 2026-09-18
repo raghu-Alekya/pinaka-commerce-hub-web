@@ -10,9 +10,14 @@ import {
 } from "../api/permissions";
 import { listFeatures } from "../api/features";
 
+/* =========================================================
+   EMPTY FORM
+   ========================================================= */
+
 const emptyForm = {
   key: "",
   name: "",
+  featureId: "",
   description: "",
   status: "ACTIVE",
 };
@@ -35,6 +40,13 @@ export default function FeaturePermissions() {
   const [success, setSuccess] = useState("");
 
   const isEditing = editingId !== null;
+  const hasUnsavedChanges = Object.keys(emptyForm).some(
+    (field) => form[field] !== savedForm[field]
+  );
+
+  /* =========================================================
+     UPDATE FIELD
+     ========================================================= */
 
   const loadFeatures = async () => {
     try {
@@ -98,6 +110,10 @@ export default function FeaturePermissions() {
     setError("");
     setSuccess("");
   };
+
+  /* =========================================================
+     CLEAR / RESET FORM
+     ========================================================= */
 
   const clearForm = () => {
     setEditingId(null);
@@ -203,6 +219,11 @@ export default function FeaturePermissions() {
 
   return (
     <div className="feature-permissions-page">
+
+      {/* =====================================================
+          PAGE HEADER
+          ===================================================== */}
+
       <div className="fp-page-head">
         <div className="fp-title-wrap"><div><h1>Feature Permissions</h1><p>Manage feature permissions and permission access.</p></div></div>
       </div>
@@ -211,6 +232,7 @@ export default function FeaturePermissions() {
       {success && <div className="fp-success-message" role="status">{success}</div>}
 
       <section className="fp-info-card">
+
         <div className="fp-info-top">
           <div><h2>Permission Information</h2><p>Create a new permission or edit an existing permission.</p></div>
           <div className="fp-mode-chip">{isEditing ? `Editing: ${form.key}` : "Creating New Permission"}</div>
@@ -242,10 +264,15 @@ export default function FeaturePermissions() {
         <div className="fp-form-actions"><button type="button" className="fp-btn fp-btn-secondary" onClick={clearForm} disabled={saving}><i className="bi bi-arrow-counterclockwise" /> Reset</button><button type="button" className="fp-btn fp-btn-primary" onClick={savePermission} disabled={saving}><i className="bi bi-floppy" />{saving ? "Saving..." : isEditing ? "Update Permission" : "Save Permission"}</button></div>
       </section>
 
+      {/* =====================================================
+          PERMISSIONS LIST
+          ===================================================== */}
+
       <section className="fp-list-card">
         <div className="fp-list-toolbar"><h2>Permissions List ({filteredPermissions.length})</h2><div className="fp-list-filters"><div className="fp-search"><i className="bi bi-search" /><input placeholder="Search permissions..." value={search} onChange={(event) => setSearch(event.target.value)} /></div><div className="fp-status-filter"><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="All Statuses">All Statuses</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select><i className="bi bi-chevron-down" /></div><button type="button" className="fp-reset-btn" onClick={() => { setSearch(""); setStatusFilter("All Statuses"); }}><i className="bi bi-arrow-repeat" /> Reset</button></div></div>
         <div className="fp-table-wrap"><table className="fp-table"><thead><tr><th>Permission Key</th><th>Permission Name</th><th>Description</th><th>Status</th><th>Actions</th></tr></thead><tbody>{loading ? <tr><td colSpan="5" className="fp-empty-cell">Loading permissions...</td></tr> : !selectedFeatureId ? <tr><td colSpan="5" className="fp-empty-cell">Select a feature to view permissions.</td></tr> : filteredPermissions.length === 0 ? <tr><td colSpan="5" className="fp-empty-cell">No permissions found.</td></tr> : filteredPermissions.map((permission) => { const id = permission.id; const status = String(permission.status || "ACTIVE").toUpperCase(); return <tr key={id}><td>{permission.permissionKey || permission.key || "-"}</td><td>{permission.name || "-"}</td><td className="fp-description-cell">{permission.description || "-"}</td><td><span className={`fp-status-pill ${status.toLowerCase()}`}><b />{status === "ACTIVE" ? "Active" : "Inactive"}</span></td><td><div className="fp-row-actions"><button type="button" className="edit" onClick={() => editPermission(permission)} disabled={saving || deletingId !== null}><i className="bi bi-pencil" /></button><button type="button" className="copy" onClick={() => duplicatePermission(permission)} disabled={saving || deletingId !== null}><i className="bi bi-copy" /></button><button type="button" className="delete" onClick={() => deletePermission(id)} disabled={saving || deletingId === id}><i className="bi bi-trash3" /></button></div></td></tr>; })}</tbody></table></div>
       </section>
+
     </div>
   );
 }

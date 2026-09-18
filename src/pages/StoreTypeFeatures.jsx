@@ -77,6 +77,10 @@ export default function StoreTypeFeatures() {
       .filter((group) => group.options.length > 0);
   }, [modalSearch]);
 
+  const addFeatureModalStyle = {
+    maxHeight: `${Math.min(78, 40 + selectedFeatures.length * 4 + filteredGroups.length * 5)}vh`,
+  };
+
   function toggleFeature(id) {
     setFeatures((current) =>
       current.map((feature) =>
@@ -274,6 +278,7 @@ export default function StoreTypeFeatures() {
         >
           <div
             className="add-features-modal"
+            style={addFeatureModalStyle}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="add-features-modal-header">
@@ -333,6 +338,27 @@ export default function StoreTypeFeatures() {
               ))}
             </div>
 
+            <div className="add-features-preview">
+              <div className="add-features-preview-header">
+                <span>Selected Features</span>
+                <strong>{selectedFeatures.length}</strong>
+              </div>
+
+              <div className="add-features-preview-list">
+                {selectedFeatures.length > 0 ? (
+                  selectedFeatures.map((featureName) => (
+                    <span className="add-features-preview-pill" key={featureName}>
+                      {featureName}
+                    </span>
+                  ))
+                ) : (
+                  <span className="add-features-preview-empty">
+                    No features selected yet
+                  </span>
+                )}
+              </div>
+            </div>
+
             <div className="add-features-modal-actions">
               <button
                 type="button"
@@ -348,7 +374,7 @@ export default function StoreTypeFeatures() {
                 onClick={addSelectedFeatures}
                 disabled={selectedFeatures.length === 0}
               >
-                Add Selected
+                Add Selected ({selectedFeatures.length})
               </button>
             </div>
           </div>

@@ -84,13 +84,6 @@ const includedFeatureOptions = [
   ["Payments", "Payment processing", "bi-credit-card"],
 ];
 
-const addOnOptions = [
-  ["Advanced Analytics", "Detailed business insights", "bi-graph-up"],
-  ["Loyalty Program", "Customer loyalty and rewards", "bi-heart"],
-  ["API Access", "Integrate with third-party apps", "bi-code-slash"],
-  ["Premium Support", "Priority support and SLA", "bi-headset"],
-];
-
 function today() {
   return new Date().toLocaleDateString("en-US", {
     month: "short",
@@ -137,19 +130,17 @@ useEffect(() => {
   const [planStep, setPlanStep] = useState(1);
   const [editingId, setEditingId] = useState(null);
   const [includedFeatures, setIncludedFeatures] = useState([]);
-  const [optionalAddOns, setOptionalAddOns] = useState([]);
-  const [featureLimits, setFeatureLimits] = useState({
-    storesLimit: "",
-    terminalsLimit: "",
-    usersLimit: "",
-    roleTemplate: "",
-  });
 
   const [search, setSearch] = useState("");
   const [billingFilter, setBillingFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [message, setMessage] = useState("");
+
+  const textInputProps = {
+    autoComplete: "off",
+    spellCheck: false,
+  };
 
   const filteredPlans = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -171,18 +162,13 @@ useEffect(() => {
   const canContinueStepOne =
     form.code.trim() &&
     form.name.trim() &&
-    form.description.trim() &&
     form.applicableStoreType;
 
   const canContinuePricing =
     form.billingModel &&
     form.currency &&
     form.billingCycle &&
-    form.basePrice !== "" &&
-    form.additionalTerminalPrice !== "" &&
-    form.additionalUserPrice !== "" &&
-    form.trialPeriod &&
-    form.effectiveFrom;
+    form.basePrice !== "";
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -190,15 +176,6 @@ useEffect(() => {
     setForm((current) => ({
       ...current,
       [name]: name === "code" ? value.toUpperCase() : value,
-    }));
-  }
-
-  function updateFeatureLimit(event) {
-    const { name, value } = event.target;
-
-    setFeatureLimits((current) => ({
-      ...current,
-      [name]: value,
     }));
   }
 
@@ -210,26 +187,11 @@ useEffect(() => {
     );
   }
 
-  function toggleOptionalAddOn(addOnName) {
-    setOptionalAddOns((current) =>
-      current.includes(addOnName)
-        ? current.filter((item) => item !== addOnName)
-        : [...current, addOnName]
-    );
-  }
-
   function resetCreationForm() {
     setForm(emptyForm);
     setPlanStep(1);
     setEditingId(null);
     setIncludedFeatures([]);
-    setOptionalAddOns([]);
-    setFeatureLimits({
-      storesLimit: "",
-      terminalsLimit: "",
-      usersLimit: "",
-      roleTemplate: "",
-    });
   }
 
   function resetFilters() {
@@ -362,6 +324,7 @@ useEffect(() => {
               <div className="plan-input-wrap">
                 <i className="bi bi-tag" />
                 <input
+                  {...textInputProps}
                   name="code"
                   value={form.code}
                   onChange={updateField}
@@ -378,6 +341,7 @@ useEffect(() => {
               <div className="plan-input-wrap">
                 <i className="bi bi-type" />
                 <input
+                  {...textInputProps}
                   name="name"
                   value={form.name}
                   onChange={updateField}
@@ -395,17 +359,13 @@ useEffect(() => {
             <div className="plan-textarea-wrap">
               <i className="bi bi-file-earmark-text" />
               <textarea
+                {...textInputProps}
                 name="description"
                 value={form.description}
                 onChange={updateField}
-                maxLength="500"
                 placeholder="Describe the plan, its features and target audience..."
               />
             </div>
-
-            <small className="plan-character-count">
-              {form.description.length}/500
-            </small>
           </label>
 
           <div className="plan-create-grid plan-bottom-grid">
@@ -455,6 +415,7 @@ useEffect(() => {
               </span>
 
               <select
+                autoComplete="off"
                 name="status"
                 value={form.status}
                 onChange={updateField}
@@ -481,8 +442,7 @@ useEffect(() => {
               disabled={!canContinueStepOne}
               onClick={() => setPlanStep(2)}
             >
-              Next: Pricing
-              <i className="bi bi-arrow-right" />
+              Save and Continue
             </button>
           </div>
         </section>
@@ -505,6 +465,7 @@ useEffect(() => {
             <label className="plan-field">
               <span>Billing Model <b>*</b></span>
               <select
+                autoComplete="off"
                 name="billingModel"
                 value={form.billingModel}
                 onChange={updateField}
@@ -519,6 +480,7 @@ useEffect(() => {
             <label className="plan-field">
               <span>Currency <b>*</b></span>
               <select
+                autoComplete="off"
                 name="currency"
                 value={form.currency}
                 onChange={updateField}
@@ -533,6 +495,7 @@ useEffect(() => {
             <label className="plan-field">
               <span>Billing Cycle <b>*</b></span>
               <select
+                autoComplete="off"
                 name="billingCycle"
                 value={form.billingCycle}
                 onChange={updateField}
@@ -548,6 +511,7 @@ useEffect(() => {
               <span>Base Price <b>*</b></span>
               <div className="plan-price-input">
                 <input
+                  {...textInputProps}
                   name="basePrice"
                   type="number"
                   min="0"
@@ -564,6 +528,7 @@ useEffect(() => {
             <label className="plan-field">
               <span>Included Stores <b>*</b></span>
               <input
+                {...textInputProps}
                 name="includedStores"
                 type="number"
                 min="0"
@@ -575,6 +540,7 @@ useEffect(() => {
             <label className="plan-field">
               <span>Included Terminals <b>*</b></span>
               <input
+                {...textInputProps}
                 name="includedTerminals"
                 type="number"
                 min="0"
@@ -584,9 +550,10 @@ useEffect(() => {
             </label>
 
             <label className="plan-field">
-              <span>Additional Terminal Price <b>*</b></span>
+              <span>Additional Terminal Price</span>
               <div className="plan-price-input">
                 <input
+                  {...textInputProps}
                   name="additionalTerminalPrice"
                   type="number"
                   min="0"
@@ -603,6 +570,7 @@ useEffect(() => {
             <label className="plan-field">
               <span>Included Users/Employees <b>*</b></span>
               <input
+                {...textInputProps}
                 name="includedUsers"
                 type="number"
                 min="0"
@@ -612,9 +580,10 @@ useEffect(() => {
             </label>
 
             <label className="plan-field">
-              <span>Additional User Price <b>*</b></span>
+              <span>Additional User Price</span>
               <div className="plan-price-input">
                 <input
+                  {...textInputProps}
                   name="additionalUserPrice"
                   type="number"
                   min="0"
@@ -627,8 +596,9 @@ useEffect(() => {
             </label>
 
             <label className="plan-field">
-              <span>Trial Period <b>*</b></span>
+              <span>Trial Period</span>
               <select
+                autoComplete="off"
                 name="trialPeriod"
                 value={form.trialPeriod}
                 onChange={updateField}
@@ -642,8 +612,9 @@ useEffect(() => {
             </label>
 
             <label className="plan-field">
-              <span>Effective From <b>*</b></span>
+              <span>Effective From</span>
               <input
+                {...textInputProps}
                 name="effectiveFrom"
                 type="date"
                 value={form.effectiveFrom}
@@ -658,7 +629,6 @@ useEffect(() => {
               className="plan-cancel-button"
               onClick={() => setPlanStep(1)}
             >
-              <i className="bi bi-arrow-left" />
               Back
             </button>
 
@@ -668,8 +638,7 @@ useEffect(() => {
               disabled={!canContinuePricing}
               onClick={() => setPlanStep(3)}
             >
-              Next: Features and Limits
-              <i className="bi bi-arrow-right" />
+              Save and Continue
             </button>
           </div>
         </section>
@@ -683,8 +652,8 @@ useEffect(() => {
             </div>
 
             <div>
-              <h2>Features and Limits</h2>
-              <p>Select features, optional add-ons, and feature usage limits.</p>
+              <h2>Features</h2>
+              <p>Select the features included in this plan.</p>
             </div>
           </div>
 
@@ -710,88 +679,21 @@ useEffect(() => {
                   </span>
                 </label>
               ))}
-            </section>
 
-            <section className="plan-feature-panel">
-              <h3>Optional Add-ons</h3>
-
-              {addOnOptions.map(([name, description, icon]) => (
-                <div className="plan-addon-row" key={name}>
-                  <span className="plan-feature-icon">
-                    <i className={`bi ${icon}`} />
-                  </span>
-
-                  <span>
-                    <strong>{name}</strong>
-                    <small>{description}</small>
-                  </span>
-
-                  <button
-                    type="button"
-                    className={`plan-addon-toggle ${
-                      optionalAddOns.includes(name) ? "enabled" : ""
-                    }`}
-                    onClick={() => toggleOptionalAddOn(name)}
-                    aria-label={`Toggle ${name}`}
-                  >
-                    <span />
-                  </button>
+              <div className="plan-feature-summary">
+                <span className="plan-feature-summary-label">Selected Features</span>
+                <div className="plan-review-feature-list">
+                  {includedFeatures.length > 0 ? (
+                    includedFeatures.map((feature) => (
+                      <span className="plan-review-feature-pill" key={feature}>
+                        {feature}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="plan-review-empty">No features selected</span>
+                  )}
                 </div>
-              ))}
-            </section>
-
-            <section className="plan-feature-panel plan-limits-panel">
-              <h3>Feature Usage Limits</h3>
-
-              <label className="plan-field">
-                <span>Stores Limit</span>
-                <input
-                  type="number"
-                  min="0"
-                  name="storesLimit"
-                  value={featureLimits.storesLimit}
-                  onChange={updateFeatureLimit}
-                  placeholder="0"
-                />
-              </label>
-
-              <label className="plan-field">
-                <span>Terminals Limit</span>
-                <input
-                  type="number"
-                  min="0"
-                  name="terminalsLimit"
-                  value={featureLimits.terminalsLimit}
-                  onChange={updateFeatureLimit}
-                  placeholder="0"
-                />
-              </label>
-
-              <label className="plan-field">
-                <span>Users Limit</span>
-                <input
-                  type="number"
-                  min="0"
-                  name="usersLimit"
-                  value={featureLimits.usersLimit}
-                  onChange={updateFeatureLimit}
-                  placeholder="0"
-                />
-              </label>
-
-              <label className="plan-field">
-                <span>Role/User Limitations</span>
-                <select
-                  name="roleTemplate"
-                  value={featureLimits.roleTemplate}
-                  onChange={updateFeatureLimit}
-                >
-                  <option value="">Select role template</option>
-                  <option value="Admin">Admin</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Staff">Staff</option>
-                </select>
-              </label>
+              </div>
             </section>
           </div>
 
@@ -801,7 +703,6 @@ useEffect(() => {
               className="plan-cancel-button"
               onClick={() => setPlanStep(2)}
             >
-              <i className="bi bi-arrow-left" />
               Back
             </button>
 
@@ -811,8 +712,7 @@ useEffect(() => {
               disabled={includedFeatures.length === 0}
               onClick={() => setPlanStep(4)}
             >
-              Next: Review and Create
-              <i className="bi bi-arrow-right" />
+              Save and Continue
             </button>
           </div>
         </section>
@@ -877,29 +777,25 @@ useEffect(() => {
             <section className="plan-review-section">
               <h3>
                 <i className="bi bi-boxes" />
-                Features and Limits
+                Features
               </h3>
 
               <dl>
                 <div>
                   <dt>Included Features</dt>
-                  <dd>{includedFeatures.join(", ") || "None"}</dd>
-                </div>
-                <div>
-                  <dt>Add-ons</dt>
-                  <dd>{optionalAddOns.join(", ") || "None"}</dd>
-                </div>
-                <div>
-                  <dt>Usage Limits</dt>
-                  <dd>
-                    Stores: {featureLimits.storesLimit || "0"} · Terminals:{" "}
-                    {featureLimits.terminalsLimit || "0"} · Users:{" "}
-                    {featureLimits.usersLimit || "0"}
+                  <dd className="plan-review-feature-container">
+                    <div className="plan-review-feature-list">
+                      {includedFeatures.length > 0 ? (
+                        includedFeatures.map((feature) => (
+                          <span className="plan-review-feature-pill" key={feature}>
+                            {feature}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="plan-review-empty">None</span>
+                      )}
+                    </div>
                   </dd>
-                </div>
-                <div>
-                  <dt>Role Limitations</dt>
-                  <dd>{featureLimits.roleTemplate || "Not selected"}</dd>
                 </div>
               </dl>
             </section>
@@ -917,7 +813,6 @@ useEffect(() => {
               className="plan-cancel-button"
               onClick={() => setPlanStep(3)}
             >
-              <i className="bi bi-arrow-left" />
               Back
             </button>
 
@@ -933,45 +828,47 @@ useEffect(() => {
       )}
 
       <section className="plans-list-card">
-        <h2>Plans List</h2>
+        <div className="plans-list-header">
+          <h2>Plans List</h2>
 
-        <div className="plans-filters">
-          <label className="plan-search">
-            <i className="bi bi-search" />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search plans..."
-            />
-          </label>
+          <div className="plans-filters">
+            <label className="plan-search">
+              <i className="bi bi-search" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search plans..."
+              />
+            </label>
 
-          <select
-            value={billingFilter}
-            onChange={(event) => setBillingFilter(event.target.value)}
-          >
-            <option value="">All Billing Models</option>
-            <option value="Per store">Per Store</option>
-            <option value="Per terminal">Per Terminal</option>
-            <option value="Flat rate">Flat Rate</option>
-          </select>
+            <select
+              value={billingFilter}
+              onChange={(event) => setBillingFilter(event.target.value)}
+            >
+              <option value="">All Billing Models</option>
+              <option value="Per store">Per Store</option>
+              <option value="Per terminal">Per Terminal</option>
+              <option value="Flat rate">Flat Rate</option>
+            </select>
 
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-          >
-            <option value="">All Statuses</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
 
-          <button
-            type="button"
-            className="plan-reset-button"
-            onClick={resetFilters}
-          >
-            <i className="bi bi-arrow-counterclockwise" />
-            Reset
-          </button>
+            <button
+              type="button"
+              className="plan-reset-button"
+              onClick={resetFilters}
+            >
+              <i className="bi bi-arrow-counterclockwise" />
+              Reset
+            </button>
+          </div>
         </div>
 
         <div className="plans-table-wrap">
@@ -979,6 +876,7 @@ useEffect(() => {
             <div className="plans-row plans-row-head">
               <div>Plan Code</div>
               <div>Name / Description</div>
+              <div>Applicable Type</div>
               <div>Billing Model</div>
               <div>Price</div>
               <div>Status</div>
@@ -995,6 +893,10 @@ useEffect(() => {
                 <div className="plan-name-cell">
                   <strong>{plan.name}</strong>
                   <span>{plan.description}</span>
+                </div>
+
+                <div>
+                  <span className="plan-type-badge">{plan.storeType}</span>
                 </div>
 
                 <div>{plan.billingModel}</div>
@@ -1046,11 +948,11 @@ useEffect(() => {
           </span>
 
           <div>
-            <button type="button">
+            <button type="button" aria-label="Previous page">
               <i className="bi bi-chevron-left" />
             </button>
             <button type="button" className="active">1</button>
-            <button type="button">
+            <button type="button" aria-label="Next page">
               <i className="bi bi-chevron-right" />
             </button>
           </div>
