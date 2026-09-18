@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { storeTypesApi } from "../api/storeTypes";
-import RoleTemplateDetailsHeader from "../components/RoleTemplateDetailsHeader";
 
 function readStoreTypes(response) {
   const candidates = [
@@ -18,7 +18,7 @@ function readStoreTypes(response) {
   return candidates.find((value) => Array.isArray(value)) || [];
 }
 
-const storeTypes = [
+const fallbackStoreTypesList = [
   { id: "retail", name: "Retail", code: "RETAIL" },
   { id: "restaurant", name: "Restaurant", code: "RESTAURANT" },
   { id: "spa", name: "Spa", code: "SPA" },
@@ -26,10 +26,23 @@ const storeTypes = [
 ];
 
 export default function ViewRoleTemplateStoreTypes() {
-  const [storeTypes, setStoreTypes] = useState([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { roleId } = useParams();
+  const roleTemplate = {
+    ...(location.state?.roleTemplate ?? {}),
+  };
+
+  const [storeTypesList, setStoreTypesList] = useState(fallbackStoreTypesList);
   const [selectedStoreTypes, setSelectedStoreTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const tabs = [
+    ["overview", "Overview", `/role-templates/${roleId || "store-manager"}`],
+    ["store-types", "Applicable Store Types", `/role-templates/${roleId || "store-manager"}/store-types`],
+    ["access", "Feature & Permission Access", `/role-templates/${roleId || "store-manager"}/access`],
+  ];
 
   useEffect(() => {
     let cancelled = false;
@@ -42,8 +55,8 @@ export default function ViewRoleTemplateStoreTypes() {
         const response = await storeTypesApi.getAll();
         const items = readStoreTypes(response);
 
-        if (!cancelled) {
-          setStoreTypes(items);
+        if (!cancelled && items.length > 0) {
+          setStoreTypesList(items);
         }
       } catch (requestError) {
         if (!cancelled) {
@@ -128,34 +141,34 @@ export default function ViewRoleTemplateStoreTypes() {
         <div className="role-store-types-grid">
           {loading && <p>Loading store types...</p>}
 
-          {!loading && !error && storeTypes.length === 0 && (
+          {!loading && storeTypesList.length === 0 && (
             <p>No store types found.</p>
           )}
 
-          {!loading && storeTypes.map((storeType) => {
+          {!loading && storeTypesList.map((storeType) => {
             const storeTypeId =
               storeType.id ??
               storeType._id ??
               storeType.storeTypeId;
 
             return (
-            <label
-              key={storeTypeId}
-              className={`role-store-type-option ${
-                selectedStoreTypes.includes(storeTypeId) ? "selected" : ""
-              }`}
-            >
-             <input
-                type="checkbox"
-                checked={selectedStoreTypes.includes(storeTypeId)}
-                onChange={() => toggleStoreType(storeTypeId)}
-              />
+              <label
+                key={storeTypeId}
+                className={`role-store-type-option ${
+                  selectedStoreTypes.includes(storeTypeId) ? "selected" : ""
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedStoreTypes.includes(storeTypeId)}
+                  onChange={() => toggleStoreType(storeTypeId)}
+                />
 
-              <span>
-                <strong>{storeType.name || storeType.storeTypeName}</strong>
-                <small>{storeType.code || storeType.storeTypeCode}</small>
-              </span>
-            </label>
+                <span>
+                  <strong>{storeType.name || storeType.storeTypeName}</strong>
+                  <small>{storeType.code || storeType.storeTypeCode}</small>
+                </span>
+              </label>
             );
           })}
         </div>

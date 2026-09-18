@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { roleTemplatesApi } from "../api/roleTemplatesApi";
-import RoleTemplateDetailsHeader from "../components/RoleTemplateDetailsHeader";
-import { roleTemplate as fallbackRoleTemplate } from "../data/roleTemplateDetails";
 
 const defaultRoleTemplate = {
   id: "store-manager",
@@ -13,14 +11,21 @@ const defaultRoleTemplate = {
 };
 
 export default function ViewRoleTemplateOverview() {
+  const navigate = useNavigate();
   const { roleId } = useParams();
   const location = useLocation();
   const selectedRole = location.state?.roleTemplate;
   const [roleDetails, setRoleDetails] = useState(
-    selectedRole || fallbackRoleTemplate
+    selectedRole || defaultRoleTemplate
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const tabs = [
+    ["overview", "Overview", `/role-templates/${roleId || "store-manager"}`],
+    ["store-types", "Applicable Store Types", `/role-templates/${roleId || "store-manager"}/store-types`],
+    ["access", "Feature & Permission Access", `/role-templates/${roleId || "store-manager"}/access`],
+  ];
 
   useEffect(() => {
     let isMounted = true;
@@ -48,22 +53,22 @@ export default function ViewRoleTemplateOverview() {
               selectedRole?.roleName ??
               data?.name ??
               data?.roleName ??
-              fallbackRoleTemplate.name,
+              defaultRoleTemplate.name,
             code:
               selectedRole?.roleCode ??
               selectedRole?.code ??
               data?.roleCode ??
               data?.code ??
               data?.role_code ??
-              fallbackRoleTemplate.code,
+              defaultRoleTemplate.code,
             description:
               selectedRole?.description ??
               data?.description ??
-              fallbackRoleTemplate.description,
+              defaultRoleTemplate.description,
             status:
               selectedRole?.status ??
               data?.status ??
-              fallbackRoleTemplate.status,
+              defaultRoleTemplate.status,
           });
         }
       } catch (requestError) {
@@ -98,13 +103,13 @@ export default function ViewRoleTemplateOverview() {
 
       <div className="role-details-heading">
         <div>
-          <h1>{roleTemplate.name}</h1>
+          <h1>{roleDetails.name}</h1>
           <p>Configure store types, features and permissions for this role.</p>
         </div>
 
         <span className="role-details-active">
           <i className="bi bi-circle-fill" />
-          {roleTemplate.status}
+          {roleDetails.status}
         </span>
       </div>
 
@@ -114,7 +119,7 @@ export default function ViewRoleTemplateOverview() {
             type="button"
             key={id}
             className={id === "overview" ? "active" : ""}
-            onClick={() => navigate(path, { state: { roleTemplate } })}
+            onClick={() => navigate(path, { state: { roleTemplate: roleDetails } })}
           >
             {label}
           </button>
