@@ -816,6 +816,8 @@ export default function FeaturePermissions() {
 
               <col className="fp-col-name" />
 
+              <col className="fp-col-feature" />
+
               <col className="fp-col-description" />
 
               <col className="fp-col-status" />
@@ -835,6 +837,11 @@ export default function FeaturePermissions() {
 
                 <th>
                   Permission Name
+                  <i className="bi bi-chevron-expand" />
+                </th>
+
+                <th>
+                  Feature Name
                   <i className="bi bi-chevron-expand" />
                 </th>
 
@@ -880,6 +887,14 @@ export default function FeaturePermissions() {
                     <td>
                       {
                         permission.name
+                      }
+                    </td>
+
+                    {/* Feature Name */}
+
+                    <td>
+                      {
+                        permission.featureName
                       }
                     </td>
 

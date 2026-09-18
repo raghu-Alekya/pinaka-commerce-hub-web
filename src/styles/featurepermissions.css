@@ -830,23 +830,27 @@
    ========================================================= */
 
 .feature-permissions-page .fp-col-key {
-  width: 20%;
+  width: 16%;
 }
 
 .feature-permissions-page .fp-col-name {
-  width: 21%;
+  width: 15%;
 }
 
-.feature-permissions-page .fp-col-description {
-  width: 34%;
-}
-
-.feature-permissions-page .fp-col-status {
+.feature-permissions-page .fp-col-feature {
   width: 12%;
 }
 
-.feature-permissions-page .fp-col-actions {
+.feature-permissions-page .fp-col-description {
+  width: 32%;
+}
+
+.feature-permissions-page .fp-col-status {
   width: 13%;
+}
+
+.feature-permissions-page .fp-col-actions {
+  width: 12%;
 }
 
 
@@ -861,7 +865,7 @@
 .feature-permissions-page .fp-table th {
   height: 44px;
 
-  padding: 0 14px;
+  padding: 0 20px;
 
   border-bottom: 1px solid #e3e9f2;
 
@@ -903,7 +907,7 @@
 .feature-permissions-page .fp-table td {
   height: 52px;
 
-  padding: 0 14px;
+  padding: 0 20px;
 
   border-bottom: 1px solid #edf1f6;
 
@@ -914,7 +918,9 @@
 
   vertical-align: middle;
 
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .feature-permissions-page .fp-table tbody tr:last-child td {
@@ -1349,19 +1355,23 @@
   }
 
   .feature-permissions-page .fp-col-name {
-    width: 20%;
+    width: 18%;
+  }
+
+  .feature-permissions-page .fp-col-feature {
+    width: 15%;
   }
 
   .feature-permissions-page .fp-col-description {
-    width: 27%;
+    width: 23%;
   }
 
   .feature-permissions-page .fp-col-status {
-    width: 13%;
+    width: 14%;
   }
 
   .feature-permissions-page .fp-col-actions {
-    width: 20%;
+    width: 10%;
   }
 
   .feature-permissions-page .fp-table th,
