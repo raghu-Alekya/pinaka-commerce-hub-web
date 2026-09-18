@@ -8,7 +8,12 @@ const initialVendors = [
     contact: "Maya Patel",
     phone: "+1 (512) 555-0148",
     email: "maya@freshline.example",
-    address: "120 Market Street, Austin, TX",
+    addressLine1: "120 Market Street",
+    addressLine2: "Suite 300",
+    city: "Austin",
+    state: "TX",
+    zipCode: "78701",
+    country: "United States",
     category: "Food & Beverage",
     status: "Active",
     changedBy: "Admin",
@@ -21,7 +26,12 @@ const initialVendors = [
     contact: "Jordan Lee",
     phone: "+1 (512) 555-0192",
     email: "jordan@northstar.example",
-    address: "44 Industrial Drive, Dallas, TX",
+    addressLine1: "44 Industrial Drive",
+    addressLine2: "",
+    city: "Dallas",
+    state: "TX",
+    zipCode: "75201",
+    country: "United States",
     category: "Equipment",
     status: "Active",
     changedBy: "Admin",
@@ -35,8 +45,13 @@ const emptyForm = {
   contact: "",
   phone: "",
   email: "",
-  address: "",
   category: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  zipCode: "",
+  country: "",
   status: "Active",
 };
 
@@ -59,7 +74,10 @@ export default function Vendors() {
 
   function handleChange(event) {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
+    setForm((current) => ({
+      ...current,
+      [name]: name === "state" ? value.toUpperCase() : value,
+    }));
   }
 
   function resetForm() {
@@ -92,12 +110,17 @@ export default function Vendors() {
     setForm({
       name: vendor.name,
       code: vendor.code,
-      contact: vendor.contact,
-      phone: vendor.phone,
-      email: vendor.email,
-      address: vendor.address,
-      category: vendor.category,
-      status: vendor.status,
+      contact: vendor.contact || "",
+      phone: vendor.phone || "",
+      email: vendor.email || "",
+      category: vendor.category || "",
+      addressLine1: vendor.addressLine1 || "",
+      addressLine2: vendor.addressLine2 || "",
+      city: vendor.city || "",
+      state: vendor.state || "",
+      zipCode: vendor.zipCode || "",
+      country: vendor.country || "",
+      status: vendor.status || "Active",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -119,7 +142,7 @@ export default function Vendors() {
             </div>
             <div>
               <h2>{editingId ? "Update Vendor" : "Add Vendor"}</h2>
-              <p>Provide the vendor contact and business details.</p>
+              <p>Provide the vendor contact, structured address, and business details.</p>
             </div>
           </div>
           {editingId && (
@@ -136,7 +159,12 @@ export default function Vendors() {
           <label><span>Phone</span><input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone number" /></label>
           <label><span>Email</span><input type="email" name="email" value={form.email} onChange={handleChange} placeholder="Email address" /></label>
           <label><span>Product / Category</span><input name="category" value={form.category} onChange={handleChange} placeholder="e.g. Food & Beverage" /></label>
-          <label className="vendors-wide-field"><span>Address</span><textarea name="address" value={form.address} onChange={handleChange} placeholder="Vendor address" rows="2" /></label>
+          <label><span>Address Line 1 <b>*</b></span><input name="addressLine1" value={form.addressLine1} onChange={handleChange} placeholder="Street number + Street name" required /></label>
+          <label><span>Address Line 2</span><input name="addressLine2" value={form.addressLine2} onChange={handleChange} placeholder="Apartment / Suite / Unit (optional)" /></label>
+          <label><span>City</span><input name="city" value={form.city} onChange={handleChange} placeholder="City name" /></label>
+          <label><span>State</span><input name="state" value={form.state} onChange={handleChange} placeholder="2-letter state (e.g. TX)" maxLength={2} /></label>
+          <label><span>ZIP Code</span><input name="zipCode" value={form.zipCode} onChange={handleChange} placeholder="5-digit ZIP code (or ZIP+4)" /></label>
+          <label><span>Country</span><input name="country" value={form.country} onChange={handleChange} placeholder="Country name" /></label>
           <label><span>Status</span><select name="status" value={form.status} onChange={handleChange}><option>Active</option><option>Inactive</option></select></label>
         </div>
         <div className="vendors-form-actions">
@@ -154,14 +182,91 @@ export default function Vendors() {
           </div>
         </div>
         <div className="vendors-table-wrap">
-          <table className="vendors-table"><thead><tr><th>Vendor</th><th>Code</th><th>Contact</th><th>Phone / Email</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>{filteredVendors.map((vendor) => <tr key={vendor.id}><td><strong>{vendor.name}</strong><small>{vendor.address}</small></td><td>{vendor.code}</td><td>{vendor.contact || "—"}</td><td>{vendor.phone || "—"}<small>{vendor.email || "—"}</small></td><td>{vendor.category || "—"}</td><td><span className={`vendors-status ${vendor.status.toLowerCase()}`}>{vendor.status}</span></td><td className="vendors-actions"><button type="button" onClick={() => setViewingVendor(vendor)} aria-label={`View ${vendor.name}`}><i className="bi bi-eye" /></button><button type="button" onClick={() => editVendor(vendor)} aria-label={`Edit ${vendor.name}`}><i className="bi bi-pencil" /></button></td></tr>)}</tbody>
+          <table className="vendors-table">
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Code</th>
+                <th>Contact</th>
+                <th>Phone / Email</th>
+                <th>Address Line 1</th>
+                <th>Address Line 2</th>
+                <th>City</th>
+                <th>State</th>
+                <th>ZIP Code</th>
+                <th>Country</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredVendors.map((vendor) => (
+                <tr key={vendor.id}>
+                  <td><strong>{vendor.name}</strong></td>
+                  <td>{vendor.code}</td>
+                  <td>{vendor.contact || "—"}</td>
+                  <td>{vendor.phone || "—"}<small>{vendor.email || "—"}</small></td>
+                  <td>{vendor.addressLine1 || "—"}</td>
+                  <td>{vendor.addressLine2 || "—"}</td>
+                  <td>{vendor.city || "—"}</td>
+                  <td>{vendor.state || "—"}</td>
+                  <td>{vendor.zipCode || "—"}</td>
+                  <td>{vendor.country || "—"}</td>
+                  <td>{vendor.category || "—"}</td>
+                  <td><span className={`vendors-status ${vendor.status.toLowerCase()}`}>{vendor.status}</span></td>
+                  <td className="vendors-actions">
+                    <button type="button" onClick={() => setViewingVendor(vendor)} aria-label={`View ${vendor.name}`}>
+                      <i className="bi bi-eye" />
+                    </button>
+                    <button type="button" onClick={() => editVendor(vendor)} aria-label={`Edit ${vendor.name}`}>
+                      <i className="bi bi-pencil" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
           {filteredVendors.length === 0 && <div className="vendors-empty">No vendors found.</div>}
         </div>
       </div>
 
-      {viewingVendor && <div className="vendors-modal-backdrop" onClick={() => setViewingVendor(null)}><div className="vendors-modal" onClick={(event) => event.stopPropagation()}><div className="vendors-modal-heading"><div><h2>{viewingVendor.name}</h2><p>{viewingVendor.code}</p></div><button type="button" onClick={() => setViewingVendor(null)} aria-label="Close vendor details"><i className="bi bi-x-lg" /></button></div><dl>{[["Contact Person", viewingVendor.contact], ["Phone", viewingVendor.phone], ["Email", viewingVendor.email], ["Address", viewingVendor.address], ["Category", viewingVendor.category], ["Status", viewingVendor.status]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || "—"}</dd></div>)}</dl><p className="vendors-audit">Last changed by {viewingVendor.changedBy} on {viewingVendor.changedAt}</p></div></div>}
+      {viewingVendor && (
+        <div className="vendors-modal-backdrop" onClick={() => setViewingVendor(null)}>
+          <div className="vendors-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="vendors-modal-heading">
+              <div>
+                <h2>{viewingVendor.name}</h2>
+                <p>{viewingVendor.code}</p>
+              </div>
+              <button type="button" onClick={() => setViewingVendor(null)} aria-label="Close vendor details">
+                <i className="bi bi-x-lg" />
+              </button>
+            </div>
+            <dl>
+              {[
+                ["Contact Person", viewingVendor.contact],
+                ["Phone", viewingVendor.phone],
+                ["Email", viewingVendor.email],
+                ["Category", viewingVendor.category],
+                ["Address Line 1", viewingVendor.addressLine1],
+                ["Address Line 2", viewingVendor.addressLine2],
+                ["City", viewingVendor.city],
+                ["State", viewingVendor.state],
+                ["ZIP Code", viewingVendor.zipCode],
+                ["Country", viewingVendor.country],
+                ["Status", viewingVendor.status],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value || "—"}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="vendors-audit">Last changed by {viewingVendor.changedBy} on {viewingVendor.changedAt}</p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
