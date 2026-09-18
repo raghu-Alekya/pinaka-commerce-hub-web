@@ -123,7 +123,9 @@
 
 .role-secondary-btn,
 .role-primary-btn,
-.role-reset-btn {
+.role-reset-btn,
+.role-template-cancel-button,
+.role-template-submit-button {
   height: 44px;
   box-sizing: border-box;
   border-radius: 7px;
@@ -132,7 +134,8 @@
   font-weight: 500;
 }
 
-.role-secondary-btn {
+.role-secondary-btn,
+.role-template-cancel-button {
   min-width: 150px;
   padding: 0 24px;
   border: 1px solid #dce8f4;
@@ -140,7 +143,8 @@
   color: #25466f;
 }
 
-.role-primary-btn {
+.role-primary-btn,
+.role-template-submit-button {
   min-width: 205px;
   padding: 0 24px;
   border: 0;
@@ -149,17 +153,26 @@
   box-shadow: 0 4px 10px rgba(104, 78, 227, 0.16);
 }
 
-.role-primary-btn i {
+.role-primary-btn i,
+.role-template-submit-button i {
   margin-right: 7px;
 }
 
-.role-secondary-btn:hover {
+.role-secondary-btn:hover,
+.role-template-cancel-button:hover {
   border-color: #c9d2ef;
   background: #f4f6ff;
 }
 
-.role-primary-btn:hover {
+.role-primary-btn:hover,
+.role-template-submit-button:hover {
   background: #5b43d1;
+}
+
+.role-template-cancel-button:disabled,
+.role-template-submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* =========================================================
@@ -281,12 +294,20 @@
    FORM GRID
    ========================================================= */
 
-.role-form-grid {
+.role-form-grid,
+.role-bottom-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.72fr);
-  column-gap: 28px;
-  row-gap: 18px;
-  width: 100%;
+  gap: 18px 24px;
+}
+
+.role-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.role-bottom-grid {
+  grid-template-columns: minmax(0, 1.8fr) minmax(0, 0.8fr);
+  align-items: start;
+  margin-top: 14px;
 }
 
 /* =========================================================
@@ -295,8 +316,11 @@
 
 .role-field {
   display: grid;
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
+  color: #23426e;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .role-field span {
@@ -314,36 +338,65 @@
    INPUTS
    ========================================================= */
 
-.role-field input,
-.role-field select,
-.role-field textarea {
-  width: 100%;
+.role-input-wrap,
+.role-textarea-wrap,
+.role-field select {
   box-sizing: border-box;
   border: 1px solid #d9e6f4;
   border-radius: 7px;
-  outline: none;
   background: #ffffff;
-  color: #252d42;
-  font-size: 13px;
-  font-family: inherit;
 }
 
-.role-field input,
-.role-field select {
-  height: 44px;
-  padding: 0 12px;
+.role-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 40px;
+  padding: 0 10px;
+  color: #6380b0;
 }
 
-.role-field textarea {
-  min-height: 92px;
-  padding: 11px 12px;
-  resize: vertical;
+.role-input-wrap input,
+.role-textarea-wrap textarea {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: #2f3b56;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
   line-height: 1.4;
 }
 
-.role-field input::placeholder,
-.role-field textarea::placeholder {
+.role-input-wrap input::placeholder,
+.role-textarea-wrap textarea::placeholder {
   color: #9ba5b8;
+}
+
+.role-textarea-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-height: 38px;
+  padding: 10px 12px;
+  color: #6380b0;
+}
+
+.role-textarea-wrap textarea {
+  min-height: 24px;
+  height: 24px;
+  resize: none;
+}
+
+.role-field select {
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  outline: 0;
+  color: #2f3b56;
+  font: inherit;
+  font-size: 13px;
 }
 
 .role-field input:focus,
@@ -353,20 +406,19 @@
   box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
 }
 
-/* =========================================================
-   FIELD HELPER TEXT
-   ========================================================= */
-
 .role-field small {
   color: #5575a8;
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1.25;
+  font-weight: 400;
 }
 
-/* Description */
+.role-status-field {
+  width: 100%;
+}
 
 .role-description-field {
-  grid-column: 1 / 3;
+  min-width: 0;
 }
 
 /* =========================================================
@@ -381,8 +433,8 @@
   margin-top: 26px;
 }
 
-.role-form-actions .role-secondary-btn,
-.role-form-actions .role-primary-btn {
+.role-form-actions .role-template-cancel-button,
+.role-form-actions .role-template-submit-button {
   min-width: 150px;
 }
 
@@ -1159,4 +1211,20 @@
 .role-delete-confirm-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.role-name-link {
+  padding: 0;
+  border: 0;
+  color: #173861;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.role-name-link:hover {
+  color: #0873f9;
+  text-decoration: underline;
 }

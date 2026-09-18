@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   roleTemplatesApi,
   readRoleTemplatesList,
@@ -28,6 +29,7 @@ function displayDate(value) {
 }
 
 export default function RoleTemplates() {
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
   const [form, setForm] = useState(initialForm);
 
@@ -275,35 +277,9 @@ export default function RoleTemplates() {
               </div>
             </div>
 
-            <div className="role-heading-actions">
-              <span className="role-mode-pill">
-                {editingId !== null ? "Editing" : "Creating New"}
-              </span>
-
-              <button
-                type="button"
-                className="role-secondary-btn"
-                onClick={resetForm}
-                disabled={saving}
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                className="role-primary-btn"
-                onClick={saveTemplate}
-                disabled={saving}
-              >
-                <i className="bi bi-floppy" />
-
-                {saving
-                  ? "Saving..."
-                  : editingId !== null
-                  ? "Update Role Template"
-                  : "Save Role Template"}
-              </button>
-            </div>
+            <span className="role-mode-pill">
+              {editingId !== null ? "Editing" : "Creating New"}
+            </span>
           </div>
 
           {error && (
@@ -322,14 +298,17 @@ export default function RoleTemplates() {
                 Role Code <b>*</b>
               </span>
 
-              <input
-                type="text"
-                name="roleCode"
-                value={form.roleCode}
-                onChange={handleChange}
-                placeholder="e.g. CASHIER"
-                maxLength={50}
-              />
+              <div className="role-input-wrap">
+                <i className="bi bi-tag" />
+                <input
+                  type="text"
+                  name="roleCode"
+                  value={form.roleCode}
+                  onChange={handleChange}
+                  placeholder="e.g. CASHIER"
+                  maxLength={50}
+                />
+              </div>
 
               <small>
                 Unique code using uppercase letters and underscores.
@@ -341,21 +320,46 @@ export default function RoleTemplates() {
                 Role Template Name <b>*</b>
               </span>
 
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Enter role template name"
-                maxLength={100}
-              />
+              <div className="role-input-wrap">
+                <i className="bi bi-type" />
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="Enter role template name"
+                  maxLength={100}
+                />
+              </div>
 
               <small>
                 Display name for the role template.
               </small>
             </label>
+          </div>
 
-            <label className="role-field">
+          <div className="role-bottom-grid">
+            <label className="role-field role-description-field">
+              <span>Description</span>
+
+              <div className="role-textarea-wrap">
+                <i className="bi bi-file-earmark-text" />
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Enter a brief description..."
+                  rows={3}
+                  maxLength={250}
+                />
+              </div>
+
+              <small>
+                Explain the purpose of this role template.
+              </small>
+            </label>
+
+            <label className="role-field role-status-field">
               <span>
                 Status <b>*</b>
               </span>
@@ -365,30 +369,38 @@ export default function RoleTemplates() {
                 value={form.status}
                 onChange={handleChange}
               >
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
+                <option value="ACTIVE">● Active</option>
+                <option value="INACTIVE">● Inactive</option>
               </select>
 
               <small>Active or Inactive.</small>
             </label>
+          </div>
+
+          <div className="role-form-actions">
+            <button
+              type="button"
+              className="role-template-cancel-button"
+              onClick={resetForm}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              className="role-template-submit-button"
+              onClick={saveTemplate}
+              disabled={saving}
+            >
 
 
-            <label className="role-field role-description-field">
-              <span>Description</span>
-
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                placeholder="Enter a brief description..."
-                rows={3}
-                maxLength={250}
-              />
-
-              <small>
-                Explain the purpose of this role template.
-              </small>
-            </label>
+              {saving
+                ? "Saving..."
+                : editingId !== null
+                ? "Update Role Template"
+                : "Create Role Template"}
+            </button>
           </div>
         </div>
 
@@ -434,7 +446,6 @@ export default function RoleTemplates() {
                 className="role-reset-btn"
                 onClick={resetFilters}
               >
-                <i className="bi bi-arrow-repeat" />
                 Reset
               </button>
             </div>
@@ -512,7 +523,17 @@ export default function RoleTemplates() {
                     </td>
 
                     <td className="role-name-cell">
-                      {template.name || "—"}
+                      <button
+                        type="button"
+                        className="role-name-link"
+                        onClick={() =>
+                          navigate(`/role-templates/${template.id}`, {
+                            state: { roleTemplate: template },
+                          })
+                        }
+                      >
+                        {template.name || "—"}
+                      </button>
                     </td>
 
                     <td className="role-description-cell">

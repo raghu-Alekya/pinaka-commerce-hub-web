@@ -37,6 +37,9 @@ import RoleTemplates from "./pages/Roletemplates";
 import Vendors from "./pages/Vendors";
 import Tenders from "./pages/Tenders";
 import ViewPlan from "./pages/ViewPlan";
+import ViewRoleTemplateOverview from "./pages/ViewRoleTemplateDetails";
+import ViewRoleTemplateStoreTypes from "./pages/ViewRoleTemplateStoreTypes";
+import ViewRoleTemplateAccess from "./pages/ViewRoleTemplateAccess";
 
 const placeholders = [
   "Cash Management",
@@ -267,7 +270,10 @@ export default function App() {
         <Route path="/store-types/:storeTypeId" element={<StoreTypeDetails />} />
         <Route path="/store-types/:storeTypeId/features" element={<StoreTypeFeatures />} />
         <Route path="/store-types/:storeTypeId/role-templates" element={<StoreTypeRoleTemplates />} />
-        
+        <Route path="/role-templates/:roleId" element={<ViewRoleTemplateOverview />} />
+        <Route path="/role-templates/:roleId/store-types" element={<ViewRoleTemplateStoreTypes />}/>
+        <Route path="/role-templates/:roleId/access" element={<ViewRoleTemplateAccess />}/>
+
       </Route>
 
       <Route

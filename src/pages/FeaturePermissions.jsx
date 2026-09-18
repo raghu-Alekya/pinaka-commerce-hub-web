@@ -732,9 +732,6 @@ export default function FeaturePermissions() {
               className="fp-btn fp-btn-secondary"
               onClick={clearForm}
             >
-
-              <i className="bi bi-arrow-counterclockwise" />
-
               Reset
 
             </button>
@@ -743,8 +740,6 @@ export default function FeaturePermissions() {
               type="submit"
               className="fp-btn fp-btn-primary"
             >
-
-              <i className="bi bi-floppy" />
 
               {isEditing
                 ? "Update Permission"
