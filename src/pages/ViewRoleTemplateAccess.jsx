@@ -1,11 +1,53 @@
 import { useMemo, useState } from "react";
-import RoleTemplateDetailsHeader from "../components/RoleTemplateDetailsHeader";
-import { featurePermissions } from "../data/roleTemplateDetails";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+
+const featurePermissions = [
+  {
+    id: "pos",
+    name: "Point of Sale",
+    code: "POS",
+    description: "Manage sales, checkout, payments and POS operations.",
+    permissions: [
+      ["view-pos", "View POS", "VIEW_POS"],
+      ["create-order", "Create Order", "CREATE_ORDER"],
+      ["edit-order", "Edit Order", "EDIT_ORDER"],
+      ["void-order", "Void Order", "VOID_ORDER"],
+      ["refund-order", "Refund Order", "REFUND_ORDER"],
+    ],
+  },
+  {
+    id: "inventory",
+    name: "Inventory",
+    code: "INVENTORY",
+    description: "Manage stock, products and inventory operations.",
+    permissions: [
+      ["view-inventory", "View Inventory", "VIEW_INVENTORY"],
+      ["adjust-stock", "Adjust Stock", "ADJUST_STOCK"],
+      ["manage-products", "Manage Products", "MANAGE_PRODUCTS"],
+    ],
+  },
+];
 
 export default function ViewRoleTemplateAccess() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { roleId } = useParams();
+  const roleTemplate = {
+    ...(location.state?.roleTemplate ?? {}),
+  };
   const [search, setSearch] = useState("");
-  const [enabledFeatures, setEnabledFeatures] = useState(["pos"]);
-  const [selectedPermissions, setSelectedPermissions] = useState(["view-pos"]);
+  const [enabledFeatures, setEnabledFeatures] = useState([
+    location.state?.roleTemplate?.featureId ?? "pos",
+  ]);
+  const [selectedPermissions, setSelectedPermissions] = useState([
+    location.state?.roleTemplate?.permissionId ?? "view-pos",
+   ]);
+
+  const tabs = [
+    ["overview", "Overview", `/role-templates/${roleId}`],
+    ["store-types", "Applicable Store Types", `/role-templates/${roleId}/store-types`],
+    ["access", "Feature & Permission Access", `/role-templates/${roleId}/access`],
+  ];
 
   const filteredFeatures = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -54,7 +96,39 @@ export default function ViewRoleTemplateAccess() {
 
   return (
     <section className="role-details-page">
-      <RoleTemplateDetailsHeader activeTab="access" />
+      <button
+        type="button"
+        className="role-details-back"
+        onClick={() => navigate("/role-templates")}
+        aria-label="Back to role templates"
+      >
+        <i className="bi bi-arrow-left" />
+      </button>
+
+      <div className="role-details-heading">
+        <div>
+          <h1>{roleTemplate.name || "Role Template"}</h1>
+          <p>Configure store types, features and permissions for this role.</p>
+        </div>
+
+        <span className="role-details-active">
+          <i className="bi bi-circle-fill" />
+          {roleTemplate.status || "Active"}
+        </span>
+      </div>
+
+      <nav className="role-details-tabs">
+        {tabs.map(([id, label, path]) => (
+          <button
+            type="button"
+            key={id}
+            className={id === "access" ? "active" : ""}
+            onClick={() => navigate(path, { state: { roleTemplate } })}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
 
       <section className="role-details-card">
         <div className="role-details-card-title role-access-heading">

@@ -1,9 +1,28 @@
 import { useState } from "react";
-import RoleTemplateDetailsHeader from "../components/RoleTemplateDetailsHeader";
-import { storeTypes } from "../data/roleTemplateDetails";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+
+const storeTypes = [
+  { id: "retail", name: "Retail", code: "RETAIL" },
+  { id: "restaurant", name: "Restaurant", code: "RESTAURANT" },
+  { id: "spa", name: "Spa", code: "SPA" },
+  { id: "kiosk", name: "Kiosk", code: "KIOSK" },
+];
 
 export default function ViewRoleTemplateStoreTypes() {
-  const [selectedStoreTypes, setSelectedStoreTypes] = useState(["retail"]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { roleId } = useParams();
+  const roleTemplate = {
+    ...(location.state?.roleTemplate ?? {}),
+  };
+  const defaultSelection = roleTemplate.storeTypeId ?? "retail";
+  const [selectedStoreTypes, setSelectedStoreTypes] = useState([defaultSelection]);
+
+  const tabs = [
+    ["overview", "Overview", `/role-templates/${roleId}`],
+    ["store-types", "Applicable Store Types", `/role-templates/${roleId}/store-types`],
+    ["access", "Feature & Permission Access", `/role-templates/${roleId}/access`],
+  ];
 
   function toggleStoreType(id) {
     setSelectedStoreTypes((current) =>
@@ -15,7 +34,39 @@ export default function ViewRoleTemplateStoreTypes() {
 
   return (
     <section className="role-details-page">
-      <RoleTemplateDetailsHeader activeTab="store-types" />
+      <button
+        type="button"
+        className="role-details-back"
+        onClick={() => navigate("/role-templates")}
+        aria-label="Back to role templates"
+      >
+        <i className="bi bi-arrow-left" />
+      </button>
+
+      <div className="role-details-heading">
+        <div>
+          <h1>{roleTemplate.name || "Role Template"}</h1>
+          <p>Configure store types, features and permissions for this role.</p>
+        </div>
+
+        <span className="role-details-active">
+          <i className="bi bi-circle-fill" />
+          {roleTemplate.status || "Active"}
+        </span>
+      </div>
+
+      <nav className="role-details-tabs">
+        {tabs.map(([id, label, path]) => (
+          <button
+            type="button"
+            key={id}
+            className={id === "store-types" ? "active" : ""}
+            onClick={() => navigate(path, { state: { roleTemplate } })}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
 
       <section className="role-details-card">
         <div className="role-details-card-title">
