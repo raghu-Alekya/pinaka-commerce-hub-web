@@ -8,6 +8,11 @@ export const endpoints = {
   merchant: (id) => `/merchants/${id}`,
   stores: "/stores",
   store: (id) => `/stores/${id}`,
+  storeTypes: "/store-types",
+  storeType: (id) => `/store-types/${encodeURIComponent(id)}`,
+  storeTypeFeatures: (id) => `/store-types/${encodeURIComponent(id)}/features`,
+  storeTypeFeature: (storeTypeId, featureId) =>
+    `//store-types/${encodeURIComponent(storeTypeId)}/features/${encodeURIComponent(featureId)}`,
   storeConnector: (id) => `/stores/${id}/connector`,
   merchantStores: (merchantId) => `/merchants/${merchantId}/stores`,
   features: "/features",

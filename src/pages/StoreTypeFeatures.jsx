@@ -1,60 +1,127 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { listFeatures } from "../api/features";
+import { storeTypesApi } from "../api/storeTypes";
 
-const initialFeatures = [
-  {
-    id: 1,
-    name: "KDS",
-    category: "Restaurant",
-    active: true,
-    order: 1,
-  },
-  {
-    id: 2,
-    name: "Tables",
-    category: "Restaurant",
-    active: true,
-    order: 2,
-  },
-  {
-    id: 3,
-    name: "Tips",
-    category: "Restaurant",
-    active: true,
-    order: 3,
-  },
-  {
-    id: 4,
-    name: "Service Charges",
-    category: "Restaurant",
-    active: true,
-    order: 4,
-  },
-  {
-    id: 5,
-    name: "Delivery",
-    category: "Integration",
-    active: true,
-    order: 5,
-  },
-];
-
-const featureOptions = {
-  Restaurant: ["KDS", "Tables", "Tips", "Service Charges", "Dining"],
-  Integration: ["Delivery", "Online Ordering", "Payment Gateway"],
-  POS: ["Fast Keys", "Customer Display", "Printer", "Cash Management"],
+const initialStoreType = {
+  name: "Store Type",
+  description: "Manage the features assigned to this store type.",
+  status: "ACTIVE",
 };
+
+// const featureOptions = {
+//   Restaurant: ["KDS", "Tables", "Tips", "Service Charges", "Dining"],
+//   Integration: ["Delivery", "Online Ordering", "Payment Gateway"],
+//   POS: ["Fast Keys", "Customer Display", "Printer", "Cash Management"],
+// };
+
+function getFeatureAssignments(response) {
+  if (Array.isArray(response)) return response;
+
+  const containers = [response, response?.data, response?.result];
+
+  for (const container of containers) {
+    if (!container || typeof container !== "object") continue;
+
+    const assignments =
+      container.features ??
+      container.storeTypeFeatures ??
+      container.items ??
+      container.results;
+
+    if (Array.isArray(assignments)) return assignments;
+  }
+
+  return [];
+}
+
+function toFeatureRow(assignment, index) {
+  const feature =
+    assignment.feature ??
+    assignment.featureDetails ??
+    assignment.featureDefinition ??
+    assignment;
+  const assignmentData = assignment.data ?? assignment.storeTypeFeature ?? {};
+
+  return {
+    id: feature.id ?? assignment.featureId ?? assignment.id,
+    storeTypeFeatureId:
+      assignment.featureId ??
+      feature.id ??
+      assignment.id ??
+      assignment.storeTypeFeatureId ??
+      assignment.featureAssignmentId ??
+      assignmentData.id ??
+      assignmentData.storeTypeFeatureId ??
+      assignmentData.featureId,
+    name: feature.name ?? feature.featureKey ?? "Unnamed feature",
+    category: feature.category ?? "Uncategorized",
+    active: assignment.defaultEnabled ?? true,
+    order: assignment.displayOrder ?? index + 1,
+  };
+}
 
 export default function StoreTypeFeatures() {
   const navigate = useNavigate();
   const { storeTypeId } = useParams();
 
-  const [features, setFeatures] = useState(initialFeatures);
+  const [storeType, setStoreType] = useState(initialStoreType);
+  const [features, setFeatures] = useState([]);
+  const [featureCatalog, setFeatureCatalog] = useState([]);
   const [search, setSearch] = useState("");
   const [modalSearch, setModalSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [selectedFeatures, setSelectedFeatures] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    storeTypesApi
+      .getOne(storeTypeId)
+      .then((response) => {
+        const item = response?.storeType ?? response?.data ?? response;
+
+        if (!item || typeof item !== "object" || cancelled) return;
+
+        setStoreType({
+          name: item.name ?? initialStoreType.name,
+          description: item.description ?? initialStoreType.description,
+          status: item.status ?? initialStoreType.status,
+        });
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeTypeId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    storeTypesApi
+      .getFeatures(storeTypeId)
+      .then((response) => {
+        const assignments = getFeatureAssignments(response);
+
+        if (cancelled) return;
+
+        setFeatures(assignments.map(toFeatureRow));
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeTypeId]);
 
   const filteredFeatures = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -64,18 +131,40 @@ export default function StoreTypeFeatures() {
     );
   }, [features, search]);
 
+  const featureGroups = useMemo(() => {
+    return featureCatalog.reduce((groups, feature) => {
+      const category = feature.category || "Uncategorized";
+      const group = groups.find((item) => item.category === category);
+
+      if (group) group.options.push(feature);
+      else groups.push({ category, options: [feature] });
+
+      return groups;
+    }, []);
+  }, [featureCatalog]);
+
   const filteredGroups = useMemo(() => {
     const query = modalSearch.trim().toLowerCase();
 
-    return Object.entries(featureOptions)
-      .map(([category, options]) => ({
-        category,
-        options: options.filter((featureName) =>
-          featureName.toLowerCase().includes(query)
+    return featureGroups
+      .map((group) => ({
+        ...group,
+        options: group.options.filter((feature) =>
+          feature.name.toLowerCase().includes(query)
         ),
       }))
       .filter((group) => group.options.length > 0);
-  }, [modalSearch]);
+  }, [featureGroups, modalSearch]);
+
+  const selectedFeatureDetails = useMemo(
+    () =>
+      featureCatalog.filter((feature) => selectedFeatures.includes(feature.id)),
+    [featureCatalog, selectedFeatures]
+  );
+
+  const addFeatureModalStyle = {
+    maxHeight: `${Math.min(78, 40 + selectedFeatures.length * 4 + filteredGroups.length * 5)}vh`,
+  };
 
   function toggleFeature(id) {
     setFeatures((current) =>
@@ -87,11 +176,13 @@ export default function StoreTypeFeatures() {
     );
   }
 
-  function toggleSelectedFeature(featureName) {
+  function toggleSelectedFeature(feature) {
+    if (!feature.id) return;
+
     setSelectedFeatures((current) =>
-      current.includes(featureName)
-        ? current.filter((item) => item !== featureName)
-        : [...current, featureName]
+      current.includes(feature.id)
+        ? current.filter((item) => item !== feature.id)
+        : [...current, feature.id]
     );
   }
 
@@ -99,43 +190,114 @@ export default function StoreTypeFeatures() {
     setSelectedFeatures([]);
     setModalSearch("");
     setShowAddModal(true);
+    setLoadingCatalog(true);
+    setError("");
+
+    listFeatures()
+      .then((items) => {
+        setFeatureCatalog(items.filter((item) => item?.id));
+      })
+      .catch((err) => {
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoadingCatalog(false);
+      });
   }
 
-  function addSelectedFeatures() {
+  async function addSelectedFeatures() {
+    const selected = featureCatalog.filter((feature) =>
+      selectedFeatures.includes(feature.id)
+    );
+
+    if (!storeTypeId || selected.length === 0) return;
+
     const existingNames = features.map((feature) => feature.name);
+    setSaving(true);
+    setError("");
 
-    const additions = selectedFeatures
-      .filter((featureName) => !existingNames.includes(featureName))
-      .map((featureName, index) => {
-        const category = Object.entries(featureOptions).find(([, options]) =>
-          options.includes(featureName)
-        )?.[0];
+    try {
+      const createdFeatures = await Promise.all(
+        selected.map((feature, index) =>
+          storeTypesApi
+            .createFeature(storeTypeId, {
+            featureId: feature.id,
+            defaultEnabled: true,
+            required: false,
+            displayOrder: features.length + index + 1,
+            configurationJson: {
+              showInPos: true,
+            },
+            })
+        )
+      );
 
-        return {
-          id: Date.now() + index,
-          name: featureName,
-          category: category || "Restaurant",
+      const refreshed = await storeTypesApi.getFeatures(storeTypeId);
+      const persistedAssignments = getFeatureAssignments(refreshed);
+
+      if (persistedAssignments.length > 0) {
+        setFeatures(persistedAssignments.map(toFeatureRow));
+      } else {
+        const additions = selected.map((feature, index) => ({
+          id: feature.id,
+          storeTypeFeatureId:
+            createdFeatures[index]?.featureId ||
+            createdFeatures[index]?.feature?.id ||
+            createdFeatures[index]?.feature?.featureId ||
+            createdFeatures[index]?.data?.id ||
+            createdFeatures[index]?.storeTypeFeature?.id ||
+            createdFeatures[index]?.data?.storeTypeFeature?.id,
+          name: feature.name,
+          category: feature.category || "Uncategorized",
           active: true,
           order: features.length + index + 1,
-        };
-      });
+        }));
 
-    setFeatures((current) => [...current, ...additions]);
-    setShowAddModal(false);
-    setSelectedFeatures([]);
+        setFeatures((current) => [
+          ...current,
+          ...additions.filter((feature) => !existingNames.includes(feature.name)),
+        ]);
+      }
+      setShowAddModal(false);
+      setSelectedFeatures([]);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function confirmDeleteFeature() {
+  async function confirmDeleteFeature() {
     if (!deleteTarget) return;
 
-    setFeatures((current) =>
-      current.filter((feature) => feature.id !== deleteTarget.id)
-    );
-    setDeleteTarget(null);
+    const featureId =
+      deleteTarget.storeTypeFeatureId ??
+      (typeof deleteTarget.id === "string" ? deleteTarget.id : null);
+
+    if (!storeTypeId || !featureId) {
+      setError("This feature is missing its store-type assignment ID.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
+    try {
+      await storeTypesApi.removeFeature(storeTypeId, featureId);
+      setFeatures((current) =>
+        current.filter((feature) => feature.id !== deleteTarget.id)
+      );
+      setDeleteTarget(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <section className="store-features-page">
+     {error && <p role="alert">{error}</p>}
       <button
         type="button"
         className="store-features-back"
@@ -147,18 +309,19 @@ export default function StoreTypeFeatures() {
 
       <div className="store-features-title">
         <div className="store-type-title-line">
-          <h1>Restaurant</h1>
+          <h1>{storeType.name}</h1>
 
-          <span className="store-type-active-badge">
+          <span
+            className={`store-type-active-badge ${
+              storeType.status === "INACTIVE" ? "inactive" : ""
+            }`}
+          >
             <i className="bi bi-circle-fill" />
-            Active
+            {storeType.status === "INACTIVE" ? "Inactive" : "Active"}
           </span>
         </div>
 
-        <p>
-          Store type for restaurant vertical with full service and quick
-          service operations.
-        </p>
+        <p>{storeType.description}</p>
       </div>
 
       <nav className="store-type-tabs">
@@ -274,6 +437,7 @@ export default function StoreTypeFeatures() {
         >
           <div
             className="add-features-modal"
+            style={addFeatureModalStyle}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="add-features-modal-header">
@@ -300,37 +464,67 @@ export default function StoreTypeFeatures() {
             </label>
 
             <div className="add-features-groups">
-              {filteredGroups.map((group) => (
-                <div className="add-features-group" key={group.category}>
-                  <div className="add-features-group-title">
-                    <span>
-                      <i className="bi bi-chevron-down" />
-                      {group.category}
-                    </span>
+              {loadingCatalog ? (
+                <p>Loading features...</p>
+              ) : error ? (
+                <p role="alert">{error}</p>
+              ) : filteredGroups.length === 0 ? (
+                <p>No features available.</p>
+              ) : (
+                filteredGroups.map((group) => (
+                  <div className="add-features-group" key={group.category}>
+                    <div className="add-features-group-title">
+                      <span>
+                        <i className="bi bi-chevron-down" />
+                        {group.category}
+                      </span>
 
-                    <small>
-                      (
-                      {
-                        selectedFeatures.filter((featureName) =>
-                          featureOptions[group.category].includes(featureName)
-                        ).length
-                      }
-                      /{featureOptions[group.category].length})
-                    </small>
+                      <small>
+                        (
+                        {
+                          group.options.filter((feature) =>
+                            selectedFeatures.includes(feature.id)
+                          ).length
+                        }
+                        /{group.options.length})
+                      </small>
+                    </div>
+
+                    {group.options.map((feature) => (
+                      <label className="add-feature-option" key={feature.id || feature.name}>
+                        <input
+                          type="checkbox"
+                          checked={selectedFeatures.includes(feature.id)}
+                          onChange={() => toggleSelectedFeature(feature)}
+                          disabled={saving}
+                        />
+                        <span>{feature.name}</span>
+                      </label>
+                    ))}
                   </div>
+                ))
+              )}
+            </div>
 
-                  {group.options.map((featureName) => (
-                    <label className="add-feature-option" key={featureName}>
-                      <input
-                        type="checkbox"
-                        checked={selectedFeatures.includes(featureName)}
-                        onChange={() => toggleSelectedFeature(featureName)}
-                      />
-                      <span>{featureName}</span>
-                    </label>
-                  ))}
-                </div>
-              ))}
+            <div className="add-features-preview">
+              <div className="add-features-preview-header">
+                <span>Selected Features</span>
+                <strong>{selectedFeatures.length}</strong>
+              </div>
+
+              <div className="add-features-preview-list">
+                {selectedFeatureDetails.length > 0 ? (
+                  selectedFeatureDetails.map((feature) => (
+                    <span className="add-features-preview-pill" key={feature.id}>
+                      {feature.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="add-features-preview-empty">
+                    No features selected yet
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="add-features-modal-actions">
@@ -346,9 +540,9 @@ export default function StoreTypeFeatures() {
                 type="button"
                 className="add-features-confirm"
                 onClick={addSelectedFeatures}
-                disabled={selectedFeatures.length === 0}
+                disabled={selectedFeatures.length === 0 || saving}
               >
-                Add Selected
+                {saving ? "Adding..." : "Add Selected"}
               </button>
             </div>
           </div>
@@ -378,6 +572,8 @@ export default function StoreTypeFeatures() {
               This action cannot be undone.
             </p>
 
+            {error && <p role="alert">{error}</p>}
+
             <div className="delete-feature-actions">
               <button
                 type="button"
@@ -391,8 +587,9 @@ export default function StoreTypeFeatures() {
                 type="button"
                 className="delete-feature-confirm-button"
                 onClick={confirmDeleteFeature}
+                disabled={saving}
               >
-                Yes, Delete
+                {saving ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>

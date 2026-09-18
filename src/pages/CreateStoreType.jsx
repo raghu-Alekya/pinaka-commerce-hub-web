@@ -120,7 +120,6 @@ export default function CreateStoreType() {
 
   function resetForm() {
   setForm(emptyForm);
-  setFormSnapshot(emptyForm);
   setEditingId(null);
   setErrors({});
 }
@@ -216,7 +215,6 @@ export default function CreateStoreType() {
 };
 
 setForm(nextForm);
-setFormSnapshot(nextForm);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -250,7 +248,7 @@ setFormSnapshot(nextForm);
 
       {error && <p role="alert" className="store-type-error">{error}</p>}
 
-      <form className="store-type-form-card" onSubmit={submitForm}>
+      <form className="store-type-form-card" onSubmit={submitForm} autoComplete="off">
         <div className="store-type-card-heading">
           <div className="store-type-heading-icon">
             <i className="bi bi-shop" />
@@ -276,6 +274,7 @@ setFormSnapshot(nextForm);
                 onChange={updateField}
                 placeholder="e.g. GROCERY"
                 maxLength="30"
+                autoComplete="off"
               />
             </div>
 
@@ -300,6 +299,7 @@ setFormSnapshot(nextForm);
                 onChange={updateField}
                 placeholder="e.g. Grocery"
                 maxLength="80"
+                autoComplete="off"
               />
             </div>
 
@@ -328,6 +328,7 @@ setFormSnapshot(nextForm);
                 onChange={updateField}
                 maxLength="500"
                 placeholder="Describe the vertical, its operating model, and configuration needs..."
+                autoComplete="off"
               />
             </div>
 
@@ -338,9 +339,9 @@ setFormSnapshot(nextForm);
             {errors.description && (
               <em className="field-error">{errors.description}</em>
             )}
-          </label>
+           </label>
 
-          <label className="store-type-field store-type-status-field">
+           <label className="store-type-field store-type-status-field">
             <span>
               Status <b>*</b>
             </span>
@@ -351,7 +352,7 @@ setFormSnapshot(nextForm);
             </select>
 
             <small>Inactive types cannot be selected for new stores.</small>
-          </label>
+           </label>
         </div>
 
         <div className="store-type-actions">
@@ -381,6 +382,7 @@ setFormSnapshot(nextForm);
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search store types..."
+                autoComplete="off"
               />
             </label>
 
@@ -421,10 +423,14 @@ setFormSnapshot(nextForm);
                   <strong>{item.code}</strong>
                 </div>
 
-                <button
+               <button
                   type="button"
                   className="store-type-name-cell store-type-name-clickable"
-                  onClick={() => navigate(`/store-types/${item.id}`)}
+                  onClick={() =>
+                    navigate(`/store-types/${item.id}`, {
+                      state: { storeType: item },
+                    })
+                  }
                 >
                   <strong>{item.name}</strong>
                   <span>{item.description}</span>

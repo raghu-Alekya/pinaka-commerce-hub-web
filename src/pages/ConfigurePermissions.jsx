@@ -48,13 +48,6 @@ export default function ConfigurePermissions() {
     setPermissions((current) => current.filter((permission) => permission.id !== id));
   };
 
-  const duplicatePermission = (permission) => {
-    setPermissions((current) => [
-      ...current,
-      { ...permission, id: Date.now(), key: `${permission.key}_COPY`, name: `${permission.name} Copy` },
-    ]);
-  };
-
   return (
     <div className="configure-permissions-page">
       <header className="cp-page-head">
@@ -99,7 +92,6 @@ export default function ConfigurePermissions() {
         <div className="cp-list-toolbar">
           <div>
             <h2>Permissions List ({filteredPermissions.length})</h2>
-            <p>Manage permissions assigned to this feature.</p>
           </div>
           <div className="cp-list-filters">
             <div className="cp-search">
@@ -149,7 +141,6 @@ export default function ConfigurePermissions() {
                   <td>
                     <div className="cp-row-actions">
                       <button className="edit" type="button" aria-label={`Edit ${permission.name}`}><i className="bi bi-pencil" /></button>
-                      <button className="copy" type="button" onClick={() => duplicatePermission(permission)} aria-label={`Duplicate ${permission.name}`}><i className="bi bi-copy" /></button>
                       <button className="delete" type="button" onClick={() => deletePermission(permission.id)} aria-label={`Delete ${permission.name}`}><i className="bi bi-trash" /></button>
                     </div>
                   </td>
