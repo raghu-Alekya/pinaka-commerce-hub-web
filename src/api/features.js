@@ -3,8 +3,8 @@ import { endpoints } from "./endpoints";
 
 // Map React form fields to API payload
 const toFeaturePayload = (form) => ({
-  featureKey: form.name?.trim() || "",         // Form "Name" maps to API "featureKey"
-  name: form.description?.trim() || form.name?.trim() || "", // Display Name
+  featureKey: form.code?.trim() || form.name?.trim() || "",
+  name: form.name?.trim() || "",
   category: form.category || "",
   featureType: form.type?.trim() || "BOOLEAN", // API expects featureType
   description: form.description?.trim() || "",
@@ -17,7 +17,8 @@ const normalizeFeature = (item) => {
   return {
     ...item,
     id: item.id || item._id || Date.now(),
-    name: item.featureKey || item.name || "",
+    code: item.featureKey || item.code || "",
+    name: item.name || item.featureKey || "",
     description: item.description || item.name || "",
     category: item.category || "Uncategorized",
     type: item.featureType || item.type || "BOOLEAN",

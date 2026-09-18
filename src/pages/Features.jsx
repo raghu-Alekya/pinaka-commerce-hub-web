@@ -1,45 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/features.css";
+import { listFeatures, createFeature as createFeatureApi, updateFeature as updateFeatureApi, deleteFeature as deleteFeatureApi } from "../api/features";
 
-const initialFeatures = [
-  { id: 1, code: "LOYALTY", name: "Loyalty", category: "Customer Engagement", description: "Manage loyalty programs and rewards.", status: "Active", createdAt: "Apr 10, 2026 02:15 PM", type: "BOOLEAN", icon: "bi-diamond", tone: "purple" },
-  { id: 2, code: "KDS", name: "KDS", category: "Restaurant", description: "Kitchen Display System for order management.", status: "Active", createdAt: "Apr 08, 2026 11:42 AM", type: "BOOLEAN", icon: "bi-display", tone: "amber" },
-  { id: 3, code: "DELIVERY", name: "Delivery", category: "Orders", description: "Manage delivery orders and logistics.", status: "Active", createdAt: "Apr 05, 2026 09:30 AM", type: "BOOLEAN", icon: "bi-truck", tone: "blue" },
-  { id: 4, code: "SAFE_DROP", name: "Safe Drop", category: "Cash Management", description: "Secure cash drop and pickup management.", status: "Inactive", createdAt: "Apr 02, 2026 04:12 PM", type: "BOOLEAN", icon: "bi-shield-check", tone: "red" },
-  { id: 5, code: "INVENTORY", name: "Inventory", category: "Stock Control", description: "Track and manage inventory levels in real-time.", status: "Active", createdAt: "Apr 12, 2026 10:00 AM", type: "BOOLEAN", icon: "bi-diamond", tone: "purple" },
-];
+const initialFeatures = [];
 
 const emptyForm = { code: "", name: "", description: "", category: "", status: "Active" };
 
 export default function Features() {
   const navigate = useNavigate();
-  const [features, setFeatures] = useState(() => {
-    try {
-      const savedFeatures = localStorage.getItem("pch_features");
-      if (savedFeatures) {
-        const parsedFeatures = JSON.parse(savedFeatures);
-        if (Array.isArray(parsedFeatures)) return parsedFeatures;
-      }
-    } catch (error) {
-      console.error("Unable to load saved features:", error);
-    }
-    return initialFeatures;
-  });
+  const [features, setFeatures] = useState(initialFeatures);
+  const [apiError, setApiError] = useState("");
+  useEffect(() => { listFeatures().then(setFeatures).catch((e) => setApiError(e.message || "Unable to load features.")); }, []);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [formErrors, setFormErrors] = useState({});
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("pch_features", JSON.stringify(features));
-    } catch (error) {
-      console.error("Unable to save features:", error);
-    }
-  }, [features]);
 
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
@@ -59,7 +37,6 @@ export default function Features() {
 
     if (!code) errors.code = "Feature Code is required.";
     if (!name) errors.name = "Feature Name is required.";
-    if (!form.category) errors.category = "Category is required.";
 
     if (code && features.some(
       (item) =>
@@ -100,30 +77,14 @@ export default function Features() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const saveFeature = () => {
+  const saveFeature = async () => {
     if (!validateFeature()) return;
-    setFeatures((prev) => [
-      {
-        id: Date.now(),
-        ...form,
-        category: form.category || "Uncategorized",
-        createdAt: "Apr 12, 2026 10:00 AM",
-        icon: "bi-diamond",
-        tone: "purple",
-      },
-      ...prev,
-    ]);
-    clearForm();
+    try { const created = await createFeatureApi(form); setFeatures((prev) => [created, ...prev]); clearForm(); setApiError(""); } catch (e) { setApiError(e.message || "Unable to create feature."); }
   };
 
-  const updateFeature = () => {
+  const updateFeature = async () => {
     if (!validateFeature()) return;
-    setFeatures((prev) =>
-      prev.map((item) =>
-        item.id === editingId ? { ...item, ...form } : item
-      )
-    );
-    clearForm();
+    try { const updated = await updateFeatureApi(editingId, form); setFeatures((prev) => prev.map((item) => item.id === editingId ? updated : item)); clearForm(); setApiError(""); } catch (e) { setApiError(e.message || "Unable to update feature."); }
   };
 
   const resetFilters = () => {
@@ -132,8 +93,8 @@ export default function Features() {
     setStatusFilter("All Statuses");
   };
 
-  const deleteFeature = (featureId) => {
-    setFeatures((prev) => prev.filter((item) => item.id !== featureId));
+  const deleteFeature = async (featureId) => {
+    try { await deleteFeatureApi(featureId); setFeatures((prev) => prev.filter((item) => item.id !== featureId)); setApiError(""); } catch (e) { setApiError(e.message || "Unable to delete feature."); }
   };
 
   const filteredFeatures = useMemo(() => {
@@ -161,6 +122,8 @@ export default function Features() {
         <p>Manage platform features and their details.</p>
       </header>
 
+      {apiError && <p role="alert">{apiError}</p>}
+
       <section className="feature-details-card">
         <div className="feature-section-heading">
           <div className="feature-title-icon">
@@ -173,69 +136,41 @@ export default function Features() {
         </div>
 
         <div className="feature-form-grid">
-          <div className="feature-field feature-code-field">
-            <label htmlFor="feature-code">Feature Code<span>*</span></label>
+          <div className="feature-field">
+            <label>Feature Code<span>*</span></label>
             <input
-              id="feature-code"
               name="code"
               value={form.code}
               onChange={updateField}
-              placeholder="Enter a unique code, e.g. INVENTORY"
+              placeholder="Enter a unique code, e.g. INVENTORY_MANAGEMENT"
               className={formErrors.code ? "feature-input-error" : ""}
             />
             {formErrors.code ? (
               <small className="feature-error-text">{formErrors.code}</small>
             ) : (
-              <small className="feature-field-space">&nbsp;</small>
+              <small></small>
             )}
           </div>
 
-          <div className="feature-field feature-name-field">
-            <label htmlFor="feature-name">Name<span>*</span></label>
+          <div className="feature-field">
+            <label>Feature Name<span>*</span></label>
             <input
-              id="feature-name"
               name="name"
               value={form.name}
               onChange={updateField}
-              placeholder="Enter a unique feature name, e.g. Inventory"
+              placeholder="Enter a unique feature name, e.g. Inventory Management"
               className={formErrors.name ? "feature-input-error" : ""}
             />
             {formErrors.name ? (
               <small className="feature-error-text">{formErrors.name}</small>
             ) : (
-              <small className="feature-field-space">&nbsp;</small>
-            )}
-          </div>
-
-          <div className="feature-field feature-category-field">
-            <label htmlFor="feature-category">Category<span>*</span></label>
-            <div className={`select-shell ${formErrors.category ? "feature-select-error" : ""}`}>
-              <select
-                id="feature-category"
-                name="category"
-                value={form.category}
-                onChange={updateField}
-              >
-                <option value="">Select category</option>
-                <option value="Restaurant">Restaurant</option>
-                <option value="Customer Engagement">Customer Engagement</option>
-                <option value="Orders">Orders</option>
-                <option value="Cash Management">Cash Management</option>
-                <option value="Stock Control">Stock Control</option>
-              </select>
-              <i className="bi bi-chevron-down" />
-            </div>
-            {formErrors.category ? (
-              <small className="feature-error-text">{formErrors.category}</small>
-            ) : (
-              <small className="feature-field-space">&nbsp;</small>
+              <small> </small>
             )}
           </div>
 
           <div className="feature-field feature-description-field">
-            <label htmlFor="feature-description">Description</label>
+            <label>Description</label>
             <textarea
-              id="feature-description"
               name="description"
               value={form.description}
               onChange={updateField}
@@ -248,20 +183,32 @@ export default function Features() {
             </div>
           </div>
 
-          <div className="feature-field pch-feature-form-status-field">
-            <label htmlFor="feature-status">Status</label>
+          <div className="feature-field">
+            <label>Category<span>*</span></label>
             <div className="select-shell">
-              <select
-                id="feature-status"
-                name="status"
-                value={form.status}
-                onChange={updateField}
-              >
+              <select name="category" value={form.category} onChange={updateField}>
+                <option value="">Select category</option>
+                <option value="Restaurant">Restaurant</option>
+                <option value="Customer Engagement">Customer Engagement</option>
+                <option value="Orders">Orders</option>
+                <option value="Cash Management">Cash Management</option>
+                <option value="Stock Control">Stock Control</option>
+              </select>
+              <i className="bi bi-chevron-down" />
+            </div>
+            <small></small>
+          </div>
+
+          <div className="feature-field feature-form-status-field">
+            <label>Status</label>
+            <div className="select-shell">
+              <select name="status" value={form.status} onChange={updateField}>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
               <i className="bi bi-chevron-down" />
             </div>
+            <small> </small>
           </div>
         </div>
 

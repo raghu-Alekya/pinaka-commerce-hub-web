@@ -1,82 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { listFeatures } from "../api/features";
+import {
+  listFeaturePermissions,
+  createFeaturePermission,
+  updateFeaturePermission,
+  deleteFeaturePermission,
+} from "../api/featurePermissionsApi";
 import "../styles/featurepermissions.css";
-
-/* =========================================================
-   FEATURES
-   Temporary frontend data.
-   Later this list can come from shared state / backend API.
-   ========================================================= */
-
-const initialFeatures = [
-  {
-    id: 1,
-    code: "LOYALTY",
-    name: "Loyalty",
-  },
-  {
-    id: 2,
-    code: "KDS",
-    name: "KDS",
-  },
-  {
-    id: 3,
-    code: "DELIVERY",
-    name: "Delivery",
-  },
-  {
-    id: 4,
-    code: "SAFE_DROP",
-    name: "Safe Drop",
-  },
-  {
-    id: 5,
-    code: "INVENTORY",
-    name: "Inventory",
-  },
-];
-
-/* =========================================================
-   INITIAL PERMISSIONS
-   ========================================================= */
-
-const initialPermissions = [
-  {
-    id: 1,
-    key: "VIEW_REFUND",
-    name: "View Refund",
-    featureId: 1,
-    featureName: "Loyalty",
-    description: "Allows user to view refund details.",
-    status: "Active",
-  },
-  {
-    id: 2,
-    key: "CREATE_REFUND",
-    name: "Create Refund",
-    featureId: 2,
-    featureName: "KDS",
-    description: "Allows user to create a new refund request.",
-    status: "Active",
-  },
-  {
-    id: 3,
-    key: "APPROVE_REFUND",
-    name: "Approve Refund",
-    featureId: 3,
-    featureName: "Delivery",
-    description: "Allows user to approve refund requests.",
-    status: "Active",
-  },
-  {
-    id: 4,
-    key: "OVERRIDE_REFUND",
-    name: "Override Refund",
-    featureId: 4,
-    featureName: "Safe Drop",
-    description: "Allows user to override refund policies.",
-    status: "Inactive",
-  },
-];
 
 /* =========================================================
    EMPTY FORM
@@ -91,10 +21,10 @@ const emptyForm = {
 };
 
 export default function FeaturePermissions() {
-  const [features] = useState(initialFeatures);
+  const [features, setFeatures] = useState([]);
 
-  const [permissions, setPermissions] =
-    useState(initialPermissions);
+  const [permissions, setPermissions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] =
     useState(emptyForm);
@@ -112,6 +42,57 @@ export default function FeaturePermissions() {
     useState("All Statuses");
 
   const isEditing = editingId !== null;
+
+  const normalizeStatus = (status) =>
+    String(status || "ACTIVE").toUpperCase() === "ACTIVE"
+      ? "Active"
+      : "Inactive";
+
+  const normalizePermission = (item, feature) => {
+    const source = item?.permission || item?.data || item || {};
+    return {
+      ...source,
+      id: source.id ?? source._id ?? source.permissionId ?? source.permission_id,
+      key: source.permissionKey || source.permission_key || source.key || "",
+      name: source.name || "",
+      featureId:
+        source.featureId ??
+        source.feature_id ??
+        source.feature?.id ??
+        feature?.id ??
+        "",
+      featureName: source.feature?.name || source.featureName || feature?.name || "",
+      description: source.description || "",
+      status: normalizeStatus(source.status),
+    };
+  };
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const featureList = await listFeatures();
+      setFeatures(featureList);
+
+      const permissionGroups = await Promise.all(
+        featureList
+          .filter((feature) => feature?.id !== undefined && feature?.id !== null)
+          .map(async (feature) => {
+            const list = await listFeaturePermissions(feature.id);
+            return list.map((item) => normalizePermission(item, feature));
+          })
+      );
+
+      setPermissions(permissionGroups.flat());
+    } catch (error) {
+      console.error("Feature permissions load failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   /* =========================================================
      UPDATE FIELD
@@ -154,110 +135,43 @@ export default function FeaturePermissions() {
      SAVE / UPDATE PERMISSION
      ========================================================= */
 
-  const savePermission = () => {
-    const permissionKey =
-      form.key.trim();
-
-    const permissionName =
-      form.name.trim();
-
-    const selectedFeature =
-      features.find(
-        (feature) =>
-          String(feature.id) ===
-          String(form.featureId)
-      );
-
+  const savePermission = async () => {
+    const permissionKey = form.key.trim();
+    const permissionName = form.name.trim();
+    const selectedFeature = features.find(
+      (feature) => String(feature.id) === String(form.featureId)
+    );
     const validationErrors = {};
 
-    if (!permissionKey) {
-      validationErrors.key =
-        "Permission key is required.";
-    }
-
-    if (!permissionName) {
-      validationErrors.name =
-        "Permission name is required.";
-    }
-
-    if (!selectedFeature) {
-      validationErrors.featureId =
-        "Please select a feature.";
-    }
+    if (!permissionKey) validationErrors.key = "Permission key is required.";
+    if (!permissionName) validationErrors.name = "Permission name is required.";
+    if (!selectedFeature) validationErrors.featureId = "Please select a feature.";
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    /* =========================
-       UPDATE EXISTING
-       ========================= */
+    const payload = {
+      ...(isEditing ? {} : { permissionKey: permissionKey.toUpperCase() }),
+      name: permissionName,
+      description: form.description.trim(),
+      status: form.status.toUpperCase(),
+    };
 
-    if (isEditing) {
-      setPermissions((prev) =>
-        prev.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
+    try {
+      const response = isEditing
+        ? await updateFeaturePermission(selectedFeature.id, editingId, payload)
+        : await createFeaturePermission(selectedFeature.id, payload);
 
-                key:
-                  permissionKey.toUpperCase(),
-
-                name:
-                  permissionName,
-
-                featureId:
-                  selectedFeature.id,
-
-                featureName:
-                  selectedFeature.name,
-
-                description:
-                  form.description.trim(),
-
-                status:
-                  form.status,
-              }
-            : item
-        )
-      );
+      // Reload from the backend so the UI reflects the actual saved row,
+      // including server-generated IDs and normalized fields.
+      await loadData();
+      clearForm();
+    } catch (error) {
+      console.error("Save permission failed:", error);
+      window.alert(error?.message || "Unable to save permission.");
     }
-
-    /* =========================
-       CREATE NEW
-       ========================= */
-
-    else {
-      const newPermission = {
-        id: Date.now(),
-
-        key:
-          permissionKey.toUpperCase(),
-
-        name:
-          permissionName,
-
-        featureId:
-          selectedFeature.id,
-
-        featureName:
-          selectedFeature.name,
-
-        description:
-          form.description.trim(),
-
-        status:
-          form.status,
-      };
-
-      setPermissions((prev) => [
-        ...prev,
-        newPermission,
-      ]);
-    }
-
-    clearForm();
   };
 
   /* =========================================================
@@ -302,21 +216,23 @@ export default function FeaturePermissions() {
      DELETE PERMISSION
      ========================================================= */
 
-  const deletePermission = (
-    permissionId
-  ) => {
-    setPermissions((prev) =>
-      prev.filter(
-        (item) =>
-          item.id !== permissionId
-      )
+  const deletePermission = async (permissionId) => {
+    const permission = permissions.find(
+      (item) => String(item.id) === String(permissionId)
     );
+    if (!permission?.featureId || !permissionId) {
+      window.alert("Permission ID or feature ID is missing.");
+      return;
+    }
 
-    if (
-      editingId ===
-      permissionId
-    ) {
-      clearForm();
+    try {
+      await deleteFeaturePermission(permission.featureId, permissionId);
+      await loadData();
+
+      if (String(editingId) === String(permissionId)) clearForm();
+    } catch (error) {
+      console.error("Delete permission failed:", error);
+      window.alert(error?.message || "Unable to delete permission.");
     }
   };
 

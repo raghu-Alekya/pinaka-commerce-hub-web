@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { getFeature } from '../api/features';
+import { listFeaturePermissions, createFeaturePermission, deleteFeaturePermission } from '../api/featurePermissionsApi';
 import {
   Gift,
   ShieldCheck,
@@ -13,71 +15,19 @@ import {
 
 import "../styles/featurepermissiondetails.css";
 
-const initialPermissions = [
-  {
-    key: "VIEW_LOYALTY",
-    name: "View Loyalty",
-    feature: "Loyalty",
-    description: "Allows user to view loyalty programs and details.",
-    active: true,
-  },
-  {
-    key: "CREATE_LOYALTY",
-    name: "Create Loyalty",
-    feature: "Loyalty",
-    description: "Allows user to create a new loyalty program.",
-    active: true,
-  },
-  {
-    key: "EDIT_LOYALTY",
-    name: "Edit Loyalty",
-    feature: "Loyalty",
-    description: "Allows user to edit existing loyalty programs.",
-    active: false,
-  },
-  {
-    key: "DELETE_LOYALTY",
-    name: "Delete Loyalty",
-    feature: "Loyalty",
-    description: "Allows user to delete loyalty programs.",
-    active: false,
-  },
-  {
-    key: "MANAGE_REWARDS",
-    name: "Manage Rewards",
-    feature: "Loyalty",
-    description: "Allows user to manage loyalty rewards.",
-    active: true,
-  },
-  {
-    key: "VIEW_CUSTOMERS",
-    name: "View Customers",
-    feature: "Loyalty",
-    description: "Allows user to view customer points and history.",
-    active: true,
-  },
-  {
-    key: "ADJUST_POINTS",
-    name: "Adjust Points",
-    feature: "Loyalty",
-    description: "Allows user to manually adjust customer points.",
-    active: false,
-  },
-  {
-    key: "EXPORT_REPORTS",
-    name: "Export Reports",
-    feature: "Loyalty",
-    description: "Allows user to export loyalty reports.",
-    active: true,
-  },
-];
-
 const FeaturePermissions = () => {
   const navigate = useNavigate();
   const { featureId } = useParams();
-  const [permissions, setPermissions] = useState(initialPermissions);
+  const [permissions, setPermissions] = useState([]);
+  const [feature, setFeature] = useState(null);
+  const [error, setError] = useState('');
+  React.useEffect(() => { Promise.all([getFeature(featureId), listFeaturePermissions(featureId)]).then(([f, list]) => { setFeature(f); setPermissions(list.map(p => ({ ...p, key: p.permissionKey || p.key || '', feature: f?.name || p.feature?.name || '', active: String(p.status || '').toUpperCase() === 'ACTIVE' }))); }).catch(e => setError(e.message || 'Unable to load permissions.')); }, [featureId]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [form, setForm] = useState({ key: '', name: '', description: '', status: 'Active' });
 
   const filteredPermissions = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -98,10 +48,32 @@ const FeaturePermissions = () => {
     });
   }, [permissions, search, filter]);
 
-  const deletePermission = (key) => {
-    setPermissions((current) =>
-      current.filter((permission) => permission.key !== key)
-    );
+  const deletePermission = async (key) => { const item = permissions.find(p => p.key === key); if (!item?.id) return; try { await deleteFeaturePermission(featureId, item.id); setPermissions(current => current.filter(p => p.id !== item.id)); } catch(e) { setError(e.message || 'Unable to delete permission.'); } };
+
+  const openCreateModal = () => {
+    setForm({ key: '', name: '', description: '', status: 'Active' });
+    setFormError('');
+    setIsCreateOpen(true);
+  };
+
+  const saveNewPermission = async (event) => {
+    event.preventDefault();
+    const key = form.key.trim();
+    const name = form.name.trim();
+    if (!key || !name) { setFormError('Permission Key and Permission Name are required.'); return; }
+    setSaving(true); setFormError('');
+    try {
+const created = await createFeaturePermission(featureId, {
+  permissionKey: key,
+  name,
+  featureId,
+  description: form.description.trim(),
+  status: form.status.toUpperCase()
+});      const item = created?.data || created?.permission || created || {};
+      setPermissions(current => [{ ...item, id: item.id || `${featureId}-${Date.now()}`, key: item.permissionKey || item.key || key, name: item.permissionName || item.name || name, feature: feature?.name || item.feature?.name || '', description: item.description || form.description.trim(), active: String(item.status || form.status).toUpperCase() === 'ACTIVE' }, ...current]);
+      setIsCreateOpen(false);
+    } catch (e) { setFormError(e.message || 'Unable to create permission.'); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -120,8 +92,8 @@ const FeaturePermissions = () => {
           </div>
 
           <div className="fp-feature-copy">
-            <h1>Loyalty</h1>
-            <p>Manage loyalty programs and rewards.</p>
+            <h1>{feature?.name || "Feature"}</h1>
+            <p>{feature?.description || "Manage permissions for this feature."}</p>
           </div>
 
         </div>
@@ -176,7 +148,7 @@ const FeaturePermissions = () => {
               <h2>Permissions List ({permissions.length})</h2>
 
               <p>
-                Manage and configure permissions for the Loyalty feature.
+                Manage and configure permissions for this feature.
               </p>
             </div>
 
@@ -186,6 +158,10 @@ const FeaturePermissions = () => {
           {/* SEARCH + FILTER */}
 
           <div className="fp-toolbar">
+
+            <button type="button" className="fp-create-permission-btn" onClick={openCreateModal}>
+              <span aria-hidden="true">+</span> Create Feature Permission
+            </button>
 
             <div className="fp-search-box">
 
@@ -281,6 +257,7 @@ const FeaturePermissions = () => {
 
             <tbody>
 
+              {error && <p role="alert">{error}</p>}
               {filteredPermissions.map((permission) => (
 
                 <tr key={permission.key}>
@@ -410,6 +387,27 @@ const FeaturePermissions = () => {
         </div>
 
       </section>
+
+      {isCreateOpen && (
+        <div className="fp-modal-backdrop" role="presentation" onMouseDown={() => !saving && setIsCreateOpen(false)}>
+          <div className="fp-create-modal" role="dialog" aria-modal="true" aria-labelledby="fp-create-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="fp-modal-header">
+              <div><h2 id="fp-create-title">Add New Feature Permission</h2><p>Create a permission for {feature?.name || 'this feature'}.</p></div>
+              <button type="button" className="fp-modal-close" onClick={() => !saving && setIsCreateOpen(false)} aria-label="Close">×</button>
+            </div>
+            <form className="fp-create-form" onSubmit={saveNewPermission}>
+              <div className="fp-create-grid">
+                <label>Permission Key <span>*</span><input value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value })} placeholder="e.g. refunds.view" autoFocus /></label>
+                <label>Permission Name <span>*</span><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. View Refunds" /></label>
+                <label className="fp-create-full">Description<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe what this permission allows users to do" rows={3} /></label>
+                <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label>
+              </div>
+              {formError && <p className="fp-modal-error" role="alert">{formError}</p>}
+              <div className="fp-modal-actions"><button type="button" className="fp-modal-cancel" onClick={() => !saving && setIsCreateOpen(false)} disabled={saving}>Cancel</button><button type="submit" className="fp-modal-save" disabled={saving}>{saving ? 'Saving...' : 'Save Permission'}</button></div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
