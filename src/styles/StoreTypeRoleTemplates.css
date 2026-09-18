@@ -304,10 +304,11 @@
 }
 
 .role-template-modal {
-  display: grid;
-  width: min(100%, 370px);
-  gap: 16px;
-  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 395px);
+  gap: 14px;
+  padding: 18px;
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 20px 50px rgba(4, 28, 64, 0.28);
@@ -332,21 +333,113 @@
   cursor: pointer;
 }
 
-.role-template-modal label {
-  display: grid;
-  gap: 7px;
-  color: #23426e;
+.role-template-search {
+  display: flex;
+  height: 36px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 11px;
+  border: 1px solid #d8e6f4;
+  border-radius: 7px;
+  color: #4c82cd;
+}
+
+.role-template-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: #163762;
+  background: transparent;
   font-size: 12px;
+}
+
+.role-template-list {
+  display: grid;
+  gap: 8px;
+  max-height: 250px;
+  padding: 8px 0;
+  overflow-y: auto;
+  border-top: 1px solid #edf2fa;
+  border-bottom: 1px solid #edf2fa;
+}
+
+.role-template-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 24px;
+  color: #4a6d9f;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.role-template-option input {
+  width: 14px;
+  height: 14px;
+  accent-color: #684ee3;
+  cursor: pointer;
+}
+
+.role-template-empty {
+  color: #6d88b4;
+  font-size: 11px;
+  font-style: italic;
+}
+
+.role-template-preview {
+  padding-top: 4px;
+}
+
+.role-template-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #163768;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.role-template-preview-header strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  color: #fff;
+  background: #684ee3;
+  font-size: 11px;
+}
+
+.role-template-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 30px;
+  padding: 8px 10px;
+  border: 1px solid #e3eaf8;
+  border-radius: 8px;
+  background: #f9faff;
+}
+
+.role-template-preview-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid #dfe6ff;
+  border-radius: 999px;
+  color: #3e30b2;
+  background: #eef2ff;
+  font-size: 10px;
   font-weight: 600;
 }
 
-.role-template-modal input {
-  height: 38px;
-  padding: 0 10px;
-  border: 1px solid #d8e6f4;
-  border-radius: 7px;
-  outline: 0;
-  color: #163762;
+.role-template-preview-empty {
+  color: #6d88b4;
+  font-size: 11px;
+  font-style: italic;
 }
 
 .role-template-modal-actions {

@@ -36,6 +36,7 @@ import ConfigurePermissions from "./pages/ConfigurePermissions";
 import RoleTemplates from "./pages/Roletemplates";
 import Vendors from "./pages/Vendors";
 import Tenders from "./pages/Tenders";
+import ViewPlan from "./pages/ViewPlan";
 
 const placeholders = [
   "Cash Management",
@@ -261,20 +262,12 @@ export default function App() {
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/plans/:planId" element={<ViewPlan />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
-        <Route
-          path="/store-types/:storeTypeId"
-          element={<StoreTypeDetails />}
-        />
-        <Route
-          path="/store-types/:storeTypeId/features"
-          element={<StoreTypeFeatures />}
-        />
-        <Route
-          path="/store-types/:storeTypeId/role-templates"
-          element={<StoreTypeRoleTemplates />}
-        />
-
+        <Route path="/store-types/:storeTypeId" element={<StoreTypeDetails />} />
+        <Route path="/store-types/:storeTypeId/features" element={<StoreTypeFeatures />} />
+        <Route path="/store-types/:storeTypeId/role-templates" element={<StoreTypeRoleTemplates />} />
+        
       </Route>
 
       <Route

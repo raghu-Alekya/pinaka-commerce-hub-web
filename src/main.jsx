@@ -36,6 +36,7 @@ import "./styles/add-device.css";
 import "./styles/employees.css";
 import "./styles/add-employee.css";
 import "./styles/Merchant-subscriptions.css";
+import "./styles/ViewPlan.css";
 
 
 ReactDOM.createRoot(document.getElementById("root")).render(

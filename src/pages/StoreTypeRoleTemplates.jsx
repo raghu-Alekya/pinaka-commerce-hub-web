@@ -1,24 +1,114 @@
-import { useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  readRoleTemplatesList,
+  roleTemplatesApi,
+} from "../api/roleTemplatesApi";
+import { storeTypesApi } from "../api/storeTypes";
 
-const initialRoles = [
-  { id: 1, name: "Restaurant Manager", scope: "Store", active: true },
-  { id: 2, name: "Shift Manager", scope: "Store", active: true },
-  { id: 3, name: "Cashier", scope: "Store", active: true },
-  { id: 4, name: "Server", scope: "Store", active: true },
-  { id: 5, name: "Kitchen Manager", scope: "Store", active: true },
-  { id: 6, name: "Kitchen Staff", scope: "Store", active: true },
-];
+const initialStoreType = {
+  name: "Store Type",
+  description: "Manage the role templates assigned to this store type.",
+  status: "ACTIVE",
+};
+
+function normalizeRole(role, index) {
+  const template = role.roleTemplate ?? role.template ?? role;
+
+  return {
+    id:
+      role.roleTemplateId ??
+      template.id ??
+      template._id ??
+      role.id ??
+      `role-${index}`,
+    name:
+      template.name ??
+      template.roleName ??
+      template.templateName ??
+      template.code ??
+      "Unnamed role template",
+    scope: template.scope ?? template.roleScope ?? "Store",
+    active: template.status ? template.status !== "INACTIVE" : true,
+  };
+}
 
 export default function StoreTypeRoleTemplates() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { storeTypeId } = useParams();
+  const initialState = location.state?.storeType;
 
-  const [roles, setRoles] = useState(initialRoles);
+  const [storeType, setStoreType] = useState(() => ({
+    ...initialStoreType,
+    ...(initialState
+      ? {
+          name: initialState.name ?? initialStoreType.name,
+          description:
+            initialState.description ?? initialStoreType.description,
+          status: initialState.status ?? initialStoreType.status,
+        }
+      : {}),
+  }));
+  const [roles, setRoles] = useState([]);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [newRoleName, setNewRoleName] = useState("");
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [modalSearch, setModalSearch] = useState("");
+  const [availableRoles, setAvailableRoles] = useState([]);
+  const [loadingAvailableRoles, setLoadingAvailableRoles] = useState(false);
+  const [roleListError, setRoleListError] = useState("");
+  const [savingRoles, setSavingRoles] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    storeTypesApi
+      .getOne(storeTypeId)
+      .then((response) => {
+        const item = response?.storeType ?? response?.data ?? response;
+
+        if (!item || typeof item !== "object" || cancelled) return;
+
+        setStoreType({
+          name: item.name ?? initialStoreType.name,
+          description: item.description ?? initialStoreType.description,
+          status: item.status ?? initialStoreType.status,
+        });
+      })
+      .catch((err) => {
+        if (!cancelled) setRoleListError(err.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeTypeId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    roleTemplatesApi
+      .getForStoreType(storeTypeId)
+      .then((response) => {
+        if (cancelled) return;
+
+        const assignments = readRoleTemplatesList(response);
+        setRoles(assignments.map(normalizeRole));
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setRoleListError(
+            err.message || "Unable to load assigned role templates."
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeTypeId]);
 
   const filteredRoles = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -38,41 +128,102 @@ export default function StoreTypeRoleTemplates() {
     );
   }
 
-  function addRole(event) {
-    event.preventDefault();
+  const filteredModalRoles = useMemo(() => {
+    const query = modalSearch.trim().toLowerCase();
 
-    const name = newRoleName.trim();
-
-    if (!name) return;
-
-    const duplicate = roles.some(
-      (role) => role.name.toLowerCase() === name.toLowerCase()
+    return availableRoles.filter((role) =>
+      role.name.toLowerCase().includes(query)
     );
+  }, [availableRoles, modalSearch]);
 
-    if (duplicate) {
-      window.alert("This role template already exists.");
-      return;
-    }
-
-    setRoles((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        name,
-        scope: "Store",
-        active: true,
-      },
-    ]);
-
-    setNewRoleName("");
-    setShowModal(false);
+  function toggleSelectedRole(roleId) {
+    setSelectedRoles((current) =>
+      current.includes(roleId)
+        ? current.filter((item) => item !== roleId)
+        : [...current, roleId]
+    );
   }
 
-  function confirmDeleteRole() {
-    if (!deleteTarget) return;
+  async function openRoleModal() {
+    const existingIds = new Set(roles.map((role) => role.id));
+    setModalSearch("");
+    setRoleListError("");
+    setShowModal(true);
 
-    setRoles((current) => current.filter((role) => role.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    setLoadingAvailableRoles(true);
+    try {
+      const response = await roleTemplatesApi.getAll();
+      const apiRoles = readRoleTemplatesList(response).map(normalizeRole);
+
+      setAvailableRoles(apiRoles);
+      setSelectedRoles(
+        apiRoles
+          .filter((role) => existingIds.has(role.id))
+          .map((role) => role.id)
+      );
+    } catch (err) {
+      setAvailableRoles([]);
+      setSelectedRoles([]);
+      setRoleListError(err.message || "Unable to load role templates.");
+    } finally {
+      setLoadingAvailableRoles(false);
+    }
+  }
+
+  async function addSelectedRoles() {
+    if (!storeTypeId || selectedRoles.length === 0) return;
+
+    const existingIds = new Set(roles.map((role) => role.id));
+    const selected = availableRoles.filter((role) =>
+      selectedRoles.includes(role.id)
+    );
+
+    setSavingRoles(true);
+    setRoleListError("");
+
+    try {
+      await Promise.all(
+        selected
+          .filter((role) => !existingIds.has(role.id))
+          .map((role) =>
+            roleTemplatesApi.assignToStoreType(storeTypeId, {
+              roleTemplateId: role.id,
+              defaultEnabled: true,
+              required: false,
+            })
+          )
+      );
+
+      setRoles((current) => [
+        ...current,
+        ...selected.filter((role) => !existingIds.has(role.id)),
+      ]);
+      setShowModal(false);
+      setSelectedRoles([]);
+    } catch (err) {
+      setRoleListError(err.message || "Unable to add role templates.");
+    } finally {
+      setSavingRoles(false);
+    }
+  }
+
+  async function confirmDeleteRole() {
+    if (!deleteTarget || !storeTypeId) return;
+
+    setSavingRoles(true);
+    setRoleListError("");
+
+    try {
+      await roleTemplatesApi.removeFromStoreType(storeTypeId, deleteTarget.id);
+      setRoles((current) =>
+        current.filter((role) => role.id !== deleteTarget.id)
+      );
+      setDeleteTarget(null);
+    } catch (err) {
+      setRoleListError(err.message || "Unable to delete role template.");
+    } finally {
+      setSavingRoles(false);
+    }
   }
 
   return (
@@ -88,18 +239,19 @@ export default function StoreTypeRoleTemplates() {
 
       <div className="role-templates-title">
         <div className="store-type-title-line">
-          <h1>Restaurant</h1>
+          <h1>{storeType.name}</h1>
 
-          <span className="store-type-active-badge">
+          <span
+            className={`store-type-active-badge ${
+              storeType.status === "INACTIVE" ? "inactive" : ""
+            }`}
+          >
             <i className="bi bi-circle-fill" />
-            Active
+            {storeType.status === "INACTIVE" ? "Inactive" : "Active"}
           </span>
         </div>
 
-        <p>
-          Store type for restaurant vertical with full service and quick
-          service operations.
-        </p>
+        <p>{storeType.description}</p>
       </div>
 
       <nav className="role-templates-tabs">
@@ -152,7 +304,7 @@ export default function StoreTypeRoleTemplates() {
             <button
               type="button"
               className="role-templates-add-button"
-              onClick={() => setShowModal(true)}
+              onClick={openRoleModal}
             >
               <i className="bi bi-plus-lg" />
               Add Role Template
@@ -216,9 +368,8 @@ export default function StoreTypeRoleTemplates() {
           className="role-template-modal-overlay"
           onClick={() => setShowModal(false)}
         >
-          <form
+          <div
             className="role-template-modal"
-            onSubmit={addRole}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="role-template-modal-heading">
@@ -233,34 +384,86 @@ export default function StoreTypeRoleTemplates() {
               </button>
             </div>
 
-            <label>
-              Role Template Name
+            <label className="role-template-search">
+              <i className="bi bi-search" />
               <input
-                value={newRoleName}
-                onChange={(event) => setNewRoleName(event.target.value)}
-                placeholder="e.g. Restaurant Supervisor"
+                type="search"
+                value={modalSearch}
+                onChange={(event) => setModalSearch(event.target.value)}
+                placeholder="Search roles..."
                 autoFocus
               />
             </label>
+
+            <div className="role-template-list">
+              {loadingAvailableRoles ? (
+                <span className="role-template-empty">Loading roles...</span>
+              ) : roleListError ? (
+                <span className="role-template-empty" role="alert">
+                  {roleListError}
+                </span>
+              ) : filteredModalRoles.length > 0 ? (
+                filteredModalRoles.map((role) => (
+                  <label className="role-template-option" key={role.id}>
+                    <input
+                      type="checkbox"
+                      checked={selectedRoles.includes(role.id)}
+                      onChange={() => toggleSelectedRole(role.id)}
+                      disabled={savingRoles}
+                    />
+                    <span>{role.name}</span>
+                  </label>
+                ))
+              ) : (
+                <span className="role-template-empty">No matching roles found</span>
+              )}
+            </div>
+
+            <div className="role-template-preview">
+              <div className="role-template-preview-header">
+                <span>Selected Roles</span>
+                <strong>{selectedRoles.length}</strong>
+              </div>
+
+              <div className="role-template-preview-list">
+                {selectedRoles.length > 0 ? (
+                  selectedRoles.map((roleId) => {
+                    const role = availableRoles.find((item) => item.id === roleId);
+
+                    return (
+                    <span className="role-template-preview-pill" key={roleId}>
+                      {role?.name ?? roleId}
+                    </span>
+                    );
+                  })
+                ) : (
+                  <span className="role-template-preview-empty">
+                    No roles selected yet
+                  </span>
+                )}
+              </div>
+            </div>
 
             <div className="role-template-modal-actions">
               <button
                 type="button"
                 className="role-template-cancel-button"
                 onClick={() => setShowModal(false)}
+                disabled={savingRoles}
               >
                 Cancel
               </button>
 
               <button
-                type="submit"
+                type="button"
                 className="role-template-create-button"
-                disabled={!newRoleName.trim()}
+                onClick={addSelectedRoles}
+                disabled={selectedRoles.length === 0 || savingRoles}
               >
-                Add Role
+                {savingRoles ? "Adding..." : `Add Selected (${selectedRoles.length})`}
               </button>
             </div>
-          </form>
+          </div>
         </div>
       )}
 
@@ -287,11 +490,14 @@ export default function StoreTypeRoleTemplates() {
               This action cannot be undone.
             </p>
 
+            {roleListError && <p role="alert">{roleListError}</p>}
+
             <div className="delete-roletemplate-actions">
               <button
                 type="button"
                 className="delete-roletemplate-keep-button"
                 onClick={() => setDeleteTarget(null)}
+                disabled={savingRoles}
               >
                 No, Keep It
               </button>
@@ -300,8 +506,9 @@ export default function StoreTypeRoleTemplates() {
                 type="button"
                 className="delete-roletemplate-confirm-button"
                 onClick={confirmDeleteRole}
+                disabled={savingRoles}
               >
-                Yes, Delete
+                {savingRoles ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>
