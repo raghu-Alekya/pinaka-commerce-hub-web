@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/features.css";
 
@@ -14,13 +14,32 @@ const emptyForm = { code: "", name: "", description: "", category: "", status: "
 
 export default function Features() {
   const navigate = useNavigate();
-  const [features, setFeatures] = useState(initialFeatures);
+  const [features, setFeatures] = useState(() => {
+    try {
+      const savedFeatures = localStorage.getItem("pch_features");
+      if (savedFeatures) {
+        const parsedFeatures = JSON.parse(savedFeatures);
+        if (Array.isArray(parsedFeatures)) return parsedFeatures;
+      }
+    } catch (error) {
+      console.error("Unable to load saved features:", error);
+    }
+    return initialFeatures;
+  });
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [formErrors, setFormErrors] = useState({});
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("pch_features", JSON.stringify(features));
+    } catch (error) {
+      console.error("Unable to save features:", error);
+    }
+  }, [features]);
 
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
@@ -40,6 +59,7 @@ export default function Features() {
 
     if (!code) errors.code = "Feature Code is required.";
     if (!name) errors.name = "Feature Name is required.";
+    if (!form.category) errors.category = "Category is required.";
 
     if (code && features.some(
       (item) =>
@@ -153,41 +173,69 @@ export default function Features() {
         </div>
 
         <div className="feature-form-grid">
-          <div className="feature-field">
-            <label>Feature Code<span>*</span></label>
+          <div className="feature-field feature-code-field">
+            <label htmlFor="feature-code">Feature Code<span>*</span></label>
             <input
+              id="feature-code"
               name="code"
               value={form.code}
               onChange={updateField}
-              placeholder="Enter a unique code, e.g. INVENTORY_MANAGEMENT"
+              placeholder="Enter a unique code, e.g. INVENTORY"
               className={formErrors.code ? "feature-input-error" : ""}
             />
             {formErrors.code ? (
               <small className="feature-error-text">{formErrors.code}</small>
             ) : (
-              <small></small>
+              <small className="feature-field-space">&nbsp;</small>
             )}
           </div>
 
-          <div className="feature-field">
-            <label>Feature Name<span>*</span></label>
+          <div className="feature-field feature-name-field">
+            <label htmlFor="feature-name">Name<span>*</span></label>
             <input
+              id="feature-name"
               name="name"
               value={form.name}
               onChange={updateField}
-              placeholder="Enter a unique feature name, e.g. Inventory Management"
+              placeholder="Enter a unique feature name, e.g. Inventory"
               className={formErrors.name ? "feature-input-error" : ""}
             />
             {formErrors.name ? (
               <small className="feature-error-text">{formErrors.name}</small>
             ) : (
-              <small> </small>
+              <small className="feature-field-space">&nbsp;</small>
+            )}
+          </div>
+
+          <div className="feature-field feature-category-field">
+            <label htmlFor="feature-category">Category<span>*</span></label>
+            <div className={`select-shell ${formErrors.category ? "feature-select-error" : ""}`}>
+              <select
+                id="feature-category"
+                name="category"
+                value={form.category}
+                onChange={updateField}
+              >
+                <option value="">Select category</option>
+                <option value="Restaurant">Restaurant</option>
+                <option value="Customer Engagement">Customer Engagement</option>
+                <option value="Orders">Orders</option>
+                <option value="Cash Management">Cash Management</option>
+                <option value="Stock Control">Stock Control</option>
+              </select>
+              <i className="bi bi-chevron-down" />
+            </div>
+            {formErrors.category ? (
+              <small className="feature-error-text">{formErrors.category}</small>
+            ) : (
+              <small className="feature-field-space">&nbsp;</small>
             )}
           </div>
 
           <div className="feature-field feature-description-field">
-            <label>Description</label>
+            <label htmlFor="feature-description">Description</label>
             <textarea
+              id="feature-description"
               name="description"
               value={form.description}
               onChange={updateField}
@@ -200,32 +248,20 @@ export default function Features() {
             </div>
           </div>
 
-          <div className="feature-field">
-            <label>Category<span>*</span></label>
+          <div className="feature-field pch-feature-form-status-field">
+            <label htmlFor="feature-status">Status</label>
             <div className="select-shell">
-              <select name="category" value={form.category} onChange={updateField}>
-                <option value="">Select category</option>
-                <option value="Restaurant">Restaurant</option>
-                <option value="Customer Engagement">Customer Engagement</option>
-                <option value="Orders">Orders</option>
-                <option value="Cash Management">Cash Management</option>
-                <option value="Stock Control">Stock Control</option>
-              </select>
-              <i className="bi bi-chevron-down" />
-            </div>
-            <small></small>
-          </div>
-
-          <div className="feature-field feature-status-field">
-            <label>Status</label>
-            <div className="select-shell">
-              <select name="status" value={form.status} onChange={updateField}>
+              <select
+                id="feature-status"
+                name="status"
+                value={form.status}
+                onChange={updateField}
+              >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
               <i className="bi bi-chevron-down" />
             </div>
-            <small> </small>
           </div>
         </div>
 

@@ -19,6 +19,25 @@
   box-sizing: border-box;
 }
 
+.feature-overview-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #684ee3;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.feature-overview-back:hover {
+  color: #5138d3;
+}
+
 
 /* =========================================================
    FEATURE HEADER CARD

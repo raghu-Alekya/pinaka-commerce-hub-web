@@ -10,6 +10,15 @@ const FeatureOverview = () => {
   return (
     <div className="feature-overview-page">
 
+      <button
+        type="button"
+        className="feature-overview-back"
+        onClick={() => navigate("/features")}
+      >
+        <i className="bi bi-arrow-left" />
+        Back to Features
+      </button>
+
       {/* =========================
           FEATURE HEADER CARD
       ========================== */}

@@ -118,30 +118,90 @@
   align-items: start;
 }
 
-.feature-form-grid > .feature-field:nth-child(1) {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.feature-form-grid > .feature-field:nth-child(2) {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.feature-form-grid > .feature-field:nth-child(5) {
+.feature-code-field { grid-column: 1; grid-row: 1; }
+.feature-name-field { grid-column: 2; grid-row: 1; }
+.feature-category-field { grid-column: 3; grid-row: 1; }
+.feature-description-field { grid-column: 1 / -1; grid-row: 2; }
+.pch-feature-form-status-field {
   grid-column: 1;
   grid-row: 3;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 7px;
 }
 
-.feature-form-grid > .feature-field:nth-child(3) {
-  grid-column: 1 / 4;
-  grid-row: 2;
+.features-page .feature-details-card .pch-feature-form-status-field > label {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #244b76;
+  text-align: left;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 700;
 }
 
-.feature-form-grid > .feature-field:nth-child(4) {
-  grid-column: 3;
-  grid-row: 1;
+.features-page .feature-details-card .pch-feature-form-status-field > .select-shell {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 48px;
+  min-height: 48px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #d5dfed;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: none;
 }
+
+.features-page .feature-details-card .pch-feature-form-status-field > .select-shell > select {
+  display: block;
+  width: 100%;
+  height: 46px;
+  min-height: 46px;
+  margin: 0;
+  padding: 0 42px 0 15px;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  color: #1f385b;
+  text-align: left;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
+  cursor: pointer;
+}
+
+.features-page .feature-details-card .pch-feature-form-status-field > .select-shell > i {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  color: #61799d;
+  font-size: 12px;
+  line-height: 1;
+  pointer-events: none;
+}
+
 
 .feature-field {
   display: flex;
@@ -152,10 +212,10 @@
 
 .feature-field label {
   margin: 0;
-  color: #274761;
-  font-size: 14px;
+  color: #244b76;
+  font-size: 16px;
   line-height: 1.25;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .feature-field label span {
@@ -164,27 +224,27 @@
 }
 
 .feature-field input,
-.feature-field select,
 .feature-field textarea {
   width: 100%;
-  border: 1px solid #dce3ed;
-  border-radius: 7px;
+  border: 1px solid #d5dfed;
+  border-radius: 9px;
   background: #ffffff;
-  color: #25314c;
+  color: #1f385b;
   outline: none;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 16px;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 
 .feature-field input {
-  height: 44px;
-  padding: 0 13px;
+  height: 48px;
+  padding: 0 15px;
 }
 
 .feature-field textarea {
-  min-height: 48px;
-  height: 48px;
-  padding: 12px 13px;
+  min-height: 80px;
+  height: 80px;
+  padding: 14px 15px;
   line-height: 1.45;
   resize: vertical;
 }
@@ -193,13 +253,52 @@
 .feature-field textarea::placeholder {
   color: #9aa8bd;
   opacity: 1;
+  font-size: 13px;
 }
 
-.feature-field input:focus,
-.feature-field textarea:focus,
-.feature-field .select-shell:focus-within {
-  border-color: #8c7cf0;
-  box-shadow: 0 0 0 3px rgba(104, 78, 227, 0.08);
+.select-shell {
+  position: relative;
+  width: 100%;
+  height: 48px;
+  overflow: hidden;
+  border: 1px solid #d5dfed;
+  border-radius: 9px;
+  background: #ffffff;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.select-shell select {
+  width: 100%;
+  height: 100%;
+  padding: 0 42px 0 15px;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  color: #1f385b;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.select-shell > i {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  color: #61799d;
+  font-size: 12px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.feature-description-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 16px;
 }
 
 .feature-field small,
@@ -207,54 +306,23 @@
 .feature-description-meta > span {
   margin: 0;
   color: #7d8da7;
-  font-size: 12px;
+  font-size: 8px;
   line-height: 1.35;
 }
 
-.select-shell {
-  position: relative;
-  width: 100%;
-  height: 44px;
-  overflow: hidden;
-  border: 1px solid #dce3ed;
-  border-radius: 7px;
-  background: #ffffff;
+.feature-field-space {
+  visibility: hidden;
 }
 
-.select-shell select {
-  width: 100%;
-  height: 100%;
-  padding: 0 38px 0 13px;
-  border: 0;
-  border-radius: 0;
-  outline: 0;
-  appearance: none;
-  -webkit-appearance: none;
-  background: transparent;
-  color: #25314c;
-  font-family: inherit;
-  font-size: 14px;
+.feature-field input:focus,
+.feature-field textarea:focus,
+.feature-field .select-shell:focus-within {
+  border-color: #806bff;
+  box-shadow: 0 0 0 4px rgba(128, 107, 255, 0.14);
 }
 
-.select-shell > i {
-  position: absolute;
-  top: 50%;
-  right: 13px;
-  transform: translateY(-50%);
-  color: #75819a;
-  font-size: 11px;
-  line-height: 1;
-  pointer-events: none;
-}
-
-.feature-description-meta {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.feature-input-error {
+.feature-input-error,
+.feature-select-error {
   border-color: #e25d6f !important;
 }
 
@@ -728,19 +796,33 @@
 @media (max-width: 1050px) {
   .feature-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
   }
 
-  .feature-form-grid > .feature-field {
-    grid-column: auto !important;
-    grid-row: auto !important;
+  .feature-code-field,
+  .feature-name-field,
+  .feature-category-field,
+  .feature-description-field,
+  .pch-feature-form-status-field {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .feature-description-field {
-    grid-column: 1 / -1 !important;
+    grid-column: 1 / -1;
   }
 }
 
 @media (max-width: 700px) {
+  .feature-code-field,
+  .feature-name-field,
+  .feature-category-field,
+  .feature-description-field,
+  .pch-feature-form-status-field {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
   .features-page {
     padding: 16px;
   }
@@ -830,3 +912,55 @@
     min-width: 27px;
   }
 }
+
+/* =========================================================
+   FINAL FEATURE FORM CONSISTENCY OVERRIDES
+   ========================================================= */
+
+.features-page .feature-details-card .feature-field > label,
+.features-page .feature-details-card .pch-feature-form-status-field > label {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #10264d;
+  text-align: left;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+/* Keep all standard controls visually consistent. */
+.features-page .feature-details-card .feature-field > input,
+.features-page .feature-details-card .feature-field > .select-shell,
+.features-page .feature-details-card .pch-feature-form-status-field > .select-shell {
+  height: 48px;
+  min-height: 48px;
+  border-radius: 9px;
+}
+
+/* Status text should match Category / input text. */
+.features-page .feature-details-card .pch-feature-form-status-field > .select-shell > select {
+  height: 46px;
+  min-height: 46px;
+  padding: 0 42px 0 15px;
+  color: #1f385b;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: normal;
+  font-weight: 400;
+}
+
+/* Same purple focus treatment for input, category and status dropdown. */
+.features-page .feature-details-card .feature-field > input:focus,
+.features-page .feature-details-card .feature-description-field > textarea:focus,
+.features-page .feature-details-card .feature-field > .select-shell:focus-within,
+.features-page .feature-details-card .pch-feature-form-status-field > .select-shell:focus-within {
+  border-color: #806bff;
+  box-shadow: 0 0 0 4px rgba(128, 107, 255, 0.14);
+  outline: none;
+}
+
