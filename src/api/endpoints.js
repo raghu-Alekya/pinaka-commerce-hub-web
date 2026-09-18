@@ -18,4 +18,6 @@ export const endpoints = {
   features: "/features",
   feature: (id) => `/features/${id}`,
   featureStatus: (id) => `/features/${id}/status`,
+  tendors: "/tendors",
+  tendor: (id) => `/tendors/${id}`,
 };
