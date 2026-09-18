@@ -1,4 +1,8 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import { roleTemplatesApi } from "../api/roleTemplatesApi";
+import RoleTemplateDetailsHeader from "../components/RoleTemplateDetailsHeader";
+import { roleTemplate as fallbackRoleTemplate } from "../data/roleTemplateDetails";
 
 const defaultRoleTemplate = {
   id: "store-manager",
@@ -9,19 +13,77 @@ const defaultRoleTemplate = {
 };
 
 export default function ViewRoleTemplateOverview() {
-  const navigate = useNavigate();
-  const location = useLocation();
   const { roleId } = useParams();
-  const roleTemplate = {
-    ...defaultRoleTemplate,
-    ...(location.state?.roleTemplate ?? {}),
-  };
+  const location = useLocation();
+  const selectedRole = location.state?.roleTemplate;
+  const [roleDetails, setRoleDetails] = useState(
+    selectedRole || fallbackRoleTemplate
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const tabs = [
-    ["overview", "Overview", `/role-templates/${roleId}`],
-    ["store-types", "Applicable Store Types", `/role-templates/${roleId}/store-types`],
-    ["access", "Feature & Permission Access", `/role-templates/${roleId}/access`],
-  ];
+  useEffect(() => {
+    let isMounted = true;
+
+    if (selectedRole) {
+      setRoleDetails(selectedRole);
+    }
+
+    async function loadRoleDetails() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await roleTemplatesApi.getById(roleId);
+        const data =
+          response?.data?.data ??
+          response?.data ??
+          response?.result ??
+          response;
+
+        if (isMounted) {
+          setRoleDetails({
+            name:
+              selectedRole?.name ??
+              selectedRole?.roleName ??
+              data?.name ??
+              data?.roleName ??
+              fallbackRoleTemplate.name,
+            code:
+              selectedRole?.roleCode ??
+              selectedRole?.code ??
+              data?.roleCode ??
+              data?.code ??
+              data?.role_code ??
+              fallbackRoleTemplate.code,
+            description:
+              selectedRole?.description ??
+              data?.description ??
+              fallbackRoleTemplate.description,
+            status:
+              selectedRole?.status ??
+              data?.status ??
+              fallbackRoleTemplate.status,
+          });
+        }
+      } catch (requestError) {
+        if (isMounted) {
+          setError(
+            requestError?.message ||
+              "Unable to load role template details."
+          );
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    if (roleId) loadRoleDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [roleId, selectedRole]);
 
   return (
     <section className="role-details-page">
@@ -71,28 +133,40 @@ export default function ViewRoleTemplateOverview() {
           </div>
         </div>
 
+        {error && (
+          <p className="role-error-message" role="alert">
+            {error}
+          </p>
+        )}
+
         <div className="role-overview-grid">
           <div>
             <span>Role Template Name</span>
-            <strong>{roleTemplate.name}</strong>
+            <strong>
+              {loading ? "Loading..." : roleDetails.name}
+            </strong>
           </div>
 
           <div>
             <span>Role Code</span>
-            <strong>{roleTemplate.code}</strong>
+            <strong>
+              {loading ? "Loading..." : roleDetails.code}
+            </strong>
           </div>
 
           <div>
             <span>Status</span>
             <strong className="role-overview-active">
               <i className="bi bi-circle-fill" />
-              {roleTemplate.status}
+              {loading ? "Loading..." : roleDetails.status}
             </strong>
           </div>
 
           <div className="role-overview-description">
             <span>Description</span>
-            <strong>{roleTemplate.description}</strong>
+            <strong>
+              {loading ? "Loading..." : roleDetails.description}
+            </strong>
           </div>
         </div>
       </section>
