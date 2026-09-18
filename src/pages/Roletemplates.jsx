@@ -534,7 +534,7 @@ export default function RoleTemplates() {
                       >
                         {template.name || "—"}
                       </button>
-                    </td>
+                   </td>
 
                     <td className="role-description-cell">
                       {template.description || "-"}

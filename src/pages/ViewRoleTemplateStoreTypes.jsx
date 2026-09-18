@@ -1,5 +1,22 @@
-import { useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { storeTypesApi } from "../api/storeTypes";
+import RoleTemplateDetailsHeader from "../components/RoleTemplateDetailsHeader";
+
+function readStoreTypes(response) {
+  const candidates = [
+    response?.storeTypes,
+    response?.data?.storeTypes,
+    response?.data?.data,
+    response?.data?.items,
+    response?.data?.results,
+    response?.data,
+    response?.items,
+    response?.results,
+    response,
+  ];
+
+  return candidates.find((value) => Array.isArray(value)) || [];
+}
 
 const storeTypes = [
   { id: "retail", name: "Retail", code: "RETAIL" },
@@ -9,20 +26,43 @@ const storeTypes = [
 ];
 
 export default function ViewRoleTemplateStoreTypes() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { roleId } = useParams();
-  const roleTemplate = {
-    ...(location.state?.roleTemplate ?? {}),
-  };
-  const defaultSelection = roleTemplate.storeTypeId ?? "retail";
-  const [selectedStoreTypes, setSelectedStoreTypes] = useState([defaultSelection]);
+  const [storeTypes, setStoreTypes] = useState([]);
+  const [selectedStoreTypes, setSelectedStoreTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const tabs = [
-    ["overview", "Overview", `/role-templates/${roleId}`],
-    ["store-types", "Applicable Store Types", `/role-templates/${roleId}/store-types`],
-    ["access", "Feature & Permission Access", `/role-templates/${roleId}/access`],
-  ];
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadStoreTypes() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await storeTypesApi.getAll();
+        const items = readStoreTypes(response);
+
+        if (!cancelled) {
+          setStoreTypes(items);
+        }
+      } catch (requestError) {
+        if (!cancelled) {
+          setError(
+            requestError?.message ||
+              "Unable to load store types."
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadStoreTypes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function toggleStoreType(id) {
     setSelectedStoreTypes((current) =>
@@ -79,27 +119,45 @@ export default function ViewRoleTemplateStoreTypes() {
             <p>Select the store types where this role template can be used.</p>
           </div>
         </div>
+        {error && (
+          <p className="role-error-message" role="alert">
+            {error}
+          </p>
+        )}
 
         <div className="role-store-types-grid">
-          {storeTypes.map((storeType) => (
+          {loading && <p>Loading store types...</p>}
+
+          {!loading && !error && storeTypes.length === 0 && (
+            <p>No store types found.</p>
+          )}
+
+          {!loading && storeTypes.map((storeType) => {
+            const storeTypeId =
+              storeType.id ??
+              storeType._id ??
+              storeType.storeTypeId;
+
+            return (
             <label
-              key={storeType.id}
+              key={storeTypeId}
               className={`role-store-type-option ${
-                selectedStoreTypes.includes(storeType.id) ? "selected" : ""
+                selectedStoreTypes.includes(storeTypeId) ? "selected" : ""
               }`}
             >
-              <input
+             <input
                 type="checkbox"
-                checked={selectedStoreTypes.includes(storeType.id)}
-                onChange={() => toggleStoreType(storeType.id)}
+                checked={selectedStoreTypes.includes(storeTypeId)}
+                onChange={() => toggleStoreType(storeTypeId)}
               />
 
               <span>
-                <strong>{storeType.name}</strong>
-                <small>{storeType.code}</small>
+                <strong>{storeType.name || storeType.storeTypeName}</strong>
+                <small>{storeType.code || storeType.storeTypeCode}</small>
               </span>
             </label>
-          ))}
+            );
+          })}
         </div>
       </section>
     </section>
