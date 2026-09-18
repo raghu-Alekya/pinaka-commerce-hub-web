@@ -9,13 +9,27 @@ function toRow(item) {
     name: item.name ?? "",
     description: item.description ?? "",
     status: item.status === "INACTIVE" ? "Inactive" : "Active",
+
     createdOn: item.createdAt
-      ? new Date(item.createdAt).toLocaleDateString("en-US", {
+      ? new Date(item.createdAt).toLocaleString("en-US", {
           month: "short",
           day: "2-digit",
           year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         })
       : "—",
+
+    updatedOn: item.updatedAt
+      ? new Date(item.updatedAt).toLocaleString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "—",
+
     icon: "bi-shop",
     tone: "green",
   };
