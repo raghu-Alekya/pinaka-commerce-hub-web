@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
 import "../styles/featurepermissions.css";
 
 /* =========================================================
@@ -84,7 +83,7 @@ const initialPermissions = [
    ========================================================= */
 
 const emptyForm = {
-  key: [],
+  key: "",
   name: "",
   featureId: "",
   description: "",
@@ -92,16 +91,12 @@ const emptyForm = {
 };
 
 export default function FeaturePermissions() {
-  const navigate = useNavigate();
   const [features] = useState(initialFeatures);
 
   const [permissions, setPermissions] =
     useState(initialPermissions);
 
   const [form, setForm] =
-    useState(emptyForm);
-
-  const [savedForm, setSavedForm] =
     useState(emptyForm);
 
   const [errors, setErrors] =
@@ -116,17 +111,7 @@ export default function FeaturePermissions() {
   const [statusFilter, setStatusFilter] =
     useState("All Statuses");
 
-  const [keyInput, setKeyInput] = useState("");
-
   const isEditing = editingId !== null;
-  const hasUnsavedFormChanges = Object.keys(emptyForm).some((field) => {
-    if (field === "key") {
-      return JSON.stringify(form.key) !== JSON.stringify(savedForm.key);
-    }
-    return form[field] !== savedForm[field];
-  });
-  const hasUnsavedChanges =
-    hasUnsavedFormChanges || keyInput.trim().length > 0;
 
   /* =========================================================
      UPDATE FIELD
@@ -162,43 +147,7 @@ export default function FeaturePermissions() {
       ...emptyForm,
     });
 
-    setSavedForm({
-      ...emptyForm,
-    });
-
     setErrors({});
-    setKeyInput("");
-  };
-
-  const addPermissionKey = () => {
-    const nextKey = keyInput.trim().toUpperCase();
-    if (!nextKey) return;
-
-    if (form.key.includes(nextKey)) {
-      setKeyInput("");
-      return;
-    }
-
-    setForm((prev) => ({ ...prev, key: [...prev.key, nextKey] }));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next.key;
-      return next;
-    });
-    setKeyInput("");
-  };
-
-  const removePermissionKey = (keyToRemove) => {
-    setForm((prev) => ({
-      ...prev,
-      key: prev.key.filter((item) => item !== keyToRemove),
-    }));
-
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next.key;
-      return next;
-    });
   };
 
   /* =========================================================
@@ -206,7 +155,8 @@ export default function FeaturePermissions() {
      ========================================================= */
 
   const savePermission = () => {
-    const permissionKeys = form.key;
+    const permissionKey =
+      form.key.trim();
 
     const permissionName =
       form.name.trim();
@@ -220,7 +170,7 @@ export default function FeaturePermissions() {
 
     const validationErrors = {};
 
-    if (!permissionKeys.length) {
+    if (!permissionKey) {
       validationErrors.key =
         "Permission key is required.";
     }
@@ -252,7 +202,7 @@ export default function FeaturePermissions() {
                 ...item,
 
                 key:
-                  permissionKeys.join(", "),
+                  permissionKey.toUpperCase(),
 
                 name:
                   permissionName,
@@ -283,7 +233,7 @@ export default function FeaturePermissions() {
         id: Date.now(),
 
         key:
-          permissionKeys.join(", "),
+          permissionKey.toUpperCase(),
 
         name:
           permissionName,
@@ -321,12 +271,9 @@ export default function FeaturePermissions() {
       permission.id
     );
 
-    const nextForm = {
+    setForm({
       key:
-        String(permission.key || "")
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
+        permission.key,
 
       name:
         permission.name,
@@ -343,55 +290,13 @@ export default function FeaturePermissions() {
 
       status:
         permission.status,
-    };
-
-    setForm(nextForm);
-    setSavedForm(nextForm);
+    });
 
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   };
-
-  useEffect(() => {
-    const handleBeforeUnload = (event) => {
-      if (!hasUnsavedChanges) return;
-
-      event.preventDefault();
-      event.returnValue = "";
-    };
-
-    const handleNavigationClick = (event) => {
-      if (!hasUnsavedChanges) return;
-
-      const link = event.target.closest("a[href]");
-      if (!link || link.target === "_blank") return;
-
-      const href = link.getAttribute("href");
-      if (!href || href.startsWith("#") || href === window.location.pathname) {
-        return;
-      }
-
-      if (!window.confirm("You have unsaved changes. Leave without saving?")) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-      navigate(href);
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    document.addEventListener("click", handleNavigationClick, true);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      document.removeEventListener("click", handleNavigationClick, true);
-    };
-  }, [hasUnsavedChanges, navigate]);
 
   /* =========================================================
      DELETE PERMISSION
@@ -536,6 +441,14 @@ export default function FeaturePermissions() {
 
           </div>
 
+          <div className="fp-mode-chip">
+
+            {isEditing
+              ? `Editing: ${form.key}`
+              : "Creating New Permission"}
+
+          </div>
+
         </div>
 
         {/* ===================================================
@@ -553,9 +466,63 @@ export default function FeaturePermissions() {
 
           <div className="fp-form-grid">
 
-            {/* PERMISSION NAME */}
-            <div className={`fp-field fp-permission-name-field${errors.name ? " fp-field-invalid" : ""}`}>
-              <label htmlFor="permission-name">Permission Name<span>*</span></label>
+            {/* ===============================
+                PERMISSION KEY
+                =============================== */}
+
+            <div
+              className={`fp-field${
+                errors.key
+                  ? " fp-field-invalid"
+                  : ""
+              }`}
+            >
+
+              <label
+                htmlFor="permission-key"
+              >
+                Permission Key
+                <span>*</span>
+              </label>
+
+              <input
+                id="permission-key"
+                type="text"
+                name="key"
+                value={form.key}
+                onChange={updateField}
+                autoComplete="off"
+                placeholder="e.g. refunds.view"
+                aria-invalid={Boolean(errors.key)}
+              />
+
+              {errors.key && (
+                <p className="fp-field-error">
+                  {errors.key}
+                </p>
+              )}
+
+            </div>
+
+            {/* ===============================
+                PERMISSION NAME
+                =============================== */}
+
+            <div
+              className={`fp-field${
+                errors.name
+                  ? " fp-field-invalid"
+                  : ""
+              }`}
+            >
+
+              <label
+                htmlFor="permission-name"
+              >
+                Permission Name
+                <span>*</span>
+              </label>
+
               <input
                 id="permission-name"
                 type="text"
@@ -566,40 +533,13 @@ export default function FeaturePermissions() {
                 placeholder="e.g. View Refunds"
                 aria-invalid={Boolean(errors.name)}
               />
-              {errors.name && <p className="fp-field-error">{errors.name}</p>}
-            </div>
 
-            {/* PERMISSION KEY - MULTI VALUE */}
-            <div className={`fp-field fp-permission-key-field${errors.key ? " fp-field-invalid" : ""}`}>
-              <label htmlFor="permission-key">Permission Key(s)<span>*</span></label>
-              <div className="fp-key-entry-row">
-                  <input
-                    id="permission-key"
-                    type="text"
-                    value={keyInput}
-                    onChange={(event) => setKeyInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        addPermissionKey();
-                      }
-                    }}
-                    placeholder="e.g. VIEW_REFUND"
-                  />
-                  <button type="button" className="fp-key-add-btn" onClick={addPermissionKey} aria-label="Add permission key">
-                    <i className="bi bi-plus-lg" />
-                  </button>
-              </div>
-              <small className="fp-key-hint">Use UPPERCASE with underscores</small>
-              <div className="fp-key-chips">
-                  {form.key.map((key) => (
-                    <span className="fp-key-chip" key={key}>
-                      {key}
-                      <button type="button" onClick={() => removePermissionKey(key)} aria-label={`Remove ${key}`}>×</button>
-                    </span>
-                  ))}
-              </div>
-              {errors.key && <p className="fp-field-error">{errors.key}</p>}
+              {errors.name && (
+                <p className="fp-field-error">
+                  {errors.name}
+                </p>
+              )}
+
             </div>
 
             {/* ===============================
@@ -607,7 +547,7 @@ export default function FeaturePermissions() {
                 =============================== */}
 
             <div
-              className={`fp-field fp-feature-field${
+              className={`fp-field${
                 errors.featureId
                   ? " fp-field-invalid"
                   : ""
@@ -699,7 +639,7 @@ export default function FeaturePermissions() {
                 STATUS
                 =============================== */}
 
-            <div className="fp-field fp-status-field">
+            <div className="fp-field">
 
               <label
                 htmlFor="permission-status"
@@ -876,8 +816,6 @@ export default function FeaturePermissions() {
 
               <col className="fp-col-name" />
 
-              <col className="fp-col-feature" />
-
               <col className="fp-col-description" />
 
               <col className="fp-col-status" />
@@ -897,11 +835,6 @@ export default function FeaturePermissions() {
 
                 <th>
                   Permission Name
-                  <i className="bi bi-chevron-expand" />
-                </th>
-
-                <th>
-                  Feature
                   <i className="bi bi-chevron-expand" />
                 </th>
 
@@ -949,10 +882,6 @@ export default function FeaturePermissions() {
                         permission.name
                       }
                     </td>
-
-                    {/* Feature */}
-
-                    <td className="fp-feature-cell">{permission.featureName}</td>
 
                     {/* Description */}
 
