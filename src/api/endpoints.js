@@ -25,6 +25,6 @@ export const endpoints = {
   
   permissions: "/permissions",
   permission: (id) => `/permissions/${id}`,
- tendors: "/tendors",
+  tendors: "/tendors",
   tendor: (id) => `/tendors/${id}`,
 };
