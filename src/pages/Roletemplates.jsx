@@ -261,148 +261,149 @@ export default function RoleTemplates() {
   return (
     <>
       <section className="role-templates-page">
-        <div className="role-details-card">
-          <div className="role-page-heading">
-            <div className="role-title-wrap">
-              <div className="role-title-icon">
-                <i className="bi bi-grid-1x2" />
-              </div>
+        <div className="role-templates-page-heading">
+  <div>
+    <h1>
+      {editingId !== null ? "Edit Role Template" : "Create Role Template"}
+    </h1>
 
-              <div>
-                <h1>Role Templates</h1>
-                <p>
-                  Create and manage role templates using feature
-                  permissions.
-                </p>
-              </div>
-            </div>
+    <p>
+      Create and manage role templates using feature permissions.
+    </p>
+  </div>
+</div>
 
-            <span className="role-mode-pill">
-              {editingId !== null ? "Editing" : "Creating New"}
-            </span>
-          </div>
+<div className="role-details-card">
+  <div className="role-card-heading">
+    <div className="role-heading-icon">
+      <i className="bi bi-person-vcard" />
+    </div>
 
-          {error && (
-            <p className="role-error-message" role="alert">
-              {error}
-            </p>
-          )}
+    <div>
+      <h2>Role Template Information</h2>
+      <p>Provide the basic details about the role template.</p>
+    </div>
+  </div>
 
-          <div className="role-section-title">
-            Role Template Details
-          </div>
+  {error && (
+    <p className="role-error-message" role="alert">
+      {error}
+    </p>
+  )}
 
-          <div className="role-form-grid">
-            <label className="role-field">
-              <span>
-                Role Code <b>*</b>
-              </span>
+  <div className="role-form-grid">
+    <label className="role-field">
+      <span>
+        Role Code <b>*</b>
+      </span>
 
-              <div className="role-input-wrap">
-                <i className="bi bi-tag" />
-                <input
-                  type="text"
-                  name="roleCode"
-                  value={form.roleCode}
-                  onChange={handleChange}
-                  placeholder="e.g. CASHIER"
-                  maxLength={50}
-                />
-              </div>
+      <div className="role-input-wrap">
+        <i className="bi bi-tag" />
 
-              <small>
-                Unique code using uppercase letters and underscores.
-              </small>
-            </label>
+        <input
+          type="text"
+          name="roleCode"
+          value={form.roleCode}
+          onChange={handleChange}
+          placeholder="e.g. CASHIER"
+          maxLength={50}
+          autoComplete="off"
+        />
+      </div>
 
-            <label className="role-field">
-              <span>
-                Role Template Name <b>*</b>
-              </span>
+      <small>
+        Use uppercase letters, numbers, and underscores only.
+      </small>
+    </label>
 
-              <div className="role-input-wrap">
-                <i className="bi bi-type" />
-                <input
-                  type="text"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="Enter role template name"
-                  maxLength={100}
-                />
-              </div>
+    <label className="role-field">
+      <span>
+        Role Template Name <b>*</b>
+      </span>
 
-              <small>
-                Display name for the role template.
-              </small>
-            </label>
-          </div>
+      <div className="role-input-wrap">
+        <i className="bi bi-type" />
 
-          <div className="role-bottom-grid">
-            <label className="role-field role-description-field">
-              <span>Description</span>
+        <input
+          type="text"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          placeholder="e.g. Cashier"
+          maxLength={100}
+          autoComplete="off"
+        />
+      </div>
 
-              <div className="role-textarea-wrap">
-                <i className="bi bi-file-earmark-text" />
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  placeholder="Enter a brief description..."
-                  rows={3}
-                  maxLength={250}
-                />
-              </div>
+      <small>Name displayed throughout the system.</small>
+    </label>
+  </div>
 
-              <small>
-                Explain the purpose of this role template.
-              </small>
-            </label>
+  <div className="role-bottom-grid">
+    <label className="role-field role-description-field">
+      <span>Description</span>
 
-            <label className="role-field role-status-field">
-              <span>
-                Status <b>*</b>
-              </span>
+      <div className="role-textarea-wrap">
+        <i className="bi bi-file-earmark-text" />
 
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-              >
-                <option value="ACTIVE">● Active</option>
-                <option value="INACTIVE">● Inactive</option>
-              </select>
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          placeholder="Describe the role, its responsibilities, and permission access..."
+          rows={3}
+          maxLength={250}
+          autoComplete="off"
+        />
+      </div>
 
-              <small>Active or Inactive.</small>
-            </label>
-          </div>
+      <small className="role-character-count">
+        {form.description.length}/250
+      </small>
+    </label>
 
-          <div className="role-form-actions">
-            <button
-              type="button"
-              className="role-template-cancel-button"
-              onClick={resetForm}
-              disabled={saving}
-            >
-              Cancel
-            </button>
+    <label className="role-field role-status-field">
+      <span>
+        Status <b>*</b>
+      </span>
 
-            <button
-              type="button"
-              className="role-template-submit-button"
-              onClick={saveTemplate}
-              disabled={saving}
-            >
+      <select
+        name="status"
+        value={form.status}
+        onChange={handleChange}
+      >
+        <option value="ACTIVE">● Active</option>
+        <option value="INACTIVE">● Inactive</option>
+      </select>
 
+      <small>Inactive roles cannot be assigned to employees.</small>
+    </label>
+  </div>
 
-              {saving
-                ? "Saving..."
-                : editingId !== null
-                ? "Update Role Template"
-                : "Create Role Template"}
-            </button>
-          </div>
-        </div>
+  <div className="role-form-actions">
+    <button
+      type="button"
+      className="role-template-cancel-button"
+      onClick={resetForm}
+      disabled={saving}
+    >
+      Cancel
+    </button>
+
+    <button
+      type="button"
+      className="role-template-submit-button"
+      onClick={saveTemplate}
+      disabled={saving}
+    >
+      {saving
+        ? "Saving..."
+        : editingId !== null
+        ? "Update Role Template"
+        : "Create Role Template"}
+    </button>
+  </div>
+</div>
 
         <div className="role-list-card">
           <div className="role-list-header">
@@ -452,160 +453,112 @@ export default function RoleTemplates() {
           </div>
 
           <div className="role-table-wrap">
-            <table className="role-table">
-              <thead>
-                <tr>
-                  <th className="role-check-col">
-                    <input
-                      type="checkbox"
-                      checked={allVisibleSelected}
-                      onChange={toggleAllVisible}
-                      aria-label="Select all role templates"
-                    />
-                  </th>
+  <table className="role-table">
+    <thead>
+      <tr>
+        <th className="role-code-col">Role Code</th>
+        <th className="role-name-col">Role Template Name</th>
+        <th className="role-description-col">Description</th>
+        <th className="role-status-col">Status</th>
+        <th className="role-created-col">Created At</th>
+        <th className="role-updated-col">Updated At</th>
+        <th className="role-actions-col">Actions</th>
+      </tr>
+    </thead>
 
-                  <th className="role-code-col">
-                    Role Code
-                  </th>
+    <tbody>
+      {filteredTemplates.map((template) => (
+        <tr key={template.id}>
+          <td className="role-code-cell">
+            <strong>{template.roleCode || "—"}</strong>
+          </td>
 
-                  <th className="role-name-col">
-                    Role Template Name
-                  </th>
+          <td className="role-name-cell">
+            <button
+              type="button"
+              className="role-name-link"
+              onClick={() =>
+                navigate(`/role-templates/${template.id}`, {
+                  state: { roleTemplate: template },
+                })
+              }
+            >
+              {template.name || "—"}
+            </button>
+          </td>
 
-                  <th className="role-description-col">
-                    Description
-                  </th>
+          <td className="role-description-cell">
+            {template.description || "—"}
+          </td>
 
-                  <th className="role-status-col">
-                    Status
-                  </th>
+          <td className="role-status-cell">
+            <span
+              className={`role-status ${String(
+                template.status || ""
+              ).toLowerCase()}`}
+            >
+              <i />
+              {String(template.status).toUpperCase() === "ACTIVE"
+                ? "Active"
+                : "Inactive"}
+            </span>
+          </td>
 
-                  <th className="role-created-col">
-                    Created On
-                  </th>
+          <td className="role-created-cell">
+            {displayDate(
+              template.createdAt ||
+                template.created_at ||
+                template.createdDate
+            )}
+          </td>
 
-                  <th className="role-actions-col">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
+          <td className="role-updated-cell">
+            {displayDate(
+              template.updatedAt ||
+                template.updated_at ||
+                template.updatedDate ||
+                template.modifiedAt ||
+                template.modified_at ||
+                template.createdAt
+            )}
+          </td>
 
-              <tbody>
-                {filteredTemplates.map((template, index) => (
-                  <tr key={template.id}>
-                    <td className="role-check-col">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(template.id)}
-                        onChange={() =>
-                          toggleSelection(template.id)
-                        }
-                        aria-label={`Select ${
-                          template.name || template.roleCode
-                        }`}
-                      />
-                    </td>
+          <td className="role-actions">
+            <button
+              type="button"
+              onClick={() => editTemplate(template)}
+              disabled={saving}
+              aria-label={`Edit ${template.name || template.roleCode}`}
+              title="Edit role template"
+            >
+              <i className="bi bi-pencil" />
+            </button>
 
-                    <td className="role-code-cell">
-                      <div className="role-key-cell">
-                        <span
-                          className={`role-row-icon role-icon-${
-                            (index % 5) + 1
-                          }`}
-                        >
-                          <i className="bi bi-person-badge" />
-                        </span>
+            <button
+              type="button"
+              onClick={() => openDeletePopup(template)}
+              disabled={saving}
+              aria-label={`Delete ${template.name || template.roleCode}`}
+              title="Delete role template"
+            >
+              <i className="bi bi-trash" />
+            </button>
+          </td>
+        </tr>
+      ))}
 
-                        <strong>
-                          {template.roleCode || "—"}
-                        </strong>
-                      </div>
-                    </td>
-
-                    <td className="role-name-cell">
-                      <button
-                        type="button"
-                        className="role-name-link"
-                        onClick={() =>
-                          navigate(`/role-templates/${template.id}`, {
-                            state: { roleTemplate: template },
-                          })
-                        }
-                      >
-                        {template.name || "—"}
-                      </button>
-                   </td>
-
-                    <td className="role-description-cell">
-                      {template.description || "-"}
-                    </td>
-
-                    <td className="role-status-cell">
-                      <span
-                        className={`role-status ${String(
-                          template.status || ""
-                        ).toLowerCase()}`}
-                      >
-                        <i />
-
-                        {String(template.status).toUpperCase() ===
-                        "ACTIVE"
-                          ? "Active"
-                          : "Inactive"}
-                      </span>
-                    </td>
-
-                    <td className="role-created-cell">
-                      {displayDate(
-                        template.createdAt ||
-                          template.created_at ||
-                          template.createdDate
-                      )}
-                    </td>
-
-                    <td className="role-actions">
-                      <button
-                        type="button"
-                        onClick={() => editTemplate(template)}
-                        disabled={saving}
-                        aria-label={`Edit ${
-                          template.name || template.roleCode
-                        }`}
-                        title="Edit role template"
-                      >
-                        <i className="bi bi-pencil" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => openDeletePopup(template)}
-                        disabled={saving}
-                        aria-label={`Delete ${
-                          template.name || template.roleCode
-                        }`}
-                        title="Delete role template"
-                      >
-                        <i className="bi bi-trash" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-
-                {filteredTemplates.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="role-empty-state"
-                    >
-                      {loading
-                        ? "Loading role templates..."
-                        : "No role templates found."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+      {filteredTemplates.length === 0 && (
+        <tr>
+          <td colSpan={7} className="role-empty-state">
+            {loading
+              ? "Loading role templates..."
+              : "No role templates found."}
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
 
           <div className="role-pagination">
             <span>

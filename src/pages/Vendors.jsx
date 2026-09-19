@@ -1102,11 +1102,11 @@ export default function Vendors({
                 </th>
 
                 <th>
-                  Created Time
+                  Created At
                 </th>
 
                 <th>
-                  Updated Time
+                  Updated At
                 </th>
 
                 <th>

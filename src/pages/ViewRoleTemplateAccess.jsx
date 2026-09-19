@@ -1,32 +1,118 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { roleTemplatesApi } from "../api/roleTemplatesApi";
 
-const featurePermissions = [
-  {
-    id: "pos",
-    name: "Point of Sale",
-    code: "POS",
-    description: "Manage sales, checkout, payments and POS operations.",
-    permissions: [
-      ["view-pos", "View POS", "VIEW_POS"],
-      ["create-order", "Create Order", "CREATE_ORDER"],
-      ["edit-order", "Edit Order", "EDIT_ORDER"],
-      ["void-order", "Void Order", "VOID_ORDER"],
-      ["refund-order", "Refund Order", "REFUND_ORDER"],
-    ],
-  },
-  {
-    id: "inventory",
-    name: "Inventory",
-    code: "INVENTORY",
-    description: "Manage stock, products and inventory operations.",
-    permissions: [
-      ["view-inventory", "View Inventory", "VIEW_INVENTORY"],
-      ["adjust-stock", "Adjust Stock", "ADJUST_STOCK"],
-      ["manage-products", "Manage Products", "MANAGE_PRODUCTS"],
-    ],
-  },
-];
+const readFeatureList = (response) => {
+  const candidates = [
+    response?.features,
+    response?.data?.features,
+    response?.data?.data,
+    response?.data?.items,
+    response?.data?.results,
+    response?.data,
+    response?.items,
+    response?.results,
+    response,
+  ];
+
+  return candidates.find((value) => Array.isArray(value)) || [];
+};
+
+const normalizePermission = (permission, featureId, permissionIndex) => {
+  const permissionRecord = permission?.permission ?? permission ?? {};
+  const permissionId =
+    permissionRecord.id ??
+    permission?.permissionId ??
+    permission?.id ??
+    permissionRecord.permissionId ??
+    permissionRecord.permissionKey ??
+    permissionRecord.key ??
+    `${featureId}-permission-${permissionIndex}`;
+
+  return {
+    id: String(permissionId),
+    name:
+      permissionRecord.name ??
+      permissionRecord.permissionName ??
+      permission?.name ??
+      permission?.permissionName ??
+      permissionRecord.label ??
+      permissionRecord.permissionKey ??
+      permissionRecord.key ??
+      "Permission",
+    code:
+      permissionRecord.code ??
+      permissionRecord.permissionCode ??
+      permission?.code ??
+      permission?.permissionCode ??
+      permissionRecord.permissionKey ??
+      permissionRecord.key ??
+      permissionRecord.name ??
+      "PERMISSION",
+    checked:
+      permission?.checked ??
+      permissionRecord?.checked ??
+      permission?.enabled ??
+      permissionRecord?.enabled ??
+      permission?.mapped ??
+      permissionRecord?.mapped ??
+      permission?.defaultAllowed ??
+      permissionRecord?.defaultAllowed ??
+      permission?.defaultEnabled ??
+      permissionRecord?.defaultEnabled ??
+      false,
+  };
+};
+
+const normalizeFeature = (feature, featureIndex) => {
+  const featureRecord = feature?.feature ?? feature ?? {};
+  const featureId =
+    featureRecord.id ??
+    feature?.featureId ??
+    feature?.id ??
+    featureRecord.featureId ??
+    `feature-${featureIndex}`;
+
+  const permissions = Array.isArray(feature?.permissions)
+    ? feature.permissions
+    : Array.isArray(featureRecord?.permissions)
+      ? featureRecord.permissions
+      : [];
+
+  return {
+    id: String(featureId),
+    name:
+      featureRecord.name ??
+      feature?.name ??
+      featureRecord.featureName ??
+      "Feature",
+    code:
+      featureRecord.code ??
+      featureRecord.featureCode ??
+      feature?.code ??
+      feature?.featureCode ??
+      featureRecord.featureKey ??
+      feature?.featureKey ??
+      "FEATURE",
+    description:
+      featureRecord.description ??
+      feature?.description ??
+      "",
+    checked:
+      feature?.checked ??
+      featureRecord?.checked ??
+      feature?.enabled ??
+      featureRecord?.enabled ??
+      feature?.mapped ??
+      featureRecord?.mapped ??
+      feature?.defaultEnabled ??
+      featureRecord?.defaultEnabled ??
+      false,
+    permissions: permissions.map((permission, index) =>
+      normalizePermission(permission, featureId, index)
+    ),
+  };
+};
 
 export default function ViewRoleTemplateAccess() {
   const navigate = useNavigate();
@@ -35,13 +121,53 @@ export default function ViewRoleTemplateAccess() {
   const roleTemplate = {
     ...(location.state?.roleTemplate ?? {}),
   };
+  const activeStoreTypeId = location.state?.storeType?.id ?? location.state?.storeTypeId;
+  const [featurePermissions, setFeaturePermissions] = useState([]);
   const [search, setSearch] = useState("");
-  const [enabledFeatures, setEnabledFeatures] = useState([
-    location.state?.roleTemplate?.featureId ?? "pos",
-  ]);
-  const [selectedPermissions, setSelectedPermissions] = useState([
-    location.state?.roleTemplate?.permissionId ?? "view-pos",
-   ]);
+  const [enabledFeatures, setEnabledFeatures] = useState([]);
+  const [selectedPermissions, setSelectedPermissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRoleFeatureAccess() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await roleTemplatesApi.getFeatures(roleId, activeStoreTypeId ? [activeStoreTypeId] : []);
+        const features = readFeatureList(response).map(normalizeFeature);
+
+        if (!cancelled) {
+          setFeaturePermissions(features);
+          setEnabledFeatures(
+            features.filter((feature) => Boolean(feature.checked)).map((feature) => feature.id)
+          );
+          setSelectedPermissions(
+            features.flatMap((feature) =>
+              feature.permissions
+                .filter((permission) => Boolean(permission.checked))
+                .map((permission) => permission.id)
+            )
+          );
+        }
+      } catch (requestError) {
+        if (!cancelled) {
+          setError(requestError?.message || "Unable to load feature access.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadRoleFeatureAccess();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [roleId, activeStoreTypeId]);
 
   const tabs = [
     ["overview", "Overview", `/role-templates/${roleId}`],
@@ -54,14 +180,14 @@ export default function ViewRoleTemplateAccess() {
 
     return featurePermissions.filter((feature) => {
       const permissionText = feature.permissions
-        .map((permission) => permission[1])
+        .map((permission) => `${permission.name} ${permission.code}`)
         .join(" ");
 
       return `${feature.name} ${feature.description} ${permissionText}`
         .toLowerCase()
         .includes(query);
     });
-  }, [search]);
+  }, [featurePermissions, search]);
 
   function toggleFeature(featureId) {
     setEnabledFeatures((current) =>
@@ -84,7 +210,7 @@ export default function ViewRoleTemplateAccess() {
 
     setSelectedPermissions(
       featurePermissions.flatMap((feature) =>
-        feature.permissions.map(([id]) => id)
+        feature.permissions.map((permission) => permission.id)
       )
     );
   }
@@ -162,73 +288,102 @@ export default function ViewRoleTemplateAccess() {
           />
         </label>
 
-        <p className="role-access-count">
-          {enabledFeatures.length} Features selected ·{" "}
-          {selectedPermissions.length} Permissions selected
-        </p>
+        {error && (
+          <p className="role-error-message" role="alert">
+            {error}
+          </p>
+        )}
 
-        <div className="role-feature-list">
-          {filteredFeatures.map((feature) => {
-            const isEnabled = enabledFeatures.includes(feature.id);
+        {loading && <p>Loading feature access...</p>}
 
-            return (
-              <section className="role-feature-access-card" key={feature.id}>
-                <div className="role-feature-access-top">
-                  <input
-                    type="checkbox"
-                    checked={isEnabled}
-                    onChange={() => toggleFeature(feature.id)}
-                  />
+        {!loading && (
+          <>
+            <p className="role-access-count">
+              {enabledFeatures.length} Features selected ·{" "}
+              {selectedPermissions.length} Permissions selected
+            </p>
 
-                  <span className="role-feature-access-icon">
-                    <i className="bi bi-grid" />
-                  </span>
+            {filteredFeatures.length === 0 ? (
+              <div className="role-empty-state" style={{ padding: "24px", textAlign: "center", border: "1px dashed #cad1e6", borderRadius: "12px", color: "#53627b", background: "#f8faff" }}>
+                <p style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>
+                  No feature permissions are assigned to this role template yet.
+                </p>
+                <small style={{ display: "block", marginTop: "8px" }}>
+                  The backend returned an empty features list for this role template.
+                </small>
+              </div>
+            ) : (
+              <div className="role-feature-list">
+                {filteredFeatures.map((feature) => {
+                  const isEnabled = enabledFeatures.includes(feature.id);
 
-                  <div>
-                    <h3>
-                      {feature.name} <small>{feature.code}</small>
-                    </h3>
-                    <p>{feature.description}</p>
-                  </div>
+                  return (
+                    <section className="role-feature-access-card" key={feature.id}>
+                      <div className="role-feature-access-top">
+                        <input
+                          type="checkbox"
+                          checked={isEnabled}
+                          onChange={() => toggleFeature(feature.id)}
+                        />
 
-                  <span className={isEnabled ? "role-enabled" : "role-disabled"}>
-                    {isEnabled ? "Enabled" : "Disabled"}
-                  </span>
-                </div>
+                        <span className="role-feature-access-icon">
+                          <i className="bi bi-grid" />
+                        </span>
 
-                <div className="role-permissions-heading">
-                  <strong>Permissions</strong>
-                  <span>Common permissions for this feature</span>
-                </div>
+                        <div>
+                          <h3>
+                            {feature.name} <small>{feature.code}</small>
+                          </h3>
+                          <p>{feature.description}</p>
+                        </div>
 
-                <div className="role-permissions-grid">
-                  {feature.permissions.map(([id, name, code]) => (
-                    <label
-                      key={id}
-                      className={
-                        selectedPermissions.includes(id)
-                          ? "selected"
-                          : ""
-                      }
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedPermissions.includes(id)}
-                        disabled={!isEnabled}
-                        onChange={() => togglePermission(id)}
-                      />
+                        <span className={isEnabled ? "role-enabled" : "role-disabled"}>
+                          {isEnabled ? "Enabled" : "Disabled"}
+                        </span>
+                      </div>
 
-                      <span>
-                        <strong>{name}</strong>
-                        <small>{code}</small>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+                      <div className="role-permissions-heading">
+                        <strong>Permissions</strong>
+                        <span>Common permissions for this feature</span>
+                      </div>
+
+                      <div className="role-permissions-grid">
+                        {feature.permissions.length === 0 ? (
+                          <div style={{ padding: "10px 0", color: "#53627b" }}>
+                            No permissions configured for this feature.
+                          </div>
+                        ) : (
+                          feature.permissions.map((permission) => (
+                            <label
+                              key={permission.id}
+                              className={
+                                selectedPermissions.includes(permission.id)
+                                  ? "selected"
+                                  : ""
+                              }
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedPermissions.includes(permission.id)}
+                                disabled={!isEnabled}
+                                onChange={() => togglePermission(permission.id)}
+                              />
+
+                              <span>
+                                <strong>{permission.name}</strong>
+                                <small>{permission.code}</small>
+                              </span>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                    </section>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
       </section>
     </section>
   );
