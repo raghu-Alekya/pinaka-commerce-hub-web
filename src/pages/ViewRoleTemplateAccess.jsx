@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 const featurePermissions = [
@@ -61,7 +61,9 @@ export default function ViewRoleTemplateAccess() {
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
+  const [saveState, setSaveState] = useState("saved");
+  const [showSavedToast, setShowSavedToast] = useState(false);
+  const savedToastTimerRef = useRef(null);
 
   const [enabledFeatures, setEnabledFeatures] = useState(
     initialEnabledFeatures
@@ -109,6 +111,24 @@ export default function ViewRoleTemplateAccess() {
     });
   }, [search]);
 
+  useEffect(() => {
+    return () => {
+      if (savedToastTimerRef.current) {
+        clearTimeout(savedToastTimerRef.current);
+      }
+    };
+  }, []);
+
+  function markConfigurationDirty() {
+    if (savedToastTimerRef.current) {
+      clearTimeout(savedToastTimerRef.current);
+      savedToastTimerRef.current = null;
+    }
+
+    setSaveState("idle");
+    setShowSavedToast(false);
+  }
+
   function toggleFeature(featureId) {
     setEnabledFeatures((current) =>
       current.includes(featureId)
@@ -116,7 +136,7 @@ export default function ViewRoleTemplateAccess() {
         : [...current, featureId]
     );
 
-    setConfirmed(false);
+    markConfigurationDirty();
     setError("");
   }
 
@@ -127,7 +147,7 @@ export default function ViewRoleTemplateAccess() {
         : [...current, permissionId]
     );
 
-    setConfirmed(false);
+    markConfigurationDirty();
     setError("");
   }
 
@@ -139,14 +159,14 @@ export default function ViewRoleTemplateAccess() {
       )
     );
 
-    setConfirmed(false);
+    markConfigurationDirty();
     setError("");
   }
 
   function clearAll() {
     setEnabledFeatures([]);
     setSelectedPermissions([]);
-    setConfirmed(false);
+    markConfigurationDirty();
     setError("");
   }
 
@@ -225,6 +245,19 @@ export default function ViewRoleTemplateAccess() {
     });
   }
 
+  function showSavedToastMessage() {
+    if (savedToastTimerRef.current) {
+      clearTimeout(savedToastTimerRef.current);
+    }
+
+    setShowSavedToast(true);
+
+    savedToastTimerRef.current = setTimeout(() => {
+      setShowSavedToast(false);
+      savedToastTimerRef.current = null;
+    }, 3000);
+  }
+
   function handleSaveAndConfirm() {
     setError("");
 
@@ -244,12 +277,14 @@ export default function ViewRoleTemplateAccess() {
     }
 
     setSaving(true);
+    setSaveState("saving");
 
     saveConfiguration();
 
     setTimeout(() => {
       setSaving(false);
-      setConfirmed(true);
+      setSaveState("saved");
+      showSavedToastMessage();
     }, 400);
   }
 
@@ -326,19 +361,6 @@ export default function ViewRoleTemplateAccess() {
               <i className="bi bi-exclamation-circle-fill" />
               {error}
             </p>
-          )}
-
-          {confirmed && (
-            <div className="role-confirmation-message" role="status">
-              <i className="bi bi-check-circle-fill" />
-
-              <div>
-                <strong>Role template configuration saved.</strong>
-                <span>
-                  Store types, features and permissions have been confirmed.
-                </span>
-              </div>
-            </div>
           )}
 
           <label className="role-access-search">
@@ -440,18 +462,54 @@ export default function ViewRoleTemplateAccess() {
 
             <button
               type="button"
-              className="role-details-primary-btn"
+              className={`role-details-primary-btn ${
+                saveState === "saved" && !hasUnsavedChanges()
+                  ? "is-saved"
+                  : ""
+              }`}
               onClick={handleSaveAndConfirm}
-              disabled={saving}
+              disabled={saving || !hasUnsavedChanges()}
             >
-              {saving ? "Saving..." : confirmed ? "Confirmed" : "Save & Confirm"}
-              {!saving && !confirmed && (
-                <i className="bi bi-check-lg" />
-              )}
+              {saveState === "saving"
+                ? "Saving..."
+                : hasUnsavedChanges()
+                ? "Save & Confirm"
+                : "Saved"}
+              <i
+                className={
+                  saveState === "saving"
+                    ? "bi bi-arrow-repeat role-save-spinner"
+                    : hasUnsavedChanges()
+                    ? "bi bi-check-lg"
+                    : "bi bi-check-circle-fill"
+                }
+              />
             </button>
           </div>
         </section>
       </section>
+
+      {showSavedToast && (
+        <div className="role-save-toast" role="status" aria-live="polite">
+          <span className="role-save-toast-icon">
+            <i className="bi bi-check-lg" />
+          </span>
+
+          <div>
+            <strong>Configuration saved successfully</strong>
+            <span>Your feature and permission changes are saved.</span>
+          </div>
+
+          <button
+            type="button"
+            className="role-save-toast-close"
+            onClick={() => setShowSavedToast(false)}
+            aria-label="Close save confirmation"
+          >
+            <i className="bi bi-x" />
+          </button>
+        </div>
+      )}
 
       {showLeavePopup && (
         <div
