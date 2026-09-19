@@ -22,6 +22,34 @@ export const roleTemplatesApi = {
   getById: (id) =>
     api.get(`/role-templates/${encodeURIComponent(id)}`),
 
+  getAvailableStoreTypes: (id) =>
+    api.get(
+      `//role-templates/${encodeURIComponent(id)}/store-types/available`
+    ),
+
+  getFeatures: (id, storeTypeIds = []) => {
+    const ids = Array.isArray(storeTypeIds)
+      ? storeTypeIds.filter(Boolean).join(",")
+      : String(storeTypeIds ?? "");
+
+    const query = ids
+      ? `?storeTypeIds=${encodeURIComponent(ids)}`
+      : "?storeTypeIds=%2C";
+
+    return api.get(
+      `//role-templates/${encodeURIComponent(id)}/features${query}`
+    );
+  },
+
+  bulkUpdateStoreTypes: (id, storeTypeIds) =>
+    api.put(
+      `//role-templates/${encodeURIComponent(id)}/store-types/bulk`,
+      { storeTypeIds }
+    ),
+
+  updateFeatureAccess: (id, featureAccess) =>
+    api.put(`//role-templates/${encodeURIComponent(id)}/features`, featureAccess),
+
   create: (values) =>
     api.post("/role-templates", values),
 

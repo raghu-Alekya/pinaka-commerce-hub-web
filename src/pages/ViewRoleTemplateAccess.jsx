@@ -1,32 +1,119 @@
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { roleTemplatesApi } from "../api/roleTemplatesApi";
 
-const featurePermissions = [
-  {
-    id: "pos",
-    name: "Point of Sale",
-    code: "POS",
-    description: "Manage sales, checkout, payments and POS operations.",
-    permissions: [
-      ["view-pos", "View POS", "VIEW_POS"],
-      ["create-order", "Create Order", "CREATE_ORDER"],
-      ["edit-order", "Edit Order", "EDIT_ORDER"],
-      ["void-order", "Void Order", "VOID_ORDER"],
-      ["refund-order", "Refund Order", "REFUND_ORDER"],
-    ],
-  },
-  {
-    id: "inventory",
-    name: "Inventory",
-    code: "INVENTORY",
-    description: "Manage stock, products and inventory operations.",
-    permissions: [
-      ["view-inventory", "View Inventory", "VIEW_INVENTORY"],
-      ["adjust-stock", "Adjust Stock", "ADJUST_STOCK"],
-      ["manage-products", "Manage Products", "MANAGE_PRODUCTS"],
-    ],
-  },
-];
+const readFeatureList = (response) => {
+  const candidates = [
+    response?.features,
+    response?.data?.features,
+    response?.data?.data,
+    response?.data?.items,
+    response?.data?.results,
+    response?.data,
+    response?.items,
+    response?.results,
+    response,
+  ];
+
+  return candidates.find((value) => Array.isArray(value)) || [];
+};
+
+const normalizePermission = (permission, featureId, permissionIndex) => {
+  const permissionRecord = permission?.permission ?? permission ?? {};
+  const permissionId =
+    permissionRecord.id ??
+    permission?.permissionId ??
+    permission?.id ??
+    permissionRecord.permissionId ??
+    permissionRecord.permissionKey ??
+    permissionRecord.key ??
+    `${featureId}-permission-${permissionIndex}`;
+
+  return {
+    id: String(permissionId),
+    name:
+      permissionRecord.name ??
+      permissionRecord.permissionName ??
+      permission?.name ??
+      permission?.permissionName ??
+      permissionRecord.label ??
+      permissionRecord.permissionKey ??
+      permissionRecord.key ??
+      "Permission",
+    code:
+      permissionRecord.code ??
+      permissionRecord.permissionCode ??
+      permission?.code ??
+      permission?.permissionCode ??
+      permissionRecord.permissionKey ??
+      permissionRecord.key ??
+      permissionRecord.name ??
+      "PERMISSION",
+    checked:
+      permission?.checked ??
+      permissionRecord?.checked ??
+      permission?.enabled ??
+      permissionRecord?.enabled ??
+      permission?.mapped ??
+      permissionRecord?.mapped ??
+      permission?.defaultAllowed ??
+      permissionRecord?.defaultAllowed ??
+      permission?.defaultEnabled ??
+      permissionRecord?.defaultEnabled ??
+      false,
+  };
+};
+
+const normalizeFeature = (feature, featureIndex) => {
+  const featureRecord = feature?.feature ?? feature ?? {};
+  const featureId =
+    featureRecord.id ??
+    feature?.featureId ??
+    feature?.id ??
+    featureRecord.featureId ??
+    `feature-${featureIndex}`;
+
+  const permissions = Array.isArray(feature?.permissions)
+    ? feature.permissions
+    : Array.isArray(featureRecord?.permissions)
+      ? featureRecord.permissions
+      : [];
+
+  return {
+    id: String(featureId),
+    name:
+      featureRecord.name ??
+      feature?.name ??
+      featureRecord.featureName ??
+      "Feature",
+    code:
+      featureRecord.code ??
+      featureRecord.featureCode ??
+      feature?.code ??
+      feature?.featureCode ??
+      featureRecord.featureKey ??
+      feature?.featureKey ??
+      "FEATURE",
+    description:
+      featureRecord.description ??
+      feature?.description ??
+      "",
+    checked:
+      feature?.checked ??
+      featureRecord?.checked ??
+      feature?.enabled ??
+      featureRecord?.enabled ??
+      feature?.mapped ??
+      featureRecord?.mapped ??
+      feature?.defaultEnabled ??
+      featureRecord?.defaultEnabled ??
+      false,
+    permissions: permissions.map((permission, index) =>
+      normalizePermission(permission, featureId, index)
+    ),
+  };
+};
 
 const getStateArray = (value, fallback = []) =>
   Array.isArray(value) ? value : fallback;
@@ -102,14 +189,14 @@ export default function ViewRoleTemplateAccess() {
 
     return featurePermissions.filter((feature) => {
       const permissionText = feature.permissions
-        .map((permission) => permission[1])
+        .map((permission) => `${permission.name} ${permission.code}`)
         .join(" ");
 
       return `${feature.name} ${feature.description} ${permissionText}`
         .toLowerCase()
         .includes(query);
     });
-  }, [search]);
+  }, [featurePermissions, search]);
 
   useEffect(() => {
     return () => {
@@ -155,7 +242,7 @@ export default function ViewRoleTemplateAccess() {
     setEnabledFeatures(featurePermissions.map((feature) => feature.id));
     setSelectedPermissions(
       featurePermissions.flatMap((feature) =>
-        feature.permissions.map(([id]) => id)
+        feature.permissions.map((permission) => permission.id)
       )
     );
 

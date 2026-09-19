@@ -14,6 +14,8 @@ const toFeaturePayload = (form) => ({
 // Normalize API response item into React state format
 const normalizeFeature = (item) => {
   if (!item) return null;
+  const createdAt = item.createdAt || item.created_at;
+  const updatedAt = item.updatedAt || item.updated_at;
   return {
     ...item,
     id: item.id || item._id || Date.now(),
@@ -26,8 +28,11 @@ const normalizeFeature = (item) => {
       String(item.status || "").toUpperCase() === "ACTIVE"
         ? "Active"
         : "Inactive",
-    createdAt: item.createdAt
-      ? new Date(item.createdAt).toLocaleString()
+    createdAt: createdAt
+      ? new Date(createdAt).toLocaleString()
+      : "—",
+    updatedAt: updatedAt
+      ? new Date(updatedAt).toLocaleString()
       : "—",
     icon: item.icon || "bi-diamond",
     tone: item.tone || "purple",
