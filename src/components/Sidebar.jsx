@@ -55,42 +55,6 @@ const sections = [
       ["/notifications", "bi-bell", "Notifications"],
     ],
   },
-    {
-        title: "",
-        items: [
-            ["/dashboard", "bi-house-fill", "Dashboard"]
-        ]
-    },
-    {
-        title: "MANAGE",
-        items: [
-            ["/merchants", "bi-person-badge", "Merchants"],
-            ["/stores", "bi-shop", "Stores"],
-            ["/subscriptions", "bi-cart3", "Subscriptions"]
-        ]
-    },
-    {
-        title: "OPERATIONS",
-        items: [
-            ["/pos-configuration", "bi-cpu", "POS Configuration"],
-            ["/orders", "bi-receipt", "Orders"],
-            ["/cash-management", "bi-wallet2", "Cash Management"],
-            ["/employees", "bi-people", "Employees"],
-            ["/devices", "bi-display", "Devices"],
-            ["/shifts", "bi-clock", "Shifts"],
-            ["/attendance", "bi-person-check", "Attendance"]
-        ]
-    },
-    {
-        title: "INTEGRATIONS",
-        items: [
-            ["/integrations", "bi-diagram-3", "Integrations", true],
-            ["/synchronization", "bi-arrow-repeat", "Synchronization"],
-            ["/reconciliation", "bi-arrow-left-right", "Reconciliation"],
-            ["/notifications", "bi-bell", "Notifications"]
-        ]
-    }
-
 ];
 
 export default function Sidebar({

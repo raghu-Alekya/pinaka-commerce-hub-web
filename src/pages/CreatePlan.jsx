@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { storeTypesApi } from "../api/storeTypes";
 
 const initialPlans = [
   {
@@ -93,7 +94,37 @@ function today() {
 
 export default function CreatePlan() {
   const navigate = useNavigate();
+const [storeTypes, setStoreTypes] = useState([]);
+const [storeTypesLoading, setStoreTypesLoading] = useState(false);
+const [storeTypesError, setStoreTypesError] = useState("");
+useEffect(() => {
+  async function fetchStoreTypes() {
+    try {
+      setStoreTypesLoading(true);
+      setStoreTypesError("");
 
+      const response = await storeTypesApi.getAll();
+
+      console.log("Store Types API response:", response);
+
+      const data =
+        response?.data ??
+        response?.storeTypes ??
+        response?.items ??
+        response;
+
+      setStoreTypes(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch store types:", error);
+      setStoreTypesError(error.message || "Failed to load store types.");
+      setStoreTypes([]);
+    } finally {
+      setStoreTypesLoading(false);
+    }
+  }
+
+  fetchStoreTypes();
+}, []);
   const [plans, setPlans] = useState(initialPlans);
   const [form, setForm] = useState(emptyForm);
   const [planStep, setPlanStep] = useState(1);
@@ -343,18 +374,39 @@ export default function CreatePlan() {
                 Applicable Business/Store Type <b>*</b>
               </span>
 
-              <select
-                autoComplete="off"
-                name="applicableStoreType"
-                value={form.applicableStoreType}
-                onChange={updateField}
-              >
-                <option value="">Select store type</option>
-                <option value="Grocery">Grocery</option>
-                <option value="Restaurant">Restaurant</option>
-                <option value="Spa & Wellness">Spa & Wellness</option>
-                <option value="Delivery">Delivery</option>
-              </select>
+        <select
+  name="applicableStoreType"
+  value={form.applicableStoreType}
+  onChange={updateField}
+  disabled={storeTypesLoading}
+>
+  <option value="">
+    {storeTypesLoading
+      ? "Loading store types..."
+      : "Select store type"}
+  </option>
+
+  {storeTypes.map((storeType) => (
+    <option
+      key={storeType.id ?? storeType._id ?? storeType.code}
+      value={
+        storeType.name ??
+        storeType.storeTypeName ??
+        storeType.code
+      }
+    >
+      {storeType.name ??
+        storeType.storeTypeName ??
+        storeType.code}
+    </option>
+  ))}
+</select>
+
+{storeTypesError && (
+  <small className="plan-field-error">
+    {storeTypesError}
+  </small>
+)}
             </label>
 
             <label className="plan-field">
@@ -838,11 +890,12 @@ export default function CreatePlan() {
                   <strong>{plan.code}</strong>
                 </div>
 
-                <div className="plan-name-cell">
-                  <strong>{plan.name}</strong>
-                  <span>{plan.description}</span>
-                </div>
-
+                <button type="button"
+                 className="plan-name-cell plan-name-clickable"
+                 onClick={() => navigate(`/plans/${plan.id}`)} >
+                 <strong>{plan.name}</strong>
+                 <span>{plan.description}</span>
+               </button>
                 <div>
                   <span className="plan-type-badge">{plan.storeType}</span>
                 </div>
@@ -960,3 +1013,4 @@ export default function CreatePlan() {
     </section>
   );
 }
+//

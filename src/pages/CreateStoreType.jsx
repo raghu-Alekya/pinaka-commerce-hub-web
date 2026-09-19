@@ -9,13 +9,27 @@ function toRow(item) {
     name: item.name ?? "",
     description: item.description ?? "",
     status: item.status === "INACTIVE" ? "Inactive" : "Active",
+
     createdOn: item.createdAt
-      ? new Date(item.createdAt).toLocaleDateString("en-US", {
+      ? new Date(item.createdAt).toLocaleString("en-US", {
           month: "short",
           day: "2-digit",
           year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         })
       : "—",
+
+    updatedOn: item.updatedAt
+      ? new Date(item.updatedAt).toLocaleString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "—",
+
     icon: "bi-shop",
     tone: "green",
   };
@@ -234,7 +248,7 @@ setForm(nextForm);
 
       {error && <p role="alert" className="store-type-error">{error}</p>}
 
-      <form className="store-type-form-card" onSubmit={submitForm}>
+      <form className="store-type-form-card" onSubmit={submitForm} autoComplete="off">
         <div className="store-type-card-heading">
           <div className="store-type-heading-icon">
             <i className="bi bi-shop" />
@@ -260,6 +274,7 @@ setForm(nextForm);
                 onChange={updateField}
                 placeholder="e.g. GROCERY"
                 maxLength="30"
+                autoComplete="off"
               />
             </div>
 
@@ -284,6 +299,7 @@ setForm(nextForm);
                 onChange={updateField}
                 placeholder="e.g. Grocery"
                 maxLength="80"
+                autoComplete="off"
               />
             </div>
 
@@ -312,6 +328,7 @@ setForm(nextForm);
                 onChange={updateField}
                 maxLength="500"
                 placeholder="Describe the vertical, its operating model, and configuration needs..."
+                autoComplete="off"
               />
             </div>
 
@@ -365,6 +382,7 @@ setForm(nextForm);
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search store types..."
+                autoComplete="off"
               />
             </label>
 
@@ -405,10 +423,14 @@ setForm(nextForm);
                   <strong>{item.code}</strong>
                 </div>
 
-                <button
+               <button
                   type="button"
                   className="store-type-name-cell store-type-name-clickable"
-                  onClick={() => navigate(`/store-types/${item.id}`)}
+                  onClick={() =>
+                    navigate(`/store-types/${item.id}`, {
+                      state: { storeType: item },
+                    })
+                  }
                 >
                   <strong>{item.name}</strong>
                   <span>{item.description}</span>

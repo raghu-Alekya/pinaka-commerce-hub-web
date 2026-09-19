@@ -18,7 +18,9 @@ export default function Features() {
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [formErrors, setFormErrors] = useState({});
-
+// category dropdown for save features
+  const [storeTypes, setStoreTypes] = useState([]);
+  const [storeTypesLoading, setStoreTypesLoading] = useState(false);
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
 
@@ -126,7 +128,7 @@ export default function Features() {
 
       <section className="feature-details-card">
         <div className="feature-section-heading">
-          <div className="feature-title-icon">
+          {/* <div className="feature-title-icon">
             <i className="bi bi-grid-1x2" />
           </div>
           <div>
@@ -212,24 +214,60 @@ export default function Features() {
           </div>
         </div>
 
-        <div className="feature-form-footer">
-          {isEditing && (
-            <span className="editing-chip">Editing: {editingFeature?.name}</span>
-          )}
+  <div className="feature-form-footer">
+  {isEditing && (
+    <span className="editing-chip">
+      Editing: {editingFeature?.name}
+    </span>
+  )}
 
-          <div className="feature-footer-actions">
-            <button className="feature-action secondary" type="button" onClick={clearForm}>
-              {isEditing ? "Cancel" : "Clear"}
-            </button>
-            <button
-              className="feature-action primary"
-              type="button"
-              onClick={isEditing ? updateFeature : saveFeature}
-            >
-              {isEditing ? "Update Feature" : "Save Feature"}
-            </button>
-          </div>
-        </div>
+  <div className="feature-footer-actions">
+    {isEditing ? (
+      <>
+        <button
+          className="feature-action secondary"
+          type="button"
+          onClick={clearForm}
+          disabled={submitting}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="feature-action primary"
+          type="button"
+          onClick={handleUpdateFeature}
+          disabled={submitting}
+        >
+          <i className="bi bi-floppy" />
+          {submitting ? "Updating..." : "Update Feature"}
+        </button>
+      </>
+    ) : (
+      <>
+        <button
+          className="feature-action secondary blue-text"
+          type="button"
+          onClick={clearForm}
+          disabled={submitting}
+        >
+          <i className="bi bi-arrow-repeat" />
+          Clear
+        </button>
+
+        <button
+          className="feature-action primary"
+          type="button"
+          onClick={saveFeature}
+          disabled={submitting}
+        >
+          <i className="bi bi-floppy" />
+          {submitting ? "Saving..." : "Save Feature"}
+        </button>
+      </>
+    )}
+  </div>
+</div>
       </section>
 
       <section className="features-list-card">
@@ -247,18 +285,24 @@ export default function Features() {
             </div>
 
             <div className="feature-filter-control">
-              <select
-                className="features-filter-select"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-              >
-                <option value="All Categories">All Categories</option>
-                <option value="Restaurant">Restaurant</option>
-                <option value="Customer Engagement">Customer Engagement</option>
-                <option value="Orders">Orders</option>
-                <option value="Cash Management">Cash Management</option>
-                <option value="Stock Control">Stock Control</option>
-              </select>
+      <select
+  className="features-filter-select"
+  value={categoryFilter}
+  onChange={(e) => setCategoryFilter(e.target.value)}
+>
+  <option value="All Categories">
+    All Categories
+  </option>
+
+  {storeTypes.map((storeType) => (
+    <option
+      key={storeType.id}
+      value={storeType.name}
+    >
+      {storeType.name}
+    </option>
+  ))}
+</select>
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
 
