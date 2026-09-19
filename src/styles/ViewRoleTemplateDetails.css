@@ -1423,3 +1423,159 @@
     width: 100%;
   }
 }
+
+
+/* =========================================================
+   FINAL ACCESS SCREEN SAVE UX
+   ========================================================= */
+
+/* Keep the access screen clean: saving feedback is a toast,
+   not a full-width message inside the content card. */
+.role-confirmation-message {
+  display: none !important;
+}
+
+/* Primary action state */
+.role-details-actions .role-details-primary-btn {
+  min-width: 148px;
+  justify-content: center;
+  gap: 7px;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.role-details-actions .role-details-primary-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.role-details-actions .role-details-primary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  box-shadow: none;
+}
+
+.role-details-actions .role-details-primary-btn.is-saved {
+  color: #25855d;
+  border-color: #bfe8d4;
+  background: #eefaf4;
+  box-shadow: none;
+}
+
+.role-details-actions .role-details-primary-btn.is-saved:hover {
+  transform: none;
+  color: #25855d;
+  border-color: #bfe8d4;
+  background: #eefaf4;
+}
+
+/* Saving icon */
+.role-save-spinner {
+  animation: roleSaveSpin 0.9s linear infinite;
+}
+
+@keyframes roleSaveSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Compact success toast */
+.role-save-toast {
+  position: fixed;
+  top: 86px;
+  right: 28px;
+  z-index: 11000;
+  width: min(390px, calc(100vw - 40px));
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 14px;
+  border: 1px solid #c9ead9;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(22, 42, 78, 0.16);
+  animation: roleSaveToastIn 0.2s ease-out;
+  box-sizing: border-box;
+}
+
+.role-save-toast-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border-radius: 50%;
+  color: #1f8a5d;
+  background: #e9f8f0;
+  font-size: 14px;
+}
+
+.role-save-toast > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.role-save-toast strong {
+  display: block;
+  margin: 1px 0 3px;
+  color: #18304f;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.role-save-toast span:not(.role-save-toast-icon) {
+  display: block;
+  color: #6b7890;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.role-save-toast-close {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  margin: -2px -2px 0 0;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  color: #7b879b;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.role-save-toast-close:hover {
+  color: #34435e;
+  background: #f4f6f9;
+}
+
+@keyframes roleSaveToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .role-save-toast {
+    top: 72px;
+    right: 16px;
+    width: calc(100vw - 32px);
+  }
+
+  .role-details-actions .role-details-primary-btn {
+    min-width: 136px;
+  }
+}
