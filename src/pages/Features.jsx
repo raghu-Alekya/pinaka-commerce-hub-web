@@ -44,6 +44,12 @@ export default function Features() {
     ? features.find((item) => item.id === editingId)
     : null;
 
+  const hasUnsavedChanges = useMemo(() => {
+    return Object.keys(emptyForm).some(
+      (key) => (form[key] || "") !== (savedForm[key] || "")
+    );
+  }, [form, savedForm]);
+
   // 1. Dynamic API Fetching
   const fetchFeatures = async () => {
     try {
@@ -869,4 +875,3 @@ const handleUpdateFeature = async () => {
     </div>
   );
 }
-//
