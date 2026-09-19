@@ -15,6 +15,7 @@ const initialPlans = [
     cycle: "Monthly",
     status: "Active",
     createdOn: "Sep 10, 2025",
+    updatedOn: "Sep 12, 2025",
   },
   {
     id: 2,
@@ -28,6 +29,7 @@ const initialPlans = [
     cycle: "Monthly",
     status: "Active",
     createdOn: "Sep 08, 2025",
+    updatedOn: "Sep 11, 2025",
   },
   {
     id: 3,
@@ -41,6 +43,7 @@ const initialPlans = [
     cycle: "Monthly",
     status: "Active",
     createdOn: "Sep 05, 2025",
+    updatedOn: "Sep 09, 2025",
   },
   {
     id: 4,
@@ -54,6 +57,7 @@ const initialPlans = [
     cycle: "Quarterly",
     status: "Inactive",
     createdOn: "Aug 28, 2025",
+    updatedOn: "Aug 30, 2025",
   },
 ];
 
@@ -201,6 +205,7 @@ useEffect(() => {
   }
 
   function createOrUpdatePlan() {
+    const timestamp = today();
     const planData = {
       code: form.code.trim().toUpperCase(),
       name: form.name.trim(),
@@ -211,6 +216,7 @@ useEffect(() => {
       price: Number(form.basePrice),
       cycle: form.billingCycle,
       status: form.status,
+      updatedOn: timestamp,
     };
 
     if (editingId) {
@@ -226,7 +232,7 @@ useEffect(() => {
         {
           id: Date.now(),
           ...planData,
-          createdOn: today(),
+          createdOn: timestamp,
         },
         ...current,
       ]);
@@ -875,12 +881,14 @@ useEffect(() => {
           <div className="plans-table">
             <div className="plans-row plans-row-head">
               <div>Plan Code</div>
-              <div>Name / Description</div>
+              <div>Name</div>
+              <div>Description</div>
               <div>Applicable Type</div>
               <div>Billing Model</div>
               <div>Price</div>
               <div>Status</div>
-              <div>Created On</div>
+              <div>Created At</div>
+              <div>Updated At</div>
               <div>Actions</div>
             </div>
 
@@ -890,12 +898,16 @@ useEffect(() => {
                   <strong>{plan.code}</strong>
                 </div>
 
-                <button type="button"
-                 className="plan-name-cell plan-name-clickable"
-                 onClick={() => navigate(`/plans/${plan.id}`)} >
-                 <strong>{plan.name}</strong>
-                 <span>{plan.description}</span>
-               </button>
+                <button
+                  type="button"
+                  className="plan-name-cell plan-name-clickable"
+                  onClick={() => navigate(`/plans/${plan.id}`)}
+                >
+                  <strong>{plan.name}</strong>
+                </button>
+
+                <div className="plan-description-cell">{plan.description}</div>
+
                 <div>
                   <span className="plan-type-badge">{plan.storeType}</span>
                 </div>
@@ -919,6 +931,7 @@ useEffect(() => {
                 </div>
 
                 <div>{plan.createdOn}</div>
+                <div>{plan.updatedOn || plan.createdOn}</div>
 
                 <div className="plan-table-actions">
                   <button

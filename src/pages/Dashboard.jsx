@@ -1,288 +1,714 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Line, Doughnut } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ArcElement,
-  Tooltip,
-  Filler,
-} from "chart.js";
-import { orders } from "../data/data";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ArcElement,
-  Tooltip,
-  Filler
-);
-ChartJS.defaults.font.family = "Inter";
-ChartJS.defaults.font.size = 9;
-ChartJS.defaults.color = "#8991a2";
+/* =========================================================
+   KPI DATA
+========================================================= */
 
-const miniCharts = [
-  ["Merchants", "148", "12 this week", "purple", "bi-shop",
-    [15,18,17,22,19,25,20,26,23,28], "#6552dc", "rgba(101,82,220,0.08)"],
-  ["Stores", "342", "28 this week", "blue", "bi-building",
-    [18,22,25,20,29,24,30,25,33,29], "#4286df", "rgba(66,134,223,0.08)"],
+const kpis = [
+  {
+    label: "Merchants",
+    value: "148",
+    trend: "+12%",
+    detail: (
+      <>
+        <b className="is-good">139 active</b>
+        <span>4 onboarding</span>
+        <span>5 inactive</span>
+      </>
+    ),
+    icon: "bi-shop",
+    tone: "blue",
+  },
+  {
+    label: "Stores",
+    value: "342",
+    trend: "+8%",
+    detail: (
+      <>
+        <b className="is-good">331 active</b>
+        <span>6 pending</span>
+        <span>5 inactive</span>
+      </>
+    ),
+    icon: "bi-buildings",
+    tone: "green",
+  },
+  {
+    label: "Employees",
+    value: "2,486",
+    trend: "+5%",
+    detail: (
+      <>
+        <b className="is-warning">24 without roles</b>
+        <span>6 locked</span>
+      </>
+    ),
+    icon: "bi-people",
+    tone: "orange",
+  },
+  {
+    label: "Active subscriptions",
+    value: "136",
+    trend: "+3%",
+    detail: (
+      <>
+        <b className="is-warning">3 expiring</b>
+        <span>4 payment pending</span>
+      </>
+    ),
+    icon: "bi-credit-card-2-front",
+    tone: "purple",
+  },
 ];
 
-const topStores = [
-  ["DS","Downtown Store","Downtown, TX","$48,752.40","24.5%","purple-bg"],
-  ["WM","Westside Market","Austin, TX","$37,126.80","18.7%","blue-bg"],
-  ["SM","Sunshine Mart","Houston, TX","$28,934.30","16.3%","green-bg"],
-  ["AE","Airport Express","Dallas, TX","$24,583.70","14.9%","yellow-bg"],
-  ["LS","Lakeside Store","Plano, TX","$18,567.20","13.1%","lavender-bg"],
+/* =========================================================
+   PLATFORM HEALTH
+========================================================= */
+
+const healthRows = [
+  ["Devices online", "974 / 982", "99%", "good"],
+  ["Stores synchronized", "337 / 342", "98%", "warn"],
+  ["POS configuration complete", "336 / 342", "98%", "warn"],
+  ["Integrations connected", "144 / 148", "97%", "warn"],
 ];
 
-const alerts = [
-  ["7 stores are offline","Last offline: 15 mins ago","10m ago","alert-red","bi-exclamation-triangle-fill"],
-  ["23 sync failures","WooCommerce sync failed","25m ago","alert-orange","bi-arrow-repeat"],
-  ["Low stock alert","12 products running low","1h ago","alert-blue","bi-box-seam"],
-  ["Subscription expiring","3 merchants in 7 days","2h ago","alert-purple","bi-clock"],
-  ["Daily reconciliation completed","No mismatches found","3h ago","alert-green","bi-check-lg"],
+/* =========================================================
+   ADMINISTRATION MODULES
+========================================================= */
+
+const adminModules = [
+  {
+    title: "Merchants & Stores",
+    icon: "bi-shop",
+    rows: [
+      ["Pending onboarding", "10"],
+      ["Suspended accounts", "4"],
+      ["Setup completion", "96%"],
+    ],
+    path: "/merchants",
+  },
+  {
+    title: "Employees & Access",
+    icon: "bi-people",
+    rows: [
+      ["Active role templates", "14"],
+      ["Permissions", "126"],
+      ["Access exceptions", "30"],
+    ],
+    path: "/employees",
+  },
+  {
+    title: "Stores",
+    icon: "bi-buildings",
+    rows: [
+      ["Active stores", "331"],
+      ["Pending stores", "6"],
+      ["Inactive stores", "5"],
+    ],
+    path: "/stores",
+  },
+  {
+    title: "Subscriptions",
+    icon: "bi-credit-card",
+    rows: [
+      ["Trial", "5"],
+      ["Expiring soon", "3"],
+      ["Expired", "2"],
+    ],
+    path: "/subscriptions",
+  },
 ];
 
-function MiniChart({ data, borderColor, backgroundColor }) {
-  const ref = useRef(null);
-  const chartData = {
-    labels: ["1","2","3","4","5","6","7","8","9","10"],
-    datasets: [{
-      data,
-      borderColor,
-      backgroundColor,
-      fill: true,
-      borderWidth: 1.5,
-      pointRadius: 0,
-      tension: 0.45,
-    }],
-  };
+/* =========================================================
+   PLANS & ENTITLEMENTS
+========================================================= */
+
+const planEntitlements = [
+  ["Basic · 1 store", "48"],
+  ["Pro · 3 stores", "46"],
+  ["Executive · 5 stores", "18"],
+];
+
+/* =========================================================
+   ROLE & PERMISSION METRICS
+   KEEP AS-IS
+========================================================= */
+
+const roleMetrics = [
+  ["System Roles", "8", "bi-shield-check", "blue"],
+  ["Custom Roles", "6", "bi-person-badge", "purple"],
+  ["Permissions", "126", "bi-key", "purple"],
+  ["Employees Assigned", "2,456", "bi-person-check", "blue"],
+  ["Without Roles", "24", "bi-exclamation-circle", "orange"],
+  ["Locked Accounts", "6", "bi-lock", "red"],
+];
+
+/* =========================================================
+   DONUT
+========================================================= */
+
+function Donut({ value, className = "" }) {
   return (
-    <div className="mini-chart">
-      <Line ref={ref} data={chartData} options={{
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { enabled: false } },
-        scales: { x: { display: false }, y: { display: false } },
-        elements: { line: { capBezierPoints: true } },
-      }} />
-    </div>
-  );
-}
+    <div className={`dashboard-donut ${className}`}>
+      <div className="dashboard-donut-hole">
+        <strong>{value}</strong>
 
-function SalesChart() {
-  const ref = useRef(null);
-  const labels = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  const values = [41000,56000,43000,70000,56000,29000,39000];
-  const data = {
-    labels,
-    datasets: [{
-      label: "Sales",
-      data: values,
-      borderColor: "#6350dc",
-      backgroundColor: (context) => {
-        const chart = context.chart;
-        const {ctx, chartArea} = chart;
-        if (!chartArea) return "rgba(98,78,220,0.10)";
-        const gradient = ctx.createLinearGradient(0, 0, 0, 180);
-        gradient.addColorStop(0, "rgba(98, 78, 220, 0.20)");
-        gradient.addColorStop(1, "rgba(98, 78, 220, 0.01)");
-        return gradient;
-      },
-      borderWidth: 2,
-      pointRadius: 3,
-      pointHoverRadius: 5,
-      pointBackgroundColor: "#fff",
-      pointBorderColor: "#6350dc",
-      pointBorderWidth: 2,
-      fill: true,
-      tension: 0.35,
-    }],
-  };
-  return <Line ref={ref} data={data} options={{
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { intersect: false, mode: "index" },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: "#1e2740",
-        titleFont: { size: 10 },
-        bodyFont: { size: 10 },
-        padding: 8,
-        displayColors: false,
-        callbacks: { label: c => "$" + c.parsed.y.toLocaleString() },
-      },
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        border: { display: false },
-        ticks: { font: { size: 8 }, color: "#8c94a4" },
-      },
-      y: {
-        min: 0, max: 80000,
-        ticks: {
-          stepSize: 20000,
-          font: { size: 8 },
-          color: "#8c94a4",
-          callback: value => value === 0 ? "$0" : "$" + (value / 1000) + "K",
-        },
-        grid: { color: "#eef0f4", drawTicks: false },
-        border: { display: false },
-      },
-    },
-  }} />;
-}
-
-function StatusDonut({ values, colors, center, label }) {
-  return (
-    <div className="donut-area">
-      <div className="donut-wrapper">
-        <Doughnut data={{
-          labels: ["Primary","Secondary","Other","Unknown"],
-          datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, spacing: 2 }],
-        }} options={{
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: "72%",
-          plugins: { legend: { display: false }, tooltip: { enabled: true } },
-        }} />
-        <div className="donut-center">
-          <strong>{center}</strong><span>{label}</span>
-        </div>
+        <span>
+          {className.includes("coverage")
+            ? "Active features"
+            : "Healthy"}
+        </span>
       </div>
     </div>
   );
 }
+
+/* =========================================================
+   SECTION HEADER
+========================================================= */
+
+function SectionHeader({
+  icon,
+  title,
+  action,
+  onAction,
+}) {
+  return (
+    <div className="dash-section-header">
+      <div className="dash-section-title">
+        <span className="dash-section-icon">
+          <i className={`bi ${icon}`} />
+        </span>
+
+        <h2>{title}</h2>
+      </div>
+
+      {action && (
+        <button
+          type="button"
+          className="dash-link"
+          onClick={onAction}
+        >
+          {action}
+          <i className="bi bi-arrow-right" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
 
 export default function Dashboard() {
   const nav = useNavigate();
-  const [refresh, setRefresh] = useState(false);
 
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === "/" && document.activeElement?.tagName !== "INPUT") {
-        event.preventDefault();
-        document.querySelector(".global-search input")?.focus();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const doRefresh = () => {
-    setRefresh(true);
-    window.setTimeout(() => setRefresh(false), 800);
+  const refresh = () => {
+    setRefreshing(true);
+
+    window.setTimeout(() => {
+      setRefreshing(false);
+    }, 700);
   };
 
   return (
-    <div className="page-content">
-      <div className="page-header">
-        <div><h1>Dashboard</h1><p>Overview of your Pinaka Commerce Hub platform</p></div>
-        <div className="page-actions">
-          <button className="date-btn"><i className="bi bi-calendar3" /> This Week <i className="bi bi-chevron-down" /></button>
-          <button className="refresh-btn" onClick={doRefresh} disabled={refresh}>
-            <i className={`bi bi-arrow-clockwise ${refresh ? "spin" : ""}`} /> Refresh
+    <div className="page-content super-admin-dashboard">
+
+      {/* =====================================================
+          DASHBOARD HEADER
+      ===================================================== */}
+
+      <div className="super-dashboard-head">
+
+        <div>
+          <div className="dashboard-breadcrumb">
+            Dashboard / Overview
+          </div>
+
+          <h1>Super Admin Dashboard</h1>
+
+          <p>
+            Platform administration, access governance and
+            service health
+          </p>
+        </div>
+
+        <div className="dashboard-toolbar">
+
+          {/* Date filter intentionally kept commented */}
+          {/*
+          <button className="dashboard-filter">
+            <i className="bi bi-calendar3" />
+            Apr 1, 2025 – Apr 30, 2025
+            <i className="bi bi-chevron-down" />
           </button>
+          */}
+
+          <button className="dashboard-filter">
+            All merchants
+            <i className="bi bi-chevron-down" />
+          </button>
+
+          <button className="dashboard-filter">
+            All stores
+            <i className="bi bi-chevron-down" />
+          </button>
+
+          <button
+            className="dashboard-icon-btn"
+            onClick={refresh}
+            aria-label="Refresh"
+          >
+            <i
+              className={`bi bi-arrow-clockwise ${
+                refreshing ? "spin" : ""
+              }`}
+            />
+          </button>
+
+          <button className="dashboard-primary">
+            <i className="bi bi-download" />
+            Export Report
+          </button>
+
         </div>
       </div>
 
-      <div className="row g-3 dashboard-row">
-        {miniCharts.map(([title,value,change,kind,icon,data,border,bg]) => (
-          <div className="col-xl-6 col-lg-6 col-md-6" key={title}>
-            <div className="stat-card">
-              <div className="stat-top">
-                <div className={`stat-icon ${kind}`}><i className={`bi ${icon}`} /></div>
-                <div className="stat-info"><span>{title}</span><strong>{value}</strong><small className="positive"><i className="bi bi-arrow-up" /> {change}</small></div>
+      {/* =====================================================
+          KPI CARDS
+      ===================================================== */}
+
+      <section className="dashboard-kpis">
+
+        {kpis.map((item) => (
+          <article
+            className={`dashboard-kpi ${item.tone}`}
+            key={item.label}
+          >
+            <div className="dashboard-kpi-icon">
+              <i className={`bi ${item.icon}`} />
+            </div>
+
+            <div className="dashboard-kpi-body">
+
+              <span>{item.label}</span>
+
+              <div className="dashboard-kpi-value-row">
+
+                <strong>{item.value}</strong>
+
+                <small>
+                  <i className="bi bi-arrow-up" />
+                  {" "}
+                  {item.trend}
+                </small>
+
               </div>
-              <MiniChart data={data} borderColor={border} backgroundColor={bg} />
+
+              <div className="dashboard-kpi-details">
+                {item.detail}
+              </div>
+
             </div>
-          </div>
+          </article>
         ))}
+
+      </section>
+
+      {/* =====================================================
+          PLATFORM HEALTH + FEATURES
+      ===================================================== */}
+
+      <div className="dashboard-health-feature-grid">
+
+        {/* ===================================================
+            PLATFORM HEALTH
+        =================================================== */}
+
+        <section className="dashboard-panel platform-health-panel">
+
+          <SectionHeader
+            icon="bi-heart-pulse"
+            title="Platform Health"
+            action="Diagnostics"
+            onAction={() => nav("/reports")}
+          />
+
+          <div className="health-content">
+
+            <div className="health-summary">
+
+              <Donut value="91%" />
+
+
+            </div>
+
+            <div className="health-metrics">
+
+              {healthRows.map(
+                ([label, count, percent, tone]) => (
+                  <div
+                    className="health-row"
+                    key={label}
+                  >
+
+                    <div className="health-row-top">
+                      <span>{label}</span>
+                      <strong>{count}</strong>
+                    </div>
+
+                    <div className="health-progress-line">
+                      <span
+                        className={tone}
+                        style={{ width: percent }}
+                      />
+                    </div>
+
+                    <b className="health-percent">
+                      {percent}
+                    </b>
+
+                  </div>
+                )
+              )}
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* ===================================================
+            FEATURES & PLAN COVERAGE
+        =================================================== */}
+
+        <section className="dashboard-panel coverage-panel">
+
+          <SectionHeader
+            icon="bi-boxes"
+            title="Features"
+            action="Manage features"
+            onAction={() => nav("/features")}
+          />
+
+          <div className="coverage-content">
+
+            <div className="coverage-visual">
+
+              <Donut
+                value="44"
+                className="coverage"
+              />
+
+              <span className="coverage-total">
+                48 total features
+              </span>
+
+            </div>
+
+            <div className="coverage-legend">
+
+              <div>
+                <span className="legend-dot green" />
+                <span>Included in Plans</span>
+                <b>41</b>
+              </div>
+
+              <div>
+                <span className="legend-dot orange" />
+                <span>Unassigned Features</span>
+                <b>3</b>
+              </div>
+
+              <div>
+                <span className="legend-dot slate" />
+                <span>Inactive Features</span>
+                <b>4</b>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="coverage-bottom">
+
+            
+
+            {/*
+            <div className="attention">
+              <span>
+                <i className="bi bi-exclamation-triangle" />
+                Plan Gaps
+              </span>
+              <strong>2</strong>
+            </div>
+            */}
+
+          </div>
+
+        </section>
+
       </div>
 
-      <div className="row g-3 dashboard-row">
-        <div className="col-xl-5 col-lg-7">
-          <div className="dashboard-card sales-card">
-            <div className="card-header-custom"><h3>Sales Overview</h3><select defaultValue="This Week"><option>This Week</option><option>Last Week</option><option>This Month</option></select></div>
-            <div className="sales-filter"><select defaultValue="Total Sales"><option>Total Sales</option><option>Orders</option><option>Cash</option></select></div>
-            <div className="sales-chart-container"><SalesChart /></div>
-          </div>
-        </div>
+      {/* =====================================================
+          PLANS + ADMINISTRATION MODULES
+      ===================================================== */}
 
-        <div className="col-xl-3 col-lg-5">
-          <div className="dashboard-card">
-            <div className="card-header-custom"><h3>Top Stores by Sales</h3><a href="#stores" onClick={e=>{e.preventDefault();nav("/stores")}}>View all</a></div>
-            <div className="store-table">
-              <div className="store-heading"><span>STORE</span><span>SALES</span></div>
-              {topStores.map(([initials,name,location,sales,percent,cls]) => (
-                <div className="store-row" key={initials}>
-                  <div className="store-name"><div className={`store-avatar ${cls}`}>{initials}</div><div><strong>{name}</strong><small>{location}</small></div></div>
-                  <div className="store-sales"><strong>{sales}</strong><small>↑ {percent}</small></div>
+      <div className="dashboard-lower-grid">
+
+        {/* ===================================================
+            PLANS & ENTITLEMENTS
+        =================================================== */}
+
+        <section className="dashboard-panel plans-entitlements-panel">
+
+          <SectionHeader
+            icon="bi-boxes"
+            title="Plans & Entitlements"
+            action="Manage plans"
+            onAction={() => nav("/subscriptions")}
+          />
+
+          <div className="plan-tier-grid">
+
+            {planEntitlements.map(
+              ([label, value]) => (
+                <div
+                  className="plan-tier-card"
+                  key={label}
+                >
+
+                  <span>{label}</span>
+
+                  <strong>{value}</strong>
+
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
+              )
+            )}
 
-        <div className="col-xl-4 col-lg-12">
-          <div className="dashboard-card alerts-card">
-            <div className="card-header-custom"><h3>Alerts & Notifications</h3><a href="#alerts">View all</a></div>
-            <div className="alert-list">
-              {alerts.map(([title,desc,time,cls,icon]) => <div className="alert-item" key={title}>
-                <div className={`alert-icon ${cls}`}><i className={`bi ${icon}`} /></div>
-                <div className="alert-content"><strong>{title}</strong><small>{desc}</small></div><span>{time}</span>
-              </div>)}
-            </div>
           </div>
-        </div>
+
+          <div className="plan-entitlement-list">
+
+            <div className="plan-entitlement-row">
+
+              <div>
+                <strong>
+                  Store capacity reached
+                </strong>
+
+                <span>
+                  Merchants using all included stores
+                </span>
+              </div>
+
+              <b>21</b>
+
+            </div>
+
+            <div className="plan-entitlement-row">
+
+              <div>
+                <strong>
+                  Terminal limit reached
+                </strong>
+
+                <span>
+                  May require an additional terminal
+                </span>
+              </div>
+
+              <b>5</b>
+
+            </div>
+
+            <div className="plan-entitlement-row">
+
+              <div>
+                <strong>
+                  Expired subscriptions
+                </strong>
+
+                <span>
+                  Requires renewal or account review
+                </span>
+              </div>
+
+              <b className="expired-value">
+                3
+              </b>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* ===================================================
+            ADMINISTRATION MODULES
+        =================================================== */}
+
+        <section className="dashboard-panel administration-panel">
+
+          <SectionHeader
+            icon="bi-grid"
+            title="Administration Overview"
+            action="View all modules"
+            onAction={() => nav("/merchants")}
+          />
+
+          <div className="admin-grid">
+
+            {adminModules.map((module) => (
+
+              <button
+                className="admin-module"
+                key={module.title}
+                onClick={() => nav(module.path)}
+              >
+
+                <div className="admin-module-top">
+
+                  <span className="admin-module-icon">
+                    <i
+                      className={`bi ${module.icon}`}
+                    />
+                  </span>
+
+                  <strong>
+                    {module.title}
+                  </strong>
+
+                  <i
+                    className="bi bi-arrow-right admin-module-arrow"
+                  />
+
+                </div>
+
+                <div className="admin-module-rows">
+
+                  {module.rows.map(
+                    ([label, value]) => (
+
+                      <div key={label}>
+
+                        <span>{label}</span>
+
+                        <b>{value}</b>
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+
+              </button>
+
+            ))}
+
+          </div>
+
+        </section>
+
       </div>
 
-      <div className="row g-3 dashboard-row">
-        <div className="col-xl-3 col-lg-6">
-          <div className="dashboard-card status-card">
-            <div className="card-header-custom"><h3>Synchronization Status</h3><a href="#sync">View all</a></div>
-            <StatusDonut values={[287,18,23,14]} colors={["#4dbd73","#4b8dde","#eb606a","#aeb5c3"]} center="342" label="Stores" />
-            <div className="legend-list">
-              <div><span className="dot green-dot" />In Sync <b>287 (83.9%)</b></div>
-              <div><span className="dot blue-dot" />Syncing <b>18 (5.3%)</b></div>
-              <div><span className="dot red-dot" />Failed <b>23 (6.7%)</b></div>
-              <div><span className="dot gray-dot" />Not Configured <b>14 (4.1%)</b></div>
-            </div>
-            <div className="status-footer"><span>Last Sync: 2 mins ago</span><button>Sync Now</button></div>
+      {/* =====================================================
+          ROLES & PERMISSIONS
+          DO NOT REMOVE / CHANGE
+      ===================================================== */}
+
+      <section className="dashboard-panel roles-panel">
+
+        <SectionHeader
+          icon="bi-shield-lock"
+          title="Roles & Permissions"
+          action="Manage roles"
+          onAction={() => nav("/role-templates")}
+        />
+
+        <div className="roles-summary">
+
+          <div>
+            <strong>14</strong>
+            <span>active role templates</span>
           </div>
+
+          <span className="attention-text">
+            <i className="bi bi-exclamation-circle" />
+            {" "}
+            3 require attention
+          </span>
+
         </div>
 
-        <div className="col-xl-3 col-lg-6">
-          <div className="dashboard-card status-card">
-            <div className="card-header-custom"><h3>Device Status</h3><a href="#devices">View all</a></div>
-            <StatusDonut values={[742,186,28,26]} colors={["#4dbd73","#eb606a","#e9aa38","#aeb5c3"]} center="982" label="Devices" />
-            <div className="legend-list">
-              <div><span className="dot green-dot" />Online <b>742 (75.6%)</b></div>
-              <div><span className="dot red-dot" />Offline <b>186 (18.9%)</b></div>
-              <div><span className="dot orange-dot" />Error <b>28 (2.9%)</b></div>
-              <div><span className="dot gray-dot" />Maintenance <b>26 (2.6%)</b></div>
-            </div>
-            <div className="status-footer"><span>Last Updated: 1 min ago</span><button onClick={()=>nav("/devices")}>Manage Devices</button></div>
-          </div>
+        <div className="roles-grid">
+
+          {roleMetrics.map(
+            ([label, value, icon, tone]) => (
+
+              <div
+                className={`role-metric ${tone}`}
+                key={label}
+              >
+
+                <span className="role-metric-icon">
+                  <i className={`bi ${icon}`} />
+                </span>
+
+                <div>
+
+                  <span>{label}</span>
+
+                  <strong>{value}</strong>
+
+                </div>
+
+              </div>
+
+            )
+          )}
+
         </div>
 
-        <div className="col-xl-6 col-lg-12">
-          <div className="dashboard-card orders-card">
-            <div className="card-header-custom"><h3>Recent Orders</h3><a href="#orders" onClick={e=>{e.preventDefault();nav("/orders")}}>View all</a></div>
-            <div className="table-responsive"><table className="table recent-orders-table"><thead><tr><th>ORDER ID</th><th>STORE</th><th>AMOUNT</th><th>STATUS</th><th>TIME</th></tr></thead>
-              <tbody>{orders.map(o=><tr key={o.id}><td><strong>{o.id}</strong></td><td>{o.store}</td><td>{o.amount}</td><td><span className={`status ${o.status.toLowerCase()}`}>{o.status}</span></td><td>{o.time}</td></tr>)}</tbody>
-            </table></div>
-          </div>
+      </section>
+
+      {/* =====================================================
+          GROWTH / REPORTS
+      ===================================================== */}
+
+      <div className="dashboard-growth">
+
+        <div className="growth-icon">
+          <i className="bi bi-rocket-takeoff" />
         </div>
+
+        <div>
+
+          <strong>
+            Platform growing steadily!
+          </strong>
+
+          <span>
+            Keep your merchants, stores and teams
+            connected for the best experience.
+          </span>
+
+        </div>
+
+        <button
+          onClick={() => nav("/reports")}
+        >
+          View Reports
+          <i className="bi bi-arrow-right" />
+        </button>
+
       </div>
+
     </div>
   );
 }

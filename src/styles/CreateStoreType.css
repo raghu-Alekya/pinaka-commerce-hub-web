@@ -308,7 +308,7 @@
 
 .store-types-row {
   display: grid;
-  grid-template-columns: 185px minmax(240px, 1.8fr) 125px 150px 150px 100px;
+  grid-template-columns: 185px minmax(180px, 1.1fr) minmax(220px, 1.7fr) 125px 150px 150px 100px;
   min-height: 57px;
   align-items: center;
   padding: 0 12px;
@@ -345,9 +345,10 @@
   text-align: left;
 }
 
-.store-type-name-cell span {
+.store-type-description-cell {
   color: #6380ae;
   font-size: 11px;
+  line-height: 1.5;
 }
 
 .store-type-name-clickable {

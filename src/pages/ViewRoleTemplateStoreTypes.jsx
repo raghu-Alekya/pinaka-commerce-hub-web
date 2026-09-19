@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { storeTypesApi } from "../api/storeTypes";
+import { roleTemplatesApi } from "../api/roleTemplatesApi";
 
 function readStoreTypes(response) {
   const candidates = [
@@ -16,6 +16,46 @@ function readStoreTypes(response) {
   ];
 
   return candidates.find((value) => Array.isArray(value)) || [];
+}
+
+function normalizeStoreTypeEntry(item, index) {
+  const storeType = item?.storeType ?? item ?? {};
+  const rawId =
+    storeType.id ??
+    storeType._id ??
+    item?.storeTypeId ??
+    item?.id ??
+    `store-type-${index}`;
+
+  return {
+    ...storeType,
+    id: rawId,
+    name:
+      storeType.name ??
+      storeType.storeTypeName ??
+      item?.name ??
+      "Unnamed store type",
+    code:
+      storeType.code ??
+      storeType.storeTypeCode ??
+      item?.code ??
+      item?.storeTypeCode ??
+      "",
+    checked:
+      item?.checked ??
+      storeType?.checked ??
+      item?.mapped ??
+      storeType?.mapped ??
+      item?.enabled ??
+      storeType?.enabled ??
+      item?.active ??
+      storeType?.active ??
+      item?.isEnabled ??
+      storeType?.isEnabled ??
+      item?.isActive ??
+      storeType?.isActive ??
+      false,
+  };
 }
 
 const fallbackStoreTypesList = [
@@ -91,11 +131,16 @@ export default function ViewRoleTemplateStoreTypes() {
       setError("");
 
       try {
-        const response = await storeTypesApi.getAll();
-        const items = readStoreTypes(response);
+        const response = await roleTemplatesApi.getAvailableStoreTypes(roleId);
+        const items = readStoreTypes(response).map(normalizeStoreTypeEntry);
 
-        if (!cancelled && items.length > 0) {
+        if (!cancelled) {
           setStoreTypesList(items);
+          setSelectedStoreTypes(
+            items
+              .filter((storeType) => Boolean(storeType.checked))
+              .map((storeType) => storeType.id)
+          );
         }
       } catch (requestError) {
         if (!cancelled) {
