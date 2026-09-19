@@ -11,6 +11,7 @@
   color: #10264d;
 }
 
+
 /* =========================================================
    PAGE HEADER
    ========================================================= */
@@ -38,6 +39,7 @@
   font-size: 13px;
   line-height: 1.4;
 }
+
 
 /* =========================================================
    PRIMARY BUTTON
@@ -78,6 +80,7 @@
   transform: translateY(1px);
 }
 
+
 /* =========================================================
    FORM CARD
    ========================================================= */
@@ -90,6 +93,7 @@
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 3px 12px rgba(21, 67, 129, 0.04);
 }
+
 
 /* =========================================================
    FORM HEADING
@@ -135,6 +139,7 @@
   line-height: 1.4;
 }
 
+
 /* =========================================================
    FORM GRID
    ========================================================= */
@@ -145,6 +150,7 @@
   column-gap: 13px;
   row-gap: 11px;
 }
+
 
 /* =========================================================
    FORM FIELD
@@ -167,6 +173,7 @@
   font-size: 11px;
   font-weight: 700;
 }
+
 
 /* =========================================================
    INPUTS / SELECT / TEXTAREA
@@ -212,6 +219,7 @@
   box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
 }
 
+
 /* =========================================================
    WIDE FIELD
    ========================================================= */
@@ -219,6 +227,71 @@
 .vendors-wide-field {
   grid-column: span 2;
 }
+
+
+/* =========================================================
+   ADDRESS FIELDS
+   ========================================================= */
+
+.vendors-address-section {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  padding-top: 13px;
+  border-top: 1px solid #e7edf5;
+}
+
+.vendors-address-title {
+  margin: 0 0 10px;
+  color: #18213c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vendors-address-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 13px;
+  row-gap: 11px;
+}
+
+
+/* Address Line 1 */
+
+.vendors-address-line1 {
+  grid-column: span 2;
+}
+
+
+/* Address Line 2 */
+
+.vendors-address-line2 {
+  grid-column: span 1;
+}
+
+
+/* =========================================================
+   COUNTRY / STATE / ZIP
+   ========================================================= */
+
+.vendors-country-field,
+.vendors-state-field,
+.vendors-zip-field,
+.vendors-city-field {
+  min-width: 0;
+}
+
+
+/* =========================================================
+   FORM ERROR
+   ========================================================= */
+
+.vendors-field-error {
+  margin: 2px 0 0;
+  color: #ed304d;
+  font-size: 9px;
+  font-weight: 500;
+}
+
 
 /* =========================================================
    FORM ACTIONS
@@ -262,6 +335,7 @@
   box-shadow: 0 4px 10px rgba(8, 115, 249, 0.2);
 }
 
+
 /* =========================================================
    LIST CARD
    ========================================================= */
@@ -274,6 +348,7 @@
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 3px 12px rgba(21, 67, 129, 0.04);
 }
+
 
 /* =========================================================
    LIST HEADER
@@ -299,6 +374,7 @@
   color: #778198;
   font-size: 11px;
 }
+
 
 /* =========================================================
    FILTERS
@@ -372,6 +448,7 @@
   font-size: 11px;
 }
 
+
 /* =========================================================
    TABLE
    ========================================================= */
@@ -384,7 +461,7 @@
 
 .vendors-table {
   width: 100%;
-  min-width: 1080px;
+  min-width: 1400px;
   border-collapse: collapse;
 }
 
@@ -425,6 +502,7 @@
   font-size: 9px;
 }
 
+
 /* =========================================================
    STATUS
    ========================================================= */
@@ -453,6 +531,7 @@
   color: #ed304d;
 }
 
+
 /* =========================================================
    TABLE ACTIONS
    ========================================================= */
@@ -480,6 +559,21 @@
   background: #f8fbff;
 }
 
+
+/* =========================================================
+   DELETE ACTION
+   ========================================================= */
+
+.vendors-delete-action {
+  color: #dc3545 !important;
+}
+
+.vendors-delete-action:hover {
+  color: #b02a37 !important;
+  background: #fff1f2 !important;
+}
+
+
 /* =========================================================
    EMPTY STATE
    ========================================================= */
@@ -490,6 +584,7 @@
   color: #8994aa;
   font-size: 10px;
 }
+
 
 /* =========================================================
    MODAL
@@ -571,6 +666,278 @@
   font-size: 10px;
 }
 
+
+/* =========================================================
+   DELETE MODAL BACKDROP
+   ========================================================= */
+
+.vendors-delete-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(15, 23, 42, 0.45);
+
+  backdrop-filter: blur(2px);
+}
+
+
+/* =========================================================
+   DELETE MODAL
+   ========================================================= */
+
+.vendors-delete-modal {
+  width: min(420px, 100%);
+
+  background: #ffffff;
+
+  border-radius: 14px;
+
+  padding: 30px;
+
+  text-align: center;
+
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.18);
+
+  animation: vendorsDeleteModalIn 0.18s ease-out;
+}
+
+
+/* =========================================================
+   DELETE ICON
+   ========================================================= */
+
+.vendors-delete-icon {
+  width: 52px;
+  height: 52px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #fff1f2;
+
+  color: #dc3545;
+
+  font-size: 22px;
+}
+
+
+/* =========================================================
+   DELETE TITLE
+   ========================================================= */
+
+.vendors-delete-modal h2 {
+  margin: 0 0 10px;
+
+  font-size: 20px;
+
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+
+/* =========================================================
+   DELETE MESSAGE
+   ========================================================= */
+
+.vendors-delete-modal p {
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+.vendors-delete-modal p strong {
+  color: #1f2937;
+}
+
+.vendors-delete-warning {
+  margin-top: 4px !important;
+
+  font-size: 13px !important;
+
+  color: #94a3b8 !important;
+}
+
+
+/* =========================================================
+   DELETE ACTION BUTTONS
+   ========================================================= */
+
+.vendors-delete-actions {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  margin-top: 24px;
+}
+
+
+/* =========================================================
+   CANCEL
+   ========================================================= */
+
+.vendors-delete-cancel {
+  min-width: 100px;
+
+  padding: 10px 18px;
+
+  border: 1px solid #d1d5db;
+
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  color: #475569;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.vendors-delete-cancel:hover {
+  background: #f8fafc;
+}
+
+
+/* =========================================================
+   DELETE
+   ========================================================= */
+
+.vendors-delete-confirm {
+  min-width: 130px;
+
+  padding: 10px 18px;
+
+  border: 1px solid #dc3545;
+
+  border-radius: 7px;
+
+  background: #dc3545;
+
+  color: #ffffff;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 7px;
+}
+
+.vendors-delete-confirm:hover {
+  background: #bb2d3b;
+
+  border-color: #bb2d3b;
+}
+
+.vendors-error {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 13px;
+  padding: 10px 13px;
+  border: 1px solid #f3c5ca;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #b42318;
+  font-size: 12px;
+}
+
+.vendors-error>i {
+  font-size: 14px;
+}
+
+.vendors-error span {
+  flex: 1;
+}
+
+.vendors-error button {
+  border: 0;
+  background: transparent;
+  color: #b42318;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.vendors-loading-cell {
+  height: 120px;
+  text-align: center;
+  color: #63748b;
+  font-size: 12px;
+}
+
+.vendors-loading-icon {
+  display: inline-block;
+  margin-right: 7px;
+  animation: vendorsLoadingSpin 0.9s linear infinite;
+}
+
+.vendors-save-button:disabled,
+.vendors-clear-button:disabled,
+.vendors-link-button:disabled,
+.vendors-actions button:disabled,
+.vendors-delete-cancel:disabled,
+.vendors-delete-confirm:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@keyframes vendorsLoadingSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes vendorsDeleteModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
 /* =========================================================
    TABLET
    ========================================================= */
@@ -580,7 +947,16 @@
     grid-template-columns: 1fr;
   }
 
+  .vendors-address-grid {
+    grid-template-columns: 1fr;
+  }
+
   .vendors-wide-field {
+    grid-column: auto;
+  }
+
+  .vendors-address-line1,
+  .vendors-address-line2 {
     grid-column: auto;
   }
 
@@ -588,6 +964,27 @@
     flex-wrap: wrap;
   }
 }
+
+
+/* =========================================================
+   MOBILE - DELETE
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .vendors-delete-modal {
+    padding: 24px 20px;
+  }
+
+  .vendors-delete-actions {
+    flex-direction: column;
+  }
+
+  .vendors-delete-cancel,
+  .vendors-delete-confirm {
+    width: 100%;
+  }
+}
+
 
 /* =========================================================
    MOBILE
@@ -627,6 +1024,7 @@
     width: 100%;
   }
 }
+
 
 @media (max-width: 560px) {
   .vendors-header {

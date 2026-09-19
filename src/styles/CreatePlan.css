@@ -955,3 +955,17 @@
   outline: 0;
   background: transparent;
 }
+
+.plan-name-clickable {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.plan-name-clickable:hover strong {
+  color: #684ee3;
+  text-decoration: underline;
+}

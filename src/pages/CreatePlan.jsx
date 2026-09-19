@@ -890,11 +890,12 @@ useEffect(() => {
                   <strong>{plan.code}</strong>
                 </div>
 
-                <div className="plan-name-cell">
-                  <strong>{plan.name}</strong>
-                  <span>{plan.description}</span>
-                </div>
-
+                <button type="button"
+                 className="plan-name-cell plan-name-clickable"
+                 onClick={() => navigate(`/plans/${plan.id}`)} >
+                 <strong>{plan.name}</strong>
+                 <span>{plan.description}</span>
+               </button>
                 <div>
                   <span className="plan-type-badge">{plan.storeType}</span>
                 </div>

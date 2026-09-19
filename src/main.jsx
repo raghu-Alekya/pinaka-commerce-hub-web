@@ -36,11 +36,17 @@ import "./styles/add-device.css";
 import "./styles/employees.css";
 import "./styles/add-employee.css";
 import "./styles/Merchant-subscriptions.css";
-
+import "./styles/ViewPlan.css";
+import "./styles/ViewRoleTemplateDetails.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AuthProvider>
         <App />
       </AuthProvider>

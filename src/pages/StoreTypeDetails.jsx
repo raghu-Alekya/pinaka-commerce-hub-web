@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { storeTypesApi } from "../api/storeTypes";
 
 const initialStoreType = {
   code: "RESTAURANT",
@@ -11,9 +13,57 @@ const initialStoreType = {
 
 export default function StoreTypeDetails() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { storeTypeId } = useParams();
+  const initialState = location.state?.storeType;
 
-  const [form, setForm] = useState(initialStoreType);
+  const [form, setForm] = useState(() => ({
+    ...initialStoreType,
+    ...(initialState
+      ? {
+          code: initialState.code ?? initialState.storeTypeCode ?? "",
+          name: initialState.name ?? initialStoreType.name,
+          status: initialState.status ?? initialStoreType.status,
+          description:
+            initialState.description ?? initialStoreType.description,
+        }
+      : {}),
+  }));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    storeTypesApi
+      .getOne(storeTypeId)
+      .then((response) => {
+        const storeType = response?.storeType ?? response?.data ?? response;
+
+        if (!storeType || typeof storeType !== "object") {
+          throw new Error("GET /store-types/:id did not return a store type.");
+        }
+
+        if (!cancelled) {
+          setForm({
+            code: storeType.storeTypeCode ?? storeType.code ?? "",
+            name: storeType.name ?? "",
+            status: storeType.status === "INACTIVE" ? "Inactive" : "Active",
+            description: storeType.description ?? "",
+          });
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeTypeId]);
 
   return (
     <section className="store-type-details-page">
@@ -25,6 +75,9 @@ export default function StoreTypeDetails() {
         <i className="bi bi-arrow-left" />
         Back to Store Types
       </button>
+
+      {loading && <p>Loading store type...</p>}
+      {error && <p role="alert">{error}</p>}
 
       <div className="store-type-details-heading">
         <div className="store-type-title-line">
@@ -40,10 +93,7 @@ export default function StoreTypeDetails() {
           </span>
         </div>
 
-        <p>
-          Store type for restaurant vertical with full service and quick
-          service operations.
-        </p>
+        <p>{form.description}</p>
       </div>
 
       <nav className="store-type-tabs" aria-label="Store type sections">
@@ -53,7 +103,11 @@ export default function StoreTypeDetails() {
 
         <button
           type="button"
-          onClick={() => navigate(`/store-types/${storeTypeId}/features`)}
+          onClick={() =>
+            navigate(`/store-types/${storeTypeId}/features`, {
+              state: { storeType: form },
+            })
+          }
         >
           Features
         </button>
@@ -61,7 +115,9 @@ export default function StoreTypeDetails() {
         <button
           type="button"
           onClick={() =>
-            navigate(`/store-types/${storeTypeId}/role-templates`)
+            navigate(`/store-types/${storeTypeId}/role-templates`, {
+              state: { storeType: form },
+            })
           }
         >
           Role Templates
