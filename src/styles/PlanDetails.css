@@ -1,0 +1,339 @@
+.plan-details-page {
+  flex: 1;
+  min-height: calc(100vh - 72px);
+  padding: 18px 28px 30px;
+  color: #10264d;
+  background: #f6f7fb;
+}
+
+.plan-details-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  color: #076cf0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.plan-details-heading {
+  margin: 8px 0 18px;
+}
+
+.plan-details-title-line {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.plan-details-title-line h1,
+.plan-details-heading h1 {
+  margin: 0;
+  color: #10254a;
+  font-size: 25px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+}
+
+.plan-details-heading > p {
+  margin: 5px 0 0;
+  color: #5575a8;
+  font-size: 13px;
+}
+
+.plan-details-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 25px;
+  padding: 0 10px;
+  border-radius: 14px;
+  color: #00a762;
+  background: #ddf8e9;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.plan-details-active-badge i {
+  font-size: 6px;
+}
+
+.plan-details-inactive-badge {
+  color: #e5455d;
+  background: #ffe2e7;
+}
+
+.plan-details-tabs {
+  display: flex;
+  gap: 38px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #d9e7f6;
+}
+
+.plan-details-tabs button {
+  position: relative;
+  height: 39px;
+  padding: 0 0 10px;
+  border: 0;
+  color: #5878ab;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.plan-details-tabs button:hover {
+  color: #684ee3;
+}
+
+.plan-details-tabs button.active {
+  color: #684ee3;
+  font-weight: 700;
+}
+
+.plan-details-tabs button.active::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 3px;
+  border-radius: 3px;
+  content: "";
+  background: #684ee3;
+}
+
+.plan-details-card {
+  padding: 22px 20px;
+  border: 1px solid #e0eaf5;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(21, 67, 129, 0.04);
+}
+
+.plan-details-card-heading,
+.plan-details-card-title {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 20px;
+}
+
+.plan-details-icon,
+.plan-details-card-title > span {
+  display: grid;
+  width: 45px;
+  height: 45px;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: #684ee3;
+  background: #eeeaff;
+  font-size: 20px;
+}
+
+.plan-details-card-heading h2,
+.plan-details-card-title h2 {
+  margin: 0 0 4px;
+  color: #10254a;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.plan-details-card-heading p {
+  margin: 0;
+  color: #5b79ad;
+  font-size: 12px;
+}
+
+.plan-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.plan-details-field {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  color: #23426e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.plan-details-field b {
+  color: #f43d60;
+}
+
+.plan-details-field input,
+.plan-details-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d7e4f2;
+  border-radius: 7px;
+  outline: 0;
+  color: #173861;
+  background: #f8fbff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.plan-details-field input {
+  height: 42px;
+  padding: 0 13px;
+}
+
+.plan-details-field textarea {
+  min-height: 88px;
+  padding: 12px;
+  line-height: 1.5;
+  resize: none;
+}
+
+.plan-details-field small {
+  color: #6380ae;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.plan-details-status {
+  color: #00a762 !important;
+  font-weight: 600 !important;
+}
+
+.plan-details-status-inactive {
+  color: #e5455d !important;
+  font-weight: 600 !important;
+}
+
+.plan-details-full-field {
+  margin-top: 17px;
+}
+
+.plan-details-description {
+  position: relative;
+  margin-top: 17px;
+}
+
+.plan-details-description small {
+  position: absolute;
+  right: 9px;
+  bottom: 8px;
+}
+
+/* Pricing page */
+
+.plan-pricing-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 22px;
+}
+
+/* Features and Limits page */
+
+.plan-view-features-table-wrap {
+  overflow: hidden;
+  border: 1px solid #dce8f4;
+  border-radius: 8px;
+}
+
+.plan-view-features-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.plan-view-features-table th,
+.plan-view-features-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e3edf7;
+  color: #23426e;
+  text-align: left;
+  font-size: 13px;
+}
+
+.plan-view-features-table th {
+  color: #163762;
+  background: #f1f7ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.plan-view-features-table th:nth-child(1) {
+  width: 40%;
+}
+
+.plan-view-features-table th:nth-child(2) {
+  width: 28%;
+}
+
+.plan-view-features-table th:nth-child(3) {
+  width: 20%;
+}
+
+.plan-view-features-table th:nth-child(4) {
+  width: 12%;
+}
+
+.plan-view-features-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.plan-view-features-table td strong {
+  color: #102b58;
+  font-weight: 600;
+}
+
+.plan-feature-included-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 14px;
+  color: #00a762;
+  background: #ddf8e9;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.plan-feature-included-badge i {
+  font-size: 6px;
+}
+
+.plan-view-table-count {
+  margin: 13px 0 0;
+  color: #6380ae;
+  font-size: 12px;
+}
+
+@media (max-width: 1000px) {
+  .plan-pricing-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .plan-details-page {
+    padding: 18px 16px;
+  }
+
+  .plan-details-grid,
+  .plan-pricing-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-details-tabs {
+    gap: 22px;
+    overflow-x: auto;
+  }
+
+  .plan-view-features-table-wrap {
+    overflow-x: auto;
+  }
+
+  .plan-view-features-table {
+    min-width: 620px;
+  }
+}
