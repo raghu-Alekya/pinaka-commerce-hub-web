@@ -438,7 +438,7 @@
 }
 
 .feature-permissions-page .fp-col-feature {
-  width: 12%;
+  width: 13%;
 }
 
 .feature-permissions-page .fp-col-description {
@@ -478,6 +478,12 @@
   background: #f1f7ff;
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.feature-permissions-page .fp-date-cell {
+  color: #64748b;
+  font-size: 12px;
   white-space: nowrap;
 }
 

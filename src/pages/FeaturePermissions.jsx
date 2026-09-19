@@ -66,6 +66,8 @@ export default function FeaturePermissions() {
       featureName: source.feature?.name || source.featureName || feature?.name || "",
       description: source.description || "",
       status: normalizeStatus(source.status),
+      createdAt: source.createdAt || source.created_at || "",
+      updatedAt: source.updatedAt || source.updated_at || "",
     };
   };
 
@@ -101,11 +103,12 @@ export default function FeaturePermissions() {
      ========================================================= */
 
   const updateField = (event) => {
-    const { name, value } = event.target;
+    const field = event.target.dataset.field || event.target.name;
+    const { value } = event.target;
 
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [field]: value,
     }));
 
     setErrors((prev) => {
@@ -113,7 +116,7 @@ export default function FeaturePermissions() {
         ...prev,
       };
 
-      delete next[name];
+      delete next[field];
 
       return next;
     });
