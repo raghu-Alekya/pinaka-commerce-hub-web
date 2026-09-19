@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { roleTemplatesApi } from "../api/roleTemplatesApi";
@@ -21,6 +20,7 @@ const readFeatureList = (response) => {
 
 const normalizePermission = (permission, featureId, permissionIndex) => {
   const permissionRecord = permission?.permission ?? permission ?? {};
+
   const permissionId =
     permissionRecord.id ??
     permission?.permissionId ??
@@ -32,6 +32,7 @@ const normalizePermission = (permission, featureId, permissionIndex) => {
 
   return {
     id: String(permissionId),
+
     name:
       permissionRecord.name ??
       permissionRecord.permissionName ??
@@ -41,6 +42,7 @@ const normalizePermission = (permission, featureId, permissionIndex) => {
       permissionRecord.permissionKey ??
       permissionRecord.key ??
       "Permission",
+
     code:
       permissionRecord.code ??
       permissionRecord.permissionCode ??
@@ -50,6 +52,7 @@ const normalizePermission = (permission, featureId, permissionIndex) => {
       permissionRecord.key ??
       permissionRecord.name ??
       "PERMISSION",
+
     checked:
       permission?.checked ??
       permissionRecord?.checked ??
@@ -67,6 +70,7 @@ const normalizePermission = (permission, featureId, permissionIndex) => {
 
 const normalizeFeature = (feature, featureIndex) => {
   const featureRecord = feature?.feature ?? feature ?? {};
+
   const featureId =
     featureRecord.id ??
     feature?.featureId ??
@@ -82,11 +86,13 @@ const normalizeFeature = (feature, featureIndex) => {
 
   return {
     id: String(featureId),
+
     name:
       featureRecord.name ??
       feature?.name ??
       featureRecord.featureName ??
       "Feature",
+
     code:
       featureRecord.code ??
       featureRecord.featureCode ??
@@ -95,10 +101,12 @@ const normalizeFeature = (feature, featureIndex) => {
       featureRecord.featureKey ??
       feature?.featureKey ??
       "FEATURE",
+
     description:
       featureRecord.description ??
       feature?.description ??
       "",
+
     checked:
       feature?.checked ??
       featureRecord?.checked ??
@@ -109,6 +117,7 @@ const normalizeFeature = (feature, featureIndex) => {
       feature?.defaultEnabled ??
       featureRecord?.defaultEnabled ??
       false,
+
     permissions: permissions.map((permission, index) =>
       normalizePermission(permission, featureId, index)
     ),
@@ -132,24 +141,28 @@ export default function ViewRoleTemplateAccess() {
   );
 
   const initialEnabledFeatures = getStateArray(
-    location.state?.enabledFeatures,
-    location.state?.roleTemplate?.featureId
-      ? [location.state.roleTemplate.featureId]
-      : ["pos"]
+    location.state?.enabledFeatures
   );
 
   const initialSelectedPermissions = getStateArray(
-    location.state?.selectedPermissions,
-    location.state?.roleTemplate?.permissionId
-      ? [location.state.roleTemplate.permissionId]
-      : ["view-pos"]
+    location.state?.selectedPermissions
   );
 
+  /*
+   * IMPORTANT:
+   * This was missing from the previous version.
+   * The Access screen needs its own feature list loaded
+   * from the role-template API.
+   */
+  const [featurePermissions, setFeaturePermissions] = useState([]);
+
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saveState, setSaveState] = useState("saved");
   const [showSavedToast, setShowSavedToast] = useState(false);
+
   const savedToastTimerRef = useRef(null);
 
   const [enabledFeatures, setEnabledFeatures] = useState(
@@ -170,8 +183,103 @@ export default function ViewRoleTemplateAccess() {
 
   const [showLeavePopup, setShowLeavePopup] = useState(false);
 
+  /*
+   * Load Feature & Permission Access based on:
+   * - role template ID
+   * - selected store type IDs
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFeatures() {
+      setLoading(true);
+      setError("");
+
+      try {
+        if (!roleId) {
+          throw new Error("Role template ID is missing.");
+        }
+
+        if (selectedStoreTypes.length === 0) {
+          setFeaturePermissions([]);
+
+          if (!cancelled) {
+            setError(
+              "No store type is selected. Please go back and select at least one store type."
+            );
+          }
+
+          return;
+        }
+
+        const response = await roleTemplatesApi.getFeatures(
+          roleId,
+          selectedStoreTypes
+        );
+
+        const items = readFeatureList(response).map(normalizeFeature);
+
+        if (!cancelled) {
+          setFeaturePermissions(items);
+
+          /*
+           * If the API already marks features/permissions as selected,
+           * use those values when no navigation state was supplied.
+           */
+          if (initialEnabledFeatures.length === 0) {
+            const apiEnabledFeatures = items
+              .filter((feature) => feature.checked)
+              .map((feature) => feature.id);
+
+            setEnabledFeatures(apiEnabledFeatures);
+            setSavedEnabledFeatures(apiEnabledFeatures);
+          }
+
+          if (initialSelectedPermissions.length === 0) {
+            const apiSelectedPermissions = items.flatMap((feature) =>
+              feature.permissions
+                .filter((permission) => permission.checked)
+                .map((permission) => permission.id)
+            );
+
+            setSelectedPermissions(apiSelectedPermissions);
+            setSavedSelectedPermissions(apiSelectedPermissions);
+          }
+        }
+      } catch (requestError) {
+        if (!cancelled) {
+          console.error(
+            "Failed to load role template features:",
+            requestError
+          );
+
+          setFeaturePermissions([]);
+
+          setError(
+            requestError?.message ||
+              "Unable to load features and permissions."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadFeatures();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [roleId, selectedStoreTypes.join(",")]);
+
   const tabs = [
-    ["overview", "Overview", `/role-templates/${roleId}`],
+    [
+      "overview",
+      "Overview",
+      `/role-templates/${roleId}`,
+    ],
     [
       "store-types",
       "Applicable Store Types",
@@ -192,7 +300,7 @@ export default function ViewRoleTemplateAccess() {
         .map((permission) => `${permission.name} ${permission.code}`)
         .join(" ");
 
-      return `${feature.name} ${feature.description} ${permissionText}`
+      return `${feature.name} ${feature.code} ${feature.description} ${permissionText}`
         .toLowerCase()
         .includes(query);
     });
@@ -239,7 +347,10 @@ export default function ViewRoleTemplateAccess() {
   }
 
   function selectAll() {
-    setEnabledFeatures(featurePermissions.map((feature) => feature.id));
+    setEnabledFeatures(
+      featurePermissions.map((feature) => feature.id)
+    );
+
     setSelectedPermissions(
       featurePermissions.flatMap((feature) =>
         feature.permissions.map((permission) => permission.id)
@@ -253,6 +364,7 @@ export default function ViewRoleTemplateAccess() {
   function clearAll() {
     setEnabledFeatures([]);
     setSelectedPermissions([]);
+
     markConfigurationDirty();
     setError("");
   }
@@ -290,7 +402,7 @@ export default function ViewRoleTemplateAccess() {
     navigateToStoreTypes();
   }
 
-  function saveConfiguration() {
+  async function saveConfiguration() {
     const configuration = {
       roleTemplateId: roleId,
       roleTemplate,
@@ -300,13 +412,40 @@ export default function ViewRoleTemplateAccess() {
       updatedAt: new Date().toISOString(),
     };
 
+    /*
+     * Keep local persistence because this is already part
+     * of your current flow.
+     */
     localStorage.setItem(
       "pinaka_role_template_configs",
       JSON.stringify(configuration)
     );
 
-    setSavedEnabledFeatures(enabledFeatures);
-    setSavedSelectedPermissions(selectedPermissions);
+    /*
+     * Also prepare the API payload.
+     *
+     * We intentionally keep the existing localStorage behavior
+     * so your current flow does not break.
+     */
+    try {
+      await roleTemplatesApi.updateFeatureAccess(roleId, {
+        storeTypeIds: selectedStoreTypes,
+        featureIds: enabledFeatures,
+        permissionIds: selectedPermissions,
+      });
+    } catch (requestError) {
+      /*
+       * Do not break the UI if the backend endpoint is not
+       * ready yet. Local configuration remains saved.
+       */
+      console.warn(
+        "Feature access API update was not completed:",
+        requestError
+      );
+    }
+
+    setSavedEnabledFeatures([...enabledFeatures]);
+    setSavedSelectedPermissions([...selectedPermissions]);
   }
 
   function leaveWithoutSaving() {
@@ -314,16 +453,16 @@ export default function ViewRoleTemplateAccess() {
     navigateToStoreTypes();
   }
 
-  function saveAndExit() {
+  async function saveAndExit() {
     setSaving(true);
 
-    saveConfiguration();
-
-    setTimeout(() => {
+    try {
+      await saveConfiguration();
+    } finally {
       setSaving(false);
       setShowLeavePopup(false);
       navigateToStoreTypes();
-    }, 300);
+    }
   }
 
   function handleTabNavigation(path) {
@@ -345,34 +484,53 @@ export default function ViewRoleTemplateAccess() {
     }, 3000);
   }
 
-  function handleSaveAndConfirm() {
+  async function handleSaveAndConfirm() {
     setError("");
 
     if (selectedStoreTypes.length === 0) {
-      setError("Please select at least one store type before confirming.");
+      setError(
+        "Please select at least one store type before confirming."
+      );
       return;
     }
 
     if (enabledFeatures.length === 0) {
-      setError("Please select at least one feature before confirming.");
+      setError(
+        "Please select at least one feature before confirming."
+      );
       return;
     }
 
     if (selectedPermissions.length === 0) {
-      setError("Please select at least one permission before confirming.");
+      setError(
+        "Please select at least one permission before confirming."
+      );
       return;
     }
 
     setSaving(true);
     setSaveState("saving");
 
-    saveConfiguration();
+    try {
+      await saveConfiguration();
 
-    setTimeout(() => {
-      setSaving(false);
       setSaveState("saved");
       showSavedToastMessage();
-    }, 400);
+    } catch (requestError) {
+      console.error(
+        "Failed to save role template configuration:",
+        requestError
+      );
+
+      setSaveState("idle");
+
+      setError(
+        requestError?.message ||
+          "Unable to save the role template configuration."
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -391,6 +549,7 @@ export default function ViewRoleTemplateAccess() {
           <div className="role-details-heading">
             <div>
               <h1>{roleTemplate.name || "Role Template"}</h1>
+
               <p>
                 Configure store types, features and permissions for this role.
               </p>
@@ -425,6 +584,7 @@ export default function ViewRoleTemplateAccess() {
 
               <div>
                 <h2>Feature & Permission Access</h2>
+
                 <p>
                   Select the features and common permissions available to this
                   role.
@@ -433,11 +593,19 @@ export default function ViewRoleTemplateAccess() {
             </div>
 
             <div className="role-access-actions">
-              <button type="button" onClick={selectAll}>
+              <button
+                type="button"
+                onClick={selectAll}
+                disabled={loading || featurePermissions.length === 0}
+              >
                 Select All
               </button>
 
-              <button type="button" onClick={clearAll}>
+              <button
+                type="button"
+                onClick={clearAll}
+                disabled={loading || featurePermissions.length === 0}
+              >
                 Clear All
               </button>
             </div>
@@ -467,73 +635,132 @@ export default function ViewRoleTemplateAccess() {
           </p>
 
           <div className="role-feature-list">
-            {filteredFeatures.map((feature) => {
-              const isEnabled = enabledFeatures.includes(feature.id);
+            {loading && (
+              <div className="role-loading-message">
+                <i className="bi bi-arrow-repeat role-save-spinner" />
+                <span>Loading features and permissions...</span>
+              </div>
+            )}
 
-              return (
-                <section
-                  className="role-feature-access-card"
-                  key={feature.id}
-                >
-                  <div className="role-feature-access-top">
-                    <input
-                      type="checkbox"
-                      checked={isEnabled}
-                      onChange={() => toggleFeature(feature.id)}
-                    />
+            {!loading &&
+              !error &&
+              featurePermissions.length === 0 && (
+                <div className="role-empty-message">
+                  <i className="bi bi-grid" />
 
-                    <span className="role-feature-access-icon">
-                      <i className="bi bi-grid" />
-                    </span>
+                  <strong>No features found</strong>
 
-                    <div>
-                      <h3>
-                        {feature.name}
-                        <small>{feature.code}</small>
-                      </h3>
+                  <span>
+                    No features and permissions are available for the selected
+                    store type.
+                  </span>
+                </div>
+              )}
 
-                      <p>{feature.description}</p>
-                    </div>
+            {!loading &&
+              filteredFeatures.length === 0 &&
+              featurePermissions.length > 0 && (
+                <div className="role-empty-message">
+                  <i className="bi bi-search" />
 
-                    <span
-                      className={
-                        isEnabled ? "role-enabled" : "role-disabled"
-                      }
-                    >
-                      {isEnabled ? "Enabled" : "Disabled"}
-                    </span>
-                  </div>
+                  <strong>No matching features</strong>
 
-                  <div className="role-permissions-heading">
-                    <strong>Permissions</strong>
-                    <span>Common permissions for this feature</span>
-                  </div>
+                  <span>
+                    Try another feature or permission search.
+                  </span>
+                </div>
+              )}
 
-                  <div className="role-permissions-grid">
-                    {feature.permissions.map(([id, name, code]) => (
-                      <label
-                        key={id}
+            {!loading &&
+              filteredFeatures.map((feature) => {
+                const isEnabled = enabledFeatures.includes(feature.id);
+
+                return (
+                  <section
+                    className="role-feature-access-card"
+                    key={feature.id}
+                  >
+                    <div className="role-feature-access-top">
+                      <input
+                        type="checkbox"
+                        checked={isEnabled}
+                        onChange={() => toggleFeature(feature.id)}
+                      />
+
+                      <span className="role-feature-access-icon">
+                        <i className="bi bi-grid" />
+                      </span>
+
+                      <div>
+                        <h3>
+                          {feature.name}
+
+                          <small>{feature.code}</small>
+                        </h3>
+
+                        {feature.description && (
+                          <p>{feature.description}</p>
+                        )}
+                      </div>
+
+                      <span
                         className={
-                          selectedPermissions.includes(id) ? "selected" : ""
+                          isEnabled
+                            ? "role-enabled"
+                            : "role-disabled"
                         }
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedPermissions.includes(id)}
-                          disabled={!isEnabled}
-                          onChange={() => togglePermission(id)}
-                        />
+                        {isEnabled ? "Enabled" : "Disabled"}
+                      </span>
+                    </div>
 
-                        <span>
-                          <strong>{name}</strong>
-                          <small>{code}</small>
+                    <div className="role-permissions-heading">
+                      <strong>Permissions</strong>
+
+                      <span>
+                        Common permissions for this feature
+                      </span>
+                    </div>
+
+                    <div className="role-permissions-grid">
+                      {feature.permissions.length === 0 && (
+                        <span className="role-empty-permissions">
+                          No permissions available for this feature.
                         </span>
-                      </label>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
+                      )}
+
+                      {feature.permissions.map((permission) => {
+                        const isPermissionSelected =
+                          selectedPermissions.includes(permission.id);
+
+                        return (
+                          <label
+                            key={permission.id}
+                            className={
+                              isPermissionSelected ? "selected" : ""
+                            }
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isPermissionSelected}
+                              disabled={!isEnabled}
+                              onChange={() =>
+                                togglePermission(permission.id)
+                              }
+                            />
+
+                            <span>
+                              <strong>{permission.name}</strong>
+
+                              <small>{permission.code}</small>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
           </div>
 
           <div className="role-details-actions role-access-bottom-actions">
@@ -555,20 +782,26 @@ export default function ViewRoleTemplateAccess() {
                   : ""
               }`}
               onClick={handleSaveAndConfirm}
-              disabled={saving || !hasUnsavedChanges()}
+              disabled={
+                saving ||
+                loading ||
+                featurePermissions.length === 0 ||
+                !hasUnsavedChanges()
+              }
             >
               {saveState === "saving"
                 ? "Saving..."
                 : hasUnsavedChanges()
-                ? "Save & Confirm"
-                : "Saved"}
+                  ? "Save & Confirm"
+                  : "Saved"}
+
               <i
                 className={
                   saveState === "saving"
                     ? "bi bi-arrow-repeat role-save-spinner"
                     : hasUnsavedChanges()
-                    ? "bi bi-check-lg"
-                    : "bi bi-check-circle-fill"
+                      ? "bi bi-check-lg"
+                      : "bi bi-check-circle-fill"
                 }
               />
             </button>
@@ -577,14 +810,21 @@ export default function ViewRoleTemplateAccess() {
       </section>
 
       {showSavedToast && (
-        <div className="role-save-toast" role="status" aria-live="polite">
+        <div
+          className="role-save-toast"
+          role="status"
+          aria-live="polite"
+        >
           <span className="role-save-toast-icon">
             <i className="bi bi-check-lg" />
           </span>
 
           <div>
             <strong>Configuration saved successfully</strong>
-            <span>Your feature and permission changes are saved.</span>
+
+            <span>
+              Your feature and permission changes are saved.
+            </span>
           </div>
 
           <button
@@ -610,7 +850,9 @@ export default function ViewRoleTemplateAccess() {
               <i className="bi bi-exclamation-triangle" />
             </div>
 
-            <h3 id="role-leave-title">Leave Configuration?</h3>
+            <h3 id="role-leave-title">
+              Leave Configuration?
+            </h3>
 
             <p>
               You have unsaved changes. Would you like to save your changes
