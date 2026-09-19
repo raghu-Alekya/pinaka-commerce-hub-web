@@ -28,28 +28,48 @@ const emptyForm = {
   status: "Active",
 };
 
-function getVendorTypeLabel(vendorType) {
-  const type = String(vendorType || "").toUpperCase();
+/*
+|--------------------------------------------------------------------------
+| VENDOR TYPE HELPERS
+|--------------------------------------------------------------------------
+*/
 
-  if (type === "ORGANIZER" || type === "ORGANIZATION") {
+function getVendorTypeLabel(vendorType) {
+  const type = String(
+    vendorType || ""
+  ).toUpperCase();
+
+  if (
+    type === "ORGANIZER" ||
+    type === "ORGANIZATION"
+  ) {
     return "Organizer";
   }
 
-  if (type === "SUPPLIER" || type === "INDIVIDUAL") {
+  if (
+    type === "SUPPLIER" ||
+    type === "INDIVIDUAL"
+  ) {
     return "Supplier";
   }
 
   return vendorType || "—";
 }
 
-function getVendorTypeApiValue(vendorType) {
+function getVendorTypeApiValue(
+  vendorType
+) {
   return vendorType === "Organizer"
     ? "ORGANIZER"
     : "SUPPLIER";
 }
 
-function normalizeVendorType(vendorType) {
-  const type = String(vendorType || "").toUpperCase();
+function normalizeVendorType(
+  vendorType
+) {
+  const type = String(
+    vendorType || ""
+  ).toUpperCase();
 
   if (
     type === "ORGANIZER" ||
@@ -61,36 +81,78 @@ function normalizeVendorType(vendorType) {
   return "Supplier";
 }
 
+/*
+|--------------------------------------------------------------------------
+| TABLE VALUE HELPER
+|--------------------------------------------------------------------------
+*/
+
+function VendorCell({ value, strong = false }) {
+  const displayValue =
+    value === null || value === undefined || value === ""
+      ? "—"
+      : String(value);
+
+  return strong ? (
+    <strong className="vendors-cell-value">
+      {displayValue}
+    </strong>
+  ) : (
+    <span className="vendors-cell-value">
+      {displayValue}
+    </span>
+  );
+}
+
+/*
+|--------------------------------------------------------------------------
+| COMPONENT
+|--------------------------------------------------------------------------
+*/
+
 export default function Vendors({
   merchantId,
   storeId,
   store,
   embedded = false,
 }) {
-  const [vendors, setVendors] = useState([]);
+  const [vendors, setVendors] =
+    useState([]);
 
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] =
+    useState(emptyForm);
 
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] =
+    useState(null);
 
   const [deleteTarget, setDeleteTarget] =
     useState(null);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] =
+    useState("");
 
   const [statusFilter, setStatusFilter] =
     useState("All Statuses");
 
-  const [vendorTypeFilter, setVendorTypeFilter] =
-    useState("All Vendor Types");
+  const [
+    vendorTypeFilter,
+    setVendorTypeFilter,
+  ] = useState("All Vendor Types");
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] =
+    useState(false);
 
-  const [deleting, setDeleting] = useState(false);
+  const [deleting, setDeleting] =
+    useState(false);
 
-  const [error, setError] = useState("");
+  const [error, setError] =
+    useState("");
+
+  const [hoveredCell, setHoveredCell] =
+    useState(null);
 
   /*
   |--------------------------------------------------------------------------
@@ -103,7 +165,8 @@ export default function Vendors({
       setLoading(true);
       setError("");
 
-      const data = await getVendors();
+      const data =
+        await getVendors();
 
       setVendors(
         Array.isArray(data)
@@ -137,62 +200,71 @@ export default function Vendors({
   |--------------------------------------------------------------------------
   */
 
-  const filteredVendors = useMemo(() => {
-    const query = search
-      .trim()
-      .toLowerCase();
+  const filteredVendors =
+    useMemo(() => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
 
-    return vendors.filter((vendor) => {
-      const searchableText = [
-        vendor.name,
-        vendor.code,
-        vendor.vendorType,
-        getVendorTypeLabel(
-          vendor.vendorType
-        ),
-        vendor.contactPerson,
-        vendor.phone,
-        vendor.email,
-        vendor.category,
-        vendor.addressLine1,
-        vendor.addressLine2,
-        vendor.city,
-        vendor.state,
-        vendor.zipCode,
-        vendor.country,
-        vendor.status,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+      return vendors.filter(
+        (vendor) => {
+          const searchableText = [
+            vendor.name,
+            vendor.code,
+            vendor.vendorType,
+            getVendorTypeLabel(
+              vendor.vendorType
+            ),
+            vendor.contactPerson,
+            vendor.phone,
+            vendor.email,
+            vendor.category,
+            vendor.addressLine1,
+            vendor.addressLine2,
+            vendor.city,
+            vendor.state,
+            vendor.zipCode,
+            vendor.country,
+            vendor.status,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
 
-      const matchesSearch =
-        !query ||
-        searchableText.includes(query);
+          const matchesSearch =
+            !query ||
+            searchableText.includes(
+              query
+            );
 
-      const matchesStatus =
-        statusFilter === "All Statuses" ||
-        vendor.status === statusFilter;
+          const matchesStatus =
+            statusFilter ===
+              "All Statuses" ||
+            vendor.status ===
+              statusFilter;
 
-      const matchesVendorType =
-        vendorTypeFilter ===
-          "All Vendor Types" ||
-        getVendorTypeLabel(
-          vendor.vendorType
-        ) === vendorTypeFilter;
+          const matchesVendorType =
+            vendorTypeFilter ===
+              "All Vendor Types" ||
+            getVendorTypeLabel(
+              vendor.vendorType
+            ) ===
+              vendorTypeFilter;
 
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesVendorType
+          return (
+            matchesSearch &&
+            matchesStatus &&
+            matchesVendorType
+          );
+        }
       );
-    });
-  }, [
-    vendors,
-    search,
-    statusFilter,
-    vendorTypeFilter,
-  ]);
+    }, [
+      vendors,
+      search,
+      statusFilter,
+      vendorTypeFilter,
+    ]);
 
   /*
   |--------------------------------------------------------------------------
@@ -211,6 +283,29 @@ export default function Vendors({
         ...current,
         [name]: value,
       };
+
+      /*
+      |--------------------------------------------------------------------------
+      | PHONE NUMBER
+      |--------------------------------------------------------------------------
+      | Only numbers
+      | Maximum 10 digits
+      |--------------------------------------------------------------------------
+      */
+
+      if (name === "phone") {
+        updated.phone = value
+          .replace(/\D/g, "")
+          .slice(0, 10);
+      }
+
+      /*
+      |--------------------------------------------------------------------------
+      | SUPPLIER
+      |--------------------------------------------------------------------------
+      | Supplier does not need Contact Person
+      |--------------------------------------------------------------------------
+      */
 
       if (
         name === "vendorType" &&
@@ -310,17 +405,37 @@ export default function Vendors({
 
     setError("");
 
+    /*
+    |--------------------------------------------------------------------------
+    | BASIC REQUIRED VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
     if (
-      !form.name.trim() ||
       !form.code.trim() ||
-      !form.vendorType
+      !form.name.trim() ||
+      !form.vendorType ||
+      !form.phone.trim() ||
+      !form.email.trim() ||
+      !form.category.trim() ||
+      !form.addressLine1.trim() ||
+      !form.city.trim() ||
+      !form.state.trim() ||
+      !form.zipCode.trim() ||
+      !form.country.trim()
     ) {
       setError(
-        "Vendor Code, Vendor Name and Vendor Type are required."
+        "Please fill all mandatory fields. Address Line 2 is optional."
       );
 
       return;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ORGANIZER CONTACT PERSON VALIDATION
+    |--------------------------------------------------------------------------
+    */
 
     if (
       form.vendorType ===
@@ -334,6 +449,76 @@ export default function Vendors({
       return;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | PHONE REQUIRED
+    |--------------------------------------------------------------------------
+    */
+
+    if (!form.phone.trim()) {
+      setError(
+        "Phone Number is required."
+      );
+
+      return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PHONE 10 DIGIT VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      !/^\d{10}$/.test(
+        form.phone
+      )
+    ) {
+      setError(
+        "Phone Number must contain exactly 10 digits."
+      );
+
+      return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | EMAIL REQUIRED
+    |--------------------------------------------------------------------------
+    */
+
+    if (!form.email.trim()) {
+      setError(
+        "Email is required."
+      );
+
+      return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | EMAIL FORMAT VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        form.email.trim()
+      )
+    ) {
+      setError(
+        "Please enter a valid email address."
+      );
+
+      return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SAVE
+    |--------------------------------------------------------------------------
+    */
+
     try {
       setSaving(true);
 
@@ -346,7 +531,9 @@ export default function Vendors({
       |--------------------------------------------------------------------------
       */
 
-      if (editingId !== null) {
+      if (
+        editingId !== null
+      ) {
         const updatedVendor =
           await updateVendor(
             editingId,
@@ -355,11 +542,16 @@ export default function Vendors({
 
         setVendors(
           (current) =>
-            current.map((vendor) =>
-              String(vendor.id) ===
-              String(editingId)
-                ? updatedVendor
-                : vendor
+            current.map(
+              (vendor) =>
+                String(
+                  vendor.id
+                ) ===
+                String(
+                  editingId
+                )
+                  ? updatedVendor
+                  : vendor
             )
         );
       }
@@ -406,8 +598,12 @@ export default function Vendors({
   |--------------------------------------------------------------------------
   */
 
-  function editVendor(vendor) {
-    setEditingId(vendor.id);
+  function editVendor(
+    vendor
+  ) {
+    setEditingId(
+      vendor.id
+    );
 
     setForm({
       name:
@@ -422,7 +618,8 @@ export default function Vendors({
         ),
 
       contactPerson:
-        vendor.contactPerson || "",
+        vendor.contactPerson ||
+        "",
 
       phone:
         vendor.phone || "",
@@ -434,10 +631,12 @@ export default function Vendors({
         vendor.category || "",
 
       addressLine1:
-        vendor.addressLine1 || "",
+        vendor.addressLine1 ||
+        "",
 
       addressLine2:
-        vendor.addressLine2 || "",
+        vendor.addressLine2 ||
+        "",
 
       city:
         vendor.city || "",
@@ -452,7 +651,8 @@ export default function Vendors({
         vendor.country || "",
 
       status:
-        vendor.status || "Active",
+        vendor.status ||
+        "Active",
     });
 
     setError("");
@@ -469,8 +669,13 @@ export default function Vendors({
   |--------------------------------------------------------------------------
   */
 
-  function confirmDelete(vendor) {
-    setDeleteTarget(vendor);
+  function confirmDelete(
+    vendor
+  ) {
+    setDeleteTarget(
+      vendor
+    );
+
     setError("");
   }
 
@@ -497,12 +702,18 @@ export default function Vendors({
         (current) =>
           current.filter(
             (vendor) =>
-              String(vendor.id) !==
-              String(deleteTarget.id)
+              String(
+                vendor.id
+              ) !==
+              String(
+                deleteTarget.id
+              )
           )
       );
 
-      setDeleteTarget(null);
+      setDeleteTarget(
+        null
+      );
     } catch (err) {
       console.error(
         "Failed to delete vendor:",
@@ -534,6 +745,26 @@ export default function Vendors({
     setVendorTypeFilter(
       "All Vendor Types"
     );
+  }
+
+  function showCellTooltip(event, value) {
+    if (!value || value === "—") {
+      setHoveredCell(null);
+      return;
+    }
+
+    const rect =
+      event.currentTarget.getBoundingClientRect();
+
+    setHoveredCell({
+      value: String(value),
+      left: rect.left + rect.width / 2,
+      top: rect.top - 8,
+    });
+  }
+
+  function hideCellTooltip() {
+    setHoveredCell(null);
   }
 
   /*
@@ -596,6 +827,7 @@ export default function Vendors({
       <form
         className="vendors-form"
         onSubmit={saveVendor}
+        autoComplete="off"
       >
 
         <div className="vendors-form-heading">
@@ -640,7 +872,9 @@ export default function Vendors({
 
         <div className="vendors-form-grid">
 
-          {/* VENDOR CODE */}
+          {/* =================================================
+              VENDOR CODE
+          ================================================= */}
 
           <label>
             <span>
@@ -652,13 +886,16 @@ export default function Vendors({
               name="code"
               value={form.code}
               onChange={handleChange}
-              placeholder="e.g. VEN-001"
+              placeholder="Enter vendor code"
+              autoComplete="new-password"
               required
               disabled={saving}
             />
           </label>
 
-          {/* VENDOR NAME */}
+          {/* =================================================
+              VENDOR NAME
+          ================================================= */}
 
           <label>
             <span>
@@ -671,12 +908,15 @@ export default function Vendors({
               value={form.name}
               onChange={handleChange}
               placeholder="Enter vendor name"
+              autoComplete="off"
               required
               disabled={saving}
             />
           </label>
 
-          {/* VENDOR TYPE */}
+          {/* =================================================
+              VENDOR TYPE
+          ================================================= */}
 
           <label>
             <span>
@@ -702,7 +942,9 @@ export default function Vendors({
             </select>
           </label>
 
-          {/* CONTACT PERSON */}
+          {/* =================================================
+              CONTACT PERSON
+          ================================================= */}
 
           {form.vendorType ===
             "Organizer" && (
@@ -721,18 +963,20 @@ export default function Vendors({
                 onChange={
                   handleChange
                 }
-                placeholder="Enter contact person name"
+                autoComplete="off"
                 required
                 disabled={saving}
               />
             </label>
           )}
 
-          {/* PHONE */}
+          {/* =================================================
+              PHONE
+          ================================================= */}
 
           <label>
             <span>
-              Phone Number
+              Phone Number <b>*</b>
             </span>
 
             <input
@@ -740,16 +984,22 @@ export default function Vendors({
               name="phone"
               value={form.phone}
               onChange={handleChange}
-              placeholder="Enter phone number"
+              inputMode="numeric"
+              pattern="[0-9]{10}"
+              maxLength={10}
+              autoComplete="off"
+              required
               disabled={saving}
             />
           </label>
 
-          {/* EMAIL */}
+          {/* =================================================
+              EMAIL
+          ================================================= */}
 
           <label>
             <span>
-              Email
+              Email <b>*</b>
             </span>
 
             <input
@@ -757,16 +1007,19 @@ export default function Vendors({
               name="email"
               value={form.email}
               onChange={handleChange}
-              placeholder="Enter email address"
+              autoComplete="off"
+              required
               disabled={saving}
             />
           </label>
 
-          {/* PRODUCT / CATEGORY */}
+          {/* =================================================
+              PRODUCT / CATEGORY
+          ================================================= */}
 
           <label>
             <span>
-              Product / Category
+              Product <b>*</b>
             </span>
 
             <input
@@ -776,16 +1029,19 @@ export default function Vendors({
                 form.category
               }
               onChange={handleChange}
-              placeholder="e.g. Food & Beverage"
+              autoComplete="off"
+              required
               disabled={saving}
             />
           </label>
 
-          {/* ADDRESS LINE 1 */}
+          {/* =================================================
+              ADDRESS LINE 1
+          ================================================= */}
 
-          <label className="vendors-wide-field">
+          <label>
             <span>
-              Address Line 1
+              Address Line 1 <b>*</b>
             </span>
 
             <input
@@ -796,11 +1052,15 @@ export default function Vendors({
               }
               onChange={handleChange}
               placeholder="Enter street address"
+              autoComplete="off"
+              required
               disabled={saving}
             />
           </label>
 
-          {/* ADDRESS LINE 2 */}
+          {/* =================================================
+              ADDRESS LINE 2
+          ================================================= */}
 
           <label>
             <span>
@@ -815,15 +1075,18 @@ export default function Vendors({
               }
               onChange={handleChange}
               placeholder="Apartment, suite, unit"
+              autoComplete="off"
               disabled={saving}
             />
           </label>
 
-          {/* CITY */}
+          {/* =================================================
+              CITY
+          ================================================= */}
 
           <label>
             <span>
-              City
+              City <b>*</b>
             </span>
 
             <input
@@ -831,16 +1094,19 @@ export default function Vendors({
               name="city"
               value={form.city}
               onChange={handleChange}
-              placeholder="Enter city"
+              autoComplete="off"
+              required
               disabled={saving}
             />
           </label>
 
-          {/* STATE */}
+          {/* =================================================
+              STATE
+          ================================================= */}
 
           <label>
             <span>
-              State
+              State <b>*</b>
             </span>
 
             <input
@@ -848,16 +1114,19 @@ export default function Vendors({
               name="state"
               value={form.state}
               onChange={handleChange}
-              placeholder="Enter state"
+              autoComplete="off"
+              required
               disabled={saving}
             />
           </label>
 
-          {/* ZIP CODE */}
+          {/* =================================================
+              ZIP CODE
+          ================================================= */}
 
           <label>
             <span>
-              ZIP Code
+              ZIP Code <b>*</b>
             </span>
 
             <input
@@ -867,16 +1136,19 @@ export default function Vendors({
                 form.zipCode
               }
               onChange={handleChange}
-              placeholder="Enter ZIP code"
+              autoComplete="off"
+              required
               disabled={saving}
             />
           </label>
 
-          {/* COUNTRY */}
+          {/* =================================================
+              COUNTRY
+          ================================================= */}
 
           <label>
             <span>
-              Country
+              Country <b>*</b>
             </span>
 
             <input
@@ -886,17 +1158,20 @@ export default function Vendors({
                 form.country
               }
               onChange={handleChange}
-              placeholder="Enter country"
+              autoComplete="off"
+              required
               disabled={saving}
             />
           </label>
 
-          {/* STATUS */}
+          {/* =================================================
+              STATUS
+          ================================================= */}
 
           {editingId !== null && (
             <label>
               <span>
-                Status
+                Status <b>*</b>
               </span>
 
               <select
@@ -905,6 +1180,7 @@ export default function Vendors({
                   form.status
                 }
                 onChange={handleChange}
+                required
                 disabled={saving}
               >
                 <option value="Active">
@@ -920,7 +1196,9 @@ export default function Vendors({
 
         </div>
 
-        {/* FORM ACTIONS */}
+        {/* ===================================================
+            FORM ACTIONS
+        =================================================== */}
 
         <div className="vendors-form-actions">
 
@@ -999,7 +1277,7 @@ export default function Vendors({
                     event.target.value
                   )
                 }
-                placeholder="Search vendors..."
+                autoComplete="off"
               />
 
             </div>
@@ -1078,6 +1356,10 @@ export default function Vendors({
                 </th>
 
                 <th>
+                  Address
+                </th>
+
+                <th>
                   Vendor Type
                 </th>
 
@@ -1094,7 +1376,7 @@ export default function Vendors({
                 </th>
 
                 <th>
-                  Product / Category
+                  Product 
                 </th>
 
                 <th>
@@ -1102,11 +1384,11 @@ export default function Vendors({
                 </th>
 
                 <th>
-                  Created Time
+                  Created At
                 </th>
 
                 <th>
-                  Updated Time
+                  Updated At
                 </th>
 
                 <th>
@@ -1121,7 +1403,7 @@ export default function Vendors({
               {loading ? (
                 <tr>
                   <td
-                    colSpan="11"
+                    colSpan="12"
                     className="vendors-loading-cell"
                   >
                     <i className="bi bi-arrow-repeat vendors-loading-icon" />
@@ -1138,39 +1420,61 @@ export default function Vendors({
 
                       {/* CODE */}
 
-                      <td>
-                        <strong>
-                          {vendor.code}
-                        </strong>
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(event, vendor.code || "—")
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
+                        <VendorCell
+                          value={vendor.code}
+                          strong
+                        />
                       </td>
 
                       {/* NAME */}
 
-                      <td>
-                        <strong>
-                          {vendor.name}
-                        </strong>
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(event, vendor.name || "—")
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
+                        <VendorCell
+                          value={vendor.name}
+                          strong
+                        />
+                      </td>
 
-                        <small>
-                          {[
-                            vendor.addressLine1,
-                            vendor.addressLine2,
-                            vendor.city,
-                            vendor.state,
-                            vendor.zipCode,
-                            vendor.country,
-                          ]
-                            .filter(
-                              Boolean
-                            )
-                            .join(", ") ||
-                            "—"}
-                        </small>
+                      {/* ADDRESS */}
+
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(
+                            event,
+                            vendor.addressLine1 || "—"
+                          )
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
+                        <VendorCell
+                          value={vendor.addressLine1}
+                        />
                       </td>
 
                       {/* TYPE */}
 
-                      <td>
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(
+                            event,
+                            getVendorTypeLabel(
+                              vendor.vendorType
+                            )
+                          )
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
                         <span
                           className={`vendors-type ${
                             String(
@@ -1187,40 +1491,89 @@ export default function Vendors({
 
                       {/* CONTACT PERSON */}
 
-                      <td>
-                        {getVendorTypeLabel(
-                          vendor.vendorType
-                        ) ===
-                        "Organizer"
-                          ? vendor.contactPerson ||
-                            "—"
-                          : "—"}
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(
+                            event,
+                            getVendorTypeLabel(
+                              vendor.vendorType
+                            ) === "Organizer"
+                              ? vendor.contactPerson || "—"
+                              : "—"
+                          )
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
+                        <VendorCell
+                          value={
+                            getVendorTypeLabel(
+                              vendor.vendorType
+                            ) === "Organizer"
+                              ? vendor.contactPerson
+                              : "—"
+                          }
+                        />
                       </td>
 
                       {/* PHONE */}
 
-                      <td>
-                        {vendor.phone ||
-                          "—"}
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(
+                            event,
+                            vendor.phone || "—"
+                          )
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
+                        <VendorCell
+                          value={vendor.phone}
+                        />
                       </td>
 
                       {/* EMAIL */}
 
-                      <td>
-                        {vendor.email ||
-                          "—"}
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(
+                            event,
+                            vendor.email || "—"
+                          )
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
+                        <VendorCell
+                          value={vendor.email}
+                        />
                       </td>
 
                       {/* CATEGORY */}
 
-                      <td>
-                        {vendor.category ||
-                          "—"}
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(
+                            event,
+                            vendor.category || "—"
+                          )
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
+                        <VendorCell
+                          value={vendor.category}
+                        />
                       </td>
 
                       {/* STATUS */}
 
-                      <td>
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(
+                            event,
+                            vendor.status || "—"
+                          )
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
                         <span
                           className={`vendors-status ${
                             String(
@@ -1236,16 +1589,34 @@ export default function Vendors({
 
                       {/* CREATED TIME */}
 
-                      <td>
-                        {vendor.createdTime ||
-                          "—"}
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(
+                            event,
+                            vendor.createdTime || "—"
+                          )
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
+                        <VendorCell
+                          value={vendor.createdTime}
+                        />
                       </td>
 
                       {/* UPDATED TIME */}
 
-                      <td>
-                        {vendor.updatedTime ||
-                          "—"}
+                      <td
+                        onMouseEnter={(event) =>
+                          showCellTooltip(
+                            event,
+                            vendor.updatedTime || "—"
+                          )
+                        }
+                        onMouseLeave={hideCellTooltip}
+                      >
+                        <VendorCell
+                          value={vendor.updatedTime}
+                        />
                       </td>
 
                       {/* ACTIONS */}
@@ -1302,7 +1673,9 @@ export default function Vendors({
 
           </table>
 
-          {/* EMPTY */}
+          {/* =================================================
+              EMPTY STATE
+          ================================================= */}
 
           {!loading &&
             filteredVendors.length ===
@@ -1345,7 +1718,9 @@ export default function Vendors({
           className="vendors-delete-backdrop"
           onClick={() =>
             !deleting &&
-            setDeleteTarget(null)
+            setDeleteTarget(
+              null
+            )
           }
         >
 
@@ -1428,6 +1803,19 @@ export default function Vendors({
 
           </div>
 
+        </div>
+      )}
+
+      {hoveredCell && (
+        <div
+          className="vendors-hover-tooltip"
+          style={{
+            left: `${hoveredCell.left}px`,
+            top: `${hoveredCell.top}px`,
+          }}
+          role="tooltip"
+        >
+          {hoveredCell.value}
         </div>
       )}
 

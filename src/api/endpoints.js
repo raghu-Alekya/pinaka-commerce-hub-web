@@ -25,4 +25,13 @@ export const endpoints = {
   
   permissions: "/permissions",
   permission: (id) => `/permissions/${id}`,
+
+  plans: "/plans",
+
+plan: (id) =>
+  `/plans/${encodeURIComponent(id)}`,
+
+planStatus: (id) =>
+  `/plans/${encodeURIComponent(id)}`,
+
 };

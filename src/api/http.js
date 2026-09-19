@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "../config/env";
 import { getAccessToken, setAccessToken } from "../auth/tokenStore";
 import { endpoints } from "./endpoints";
-
+ 
 export class ApiError extends Error {
   constructor(message, status, body) {
     super(message);
@@ -10,7 +10,7 @@ export class ApiError extends Error {
     this.body = body;
   }
 }
-
+ 
 // Fixed buildUrl with safety checks
 function buildUrl(path) {
   if (!path || typeof path !== "string") {
@@ -23,20 +23,20 @@ function buildUrl(path) {
   }
   return `${API_BASE_URL || ""}${normalizedPath}`;
 }
-
+ 
 async function parseBody(response) {
   const text = await response.text();
   if (!text) return null;
-
+ 
   try {
     return JSON.parse(text);
   } catch {
     return text;
   }
 }
-
+ 
 let refreshPromise = null;
-
+ 
 async function refreshAccessToken() {
   if (!refreshPromise) {
     refreshPromise = (async () => {
@@ -46,29 +46,55 @@ async function refreshAccessToken() {
       refreshPromise = null;
     });
   }
-
+ 
   return refreshPromise;
 }
-
+ 
 export async function apiRequest(
   path,
   { method = "GET", body, headers, skipAuthRefresh = false } = {}
 ) {
   const token = getAccessToken();
-  const response = await fetch(buildUrl(path), {
+  const requestUrl = buildUrl(path);
+  const payload = body !== undefined ? body : undefined;
+ 
+  console.log("[API REQUEST]", {
+    method,
+    url: requestUrl,
+    path,
+    token,
+    payload,
+    headers: {
+      Accept: "application/json",
+      ...(payload !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
+  });
+ 
+  const response = await fetch(requestUrl, {
     method,
     credentials: "include",
     headers: {
       Accept: "application/json",
-      ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(payload !== undefined ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: payload !== undefined ? JSON.stringify(payload) : undefined,
   });
-
+ 
   const data = await parseBody(response);
-
+ 
+  console.log("[API RESPONSE]", {
+    method,
+    url: requestUrl,
+    token,
+    status: response.status,
+    ok: response.ok,
+    data,
+  });
+ 
   if (
     response.status === 401 &&
     !skipAuthRefresh &&
@@ -87,7 +113,7 @@ export async function apiRequest(
       setAccessToken(null);
     }
   }
-
+ 
   if (!response.ok) {
     const message =
       (data && (data.message || data.error)) ||
@@ -98,10 +124,10 @@ export async function apiRequest(
       data
     );
   }
-
+ 
   return data;
 }
-
+ 
 export const api = {
   get: (path, options) => apiRequest(path, { ...options, method: "GET" }),
   post: (path, body, options) =>

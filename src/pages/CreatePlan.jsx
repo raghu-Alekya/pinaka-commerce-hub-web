@@ -1,61 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { storeTypesApi } from "../api/storeTypes";
-
-const initialPlans = [
-  {
-    id: 1,
-    code: "BASIC",
-    name: "Basic Plan",
-    description: "For small businesses getting started.",
-    storeType: "Restaurant",
-    billingModel: "Per store",
-    currency: "USD",
-    price: 49,
-    cycle: "Monthly",
-    status: "Active",
-    createdOn: "Sep 10, 2025",
-  },
-  {
-    id: 2,
-    code: "PRO",
-    name: "Pro Plan",
-    description: "For growing businesses with higher demand.",
-    storeType: "Restaurant",
-    billingModel: "Per store",
-    currency: "USD",
-    price: 99,
-    cycle: "Monthly",
-    status: "Active",
-    createdOn: "Sep 08, 2025",
-  },
-  {
-    id: 3,
-    code: "ENTERPRISE",
-    name: "Enterprise Plan",
-    description: "For large businesses with custom requirements.",
-    storeType: "Restaurant",
-    billingModel: "Flat rate",
-    currency: "USD",
-    price: 199,
-    cycle: "Monthly",
-    status: "Active",
-    createdOn: "Sep 05, 2025",
-  },
-  {
-    id: 4,
-    code: "SEASONAL",
-    name: "Seasonal Plan",
-    description: "A limited plan for seasonal merchants.",
-    storeType: "Grocery",
-    billingModel: "Per store",
-    currency: "USD",
-    price: 69,
-    cycle: "Quarterly",
-    status: "Inactive",
-    createdOn: "Aug 28, 2025",
-  },
-];
+import {
+  createPlan,
+  deletePlan,
+  listPlans,
+  updatePlan,
+} from "../api/plans";
 
 const emptyForm = {
   code: "",
@@ -76,13 +27,96 @@ const emptyForm = {
   effectiveFrom: "",
 };
 
-const includedFeatureOptions = [
-  ["POS", "Point of sale operations", "bi-grid"],
-  ["Inventory", "Stock and inventory management", "bi-box-seam"],
-  ["Reporting", "Reports and analytics", "bi-bar-chart"],
-  ["Multi-Store", "Manage multiple stores", "bi-buildings"],
-  ["Payments", "Payment processing", "bi-credit-card"],
-];
+function normalizeStoreTypeFeatures(response) {
+  const source =
+    response?.features ??
+    response?.storeTypeFeatures ??
+    response?.items ??
+    response?.data ??
+    response;
+
+  return (Array.isArray(source) ? source : [])
+    .map((assignment, index) => {
+      const feature =
+        assignment?.feature ??
+        assignment?.featureDetails ??
+        assignment?.featureDefinition ??
+        assignment;
+
+      return {
+        id: String(
+          feature?.id ??
+            assignment?.featureId ??
+            assignment?.id ??
+            `feature-${index}`
+        ),
+        name: String(
+          feature?.name ??
+            feature?.featureKey ??
+            feature?.code ??
+            `Feature ${index + 1}`
+        ).trim(),
+        description: String(
+          feature?.description ??
+            feature?.category ??
+            "Store type feature"
+        ).trim(),
+        icon: feature?.icon || "bi-grid",
+        active:
+          assignment?.defaultEnabled !== false &&
+          String(feature?.status || "ACTIVE").toUpperCase() !== "INACTIVE",
+      };
+    })
+    .filter((feature) => feature.name && feature.active);
+}
+
+function storeTypeDisplayName(value, storeTypes) {
+  const candidates =
+    value && typeof value === "object"
+      ? [
+          value.id,
+          value._id,
+          value.storeTypeId,
+          value.storeTypeCode,
+          value.code,
+          value.name,
+          value.storeTypeName,
+        ]
+      : [value];
+
+  const match = storeTypes.find((storeType) => {
+    const identifiers = [
+      storeType.id,
+      storeType._id,
+      storeType.storeTypeId,
+      storeType.storeTypeCode,
+      storeType.code,
+      storeType.name,
+      storeType.storeTypeName,
+    ].filter(Boolean).map((item) => String(item).trim().toLowerCase());
+
+    return candidates.some(
+      (candidate) =>
+        candidate !== undefined &&
+        candidate !== null &&
+        identifiers.includes(String(candidate).trim().toLowerCase())
+    );
+  });
+
+  if (match) {
+    return (
+      match.name ??
+      match.storeTypeName ??
+      match.code ??
+      match.storeTypeCode ??
+      String(value ?? "")
+    );
+  }
+
+  return typeof value === "object"
+    ? value.name ?? value.storeTypeName ?? value.code ?? ""
+    : String(value ?? "");
+}
 
 function today() {
   return new Date().toLocaleDateString("en-US", {
@@ -94,48 +128,174 @@ function today() {
 
 export default function CreatePlan() {
   const navigate = useNavigate();
-const [storeTypes, setStoreTypes] = useState([]);
-const [storeTypesLoading, setStoreTypesLoading] = useState(false);
-const [storeTypesError, setStoreTypesError] = useState("");
-useEffect(() => {
+
+  // ============================================================
+  // STORE TYPE STATE
+  // ============================================================
+  const [storeTypes, setStoreTypes] = useState([]);
+  const [storeTypesLoading, setStoreTypesLoading] = useState(false);
+  const [storeTypesError, setStoreTypesError] = useState("");
+
+  // ============================================================
+  // PLAN API STATE
+  // ============================================================
+  const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [plansError, setPlansError] = useState("");
+  const [savingPlan, setSavingPlan] = useState(false);
+  const [deletingPlan, setDeletingPlan] = useState(false);
+
+  // ============================================================
+  // FORM STATE
+  // ============================================================
+  const [form, setForm] = useState(emptyForm);
+  const [planStep, setPlanStep] = useState(1);
+  const [editingId, setEditingId] = useState(null);
+  const [includedFeatures, setIncludedFeatures] = useState([]);
+  const [storeTypeFeatures, setStoreTypeFeatures] = useState([]);
+  const [storeTypeFeaturesLoading, setStoreTypeFeaturesLoading] = useState(false);
+  const [storeTypeFeaturesError, setStoreTypeFeaturesError] = useState("");
+
+  // ============================================================
+  // FILTER / UI STATE
+  // ============================================================
+  const [search, setSearch] = useState("");
+  const [billingFilter, setBillingFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [message, setMessage] = useState("");
+
+  // ============================================================
+  // LOAD STORE TYPES
+  // Existing Store Type API behavior is preserved.
+  // ============================================================
   async function fetchStoreTypes() {
     try {
       setStoreTypesLoading(true);
       setStoreTypesError("");
 
       const response = await storeTypesApi.getAll();
+      const normalized = Array.isArray(response?.storeTypes)
+        ? response.storeTypes
+        : Array.isArray(response?.items)
+          ? response.items
+          : Array.isArray(response?.data)
+            ? response.data
+            : Array.isArray(response)
+              ? response
+              : [];
 
       console.log("Store Types API response:", response);
-
-      const data =
-        response?.data ??
-        response?.storeTypes ??
-        response?.items ??
-        response;
-
-      setStoreTypes(Array.isArray(data) ? data : []);
+      console.log("Normalized store types:", normalized);
+      setStoreTypes(normalized);
     } catch (error) {
       console.error("Failed to fetch store types:", error);
-      setStoreTypesError(error.message || "Failed to load store types.");
+
+      setStoreTypesError(
+        error?.message || "Failed to load store types."
+      );
+
       setStoreTypes([]);
     } finally {
       setStoreTypesLoading(false);
     }
   }
 
-  fetchStoreTypes();
-}, []);
-  const [plans, setPlans] = useState(initialPlans);
-  const [form, setForm] = useState(emptyForm);
-  const [planStep, setPlanStep] = useState(1);
-  const [editingId, setEditingId] = useState(null);
-  const [includedFeatures, setIncludedFeatures] = useState([]);
+  // ============================================================
+  // LOAD PLANS FROM API
+  // GET /plans
+  // Plans are loaded only from the API.
+  // ============================================================
+  async function fetchPlans() {
+    try {
+      setPlansLoading(true);
+      setPlansError("");
 
-  const [search, setSearch] = useState("");
-  const [billingFilter, setBillingFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [message, setMessage] = useState("");
+      const data = await listPlans();
+      const nextPlans = Array.isArray(data) ? data : [];
+
+      console.log("Plans loaded:", nextPlans);
+      setPlans(nextPlans);
+    } catch (error) {
+      console.error("Failed to fetch plans:", error);
+
+      setPlansError(
+        error?.message || "Failed to load plans."
+      );
+
+      // Do not use local/static plan data as a fallback.
+      setPlans([]);
+    } finally {
+      setPlansLoading(false);
+    }
+  }
+
+  // ============================================================
+  // INITIAL DATA LOAD
+  // Fixed the broken useEffect from the uploaded file.
+  // ============================================================
+  useEffect(() => {
+    fetchStoreTypes();
+    fetchPlans();
+  }, []);
+
+  useEffect(() => {
+    const selectedStoreType = storeTypes.find(
+      (storeType) =>
+        String(
+          storeType.id ?? storeType._id ?? storeType.storeTypeId ?? storeType.code
+        ) === String(form.applicableStoreType) ||
+        String(
+          storeType.name ?? storeType.storeTypeName ?? storeType.code
+        ).toLowerCase() === String(form.applicableStoreType).toLowerCase()
+    );
+
+    if (!selectedStoreType) {
+      setStoreTypeFeatures([]);
+      setStoreTypeFeaturesError("");
+      setStoreTypeFeaturesLoading(false);
+      return undefined;
+    }
+
+    let active = true;
+    const storeTypeId =
+      selectedStoreType.id ??
+      selectedStoreType._id ??
+      selectedStoreType.storeTypeId ??
+      selectedStoreType.code;
+
+    setStoreTypeFeaturesLoading(true);
+    setStoreTypeFeaturesError("");
+
+    storeTypesApi
+      .getFeatures(storeTypeId)
+      .then((response) => {
+        if (!active) return;
+        const features = normalizeStoreTypeFeatures(response);
+        setStoreTypeFeatures(features);
+        setIncludedFeatures((current) =>
+          current.filter((name) =>
+            features.some(
+              (feature) => feature.name.toLowerCase() === String(name).toLowerCase()
+            )
+          )
+        );
+      })
+      .catch((error) => {
+        if (!active) return;
+        setStoreTypeFeatures([]);
+        setStoreTypeFeaturesError(
+          error?.message || "Failed to load store type features."
+        );
+      })
+      .finally(() => {
+        if (active) setStoreTypeFeaturesLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [form.applicableStoreType, storeTypes]);
 
   const textInputProps = {
     autoComplete: "off",
@@ -200,70 +360,144 @@ useEffect(() => {
     setStatusFilter("");
   }
 
-  function createOrUpdatePlan() {
+  // ============================================================
+  // CREATE / UPDATE PLAN
+  // POST /plans for create
+  // PUT /plans/:id for update
+  // ============================================================
+  async function createOrUpdatePlan() {
     const planData = {
+      ...form,
       code: form.code.trim().toUpperCase(),
       name: form.name.trim(),
       description: form.description.trim(),
-      storeType: form.applicableStoreType,
-      billingModel: form.billingModel,
-      currency: form.currency,
-      price: Number(form.basePrice),
-      cycle: form.billingCycle,
-      status: form.status,
     };
 
-    if (editingId) {
-      setPlans((current) =>
-        current.map((plan) =>
-          plan.id === editingId ? { ...plan, ...planData } : plan
-        )
+    try {
+      setSavingPlan(true);
+      setMessage("");
+
+      let savedPlan;
+
+      if (editingId) {
+        savedPlan = await updatePlan(
+          editingId,
+          planData,
+          includedFeatures
+        );
+        setMessage("Plan updated successfully.");
+      } else {
+        savedPlan = await createPlan(
+          planData,
+          includedFeatures
+        );
+        setMessage("Plan created successfully.");
+      }
+
+      console.log("Plan saved result:", savedPlan);
+
+      const refreshedPlans = await listPlans();
+      const parsedPlans = Array.isArray(refreshedPlans) ? refreshedPlans : [];
+
+      console.log("Plans after save:", parsedPlans);
+      setPlans(parsedPlans);
+
+      resetCreationForm();
+    } catch (error) {
+      console.error("Failed to save plan:", error);
+
+      setMessage(
+        error?.message || "Failed to save plan."
       );
-
-      setMessage("Plan updated successfully.");
-    } else {
-      setPlans((current) => [
-        {
-          id: Date.now(),
-          ...planData,
-          createdOn: today(),
-        },
-        ...current,
-      ]);
-
-      setMessage("Plan created successfully.");
+    } finally {
+      setSavingPlan(false);
     }
-
-    resetCreationForm();
   }
 
+  // ============================================================
+  // EDIT PLAN
+  // Loads all API-backed fields into the existing form.
+  // ============================================================
   function editPlan(plan) {
     setEditingId(plan.id);
 
     setForm({
       ...emptyForm,
-      code: plan.code,
-      name: plan.name,
-      description: plan.description,
-      applicableStoreType: plan.storeType,
-      billingModel: plan.billingModel,
-      currency: plan.currency,
-      billingCycle: plan.cycle,
-      basePrice: String(plan.price),
-      status: plan.status,
+      code: plan.code || "",
+      name: plan.name || "",
+      description: plan.description || "",
+      applicableStoreType:
+        storeTypeDisplayName(
+          plan.applicableStoreType || plan.storeType || "",
+          storeTypes
+        ),
+      billingModel: plan.billingModel || "",
+      currency: plan.currency || "",
+      billingCycle: plan.billingCycle || plan.cycle || "",
+      basePrice: String(plan.basePrice ?? plan.price ?? ""),
+      includedStores: String(plan.includedStores ?? 0),
+      includedTerminals: String(plan.includedTerminals ?? 0),
+      additionalTerminalPrice: String(
+        plan.additionalTerminalPrice ?? ""
+      ),
+      includedUsers: String(plan.includedUsers ?? 0),
+      additionalUserPrice: String(
+        plan.additionalUserPrice ?? ""
+      ),
+      trialPeriod: plan.trialPeriod || "",
+      effectiveFrom: plan.effectiveFrom
+        ? String(plan.effectiveFrom).slice(0, 10)
+        : "",
+      status: plan.status || "Active",
     });
+
+    setIncludedFeatures(
+      Array.isArray(plan.includedFeatures)
+        ? plan.includedFeatures.map((feature) =>
+            typeof feature === "string" ? feature : feature.name
+          )
+        : []
+    );
 
     setPlanStep(1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function confirmDelete() {
-    setPlans((current) =>
-      current.filter((plan) => plan.id !== deleteTarget.id)
-    );
+  // ============================================================
+  // DELETE PLAN
+  // DELETE /plans/:id
+  // ============================================================
+  async function confirmDelete() {
+    if (!deleteTarget?.id || deletingPlan) {
+      return;
+    }
 
-    setMessage(`${deleteTarget.name} deleted successfully.`);
-    setDeleteTarget(null);
+    try {
+      setDeletingPlan(true);
+      setMessage("");
+
+      await deletePlan(deleteTarget.id);
+
+      const refreshedPlans = await listPlans();
+      const parsedPlans = Array.isArray(refreshedPlans) ? refreshedPlans : [];
+
+      console.log("Plans after delete:", parsedPlans);
+      setPlans(parsedPlans);
+
+      setMessage(
+        `${deleteTarget.name} deleted successfully.`
+      );
+
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error("Failed to delete plan:", error);
+
+      setMessage(
+        error?.message || "Failed to delete plan."
+      );
+    } finally {
+      setDeletingPlan(false);
+    }
   }
 
   return (
@@ -661,7 +895,23 @@ useEffect(() => {
             <section className="plan-feature-panel">
               <h3>Included Features <b>*</b></h3>
 
-              {includedFeatureOptions.map(([name, description, icon]) => (
+              {storeTypeFeaturesLoading && (
+                <p className="plan-review-empty">Loading features for the selected store type...</p>
+              )}
+
+              {storeTypeFeaturesError && (
+                <p className="plan-field-error">{storeTypeFeaturesError}</p>
+              )}
+
+              {!storeTypeFeaturesLoading && !storeTypeFeaturesError && !form.applicableStoreType && (
+                <p className="plan-review-empty">Select a store type to view its features.</p>
+              )}
+
+              {!storeTypeFeaturesLoading && !storeTypeFeaturesError && form.applicableStoreType && storeTypeFeatures.length === 0 && (
+                <p className="plan-review-empty">No active features are assigned to this store type.</p>
+              )}
+
+              {!storeTypeFeaturesLoading && storeTypeFeatures.map(({ name, description, icon }) => (
                 <label className="plan-feature-check" key={name}>
                   <input
                     type="checkbox"
@@ -675,7 +925,7 @@ useEffect(() => {
 
                   <span>
                     <strong>{name}</strong>
-                    <small>{description}</small>
+                    <small>{description || "Store type feature"}</small>
                   </span>
                 </label>
               ))}
@@ -819,9 +1069,16 @@ useEffect(() => {
             <button
               type="button"
               className="plan-submit-button"
+              disabled={savingPlan}
               onClick={createOrUpdatePlan}
             >
-              {editingId ? "Update Plan" : "Create Plan"}
+              {savingPlan
+                ? editingId
+                  ? "Updating..."
+                  : "Creating..."
+                : editingId
+                  ? "Update Plan"
+                  : "Create Plan"}
             </button>
           </div>
         </section>
@@ -829,7 +1086,17 @@ useEffect(() => {
 
       <section className="plans-list-card">
         <div className="plans-list-header">
-          <h2>Plans List</h2>
+          <div>
+            <h2>Plans List</h2>
+            {plansLoading && (
+              <small>Loading plans...</small>
+            )}
+            {plansError && (
+              <small className="plan-field-error">
+                {plansError}
+              </small>
+            )}
+          </div>
 
           <div className="plans-filters">
             <label className="plan-search">
@@ -880,7 +1147,7 @@ useEffect(() => {
               <div>Billing Model</div>
               <div>Price</div>
               <div>Status</div>
-              <div>Created On</div>
+              <div>Created / Updated</div>
               <div>Actions</div>
             </div>
 
@@ -892,7 +1159,11 @@ useEffect(() => {
 
                 <button type="button"
                  className="plan-name-cell plan-name-clickable"
-                 onClick={() => navigate(`/plans/${plan.id}`)} >
+                 onClick={() =>
+                    navigate(`/plans/${plan.id}`, {
+                      state: { plan },
+                    })
+                  } >
                  <strong>{plan.name}</strong>
                  <span>{plan.description}</span>
                </button>
@@ -918,7 +1189,12 @@ useEffect(() => {
                   </span>
                 </div>
 
-                <div>{plan.createdOn}</div>
+                <div>
+                  <div>{plan.createdOn}</div>
+                  {plan.updatedOn && plan.updatedOn !== plan.createdOn && (
+                    <small>{plan.updatedOn}</small>
+                  )}
+                </div>
 
                 <div className="plan-table-actions">
                   <button
@@ -993,9 +1269,10 @@ useEffect(() => {
               <button
                 type="button"
                 className="delete-plan-confirm-button"
+                disabled={deletingPlan}
                 onClick={confirmDelete}
               >
-                Yes, Delete
+                {deletingPlan ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>
