@@ -64,6 +64,8 @@ export default function FeaturePermissions() {
       featureName: source.feature?.name || source.featureName || feature?.name || "",
       description: source.description || "",
       status: normalizeStatus(source.status),
+      createdAt: source.createdAt || source.created_at || "",
+      updatedAt: source.updatedAt || source.updated_at || "",
     };
   };
 
@@ -99,11 +101,12 @@ export default function FeaturePermissions() {
      ========================================================= */
 
   const updateField = (event) => {
-    const { name, value } = event.target;
+    const field = event.target.dataset.field || event.target.name;
+    const { value } = event.target;
 
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [field]: value,
     }));
 
     setErrors((prev) => {
@@ -111,7 +114,7 @@ export default function FeaturePermissions() {
         ...prev,
       };
 
-      delete next[name];
+      delete next[field];
 
       return next;
     });
@@ -357,14 +360,6 @@ export default function FeaturePermissions() {
 
           </div>
 
-          <div className="fp-mode-chip">
-
-            {isEditing
-              ? `Editing: ${form.key}`
-              : "Creating New Permission"}
-
-          </div>
-
         </div>
 
         {/* ===================================================
@@ -404,7 +399,7 @@ export default function FeaturePermissions() {
               <input
                 id="permission-key"
                 type="text"
-                name="key"
+                data-field="key"
                 value={form.key}
                 onChange={updateField}
                 autoComplete="off"
@@ -442,7 +437,7 @@ export default function FeaturePermissions() {
               <input
                 id="permission-name"
                 type="text"
-                name="name"
+                data-field="name"
                 value={form.name}
                 onChange={updateField}
                 autoComplete="off"
@@ -537,16 +532,23 @@ export default function FeaturePermissions() {
 
               <textarea
                 id="permission-description"
-                name="description"
+                data-field="description"
                 value={
                   form.description
                 }
                 onChange={
                   updateField
                 }
+                onInput={(event) => {
+                  event.currentTarget.style.height = "44px";
+                  event.currentTarget.style.height = `${Math.max(
+                    44,
+                    event.currentTarget.scrollHeight
+                  )}px`;
+                }}
                 autoComplete="off"
-                placeholder="Describe what this permission allows users to do"
-                rows={3}
+                placeholder="Describe this permission and its purpose."
+                rows={1}
               />
 
             </div>
@@ -603,9 +605,7 @@ export default function FeaturePermissions() {
               onClick={clearForm}
             >
 
-              <i className="bi bi-arrow-counterclockwise" />
-
-              Reset
+              Clear
 
             </button>
 
@@ -613,8 +613,6 @@ export default function FeaturePermissions() {
               type="submit"
               className="fp-btn fp-btn-primary"
             >
-
-              <i className="bi bi-floppy" />
 
               {isEditing
                 ? "Update Permission"
@@ -738,6 +736,10 @@ export default function FeaturePermissions() {
 
               <col className="fp-col-status" />
 
+              <col className="fp-col-created" />
+
+              <col className="fp-col-updated" />
+
               <col className="fp-col-actions" />
 
             </colgroup>
@@ -748,27 +750,30 @@ export default function FeaturePermissions() {
 
                 <th>
                   Permission Key
-                  <i className="bi bi-chevron-expand" />
                 </th>
 
                 <th>
                   Permission Name
-                  <i className="bi bi-chevron-expand" />
                 </th>
 
                 <th>
                   Feature Name
-                  <i className="bi bi-chevron-expand" />
                 </th>
 
                 <th>
                   Description
-                  <i className="bi bi-chevron-expand" />
                 </th>
 
                 <th>
                   Status
-                  <i className="bi bi-chevron-expand" />
+                </th>
+
+                <th>
+                  Created At
+                </th>
+
+                <th>
+                  Updated At
                 </th>
 
                 <th>
@@ -838,6 +843,18 @@ export default function FeaturePermissions() {
 
                       </span>
 
+                    </td>
+
+                    <td className="fp-date-cell">
+                      {permission.createdAt
+                        ? new Date(permission.createdAt).toLocaleString()
+                        : "—"}
+                    </td>
+
+                    <td className="fp-date-cell">
+                      {permission.updatedAt
+                        ? new Date(permission.updatedAt).toLocaleString()
+                        : "—"}
                     </td>
 
                     {/* =========================

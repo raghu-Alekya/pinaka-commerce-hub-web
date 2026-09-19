@@ -238,12 +238,12 @@
 }
 
 .feature-permissions-page .fp-field:nth-child(4) {
-  grid-column: 1 / 3;
+  grid-column: 1;
   grid-row: 2;
 }
 
 .feature-permissions-page .fp-field:nth-child(5) {
-  grid-column: 3;
+  grid-column: 2;
   grid-row: 2;
 }
 
@@ -421,16 +421,19 @@
 
 .feature-permissions-page .fp-description-field {
   width: 100%;
+  min-width: 0;
 }
 
 .feature-permissions-page .fp-field textarea {
   width: 100%;
+  min-width: 100%;
+  max-width: 100%;
 
-  height: 48px;
-  min-height: 48px;
+  height: 44px;
+  min-height: 44px;
   max-height: 130px;
 
-  padding: 10px 13px;
+  padding: 11px 13px;
 
   border: 1px solid #dce3ed;
   border-radius: 7px;
@@ -443,13 +446,22 @@
 
   font-family: inherit;
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 20px;
 
+  overflow-y: hidden;
   resize: vertical;
 
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease;
+}
+
+.feature-permissions-page .fp-description-field textarea::placeholder {
+  color: #9aa8bd;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+  opacity: 1;
 }
 
 
@@ -493,7 +505,7 @@
    ========================================================= */
 
 .feature-permissions-page .fp-btn {
-  width: auto;
+  width: 180px;
   height: 44px;
 
   margin: 0;
@@ -532,7 +544,7 @@
    ========================================================= */
 
 .feature-permissions-page .fp-btn-secondary {
-  min-width: 150px;
+  min-width: 180px;
 
   border: 1px solid #d5e0ef;
 
@@ -555,7 +567,7 @@
    ========================================================= */
 
 .feature-permissions-page .fp-btn-primary {
-  min-width: 205px;
+  min-width: 180px;
 
   border: 0;
 
@@ -802,7 +814,8 @@
 .feature-permissions-page .fp-table-wrap {
   width: 100%;
 
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 
   border: 1px solid #e3e9f2;
   border-radius: 9px;
@@ -817,6 +830,7 @@
 
 .feature-permissions-page .fp-table {
   width: 100%;
+  min-width: 1200px;
 
   border-collapse: collapse;
   table-layout: fixed;
@@ -830,7 +844,7 @@
    ========================================================= */
 
 .feature-permissions-page .fp-col-key {
-  width: 16%;
+  width: 15%;
 }
 
 .feature-permissions-page .fp-col-name {
@@ -838,19 +852,24 @@
 }
 
 .feature-permissions-page .fp-col-feature {
-  width: 12%;
+  width: 13%;
 }
 
 .feature-permissions-page .fp-col-description {
-  width: 32%;
+  width: 5%;
 }
 
 .feature-permissions-page .fp-col-status {
+  width: 15%;
+}
+
+.feature-permissions-page .fp-col-created,
+.feature-permissions-page .fp-col-updated {
   width: 13%;
 }
 
 .feature-permissions-page .fp-col-actions {
-  width: 12%;
+  width: 10%;
 }
 
 
@@ -865,7 +884,7 @@
 .feature-permissions-page .fp-table th {
   height: 44px;
 
-  padding: 0 20px;
+  padding: 0 12px;
 
   border-bottom: 1px solid #e3e9f2;
 
@@ -879,15 +898,7 @@
 
   vertical-align: middle;
 
-  white-space: normal;
-}
-
-.feature-permissions-page .fp-table th i {
-  margin-left: 6px;
-
-  color: #9aa9bd;
-
-  font-size: 11px;
+  white-space: nowrap;
 }
 
 
@@ -905,9 +916,9 @@
    ========================================================= */
 
 .feature-permissions-page .fp-table td {
-  height: 52px;
+  height: 56px;
 
-  padding: 0 20px;
+  padding: 0 12px;
 
   border-bottom: 1px solid #edf1f6;
 
@@ -920,6 +931,12 @@
 
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feature-permissions-page .fp-date-cell {
+  color: #64748b;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -954,7 +971,15 @@
 .feature-permissions-page .fp-description-cell {
   color: #64748b !important;
 
-  overflow-wrap: anywhere;
+  width: 220px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feature-permissions-page .fp-table col.fp-col-description {
+  width: 220px;
 }
 
 
@@ -1056,8 +1081,8 @@
    ========================================================= */
 
 .feature-permissions-page .fp-row-actions button {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
 
   padding: 0;
 
@@ -1346,8 +1371,8 @@
   /* Description */
 
   .feature-permissions-page .fp-field textarea {
-    height: 48px;
-    min-height: 48px;
+    height: 44px;
+    min-height: 44px;
   }
 
   .feature-permissions-page .fp-col-key {
@@ -1363,7 +1388,7 @@
   }
 
   .feature-permissions-page .fp-col-description {
-    width: 23%;
+    width: 15%;
   }
 
   .feature-permissions-page .fp-col-status {
@@ -1465,4 +1490,20 @@
     font-size: 20px;
   }
 
+}
+
+
+/* Final form action alignment */
+.feature-permissions-page .fp-form-actions .fp-btn {
+  width: 180px;
+  min-width: 180px;
+  height: 44px;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .feature-permissions-page .fp-form-actions .fp-btn {
+    width: 100%;
+    min-width: 0;
+  }
 }

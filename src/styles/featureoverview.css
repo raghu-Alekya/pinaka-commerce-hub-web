@@ -429,3 +429,36 @@
     margin-top: 8px;
   }
 }
+
+.feature-overview-page .feature-overview-back {
+  font-size: 13px;
+}
+
+.feature-overview-page .feature-header-text h1 {
+  font-size: 18px;
+  line-height: 22px;
+}
+
+.feature-overview-page .feature-header-text p,
+.feature-overview-page .feature-info-title p {
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.feature-overview-page .feature-tab {
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.feature-overview-page .feature-info-title h2 {
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.feature-overview-page .feature-field label,
+.feature-overview-page .feature-readonly-input,
+.feature-overview-page .feature-status-field,
+.feature-overview-page .feature-description-box {
+  font-size: 13px;
+  line-height: 18px;
+}
