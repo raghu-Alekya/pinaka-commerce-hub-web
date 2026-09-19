@@ -40,9 +40,6 @@ export default function FeaturePermissions() {
   const [success, setSuccess] = useState("");
 
   const isEditing = editingId !== null;
-  const hasUnsavedChanges = Object.keys(emptyForm).some(
-    (field) => form[field] !== savedForm[field]
-  );
 
   /* =========================================================
      UPDATE FIELD
