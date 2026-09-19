@@ -18,6 +18,7 @@ export default function Features() {
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [formErrors, setFormErrors] = useState({});
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
@@ -95,6 +96,12 @@ export default function Features() {
 
   const deleteFeature = async (featureId) => {
     try { await deleteFeatureApi(featureId); setFeatures((prev) => prev.filter((item) => item.id !== featureId)); setApiError(""); } catch (e) { setApiError(e.message || "Unable to delete feature."); }
+  };
+
+  const confirmDeleteFeature = async () => {
+    if (!deleteTarget) return;
+    await deleteFeature(deleteTarget.id);
+    setDeleteTarget(null);
   };
 
   const filteredFeatures = useMemo(() => {
@@ -295,11 +302,12 @@ export default function Features() {
 
             <thead>
               <tr>
-                <th>Feature Name <i className="bi bi-arrow-down-up" /></th>
-                <th>Category <i className="bi bi-arrow-down-up" /></th>
-                <th>Description <i className="bi bi-arrow-down-up" /></th>
-                <th>Status <i className="bi bi-arrow-down-up" /></th>
-                <th>Created At <i className="bi bi-arrow-down-up" /></th>
+                <th>Feature Name</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
                 <th className="actions-col">Actions</th>
               </tr>
             </thead>
@@ -332,7 +340,7 @@ export default function Features() {
                       <button
                         type="button"
                         className="delete-button"
-                        onClick={() => deleteFeature(item.id)}
+                        onClick={() => setDeleteTarget(item)}
                         aria-label={`Delete ${item.name}`}
                         title={`Delete ${item.name}`}
                       >
@@ -357,6 +365,53 @@ export default function Features() {
           </div>
         </div>
       </section>
+
+      {deleteTarget && (
+        <div
+          className="features-delete-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-feature-title"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div
+            className="features-delete-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="features-delete-icon">
+              <i className="bi bi-trash" />
+            </div>
+
+            <h2 id="delete-feature-title">Delete Feature?</h2>
+
+            <p>
+              Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
+            </p>
+
+            <p className="features-delete-final-warning">
+              This action cannot be undone.
+            </p>
+
+            <div className="features-delete-actions">
+              <button
+                type="button"
+                className="features-delete-keep-button"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="features-delete-confirm-button"
+                onClick={confirmDeleteFeature}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

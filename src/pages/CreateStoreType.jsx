@@ -11,22 +11,18 @@ function toRow(item) {
     status: item.status === "INACTIVE" ? "Inactive" : "Active",
 
     createdOn: item.createdAt
-      ? new Date(item.createdAt).toLocaleString("en-US", {
+      ? new Date(item.createdAt).toLocaleDateString("en-US", {
           month: "short",
           day: "2-digit",
           year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
         })
       : "—",
 
     updatedOn: item.updatedAt
-      ? new Date(item.updatedAt).toLocaleString("en-US", {
+      ? new Date(item.updatedAt).toLocaleDateString("en-US", {
           month: "short",
           day: "2-digit",
           year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
         })
       : "—",
 
@@ -410,10 +406,11 @@ setForm(nextForm);
           <div className="store-types-table">
             <div className="store-types-row store-types-row-head">
               <div>Store Type Code</div>
-              <div>Name / Description</div>
+              <div>Name</div>
+              <div>Description</div>
               <div>Status</div>
-              <div>Created On</div>
-              <div>Updated On</div>
+              <div>Created At</div>
+              <div>Updated At</div>
               <div>Actions</div>
             </div>
 
@@ -423,7 +420,7 @@ setForm(nextForm);
                   <strong>{item.code}</strong>
                 </div>
 
-               <button
+                <button
                   type="button"
                   className="store-type-name-cell store-type-name-clickable"
                   onClick={() =>
@@ -433,8 +430,9 @@ setForm(nextForm);
                   }
                 >
                   <strong>{item.name}</strong>
-                  <span>{item.description}</span>
                 </button>
+
+                <div className="store-type-description-cell">{item.description}</div>
 
                 <div>
                   <span

@@ -667,6 +667,96 @@
 }
 
 /* =========================================================
+   DELETE CONFIRMATION MODAL
+   ========================================================= */
+
+.features-delete-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 27, 55, 0.45);
+}
+
+.features-delete-modal {
+  width: 100%;
+  max-width: 390px;
+  padding: 28px 30px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 55px rgba(20, 35, 75, 0.2);
+  text-align: center;
+}
+
+.features-delete-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  margin: 0 auto 15px;
+  border-radius: 50%;
+  color: #e5455d;
+  background: #fff0f2;
+  font-size: 23px;
+}
+
+.features-delete-modal h2 {
+  margin: 0 0 10px;
+  color: #10254a;
+  font-size: 20px;
+}
+
+.features-delete-modal p {
+  margin: 0 0 6px;
+  color: #5b79ad;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.features-delete-final-warning {
+  margin-top: 12px !important;
+  color: #dc2649 !important;
+  font-size: 12px !important;
+}
+
+.features-delete-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.features-delete-keep-button,
+.features-delete-confirm-button {
+  min-width: 120px;
+  height: 42px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.features-delete-keep-button {
+  border: 1px solid #dce8f4;
+  background: #ffffff;
+  color: #25466f;
+}
+
+.features-delete-confirm-button {
+  border: 1px solid #e5455d;
+  background: #e5455d;
+  color: #ffffff;
+}
+
+.features-delete-confirm-button:hover {
+  border-color: #cc3f4d;
+  background: #cc3f4d;
+}
+
+/* =========================================================
    PAGINATION
    ========================================================= */
 
