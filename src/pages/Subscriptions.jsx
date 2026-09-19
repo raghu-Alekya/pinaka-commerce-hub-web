@@ -375,3 +375,167 @@ export default function Subscriptions() {
     </div>
   );
 }
+
+/* ========================================
+   MAIN COMPONENT
+
+export default function MerchantSubscriptions() {
+  const [subscriptions, setSubscriptions] = useState(initialSubscriptions);
+
+  const [screen, setScreen] = useState("list");
+  const [selectedMerchant, setSelectedMerchant] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [billingCycle, setBillingCycle] = useState("Monthly");
+  const [paymentMethod, setPaymentMethod] = useState("Card");
+  const [amountPaid, setAmountPaid] = useState(0);
+  const [paymentError, setPaymentError] = useState("");
+
+  const [paymentDetails, setPaymentDetails] = useState({
+    cardNumber: "",
+    cardholderName: "",
+    expiry: "",
+    cvv: "",
+    saveCard: true,
+    upi: "",
+    bank: "",
+  });
+
+  const updatePaymentField = (field, value) => {
+    setPaymentDetails((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+    setPaymentError("");
+  };
+
+  const openDetails = (merchant) => {
+    setSelectedMerchant(merchant);
+    setScreen("details");
+  };
+
+  const openChoosePlan = () => {
+    setSelectedPlan("");
+    setScreen("choose");
+  };
+
+  const openConfirm = () => {
+    setScreen("confirm");
+  };
+
+  const openPayment = () => {
+    setPaymentError("");
+    setScreen("payment");
+  };
+
+  const submitPayment = (amount) => {
+    if (paymentMethod === "Card") {
+      if (
+        !paymentDetails.cardNumber ||
+        !paymentDetails.cardholderName ||
+        !paymentDetails.expiry ||
+        !paymentDetails.cvv
+      ) {
+        setPaymentError("Please fill all card details.");
+        return;
+      }
+    }
+
+    if (paymentMethod === "UPI" && !paymentDetails.upi) {
+      setPaymentError("Please enter your UPI ID.");
+      return;
+    }
+
+    if (paymentMethod === "Net Banking" && !paymentDetails.bank) {
+      setPaymentError("Please select your bank.");
+      return;
+    }
+
+    setAmountPaid(amount);
+
+    setSubscriptions((previous) =>
+      previous.map((item) =>
+        item.id === selectedMerchant.id
+          ? {
+              ...item,
+              plan: selectedPlan,
+            }
+          : item,
+      ),
+    );
+
+    setSelectedMerchant((previous) => ({
+      ...previous,
+      plan: selectedPlan,
+    }));
+
+    setScreen("success");
+  };
+
+  if (screen === "details") {
+    return (
+      <SubscriptionDetails
+        merchant={selectedMerchant}
+        onBack={() => setScreen("list")}
+        onChangePlan={openChoosePlan}
+      />
+    );
+  }
+
+  if (screen === "choose") {
+    return (
+      <ChoosePlan
+        merchant={selectedMerchant}
+        selectedPlan={selectedPlan}
+        setSelectedPlan={setSelectedPlan}
+        onBack={() => setScreen("details")}
+        onNext={openConfirm}
+      />
+    );
+  }
+
+  if (screen === "confirm") {
+    return (
+      <ConfirmPlanChange
+        merchant={selectedMerchant}
+        selectedPlan={selectedPlan}
+        onBack={() => setScreen("choose")}
+        onNext={openPayment}
+      />
+    );
+  }
+
+  if (screen === "payment") {
+    return (
+      <PaymentScreen
+        merchant={selectedMerchant}
+        selectedPlan={selectedPlan}
+        billingCycle={billingCycle}
+        setBillingCycle={setBillingCycle}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        paymentDetails={paymentDetails}
+        updatePaymentField={updatePaymentField}
+        paymentError={paymentError}
+        onBack={() => setScreen("confirm")}
+        onSubmit={submitPayment}
+      />
+    );
+  }
+
+  if (screen === "success") {
+    return (
+      <PaymentSuccess
+        merchant={selectedMerchant}
+        selectedPlan={selectedPlan}
+        amountPaid={amountPaid}
+        billingCycle={billingCycle}
+        onBack={() => setScreen("details")}
+      />
+    );
+  }
+
+  return (
+    <SubscriptionList subscriptions={subscriptions} onView={openDetails} />
+    
+  );
+}

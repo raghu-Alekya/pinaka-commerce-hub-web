@@ -11,12 +11,12 @@ const toFeaturePayload = (form) => ({
   status: (form.status || "ACTIVE").toUpperCase(),
 });
 
-// Normalize API response item into React state format
+// Normalize API response item into React state formats
 const normalizeFeature = (item) => {
   if (!item) return null;
   return {
     ...item,
-    id: item.id || item._id || Date.now(),
+    id: item.id || item._id || "",
     name: item.featureKey || item.name || "",
     description: item.description || item.name || "",
     category: item.category || "Uncategorized",
@@ -27,6 +27,9 @@ const normalizeFeature = (item) => {
         : "Inactive",
     createdAt: item.createdAt
       ? new Date(item.createdAt).toLocaleString()
+      : "—",
+    updatedAt: item.updatedAt
+      ? new Date(item.updatedAt).toLocaleString()
       : "—",
     icon: item.icon || "bi-diamond",
     tone: item.tone || "purple",
@@ -44,9 +47,13 @@ export async function listFeatures() {
       rawList = response.features;
     } else if (response && Array.isArray(response.data)) {
       rawList = response.data;
+    } else if (response && response.data && Array.isArray(response.data.features)) {
+      rawList = response.data.features;
     }
 
-    return rawList.map(normalizeFeature).filter(Boolean);
+    return rawList
+      .map(normalizeFeature)
+      .filter((feature) => feature && feature.id);
   } catch (err) {
     console.error("listFeatures API Error:", err);
     throw err;

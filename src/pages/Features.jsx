@@ -8,15 +8,14 @@ import {
 } from "../api/features";
 import "../styles/features.css";
 
-const initialFeatures = [
-  { id: 1, code: "LOYALTY", name: "Loyalty", price: 19.99, category: "Customer Engagement", description: "Manage loyalty programs and rewards.", status: "Active", createdAt: "Apr 10, 2026 02:15 PM", type: "BOOLEAN", icon: "bi-diamond", tone: "purple" },
-  { id: 2, code: "KDS", name: "KDS", price: 29.5, category: "Restaurant", description: "Kitchen Display System for order management.", status: "Active", createdAt: "Apr 08, 2026 11:42 AM", type: "BOOLEAN", icon: "bi-display", tone: "amber" },
-  { id: 3, code: "DELIVERY", name: "Delivery", price: 14.75, category: "Orders", description: "Manage delivery orders and logistics.", status: "Active", createdAt: "Apr 05, 2026 09:30 AM", type: "BOOLEAN", icon: "bi-truck", tone: "blue" },
-  { id: 4, code: "SAFE_DROP", name: "Safe Drop", price: 24, category: "Cash Management", description: "Secure cash drop and pickup management.", status: "Inactive", createdAt: "Apr 02, 2026 04:12 PM", type: "BOOLEAN", icon: "bi-shield-check", tone: "red" },
-  { id: 5, code: "INVENTORY", name: "Inventory", price: 34.99, category: "Stock Control", description: "Track and manage inventory levels in real-time.", status: "Active", createdAt: "Apr 12, 2026 10:00 AM", type: "BOOLEAN", icon: "bi-diamond", tone: "purple" },
-];
-
-const emptyForm = { code: "", name: "", price: "", description: "", category: "", status: "Active" };
+const emptyForm = {
+  name: "",
+  description: "",
+  category: "",
+  type: "",
+  status: "Active",
+};
+import { storeTypesApi } from "../api/storeTypes";
 
 export default function Features() {
   const navigate = useNavigate();
@@ -37,12 +36,58 @@ export default function Features() {
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [actionMenu, setActionMenu] = useState(null);
   const [formErrors, setFormErrors] = useState({});
-
+// category dropdown for save features
+  const [storeTypes, setStoreTypes] = useState([]);
+  const [storeTypesLoading, setStoreTypesLoading] = useState(false);
   const isEditing = editingId !== null;
-  const editingFeature = features.find((item) => item.id === editingId);
-  const hasUnsavedChanges = Object.keys(emptyForm).some(
-    (field) => form[field] !== savedForm[field]
-  );
+  const editingFeature = Array.isArray(features)
+    ? features.find((item) => item.id === editingId)
+    : null;
+
+  // 1. Dynamic API Fetching
+  const fetchFeatures = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await listFeatures();
+      setFeatures(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load features:", err);
+      setError(err.message || "Failed to load features from server.");
+      setFeatures([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // dynamic dropdown category
+const fetchStoreTypes = async () => {
+  try {
+    setStoreTypesLoading(true);
+
+    const response = await storeTypesApi.getAll();
+
+    console.log("Store Types API Response:", response);
+
+    if (Array.isArray(response)) {
+      setStoreTypes(response);
+    } else if (Array.isArray(response?.data)) {
+      setStoreTypes(response.data);
+    } else if (Array.isArray(response?.storeTypes)) {
+      setStoreTypes(response.storeTypes);
+    } else {
+      setStoreTypes([]);
+    }
+  } catch (error) {
+    console.error("Failed to load store types:", error);
+    setStoreTypes([]);
+  } finally {
+    setStoreTypesLoading(false);
+  }
+};
+  useEffect(() => {
+    fetchFeatures();
+     fetchStoreTypes();
+  }, []);
 
   const updateField = (event) => {
     const { name, value } = event.target;
@@ -378,13 +423,55 @@ const handleUpdateFeature = async () => {
 
       <section className="feature-details-card">
         <div className="feature-section-heading">
-          <div className="feature-title-icon">
+          {/* <div className="feature-title-icon">
             <i className="bi bi-grid-1x2" />
-          </div>
-          <div>
-            <h2>Feature Details</h2>
-            <p>Provide the basic details about the platform feature.</p>
-          </div>
+          </div> */}
+
+          {/* <div className="feature-header-actions">
+            {isEditing ? (
+              <>
+                <span className="editing-chip">Editing: {editingFeature?.name}</span>
+                <button
+                  className="feature-action secondary"
+                  type="button"
+                  onClick={clearForm}
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="feature-action primary"
+                  type="button"
+                  onClick={handleUpdateFeature}
+                  disabled={submitting}
+                >
+                  <i className="bi bi-floppy" />
+                  {submitting ? "Updating..." : "Update Feature"}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="feature-action secondary blue-text"
+                  type="button"
+                  onClick={clearForm}
+                  disabled={submitting}
+                >
+                  <i className="bi bi-arrow-repeat" />
+                  Clear
+                </button>
+                <button
+                  className="feature-action primary"
+                  type="button"
+                  onClick={saveFeature}
+                  disabled={submitting}
+                >
+                  <i className="bi bi-floppy" />
+                  {submitting ? "Saving..." : "Save Feature"}
+                </button>
+              </>
+            )}
+          </div> */}
         </div>
 
         {error && (
@@ -439,19 +526,27 @@ const handleUpdateFeature = async () => {
           <div className="feature-field">
             <label>Category<span>*</span></label>
             <div className="select-shell">
-              <select
-                name="category"
-                value={form.category}
-                onChange={updateField}
-                disabled={submitting}
-              >
-                <option value="">Select category</option>
-                <option value="Restaurant">Restaurant</option>
-                <option value="Customer Engagement">Customer Engagement</option>
-                <option value="Orders">Orders</option>
-                <option value="Cash Management">Cash Management</option>
-                <option value="Stock Control">Stock Control</option>
-              </select>
+       <select
+  name="category"
+  value={form.category}
+  onChange={updateField}
+  disabled={submitting || storeTypesLoading}
+>
+  <option value="">
+    {storeTypesLoading
+      ? "Loading categories..."
+      : "Select category"}
+  </option>
+
+  {storeTypes.map((storeType) => (
+    <option
+      key={storeType.id}
+      value={storeType.name}
+    >
+      {storeType.name}
+    </option>
+  ))}
+</select>
               <i className="bi bi-chevron-down" />
             </div>
             {formErrors.category ? (
@@ -508,24 +603,60 @@ const handleUpdateFeature = async () => {
           </div>
         </div>
 
-        <div className="feature-form-footer">
-          {isEditing && (
-            <span className="editing-chip">Editing: {editingFeature?.name}</span>
-          )}
+  <div className="feature-form-footer">
+  {isEditing && (
+    <span className="editing-chip">
+      Editing: {editingFeature?.name}
+    </span>
+  )}
 
-          <div className="feature-footer-actions">
-            <button className="feature-action secondary" type="button" onClick={clearForm}>
-              {isEditing ? "Cancel" : "Clear"}
-            </button>
-            <button
-              className="feature-action primary"
-              type="button"
-              onClick={isEditing ? updateFeature : saveFeature}
-            >
-              {isEditing ? "Update Feature" : "Save Feature"}
-            </button>
-          </div>
-        </div>
+  <div className="feature-footer-actions">
+    {isEditing ? (
+      <>
+        <button
+          className="feature-action secondary"
+          type="button"
+          onClick={clearForm}
+          disabled={submitting}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="feature-action primary"
+          type="button"
+          onClick={handleUpdateFeature}
+          disabled={submitting}
+        >
+          <i className="bi bi-floppy" />
+          {submitting ? "Updating..." : "Update Feature"}
+        </button>
+      </>
+    ) : (
+      <>
+        <button
+          className="feature-action secondary blue-text"
+          type="button"
+          onClick={clearForm}
+          disabled={submitting}
+        >
+          <i className="bi bi-arrow-repeat" />
+          Clear
+        </button>
+
+        <button
+          className="feature-action primary"
+          type="button"
+          onClick={saveFeature}
+          disabled={submitting}
+        >
+          <i className="bi bi-floppy" />
+          {submitting ? "Saving..." : "Save Feature"}
+        </button>
+      </>
+    )}
+  </div>
+</div>
       </section>
 
       <section className="features-list-card">
@@ -543,18 +674,24 @@ const handleUpdateFeature = async () => {
             </div>
 
             <div className="feature-filter-control">
-              <select
-                className="features-filter-select"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-              >
-                <option value="All Categories">All Categories</option>
-                <option value="Restaurant">Restaurant</option>
-                <option value="Customer Engagement">Customer Engagement</option>
-                <option value="Orders">Orders</option>
-                <option value="Cash Management">Cash Management</option>
-                <option value="Stock Control">Stock Control</option>
-              </select>
+      <select
+  className="features-filter-select"
+  value={categoryFilter}
+  onChange={(e) => setCategoryFilter(e.target.value)}
+>
+  <option value="All Categories">
+    All Categories
+  </option>
+
+  {storeTypes.map((storeType) => (
+    <option
+      key={storeType.id}
+      value={storeType.name}
+    >
+      {storeType.name}
+    </option>
+  ))}
+</select>
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
 
@@ -732,3 +869,4 @@ const handleUpdateFeature = async () => {
     </div>
   );
 }
+//
