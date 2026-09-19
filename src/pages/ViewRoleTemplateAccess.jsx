@@ -28,25 +28,71 @@ const featurePermissions = [
   },
 ];
 
+const getStateArray = (value, fallback = []) =>
+  Array.isArray(value) ? value : fallback;
+
 export default function ViewRoleTemplateAccess() {
   const navigate = useNavigate();
   const location = useLocation();
   const { roleId } = useParams();
+
   const roleTemplate = {
     ...(location.state?.roleTemplate ?? {}),
   };
+
+  const selectedStoreTypes = getStateArray(
+    location.state?.selectedStoreTypes
+  );
+
+  const initialEnabledFeatures = getStateArray(
+    location.state?.enabledFeatures,
+    location.state?.roleTemplate?.featureId
+      ? [location.state.roleTemplate.featureId]
+      : ["pos"]
+  );
+
+  const initialSelectedPermissions = getStateArray(
+    location.state?.selectedPermissions,
+    location.state?.roleTemplate?.permissionId
+      ? [location.state.roleTemplate.permissionId]
+      : ["view-pos"]
+  );
+
   const [search, setSearch] = useState("");
-  const [enabledFeatures, setEnabledFeatures] = useState([
-    location.state?.roleTemplate?.featureId ?? "pos",
-  ]);
-  const [selectedPermissions, setSelectedPermissions] = useState([
-    location.state?.roleTemplate?.permissionId ?? "view-pos",
-   ]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+
+  const [enabledFeatures, setEnabledFeatures] = useState(
+    initialEnabledFeatures
+  );
+
+  const [selectedPermissions, setSelectedPermissions] = useState(
+    initialSelectedPermissions
+  );
+
+  const [savedEnabledFeatures, setSavedEnabledFeatures] = useState(
+    initialEnabledFeatures
+  );
+
+  const [savedSelectedPermissions, setSavedSelectedPermissions] = useState(
+    initialSelectedPermissions
+  );
+
+  const [showLeavePopup, setShowLeavePopup] = useState(false);
 
   const tabs = [
     ["overview", "Overview", `/role-templates/${roleId}`],
-    ["store-types", "Applicable Store Types", `/role-templates/${roleId}/store-types`],
-    ["access", "Feature & Permission Access", `/role-templates/${roleId}/access`],
+    [
+      "store-types",
+      "Applicable Store Types",
+      `/role-templates/${roleId}/store-types`,
+    ],
+    [
+      "access",
+      "Feature & Permission Access",
+      `/role-templates/${roleId}/access`,
+    ],
   ];
 
   const filteredFeatures = useMemo(() => {
@@ -69,6 +115,9 @@ export default function ViewRoleTemplateAccess() {
         ? current.filter((item) => item !== featureId)
         : [...current, featureId]
     );
+
+    setConfirmed(false);
+    setError("");
   }
 
   function togglePermission(permissionId) {
@@ -77,159 +126,383 @@ export default function ViewRoleTemplateAccess() {
         ? current.filter((item) => item !== permissionId)
         : [...current, permissionId]
     );
+
+    setConfirmed(false);
+    setError("");
   }
 
   function selectAll() {
     setEnabledFeatures(featurePermissions.map((feature) => feature.id));
-
     setSelectedPermissions(
       featurePermissions.flatMap((feature) =>
         feature.permissions.map(([id]) => id)
       )
     );
+
+    setConfirmed(false);
+    setError("");
   }
 
   function clearAll() {
     setEnabledFeatures([]);
     setSelectedPermissions([]);
+    setConfirmed(false);
+    setError("");
+  }
+
+  function buildNavigationState() {
+    return {
+      roleTemplate,
+      selectedStoreTypes,
+      enabledFeatures,
+      selectedPermissions,
+    };
+  }
+
+  function navigateToStoreTypes() {
+    navigate(`/role-templates/${roleId}/store-types`, {
+      state: buildNavigationState(),
+    });
+  }
+
+  function hasUnsavedChanges() {
+    return (
+      JSON.stringify(enabledFeatures) !==
+        JSON.stringify(savedEnabledFeatures) ||
+      JSON.stringify(selectedPermissions) !==
+        JSON.stringify(savedSelectedPermissions)
+    );
+  }
+
+  function handleBackToStoreTypes() {
+    if (hasUnsavedChanges()) {
+      setShowLeavePopup(true);
+      return;
+    }
+
+    navigateToStoreTypes();
+  }
+
+  function saveConfiguration() {
+    const configuration = {
+      roleTemplateId: roleId,
+      roleTemplate,
+      selectedStoreTypes,
+      enabledFeatures,
+      selectedPermissions,
+      updatedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(
+      "pinaka_role_template_configs",
+      JSON.stringify(configuration)
+    );
+
+    setSavedEnabledFeatures(enabledFeatures);
+    setSavedSelectedPermissions(selectedPermissions);
+  }
+
+  function leaveWithoutSaving() {
+    setShowLeavePopup(false);
+    navigateToStoreTypes();
+  }
+
+  function saveAndExit() {
+    setSaving(true);
+
+    saveConfiguration();
+
+    setTimeout(() => {
+      setSaving(false);
+      setShowLeavePopup(false);
+      navigateToStoreTypes();
+    }, 300);
+  }
+
+  function handleTabNavigation(path) {
+    navigate(path, {
+      state: buildNavigationState(),
+    });
+  }
+
+  function handleSaveAndConfirm() {
+    setError("");
+
+    if (selectedStoreTypes.length === 0) {
+      setError("Please select at least one store type before confirming.");
+      return;
+    }
+
+    if (enabledFeatures.length === 0) {
+      setError("Please select at least one feature before confirming.");
+      return;
+    }
+
+    if (selectedPermissions.length === 0) {
+      setError("Please select at least one permission before confirming.");
+      return;
+    }
+
+    setSaving(true);
+
+    saveConfiguration();
+
+    setTimeout(() => {
+      setSaving(false);
+      setConfirmed(true);
+    }, 400);
   }
 
   return (
-    <section className="role-details-page">
-      <button
-        type="button"
-        className="role-details-back"
-        onClick={() => navigate("/role-templates")}
-        aria-label="Back to role templates"
-      >
-        <i className="bi bi-arrow-left" />
-      </button>
-
-      <div className="role-details-heading">
-        <div>
-          <h1>{roleTemplate.name || "Role Template"}</h1>
-          <p>Configure store types, features and permissions for this role.</p>
-        </div>
-
-        <span className="role-details-active">
-          <i className="bi bi-circle-fill" />
-          {roleTemplate.status || "Active"}
-        </span>
-      </div>
-
-      <nav className="role-details-tabs">
-        {tabs.map(([id, label, path]) => (
+    <>
+      <section className="role-details-page">
+        <div className="role-details-top">
           <button
             type="button"
-            key={id}
-            className={id === "access" ? "active" : ""}
-            onClick={() => navigate(path, { state: { roleTemplate } })}
+            className="role-details-back"
+            onClick={handleBackToStoreTypes}
+            aria-label="Back to applicable store types"
           >
-            {label}
+            <i className="bi bi-arrow-left" />
           </button>
-        ))}
-      </nav>
 
-      <section className="role-details-card">
-        <div className="role-details-card-title role-access-heading">
-          <div className="role-access-title">
-            <span>
-              <i className="bi bi-grid-1x2" />
-            </span>
-
+          <div className="role-details-heading">
             <div>
-              <h2>Feature & Permission Access</h2>
+              <h1>{roleTemplate.name || "Role Template"}</h1>
               <p>
-                Select the features and common permissions available to this role.
+                Configure store types, features and permissions for this role.
               </p>
+            </div>
+
+            <span className="role-details-active">
+              <i className="bi bi-circle-fill" />
+              {roleTemplate.status || "Active"}
+            </span>
+          </div>
+        </div>
+
+        <nav className="role-details-tabs">
+          {tabs.map(([id, label, path]) => (
+            <button
+              type="button"
+              key={id}
+              className={id === "access" ? "active" : ""}
+              onClick={() => handleTabNavigation(path)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        <section className="role-details-card">
+          <div className="role-details-card-title role-access-heading">
+            <div className="role-access-title">
+              <span>
+                <i className="bi bi-grid-1x2" />
+              </span>
+
+              <div>
+                <h2>Feature & Permission Access</h2>
+                <p>
+                  Select the features and common permissions available to this
+                  role.
+                </p>
+              </div>
+            </div>
+
+            <div className="role-access-actions">
+              <button type="button" onClick={selectAll}>
+                Select All
+              </button>
+
+              <button type="button" onClick={clearAll}>
+                Clear All
+              </button>
             </div>
           </div>
 
-          <div className="role-access-actions">
-            <button type="button" onClick={selectAll}>Select All</button>
-            <button type="button" onClick={clearAll}>Clear All</button>
-          </div>
-        </div>
+          {error && (
+            <p className="role-error-message" role="alert">
+              <i className="bi bi-exclamation-circle-fill" />
+              {error}
+            </p>
+          )}
 
-        <label className="role-access-search">
-          <i className="bi bi-search" />
+          {confirmed && (
+            <div className="role-confirmation-message" role="status">
+              <i className="bi bi-check-circle-fill" />
 
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search features or permissions..."
-          />
-        </label>
+              <div>
+                <strong>Role template configuration saved.</strong>
+                <span>
+                  Store types, features and permissions have been confirmed.
+                </span>
+              </div>
+            </div>
+          )}
 
-        <p className="role-access-count">
-          {enabledFeatures.length} Features selected ·{" "}
-          {selectedPermissions.length} Permissions selected
-        </p>
+          <label className="role-access-search">
+            <i className="bi bi-search" />
 
-        <div className="role-feature-list">
-          {filteredFeatures.map((feature) => {
-            const isEnabled = enabledFeatures.includes(feature.id);
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search features or permissions..."
+            />
+          </label>
 
-            return (
-              <section className="role-feature-access-card" key={feature.id}>
-                <div className="role-feature-access-top">
-                  <input
-                    type="checkbox"
-                    checked={isEnabled}
-                    onChange={() => toggleFeature(feature.id)}
-                  />
+          <p className="role-access-count">
+            {enabledFeatures.length} Features selected ·{" "}
+            {selectedPermissions.length} Permissions selected
+          </p>
 
-                  <span className="role-feature-access-icon">
-                    <i className="bi bi-grid" />
-                  </span>
+          <div className="role-feature-list">
+            {filteredFeatures.map((feature) => {
+              const isEnabled = enabledFeatures.includes(feature.id);
 
-                  <div>
-                    <h3>
-                      {feature.name} <small>{feature.code}</small>
-                    </h3>
-                    <p>{feature.description}</p>
-                  </div>
+              return (
+                <section
+                  className="role-feature-access-card"
+                  key={feature.id}
+                >
+                  <div className="role-feature-access-top">
+                    <input
+                      type="checkbox"
+                      checked={isEnabled}
+                      onChange={() => toggleFeature(feature.id)}
+                    />
 
-                  <span className={isEnabled ? "role-enabled" : "role-disabled"}>
-                    {isEnabled ? "Enabled" : "Disabled"}
-                  </span>
-                </div>
+                    <span className="role-feature-access-icon">
+                      <i className="bi bi-grid" />
+                    </span>
 
-                <div className="role-permissions-heading">
-                  <strong>Permissions</strong>
-                  <span>Common permissions for this feature</span>
-                </div>
+                    <div>
+                      <h3>
+                        {feature.name}
+                        <small>{feature.code}</small>
+                      </h3>
 
-                <div className="role-permissions-grid">
-                  {feature.permissions.map(([id, name, code]) => (
-                    <label
-                      key={id}
+                      <p>{feature.description}</p>
+                    </div>
+
+                    <span
                       className={
-                        selectedPermissions.includes(id)
-                          ? "selected"
-                          : ""
+                        isEnabled ? "role-enabled" : "role-disabled"
                       }
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedPermissions.includes(id)}
-                        disabled={!isEnabled}
-                        onChange={() => togglePermission(id)}
-                      />
+                      {isEnabled ? "Enabled" : "Disabled"}
+                    </span>
+                  </div>
 
-                      <span>
-                        <strong>{name}</strong>
-                        <small>{code}</small>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+                  <div className="role-permissions-heading">
+                    <strong>Permissions</strong>
+                    <span>Common permissions for this feature</span>
+                  </div>
+
+                  <div className="role-permissions-grid">
+                    {feature.permissions.map(([id, name, code]) => (
+                      <label
+                        key={id}
+                        className={
+                          selectedPermissions.includes(id) ? "selected" : ""
+                        }
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedPermissions.includes(id)}
+                          disabled={!isEnabled}
+                          onChange={() => togglePermission(id)}
+                        />
+
+                        <span>
+                          <strong>{name}</strong>
+                          <small>{code}</small>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+
+          <div className="role-details-actions role-access-bottom-actions">
+            <button
+              type="button"
+              className="role-details-secondary-btn"
+              onClick={handleBackToStoreTypes}
+              disabled={saving}
+            >
+              <i className="bi bi-arrow-left" />
+              Back
+            </button>
+
+            <button
+              type="button"
+              className="role-details-primary-btn"
+              onClick={handleSaveAndConfirm}
+              disabled={saving}
+            >
+              {saving ? "Saving..." : confirmed ? "Confirmed" : "Save & Confirm"}
+              {!saving && !confirmed && (
+                <i className="bi bi-check-lg" />
+              )}
+            </button>
+          </div>
+        </section>
       </section>
-    </section>
+
+      {showLeavePopup && (
+        <div
+          className="role-leave-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="role-leave-title"
+        >
+          <div className="role-leave-modal">
+            <div className="role-leave-icon">
+              <i className="bi bi-exclamation-triangle" />
+            </div>
+
+            <h3 id="role-leave-title">Leave Configuration?</h3>
+
+            <p>
+              You have unsaved changes. Would you like to save your changes
+              before leaving?
+            </p>
+
+            <div className="role-leave-actions">
+              <button
+                type="button"
+                className="role-leave-cancel-btn"
+                onClick={() => setShowLeavePopup(false)}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="role-leave-discard-btn"
+                onClick={leaveWithoutSaving}
+                disabled={saving}
+              >
+                Leave Without Saving
+              </button>
+
+              <button
+                type="button"
+                className="role-leave-save-btn"
+                onClick={saveAndExit}
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save & Exit"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

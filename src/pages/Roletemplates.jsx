@@ -34,8 +34,6 @@ export default function RoleTemplates() {
   const [form, setForm] = useState(initialForm);
 
   const [editingId, setEditingId] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
-
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -58,11 +56,6 @@ export default function RoleTemplates() {
 
       setTemplates(validItems);
 
-      setSelectedIds((currentIds) =>
-        currentIds.filter((id) =>
-          validItems.some((template) => template.id === id)
-        )
-      );
     } catch (err) {
       setError(
         err?.message || "Unable to load role templates."
@@ -101,11 +94,27 @@ export default function RoleTemplates() {
     });
   }, [templates, search, statusFilter]);
 
-  const allVisibleSelected =
-    filteredTemplates.length > 0 &&
-    filteredTemplates.every((template) =>
-      selectedIds.includes(template.id)
-    );
+  // Use existing role-template values as optional form suggestions.
+  // These suggestions are only shown while entering data; they are not added to the table.
+  const roleCodeSuggestions = useMemo(
+    () =>
+      [...new Set(
+        templates
+          .map((template) => String(template.roleCode || "").trim())
+          .filter(Boolean)
+      )],
+    [templates]
+  );
+
+  const roleNameSuggestions = useMemo(
+    () =>
+      [...new Set(
+        templates
+          .map((template) => String(template.name || "").trim())
+          .filter(Boolean)
+      )],
+    [templates]
+  );
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -206,10 +215,6 @@ export default function RoleTemplates() {
         )
       );
 
-      setSelectedIds((currentIds) =>
-        currentIds.filter((id) => id !== templateToDelete.id)
-      );
-
       if (editingId === templateToDelete.id) {
         resetForm();
       }
@@ -224,38 +229,9 @@ export default function RoleTemplates() {
     }
   }
 
-  function toggleSelection(id) {
-    setSelectedIds((currentIds) =>
-      currentIds.includes(id)
-        ? currentIds.filter((itemId) => itemId !== id)
-        : [...currentIds, id]
-    );
-  }
-
-  function toggleAllVisible() {
-    if (allVisibleSelected) {
-      setSelectedIds((currentIds) =>
-        currentIds.filter(
-          (id) =>
-            !filteredTemplates.some(
-              (template) => template.id === id
-            )
-        )
-      );
-    } else {
-      setSelectedIds((currentIds) => [
-        ...new Set([
-          ...currentIds,
-          ...filteredTemplates.map((template) => template.id),
-        ]),
-      ]);
-    }
-  }
-
   function resetFilters() {
     setSearch("");
     setStatusFilter("ALL");
-    setSelectedIds([]);
   }
 
   return (
@@ -307,7 +283,14 @@ export default function RoleTemplates() {
                   onChange={handleChange}
                   placeholder="e.g. CASHIER"
                   maxLength={50}
+                  list="role-code-suggestions"
+                  autoComplete="off"
                 />
+                <datalist id="role-code-suggestions">
+                  {roleCodeSuggestions.map((suggestion) => (
+                    <option key={suggestion} value={suggestion} />
+                  ))}
+                </datalist>
               </div>
 
               <small>
@@ -329,7 +312,14 @@ export default function RoleTemplates() {
                   onChange={handleChange}
                   placeholder="Enter role template name"
                   maxLength={100}
+                  list="role-name-suggestions"
+                  autoComplete="off"
                 />
+                <datalist id="role-name-suggestions">
+                  {roleNameSuggestions.map((suggestion) => (
+                    <option key={suggestion} value={suggestion} />
+                  ))}
+                </datalist>
               </div>
 
               <small>
@@ -453,72 +443,39 @@ export default function RoleTemplates() {
 
           <div className="role-table-wrap">
             <table className="role-table">
+              <colgroup>
+                <col className="role-code-col" />
+                <col className="role-name-col" />
+                <col className="role-description-col" />
+                <col className="role-status-col" />
+                <col className="role-created-col" />
+                <col className="role-updated-col" />
+                <col className="role-actions-col" />
+              </colgroup>
+
               <thead>
                 <tr>
-                  <th className="role-check-col">
-                    <input
-                      type="checkbox"
-                      checked={allVisibleSelected}
-                      onChange={toggleAllVisible}
-                      aria-label="Select all role templates"
-                    />
-                  </th>
-
-                  <th className="role-code-col">
-                    Role Code
-                  </th>
-
-                  <th className="role-name-col">
-                    Role Template Name
-                  </th>
-
-                  <th className="role-description-col">
-                    Description
-                  </th>
-
-                  <th className="role-status-col">
-                    Status
-                  </th>
-
-                  <th className="role-created-col">
-                    Created On
-                  </th>
-
-                  <th className="role-actions-col">
-                    Actions
-                  </th>
+                  <th className="role-code-col">Role Code</th>
+                  <th className="role-name-col">Role Template Name</th>
+                  <th className="role-description-col">Description</th>
+                  <th className="role-status-col">Status</th>
+                  <th className="role-created-col">Created On</th>
+                  <th className="role-updated-col">Updated On</th>
+                  <th className="role-actions-col">Actions</th>
                 </tr>
               </thead>
 
               <tbody>
                 {filteredTemplates.map((template, index) => (
                   <tr key={template.id}>
-                    <td className="role-check-col">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(template.id)}
-                        onChange={() =>
-                          toggleSelection(template.id)
-                        }
-                        aria-label={`Select ${
-                          template.name || template.roleCode
-                        }`}
-                      />
-                    </td>
-
                     <td className="role-code-cell">
                       <div className="role-key-cell">
                         <span
-                          className={`role-row-icon role-icon-${
-                            (index % 5) + 1
-                          }`}
+                          className={`role-row-icon role-icon-${(index % 5) + 1}`}
                         >
                           <i className="bi bi-person-badge" />
                         </span>
-
-                        <strong>
-                          {template.roleCode || "—"}
-                        </strong>
+                        <strong>{template.roleCode || "—"}</strong>
                       </div>
                     </td>
 
@@ -531,13 +488,19 @@ export default function RoleTemplates() {
                             state: { roleTemplate: template },
                           })
                         }
+                        title={template.name || "—"}
                       >
                         {template.name || "—"}
                       </button>
-                   </td>
+                    </td>
 
-                    <td className="role-description-cell">
-                      {template.description || "-"}
+                    <td
+                      className="role-description-cell"
+                      title={template.description || "—"}
+                    >
+                      <span className="role-description-text">
+                        {template.description || "—"}
+                      </span>
                     </td>
 
                     <td className="role-status-cell">
@@ -547,9 +510,7 @@ export default function RoleTemplates() {
                         ).toLowerCase()}`}
                       >
                         <i />
-
-                        {String(template.status).toUpperCase() ===
-                        "ACTIVE"
+                        {String(template.status).toUpperCase() === "ACTIVE"
                           ? "Active"
                           : "Inactive"}
                       </span>
@@ -563,9 +524,18 @@ export default function RoleTemplates() {
                       )}
                     </td>
 
+                    <td className="role-updated-cell">
+                      {displayDate(
+                        template.updatedAt ||
+                          template.updated_at ||
+                          template.updatedDate
+                      )}
+                    </td>
+
                     <td className="role-actions">
                       <button
                         type="button"
+                        className="role-edit-action"
                         onClick={() => editTemplate(template)}
                         disabled={saving}
                         aria-label={`Edit ${
@@ -578,6 +548,7 @@ export default function RoleTemplates() {
 
                       <button
                         type="button"
+                        className="role-delete-action"
                         onClick={() => openDeletePopup(template)}
                         disabled={saving}
                         aria-label={`Delete ${
@@ -593,10 +564,7 @@ export default function RoleTemplates() {
 
                 {filteredTemplates.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="role-empty-state"
-                    >
+                    <td colSpan={7} className="role-empty-state">
                       {loading
                         ? "Loading role templates..."
                         : "No role templates found."}
