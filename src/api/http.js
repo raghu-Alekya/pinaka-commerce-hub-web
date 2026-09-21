@@ -118,6 +118,12 @@ export async function apiRequest(
     const message =
       (data && (data.message || data.error)) ||
       `Request failed with status ${response.status}`;
+    console.error("[API ERROR DETAILS]", {
+      method,
+      url: requestUrl,
+      status: response.status,
+      body: data,
+    });
     throw new ApiError(
       Array.isArray(message) ? message.join(", ") : message,
       response.status,

@@ -14,7 +14,7 @@ export const endpoints = {
   storeType: (id) => `/store-types/${encodeURIComponent(id)}`,
   storeTypeFeatures: (id) => `/store-types/${encodeURIComponent(id)}/features`,
   storeTypeFeature: (storeTypeId, featureId) =>
-    `//store-types/${encodeURIComponent(storeTypeId)}/features/${encodeURIComponent(featureId)}`,
+    `/store-types/${encodeURIComponent(storeTypeId)}/features/${encodeURIComponent(featureId)}`,
   storeConnector: (id) => `/stores/${id}/connector`,
   merchantStores: (merchantId) =>
     `/merchants/${merchantId}/stores`,
@@ -33,5 +33,8 @@ plan: (id) =>
 
 planStatus: (id) =>
   `/plans/${encodeURIComponent(id)}`,
+
+tendors: "/tendors",
+  tendor: (id) => `/tendors/${id}`,
 
 };

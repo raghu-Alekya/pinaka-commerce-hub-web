@@ -213,8 +213,8 @@
 
 .plan-description-field {
   position: relative;
-  width: 50%;
-  max-width: 50%;
+  width: calc(50% - 9px);
+  max-width: calc(50% - 9px);
   margin-top: 14px;
 }
 
@@ -252,10 +252,13 @@
   margin-top: 14px;
 }
 
-.plan-status-select {
-  color: #14ae70 !important;
+.plan-status-select.active {
+  color: #1c9b4d;
 }
 
+.plan-status-select.inactive {
+  color: #d72d47;
+}
 .plan-price-input {
   display: flex;
   height: 34px;
@@ -376,8 +379,8 @@
   font-size: 12px;
 }
 
-.plan-feature-check > span:last-child,
-.plan-addon-row > span:nth-child(2) {
+.plan-feature-check>span:last-child,
+.plan-addon-row>span:nth-child(2) {
   display: grid;
   min-width: 0;
   gap: 2px;
@@ -520,7 +523,7 @@
   margin: 0;
 }
 
-.plan-review-section dl > div {
+.plan-review-section dl>div {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
@@ -636,24 +639,36 @@
 }
 
 .plans-table-wrap {
-  overflow: hidden;
+  overflow-x: auto;
   border: 1px solid #e3ecf5;
   border-radius: 8px;
 }
 
 .plans-table {
-  min-width: 0;
+  width: 100%;
+  min-width: 0px;
 }
-
 .plans-row {
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: 120px minmax(120px, 1fr) minmax(150px, 1.5fr) 110px 100px 90px 90px 90px 90px 72px;
-  gap: 4px;
+  width: 100%;
+  grid-template-columns:
+    110px
+    150px
+    minmax(220px, 2fr)
+    150px
+    130px
+    120px
+    100px
+    130px
+    130px
+    90px;
+  gap: 16px;
   min-height: 62px;
   align-items: center;
-  padding: 0 8px;
-  border-bottom: 1px solid #e6eef6;
-  color: #163762;
+  padding: 0 13px;
+  border-bottom: 1px solid #edf0f4;
+  color: #4d5970;
   font-size: 12px;
 }
 
@@ -881,6 +896,7 @@
 }
 
 @media (max-width: 950px) {
+
   .plan-features-limits-grid,
   .plan-review-grid,
   .plan-pricing-grid.three-columns {
