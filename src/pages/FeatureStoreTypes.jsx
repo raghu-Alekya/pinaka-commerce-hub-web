@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Gift, Store, Search, Plus, X, Trash2, ChevronDown, ArrowLeft } from 'lucide-react';
+import { Store, Search, Plus, X, Trash2, ChevronDown, ArrowLeft } from 'lucide-react';
 import { getFeature } from '../api/features';
 import {
   listMappedStoreTypes,
@@ -9,6 +9,7 @@ import {
   removeStoreTypeFromFeature,
 } from '../api/featureStoreTypesApi';
 import '../styles/featurestoretypes.css';
+import '../styles/feature-detail-header.css';
 
 const mapStore = (item) => {
   const s = item.storeType || item;
@@ -130,26 +131,20 @@ const FeatureStoreTypes = () => {
   const desc = feature?.description || '';
 
   return (
-    <div className="store-types-page">
-      <button className="st-back-button" type="button" onClick={() => navigate('/features')}>
-        <ArrowLeft size={16} />
-        Back to Features
-      </button>
-      <section className="st-feature-header">
-        <div className="st-feature-info">
-          <div className="st-feature-icon">
-            <Gift size={27} strokeWidth={2.2} />
-          </div>
-          <div>
-            <h1>{name}</h1>
-            <p>{desc}</p>
-          </div>
+    <div className="store-types-page feature-detail-page">
+      <section className="feature-detail-header">
+        <div className="feature-detail-top">
+          <button className="feature-detail-back" type="button" onClick={() => navigate('/features')} aria-label="Back to Features">
+            <ArrowLeft size={28} />
+          </button>
+          <div className="feature-detail-copy"><h1>{name}</h1><p>{desc}</p></div>
+          <div className="feature-detail-status">{(feature?.status || 'Active').toUpperCase()}</div>
         </div>
-        <div className="st-tabs">
-          <button className="st-tab" onClick={() => navigate(`/features/${featureId}/overview`)}>Overview</button>
-          <button className="st-tab active">Store Types</button>
-          <button className="st-tab" onClick={() => navigate(`/features/${featureId}/permissions`)}>Feature Permissions</button>
-        </div>
+        <nav className="feature-detail-tabs" aria-label="Feature sections">
+          <button className="feature-detail-tab" type="button" onClick={() => navigate(`/features/${featureId}/overview`)}>Overview</button>
+          <button className="feature-detail-tab active" type="button">Applicable Store Types</button>
+          <button className="feature-detail-tab" type="button" onClick={() => navigate(`/features/${featureId}/permissions`)}>Feature &amp; Permission Access</button>
+        </nav>
       </section>
 
       <section className="st-main-card">

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Gift, Info, ChevronDown, ArrowLeft } from 'lucide-react';
+import { Info, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getFeature } from '../api/features';
 import '../styles/featureoverview.css';
+import '../styles/feature-detail-header.css';
 
 const FeatureOverview = () => {
   const navigate = useNavigate();
@@ -21,14 +22,20 @@ const FeatureOverview = () => {
   const code = feature?.code || feature?.featureKey || '—';
   const status = feature?.status || 'Inactive';
 
-  return <div className="feature-overview-page">
-    <button className="feature-overview-back" type="button" onClick={() => navigate('/features')}>
-      <ArrowLeft size={16} />
-      Back to Features
-    </button>
-    <section className="feature-header-card">
-      <div className="feature-header-content"><div className="feature-icon-box"><Gift size={25} strokeWidth={2.2} /></div><div className="feature-header-text"><h1>{name}</h1><p>{description}</p></div></div>
-      <div className="feature-tabs"><button className="feature-tab active" type="button">Overview</button><button className="feature-tab" type="button" onClick={() => navigate(`/features/${featureId}/store-types`)}>Store Types</button><button className="feature-tab" type="button" onClick={() => navigate(`/features/${featureId}/permissions`)}>Feature Permissions</button></div>
+  return <div className="feature-overview-page feature-detail-page">
+    <section className="feature-detail-header">
+      <div className="feature-detail-top">
+        <button className="feature-detail-back" type="button" onClick={() => navigate('/features')} aria-label="Back to Features">
+          <ArrowLeft size={30} />
+        </button>
+        <div className="feature-detail-copy"><h1>{name}</h1><p>{description}</p></div>
+        <div className="feature-detail-status">{status.toUpperCase()}</div>
+      </div>
+      <nav className="feature-detail-tabs" aria-label="Feature sections">
+        <button className="feature-detail-tab active" type="button">Overview</button>
+        <button className="feature-detail-tab" type="button" onClick={() => navigate(`/features/${featureId}/store-types`)}>Applicable Store Types</button>
+        <button className="feature-detail-tab" type="button" onClick={() => navigate(`/features/${featureId}/permissions`)}>Feature &amp; Permission Access</button>
+      </nav>
     </section>
     <section className="feature-info-card">
       <div className="feature-info-header"><div className="info-icon-box"><Info size={20} strokeWidth={2.2} /></div><div className="feature-info-title"><h2>Feature Information</h2><p>View the core feature details.</p></div></div>

@@ -41,8 +41,6 @@ export default function FeaturePermissions() {
   const [statusFilter, setStatusFilter] =
     useState("All Statuses");
 
-  const [deleteTarget, setDeleteTarget] = useState(null);
-
   const isEditing = editingId !== null;
 
   const normalizeStatus = (status) =>
@@ -235,16 +233,10 @@ export default function FeaturePermissions() {
       await loadData();
 
       if (String(editingId) === String(permissionId)) clearForm();
-      setDeleteTarget(null);
     } catch (error) {
       console.error("Delete permission failed:", error);
       window.alert(error?.message || "Unable to delete permission.");
     }
-  };
-
-  const confirmDeletePermission = async () => {
-    if (!deleteTarget) return;
-    await deletePermission(deleteTarget.id);
   };
 
   /* =========================================================
@@ -310,6 +302,19 @@ export default function FeaturePermissions() {
       statusFilter,
     ]);
 
+  const formatPermissionDate = (value) => {
+    if (!value) return "—";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   return (
     <div className="feature-permissions-page">
 
@@ -318,431 +323,659 @@ export default function FeaturePermissions() {
           ===================================================== */}
 
       <div className="fp-page-head">
-  <div>
-    <h1>
-      {isEditing ? "Edit Feature Permission" : "Create Feature Permission"}
-    </h1>
 
-    <p>
-      Define permissions and assign them to the appropriate feature.
-    </p>
-  </div>
-</div>
+        <div className="fp-title-wrap">
+
+          <div>
+
+            <h1>
+              Create Feature Permissions
+            </h1>
+
+            <p>
+              Manage feature permissions
+              and permission access.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
 
       {/* =====================================================
           PERMISSION INFORMATION CARD
           ===================================================== */}
 
       <section className="fp-info-card">
-  <div className="fp-info-heading">
-    <div className="fp-info-icon">
-      <i className="bi bi-key" />
-    </div>
 
-    <div>
-      <h2>Permission Information</h2>
-      <p>Provide the basic details about the feature permission.</p>
-    </div>
-  </div>
+        <div className="fp-info-top">
 
-  <form
-    autoComplete="off"
-    onSubmit={(event) => {
-      event.preventDefault();
-      savePermission();
-    }}
-  >
-    <div className="fp-form-grid">
-      <div className={`fp-field${errors.key ? " fp-field-invalid" : ""}`}>
-        <label htmlFor="permission-key">
-          Permission Key <span>*</span>
-        </label>
+          <div className="fp-info-heading">
 
-        <input
-          id="permission-key"
-          type="text"
-          name="key"
-          value={form.key}
-          onChange={updateField}
+            <div className="fp-info-icon">
+              <i className="bi bi-key" />
+            </div>
+
+            <div>
+
+              <h2>
+                {isEditing ? "Edit Permission" : "Add Permission"}
+              </h2>
+
+              <p>
+                Create a new permission
+                or edit an existing
+                permission.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* ===================================================
+            FORM
+            =================================================== */}
+
+        <form
           autoComplete="off"
-          placeholder="e.g. refunds.view"
-          aria-invalid={Boolean(errors.key)}
-        />
+          onSubmit={(event) => {
+            event.preventDefault();
 
-        {errors.key && (
-          <p className="fp-field-error">{errors.key}</p>
-        )}
-
-        <small>Unique key used to identify this permission.</small>
-      </div>
-
-      <div className={`fp-field${errors.name ? " fp-field-invalid" : ""}`}>
-        <label htmlFor="permission-name">
-          Permission Name <span>*</span>
-        </label>
-
-        <input
-          id="permission-name"
-          type="text"
-          name="name"
-          value={form.name}
-          onChange={updateField}
-          autoComplete="off"
-          placeholder="e.g. View Refunds"
-          aria-invalid={Boolean(errors.name)}
-        />
-
-        {errors.name && (
-          <p className="fp-field-error">{errors.name}</p>
-        )}
-
-        <small>Name displayed throughout the system.</small>
-      </div>
-    </div>
-
-    <div className="fp-bottom-grid">
-      <div className="fp-field fp-description-field">
-        <label htmlFor="permission-description">Description</label>
-
-        <textarea
-          id="permission-description"
-          name="description"
-          value={form.description}
-          onChange={updateField}
-          autoComplete="off"
-          placeholder="Describe what this permission allows users to do..."
-          rows={3}
-          maxLength={250}
-        />
-
-        <small className="fp-character-count">
-          {form.description.length}/250
-        </small>
-      </div>
-
-      <div className="fp-side-fields">
-        <div
-          className={`fp-field${
-            errors.featureId ? " fp-field-invalid" : ""
-          }`}
+            savePermission();
+          }}
         >
-          <label htmlFor="permission-feature">
-            Feature <span>*</span>
-          </label>
 
-          <div className="fp-select-wrap">
-            <select
-              id="permission-feature"
-              name="featureId"
-              value={form.featureId}
-              onChange={updateField}
-              autoComplete="off"
-              aria-invalid={Boolean(errors.featureId)}
+          <div className="fp-form-grid">
+
+            {/* ===============================
+                PERMISSION KEY
+                =============================== */}
+
+            <div
+              className={`fp-field${
+                errors.key
+                  ? " fp-field-invalid"
+                  : ""
+              }`}
             >
-              <option value="">Select Feature</option>
 
-              {features.map((feature) => (
-                <option key={feature.id} value={feature.id}>
-                  {feature.name}
-                </option>
-              ))}
-            </select>
+              <label
+                htmlFor="permission-key"
+              >
+                Permission Key
+                <span>*</span>
+              </label>
 
-            <i className="bi bi-chevron-down" />
+              <input
+                id="permission-key"
+                type="text"
+                data-field="key"
+                value={form.key}
+                onChange={updateField}
+                autoComplete="off"
+                placeholder="e.g. refunds.view"
+                aria-invalid={Boolean(errors.key)}
+              />
+
+              {errors.key && (
+                <p className="fp-field-error">
+                  {errors.key}
+                </p>
+              )}
+
+            </div>
+
+            {/* ===============================
+                PERMISSION NAME
+                =============================== */}
+
+            <div
+              className={`fp-field${
+                errors.name
+                  ? " fp-field-invalid"
+                  : ""
+              }`}
+            >
+
+              <label
+                htmlFor="permission-name"
+              >
+                Permission Name
+                <span>*</span>
+              </label>
+
+              <input
+                id="permission-name"
+                type="text"
+                data-field="name"
+                value={form.name}
+                onChange={updateField}
+                autoComplete="off"
+                placeholder="e.g. View Refunds"
+                aria-invalid={Boolean(errors.name)}
+              />
+
+              {errors.name && (
+                <p className="fp-field-error">
+                  {errors.name}
+                </p>
+              )}
+
+            </div>
+
+            {/* ===============================
+                FEATURE DROPDOWN
+                =============================== */}
+
+            <div
+              className={`fp-field${
+                errors.featureId
+                  ? " fp-field-invalid"
+                  : ""
+              }`}
+            >
+
+              <label
+                htmlFor="permission-feature"
+              >
+                Feature
+                <span>*</span>
+              </label>
+
+              <div className="fp-select-wrap">
+
+                <select
+                  id="permission-feature"
+                  name="featureId"
+                  value={form.featureId}
+                  onChange={updateField}
+                  autoComplete="off"
+                  aria-invalid={Boolean(errors.featureId)}
+                >
+
+                  <option value="">
+                    Select Feature
+                  </option>
+
+                  {features.map(
+                    (feature) => (
+                      <option
+                        key={
+                          feature.id
+                        }
+                        value={
+                          feature.id
+                        }
+                      >
+                        {
+                          feature.name
+                        }
+                      </option>
+                    )
+                  )}
+
+                </select>
+
+                <i className="bi bi-chevron-down" />
+
+              </div>
+
+              {errors.featureId && (
+                <p className="fp-field-error">
+                  {errors.featureId}
+                </p>
+              )}
+
+            </div>
+
+            {/* ===============================
+                DESCRIPTION
+                =============================== */}
+
+            <div className="fp-field fp-description-field">
+
+              <label
+                htmlFor="permission-description"
+              >
+                Description
+              </label>
+
+              <textarea
+                id="permission-description"
+                data-field="description"
+                value={
+                  form.description
+                }
+                onChange={
+                  updateField
+                }
+                onInput={(event) => {
+                  event.currentTarget.style.height = "44px";
+                  event.currentTarget.style.height = `${Math.max(
+                    44,
+                    event.currentTarget.scrollHeight
+                  )}px`;
+                }}
+                autoComplete="off"
+                placeholder="Describe this permission and its purpose."
+                rows={1}
+              />
+
+            </div>
+
+            {/* ===============================
+                STATUS
+                =============================== */}
+
+            <div className="fp-field">
+
+              <label
+                htmlFor="permission-status"
+              >
+                Status
+              </label>
+
+              <div className="fp-select-wrap">
+
+                <select
+                  id="permission-status"
+                  name="status"
+                  value={form.status}
+                  onChange={updateField}
+                  autoComplete="off"
+                >
+
+                  <option value="Active">
+                    Active
+                  </option>
+
+                  <option value="Inactive">
+                    Inactive
+                  </option>
+
+                </select>
+
+                <i className="bi bi-chevron-down" />
+
+              </div>
+
+            </div>
+
           </div>
 
-          {errors.featureId && (
-            <p className="fp-field-error">{errors.featureId}</p>
-          )}
-        </div>
+          {/* =================================================
+              FORM ACTIONS
+              ================================================= */}
 
-        <div className="fp-field">
-          <label htmlFor="permission-status">Status</label>
+          <div className="fp-form-actions">
 
-          <div className="fp-select-wrap">
-            <select
-              id="permission-status"
-              name="status"
-              value={form.status}
-              onChange={updateField}
-              autoComplete="off"
+            <button
+              type="button"
+              className="fp-btn fp-btn-secondary"
+              onClick={clearForm}
             >
-              <option value="Active">● Active</option>
-              <option value="Inactive">● Inactive</option>
-            </select>
 
-            <i className="bi bi-chevron-down" />
+              Clear
+
+            </button>
+
+            <button
+              type="submit"
+              className="fp-btn fp-btn-primary"
+            >
+
+              {isEditing
+                ? "Update Permission"
+                : "Save Permission"}
+
+            </button>
+
           </div>
-        </div>
-      </div>
-    </div>
 
-    <div className="fp-form-actions">
-      <button
-        type="button"
-        className="fp-btn fp-btn-secondary"
-        onClick={clearForm}
-      >
-        Cancel
-      </button>
+        </form>
 
-      <button type="submit" className="fp-btn fp-btn-primary">
-        {isEditing ? "Update Permission" : "Create Permission"}
-      </button>
-    </div>
-  </form>
-</section>
+      </section>
 
       {/* =====================================================
           PERMISSIONS LIST
           ===================================================== */}
 
-    <section className="fp-list-card">
-  <div className="fp-list-toolbar">
-    <div>
-      <h2>Feature Permissions List</h2>
+      <section className="fp-list-card">
 
-      <p>
-        Manage feature permissions and permission access.
-      </p>
-    </div>
+        <div className="fp-list-toolbar">
 
-    <div className="fp-list-filters">
-      <div className="fp-search">
-        <i className="bi bi-search" />
+          <h2>
+            Permissions List (
+            {
+              filteredPermissions.length
+            }
+            )
+          </h2>
 
-        <input
-          type="text"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          autoComplete="off"
-          placeholder="Search permissions..."
-        />
-      </div>
+          <div className="fp-list-filters">
 
-      <div className="fp-status-filter">
-        <select
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          autoComplete="off"
-          aria-label="Filter by status"
-        >
-          <option value="All Statuses">All Statuses</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
+            {/* SEARCH */}
 
-        <i className="bi bi-chevron-down" />
-      </div>
+            <div className="fp-search">
 
-      <button
-        type="button"
-        className="fp-reset-btn"
-        onClick={resetFilters}
-      >
-        <i className="bi bi-arrow-repeat" />
-        Reset
-      </button>
-    </div>
-  </div>
+              <i className="bi bi-search" />
 
-  <div className="fp-table-wrap">
-    <table className="fp-table">
-      <colgroup>
-        <col className="fp-col-key" />
-        <col className="fp-col-name" />
-        <col className="fp-col-feature" />
-        <col className="fp-col-description" />
-        <col className="fp-col-status" />
-        <col className="fp-col-created" />
-        <col className="fp-col-updated" />
-        <col className="fp-col-actions" />
-      </colgroup>
+              <input
+                type="text"
+                value={search}
+                onChange={(event) =>
+                  setSearch(
+                    event.target.value
+                  )
+                }
+                autoComplete="off"
+                placeholder="Search permissions..."
+              />
 
-      <thead>
-        <tr>
-          <th>Permission Key</th>
-          <th>Permission Name</th>
-          <th>Feature Name</th>
-          <th>Description</th>
-          <th>Status</th>
-          <th>Created At</th>
-          <th>Updated At</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {filteredPermissions.map((permission) => {
-          const createdOn =
-            permission.createdAt ||
-            permission.created_at ||
-            permission.createdDate;
-
-          const updatedOn =
-            permission.updatedAt ||
-            permission.updated_at ||
-            permission.updatedDate ||
-            permission.modifiedAt ||
-            permission.modified_at ||
-            createdOn;
-
-          return (
-            <tr key={permission.id}>
-              <td>{permission.key || "—"}</td>
-
-              <td>{permission.name || "—"}</td>
-
-              <td>{permission.featureName || "—"}</td>
-
-              <td className="fp-description-cell">
-                {permission.description || "—"}
-              </td>
-
-              <td>
-                <span
-                  className={`fp-status-pill ${String(
-                    permission.status || ""
-                  ).toLowerCase()}`}
-                >
-                  <b />
-                  {permission.status || "Inactive"}
-                </span>
-              </td>
-
-              <td className="fp-created-cell">
-                {createdOn
-                  ? new Date(createdOn).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  : "—"}
-              </td>
-
-              <td className="fp-updated-cell">
-                {updatedOn
-                  ? new Date(updatedOn).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  : "—"}
-              </td>
-
-              <td>
-                <div className="fp-row-actions">
-                  <button
-                    type="button"
-                    className="edit"
-                    aria-label={`Edit ${permission.name}`}
-                    onClick={() => editPermission(permission)}
-                  >
-                    <i className="bi bi-pencil" />
-                  </button>
-
-                  <button
-                    type="button"
-                    className="delete"
-                    aria-label={`Delete ${permission.name}`}
-                    onClick={() => setDeleteTarget(permission)}
-                  >
-                    <i className="bi bi-trash3" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          );
-        })}
-
-        {filteredPermissions.length === 0 && (
-          <tr>
-            <td colSpan={8} className="fp-empty-state">
-              {loading
-                ? "Loading feature permissions..."
-                : "No feature permissions found."}
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-
-  <div className="fp-list-footer">
-    <span>
-      Showing {filteredPermissions.length} of{" "}
-      {permissions.length} entries
-    </span>
-
-    <div className="fp-pagination">
-      <button type="button" aria-label="Previous page">
-        <i className="bi bi-chevron-left" />
-      </button>
-
-      <button type="button" className="current">
-        1
-      </button>
-
-      <button type="button" aria-label="Next page">
-        <i className="bi bi-chevron-right" />
-      </button>
-    </div>
-  </div>
-</section>
-
-      {deleteTarget && (
-        <div
-          className="fp-delete-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-permission-title"
-          onClick={() => setDeleteTarget(null)}
-        >
-          <div
-            className="fp-delete-modal"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="fp-delete-icon">
-              <i className="bi bi-trash" />
             </div>
 
-            <h2 id="delete-permission-title">Delete Feature Permission?</h2>
+            {/* STATUS FILTER */}
 
-            <p>
-              Are you sure you want to delete{" "}
-              <strong>{deleteTarget.name}</strong>?
-            </p>
+            <div className="fp-status-filter">
 
-            {deleteTarget.featureName && (
-              <p className="fp-delete-feature-text">
-                Feature: <strong>{deleteTarget.featureName}</strong>
-              </p>
-            )}
-
-            <p className="fp-delete-final-warning">
-              This action cannot be undone.
-            </p>
-
-            <div className="fp-delete-actions">
-              <button
-                type="button"
-                className="fp-delete-keep-button"
-                onClick={() => setDeleteTarget(null)}
+              <select
+                value={
+                  statusFilter
+                }
+                onChange={(event) =>
+                  setStatusFilter(
+                    event.target.value
+                  )
+                }
+                autoComplete="off"
               >
-                Cancel
-              </button>
 
-              <button
-                type="button"
-                className="fp-delete-confirm-button"
-                onClick={confirmDeletePermission}
-              >
-                Delete
-              </button>
+                <option value="All Statuses">
+                  All Statuses
+                </option>
+
+                <option value="Active">
+                  Active
+                </option>
+
+                <option value="Inactive">
+                  Inactive
+                </option>
+
+              </select>
+
+              <i className="bi bi-chevron-down" />
+
             </div>
+
+            {/* RESET FILTER */}
+
+            <button
+              type="button"
+              className="fp-reset-btn"
+              onClick={resetFilters}
+            >
+
+              <i className="bi bi-arrow-repeat" />
+
+              Reset
+
+            </button>
+
           </div>
+
         </div>
-      )}
+
+        {/* ===================================================
+            TABLE
+            =================================================== */}
+
+        <div className="fp-table-wrap">
+
+          <table className="fp-table">
+
+            <colgroup>
+
+              <col className="fp-col-key" />
+
+              <col className="fp-col-name" />
+
+              <col className="fp-col-feature" />
+
+              <col className="fp-col-description" />
+
+              <col className="fp-col-status" />
+
+              <col className="fp-col-created" />
+
+              <col className="fp-col-updated" />
+
+              <col className="fp-col-actions" />
+
+            </colgroup>
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  Permission Key
+                </th>
+
+                <th>
+                  Permission Name
+                </th>
+
+                <th>
+                  Feature Name
+                </th>
+
+                <th>
+                  Description
+                </th>
+
+                <th>
+                  Status
+                </th>
+
+                <th>
+                  Created At
+                </th>
+
+                <th>
+                  Updated At
+                </th>
+
+                <th>
+                  Actions
+                </th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              {filteredPermissions.map(
+                (permission) => (
+
+                  <tr
+                    key={
+                      permission.id
+                    }
+                  >
+
+                    {/* Permission Key */}
+
+                    <td>
+                      {
+                        permission.key
+                      }
+                    </td>
+
+                    {/* Permission Name */}
+
+                    <td>
+                      {
+                        permission.name
+                      }
+                    </td>
+
+                    {/* Feature Name */}
+
+                    <td>
+                      {
+                        permission.featureName
+                      }
+                    </td>
+
+                    {/* Description */}
+
+                    <td className="fp-description-cell">
+                      {
+                        permission.description
+                      }
+                    </td>
+
+                    {/* Status */}
+
+                    <td>
+
+                      <span
+                        className={`fp-status-pill ${permission.status.toLowerCase()}`}
+                      >
+
+                        <b />
+
+                        {
+                          permission.status
+                        }
+
+                      </span>
+
+                    </td>
+
+                    <td className="fp-date-cell">
+                      {formatPermissionDate(permission.createdAt)}
+                    </td>
+
+                    <td className="fp-date-cell">
+                      {formatPermissionDate(permission.updatedAt)}
+                    </td>
+
+                    {/* =========================
+                        ACTIONS
+                        Edit + Delete only
+                        ========================= */}
+
+                    <td>
+
+                      <div className="fp-row-actions">
+
+                        {/* EDIT */}
+
+                        <button
+                          type="button"
+                          className="edit"
+                          aria-label={`Edit ${permission.name}`}
+                          onClick={() =>
+                            editPermission(
+                              permission
+                            )
+                          }
+                        >
+
+                          <i className="bi bi-pencil" />
+
+                        </button>
+
+                        {/* DELETE */}
+
+                        <button
+                          type="button"
+                          className="delete"
+                          aria-label={`Delete ${permission.name}`}
+                          onClick={() =>
+                            deletePermission(
+                              permission.id
+                            )
+                          }
+                        >
+
+                          <i className="bi bi-trash3" />
+
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                )
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+        {/* ===================================================
+            TABLE FOOTER
+            =================================================== */}
+
+        <div className="fp-list-footer">
+
+          <span>
+
+            Showing 1 to{" "}
+            {
+              filteredPermissions.length
+            }{" "}
+            of{" "}
+            {
+              filteredPermissions.length
+            }{" "}
+            entries
+
+          </span>
+
+          <div className="fp-pagination">
+
+            <button
+              type="button"
+              aria-label="Previous page"
+            >
+
+              <i className="bi bi-chevron-left" />
+
+            </button>
+
+            <button
+              type="button"
+              className="current"
+            >
+              1
+            </button>
+
+            <button
+              type="button"
+              aria-label="Next page"
+            >
+
+              <i className="bi bi-chevron-right" />
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
 
     </div>
   );
