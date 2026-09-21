@@ -86,7 +86,7 @@
    ========================================================= */
 
 .vendors-form {
-  padding: 17px 22px 25px;
+  padding: 17px 22px 18px;
   margin: 13px 0 20px;
   border: 1px solid #e1ebf5;
   border-radius: 11px;
@@ -148,7 +148,8 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: 13px;
-  row-gap: 11px;
+  row-gap: 10px;
+  align-items: start;
 }
 
 
@@ -159,6 +160,8 @@
 .vendors-form label {
   display: grid;
   gap: 5px;
+  min-width: 0;
+  margin: 0;
   color: #23426e;
   font-size: 11px;
   font-weight: 700;
@@ -197,8 +200,9 @@
 
 .vendors-form input,
 .vendors-form select {
-  height: 34px;
-  padding: 0 10px;
+  height: 42px;
+  min-width: 0;
+  padding: 0 11px;
 }
 
 .vendors-form textarea {
@@ -217,55 +221,6 @@
 .vendors-form textarea:focus {
   border-color: #aeb7ff;
   box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
-}
-
-
-/* =========================================================
-   WIDE FIELD
-   ========================================================= */
-
-.vendors-wide-field {
-  grid-column: span 2;
-}
-
-
-/* =========================================================
-   ADDRESS FIELDS
-   ========================================================= */
-
-.vendors-address-section {
-  grid-column: 1 / -1;
-  margin-top: 4px;
-  padding-top: 13px;
-  border-top: 1px solid #e7edf5;
-}
-
-.vendors-address-title {
-  margin: 0 0 10px;
-  color: #18213c;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.vendors-address-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: 13px;
-  row-gap: 11px;
-}
-
-
-/* Address Line 1 */
-
-.vendors-address-line1 {
-  grid-column: span 2;
-}
-
-
-/* Address Line 2 */
-
-.vendors-address-line2 {
-  grid-column: span 1;
 }
 
 
@@ -301,15 +256,15 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 16px;
-  padding-top: 13px;
-  margin-top: 12px;
+  gap: 14px;
+  padding-top: 0;
+  margin-top: 10px;
 }
 
 .vendors-clear-button,
 .vendors-save-button {
   width: 180px;
-  height: 45px;
+  height: 42px;
   padding: 0 21px;
   border-radius: 8px;
   font-size: 14px;
@@ -461,19 +416,25 @@
 
 .vendors-table {
   width: 100%;
-  min-width: 1400px;
+  min-width: 1320px;
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
 .vendors-table th,
 .vendors-table td {
+  width: 8.333333%;
   height: 45px;
   padding: 0 10px;
+  box-sizing: border-box;
   border-bottom: 1px solid #e4e8ef;
   text-align: left;
   vertical-align: middle;
   color: #2b354d;
   font-size: 10px;
+  overflow: visible;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .vendors-table th {
@@ -490,9 +451,12 @@
 
 .vendors-table td strong {
   display: block;
+  overflow: hidden;
   color: #172343;
   font-size: 11px;
   font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .vendors-table td small {
@@ -951,14 +915,6 @@
     grid-template-columns: 1fr;
   }
 
-  .vendors-wide-field {
-    grid-column: auto;
-  }
-
-  .vendors-address-line1,
-  .vendors-address-line2 {
-    grid-column: auto;
-  }
 
   .vendors-filters {
     flex-wrap: wrap;
@@ -1045,4 +1001,113 @@
   .vendors-modal dl {
     grid-template-columns: 1fr;
   }
+}
+.vendors-table td {
+  position: relative;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vendors-table td .vendors-cell-value {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Full value tooltip */
+.vendors-table td .vendors-cell-value[data-tooltip] {
+  cursor: default;
+}
+
+.vendors-table td .vendors-cell-value[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+
+  width: max-content;
+  max-width: 320px;
+
+  padding: 8px 10px;
+  border-radius: 6px;
+
+  background: #163762;
+  color: #fff;
+
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+
+  white-space: normal;
+  word-break: break-word;
+
+  box-shadow: 0 6px 18px rgba(15, 35, 65, 0.18);
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+
+  z-index: 1000;
+}
+
+.vendors-table td .vendors-cell-value[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+
+/* =========================================================
+   TABLE CELL VALUE
+   ========================================================= */
+
+.vendors-table td .vendors-cell-value {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   HOVER FULL-VALUE TOOLTIP
+   ========================================================= */
+
+.vendors-hover-tooltip {
+  position: fixed;
+
+  transform: translate(-50%, -100%);
+
+  width: max-content;
+  max-width: 320px;
+
+  padding: 8px 10px;
+
+  border-radius: 6px;
+
+  background: #163762;
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+
+  box-shadow: 0 6px 18px rgba(15, 35, 65, 0.18);
+
+  pointer-events: none;
+
+  z-index: 99999;
 }

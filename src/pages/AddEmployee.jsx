@@ -417,7 +417,6 @@ export default function AddEmployee() {
     role: "",
     merchant: "",
     store: "",
-    merchant: "",
     employeeLoginPin: "",
     manager: "",
     username: "",
