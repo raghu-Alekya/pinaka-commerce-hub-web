@@ -481,23 +481,13 @@ export default function RoleTemplates() {
 
               <thead>
                 <tr>
-<<<<<<< HEAD
-                  <th className="role-code-col">Role Code</th>
-                  <th className="role-name-col">Role Template Name</th>
-                  <th className="role-description-col">Description</th>
-                  <th className="role-status-col">Status</th>
-                  <th className="role-created-col">Created At</th>
-                  <th className="role-updated-col">Updated At</th>
-                  <th className="role-actions-col">Actions</th>
-=======
                   <th className="role-code-col role-equal-col">Role Code</th>
                   <th className="role-name-col role-equal-col">Role Template Name</th>
                   <th className="role-description-col role-equal-col">Description</th>
                   <th className="role-status-col role-equal-col">Status</th>
-                  <th className="role-created-col role-equal-col">Created On</th>
-                  <th className="role-updated-col role-equal-col">Updated On</th>
+                  <th className="role-created-col role-equal-col">Created At</th>
+                  <th className="role-updated-col role-equal-col">Updated At</th>
                   <th className="role-actions-col role-equal-col">Actions</th>
->>>>>>> origin/raju
                 </tr>
               </thead>
 
