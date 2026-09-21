@@ -1402,3 +1402,754 @@
     min-width: 1180px;
   }
 }
+
+/* =========================================================
+   ROLE TEMPLATE CREATION FORM — FEATURES REFERENCE LAYOUT
+   UI-only layout override. Existing functionality unchanged.
+   Desktop: Role Code | Role Template Name | Status
+   Second row: Description
+   ========================================================= */
+
+.role-create-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 28px;
+  row-gap: 20px;
+  align-items: start;
+}
+
+.role-create-fields-grid .role-code-field { grid-column: 1; grid-row: 1; }
+.role-create-fields-grid .role-name-field { grid-column: 2; grid-row: 1; }
+.role-create-fields-grid .role-status-field { grid-column: 3; grid-row: 1; }
+.role-create-fields-grid .role-description-field {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+}
+
+.role-create-fields-grid .role-field { gap: 7px; }
+
+.role-create-fields-grid .role-field > span {
+  color: #173d70;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.role-create-fields-grid .role-field > small {
+  color: #6380ae;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.role-create-fields-grid .role-input-wrap,
+.role-create-fields-grid .role-select-wrap {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  box-sizing: border-box;
+  border: 1px solid #dce3ed;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.role-create-fields-grid .role-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 13px;
+  color: #6380ae;
+}
+
+.role-create-fields-grid .role-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #25314c;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.role-create-fields-grid .role-input-wrap input::placeholder,
+.role-create-fields-grid .role-textarea-wrap textarea::placeholder {
+  color: #9aa8bd;
+  opacity: 1;
+}
+
+.role-create-fields-grid .role-select-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.role-create-fields-grid .role-select-wrap select {
+  width: 100%;
+  height: 100%;
+  padding: 0 40px 0 13px;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  color: #25314c;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.role-create-fields-grid .role-select-wrap > i {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  transform: translateY(-50%);
+  color: #75819a;
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.role-create-fields-grid .role-textarea-wrap {
+  width: 100%;
+  min-height: 72px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 13px;
+  border: 1px solid #dce3ed;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #6380ae;
+}
+
+.role-create-fields-grid .role-textarea-wrap textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  outline: 0;
+  resize: vertical;
+  background: transparent;
+  color: #25314c;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.role-create-fields-grid .role-input-wrap:focus-within,
+.role-create-fields-grid .role-textarea-wrap:focus-within,
+.role-create-fields-grid .role-select-wrap:focus-within {
+  border-color: #8c7cf0;
+  box-shadow: 0 0 0 3px rgba(104, 78, 227, 0.08);
+}
+
+@media (max-width: 1050px) {
+  .role-create-fields-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .role-create-fields-grid .role-code-field,
+  .role-create-fields-grid .role-name-field,
+  .role-create-fields-grid .role-status-field,
+  .role-create-fields-grid .role-description-field {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .role-create-fields-grid .role-description-field {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 700px) {
+  .role-create-fields-grid {
+    grid-template-columns: 1fr;
+    row-gap: 18px;
+  }
+
+  .role-create-fields-grid .role-code-field,
+  .role-create-fields-grid .role-name-field,
+  .role-create-fields-grid .role-status-field,
+  .role-create-fields-grid .role-description-field {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+
+/* =========================================================
+   FINAL ROLE TEMPLATE UI ADJUSTMENTS
+   - Page heading sits outside the white creation card
+   - Description keeps Role Code column width
+   - Description grows vertically with content
+   - Role-code table icon removed
+   - Table header light-blue background covers all 7 columns, including Actions
+   ========================================================= */
+
+.role-templates-page-heading {
+  width: 100%;
+  min-height: 44px;
+  margin: 0 0 18px;
+  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.role-templates-page-heading h1 {
+  margin: 0 0 6px;
+  color: #10264d;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.role-templates-page-heading p {
+  margin: 0;
+  color: #5575a8;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+/* Three equal fields in the first row. Description stays one column wide. */
+.role-create-fields-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 28px;
+  row-gap: 20px;
+}
+
+.role-create-fields-grid .role-code-field {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.role-create-fields-grid .role-name-field {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.role-create-fields-grid .role-status-field {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.role-create-fields-grid .role-description-field {
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+  max-width: 100%;
+}
+
+.role-create-fields-grid .role-textarea-wrap {
+  width: 100%;
+  min-height: 72px;
+  height: auto;
+  align-items: flex-start;
+}
+
+.role-create-fields-grid .role-textarea-wrap textarea {
+  width: 100%;
+  min-height: 48px;
+  height: 72px;
+  max-height: none;
+  overflow-y: hidden;
+  resize: none;
+}
+
+/* Table header: one continuous light-blue row across Actions too. */
+.role-table thead,
+.role-table thead tr,
+.role-table thead th,
+.role-table th.role-actions-col {
+  background: #f1f7ff !important;
+}
+
+.role-table thead th {
+  border-bottom: 1px solid #dce8f4;
+}
+
+/* Role code is text-only; no decorative icon. */
+.role-table .role-key-cell {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.role-table .role-key-cell strong {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Keep the sticky Actions header visually part of the same header row. */
+.role-table th.role-actions-col {
+  box-shadow: none !important;
+}
+
+@media (max-width: 1050px) {
+  .role-create-fields-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .role-create-fields-grid .role-code-field,
+  .role-create-fields-grid .role-name-field,
+  .role-create-fields-grid .role-status-field,
+  .role-create-fields-grid .role-description-field {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .role-create-fields-grid .role-description-field {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .role-templates-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .role-create-fields-grid {
+    grid-template-columns: 1fr;
+    row-gap: 18px;
+  }
+
+  .role-create-fields-grid .role-code-field,
+  .role-create-fields-grid .role-name-field,
+  .role-create-fields-grid .role-status-field,
+  .role-create-fields-grid .role-description-field {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+/* =========================================================
+   FINAL ROLE TEMPLATE UI POLISH
+   - Card heading icon + title/subtitle
+   - No "Creating New" pill
+   - Status options use plain text without colored symbols
+   ========================================================= */
+
+.role-templates-page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin-bottom: 16px;
+}
+
+.role-templates-page-heading > div {
+  min-width: 0;
+}
+
+.role-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin: 0 0 20px;
+}
+
+.role-heading-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  border-radius: 50%;
+  color: #684ee3;
+  background: #eeeaff;
+  font-size: 20px;
+}
+
+.role-card-heading h2 {
+  margin: 0 0 4px;
+  color: #10264d;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+
+.role-card-heading p {
+  margin: 0;
+  color: #5b79ad;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+/* The old top-right mode pill is intentionally hidden/unused. */
+.role-mode-pill {
+  display: none !important;
+}
+
+/* Keep the native status select clean; no green status-dot styling. */
+.role-create-fields-grid .role-select-wrap select {
+  color: #25314c;
+}
+
+@media (max-width: 768px) {
+  .role-templates-page-heading {
+    margin-bottom: 14px;
+  }
+
+  .role-card-heading {
+    align-items: flex-start;
+  }
+}
+
+/* =========================================================
+   FINAL DESCRIPTION FIELD POLISH
+   - Same initial field height as the other controls
+   - Native resize handle remains visible
+   - User can expand the textarea vertically when needed
+   - Maximum content length: 500 characters
+   ========================================================= */
+
+.role-create-fields-grid .role-description-field .role-textarea-wrap {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 13px;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.role-create-fields-grid .role-description-field .role-textarea-wrap textarea {
+  height: 42px;
+  min-height: 42px;
+  max-height: 180px;
+  padding: 10px 0;
+  box-sizing: border-box;
+  resize: vertical;
+  overflow-y: auto;
+  line-height: 20px;
+}
+
+/* Keep the native bottom-right resize grip visible so users know
+   the description field can be expanded. */
+.role-create-fields-grid .role-description-field .role-textarea-wrap textarea::-webkit-resizer {
+  background: transparent;
+}
+
+/* =========================================================
+   FINAL ROLE TEMPLATE DESCRIPTION FIELD
+   - Same initial 44px height as the other controls
+   - Icon and placeholder aligned inside the field
+   - 500-WORD counter
+   - Automatic vertical growth while typing
+   - Native vertical resize handle retained
+   ========================================================= */
+
+.role-create-fields-grid .role-description-field {
+  width: 100%;
+}
+
+.role-create-fields-grid .role-description-field .role-textarea-wrap {
+  position: relative;
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: flex-start;
+
+  border: 1px solid #dce3ed;
+  border-radius: 7px;
+  background: #ffffff;
+
+  overflow: visible;
+}
+
+.role-create-fields-grid .role-description-field .role-description-icon {
+  position: absolute;
+  top: 14px;
+  left: 13px;
+
+  color: #6380ae;
+  font-size: 14px;
+  line-height: 1;
+
+  pointer-events: none;
+  z-index: 2;
+}
+
+.role-create-fields-grid .role-description-field .role-textarea-wrap textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  height: 42px;
+  max-height: 180px;
+
+  box-sizing: border-box;
+  padding: 10px 34px 10px 38px;
+
+  border: 0;
+  outline: 0;
+  border-radius: 7px;
+
+  background: transparent;
+  color: #25314c;
+
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+
+  resize: vertical;
+  overflow-y: auto;
+}
+
+.role-create-fields-grid .role-description-field
+  .role-textarea-wrap textarea::placeholder {
+  color: #9aa8bd;
+  opacity: 1;
+}
+
+.role-create-fields-grid .role-description-field
+  .role-textarea-wrap:focus-within {
+  border-color: #8c7cf0;
+  box-shadow: 0 0 0 3px rgba(104, 78, 227, 0.08);
+}
+
+.role-description-resize-hint {
+  position: absolute;
+  right: 7px;
+  bottom: 5px;
+
+  color: #7c879b;
+  font-size: 12px;
+  line-height: 1;
+
+  pointer-events: none;
+  z-index: 3;
+}
+
+.role-description-meta {
+  width: 100%;
+  min-height: 17px;
+  margin-top: 6px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.role-description-meta small {
+  margin: 0;
+  color: #6380ae;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.role-description-count {
+  margin-left: auto;
+
+  color: #6380ae;
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .role-description-meta {
+    gap: 8px;
+  }
+}
+
+/* =========================================================
+   FINAL DESCRIPTION FIELD — MATCH FEATURE SCREEN REFERENCE
+   UI ONLY: existing form/API/flow remains unchanged.
+   - Same initial height as the other creation controls
+   - Direct textarea (no icon/wrapper)
+   - Placeholder aligned inside the field
+   - 500-character limit/counter
+   - Auto grows from 44px while typing
+   - Native vertical resize handle
+   - Keeps Role Code column width
+   ========================================================= */
+
+.role-create-fields-grid .role-description-field {
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  position: relative;
+}
+
+.role-create-fields-grid .role-description-field > textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 44px;
+  min-height: 44px;
+  max-height: 180px;
+
+  box-sizing: border-box;
+  margin: 0;
+  padding: 11px 13px;
+
+  border: 1px solid #dce3ed;
+  border-radius: 7px;
+  outline: 0;
+
+  background: #ffffff;
+  color: #25314c;
+
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+
+  resize: vertical;
+  overflow-y: auto;
+}
+
+.role-create-fields-grid .role-description-field > textarea::placeholder {
+  color: #9aa8bd;
+  opacity: 1;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.role-create-fields-grid .role-description-field > textarea:focus {
+  border-color: #8c7cf0;
+  box-shadow: 0 0 0 3px rgba(104, 78, 227, 0.08);
+}
+
+.role-create-fields-grid .role-description-field .role-description-meta {
+  width: 100%;
+  min-height: 17px;
+  margin-top: 6px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.role-create-fields-grid .role-description-field .role-description-meta small {
+  margin: 0;
+  color: #6380ae;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.role-create-fields-grid .role-description-field .role-description-meta > span {
+  margin: 0 0 0 auto;
+  color: #7892b8;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* The old wrapper/icon/resize-hint styles must not affect the
+   direct textarea used by the final Role Template JSX. */
+.role-create-fields-grid .role-description-field .role-textarea-wrap {
+  display: block;
+  width: auto;
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.role-create-fields-grid .role-description-field .role-description-icon,
+.role-create-fields-grid .role-description-field .role-description-resize-hint {
+  display: none !important;
+}
+
+@media (max-width: 1050px) {
+  .role-create-fields-grid .role-description-field {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 700px) {
+  .role-create-fields-grid .role-description-field {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+
+/* =========================================================
+   FINAL ROLE TEMPLATE / STORE TYPE REFERENCE ALIGNMENT
+   - Main heading follows Create/Edit functionality
+   - Heading typography matches Store Type reference
+   - Role Template name uses the same strong naming treatment
+   - Created/Updated dates use Store Type date format
+   ========================================================= */
+
+.role-templates-page-heading h1 {
+  margin: 0 0 5px;
+  color: #10254a;
+  font-size: 25px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.role-templates-page-heading p {
+  margin: 5px 0 0;
+  color: #5676aa;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.role-table .role-name-link {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  color: #173861;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-table .role-name-link strong {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #173861;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.role-table .role-name-link:hover,
+.role-table .role-name-link:hover strong {
+  color: #0873f9;
+}
+
+.role-table td.role-created-cell,
+.role-table td.role-updated-cell {
+  color: #2b354d;
+  font-size: 13px;
+  white-space: nowrap;
+}
