@@ -238,6 +238,22 @@ export default function ViewRoleTemplateAccess() {
     });
   }, [featurePermissions, search]);
 
+  function getBackendFeatureIds(featureIds) {
+    return featureIds
+      .map((featureId) => featurePermissions.find((feature) => feature.id === featureId)?.backendId)
+      .filter(Boolean);
+  }
+
+  function getBackendPermissionIds(permissionIds) {
+    return permissionIds
+      .map((permissionId) =>
+        featurePermissions
+          .flatMap((feature) => feature.permissions)
+          .find((permission) => permission.id === permissionId)?.backendId
+      )
+      .filter(Boolean);
+  }
+
   async function toggleFeature(featureId) {
     const isEnabled = enabledFeatures.includes(featureId);
     const feature = featurePermissions.find((item) => item.id === featureId);
@@ -258,18 +274,21 @@ export default function ViewRoleTemplateAccess() {
       setError("");
 
       try {
-        await roleTemplatesApi.addFeaturePermissions(
-          roleId,
-          [featureBackendId],
-          permissionIds
-        );
-        setEnabledFeatures((current) => [...current, featureId]);
-        setSelectedPermissions((current) => [
+        const nextEnabledFeatures = [...enabledFeatures, featureId];
+        const nextSelectedPermissions = [
           ...new Set([
-            ...current,
+            ...selectedPermissions,
             ...feature.permissions.map((permission) => permission.id),
           ]),
-        ]);
+        ];
+
+        await roleTemplatesApi.addFeaturePermissions(
+          roleId,
+          getBackendFeatureIds(nextEnabledFeatures),
+          getBackendPermissionIds(nextSelectedPermissions)
+        );
+        setEnabledFeatures(nextEnabledFeatures);
+        setSelectedPermissions(nextSelectedPermissions);
       } catch (requestError) {
         setError(requestError?.message || "Unable to enable feature access.");
       } finally {
@@ -322,10 +341,14 @@ export default function ViewRoleTemplateAccess() {
       try {
         await roleTemplatesApi.addFeaturePermissions(
           roleId,
-          [featureBackendId],
-          [permissionBackendId]
+          getBackendFeatureIds(
+            enabledFeatures.includes(featureId)
+              ? enabledFeatures
+              : [...enabledFeatures, featureId]
+          ),
+          getBackendPermissionIds([...selectedPermissions, permissionId])
         );
-        setSelectedPermissions((current) => [...current, permissionId]);
+        setSelectedPermissions((current) => [...new Set([...current, permissionId])]);
         setEnabledFeatures((current) =>
           current.includes(featureId) ? current : [...current, featureId]
         );
@@ -345,7 +368,21 @@ export default function ViewRoleTemplateAccess() {
     );
 
     if (featureHasSelectedPermissions) {
-      setSelectedPermissions(remainingPermissionIds);
+      setSavingFeatureId(featureId);
+      setError("");
+
+      try {
+        await roleTemplatesApi.addFeaturePermissions(
+          roleId,
+          getBackendFeatureIds(enabledFeatures),
+          getBackendPermissionIds(remainingPermissionIds)
+        );
+        setSelectedPermissions(remainingPermissionIds);
+      } catch (requestError) {
+        setError(requestError?.message || "Unable to remove permission access.");
+      } finally {
+        setSavingFeatureId(null);
+      }
       return;
     }
 

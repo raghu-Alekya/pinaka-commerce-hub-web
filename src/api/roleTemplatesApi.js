@@ -44,7 +44,7 @@ export const roleTemplatesApi = {
   bulkUpdateStoreTypes: (id, storeTypeIds) =>
     api.put(
       `//role-templates/${encodeURIComponent(id)}/store-types/bulk`,
-      { storeTypeIds }
+      { storeTypeIds, replace: true }
     ),
 
   updateFeatureAccess: (id, featureAccess) =>

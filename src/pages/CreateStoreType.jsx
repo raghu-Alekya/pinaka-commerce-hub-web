@@ -309,7 +309,7 @@ setForm(nextForm);
           </label>
         </div>
 
-        <div className="store-type-bottom-grid">
+        <div className="store-type-form-grid">
           <label className="store-type-field store-type-description-field">
             <span>
               Description

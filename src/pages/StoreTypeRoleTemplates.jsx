@@ -243,14 +243,14 @@ export default function StoreTypeRoleTemplates() {
     <div className="store-type-title-line">
       <h1>{storeType.name}</h1>
 
-      <span
+      {/* <span
         className={`store-type-active-badge ${
           storeType.status === "INACTIVE" ? "inactive" : ""
         }`}
       >
         <i className="bi bi-circle-fill" />
         {storeType.status === "INACTIVE" ? "Inactive" : "Active"}
-      </span>
+      </span> */}
     </div>
 
     <p>{storeType.description}</p>
