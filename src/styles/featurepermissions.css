@@ -787,7 +787,7 @@
   width: 100%;
 
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
 
   border: 1px solid #e3e9f2;
   border-radius: 9px;
@@ -802,7 +802,7 @@
 
 .feature-permissions-page .fp-table {
   width: 100%;
-  min-width: 1200px;
+  min-width: 1080px;
 
   border-collapse: collapse;
   table-layout: fixed;
@@ -816,32 +816,32 @@
    ========================================================= */
 
 .feature-permissions-page .fp-col-key {
-  width: 15%;
-}
-
-.feature-permissions-page .fp-col-name {
-  width: 15%;
-}
-
-.feature-permissions-page .fp-col-feature {
   width: 13%;
 }
 
+.feature-permissions-page .fp-col-name {
+  width: 14%;
+}
+
+.feature-permissions-page .fp-col-feature {
+  width: 12%;
+}
+
 .feature-permissions-page .fp-col-description {
-  width: 5%;
+  width: 16%;
 }
 
 .feature-permissions-page .fp-col-status {
-  width: 15%;
+  width: 9%;
 }
 
 .feature-permissions-page .fp-col-created,
 .feature-permissions-page .fp-col-updated {
-  width: 13%;
+  width: 14%;
 }
 
 .feature-permissions-page .fp-col-actions {
-  width: 10%;
+  width: 8%;
 }
 
 
@@ -856,7 +856,7 @@
 .feature-permissions-page .fp-table th {
   height: 44px;
 
-  padding: 0 12px;
+  padding: 0 10px;
 
   border-bottom: 1px solid #e3e9f2;
 
@@ -890,7 +890,7 @@
 .feature-permissions-page .fp-table td {
   height: 56px;
 
-  padding: 0 12px;
+  padding: 0 10px;
 
   border-bottom: 1px solid #edf1f6;
 
@@ -943,15 +943,15 @@
 .feature-permissions-page .fp-description-cell {
   color: #64748b !important;
 
-  width: 220px;
-  max-width: 220px;
+  width: auto;
+  max-width: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .feature-permissions-page .fp-table col.fp-col-description {
-  width: 220px;
+  width: 16%;
 }
 
 
@@ -1477,5 +1477,387 @@
   .feature-permissions-page .fp-form-actions .fp-btn {
     width: 100%;
     min-width: 0;
+  }
+}
+
+
+/* =========================================================
+   LATEST CONSISTENCY + VALIDATION REFINEMENTS
+   ========================================================= */
+
+.feature-permissions-page .fp-btn-primary:disabled,
+.feature-permissions-page .fp-btn-primary:disabled:hover {
+  background: #e6eaf1;
+  color: #8a96a8;
+  border-color: transparent;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.feature-permissions-page .fp-permission-code-cell {
+  color: #274d7e !important;
+  font-weight: 500;
+  letter-spacing: 0.15px;
+  text-transform: uppercase;
+}
+
+/* Description: max 2 lines, full preview on hover only when truncated */
+.feature-permissions-page .fp-description-cell {
+  position: relative;
+  width: auto;
+  max-width: none;
+  overflow: visible !important;
+  text-overflow: clip;
+  white-space: normal !important;
+}
+
+.feature-permissions-page .fp-description-tooltip-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.feature-permissions-page .fp-description-clamp {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  max-height: 36px;
+  line-height: 18px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.feature-permissions-page .fp-description-tooltip {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 7px);
+  left: 0;
+  width: max-content;
+  min-width: 220px;
+  max-width: 360px;
+  padding: 10px 12px;
+  border: 1px solid #dce4ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #34435e;
+  box-shadow: 0 8px 24px rgba(16, 38, 77, 0.14);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+}
+
+.feature-permissions-page
+  .fp-description-tooltip-wrap:hover
+  .fp-description-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Keep timestamp readable on one line */
+.feature-permissions-page .fp-date-cell {
+  white-space: nowrap;
+}
+
+/* Actions exactly follow the Features screen visual pattern */
+.feature-permissions-page .fp-row-actions.feature-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.feature-permissions-page .fp-row-actions.feature-row-actions button {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #edf0f5;
+  border-radius: 7px;
+  background: #f8faff;
+  color: #677590;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.feature-permissions-page
+  .fp-row-actions.feature-row-actions
+  .edit-button {
+  color: #5367f0;
+  border-color: #edf0f5;
+  background: #f8faff;
+}
+
+.feature-permissions-page
+  .fp-row-actions.feature-row-actions
+  .delete-button {
+  color: #d9485f;
+  border-color: #edf0f5;
+  background: #f8faff;
+}
+
+.feature-permissions-page
+  .fp-row-actions.feature-row-actions
+  button:hover {
+  background: #f0f3fb;
+  border-color: #edf0f5;
+}
+
+.feature-permissions-page
+  .fp-row-actions.feature-row-actions
+  button i {
+  font-size: 14px;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   FINAL TABLE SPACING FIX
+   ========================================================= */
+
+.feature-permissions-page .fp-table {
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed !important;
+}
+
+/* Compact, balanced desktop distribution — totals 100% */
+.feature-permissions-page .fp-table col.fp-col-key {
+  width: 11% !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-name {
+  width: 12% !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-feature {
+  width: 12% !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-description {
+  width: 12% !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-status {
+  width: 9% !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-created {
+  width: 16% !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-updated {
+  width: 16% !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-actions {
+  width: 12% !important;
+}
+
+.feature-permissions-page .fp-table th,
+.feature-permissions-page .fp-table td {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* Description should use only its actual compact column */
+.feature-permissions-page .fp-description-cell {
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* Keep status visually close to description */
+.feature-permissions-page .fp-table th:nth-child(5),
+.feature-permissions-page .fp-table td:nth-child(5) {
+  padding-left: 6px !important;
+}
+
+/* Give timestamps the room that was previously wasted in Description */
+.feature-permissions-page .fp-date-cell {
+  font-size: 12px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* No unnecessary horizontal table expansion on normal desktop widths */
+@media (min-width: 901px) {
+  .feature-permissions-page .fp-table-wrap {
+    overflow-x: hidden !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL DESKTOP TABLE LAYOUT
+   Horizontal scrolling is intentional so every column keeps
+   comfortable spacing and readable content.
+   ========================================================= */
+
+.feature-permissions-page .fp-table-wrap {
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+.feature-permissions-page .fp-table {
+  width: 100% !important;
+  min-width: 1450px !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+
+/* Fixed pixel widths avoid headers/cells colliding.
+   Total width = 1450px */
+.feature-permissions-page .fp-table col.fp-col-key {
+  width: 170px !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-name {
+  width: 190px !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-feature {
+  width: 170px !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-description {
+  width: 260px !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-status {
+  width: 130px !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-created {
+  width: 190px !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-updated {
+  width: 190px !important;
+}
+
+.feature-permissions-page .fp-table col.fp-col-actions {
+  width: 150px !important;
+}
+
+.feature-permissions-page .fp-table th,
+.feature-permissions-page .fp-table td {
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  box-sizing: border-box !important;
+}
+
+.feature-permissions-page .fp-table th {
+  height: 48px !important;
+  color: #394052 !important;
+  font-size: 13px !important;
+  line-height: 18px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+}
+
+.feature-permissions-page .fp-table td {
+  height: 58px !important;
+  font-size: 13px !important;
+  line-height: 18px !important;
+}
+
+/* Dates now have enough width to show date + time cleanly */
+.feature-permissions-page .fp-date-cell {
+  font-size: 13px !important;
+  line-height: 18px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Description stays 2 lines and uses its dedicated 260px column */
+.feature-permissions-page .fp-description-cell {
+  width: auto !important;
+  max-width: none !important;
+  white-space: normal !important;
+  overflow: visible !important;
+}
+
+/* Actions: exact Features screen button visual rules */
+.feature-permissions-page .fp-table th:last-child,
+.feature-permissions-page .fp-table td:last-child {
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  text-align: center !important;
+}
+
+.feature-permissions-page .fp-row-actions.feature-row-actions {
+  width: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+.feature-permissions-page .fp-row-actions.feature-row-actions button {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid #edf0f5 !important;
+  border-radius: 7px !important;
+  background: #f8faff !important;
+  color: #677590 !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transform: none !important;
+}
+
+.feature-permissions-page
+  .fp-row-actions.feature-row-actions
+  .edit.edit-button {
+  border: 1px solid #edf0f5 !important;
+  background: #f8faff !important;
+  color: #5367f0 !important;
+}
+
+.feature-permissions-page
+  .fp-row-actions.feature-row-actions
+  .delete.delete-button {
+  border: 1px solid #edf0f5 !important;
+  background: #f8faff !important;
+  color: #d9485f !important;
+}
+
+.feature-permissions-page
+  .fp-row-actions.feature-row-actions
+  button:hover {
+  border-color: #edf0f5 !important;
+  background: #f0f3fb !important;
+}
+
+.feature-permissions-page
+  .fp-row-actions.feature-row-actions
+  button i {
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+/* Override the previous desktop rule that hid horizontal overflow */
+@media (min-width: 901px) {
+  .feature-permissions-page .fp-table-wrap {
+    overflow-x: auto !important;
   }
 }

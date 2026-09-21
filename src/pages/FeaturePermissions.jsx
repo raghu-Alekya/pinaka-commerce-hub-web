@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { listFeatures } from "../api/features";
 import {
   listFeaturePermissions,
@@ -19,6 +19,40 @@ const emptyForm = {
   description: "",
   status: "Active",
 };
+
+
+function PermissionDescriptionCell({ description = "" }) {
+  const textRef = useRef(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useEffect(() => {
+    const checkTruncation = () => {
+      const element = textRef.current;
+      if (!element) return;
+      setIsTruncated(element.scrollHeight > element.clientHeight + 1);
+    };
+
+    checkTruncation();
+    window.addEventListener("resize", checkTruncation);
+    return () => window.removeEventListener("resize", checkTruncation);
+  }, [description]);
+
+  return (
+    <td className="fp-description-cell">
+      <div className="fp-description-tooltip-wrap">
+        <span ref={textRef} className="fp-description-clamp">
+          {description || "—"}
+        </span>
+
+        {isTruncated && (
+          <div className="fp-description-tooltip" role="tooltip">
+            {description}
+          </div>
+        )}
+      </div>
+    </td>
+  );
+}
 
 export default function FeaturePermissions() {
   const [features, setFeatures] = useState([]);
@@ -42,6 +76,11 @@ export default function FeaturePermissions() {
     useState("All Statuses");
 
   const isEditing = editingId !== null;
+
+  const requiredFieldsComplete =
+    form.key.trim() !== "" &&
+    form.name.trim() !== "" &&
+    String(form.featureId).trim() !== "";
 
   const normalizeStatus = (status) =>
     String(status || "ACTIVE").toUpperCase() === "ACTIVE"
@@ -150,13 +189,36 @@ export default function FeaturePermissions() {
     if (!permissionName) validationErrors.name = "Permission name is required.";
     if (!selectedFeature) validationErrors.featureId = "Please select a feature.";
 
+    const normalizedKey = permissionKey.toLowerCase();
+    const normalizedName = permissionName.toLowerCase();
+
+    const duplicateKey = permissions.some(
+      (item) =>
+        String(item.id) !== String(editingId) &&
+        String(item.key || "").trim().toLowerCase() === normalizedKey
+    );
+
+    const duplicateName = permissions.some(
+      (item) =>
+        String(item.id) !== String(editingId) &&
+        String(item.name || "").trim().toLowerCase() === normalizedName
+    );
+
+    if (duplicateKey) {
+      validationErrors.key = "Permission code already exists.";
+    }
+
+    if (duplicateName) {
+      validationErrors.name = "Permission name already exists.";
+    }
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
     const payload = {
-      ...(isEditing ? {} : { permissionKey: permissionKey.toUpperCase() }),
+      permissionKey: permissionKey.toUpperCase(),
       name: permissionName,
       description: form.description.trim(),
       status: form.status.toUpperCase(),
@@ -167,9 +229,53 @@ export default function FeaturePermissions() {
         ? await updateFeaturePermission(selectedFeature.id, editingId, payload)
         : await createFeaturePermission(selectedFeature.id, payload);
 
-      // Reload from the backend so the UI reflects the actual saved row,
-      // including server-generated IDs and normalized fields.
-      await loadData();
+      if (isEditing) {
+        const normalizedUpdated = normalizePermission(response, selectedFeature);
+
+        setPermissions((prev) =>
+          prev.map((item) =>
+            String(item.id) === String(editingId)
+              ? {
+                  ...item,
+                  ...normalizedUpdated,
+                  id: normalizedUpdated.id || item.id,
+                  key: normalizedUpdated.key || permissionKey.toUpperCase(),
+                  name: normalizedUpdated.name || permissionName,
+                  featureId: normalizedUpdated.featureId || selectedFeature.id,
+                  featureName:
+                    normalizedUpdated.featureName || selectedFeature.name || "",
+                  description:
+                    normalizedUpdated.description ?? form.description.trim(),
+                  status: normalizedUpdated.status || form.status,
+                }
+              : item
+          )
+        );
+      } else {
+        const normalizedCreated = normalizePermission(response, selectedFeature);
+
+        const createdPermission = {
+          ...normalizedCreated,
+          key: normalizedCreated.key || permissionKey.toUpperCase(),
+          name: normalizedCreated.name || permissionName,
+          featureId: normalizedCreated.featureId || selectedFeature.id,
+          featureName:
+            normalizedCreated.featureName || selectedFeature.name || "",
+          description:
+            normalizedCreated.description ?? form.description.trim(),
+          status: normalizedCreated.status || form.status,
+        };
+
+        setPermissions((prev) => [
+          createdPermission,
+          ...prev.filter(
+            (item) =>
+              !createdPermission.id ||
+              String(item.id) !== String(createdPermission.id)
+          ),
+        ]);
+      }
+
       clearForm();
     } catch (error) {
       console.error("Save permission failed:", error);
@@ -308,10 +414,13 @@ export default function FeaturePermissions() {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "—";
 
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -625,6 +734,7 @@ export default function FeaturePermissions() {
             <button
               type="submit"
               className="fp-btn fp-btn-primary"
+              disabled={!requiredFieldsComplete}
             >
 
               {isEditing
@@ -810,10 +920,8 @@ export default function FeaturePermissions() {
 
                     {/* Permission Key */}
 
-                    <td>
-                      {
-                        permission.key
-                      }
+                    <td className="fp-permission-code-cell">
+                      {String(permission.key || "—").toUpperCase()}
                     </td>
 
                     {/* Permission Name */}
@@ -834,11 +942,9 @@ export default function FeaturePermissions() {
 
                     {/* Description */}
 
-                    <td className="fp-description-cell">
-                      {
-                        permission.description
-                      }
-                    </td>
+                    <PermissionDescriptionCell
+                      description={permission.description}
+                    />
 
                     {/* Status */}
 
@@ -873,13 +979,13 @@ export default function FeaturePermissions() {
 
                     <td>
 
-                      <div className="fp-row-actions">
+                      <div className="fp-row-actions feature-row-actions">
 
                         {/* EDIT */}
 
                         <button
                           type="button"
-                          className="edit"
+                          className="edit edit-button"
                           aria-label={`Edit ${permission.name}`}
                           onClick={() =>
                             editPermission(
@@ -896,7 +1002,7 @@ export default function FeaturePermissions() {
 
                         <button
                           type="button"
-                          className="delete"
+                          className="delete delete-button"
                           aria-label={`Delete ${permission.name}`}
                           onClick={() =>
                             deletePermission(
