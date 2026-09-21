@@ -44,6 +44,7 @@ import ViewRoleTemplateAccess from "./pages/ViewRoleTemplateAccess";
 import ViewPlanOverview from "./pages/ViewPlanOverview";
 import ViewPlanPricing from "./pages/ViewPlanPricing";
 import ViewPlanFeaturesLimits from "./pages/ViewPlanFeaturesLimits";
+import CashManagement from "./pages/CashManagement";
 
 const placeholders = [
   "Cash Management",
@@ -179,6 +180,11 @@ export default function App() {
         <Route
           path="/merchants/:merchantId/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
+        />
+        
+        <Route
+          path="/cash-management"
+          element={<CashManagement />}
         />
 
         {/* Subscriptions */}
