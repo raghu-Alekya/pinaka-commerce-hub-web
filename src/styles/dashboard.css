@@ -1803,16 +1803,25 @@ a {
 .admin-module:hover { background:#fbfcff; }
 .admin-module-top { display:flex; align-items:center; gap:9px; margin-bottom:11px; }
 .admin-module-icon { width:28px; height:28px; border-radius:7px; background:#efecff; color:#5d4ae7; display:flex; align-items:center; justify-content:center; font-size:13px; }
-.admin-module-top strong { color:#243252; font-size:11px; font-weight:700; }
+.admin-module-top strong { color:#243252; font-size:12px; font-weight:700; }
 .admin-module-arrow { margin-left:auto; color:#5b4ae5; font-size:10px; }
 .admin-module-rows { display:flex; flex-direction:column; gap:8px; }
 .admin-module-rows div { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.admin-module-rows span { color:#6b7791; font-size:9.5px; }
-.admin-module-rows b { color:#394664; font-size:9.5px; }
+.admin-module-rows span { color:#6b7791; font-size:11px; }
+.admin-module-rows b { color:#394664; font-size:11px; }
 
 .coverage-content { display:grid; grid-template-columns:48% 52%; align-items:center; padding:20px 18px 14px; }
 .coverage-visual { display:flex; flex-direction:column; align-items:center; gap:8px; }
-.dashboard-donut.coverage { width:138px; height:138px; background:conic-gradient(#24ae70 0 85.4%,#e99a27 85.4% 91.7%,#9aa9bd 91.7% 100%); }
+.dashboard-donut.coverage {
+  width: 138px;
+  height: 138px;
+
+  background: conic-gradient(
+    #35a9a5 0 85.42%,        /* Included in Plans - 41 */
+    #ed921d 85.42% 91.67%,   /* Not Included - 3 */
+    #9aaac0 91.67% 100%      /* Inactive - 4 */
+  );
+}
 .dashboard-donut.coverage .dashboard-donut-hole { width:104px; height:104px; }
 .dashboard-donut.coverage .dashboard-donut-hole strong { font-size:26px; }
 .coverage-total { font-size:9px; color:#74809a; }
@@ -1830,11 +1839,78 @@ a {
 .roles-summary { display:flex; justify-content:space-between; align-items:center; padding:14px 16px 10px; }
 .roles-summary > div { display:flex; align-items:baseline; gap:7px; }.roles-summary strong { color:#17264d; font-size:25px; }.roles-summary span { color:#687590; font-size:10px; }
 .attention-text { color:#8b6a2a !important; font-size:9.5px !important; }.attention-text i { color:#e99a27; margin-right:5px; }
-.roles-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; padding:0 16px 16px; }
-.role-metric { background:#f7f9fd; border:1px solid #edf0f5; border-radius:8px; min-height:70px; display:flex; align-items:center; gap:10px; padding:11px; }
-.role-metric-icon { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex:none; background:#eaf1ff; color:#3b78e3; font-size:15px; }.role-metric.purple .role-metric-icon { background:#eeeaff; color:#604ce7; }.role-metric.orange .role-metric-icon { background:#fff1df; color:#e48a19; }.role-metric.red .role-metric-icon { background:#ffe9eb; color:#e05361; }
-.role-metric div { display:flex; flex-direction:column; gap:4px; min-width:0; }.role-metric div span { color:#66738e; font-size:8.5px; white-space:nowrap; }.role-metric div strong { color:#18274b; font-size:17px; line-height:1; }
-.role-metric.orange div strong { color:#e48a19; }.role-metric.red div strong { color:#e05361; }
+/* =========================================================
+   ROLES & PERMISSIONS
+========================================================= */
+
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 16px 16px;
+  width: 100%;
+}
+
+.role-metric {
+  background: #f7f9fd;
+  border: 1px solid #edf0f5;
+  border-radius: 9px;
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.role-metric-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  background: #eaf1ff;
+  color: #3b78e3;
+  font-size: 17px;
+}
+
+.role-metric div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.role-metric div span {
+  color: #66738e;
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.role-metric div strong {
+  color: #18274b;
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.role-metric.orange div strong {
+  color: #18274b;
+}
+
+.role-metric.red div strong {
+  color: #e05361;
+}
+
+.role-metric.orange div strong { color:#18274b;}.role-metric.red div strong { color:#e05361; }
 
 .dashboard-growth { min-height:92px; border-radius:10px; background:linear-gradient(105deg,#eeeaff,#ddd7ff); border:1px solid #d8d1ff; display:flex; align-items:center; gap:14px; padding:16px 18px; margin-bottom:2px; }
 .growth-icon { width:52px; height:52px; border-radius:50%; background:#5944e9; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; flex:none; }.dashboard-growth > div:nth-child(2) { display:flex; flex-direction:column; gap:4px; }.dashboard-growth strong { color:#3021a7; font-size:16px; }.dashboard-growth span { color:#5c6480; font-size:10.5px; }.dashboard-growth button { margin-left:auto; height:38px; padding:0 17px; border:0; border-radius:7px; background:#fff; color:#4e3ce0; font-size:10.5px; font-weight:700; cursor:pointer; }.dashboard-growth button i { margin-left:5px; }
@@ -1914,13 +1990,13 @@ a {
 
 .plan-tier-card span {
   color: #687590;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.35;
 }
 
 .plan-tier-card strong {
   color: #17264d;
-  font-size: 20px;
+  font-size: 21px;
   line-height: 1;
 }
 
@@ -1951,13 +2027,13 @@ a {
 
 .plan-entitlement-row strong {
   color: #273452;
-  font-size: 10px;
+  font-size: 16px;
   font-weight: 600;
 }
 
 .plan-entitlement-row span {
   color: #73809a;
-  font-size: 9px;
+  font-size: 16px;
 }
 
 .plan-entitlement-row b {
@@ -1998,4 +2074,398 @@ a {
     grid-template-columns: 1fr;
   }
 
+}
+/* =========================================================
+   DATE RANGE FILTER
+========================================================= */
+
+.dashboard-date-filter-wrapper {
+  position: relative;
+}
+
+.dashboard-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 175px;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.dashboard-date-filter > i:first-child {
+  font-size: 16px;
+}
+
+.dashboard-date-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid #e1e6f0;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 12px 30px rgba(15, 35, 75, 0.12);
+  z-index: 1000;
+}
+
+.dashboard-date-dropdown > button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 11px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #142d57;
+  cursor: pointer;
+}
+
+.dashboard-date-dropdown > button:hover {
+  background: #f4f6ff;
+}
+
+.dashboard-date-dropdown > button.active {
+  background: #f0edff;
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+/* Custom date section */
+
+.dashboard-custom-date {
+  border-top: 1px solid #edf0f5;
+  margin-top: 6px;
+  padding: 12px 8px 6px;
+}
+
+.dashboard-custom-date > span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b6387;
+}
+
+.dashboard-date-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dashboard-date-inputs input {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid #d9dfeb;
+  border-radius: 7px;
+  font-size: 12px;
+  color: #142d57;
+  background: #fff;
+}
+
+.dashboard-date-inputs input:focus {
+  outline: none;
+  border-color: #5b4be7;
+}
+
+.dashboard-date-inputs span {
+  font-size: 12px;
+  color: #7b8ba5;
+}
+
+.dashboard-custom-apply {
+  width: 100%;
+  margin-top: 10px;
+  height: 36px;
+  border: none;
+  border-radius: 7px;
+  background: #5646e9;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dashboard-custom-apply:hover {
+  background: #4938d5;
+}
+
+.dashboard-custom-apply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* Feature legend colors */
+.legend-dot.blue {
+  background: #4f86e8;
+}
+
+.legend-dot.green {
+  background: #27ae70;
+}
+
+.legend-dot.slate {
+  background: #9aaac0;
+}
+
+.legend-dot.teal {
+  background: #35a9a5;
+}
+
+.legend-dot.orange {
+  background: #ed921d;
+}
+
+.legend-dot.purple {
+  background: #7476d1;
+}
+.trend-period {
+  font-size: 11px;
+  font-weight: 400;
+  color: #7a8499;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+/* =========================================================
+   PLAN FILTER
+========================================================= */
+
+.dashboard-plan-filter-wrapper {
+  position: relative;
+}
+
+.dashboard-plan-filter {
+  min-width: 145px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.dashboard-plan-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 145px;
+  background: #ffffff;
+  border: 1px solid #e1e6f0;
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 12px 30px rgba(15, 35, 75, 0.12);
+  z-index: 1000;
+}
+
+.dashboard-plan-dropdown button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 10px 11px;
+  border-radius: 7px;
+  font-size: 14px;
+  color: #142d57;
+  cursor: pointer;
+}
+
+.dashboard-plan-dropdown button:hover {
+  background: #f4f6ff;
+}
+
+.dashboard-plan-dropdown button.active {
+  background: #f0edff;
+  color: #5142df;
+  font-weight: 600;
+}
+
+/* =========================================================
+   SUPER ADMIN DASHBOARD HEADER — FINAL LAYOUT
+   Title + Export Report on the same row.
+   Filters are on the row below.
+========================================================= */
+
+.super-admin-dashboard .super-dashboard-head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 18px;
+  margin-bottom: 20px;
+  overflow: visible;
+}
+
+.super-admin-dashboard .super-dashboard-head > div:first-child {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  padding-right: 245px;
+}
+
+.super-admin-dashboard .super-dashboard-head h1 {
+  white-space: nowrap;
+  width: 100%;
+  margin: 0 0 6px;
+  line-height: 1.15;
+}
+
+.super-admin-dashboard .super-dashboard-head p {
+  margin: 0;
+}
+
+.super-admin-dashboard .dashboard-header-export {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 203px;
+  height: 54px;
+  border: 0;
+  border-radius: 8px;
+  background: #5543e8;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+.super-admin-dashboard .dashboard-header-export i {
+  font-size: 18px;
+}
+
+.super-admin-dashboard .dashboard-header-export:hover {
+  background: #4b3bd5;
+}
+
+.super-admin-dashboard .dashboard-toolbar {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.15fr)
+    minmax(170px, 0.95fr)
+    minmax(170px, 0.95fr)
+    minmax(170px, 0.95fr)
+    58px;
+  align-items: center;
+  gap: 12px;
+  justify-content: stretch;
+  overflow: visible;
+}
+
+.super-admin-dashboard .dashboard-toolbar > * {
+  min-width: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.super-admin-dashboard .dashboard-filter,
+.super-admin-dashboard .dashboard-date-filter,
+.super-admin-dashboard .dashboard-plan-filter {
+  width: 100%;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+.super-admin-dashboard .dashboard-icon-btn {
+  width: 58px;
+  min-width: 58px !important;
+  justify-self: stretch;
+}
+
+/* Keep the title/export row stable on desktop. */
+@media (min-width: 1201px) {
+  .super-admin-dashboard .super-dashboard-head > div:first-child {
+    min-height: 74px;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 1200px) {
+  .super-admin-dashboard .super-dashboard-head > div:first-child {
+    padding-right: 215px;
+  }
+
+  .super-admin-dashboard .dashboard-header-export {
+    width: 185px;
+    height: 48px;
+  }
+
+  .super-admin-dashboard .dashboard-toolbar {
+    grid-template-columns:
+      repeat(4, minmax(150px, 1fr))
+      54px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .super-admin-dashboard .super-dashboard-head > div:first-child {
+    padding-right: 0;
+  }
+
+  .super-admin-dashboard .super-dashboard-head h1 {
+    white-space: normal;
+    font-size: 24px;
+  }
+
+  .super-admin-dashboard .dashboard-header-export {
+    position: static;
+    width: 100%;
+    height: 44px;
+    margin-top: 12px;
+  }
+
+  .super-admin-dashboard .dashboard-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .super-admin-dashboard .dashboard-icon-btn {
+    width: 100%;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .super-admin-dashboard .dashboard-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   SUPER ADMIN — VISIBLE LOWER CARDS FONT SIZE
+   Slightly larger text for readability; layout unchanged.
+========================================================= */
+.super-admin-dashboard .plan-tier-card span {
+  font-size: 11px !important;
+}
+
+.super-admin-dashboard .plan-tier-card strong {
+  font-size: 21px !important;
+}
+
+.super-admin-dashboard .plan-entitlement-row strong {
+  font-size: 11px !important;
+}
+
+.super-admin-dashboard .plan-entitlement-row span {
+  font-size: 10px !important;
+}
+
+.super-admin-dashboard .admin-module-top strong {
+  font-size: 12px !important;
+}
+
+.super-admin-dashboard .admin-module-rows span,
+.super-admin-dashboard .admin-module-rows b {
+  font-size: 11px !important;
 }

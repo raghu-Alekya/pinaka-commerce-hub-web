@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 /* =========================================================
@@ -79,7 +79,7 @@ const healthRows = [
 
 const adminModules = [
   {
-    title: "Merchants & Stores",
+    title: "Merchants",
     icon: "bi-shop",
     rows: [
       ["Pending onboarding", "10"],
@@ -89,12 +89,12 @@ const adminModules = [
     path: "/merchants",
   },
   {
-    title: "Employees & Access",
+    title: "Users & Access",
     icon: "bi-people",
     rows: [
-      ["Active role templates", "14"],
-      ["Permissions", "126"],
-      ["Access exceptions", "30"],
+      ["Total employees", "14"],
+      ["Employees without roles", "126"],
+      ["inactive", "30"],
     ],
     path: "/employees",
   },
@@ -138,10 +138,10 @@ const planEntitlements = [
 const roleMetrics = [
   ["System Roles", "8", "bi-shield-check", "blue"],
   ["Custom Roles", "6", "bi-person-badge", "purple"],
-  ["Permissions", "126", "bi-key", "purple"],
+  ["Active role templates", "126", "bi-key", "purple"],
+  ["Total permissions", "24", "bi-exclamation-circle", "orange"],
   ["Employees Assigned", "2,456", "bi-person-check", "blue"],
-  ["Without Roles", "24", "bi-exclamation-circle", "orange"],
-  ["Locked Accounts", "6", "bi-lock", "red"],
+  
 ];
 
 /* =========================================================
@@ -206,6 +206,28 @@ export default function Dashboard() {
   const nav = useNavigate();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [dateFilter, setDateFilter] = useState("Today");
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [planFilter, setPlanFilter] = useState("All plans");
+  const [showPlanFilter, setShowPlanFilter] = useState(false);
+  const dropdownsRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownsRef.current && !dropdownsRef.current.contains(event.target)) {
+        setShowDateFilter(false);
+        setShowPlanFilter(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const refresh = () => {
     setRefreshing(true);
@@ -235,28 +257,199 @@ export default function Dashboard() {
             Platform administration, access governance and
             service health
           </p>
+          <button
+            type="button"
+            className="dashboard-header-export"
+          >
+            <i className="bi bi-download" />
+            Export Report
+          </button>
         </div>
 
-        <div className="dashboard-toolbar">
+        <div className="dashboard-toolbar" ref={dropdownsRef}>
 
-          {/* Date filter intentionally kept commented */}
-          {/*
-          <button className="dashboard-filter">
-            <i className="bi bi-calendar3" />
-            Apr 1, 2025 – Apr 30, 2025
-            <i className="bi bi-chevron-down" />
-          </button>
-          */}
+         {/* DATE RANGE FILTER */}
+<div className="dashboard-date-filter-wrapper">
+  <button
+    type="button"
+    className="dashboard-filter dashboard-date-filter"
+    onClick={() => {
+      setShowDateFilter((prev) => !prev);
+      setShowPlanFilter(false);
+    }}
+  >
+    <i className="bi bi-calendar3" />
 
-          <button className="dashboard-filter">
-            All merchants
-            <i className="bi bi-chevron-down" />
-          </button>
+    <span>{dateFilter}</span>
 
-          <button className="dashboard-filter">
-            All stores
-            <i className="bi bi-chevron-down" />
-          </button>
+    <i
+      className={`bi ${
+        showDateFilter
+          ? "bi-chevron-up"
+          : "bi-chevron-down"
+      }`}
+    />
+  </button>
+
+  {showDateFilter && (
+    <div className="dashboard-date-dropdown">
+
+      <button
+        type="button"
+        className={dateFilter === "Today" ? "active" : ""}
+        onClick={() => {
+          setDateFilter("Today");
+          setShowDateFilter(false);
+        }}
+      >
+        Today
+      </button>
+
+      <button
+        type="button"
+        className={dateFilter === "Last 7 days" ? "active" : ""}
+        onClick={() => {
+          setDateFilter("Last 7 days");
+          setShowDateFilter(false);
+        }}
+      >
+        Last 7 days
+      </button>
+
+      <button
+        type="button"
+        className={dateFilter === "Last 30 days" ? "active" : ""}
+        onClick={() => {
+          setDateFilter("Last 30 days");
+          setShowDateFilter(false);
+        }}
+      >
+        Last 30 days
+      </button>
+
+      <div className="dashboard-custom-date">
+        <span>Custom</span>
+
+        <div className="dashboard-date-inputs">
+          <input
+            type="date"
+            value={customStartDate}
+            onChange={(e) => setCustomStartDate(e.target.value)}
+          />
+
+          <span>to</span>
+
+          <input
+            type="date"
+            value={customEndDate}
+            onChange={(e) => setCustomEndDate(e.target.value)}
+          />
+        </div>
+
+        <button
+          type="button"
+          className="dashboard-custom-apply"
+          disabled={!customStartDate || !customEndDate}
+          onClick={() => {
+            setDateFilter(
+              `${customStartDate} - ${customEndDate}`
+            );
+            setShowDateFilter(false);
+          }}
+        >
+          Apply
+        </button>
+      </div>
+
+    </div>
+  )}
+</div>
+    
+      {/* MERCHANT FILTER */}
+      <button className="dashboard-filter">
+        All merchants
+        <i className="bi bi-chevron-down" />
+      </button>
+
+      {/* PLAN FILTER */}
+      <div
+          className="dashboard-plan-filter-wrapper"
+        >
+        <button
+          type="button"
+          className="dashboard-filter dashboard-plan-filter"
+          onClick={() => {
+            setShowPlanFilter((prev) => !prev);
+            setShowDateFilter(false);
+          }}
+        >
+          <span>{planFilter}</span>
+
+          <i
+            className={`bi ${
+              showPlanFilter
+                ? "bi-chevron-up"
+                : "bi-chevron-down"
+            }`}
+          />
+        </button>
+
+        {showPlanFilter && (
+          <div className="dashboard-plan-dropdown">
+
+            <button
+              type="button"
+              className={planFilter === "All plans" ? "active" : ""}
+              onClick={() => {
+                setPlanFilter("All plans");
+                setShowPlanFilter(false);
+              }}
+            >
+              All plans
+            </button>
+
+            <button
+              type="button"
+              className={planFilter === "Basic" ? "active" : ""}
+              onClick={() => {
+                setPlanFilter("Basic");
+                setShowPlanFilter(false);
+              }}
+            >
+              Basic
+            </button>
+
+            <button
+              type="button"
+              className={planFilter === "Pro" ? "active" : ""}
+              onClick={() => {
+                setPlanFilter("Pro");
+                setShowPlanFilter(false);
+              }}
+            >
+              Pro
+            </button>
+
+            <button
+              type="button"
+              className={planFilter === "Enterprise" ? "active" : ""}
+              onClick={() => {
+                setPlanFilter("Enterprise");
+                setShowPlanFilter(false);
+              }}
+            >
+              Enterprise
+            </button>
+
+          </div>
+        )}
+      </div>
+
+      {/* STORE FILTER */}
+      <button className="dashboard-filter">
+        All stores
+        <i className="bi bi-chevron-down" />
+      </button>
 
           <button
             className="dashboard-icon-btn"
@@ -268,11 +461,6 @@ export default function Dashboard() {
                 refreshing ? "spin" : ""
               }`}
             />
-          </button>
-
-          <button className="dashboard-primary">
-            <i className="bi bi-download" />
-            Export Report
           </button>
 
         </div>
@@ -305,6 +493,7 @@ export default function Dashboard() {
                   <i className="bi bi-arrow-up" />
                   {" "}
                   {item.trend}
+                  <span className="trend-period">vs last 30 days</span>
                 </small>
 
               </div>
@@ -404,32 +593,46 @@ export default function Dashboard() {
                 className="coverage"
               />
 
-              <span className="coverage-total">
-                48 total features
-              </span>
-
             </div>
 
             <div className="coverage-legend">
 
-              <div>
-                <span className="legend-dot green" />
-                <span>Included in Plans</span>
-                <b>41</b>
-              </div>
+            {/* Total Features */}
+            <div className="feature-metric">
+              <span className="legend-dot blue" />
+              <span>Total Features</span>
+              <b>48</b>
+            </div>
 
-              <div>
-                <span className="legend-dot orange" />
-                <span>Unassigned Features</span>
-                <b>3</b>
-              </div>
+            {/* Active Features */}
+            <div className="feature-metric">
+              <span className="legend-dot green" />
+              <span>Active Features</span>
+              <b>44</b>
+            </div>
 
-              <div>
-                <span className="legend-dot slate" />
-                <span>Inactive Features</span>
-                <b>4</b>
-              </div>
+            {/* Inactive Features */}
+            <div className="feature-metric">
+              <span className="legend-dot slate" />
+              <span>Inactive Features</span>
+              <b>4</b>
+            </div>
 
+            {/* Included in Plans */}
+            <div className="feature-metric">
+              <span className="legend-dot teal" />
+              <span>Included in Plans</span>
+              <b>41</b>
+            </div>
+
+            {/* Not Included in Any Plan */}
+            <div className="feature-metric">
+              <span className="legend-dot orange" />
+              <span>Not Included in Any Plan</span>
+              <b>3</b>
+            </div>
+
+         
             </div>
 
           </div>

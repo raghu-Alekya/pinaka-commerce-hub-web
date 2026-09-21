@@ -38,6 +38,7 @@ import "./styles/add-employee.css";
 import "./styles/Merchant-subscriptions.css";
 import "./styles/ViewRoleTemplateDetails.css";
 import "./styles/PlanDetails.css";
+import './styles/cash-management.css';
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
