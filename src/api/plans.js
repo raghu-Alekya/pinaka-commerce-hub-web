@@ -381,7 +381,9 @@ export function normalizePlan(item) {
    * ---------------------------------------------------------- */
   const rawFeatures =
     item.included_features ||
-    item.includedFeatures;
+    item.includedFeatures ||
+    item.features ||
+    item.entitlements;
  
   const includedFeatures =
     Array.isArray(rawFeatures)

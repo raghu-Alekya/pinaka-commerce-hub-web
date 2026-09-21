@@ -3,7 +3,7 @@ export const endpoints = {
   refresh: "/auth/refresh",
   logout: "/auth/logout",
   me: "/auth/me",
-//
+  //
   merchants: "/merchants",
   createMerchant: "/merchants/create-merchant",
   merchant: (id) => `/merchants/${id}`,
@@ -14,7 +14,7 @@ export const endpoints = {
   storeType: (id) => `/store-types/${encodeURIComponent(id)}`,
   storeTypeFeatures: (id) => `/store-types/${encodeURIComponent(id)}/features`,
   storeTypeFeature: (storeTypeId, featureId) =>
-    `//store-types/${encodeURIComponent(storeTypeId)}/features/${encodeURIComponent(featureId)}`,
+    `/store-types/${encodeURIComponent(storeTypeId)}/features/${encodeURIComponent(featureId)}`,
   storeConnector: (id) => `/stores/${id}/connector`,
   merchantStores: (merchantId) =>
     `/merchants/${merchantId}/stores`,
@@ -22,16 +22,22 @@ export const endpoints = {
   features: "/features",
   feature: (id) => `/features/${id}`,
   featureStatus: (id) => `/features/${id}/status`,
-  
+
   permissions: "/permissions",
   permission: (id) => `/permissions/${id}`,
 
   plans: "/plans",
 
-plan: (id) =>
-  `/plans/${encodeURIComponent(id)}`,
+  plan: (id) =>
+    `/plans/${encodeURIComponent(id)}`,
 
-planStatus: (id) =>
-  `/plans/${encodeURIComponent(id)}`,
+  planStatus: (id) =>
+    `/plans/${encodeURIComponent(id)}`,
+
+  tendors: "/tendors",
+  tendor: (id) => `/tendors/${id}`,
+
+tendors: "/tendors",
+  tendor: (id) => `/tendors/${id}`,
 
 };

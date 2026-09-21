@@ -7,16 +7,16 @@ export const roleTemplatesApi = {
 
   assignToStoreType: (storeTypeId, values) =>
     api.post(
-      `//store-types/${encodeURIComponent(storeTypeId)}/role-templates`,
+      `/store-types/${encodeURIComponent(storeTypeId)}/role-templates`,
       values
     ),
 
   getForStoreType: (storeTypeId) =>
-    api.get(`//store-types/${encodeURIComponent(storeTypeId)}/role-templates`),
+    api.get(`/store-types/${encodeURIComponent(storeTypeId)}/role-templates`),
 
   removeFromStoreType: (storeTypeId, roleTemplateId) =>
     api.delete(
-      `//store-types/${encodeURIComponent(storeTypeId)}/role-templates/${encodeURIComponent(roleTemplateId)}`
+      `/store-types/${encodeURIComponent(storeTypeId)}/role-templates/${encodeURIComponent(roleTemplateId)}`
     ),
 
   getById: (id) =>
@@ -24,7 +24,7 @@ export const roleTemplatesApi = {
 
   getAvailableStoreTypes: (id) =>
     api.get(
-      `//role-templates/${encodeURIComponent(id)}/store-types/available`
+      `/role-templates/${encodeURIComponent(id)}/store-types/available`
     ),
 
   getFeatures: (id, storeTypeIds = []) => {
@@ -37,7 +37,7 @@ export const roleTemplatesApi = {
       : "?storeTypeIds=%2C";
 
     return api.get(
-      `//role-templates/${encodeURIComponent(id)}/features${query}`
+      `/role-templates/${encodeURIComponent(id)}/features${query}`
     );
   },
 

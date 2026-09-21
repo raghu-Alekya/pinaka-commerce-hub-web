@@ -2,9 +2,31 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getMerchant, listMerchants } from "../api/merchants";
 import { createStore, getStore, updateStore } from "../api/stores";
+import { storeTypesApi } from "../api/storeTypes";
 import { allocateId } from "../api/ids";
 import { ApiError } from "../api/http";
 import "../styles/merchant-form.css";
+
+// Supported countries and time zones match the merchant onboarding form.
+const COUNTRY_SETTINGS = {
+  "United States": {currency: "USD", symbol: "$", zones: ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"]},
+  India: {currency: "INR", symbol: "₹", zones: ["Asia/Kolkata"]},
+  Canada: {currency: "CAD", symbol: "C$", zones: ["America/Toronto", "America/Vancouver", "America/Edmonton", "America/Winnipeg", "America/Halifax", "America/St_Johns", "America/Regina", "America/Whitehorse"]},
+  "United Kingdom": {currency: "GBP", symbol: "£", zones: ["Europe/London"]},
+  Australia: {currency: "AUD", symbol: "A$", zones: ["Australia/Sydney", "Australia/Melbourne", "Australia/Brisbane", "Australia/Adelaide", "Australia/Perth", "Australia/Darwin", "Australia/Hobart", "Australia/Broken_Hill", "Australia/Lord_Howe"]},
+};
+
+function applyCountry(store, country) {
+  const settings = COUNTRY_SETTINGS[country];
+  return {
+    ...store,
+    country,
+    currency: settings?.currency || "",
+    timezone: settings?.zones.includes(store.timezone)
+      ? store.timezone
+      : settings?.zones.length === 1 ? settings.zones[0] : "",
+  };
+}
 
 const DAYS = [
   "Monday",
@@ -21,27 +43,14 @@ const STEPS = [
   ["Merchant subscription", "Package & location licenses"],
   ["Devices", "Register & allocate licenses"],
   ["Effective features", "Relevance × entitlement"],
-  ["Merchant roles", "Templates & permissions"],
+  ["Merchant roles", "Inherited access, templates & permissions"],
   ["Review & provision", "Connected records"],
 ];
 
-const TYPES = [
-  "C-Store",
-  "G-Store",
-];
-
-const FEATURES = [
-  "Fastkeys",
-  "Refunds",
-  "Safe Drop",
-  "Loyalty",
-  "Delivery",
-  "Weighing Scale",
-  "Payroll",
-  "KDS",
-  "Service Charges",
-];
-
+// Store-level role templates a store admin can layer on top of the roles
+// inherited from the merchant. Actual permission actions for each feature
+// come from the store type's feature definitions (typeData.features), not
+// a hardcoded map, so they always match what the store type actually offers.
 const ROLE_TEMPLATES = [
   "Store Manager",
   "Shift Manager",
@@ -50,26 +59,24 @@ const ROLE_TEMPLATES = [
   "Receiving Clerk",
 ];
 
-const FEATURE_ACTIONS = {
-  Fastkeys: ["View", "Use"],
-  Refunds: ["View", "Create", "Approve", "Override"],
-  "Safe Drop": ["View", "Create"],
-  Loyalty: ["View", "Enroll", "Redeem"],
-  Delivery: ["View", "Manage"],
-  "Weighing Scale": ["Use"],
-  Payroll: ["View", "Manage"],
-  KDS: ["View", "Manage"],
-  "Service Charges": ["View", "Configure"],
-};
+const DEVICE_TYPES = ["POS", "KDS", "Printer", "Scanner"];
 
-const DEFAULT_ACTIONS = {
-  Fastkeys: ["View", "Use"],
-  Refunds: ["View", "Create"],
-  "Safe Drop": ["View", "Create"],
-  Loyalty: ["View", "Enroll", "Redeem"],
-  Delivery: ["View"],
-  "Weighing Scale": ["Use"],
+const listFrom = (response) => {
+  const rows = response?.features ?? response?.storeTypeFeatures ?? response?.items ?? response?.data ?? response;
+  return Array.isArray(rows) ? rows : [];
 };
+const featureName = (item) => typeof item === "string" ? item :
+  item?.name ?? item?.featureName ?? item?.featureKey ?? item?.code ?? "";
+const actionsFrom = (items) => Array.isArray(items)
+  ? items.map(item => typeof item === "string" ? item : item?.name ?? item?.action ?? item?.code).filter(Boolean)
+  : [];
+const limitFrom = (...values) => {
+  const value = values.find(value => value !== undefined && value !== null && value !== "" && !Array.isArray(value));
+  if (value === undefined) return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+};
+const displayLimit = value => value == null ? "Unavailable" : value;
 
 const emptyHours = () =>
   DAYS.map((day) => ({
@@ -84,18 +91,24 @@ const initialStore = (merchantId = "") => ({
   merchantId,
   id: "",
   name: "",
-  type: "Grocery",
+  type: "",
+  storeTypeId: "",
   phone: "",
   url: "",
-  currency: "USD",
-  status: "Active",
-  address: "",
+  currency: "",
+  status: "",
+  addressLine1: "",
+  addressLine2: "",
   city: "",
   state: "",
   zip: "",
-  timezone: "America/Phoenix",
+  country: "",
+  timezone: "",
   hours: emptyHours(),
 });
+
+// Store address format: Address Line 1, optional Address Line 2, City,
+// State/Province, ZIP/Postal Code, and Country.
 
 const Field = ({
   label,
@@ -154,9 +167,35 @@ const Panel = ({ title, children }) => (
 const Detail = ({ label, value }) => (
   <div className="pch-rule">
     <span className="pch-muted">{label}</span>
-    <span>{value || "—"}</span>
+    <span>{value ?? "—"}</span>
   </div>
 );
+
+function merchantIdOf(value) {
+  if (value && typeof value === "object") {
+    return String(value.id ?? value._id ?? value.merchantId ?? "");
+  }
+  return value == null ? "" : String(value);
+}
+
+function merchantConfiguration(result) {
+  const response = result.raw || {};
+  const raw = response.merchant || response.data?.merchant || response.data || response;
+  const draft = raw._onboarding || result.merchant?._onboarding;
+  const owner = {...(draft?.merchant || {}), ...raw, ...result.merchant};
+  const type = owner.storeType;
+  return {
+    merchant: owner,
+    type: {
+      id: String(owner.storeTypeId ?? type?.id ?? draft?.merchant?.storeTypeId ?? ""),
+      name: owner.storeTypeName || (typeof type === "string" ? type : type?.name) || owner.type || "",
+      code: owner.storeTypeCode || type?.code || draft?.merchant?.storeTypeCode || "",
+    },
+    subscription: result.subscription ?? raw.subscription ?? null,
+    roles: Array.isArray(result.roles) ? result.roles : Array.isArray(raw.roles) ? raw.roles :
+      Array.isArray(result.merchant?.roles) ? result.merchant.roles : draft?.roles || [],
+  };
+}
 
 export default function AddStore() {
   const nav = useNavigate();
@@ -167,19 +206,31 @@ export default function AddStore() {
     initialStore(routeMerchantId)
   );
   const [merchant, setMerchant] = useState(null);
+  const [merchantType, setMerchantType] = useState({id: "", name: "", code: ""});
+  const [merchantRoles, setMerchantRoles] = useState([]);
+  const [loadedMerchantId, setLoadedMerchantId] = useState("");
+  const [merchantLoading, setMerchantLoading] = useState(false);
+  const [merchantError, setMerchantError] = useState("");
   const [merchants, setMerchants] = useState([]);
   const [merchantStores, setMerchantStores] = useState([]);
   const [subscription, setSubscription] = useState(null);
   const [devices, setDevices] = useState([]);
-  const [enabledFeatures, setEnabledFeatures] = useState(
-    FEATURES.slice(0, 6)
-  );
-  const [roles, setRoles] = useState([]);
-  const [activeRole, setActiveRole] = useState("");
-  const [rolePermissions, setRolePermissions] = useState({});
+  const [enabledFeatures, setEnabledFeatures] = useState([]);
+  const [storeTypes, setStoreTypes] = useState([]);
+  const [mastersLoading, setMastersLoading] = useState(true);
+  const [mastersError, setMastersError] = useState("");
+  const [typeData, setTypeData] = useState({id: "", features: [], roles: [], loading: false, error: ""});
+
+  // Store-level roles: layered on top of whatever roles are inherited from
+  // the merchant. A store admin can pick from templates, add a custom role,
+  // and configure per-feature permissions for each one.
+  const [storeRoles, setStoreRoles] = useState([]);
+  const [activeStoreRole, setActiveStoreRole] = useState("");
+  const [storeRolePermissions, setStoreRolePermissions] = useState({});
   const [customRoleOpen, setCustomRoleOpen] = useState(false);
   const [customRoleName, setCustomRoleName] = useState("");
   const [customRoleScope, setCustomRoleScope] = useState("Store");
+
   const [step, setStep] = useState(0);
   const [furthest, setFurthest] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -195,19 +246,10 @@ export default function AddStore() {
       setError("");
 
       try {
-        if (routeMerchantId) {
-          const result = await getMerchant(routeMerchantId);
-
-          if (!cancelled) {
-            setMerchant(result.merchant);
-            setMerchantStores(result.stores || []);
-            setSubscription(result.subscription);
-          }
-        } else {
+        if (!routeMerchantId && !storeId) {
           const rows = await listMerchants();
-
           if (!cancelled) {
-            setMerchants(rows);
+            setMerchants(Array.isArray(rows) ? rows : []);
           }
         }
 
@@ -216,27 +258,52 @@ export default function AddStore() {
 
           if (!cancelled) {
             setStore({
-              ...initialStore(routeMerchantId || saved.merchant),
+              ...initialStore(routeMerchantId || merchantIdOf(saved.merchantId ?? saved.merchant)),
               ...saved,
               name: saved.storeName || saved.name || "",
-              type: saved.storeType || saved.type || "Grocery",
+              type: saved.storeType?.name || saved.storeTypeName || saved.storeType || saved.type || "",
+              storeTypeId: String(saved.storeTypeId ?? saved.storeType?.id ?? ""),
               id: saved.storeID || saved.id || "",
-              merchantId: routeMerchantId || saved.merchant,
+              merchantId: routeMerchantId || merchantIdOf(saved.merchantId ?? saved.merchant),
+              addressLine1:
+                saved.addressLine1 ||
+                saved.address?.addressLine1 ||
+                saved.address?.street ||
+                (typeof saved.address === "string" ? saved.address : ""),
+              addressLine2:
+                saved.addressLine2 ||
+                saved.address?.addressLine2 ||
+                saved.address?.unit ||
+                "",
+              city: saved.city || saved.address?.city || "",
+              state: saved.state || saved.address?.state || "",
+              zip:
+                saved.zip ||
+                saved.postalCode ||
+                saved.address?.zipCode ||
+                "",
+              country:
+                saved.country ||
+                saved.address?.country ||
+                "",
               hours: saved.hours || emptyHours(),
             });
             setDevices(Array.isArray(saved.devices) ? saved.devices.map(d => ({
               ...d,
               name: d.name || d.deviceName || "",
-              type: d.type || d.deviceType || "POS",
+              type: d.type || d.deviceType || "",
               serial: d.serial || d.identifier || ""
             })) : []);
             if (Array.isArray(saved.features) && saved.features.length) {
               setEnabledFeatures(saved.features.map((feature) => typeof feature === "string" ? feature : feature.name || feature.featureName).filter(Boolean));
             }
-            if (Array.isArray(saved.roles)) {
-              const savedRoles = saved.roles.map((role) => typeof role === "string" ? role : role.name || role.roleName).filter(Boolean);
-              setRoles(savedRoles);
-              setActiveRole(savedRoles[0] || "");
+            if (Array.isArray(saved.storeRoles) && saved.storeRoles.length) {
+              const savedStoreRoles = saved.storeRoles.map((role) => typeof role === "string" ? role : role.name || role.roleName).filter(Boolean);
+              setStoreRoles(savedStoreRoles);
+              setActiveStoreRole(savedStoreRoles[0] || "");
+            }
+            if (saved.storeRolePermissions && typeof saved.storeRolePermissions === "object") {
+              setStoreRolePermissions(saved.storeRolePermissions);
             }
             setFurthest(STEPS.length - 1);
           }
@@ -246,6 +313,7 @@ export default function AddStore() {
           if (!cancelled) {
             setStore((current) => ({
               ...current,
+              merchantId: routeMerchantId || "",
               id,
             }));
           }
@@ -272,35 +340,110 @@ export default function AddStore() {
     };
   }, [routeMerchantId, storeId]);
 
+  const selectedMerchantId = merchantIdOf(routeMerchantId || store.merchantId);
+
+  useEffect(() => {
+    let cancelled = false;
+    setMerchant(null);
+    setMerchantType({id: "", name: "", code: ""});
+    setMerchantRoles([]);
+    setMerchantStores([]);
+    setSubscription(null);
+    setLoadedMerchantId("");
+    setMerchantError("");
+    setMerchantLoading(Boolean(selectedMerchantId));
+
+    if (!selectedMerchantId) return;
+
+    async function loadMerchant() {
+      try {
+        const result = await getMerchant(selectedMerchantId);
+        if (cancelled) return;
+        if (!result?.merchant) throw new Error("Merchant details are unavailable.");
+        const inherited = merchantConfiguration(result);
+        setMerchant(inherited.merchant);
+        setMerchantType(inherited.type);
+        setMerchantRoles(inherited.roles);
+        setMerchantStores(Array.isArray(result.stores) ? result.stores : []);
+        setSubscription(inherited.subscription);
+        setLoadedMerchantId(selectedMerchantId);
+      } catch (err) {
+        if (!cancelled) {
+          setMerchantError(err?.message || "Unable to load the selected merchant.");
+        }
+      } finally {
+        if (!cancelled) setMerchantLoading(false);
+      }
+    }
+
+    loadMerchant();
+    return () => { cancelled = true; };
+  }, [selectedMerchantId]);
+
   const currentMerchant = useMemo(
     () =>
-      merchant ||
-      merchants.find(
-        (item) => String(item.id) === String(store.merchantId)
-      ),
-    [merchant, merchants, store.merchantId]
+      (loadedMerchantId === selectedMerchantId ? merchant : null) ||
+      merchants.find((item) => merchantIdOf(item) === selectedMerchantId),
+    [merchant, merchants, loadedMerchantId, selectedMerchantId]
   );
 
-  const planName =
-    subscription?.planName ||
-    subscription?.planCode ||
-    currentMerchant?.plan ||
-    "Current plan";
+  const merchantReady = Boolean(selectedMerchantId) &&
+    loadedMerchantId === selectedMerchantId && !merchantLoading && !merchantError;
 
-  const storeLimit = Number(
-    subscription?.storeLimit ||
-      subscription?.stores ||
-      subscription?.maxStores ||
-      subscription?.locationLimit ||
-      5
-  );
+  useEffect(() => {
+    let active = true;
+    storeTypesApi.getAll().then(types => {
+      if (!active) return;
+      if (!Array.isArray(types?.storeTypes)) {
+        throw new Error("The store-type API returned an unexpected response.");
+      }
+      setStoreTypes(types.storeTypes);
+    }).catch(err => { if (active) setMastersError(err.message || "Unable to load master data."); })
+      .finally(() => { if (active) setMastersLoading(false); });
+    return () => { active = false; };
+  }, []);
 
-  const deviceLimit = Number(
-    subscription?.deviceLimit ||
-      subscription?.devices ||
-      subscription?.maxDevices ||
-      15
-  );
+  const selectedStoreType = storeTypes.find(item =>
+    merchantReady && (merchantType.id ? String(item.id) === merchantType.id :
+      String(item.name).toLowerCase() === String(merchantType.name).toLowerCase()));
+  const inheritedTypeName = merchantReady ? selectedStoreType?.name || merchantType.name : "";
+  const inheritedTypeId = merchantReady ? String(selectedStoreType?.id ?? merchantType.id) : "";
+  const inheritedTypeCode = merchantReady ? selectedStoreType?.storeTypeCode || merchantType.code : "";
+  const roles = merchantReady ? merchantRoles.map(role => typeof role === "string" ? role :
+    role.name || role.roleName || role.templateName || "").filter(Boolean) : [];
+
+  useEffect(() => {
+    const id = selectedStoreType?.id;
+    if (id == null) {
+      setTypeData({id: "", features: [], roles: [], loading: false, error: ""});
+      return;
+    }
+    let active = true;
+    setTypeData({id: String(id), features: [], roles: [], loading: true, error: ""});
+    storeTypesApi.getFeatures(id)
+      .then(featureResponse => {
+        if (!active) return;
+        const features = listFrom(featureResponse).map(assignment => {
+          const feature = assignment.feature ?? assignment.featureDetails ?? assignment.featureDefinition ?? assignment;
+          return {name: featureName(feature), actions: actionsFrom(feature.actions),
+            active: assignment.defaultEnabled !== false && String(feature.status || "").toUpperCase() !== "INACTIVE"};
+        }).filter(feature => feature.name && feature.active);
+        setTypeData({id: String(id), features, roles: [], loading: false, error: ""});
+      }).catch(err => { if(active) setTypeData({id: String(id), features: [], roles: [], loading: false, error: err.message || "Unable to load inherited store-type features."}); });
+    return () => { active = false; };
+  }, [selectedStoreType?.id]);
+
+  const FEATURES = typeData.features.map(feature => feature.name);
+  const actionsForFeature = (name) => typeData.features.find((f) => f.name === name)?.actions || [];
+  const assignedPlan = subscription?.plan && typeof subscription.plan === "object" ? subscription.plan : null;
+  const planName = subscription?.planName || subscription?.planCode || assignedPlan?.name || (typeof currentMerchant?.plan === "string" ? currentMerchant.plan : "") || "Unavailable";
+  const storeLimit = limitFrom(subscription?.storeLimit, subscription?.stores, subscription?.maxStores,
+    subscription?.locationLimit, assignedPlan?.includedStores);
+  const deviceLimit = limitFrom(subscription?.deviceLimit, subscription?.maxDevices,
+    subscription?.devices, assignedPlan?.includedTerminals);
+  const entitledFeatures = listFrom(subscription?.includedFeatures ?? assignedPlan?.includedFeatures ?? [])
+    .map(featureName).map(name => String(name).toLowerCase());
+  const featureAvailable = name => entitledFeatures.includes(String(name).toLowerCase());
 
   const enrolledStores = merchantStores.length;
 
@@ -318,17 +461,33 @@ export default function AddStore() {
       0
   );
 
-  const usedDevices = enrolledDeviceCount + (editing ? 0 : devices.length);
+  const persistedDeviceCount = useMemo(() => {
+    if (!editing) return 0;
+    return existingDevices.filter(device => String(device.storeId ?? device.store?.id ?? device.store) === String(storeId)).length;
+  }, [editing, existingDevices, storeId]);
+  const usedDevices = Math.max(0, enrolledDeviceCount - persistedDeviceCount) + devices.length;
 
-  const remainingStores = Math.max(
-    0,
-    storeLimit - enrolledStores
-  );
+  const remainingStores = storeLimit == null ? null : Math.max(0, storeLimit - enrolledStores);
 
-  const remainingDevices = Math.max(
-    0,
-    deviceLimit - usedDevices
-  );
+  const remainingDevices = deviceLimit == null ? null : Math.max(0, deviceLimit - usedDevices);
+
+  const countrySettings = COUNTRY_SETTINGS[store.country];
+  const currencyDisplay = countrySettings
+    ? countrySettings.currency + " (" + countrySettings.symbol + ")"
+    : "";
+
+  // Normalize existing stores as well as country changes.
+  useEffect(() => {
+    setStore(current => {
+      const next = applyCountry(current, current.country);
+      return next.currency === current.currency && next.timezone === current.timezone ? current : next;
+    });
+  }, [store.country]);
+
+  const changeCountry = country => {
+    setError("");
+    setStore(current => applyCountry(current, country));
+  };
 
   const change = (key, value) => {
     setError("");
@@ -361,7 +520,15 @@ export default function AddStore() {
 
   const validateStep = (currentStep) => {
     if (currentStep === 0) {
+      if (!selectedMerchantId) return "Please select a merchant.";
+      if (merchantError) return merchantError;
+      if (!merchantReady) return "Please wait for the merchant details to load.";
       if (!store.merchantId && !routeMerchantId) return "Please select a merchant.";
+      if (mastersLoading) return "Please wait for master data to load.";
+      if (mastersError) return mastersError;
+      if (!selectedStoreType) return "The merchant has no resolvable store type. Update the merchant profile first.";
+      if (typeData.loading || typeData.id !== String(selectedStoreType.id)) return "Please wait for store-type details to load.";
+      if (typeData.error) return typeData.error;
       if (!store.name || !String(store.name).trim()) return "Store name is required.";
       if (!store.url || !String(store.url).trim()) return "Store Base URL is required.";
       try {
@@ -370,15 +537,28 @@ export default function AddStore() {
         return "Please enter a valid URL.";
       }
       if (!store.phone || !String(store.phone).trim()) return "Store phone is required.";
+      if (!store.addressLine1 || !String(store.addressLine1).trim()) return "Address Line 1 is required.";
+      if (store.country === "United States" && !/^\d+[A-Za-z]?\s+\S.+$/.test(String(store.addressLine1).trim())) return "Address Line 1 must include the street number and street name.";
       if (!store.city || !String(store.city).trim()) return "City is required.";
       if (!store.state || !String(store.state).trim()) return "State is required.";
-      if (!store.address || !String(store.address).trim()) return "Address is required.";
       if (!store.zip || !String(store.zip).trim()) return "ZIP code is required.";
+      if (store.country === "United States" && !/^\d{5}(-\d{4})?$/.test(String(store.zip).trim())) return "Enter a valid 5-digit ZIP code or ZIP+4, for example 85001 or 85001-1234.";
+      if (!store.country || !String(store.country).trim()) return "Country is required.";
+      if (!COUNTRY_SETTINGS[store.country]) return "Please select a supported country.";
+      if (!COUNTRY_SETTINGS[store.country].zones.includes(store.timezone)) return "Please select a time zone for the selected country.";
+    } else if (currentStep === 1) {
+      if (!editing && storeLimit == null) return "Store license limit is unavailable. Check the merchant subscription.";
+      if (!editing && remainingStores <= 0) return "The merchant has no remaining store licenses.";
     } else if (currentStep === 2) {
+      if (devices.length && deviceLimit == null) return "Device license limit is unavailable. Check the merchant subscription.";
+      if (deviceLimit != null && usedDevices > deviceLimit) return "Assigned devices exceed the merchant's device limit.";
       for (let d of devices) {
+        if (!d.type || !String(d.type).trim()) return "Device type is required for all devices.";
         if (!d.name || !String(d.name).trim()) return "Device name is required for all devices.";
         if (!d.serial || !String(d.serial).trim()) return "Device identifier is required for all devices.";
       }
+    } else if (currentStep === 4) {
+      if (customRoleOpen) return "Finish or cancel the custom role you're creating before continuing.";
     }
     return null;
   };
@@ -425,25 +605,22 @@ export default function AddStore() {
         : [...items, feature]
     );
 
-  const toggleRole = (role) =>
-    setRoles((items) => {
+  const toggleStoreRole = (role) =>
+    setStoreRoles((items) => {
       const next = items.includes(role)
         ? items.filter((item) => item !== role)
         : [...items, role];
 
-      setActiveRole((current) =>
+      setActiveStoreRole((current) =>
         next.includes(current) ? current : next[0] || ""
       );
 
       return next;
     });
 
-  const togglePermission = (feature, action) =>
-    setRolePermissions((current) => {
-      const selected =
-        current[activeRole]?.[feature] ||
-        DEFAULT_ACTIONS[feature] ||
-        [];
+  const toggleStorePermission = (feature, action) =>
+    setStoreRolePermissions((current) => {
+      const selected = current[activeStoreRole]?.[feature] || [];
 
       const next = selected.includes(action)
         ? selected.filter((item) => item !== action)
@@ -451,15 +628,16 @@ export default function AddStore() {
 
       return {
         ...current,
-        [activeRole]: {
-          ...current[activeRole],
+        [activeStoreRole]: {
+          ...current[activeStoreRole],
           [feature]: next,
         },
       };
     });
 
   const addDevice = () => {
-    if (devices.length >= deviceLimit) {
+    if (deviceLimit == null) return setError("Device license limit is unavailable from the subscription.");
+    if (usedDevices >= deviceLimit) {
       return setError(
         "All device licenses in this plan are in use. Upgrade the merchant plan to add another device."
       );
@@ -469,7 +647,7 @@ export default function AddStore() {
       ...items,
       {
         name: "",
-        type: "POS",
+        type: "",
         serial: "",
       },
     ]);
@@ -503,11 +681,30 @@ export default function AddStore() {
     }
 
     try {
+      const payload = {
+        ...store,
+        merchantId: selectedMerchantId,
+        currency: COUNTRY_SETTINGS[store.country].currency,
+        type: inheritedTypeName,
+        storeTypeId: inheritedTypeId,
+        storeTypeCode: inheritedTypeCode,
+        features: enabledFeatures.filter(name => FEATURES.includes(name) && featureAvailable(name)),
+        devices,
+        roleIds: merchantRoles.map(role => typeof role === "object" ? role.id ?? role.roleId : null).filter(id => id != null),
+        storeRoles,
+        storeRolePermissions,
+      };
+      // Merchant role definitions, permissions and subscription are managed on the merchant;
+      // storeRoles/storeRolePermissions above are the store-level overlay on top of those.
+      delete payload.roles;
+      delete payload.rolePermissions;
+      delete payload.subscription;
+      delete payload.plan;
       if (editing) {
-        await updateStore(storeId, store);
+        await updateStore(storeId, payload);
       } else {
         await createStore(
-          store,
+          payload,
           routeMerchantId || store.merchantId
         );
       }
@@ -531,10 +728,10 @@ export default function AddStore() {
       <>
         <Panel title="Location identity">
           <div className="pch-grid">
-            {editing ? (
+            {editing || routeMerchantId ? (
               <Field
                 label="Merchant"
-                value={`${currentMerchant?.name || routeMerchantId || store.merchantId}${
+                value={`${currentMerchant?.name || currentMerchant?.merchantName || (merchantLoading ? "Loading merchant…" : selectedMerchantId)}${
                   currentMerchant?.id ? ` · ${currentMerchant.id}` : ""
                 }`}
                 onChange={() => {}}
@@ -544,17 +741,22 @@ export default function AddStore() {
               <Select
                 label="Merchant"
                 value={store.merchantId}
-                onChange={(value) =>
-                  change("merchantId", value)
-                }
+                onChange={(value) => {
+                  change("merchantId", value);
+                  setEnabledFeatures([]);
+                  setStoreRoles([]);
+                  setStoreRolePermissions({});
+                  setStep(0);
+                  setFurthest(0);
+                }}
                 options={[
                   {
                     value: "",
                     label: "Select a merchant",
                   },
                   ...merchants.map((item) => ({
-                    value: item.id,
-                    label: `${item.name} · ${item.id}`,
+                    value: merchantIdOf(item),
+                    label: `${item.name || item.merchantName || "Merchant"} · ${merchantIdOf(item)}`,
                   })),
                 ]}
               />
@@ -576,21 +778,12 @@ export default function AddStore() {
               />
             )}
 
-            {editing ? (
-              <Field
-                label="Store Type Master"
-                value={store.type}
-                onChange={() => {}}
-                readOnly
-              />
-            ) : (
-              <Select
-                label="Store Type Master"
-                value={store.type}
-                onChange={(value) => change("type", value)}
-                options={TYPES}
-              />
-            )}
+            <Field
+              label="Store type (from merchant)"
+              value={inheritedTypeName || (merchantLoading ? "Loading…" : "Not configured on merchant")}
+              onChange={() => {}}
+              readOnly
+            />
 
             <Field
               label="Store ID"
@@ -625,14 +818,28 @@ export default function AddStore() {
           </div>
 
           <div className="pch-note">
-            {store.type} supplies the relevant feature and role
-            templates. It does not change the merchant’s existing
-            plan.
+            Store type and subscription entitlements are inherited from the
+            merchant and managed on the merchant profile. Store-level roles
+            and permissions can still be configured here.
           </div>
         </Panel>
 
         <Panel title="Address & regional settings">
           <div className="pch-grid">
+            <Field
+              label="Address Line 1"
+              value={store.addressLine1}
+              onChange={(value) => change("addressLine1", value)}
+              placeholder="Street number + street name"
+            />
+
+            <Field
+              label="Address Line 2 (optional)"
+              value={store.addressLine2}
+              onChange={(value) => change("addressLine2", value)}
+              placeholder="Apartment / Suite / Unit"
+            />
+
             <Field
               label="City"
               value={store.city}
@@ -643,44 +850,44 @@ export default function AddStore() {
               label="State / Province"
               value={store.state}
               onChange={(value) => change("state", value)}
+              placeholder="Enter state or province"
             />
 
             <Field
-              label="Address"
-              value={store.address}
-              onChange={(value) => change("address", value)}
-            />
-
-            <Field
-              label="ZIP / Postal code"
+              label={store.country === "United States" ? "ZIP Code" : "ZIP / Postal Code"}
               value={store.zip}
               onChange={(value) => change("zip", value)}
+              placeholder={store.country === "United States" ? "85001 or 85001-1234" : undefined}
             />
 
+            <Select
+              label="Country"
+              value={store.country}
+              onChange={changeCountry}
+              options={[
+                {value: "", label: "Select country"},
+                ...Object.keys(COUNTRY_SETTINGS).map(country => ({value: country, label: country})),
+              ]}
+            />
             <Select
               label="Time zone"
               value={store.timezone}
-              onChange={(value) =>
-                change("timezone", value)
-              }
+              onChange={value => change("timezone", value)}
+              disabled={!countrySettings}
               options={[
-                "America/Phoenix",
-                "America/New_York",
-                "America/Chicago",
-                "America/Los_Angeles",
-                "Asia/Kolkata",
-                "Europe/London",
+                {value: "", label: countrySettings ? "Select time zone" : "Select country first"},
+                ...(countrySettings?.zones || []).map(zone => ({value: zone, label: zone.replaceAll("_", " ")})),
               ]}
             />
-
-            <Select
-              label="Currency"
-              value={store.currency}
-              onChange={(value) =>
-                change("currency", value)
-              }
-              options={["USD", "INR", "CAD", "GBP", "AUD"]}
+            <Field
+              label="Currency (from country)"
+              value={currencyDisplay}
+              onChange={() => {}}
+              placeholder="Select country first"
+              readOnly
             />
+            <Select label="Status" value={store.status} onChange={value => change("status", value)}
+              options={[{value: "", label: "Select status"}, "Active", "Inactive"]} />
           </div>
         </Panel>
 
@@ -713,6 +920,7 @@ export default function AddStore() {
                           )
                         }
                       >
+                        <option value="">Select status</option>
                         <option>Open</option>
                         <option>Closed</option>
                         <option>24 hours</option>
@@ -795,7 +1003,7 @@ export default function AddStore() {
               <Detail
                 label="Billing cycle"
                 value={
-                  subscription?.billingCycle || "Monthly"
+                  subscription?.billingCycle || assignedPlan?.billingCycle || "Unavailable"
                 }
               />
             </div>
@@ -803,12 +1011,12 @@ export default function AddStore() {
             <div>
               <Detail
                 label="Store licenses"
-                value={`${enrolledStores} / ${storeLimit} used`}
+                value={`${enrolledStores} / ${displayLimit(storeLimit)} used`}
               />
 
               <Detail
                 label="Remaining store licenses"
-                value={remainingStores}
+                value={displayLimit(remainingStores)}
               />
 
               <Detail
@@ -841,15 +1049,15 @@ export default function AddStore() {
                     <td>{item.id}</td>
                     <td>{item.name}</td>
                     <td>{item.type}</td>
-                    <td>Licensed</td>
+                    <td>{item.licensed === true ? "Licensed" : item.licensed === false ? "Not licensed" : "Unavailable"}</td>
                   </tr>
                 ))}
 
                 {!editing && <tr>
                   <td>{store.id || "New"}</td>
                   <td>{store.name || "New store"}</td>
-                  <td>{store.type}</td>
-                  <td>{remainingStores ? "Will be licensed" : "Upgrade required"}</td>
+                  <td>{inheritedTypeName}</td>
+                  <td>{remainingStores == null ? "Limit unavailable" : remainingStores > 0 ? "Will be licensed" : "Upgrade required"}</td>
                 </tr>}
               </tbody>
             </table>
@@ -870,7 +1078,7 @@ export default function AddStore() {
               </span>
 
               <div className="pch-price">
-                {usedDevices} / {deviceLimit}
+                {usedDevices} / {displayLimit(deviceLimit)}
               </div>
             </div>
 
@@ -880,7 +1088,7 @@ export default function AddStore() {
               </span>
 
               <div className="pch-price">
-                {remainingDevices}
+                {displayLimit(remainingDevices)}
               </div>
             </div>
           </div>
@@ -980,10 +1188,10 @@ export default function AddStore() {
                           )
                         }
                       >
-                        <option>POS</option>
-                        <option>KDS</option>
-                        <option>Printer</option>
-                        <option>Scanner</option>
+                        <option value="">Select type</option>
+                        {DEVICE_TYPES.map((type) => (
+                          <option key={type}>{type}</option>
+                        ))}
                       </select>
                     </td>
 
@@ -1030,7 +1238,7 @@ export default function AddStore() {
             + Assign device to this store
           </button>
 
-          {usedDevices >= deviceLimit && (
+          {deviceLimit != null && usedDevices >= deviceLimit && (
             <div className="pch-note">
               To add more devices, upgrade the merchant plan.
             </div>
@@ -1044,6 +1252,7 @@ export default function AddStore() {
     return (
       <>
         <Panel title="Effective feature resolution">
+          {!FEATURES.length && <p className="pch-note">No active features returned for this store type.</p>}
           <div className="pch-tablewrap">
             <table>
               <thead>
@@ -1057,8 +1266,8 @@ export default function AddStore() {
               </thead>
 
               <tbody>
-                {FEATURES.map((feature, index) => {
-                  const available = index < 7;
+                {FEATURES.map((feature) => {
+                  const available = featureAvailable(feature);
                   const enabled =
                     enabledFeatures.includes(feature) &&
                     available;
@@ -1068,15 +1277,11 @@ export default function AddStore() {
                       <td>{feature}</td>
 
                       <td>
-                        {index === 7 || index === 8
-                          ? "Not relevant"
-                          : "Relevant"}
+                        Relevant
                       </td>
 
                       <td>
-                        {index === 6
-                          ? "Excluded"
-                          : "Included"}
+                        {available ? "Included" : "Not entitled"}
                       </td>
 
                       <td>
@@ -1114,11 +1319,28 @@ export default function AddStore() {
   }
 
   function rolesScreen() {
-    const selectedRole = activeRole || roles[0] || "";
+    const selectedStoreRole = activeStoreRole || storeRoles[0] || "";
 
     return (
       <>
-        <Panel title="Create merchant roles from templates">
+        <Panel title="Roles inherited from merchant">
+          <p className="pch-note">These roles and their permissions are managed on the merchant profile.</p>
+          {merchantRoles.length ? (
+            <div className="pch-tablewrap">
+              <table>
+                <thead><tr><th>ROLE</th><th>SCOPE</th></tr></thead>
+                <tbody>{merchantRoles.map((role, index) => (
+                  <tr key={typeof role === "object" ? role.id ?? role.roleId ?? index : role}>
+                    <td>{typeof role === "string" ? role : role.name || role.roleName || role.templateName || "Unnamed role"}</td>
+                    <td>{typeof role === "object" ? role.scope || role.roleScope || "—" : "—"}</td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          ) : <p className="pch-note">No merchant roles were returned. Configure roles on the merchant profile.</p>}
+        </Panel>
+
+        <Panel title="Create store-level roles from templates">
           <div className="pch-grid">
             {ROLE_TEMPLATES.map((role) => (
               <label
@@ -1127,8 +1349,8 @@ export default function AddStore() {
               >
                 <input
                   type="checkbox"
-                  checked={roles.includes(role)}
-                  onChange={() => toggleRole(role)}
+                  checked={storeRoles.includes(role)}
+                  onChange={() => toggleStoreRole(role)}
                 />
                 {role}
               </label>
@@ -1137,7 +1359,7 @@ export default function AddStore() {
 
           <div className="pch-row pch-between">
             <span className="pch-pill">
-              {roles.length} merchant roles
+              {storeRoles.length} store roles
             </span>
 
             <button
@@ -1147,7 +1369,7 @@ export default function AddStore() {
                 setError("");
               }}
             >
-              + Custom merchant role
+              + Custom store role
             </button>
           </div>
 
@@ -1197,7 +1419,7 @@ export default function AddStore() {
                       return;
                     }
 
-                    const roleExists = roles.some(
+                    const roleExists = storeRoles.some(
                       (role) =>
                         String(role).trim().toLowerCase() ===
                         trimmedName.toLowerCase()
@@ -1208,8 +1430,8 @@ export default function AddStore() {
                       return;
                     }
 
-                    setRoles((items) => [...items, trimmedName]);
-                    setActiveRole(trimmedName);
+                    setStoreRoles((items) => [...items, trimmedName]);
+                    setActiveStoreRole(trimmedName);
                     setCustomRoleName("");
                     setCustomRoleScope("Store");
                     setCustomRoleOpen(false);
@@ -1235,14 +1457,14 @@ export default function AddStore() {
           )}
         </Panel>
 
-        {roles.length > 0 && (
-          <Panel title="Configure permissions">
+        {storeRoles.length > 0 && (
+          <Panel title="Configure store role permissions">
             <div className="pch-grid">
               <Select
-                label="Actual merchant role"
-                value={selectedRole}
-                onChange={setActiveRole}
-                options={roles}
+                label="Store role"
+                value={selectedStoreRole}
+                onChange={setActiveStoreRole}
+                options={storeRoles}
               />
 
               <Field
@@ -1257,76 +1479,83 @@ export default function AddStore() {
 
             <div className="pch-note">
               Owner: {currentMerchant?.name || "Merchant"} ·
-              Source: {selectedRole} · Scope: Store
+              Source: {selectedStoreRole} · Scope: Store
             </div>
 
-            <div className="pch-tablewrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>FEATURE</th>
-                    <th>DEFINED PERMISSIONS</th>
-                    <th>STORE ACCESS</th>
-                  </tr>
-                </thead>
+            {!FEATURES.length ? (
+              <p className="pch-note">No active features are available for this store type yet.</p>
+            ) : (
+              <div className="pch-tablewrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>FEATURE</th>
+                      <th>DEFINED PERMISSIONS</th>
+                      <th>STORE ACCESS</th>
+                    </tr>
+                  </thead>
 
-                <tbody>
-                  {FEATURES.map((feature) => {
-                    const available =
-                      enabledFeatures.includes(feature);
+                  <tbody>
+                    {FEATURES.map((feature) => {
+                      const available =
+                        enabledFeatures.includes(feature) &&
+                        featureAvailable(feature);
 
-                    const selected =
-                      rolePermissions[selectedRole]?.[
-                        feature
-                      ] ||
-                      DEFAULT_ACTIONS[feature] ||
-                      [];
+                      const actions = actionsForFeature(feature);
 
-                    return (
-                      <tr key={feature}>
-                        <td>{feature}</td>
+                      const selected =
+                        storeRolePermissions[selectedStoreRole]?.[
+                          feature
+                        ] || [];
 
-                        <td>
-                          <div className="pch-row">
-                            {FEATURE_ACTIONS[feature].map(
-                              (action) => (
-                                <label
-                                  className="pch-check"
-                                  key={action}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={selected.includes(
-                                      action
-                                    )}
-                                    disabled={!available}
-                                    onChange={() =>
-                                      togglePermission(
-                                        feature,
+                      return (
+                        <tr key={feature}>
+                          <td>{feature}</td>
+
+                          <td>
+                            <div className="pch-row">
+                              {actions.length ? (
+                                actions.map((action) => (
+                                  <label
+                                    className="pch-check"
+                                    key={action}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selected.includes(
                                         action
-                                      )
-                                    }
-                                  />
-                                  {action}
-                                </label>
-                              )
-                            )}
-                          </div>
-                        </td>
+                                      )}
+                                      disabled={!available}
+                                      onChange={() =>
+                                        toggleStorePermission(
+                                          feature,
+                                          action
+                                        )
+                                      }
+                                    />
+                                    {action}
+                                  </label>
+                                ))
+                              ) : (
+                                <span className="pch-muted">
+                                  No actions defined
+                                </span>
+                              )}
+                            </div>
+                          </td>
 
-                        <td>
-                          {available
-                            ? "Available"
-                            : feature === "Payroll"
-                            ? "Not entitled"
-                            : "Not relevant"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          <td>
+                            {available
+                              ? "Available"
+                              : "Not entitled"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </Panel>
         )}
       </>
@@ -1351,14 +1580,14 @@ export default function AddStore() {
 
               <Detail
                 label="Store licenses after provision"
-                value={`${enrolledStores + (editing ? 0 : 1)} / ${storeLimit}`}
+                value={`${enrolledStores + (editing ? 0 : 1)} / ${displayLimit(storeLimit)}`}
               />
             </div>
 
             <div>
               <Detail
                 label="Assigned devices"
-                value={`${usedDevices} / ${deviceLimit}`}
+                value={`${usedDevices} / ${displayLimit(deviceLimit)}`}
               />
 
               <Detail
@@ -1369,6 +1598,11 @@ export default function AddStore() {
               <Detail
                 label="Merchant roles"
                 value={roles.length}
+              />
+
+              <Detail
+                label="Store-level roles"
+                value={storeRoles.length}
               />
             </div>
           </div>
@@ -1389,7 +1623,7 @@ export default function AddStore() {
 
               <Detail
                 label="Type"
-                value={store.type}
+                value={inheritedTypeName}
               />
             </div>
 
@@ -1397,10 +1631,12 @@ export default function AddStore() {
               <Detail
                 label="Address"
                 value={[
-                  store.address,
+                  store.addressLine1,
+                  store.addressLine2,
                   store.city,
                   store.state,
                   store.zip,
+                  store.country,
                 ]
                   .filter(Boolean)
                   .join(", ")}
@@ -1410,6 +1646,8 @@ export default function AddStore() {
                 label="Time zone"
                 value={store.timezone}
               />
+
+              <Detail label="Currency" value={currencyDisplay} />
 
               <Detail
                 label="Status"
@@ -1552,6 +1790,16 @@ export default function AddStore() {
               disabled={saving}
             >
               {screens[step]()}
+
+              {(mastersLoading || typeData.loading) && <div className="pch-note" role="status">Loading store master data…</div>}
+              {(mastersError || typeData.error) && <div className="pch-error" role="alert">{mastersError || typeData.error}</div>}
+              {merchantLoading && (
+                <div className="pch-note" role="status">Loading merchant details…</div>
+              )}
+
+              {merchantError && (
+                <div className="pch-error" role="alert">{merchantError}</div>
+              )}
 
               {error && (
                 <div className="pch-error" role="alert">

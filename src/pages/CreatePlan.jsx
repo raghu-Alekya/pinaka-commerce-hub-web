@@ -959,7 +959,17 @@ export default function CreatePlan() {
                 <option value="30 days">30 Days</option>
               </select>
             </label>
-
+     <label className="plan-field">
+              <span>Included Users/Employees <b>*</b></span>
+              <input
+                {...textInputProps}
+                name="includedUsers"
+                type="number"
+                min="0"
+                value={form.includedUsers}
+                onChange={updateField}
+              />
+            </label>
             <label className="plan-field">
               <span>Effective From</span>
 
