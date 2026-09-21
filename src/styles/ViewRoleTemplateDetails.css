@@ -293,9 +293,10 @@
   width: 100%;
   min-width: 0;
   min-height: 34px;
+  height: auto;
   box-sizing: border-box;
   align-items: center;
-  padding: 0 10px;
+  padding: 8px 10px;
   border: 1px solid #d8e6f4;
   border-radius: 7px;
   outline: 0;
@@ -305,18 +306,25 @@
   font-weight: 500;
   line-height: 1.4;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .role-overview-description {
-  grid-column: 1 / -1;
+  grid-column: 1;
+  width: 100%;
 }
 
 .role-overview-description > strong {
-  min-height: 70px !important;
+  width: 100%;
+  min-width: 0;
+  min-height: 34px !important;
+  height: auto;
   align-items: flex-start !important;
-  padding: 10px !important;
+  padding: 8px 10px !important;
   line-height: 1.5;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .role-overview-active {
@@ -1074,7 +1082,8 @@
   }
 
   .role-overview-description {
-    grid-column: 1 / -1;
+    grid-column: auto;
+    width: 100%;
   }
 
   .role-feature-access-top {
@@ -1169,6 +1178,7 @@
 
   .role-overview-description {
     grid-column: auto;
+    width: 100%;
   }
 
   .role-access-heading {
