@@ -466,8 +466,8 @@ export default function RoleTemplates() {
                   <th className="role-name-col">Role Template Name</th>
                   <th className="role-description-col">Description</th>
                   <th className="role-status-col">Status</th>
-                  <th className="role-created-col">Created On</th>
-                  <th className="role-updated-col">Updated On</th>
+                  <th className="role-created-col">Created At</th>
+                  <th className="role-updated-col">Updated At</th>
                   <th className="role-actions-col">Actions</th>
                 </tr>
               </thead>
