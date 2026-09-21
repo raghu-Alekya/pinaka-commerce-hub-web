@@ -396,6 +396,35 @@ export default function Vendors({
 
   /*
   |--------------------------------------------------------------------------
+  | FORM COMPLETION
+  |--------------------------------------------------------------------------
+  | Keep the primary action disabled until all required data is entered.
+  |--------------------------------------------------------------------------
+  */
+
+  const isFormComplete =
+    Boolean(
+      form.code.trim() &&
+      form.name.trim() &&
+      form.vendorType &&
+      form.phone.trim() &&
+      form.email.trim() &&
+      form.category.trim() &&
+      form.addressLine1.trim() &&
+      form.city.trim() &&
+      form.state.trim() &&
+      form.zipCode.trim() &&
+      form.country.trim() &&
+      (form.vendorType !== "Organizer" ||
+        form.contactPerson.trim())
+    ) &&
+    /^\d{10}$/.test(form.phone.trim()) &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+      form.email.trim()
+    );
+
+  /*
+  |--------------------------------------------------------------------------
   | SAVE VENDOR
   |--------------------------------------------------------------------------
   */
@@ -753,8 +782,24 @@ export default function Vendors({
       return;
     }
 
+    const valueElement =
+      event.currentTarget.querySelector(
+        ".vendors-cell-value"
+      );
+
+    // Show the full value only when the visible cell
+    // is actually truncated.
+    if (
+      !valueElement ||
+      valueElement.scrollWidth <=
+        valueElement.clientWidth
+    ) {
+      setHoveredCell(null);
+      return;
+    }
+
     const rect =
-      event.currentTarget.getBoundingClientRect();
+      valueElement.getBoundingClientRect();
 
     setHoveredCell({
       value: String(value),
@@ -887,7 +932,7 @@ export default function Vendors({
               value={form.code}
               onChange={handleChange}
               placeholder="Enter vendor code"
-              autoComplete="new-password"
+              autoComplete="off"
               required
               disabled={saving}
             />
@@ -1214,7 +1259,7 @@ export default function Vendors({
           <button
             type="submit"
             className="vendors-save-button"
-            disabled={saving}
+            disabled={saving || !isFormComplete}
           >
             {saving ? (
               <>
@@ -1278,6 +1323,8 @@ export default function Vendors({
                   )
                 }
                 autoComplete="off"
+              data-lpignore="true"
+              data-1p-ignore="true"
               />
 
             </div>
