@@ -15,6 +15,7 @@ export default function ViewRoleTemplateOverview() {
   const { roleId } = useParams();
   const location = useLocation();
   const selectedRole = location.state?.roleTemplate;
+
   const [roleDetails, setRoleDetails] = useState(
     selectedRole || defaultRoleTemplate
   );
@@ -23,8 +24,16 @@ export default function ViewRoleTemplateOverview() {
 
   const tabs = [
     ["overview", "Overview", `/role-templates/${roleId || "store-manager"}`],
-    ["store-types", "Applicable Store Types", `/role-templates/${roleId || "store-manager"}/store-types`],
-    ["access", "Feature & Permission Access", `/role-templates/${roleId || "store-manager"}/access`],
+    [
+      "store-types",
+      "Applicable Store Types",
+      `/role-templates/${roleId || "store-manager"}/store-types`,
+    ],
+    [
+      "access",
+      "Feature & Permission Access",
+      `/role-templates/${roleId || "store-manager"}/access`,
+    ],
   ];
 
   useEffect(() => {
@@ -40,6 +49,7 @@ export default function ViewRoleTemplateOverview() {
 
       try {
         const response = await roleTemplatesApi.getById(roleId);
+
         const data =
           response?.data?.data ??
           response?.data ??
@@ -119,7 +129,9 @@ export default function ViewRoleTemplateOverview() {
             type="button"
             key={id}
             className={id === "overview" ? "active" : ""}
-            onClick={() => navigate(path, { state: { roleTemplate: roleDetails } })}
+            onClick={() =>
+              navigate(path, { state: { roleTemplate: roleDetails } })
+            }
           >
             {label}
           </button>
@@ -147,16 +159,12 @@ export default function ViewRoleTemplateOverview() {
         <div className="role-overview-grid">
           <div>
             <span>Role Template Name</span>
-            <strong>
-              {loading ? "Loading..." : roleDetails.name}
-            </strong>
+            <strong>{loading ? "Loading..." : roleDetails.name}</strong>
           </div>
 
           <div>
             <span>Role Code</span>
-            <strong>
-              {loading ? "Loading..." : roleDetails.code}
-            </strong>
+            <strong>{loading ? "Loading..." : roleDetails.code}</strong>
           </div>
 
           <div>

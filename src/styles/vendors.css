@@ -406,12 +406,14 @@
 
 /* =========================================================
    TABLE
+   Store Type reference styling
    ========================================================= */
 
 .vendors-table-wrap {
   overflow-x: auto;
-  border: 1px solid #e3ecf5;
+  border: 1px solid #dfe9f4;
   border-radius: 8px;
+  background: #ffffff;
 }
 
 .vendors-table {
@@ -427,22 +429,29 @@
   height: 45px;
   padding: 0 10px;
   box-sizing: border-box;
-  border-bottom: 1px solid #e4e8ef;
+  border-bottom: 1px solid #e3eaf3;
   text-align: left;
   vertical-align: middle;
-  color: #2b354d;
-  font-size: 10px;
+  color: #29466f;
+  font-size: 11px;
+  line-height: 1.35;
   overflow: visible;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .vendors-table th {
-  height: 39px;
+  height: 40px;
+  padding: 0 10px;
   background: #f2f8ff;
-  color: #394052;
-  font-size: 10px;
+  color: #23426e;
+  font-size: 11px;
   font-weight: 600;
+  line-height: 1.3;
+}
+
+.vendors-table tbody tr:hover td {
+  background: #fbfdff;
 }
 
 .vendors-table tr:last-child td {
@@ -451,10 +460,12 @@
 
 .vendors-table td strong {
   display: block;
+  width: 100%;
   overflow: hidden;
   color: #172343;
   font-size: 11px;
   font-weight: 500;
+  line-height: 1.35;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -463,7 +474,37 @@
   display: block;
   margin-top: 4px;
   color: #8994aa;
-  font-size: 9px;
+  font-size: 10px;
+}
+
+.vendors-table td .vendors-cell-value {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: inherit;
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Keep the complete Actions column inside the same table row treatment. */
+.vendors-table th:last-child,
+.vendors-table td:last-child {
+  text-align: center;
+}
+
+.vendors-table th:last-child {
+  color: #23426e;
+  background: #f2f8ff;
+}
+
+.vendors-table td:last-child {
+  background: #ffffff;
+}
+
+.vendors-table tbody tr:hover td:last-child {
+  background: #fbfdff;
 }
 
 
@@ -481,8 +522,8 @@
   padding: 0 8px;
   box-sizing: border-box;
   border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 600;
 }
 
 .vendors-status.active {
@@ -502,20 +543,22 @@
 
 .vendors-actions {
   white-space: nowrap;
+  text-align: center;
 }
 
 .vendors-actions button {
   display: inline-grid;
-  width: 35px;
-  height: 35px;
-  margin-right: 7px;
+  width: 30px;
+  height: 30px;
+  margin-right: 6px;
   place-items: center;
   border: 1px solid #dce9f5;
   border-radius: 7px;
   background: #ffffff;
-  color: #18171c;
+  color: #4f5f78;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 13px;
+  vertical-align: middle;
 }
 
 .vendors-actions button:hover {
@@ -1073,6 +1116,9 @@
   display: block;
   width: 100%;
   overflow: hidden;
+  color: inherit;
+  font-size: 11px;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

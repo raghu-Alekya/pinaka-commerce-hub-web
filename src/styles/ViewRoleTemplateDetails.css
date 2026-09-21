@@ -270,55 +270,63 @@
 .role-overview-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  column-gap: 18px;
+  row-gap: 18px;
 }
 
 .role-overview-grid > div {
   display: grid;
-  gap: 7px;
-  min-height: 74px;
-  padding: 14px;
-  border: 1px solid #edf2f8;
-  border-radius: 8px;
-  background: #f8fbff;
+  gap: 6px;
+  min-width: 0;
   box-sizing: border-box;
 }
 
 .role-overview-grid > div > span {
   color: #23426e;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
+  line-height: 1.35;
 }
 
 .role-overview-grid > div > strong {
   display: flex;
   width: 100%;
-  min-height: 42px;
+  min-width: 0;
+  min-height: 34px;
   box-sizing: border-box;
   align-items: center;
-  padding: 0 13px;
-  border: 1px solid #d7e4f2;
+  padding: 0 10px;
+  border: 1px solid #d8e6f4;
   border-radius: 7px;
+  outline: 0;
   color: #173861;
-  background: #f8fbff;
-  font-size: 13px;
+  background: #f8fafc;
+  font-size: 12px;
   font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .role-overview-description {
-  grid-column: span 2;
+  grid-column: 1 / -1;
 }
 
 .role-overview-description > strong {
-  min-height: 88px !important;
+  min-height: 70px !important;
   align-items: flex-start !important;
-  padding: 12px 13px !important;
+  padding: 10px !important;
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .role-overview-active {
   color: #00a762 !important;
   font-weight: 600 !important;
+}
+
+.role-overview-active i {
+  margin-right: 5px;
+  font-size: 6px;
 }
 
 
