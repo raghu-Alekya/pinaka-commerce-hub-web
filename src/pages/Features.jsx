@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/features.css";
 import { listFeatures, createFeature as createFeatureApi, updateFeature as updateFeatureApi, deleteFeature as deleteFeatureApi } from "../api/features";
@@ -6,6 +6,39 @@ import { listFeatures, createFeature as createFeatureApi, updateFeature as updat
 const initialFeatures = [];
 
 const emptyForm = { code: "", name: "", description: "", category: "", status: "Active" };
+
+
+function FeatureDescriptionCell({ description = "" }) {
+  const textRef = useRef(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useEffect(() => {
+    const checkTruncation = () => {
+      const element = textRef.current;
+      if (!element) return;
+      setIsTruncated(element.scrollHeight > element.clientHeight + 1);
+    };
+
+    checkTruncation();
+    window.addEventListener("resize", checkTruncation);
+    return () => window.removeEventListener("resize", checkTruncation);
+  }, [description]);
+
+  return (
+    <td className="feature-description">
+      <div className="feature-description-tooltip-wrap">
+        <span ref={textRef} className="feature-description-clamp">
+          {description || "—"}
+        </span>
+        {isTruncated && (
+          <div className="feature-description-tooltip" role="tooltip">
+            {description}
+          </div>
+        )}
+      </div>
+    </td>
+  );
+}
 
 export default function Features() {
   const navigate = useNavigate();
@@ -23,6 +56,11 @@ export default function Features() {
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
 
+  const requiredFieldsComplete =
+    form.code.trim() !== "" &&
+    form.name.trim() !== "" &&
+    form.category.trim() !== "";
+
   const updateField = (event) => {
     const field = event.target.dataset.field || event.target.name;
     const { value } = event.target;
@@ -39,10 +77,11 @@ export default function Features() {
 
     if (!code) errors.code = "Feature Code is required.";
     if (!name) errors.name = "Feature Name is required.";
+    if (!form.category) errors.category = "Category is required.";
 
     if (code && features.some(
       (item) =>
-        item.id !== editingId &&
+        String(item.id) !== String(editingId) &&
         (item.code || "").trim().toLowerCase() === code.toLowerCase()
     )) {
       errors.code = "Feature Code already exists. Enter a unique code.";
@@ -50,7 +89,7 @@ export default function Features() {
 
     if (name && features.some(
       (item) =>
-        item.id !== editingId &&
+        String(item.id) !== String(editingId) &&
         item.name.trim().toLowerCase() === name.toLowerCase()
     )) {
       errors.name = "Feature Name already exists. Enter a unique name.";
@@ -81,12 +120,24 @@ export default function Features() {
 
   const saveFeature = async () => {
     if (!validateFeature()) return;
-    try { const created = await createFeatureApi(form); setFeatures((prev) => [created, ...prev]); clearForm(); setApiError(""); } catch (e) { setApiError(e.message || "Unable to create feature."); }
+    try {
+      const payload = { ...form, code: form.code.trim().toUpperCase() };
+      const created = await createFeatureApi(payload);
+      setFeatures((prev) => [created, ...prev]);
+      clearForm();
+      setApiError("");
+    } catch (e) { setApiError(e.message || "Unable to create feature."); }
   };
 
   const updateFeature = async () => {
     if (!validateFeature()) return;
-    try { const updated = await updateFeatureApi(editingId, form); setFeatures((prev) => prev.map((item) => item.id === editingId ? updated : item)); clearForm(); setApiError(""); } catch (e) { setApiError(e.message || "Unable to update feature."); }
+    try {
+      const payload = { ...form, code: form.code.trim().toUpperCase() };
+      const updated = await updateFeatureApi(editingId, payload);
+      setFeatures((prev) => prev.map((item) => item.id === editingId ? updated : item));
+      clearForm();
+      setApiError("");
+    } catch (e) { setApiError(e.message || "Unable to update feature."); }
   };
 
   const resetFilters = () => {
@@ -110,6 +161,7 @@ export default function Features() {
     return features.filter((item) => {
       const matchesSearch =
         item.name.toLowerCase().includes(q) ||
+        (item.code || "").toLowerCase().includes(q) ||
         item.category.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q);
 
@@ -130,10 +182,13 @@ export default function Features() {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
 
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -225,7 +280,11 @@ export default function Features() {
               </select>
               <i className="bi bi-chevron-down" />
             </div>
-            <small></small>
+            {formErrors.category ? (
+              <small className="feature-error-text">{formErrors.category}</small>
+            ) : (
+              <small></small>
+            )}
           </div>
 
           <div className="feature-field feature-form-status-field">
@@ -250,6 +309,7 @@ export default function Features() {
               className="feature-action primary"
               type="button"
               onClick={isEditing ? updateFeature : saveFeature}
+              disabled={!requiredFieldsComplete}
             >
               {isEditing ? "Update Feature" : "Save Feature"}
             </button>
@@ -312,6 +372,7 @@ export default function Features() {
           <table className="features-table">
             <colgroup>
               <col className="col-name" />
+              <col className="col-code" />
               <col className="col-category" />
               <col className="col-description" />
               <col className="col-status" />
@@ -323,6 +384,7 @@ export default function Features() {
             <thead>
               <tr>
                 <th>Feature Name</th>
+                <th>Feature Code</th>
                 <th>Category</th>
                 <th>Description</th>
                 <th>Status</th>
@@ -344,8 +406,11 @@ export default function Features() {
                       {item.name}
                     </button>
                   </td>
+                  <td className="feature-code-cell">
+                    {(item.code || item.name?.replace(/\s+/g, "_") || "—").toUpperCase()}
+                  </td>
                   <td>{item.category}</td>
-                  <td className="feature-description">{item.description}</td>
+                  <FeatureDescriptionCell description={item.description} />
                   <td>
                     <span className={`feature-status ${item.status.toLowerCase()}`}>
                       <b />{item.status}
