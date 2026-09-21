@@ -228,31 +228,34 @@ export default function StoreTypeRoleTemplates() {
 
   return (
     <section className="role-templates-page">
-      <button
-        type="button"
-        className="role-templates-back"
-        onClick={() => navigate("/store-types/new")}
+      <div className="role-templates-top">
+  <button
+    type="button"
+    className="role-templates-back"
+    onClick={() => navigate("/store-types/new")}
+    aria-label="Back to Store Types"
+    title="Back to Store Types"
+  >
+    <i className="bi bi-arrow-left" />
+  </button>
+
+  <div className="role-templates-title">
+    <div className="store-type-title-line">
+      <h1>{storeType.name}</h1>
+
+      {/* <span
+        className={`store-type-active-badge ${
+          storeType.status === "INACTIVE" ? "inactive" : ""
+        }`}
       >
-        <i className="bi bi-arrow-left" />
-        Back to Store Types
-      </button>
+        <i className="bi bi-circle-fill" />
+        {storeType.status === "INACTIVE" ? "Inactive" : "Active"}
+      </span> */}
+    </div>
 
-      <div className="role-templates-title">
-        <div className="store-type-title-line">
-          <h1>{storeType.name}</h1>
-
-          <span
-            className={`store-type-active-badge ${
-              storeType.status === "INACTIVE" ? "inactive" : ""
-            }`}
-          >
-            <i className="bi bi-circle-fill" />
-            {storeType.status === "INACTIVE" ? "Inactive" : "Active"}
-          </span>
-        </div>
-
-        <p>{storeType.description}</p>
-      </div>
+    <p>{storeType.description}</p>
+  </div>
+</div>
 
       <nav className="role-templates-tabs">
         <button

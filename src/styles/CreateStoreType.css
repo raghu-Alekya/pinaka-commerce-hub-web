@@ -46,10 +46,10 @@
   display: flex;
   align-items: center;
   gap: 13px;
-  margin-bottom: 13px;
+  margin-bottom: 20px;
 }
 
-.store-type-heading-icon {
+.store-type-heading-icon { 
   display: grid;
   width: 43px;
   height: 43px;
@@ -68,16 +68,19 @@
 
 .store-type-form-grid,
 .store-type-bottom-grid {
-  display: grid;
-  gap: 18px 24px;
+ display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 28px;
+  row-gap: 22px;
+  align-items: start;
 }
 
 .store-type-form-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .store-type-bottom-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: start;
   gap: 18px 23px;
   margin-top: 14px;
@@ -85,6 +88,8 @@
 
 .store-type-field {
   display: grid;
+  width: 100%;
+  min-width: 0;
   gap: 6px;
   color: #23426e;
   font-size: 12px;
@@ -116,12 +121,15 @@
 }
 
 .store-type-input-wrap {
-  display: flex;
-  height: 40px;
+    display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 0 10px;
-  color: #6380b0;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #D9E6F4;
+  border-radius: 8px;
+  background: #fff;
+  color: #7A8FB2;
 }
 
 .store-type-input-wrap input,
@@ -132,7 +140,7 @@
   color: #10264d;
   background: transparent;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.4;
 }
@@ -145,14 +153,39 @@
   opacity: 1;
 }
 
+.store-type-input-wrap i {
+  font-size: 14px;
+  color: #8AA2C5;
+  flex-shrink: 0;
+}
+
 .store-type-field select {
   width: 100%;
   height: 40px;
   padding: 0 10px;
   outline: 0;
-  color:#29ad3f;
   font: inherit;
   font-size: 13px;
+}
+
+.store-type-status-select {
+  color: #1c9b4d;
+}
+
+.store-type-status-select.inactive {
+  color: #d72d47;
+}
+
+.store-type-status-select.active {
+  color: #1c9b4d;
+}
+
+.store-type-submit-button:disabled {
+  border: 1px solid #dfe7f2;
+  color: #8da0bb;
+  background: #e9edf3;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 .store-type-description-field {
@@ -162,6 +195,8 @@
 
 .store-type-textarea-wrap {
   display: flex;
+  width: 100%;
+  min-width: 0;
   align-items: flex-start;
   gap: 9px;
   padding: 10px 12px;
@@ -214,17 +249,17 @@
 
 .store-type-cancel-button,
 .store-type-submit-button {
-  width: 150px;
-  height: 40px;
+  width: 160px;
+  height: 42px;
   border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
 }
 
 .store-type-cancel-button {
-  border: 1px solid #dce8f4;
-  color: #25466f;
+  border: 1px solid #d5d8db;
+  color: #64686e;
   background: #fff;
 }
 
@@ -324,7 +359,7 @@
 .store-types-row-head {
   min-height: 39px;
   color: #102d59;
-  background: #f2f8ff;
+  background: #f1f3fd;
   font-size: 12px;
   font-weight: 600;
 }
@@ -356,7 +391,7 @@
 }
 
 .store-type-name-clickable:hover strong {
-  color: #0873f9;
+  color: #684ee3;
   text-decoration: underline;
 }
 
@@ -394,14 +429,14 @@
   place-items: center;
   border: 1px solid #dce9f5;
   border-radius: 7px;
-  color: #274970;
-  background: #fff;
+  color: #5367f0;
+  background: #f8faff;
   cursor: pointer;
   font-size: 15px;
 }
 
 .store-type-delete-icon {
-  color: #ef3b5c !important;
+  color: #d9485f !important;
 }
 
 .store-type-delete-icon:hover {
@@ -544,8 +579,8 @@
 }
 
 .delete-keep-button {
-  border: 1.5px solid #0873f9;
-  color: #0873f9;
+  border: 1.5px solid #8995a3;
+  color: #8995a3;
   background: #fff;
 }
 
@@ -585,3 +620,4 @@
     grid-template-columns: 1fr;
   }
 }
+

@@ -162,15 +162,31 @@ export default function ViewRoleTemplateStoreTypes() {
     };
   }, []);
 
-  function toggleStoreType(id) {
-    setSelectedStoreTypes((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
-    );
+  async function toggleStoreType(id) {
+    if (saving || !roleId) return;
 
-    // Selecting/deselecting fixes the validation message.
+    const nextSelectedStoreTypes = selectedStoreTypes.includes(id)
+      ? selectedStoreTypes.filter((item) => item !== id)
+      : [...selectedStoreTypes, id];
+
+    setSelectedStoreTypes(nextSelectedStoreTypes);
     setError("");
+    setSaving(true);
+
+    try {
+      await roleTemplatesApi.bulkUpdateStoreTypes(
+        roleId,
+        nextSelectedStoreTypes
+      );
+      setSavedStoreTypes(nextSelectedStoreTypes);
+    } catch (requestError) {
+      setSelectedStoreTypes(selectedStoreTypes);
+      setError(
+        requestError?.message || "Unable to save store type selection."
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   function buildNavigationState() {
@@ -394,6 +410,7 @@ export default function ViewRoleTemplateStoreTypes() {
                     <input
                       type="checkbox"
                       checked={isSelected}
+                      disabled={saving}
                       onChange={() => toggleStoreType(storeTypeId)}
                     />
 

@@ -11,18 +11,24 @@ function toRow(item) {
     status: item.status === "INACTIVE" ? "Inactive" : "Active",
 
     createdOn: item.createdAt
-      ? new Date(item.createdAt).toLocaleDateString("en-US", {
+      ? new Date(item.createdAt).toLocaleString("en-US", {
           month: "short",
           day: "2-digit",
           year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
         })
       : "—",
 
     updatedOn: item.updatedAt
-      ? new Date(item.updatedAt).toLocaleDateString("en-US", {
+      ? new Date(item.updatedAt).toLocaleString("en-US", {
           month: "short",
           day: "2-digit",
           year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
         })
       : "—",
 
@@ -99,6 +105,9 @@ export default function CreateStoreType() {
       return matchesSearch && (!statusFilter || item.status === statusFilter);
     });
   }, [storeTypes, search, statusFilter]);
+
+  const canSubmitStoreType =
+    form.code.trim().length > 0 && form.name.trim().length > 0;
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -237,7 +246,7 @@ setForm(nextForm);
     <section className="store-types-page">
       <div className="store-types-page-heading">
         <div>
-          <h1>{editingId ? "Edit Store Type" : "Create Store Type"}</h1>
+          <h1>{editingId ? "Edit Store Type" : "Store Type Information"}</h1>
           <p>Define a business vertical and its baseline configuration.</p>
         </div>
       </div>
@@ -251,7 +260,7 @@ setForm(nextForm);
           </div>
 
           <div>
-            <h2>Store Type Information</h2>
+            <h2>Create Store Type</h2>
             <p>Provide the basic details about the store type.</p>
           </div>
         </div>
@@ -268,16 +277,12 @@ setForm(nextForm);
                 name="code"
                 value={form.code}
                 onChange={updateField}
-                placeholder="e.g. GROCERY"
+                placeholder="e.g. GROCERY Use 3–30 uppercase letters, numbers, or underscores."
                 maxLength="30"
                 autoComplete="off"
               />
             </div>
 
-            <small>
-              Use 3–30 uppercase letters, numbers, or underscores. Example:
-              GROCERY, RESTAURANT_FNB.
-            </small>
 
             {errors.code && <em className="field-error">{errors.code}</em>}
           </label>
@@ -293,19 +298,18 @@ setForm(nextForm);
                 name="name"
                 value={form.name}
                 onChange={updateField}
-                placeholder="e.g. Grocery"
+                placeholder="e.g. Grocery Name displayed throughout the system."
                 maxLength="80"
                 autoComplete="off"
               />
             </div>
 
-            <small>Name displayed throughout the system.</small>
 
             {errors.name && <em className="field-error">{errors.name}</em>}
           </label>
         </div>
 
-        <div className="store-type-bottom-grid">
+        <div className="store-type-form-grid">
           <label className="store-type-field store-type-description-field">
             <span>
               Description
@@ -342,12 +346,18 @@ setForm(nextForm);
               Status <b>*</b>
             </span>
 
-            <select name="status" value={form.status} onChange={updateField}>
+            <select
+              name="status"
+              value={form.status}
+              onChange={updateField}
+              className={`store-type-status-select ${
+                form.status === "Inactive" ? "inactive" : "active"
+              }`}
+            >
               <option value="Active">● Active</option>
               <option value="Inactive">● Inactive</option>
             </select>
-
-            <small>Inactive types cannot be selected for new stores.</small>
+            
            </label>
         </div>
 
@@ -361,7 +371,11 @@ setForm(nextForm);
             Cancel
           </button>
 
-          <button type="submit" className="store-type-submit-button" disabled={saving}>
+          <button
+            type="submit"
+            className="store-type-submit-button"
+            disabled={!canSubmitStoreType || saving}
+          >
             {saving ? "Saving..." : editingId ? "Update store type" : "Create store type"}
           </button>
         </div>
@@ -397,7 +411,6 @@ setForm(nextForm);
               onClick={resetFilters}
             >
               <i className="bi bi-arrow-counterclockwise" />
-              Reset
             </button>
           </div>
         </div>
@@ -509,7 +522,7 @@ setForm(nextForm);
             <h2>Delete Store Type?</h2>
 
             <p>
-              Are you sure you want to delete{" "}
+              Are you sure you want to Inactive{" "}
               <strong>{deleteTarget.name}</strong>?
             </p>
 

@@ -295,11 +295,10 @@
 .feature-form-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 16px;
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid #e6edf6;
+  margin-top: 12px;
+  padding-top: 8px;
 }
 
 .feature-footer-actions {
@@ -353,19 +352,6 @@
   cursor: not-allowed;
 }
 
-.editing-chip {
-  display: inline-flex;
-  min-height: 34px;
-  align-items: center;
-  padding: 0 12px;
-  border: 1px solid #9be5bd;
-  border-radius: 18px;
-  background: #effcf5;
-  color: #16a15d;
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-}
 
 /* =========================================================
    FEATURES LIST
@@ -516,7 +502,7 @@
   border-radius: 8px;
   background: #ffffff;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
 }
 
 .features-table {
@@ -527,13 +513,14 @@
   table-layout: fixed;
 }
 
-.features-table .col-name { width: 17%; }
-.features-table .col-category { width: 14%; }
-.features-table .col-description { width: 19%; }
-.features-table .col-status { width: 12%; }
+.features-table .col-name { width: 15%; }
+.features-table .col-code { width: 13%; }
+.features-table .col-category { width: 12%; }
+.features-table .col-description { width: 18%; }
+.features-table .col-status { width: 10%; }
 .features-table .col-created { width: 12%; }
 .features-table .col-updated { width: 12%; }
-.features-table .col-actions { width: 14%; }
+.features-table .col-actions { width: 8%; }
 
 .features-table thead {
   background: #f8f9fc;
@@ -602,13 +589,76 @@
   cursor: pointer;
 }
 
+.feature-name-button:hover,
+.feature-name-button:focus-visible {
+  color: #1677ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.feature-code-cell {
+  color: #44536d !important;
+  font-weight: 500;
+  letter-spacing: 0.15px;
+  text-transform: uppercase;
+}
+
 .feature-description {
+  position: relative;
   padding-left: 14px !important;
   padding-right: 14px !important;
   color: #707d95 !important;
+  overflow: visible !important;
+  white-space: normal !important;
+}
+
+.feature-description-tooltip-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.feature-description-clamp {
+  display: -webkit-box;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 18px;
+  max-height: 36px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.feature-description-tooltip {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  top: calc(100% + 7px);
+  width: max-content;
+  min-width: 220px;
+  max-width: 360px;
+  padding: 10px 12px;
+  border: 1px solid #dce4ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #34435e;
+  box-shadow: 0 8px 24px rgba(16, 38, 77, 0.14);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+}
+
+.feature-description-tooltip-wrap:hover .feature-description-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .feature-created {
@@ -1052,4 +1102,17 @@
   .feature-description-field {
     grid-column: auto !important;
   }
+}
+
+
+/* Latest Features refinements */
+.features-table .feature-created,
+.features-table .feature-updated {
+  white-space: nowrap;
+}
+
+.feature-action.primary:disabled:hover {
+  background: #e6eaf1;
+  color: #8a96a8;
+  box-shadow: none;
 }

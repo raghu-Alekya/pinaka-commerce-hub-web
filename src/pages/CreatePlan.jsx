@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { storeTypesApi } from "../api/storeTypes";
-import {
-  createPlan,
-  deletePlan,
-  listPlans,
-  updatePlan,
-} from "../api/plans";
+import { createPlan, deletePlan, listPlans, updatePlan } from "../api/plans";
 
 const emptyForm = {
   code: "",
@@ -48,18 +43,16 @@ function normalizeStoreTypeFeatures(response) {
           feature?.id ??
             assignment?.featureId ??
             assignment?.id ??
-            `feature-${index}`
+            `feature-${index}`,
         ),
         name: String(
           feature?.name ??
             feature?.featureKey ??
             feature?.code ??
-            `Feature ${index + 1}`
+            `Feature ${index + 1}`,
         ).trim(),
         description: String(
-          feature?.description ??
-            feature?.category ??
-            "Store type feature"
+          feature?.description ?? feature?.category ?? "Store type feature",
         ).trim(),
         icon: feature?.icon || "bi-grid",
         active:
@@ -93,13 +86,15 @@ function storeTypeDisplayName(value, storeTypes) {
       storeType.code,
       storeType.name,
       storeType.storeTypeName,
-    ].filter(Boolean).map((item) => String(item).trim().toLowerCase());
+    ]
+      .filter(Boolean)
+      .map((item) => String(item).trim().toLowerCase());
 
     return candidates.some(
       (candidate) =>
         candidate !== undefined &&
         candidate !== null &&
-        identifiers.includes(String(candidate).trim().toLowerCase())
+        identifiers.includes(String(candidate).trim().toLowerCase()),
     );
   });
 
@@ -114,7 +109,7 @@ function storeTypeDisplayName(value, storeTypes) {
   }
 
   return typeof value === "object"
-    ? value.name ?? value.storeTypeName ?? value.code ?? ""
+    ? (value.name ?? value.storeTypeName ?? value.code ?? "")
     : String(value ?? "");
 }
 
@@ -129,7 +124,7 @@ function today() {
 const planRowStyle = {
   display: "grid",
   gridTemplateColumns:
-    "80px 110px minmax(80px, 1fr) 100px 105px 85px 80px 100px 100px 65px",
+    "75px 45px minmax(80px, 1fr) 100px 105px 85px 80px 100px 100px 65px",
   gap: "6px",
   alignItems: "center",
 };
@@ -160,7 +155,8 @@ export default function CreatePlan() {
   const [editingId, setEditingId] = useState(null);
   const [includedFeatures, setIncludedFeatures] = useState([]);
   const [storeTypeFeatures, setStoreTypeFeatures] = useState([]);
-  const [storeTypeFeaturesLoading, setStoreTypeFeaturesLoading] = useState(false);
+  const [storeTypeFeaturesLoading, setStoreTypeFeaturesLoading] =
+    useState(false);
   const [storeTypeFeaturesError, setStoreTypeFeaturesError] = useState("");
 
   // ============================================================
@@ -198,9 +194,7 @@ export default function CreatePlan() {
     } catch (error) {
       console.error("Failed to fetch store types:", error);
 
-      setStoreTypesError(
-        error?.message || "Failed to load store types."
-      );
+      setStoreTypesError(error?.message || "Failed to load store types.");
 
       setStoreTypes([]);
     } finally {
@@ -226,9 +220,7 @@ export default function CreatePlan() {
     } catch (error) {
       console.error("Failed to fetch plans:", error);
 
-      setPlansError(
-        error?.message || "Failed to load plans."
-      );
+      setPlansError(error?.message || "Failed to load plans.");
 
       // Do not use local/static plan data as a fallback.
       setPlans([]);
@@ -250,11 +242,14 @@ export default function CreatePlan() {
     const selectedStoreType = storeTypes.find(
       (storeType) =>
         String(
-          storeType.id ?? storeType._id ?? storeType.storeTypeId ?? storeType.code
+          storeType.id ??
+            storeType._id ??
+            storeType.storeTypeId ??
+            storeType.code,
         ) === String(form.applicableStoreType) ||
         String(
-          storeType.name ?? storeType.storeTypeName ?? storeType.code
-        ).toLowerCase() === String(form.applicableStoreType).toLowerCase()
+          storeType.name ?? storeType.storeTypeName ?? storeType.code,
+        ).toLowerCase() === String(form.applicableStoreType).toLowerCase(),
     );
 
     if (!selectedStoreType) {
@@ -283,16 +278,17 @@ export default function CreatePlan() {
         setIncludedFeatures((current) =>
           current.filter((name) =>
             features.some(
-              (feature) => feature.name.toLowerCase() === String(name).toLowerCase()
-            )
-          )
+              (feature) =>
+                feature.name.toLowerCase() === String(name).toLowerCase(),
+            ),
+          ),
         );
       })
       .catch((error) => {
         if (!active) return;
         setStoreTypeFeatures([]);
         setStoreTypeFeaturesError(
-          error?.message || "Failed to load store type features."
+          error?.message || "Failed to load store type features.",
         );
       })
       .finally(() => {
@@ -327,54 +323,52 @@ export default function CreatePlan() {
   }, [plans, search, billingFilter, statusFilter]);
 
   const canContinueStepOne =
-    form.code.trim() &&
-    form.name.trim() &&
-    form.applicableStoreType;
+    form.code.trim() && form.name.trim() && form.applicableStoreType;
 
   const canContinuePricing =
     form.billingModel &&
     form.currency &&
     form.billingCycle &&
     form.basePrice !== "";
-const canContinueFeatures = includedFeatures.length > 0;
+  const canContinueFeatures = includedFeatures.length > 0;
 
-function canMoveToStep(targetStep) {
-  if (targetStep <= planStep) {
+  function canMoveToStep(targetStep) {
+    if (targetStep <= planStep) {
+      return true;
+    }
+
+    if (targetStep >= 2 && !canContinueStepOne) {
+      return false;
+    }
+
+    if (targetStep >= 3 && !canContinuePricing) {
+      return false;
+    }
+
+    if (targetStep >= 4 && !canContinueFeatures) {
+      return false;
+    }
+
     return true;
   }
 
-  if (targetStep >= 2 && !canContinueStepOne) {
-    return false;
-  }
+  function handleStepClick(step) {
+    // Always allow going backwards
+    if (step < planStep) {
+      setPlanStep(step);
+      return;
+    }
 
-  if (targetStep >= 3 && !canContinuePricing) {
-    return false;
-  }
+    // Allow current step
+    if (step === planStep) {
+      return;
+    }
 
-  if (targetStep >= 4 && !canContinueFeatures) {
-    return false;
+    // Only move forward when current step is valid
+    if (canMoveToStep(step)) {
+      setPlanStep(step);
+    }
   }
-
-  return true;
-}
-
-function handleStepClick(step) {
-  // Always allow going backwards
-  if (step < planStep) {
-    setPlanStep(step);
-    return;
-  }
-
-  // Allow current step
-  if (step === planStep) {
-    return;
-  }
-
-  // Only move forward when current step is valid
-  if (canMoveToStep(step)) {
-    setPlanStep(step);
-  }
-}
   function updateField(event) {
     const { name, value } = event.target;
 
@@ -388,7 +382,7 @@ function handleStepClick(step) {
     setIncludedFeatures((current) =>
       current.includes(featureName)
         ? current.filter((item) => item !== featureName)
-        : [...current, featureName]
+        : [...current, featureName],
     );
   }
 
@@ -425,17 +419,10 @@ function handleStepClick(step) {
       let savedPlan;
 
       if (editingId) {
-        savedPlan = await updatePlan(
-          editingId,
-          planData,
-          includedFeatures
-        );
+        savedPlan = await updatePlan(editingId, planData, includedFeatures);
         setMessage("Plan updated successfully.");
       } else {
-        savedPlan = await createPlan(
-          planData,
-          includedFeatures
-        );
+        savedPlan = await createPlan(planData, includedFeatures);
         setMessage("Plan created successfully.");
       }
 
@@ -451,9 +438,7 @@ function handleStepClick(step) {
     } catch (error) {
       console.error("Failed to save plan:", error);
 
-      setMessage(
-        error?.message || "Failed to save plan."
-      );
+      setMessage(error?.message || "Failed to save plan.");
     } finally {
       setSavingPlan(false);
     }
@@ -471,24 +456,19 @@ function handleStepClick(step) {
       code: plan.code || "",
       name: plan.name || "",
       description: plan.description || "",
-      applicableStoreType:
-        storeTypeDisplayName(
-          plan.applicableStoreType || plan.storeType || "",
-          storeTypes
-        ),
+      applicableStoreType: storeTypeDisplayName(
+        plan.applicableStoreType || plan.storeType || "",
+        storeTypes,
+      ),
       billingModel: plan.billingModel || "",
       currency: plan.currency || "",
       billingCycle: plan.billingCycle || plan.cycle || "",
       basePrice: String(plan.basePrice ?? plan.price ?? ""),
       includedStores: String(plan.includedStores ?? 0),
       includedTerminals: String(plan.includedTerminals ?? 0),
-      additionalTerminalPrice: String(
-        plan.additionalTerminalPrice ?? ""
-      ),
+      additionalTerminalPrice: String(plan.additionalTerminalPrice ?? ""),
       includedUsers: String(plan.includedUsers ?? 0),
-      additionalUserPrice: String(
-        plan.additionalUserPrice ?? ""
-      ),
+      additionalUserPrice: String(plan.additionalUserPrice ?? ""),
       trialPeriod: plan.trialPeriod || "",
       effectiveFrom: plan.effectiveFrom
         ? String(plan.effectiveFrom).slice(0, 10)
@@ -499,9 +479,9 @@ function handleStepClick(step) {
     setIncludedFeatures(
       Array.isArray(plan.includedFeatures)
         ? plan.includedFeatures.map((feature) =>
-            typeof feature === "string" ? feature : feature.name
+            typeof feature === "string" ? feature : feature.name,
           )
-        : []
+        : [],
     );
 
     setPlanStep(1);
@@ -529,17 +509,13 @@ function handleStepClick(step) {
       console.log("Plans after delete:", parsedPlans);
       setPlans(parsedPlans);
 
-      setMessage(
-        `${deleteTarget.name} deleted successfully.`
-      );
+      setMessage(`${deleteTarget.name} deleted successfully.`);
 
       setDeleteTarget(null);
     } catch (error) {
       console.error("Failed to delete plan:", error);
 
-      setMessage(
-        error?.message || "Failed to delete plan."
-      );
+      setMessage(error?.message || "Failed to delete plan.");
     } finally {
       setDeletingPlan(false);
     }
@@ -554,7 +530,6 @@ function handleStepClick(step) {
           after saving.
         </p>
       </div>
-
       <div className="plan-stepper">
         {[
           ["Plan Information", 1],
@@ -568,7 +543,7 @@ function handleStepClick(step) {
               className={`plan-step ${planStep === step ? "active" : ""} ${
                 planStep > step ? "complete" : ""
               }`}
-             onClick={() => handleStepClick(step)}
+              onClick={() => handleStepClick(step)}
             >
               <span>{step}</span>
               <strong>{label}</strong>
@@ -578,7 +553,6 @@ function handleStepClick(step) {
           </div>
         ))}
       </div>
-
       {planStep === 1 && (
         <section className="plan-form-card">
           <div className="plan-card-heading">
@@ -592,12 +566,12 @@ function handleStepClick(step) {
             </div>
           </div>
 
-          <div className="plan-create-grid">
+          {/* ONE 3-column grid: Code | Name | Store Type */}
+          <div className="plan-create-grid three-columns">
             <label className="plan-field">
               <span>
                 Plan Code <b>*</b>
               </span>
-
               <div className="plan-input-wrap">
                 <i className="bi bi-tag" />
                 <input
@@ -614,7 +588,6 @@ function handleStepClick(step) {
               <span>
                 Plan Name <b>*</b>
               </span>
-
               <div className="plan-input-wrap">
                 <i className="bi bi-type" />
                 <input
@@ -626,49 +599,121 @@ function handleStepClick(step) {
                 />
               </div>
             </label>
+
+            <label className="plan-field">
+              <span>
+                Applicable Business/Store Type <b>*</b>
+              </span>
+              <select
+                name="applicableStoreType"
+                value={form.applicableStoreType}
+                onChange={updateField}
+                disabled={storeTypesLoading}
+              >
+                <option value="">
+                  {storeTypesLoading
+                    ? "Loading store types..."
+                    : "Select store type"}
+                </option>
+                {storeTypes.map((storeType) => (
+                  <option
+                    key={storeType.id ?? storeType._id ?? storeType.code}
+                    value={
+                      storeType.name ??
+                      storeType.storeTypeName ??
+                      storeType.code
+                    }
+                  >
+                    {storeType.name ??
+                      storeType.storeTypeName ??
+                      storeType.code}
+                  </option>
+                ))}
+              </select>
+              {storeTypesError && (
+                <small className="plan-field-error">{storeTypesError}</small>
+              )}
+            </label>
+          </div>
+          <div
+            className="plan-create-grid three-columns"
+            style={{ marginTop: 14 }}
+          >
+            {/* Status */}
+            <label className="plan-field">
+              <span>
+                Status <b>*</b>
+              </span>
+
+              <select
+                autoComplete="off"
+                name="status"
+                value={form.status}
+                onChange={updateField}
+                className={`plan-status-select ${
+                  form.status === "Inactive" ? "inactive" : "active"
+                }`}
+              >
+                <option value="Active">● Active</option>
+                <option value="Inactive">● Inactive</option>
+              </select>
+            </label>
+
+            {/* Description */}
+            <label className="plan-field">
+              <span>Description</span>
+
+              <div className="plan-textarea-wrap">
+                <i className="bi bi-file-earmark-text" />
+
+                <textarea
+                  {...textInputProps}
+                  name="description"
+                  value={form.description}
+                  onChange={updateField}
+                  placeholder="Describe the plan, its features and target audience..."
+                />
+              </div>
+            </label>
           </div>
 
-    
-
-          <div className="plan-create-grid plan-bottom-grid">
+          {/* <div className="plan-create-grid plan-bottom-grid">
             <label className="plan-field">
               <span>
                 Applicable Business/Store Type <b>*</b>
               </span>
 
-        <select
-  name="applicableStoreType"
-  value={form.applicableStoreType}
-  onChange={updateField}
-  disabled={storeTypesLoading}
->
-  <option value="">
-    {storeTypesLoading
-      ? "Loading store types..."
-      : "Select store type"}
-  </option>
+              <select
+                name="applicableStoreType"
+                value={form.applicableStoreType}
+                onChange={updateField}
+                disabled={storeTypesLoading}
+              >
+                <option value="">
+                  {storeTypesLoading
+                    ? "Loading store types..."
+                    : "Select store type"}
+                </option>
 
-  {storeTypes.map((storeType) => (
-    <option
-      key={storeType.id ?? storeType._id ?? storeType.code}
-      value={
-        storeType.name ??
-        storeType.storeTypeName ??
-        storeType.code
-      }
-    >
-      {storeType.name ??
-        storeType.storeTypeName ??
-        storeType.code}
-    </option>
-  ))}
-</select>
+                {storeTypes.map((storeType) => (
+                  <option
+                    key={storeType.id ?? storeType._id ?? storeType.code}
+                    value={
+                      storeType.name ??
+                      storeType.storeTypeName ??
+                      storeType.code
+                    }
+                  >
+                    {storeType.name ??
+                      storeType.storeTypeName ??
+                      storeType.code}
+                  </option>
+                ))}
+              </select>
 
-{storeTypesError && (
-  <small className="plan-field-error">
-    {storeTypesError}
-  </small>
-)}
+              {storeTypesError && (
+                <small className="plan-field-error">{storeTypesError}</small>
+              )}
             </label>
 
             <label className="plan-field">
@@ -676,25 +721,23 @@ function handleStepClick(step) {
                 Status <b>*</b>
               </span>
 
-         <select
-  autoComplete="off"
-  name="status"
-  value={form.status}
-  onChange={updateField}
-  className={`plan-status-select ${
-    form.status === "Inactive" ? "inactive" : "active"
-  }`}
->
-  <option value="Active">● Active</option>
-  <option value="Inactive">● Inactive</option>
-</select>
+              <select
+                autoComplete="off"
+                name="status"
+                value={form.status}
+                onChange={updateField}
+                className={`plan-status-select ${
+                  form.status === "Inactive" ? "inactive" : "active"
+                }`}
+              >
+                <option value="Active">● Active</option>
+                <option value="Inactive">● Inactive</option>
+              </select>
             </label>
-          </div>
-{/* Description at the bottom */}
-     <label className="plan-field plan-description-field">
-            <span>
-              Description
-            </span>
+          </div> */}
+          {/* Description at the bottom */}
+          {/* <label className="plan-field plan-description-field">
+            <span>Description</span>
 
             <div className="plan-textarea-wrap">
               <i className="bi bi-file-earmark-text" />
@@ -706,7 +749,7 @@ function handleStepClick(step) {
                 placeholder="Describe the plan, its features and target audience..."
               />
             </div>
-          </label>
+          </label> */}
           <div className="plan-actions">
             <button
               type="button"
@@ -727,7 +770,6 @@ function handleStepClick(step) {
           </div>
         </section>
       )}
-
       {planStep === 2 && (
         <section className="plan-form-card">
           <div className="plan-card-heading">
@@ -741,9 +783,12 @@ function handleStepClick(step) {
             </div>
           </div>
 
-          <div className="plan-pricing-grid two-columns">
+          {/* Row 1: Billing Model | Currency | Billing Cycle */}
+          <div className="plan-pricing-grid three-columns">
             <label className="plan-field">
-              <span>Billing Model <b>*</b></span>
+              <span>
+                Billing Model <b>*</b>
+              </span>
               <select
                 autoComplete="off"
                 name="billingModel"
@@ -758,7 +803,9 @@ function handleStepClick(step) {
             </label>
 
             <label className="plan-field">
-              <span>Currency <b>*</b></span>
+              <span>
+                Currency <b>*</b>
+              </span>
               <select
                 autoComplete="off"
                 name="currency"
@@ -773,7 +820,9 @@ function handleStepClick(step) {
             </label>
 
             <label className="plan-field">
-              <span>Billing Cycle <b>*</b></span>
+              <span>
+                Billing Cycle <b>*</b>
+              </span>
               <select
                 autoComplete="off"
                 name="billingCycle"
@@ -786,9 +835,15 @@ function handleStepClick(step) {
                 <option value="Yearly">Yearly</option>
               </select>
             </label>
+          </div>
 
+          {/* Row 2: Base Price | Included Stores | Included Terminals */}
+          <div className="plan-pricing-grid three-columns">
             <label className="plan-field">
-              <span>Base Price <b>*</b></span>
+              <span>
+                Base Price <b>*</b>
+              </span>
+
               <div className="plan-price-input">
                 <input
                   {...textInputProps}
@@ -802,11 +857,12 @@ function handleStepClick(step) {
                 <span>{form.currency || "Currency"}</span>
               </div>
             </label>
-          </div>
 
-          <div className="plan-pricing-grid two-columns">
             <label className="plan-field">
-              <span>Included Stores <b>*</b></span>
+              <span>
+                Included Stores <b>*</b>
+              </span>
+
               <input
                 {...textInputProps}
                 name="includedStores"
@@ -818,7 +874,10 @@ function handleStepClick(step) {
             </label>
 
             <label className="plan-field">
-              <span>Included Terminals <b>*</b></span>
+              <span>
+                Included Terminals <b>*</b>
+              </span>
+
               <input
                 {...textInputProps}
                 name="includedTerminals"
@@ -828,38 +887,13 @@ function handleStepClick(step) {
                 onChange={updateField}
               />
             </label>
-
-            {/* <label className="plan-field">
-              <span>Additional Terminal Price</span>
-              <div className="plan-price-input">
-                <input
-                  {...textInputProps}
-                  name="additionalTerminalPrice"
-                  type="number"
-                  min="0"
-                  value={form.additionalTerminalPrice}
-                  onChange={updateField}
-                  placeholder="0.00"
-                />
-                <span>{form.currency || "Currency"}</span>
-              </div>
-            </label> */}
           </div>
 
-          <div className="plan-pricing-grid two-columns">
-            {/* <label className="plan-field">
-              <span>Included Users/Employees <b>*</b></span>
-              <input
-                {...textInputProps}
-                name="includedUsers"
-                type="number"
-                min="0"
-                value={form.includedUsers}
-                onChange={updateField}
-              />
-            </label> */}
-     <label className="plan-field">
+          {/* Row 3: Additional Terminal | Additional User | Included Users */}
+          <div className="plan-pricing-grid three-columns">
+            <label className="plan-field">
               <span>Additional Terminal Price</span>
+
               <div className="plan-price-input">
                 <input
                   {...textInputProps}
@@ -873,8 +907,10 @@ function handleStepClick(step) {
                 <span>{form.currency || "Currency"}</span>
               </div>
             </label>
+
             <label className="plan-field">
               <span>Additional User Price</span>
+
               <div className="plan-price-input">
                 <input
                   {...textInputProps}
@@ -890,7 +926,26 @@ function handleStepClick(step) {
             </label>
 
             <label className="plan-field">
+              <span>
+                Included Users/Employees <b>*</b>
+              </span>
+
+              <input
+                {...textInputProps}
+                name="includedUsers"
+                type="number"
+                min="0"
+                value={form.includedUsers}
+                onChange={updateField}
+              />
+            </label>
+          </div>
+
+          {/* Row 4: Trial Period | Effective From | Empty */}
+          <div className="plan-pricing-grid three-columns">
+            <label className="plan-field">
               <span>Trial Period</span>
+
               <select
                 autoComplete="off"
                 name="trialPeriod"
@@ -917,6 +972,7 @@ function handleStepClick(step) {
             </label>
             <label className="plan-field">
               <span>Effective From</span>
+
               <input
                 {...textInputProps}
                 name="effectiveFrom"
@@ -925,6 +981,9 @@ function handleStepClick(step) {
                 onChange={updateField}
               />
             </label>
+
+            {/* Empty third column keeps the layout aligned */}
+            <div />
           </div>
 
           <div className="plan-actions">
@@ -947,7 +1006,7 @@ function handleStepClick(step) {
           </div>
         </section>
       )}
-
+      ```
       {planStep === 3 && (
         <section className="plan-form-card">
           <div className="plan-card-heading">
@@ -963,45 +1022,61 @@ function handleStepClick(step) {
 
           <div className="plan-features-limits-grid">
             <section className="plan-feature-panel">
-              <h3>Included Features <b>*</b></h3>
+              <h3>
+                Included Features <b>*</b>
+              </h3>
 
               {storeTypeFeaturesLoading && (
-                <p className="plan-review-empty">Loading features for the selected store type...</p>
+                <p className="plan-review-empty">
+                  Loading features for the selected store type...
+                </p>
               )}
 
               {storeTypeFeaturesError && (
                 <p className="plan-field-error">{storeTypeFeaturesError}</p>
               )}
 
-              {!storeTypeFeaturesLoading && !storeTypeFeaturesError && !form.applicableStoreType && (
-                <p className="plan-review-empty">Select a store type to view its features.</p>
-              )}
+              {!storeTypeFeaturesLoading &&
+                !storeTypeFeaturesError &&
+                !form.applicableStoreType && (
+                  <p className="plan-review-empty">
+                    Select a store type to view its features.
+                  </p>
+                )}
 
-              {!storeTypeFeaturesLoading && !storeTypeFeaturesError && form.applicableStoreType && storeTypeFeatures.length === 0 && (
-                <p className="plan-review-empty">No active features are assigned to this store type.</p>
-              )}
+              {!storeTypeFeaturesLoading &&
+                !storeTypeFeaturesError &&
+                form.applicableStoreType &&
+                storeTypeFeatures.length === 0 && (
+                  <p className="plan-review-empty">
+                    No active features are assigned to this store type.
+                  </p>
+                )}
 
-              {!storeTypeFeaturesLoading && storeTypeFeatures.map(({ name, description, icon }) => (
-                <label className="plan-feature-check" key={name}>
-                  <input
-                    type="checkbox"
-                    checked={includedFeatures.includes(name)}
-                    onChange={() => toggleIncludedFeature(name)}
-                  />
+              {!storeTypeFeaturesLoading &&
+                storeTypeFeatures.map(({ name, description, icon }) => (
+                  <label className="plan-feature-check" key={name}>
+                    <input
+                      type="checkbox"
+                      checked={includedFeatures.includes(name)}
+                      onChange={() => toggleIncludedFeature(name)}
+                    />
 
-                  <span className="plan-feature-icon">
-                    <i className={`bi ${icon}`} />
-                  </span>
+                    <span className="plan-feature-icon">
+                      <i className={`bi ${icon}`} />
+                    </span>
 
-                  <span>
-                    <strong>{name}</strong>
-                    <small>{description || "Store type feature"}</small>
-                  </span>
-                </label>
-              ))}
+                    <span>
+                      <strong>{name}</strong>
+                      <small>{description || "Store type feature"}</small>
+                    </span>
+                  </label>
+                ))}
 
               <div className="plan-feature-summary">
-                <span className="plan-feature-summary-label">Selected Features</span>
+                <span className="plan-feature-summary-label">
+                  Selected Features
+                </span>
                 <div className="plan-review-feature-list">
                   {includedFeatures.length > 0 ? (
                     includedFeatures.map((feature) => (
@@ -1010,7 +1085,9 @@ function handleStepClick(step) {
                       </span>
                     ))
                   ) : (
-                    <span className="plan-review-empty">No features selected</span>
+                    <span className="plan-review-empty">
+                      No features selected
+                    </span>
                   )}
                 </div>
               </div>
@@ -1037,7 +1114,6 @@ function handleStepClick(step) {
           </div>
         </section>
       )}
-
       {planStep === 4 && (
         <section className="plan-form-card plan-review-card">
           <div className="plan-card-heading">
@@ -1059,10 +1135,22 @@ function handleStepClick(step) {
               </h3>
 
               <dl>
-                <div><dt>Plan Code</dt><dd>{form.code}</dd></div>
-                <div><dt>Plan Name</dt><dd>{form.name}</dd></div>
-                <div><dt>Description</dt><dd>{form.description}</dd></div>
-                <div><dt>Business/Store Type</dt><dd>{form.applicableStoreType}</dd></div>
+                <div>
+                  <dt>Plan Code</dt>
+                  <dd>{form.code}</dd>
+                </div>
+                <div>
+                  <dt>Plan Name</dt>
+                  <dd>{form.name}</dd>
+                </div>
+                <div>
+                  <dt>Description</dt>
+                  <dd>{form.description}</dd>
+                </div>
+                <div>
+                  <dt>Business/Store Type</dt>
+                  <dd>{form.applicableStoreType}</dd>
+                </div>
                 <div>
                   <dt>Status</dt>
                   <dd className="plan-review-active">
@@ -1080,17 +1168,56 @@ function handleStepClick(step) {
               </h3>
 
               <dl className="two-column-list">
-                <div><dt>Billing Model</dt><dd>{form.billingModel}</dd></div>
-                <div><dt>Currency</dt><dd>{form.currency}</dd></div>
-                <div><dt>Billing Cycle</dt><dd>{form.billingCycle}</dd></div>
-                <div><dt>Base Price</dt><dd>{form.currency} {form.basePrice}</dd></div>
-                <div><dt>Included Stores</dt><dd>{form.includedStores}</dd></div>
-                <div><dt>Included Terminals</dt><dd>{form.includedTerminals}</dd></div>
-                <div><dt>Additional Terminal Price</dt><dd>{form.currency} {form.additionalTerminalPrice}</dd></div>
-                <div><dt>Included Users</dt><dd>{form.includedUsers}</dd></div>
-                <div><dt>Additional User Price</dt><dd>{form.currency} {form.additionalUserPrice}</dd></div>
-                <div><dt>Trial Period</dt><dd>{form.trialPeriod}</dd></div>
-                <div><dt>Effective From</dt><dd>{form.effectiveFrom}</dd></div>
+                <div>
+                  <dt>Billing Model</dt>
+                  <dd>{form.billingModel}</dd>
+                </div>
+                <div>
+                  <dt>Currency</dt>
+                  <dd>{form.currency}</dd>
+                </div>
+                <div>
+                  <dt>Billing Cycle</dt>
+                  <dd>{form.billingCycle}</dd>
+                </div>
+                <div>
+                  <dt>Base Price</dt>
+                  <dd>
+                    {form.currency} {form.basePrice}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Included Stores</dt>
+                  <dd>{form.includedStores}</dd>
+                </div>
+                <div>
+                  <dt>Included Terminals</dt>
+                  <dd>{form.includedTerminals}</dd>
+                </div>
+                <div>
+                  <dt>Additional Terminal Price</dt>
+                  <dd>
+                    {form.currency} {form.additionalTerminalPrice}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Included Users</dt>
+                  <dd>{form.includedUsers}</dd>
+                </div>
+                <div>
+                  <dt>Additional User Price</dt>
+                  <dd>
+                    {form.currency} {form.additionalUserPrice}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Trial Period</dt>
+                  <dd>{form.trialPeriod}</dd>
+                </div>
+                <div>
+                  <dt>Effective From</dt>
+                  <dd>{form.effectiveFrom}</dd>
+                </div>
               </dl>
             </section>
 
@@ -1107,7 +1234,10 @@ function handleStepClick(step) {
                     <div className="plan-review-feature-list">
                       {includedFeatures.length > 0 ? (
                         includedFeatures.map((feature) => (
-                          <span className="plan-review-feature-pill" key={feature}>
+                          <span
+                            className="plan-review-feature-pill"
+                            key={feature}
+                          >
                             {feature}
                           </span>
                         ))
@@ -1153,18 +1283,13 @@ function handleStepClick(step) {
           </div>
         </section>
       )}
-
       <section className="plans-list-card">
         <div className="plans-list-header">
           <div>
             <h2>Plans List</h2>
-            {plansLoading && (
-              <small>Loading plans...</small>
-            )}
+            {plansLoading && <small>Loading plans...</small>}
             {plansError && (
-              <small className="plan-field-error">
-                {plansError}
-              </small>
+              <small className="plan-field-error">{plansError}</small>
             )}
           </div>
 
@@ -1210,103 +1335,97 @@ function handleStepClick(step) {
 
         <div className="plans-table-wrap" style={{ overflowX: "auto" }}>
           <div className="plans-table">
-           <div className="plans-row plans-row-head" style={planRowStyle}>
-  <div>Plan Code</div>
-  <div>Name</div>
-  <div>Description</div>
-  <div>Applicable Type</div>
-  <div>Billing Model</div>
-  <div>Price</div>
-  <div>Status</div>
-  <div>Created At</div>
-  <div>Updated At</div>
-  <div>Actions</div>
-</div>
+            <div className="plans-row plans-row-head" style={planRowStyle}>
+              <div>Plan Code</div>
+              <div>Name</div>
+              <div>Description</div>
+              <div>Applicable Type</div>
+              <div>Billing Model</div>
+              <div>Price</div>
+              <div>Status</div>
+              <div>Created At</div>
+              <div>Updated At</div>
+              <div>Actions</div>
+            </div>
 
-{filteredPlans.map((plan) => (
-  <div
-    className="plans-row"
-    key={plan.id}
-    style={planRowStyle}
-  >
-    {/* Plan Code */}
-    <div className="plan-code-cell">
-      <strong>{plan.code}</strong>
-    </div>
+            {filteredPlans.map((plan) => (
+              <div className="plans-row" key={plan.id} style={planRowStyle}>
+                {/* Plan Code */}
+                <div className="plan-code-cell">
+                  <strong>{plan.code}</strong>
+                </div>
 
-    {/* Name - Navigation unchanged */}
-    <button
-      type="button"
-      className="plan-name-cell plan-name-clickable"
-      onClick={() =>
-        navigate(`/plans/${plan.id}`, {
-          state: { plan },
-        })
-      }
-    >
-      <strong>{plan.name}</strong>
-    </button>
+                {/* Name - Navigation unchanged */}
+                <button
+                  type="button"
+                  className="plan-name-cell plan-name-clickable"
+                  onClick={() =>
+                    navigate(`/plans/${plan.id}`, {
+                      state: { plan },
+                    })
+                  }
+                >
+                  <strong>{plan.name}</strong>
+                </button>
 
-    {/* Description - Separate column */}
-    <div className="plan-description-cell">
-      {plan.description || "—"}
-    </div>
+                {/* Description - Separate column */}
+                <div className="plan-description-cell">
+                  {plan.description || "—"}
+                </div>
 
-    {/* Applicable Type */}
-    <div>
-      <span className="plan-type-badge">
-        {plan.storeType}
-      </span>
-    </div>
+                {/* Applicable Type */}
+                <div>
+                  <span className="plan-type-badge">{plan.storeType}</span>
+                </div>
 
-    {/* Billing Model */}
-    <div>{plan.billingModel}</div>
+                {/* Billing Model */}
+                <div>{plan.billingModel}</div>
 
-    {/* Price */}
-    <div className="plan-price-cell">
-      {plan.currency} {plan.price}
-      <small>/{plan.cycle.toLowerCase()}</small>
-    </div>
+                {/* Price */}
+                <div className="plan-price-cell">
+                  {plan.currency} {plan.price}
+                  <small>/{plan.cycle.toLowerCase()}</small>
+                </div>
 
-    {/* Status */}
-    <div>
-      <span
-        className={`plan-status ${
-          plan.status === "Inactive" ? "inactive" : ""
-        }`}
-      >
-        <i className="bi bi-circle-fill" />
-        {plan.status}
-      </span>
-    </div>
+                {/* Status */}
+                <div>
+                  <span
+                    className={`plan-status ${
+                      plan.status === "Inactive" ? "inactive" : ""
+                    }`}
+                  >
+                    <i className="bi bi-circle-fill" />
+                    {plan.status}
+                  </span>
+                </div>
 
-    {/* Created At */}
-    <div>{plan.createdOn || "—"}</div>
+                {/* Created At */}
+                <div>{plan.createdOn || "—"}</div>
 
-    {/* Updated At */}
-    <div>{plan.updatedOn || "—"}</div>
+                {/* Updated At */}
+                <div>{plan.updatedOn || "—"}</div>
 
-    {/* Actions */}
-    <div className="plan-table-actions">
-      <button
-        type="button"
-        title="Edit plan"
-        onClick={() => editPlan(plan)}
-      >
-        <i className="bi bi-pencil" />
-      </button>
+                {/* Actions */}
+                <div className="plan-table-actions">
+                  <button
+                    type="button"
+                    title="Edit plan"
+                    onClick={() => editPlan(plan)}
+                  >
+                    <i className="bi bi-pencil" />
+                  </button>
 
-      <button
-        type="button"
-        className="plan-delete-icon"
-        title="Delete plan"
-        onClick={() => setDeleteTarget(plan)}
-      >
-        <i className="bi bi-trash3" />
-      </button>
-    </div>
-  </div>
-))}
+                  <button
+                    type="button"
+                    className="plan-delete-icon"
+                    title="Delete plan"
+                    onClick={() => setDeleteTarget(plan)}
+                  >
+                    <i className="bi bi-trash3" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -1319,14 +1438,15 @@ function handleStepClick(step) {
             <button type="button" aria-label="Previous page">
               <i className="bi bi-chevron-left" />
             </button>
-            <button type="button" className="active">1</button>
+            <button type="button" className="active">
+              1
+            </button>
             <button type="button" aria-label="Next page">
               <i className="bi bi-chevron-right" />
             </button>
           </div>
         </div>
       </section>
-
       {deleteTarget && (
         <div
           className="delete-plan-overlay"
@@ -1369,7 +1489,6 @@ function handleStepClick(step) {
           </div>
         </div>
       )}
-
       {message && (
         <div className="plan-toast">
           <span>{message}</span>

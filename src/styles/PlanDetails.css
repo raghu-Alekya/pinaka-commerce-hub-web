@@ -9,13 +9,29 @@
 .plan-details-back {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   padding: 0;
+  margin: 0;
   border: 0;
-  color: #076cf0;
   background: transparent;
   cursor: pointer;
-  font-size: 13px;
+}
+
+.plan-details-back-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #d8e5f4;
+  border-radius: 12px;
+  background: #fff;
+  color: #0873f9;
+  font-size: 24px;
+  box-sizing: border-box;
+}
+
+.plan-details-back:hover .plan-details-back-icon {
+  background: #f5f9ff;
+  border-color: #bcd5f3;
 }
 
 .plan-details-heading {

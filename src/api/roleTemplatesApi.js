@@ -44,11 +44,26 @@ export const roleTemplatesApi = {
   bulkUpdateStoreTypes: (id, storeTypeIds) =>
     api.put(
       `//role-templates/${encodeURIComponent(id)}/store-types/bulk`,
-      { storeTypeIds }
+      { storeTypeIds, replace: true }
     ),
 
   updateFeatureAccess: (id, featureAccess) =>
     api.put(`//role-templates/${encodeURIComponent(id)}/features`, featureAccess),
+
+  removeFeaturePermissions: (id, featureIds) =>
+    api.put(
+      `//role-templates/${encodeURIComponent(id)}/permissions/bulk`,
+      { removeFeatureIds: featureIds.filter(Boolean) }
+    ),
+
+  addFeaturePermissions: (id, featureIds, permissionIds) =>
+    api.put(
+      `//role-templates/${encodeURIComponent(id)}/permissions/bulk`,
+      {
+        featureIds: featureIds.filter(Boolean),
+        permissionIds: permissionIds.filter(Boolean),
+      }
+    ),
 
   create: (values) =>
     api.post("/role-templates", values),

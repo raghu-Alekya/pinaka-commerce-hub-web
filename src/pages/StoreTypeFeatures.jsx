@@ -60,6 +60,18 @@ function toFeatureRow(assignment, index) {
     order: assignment.displayOrder ?? index + 1,
   };
 }
+function featureKey(feature) {
+  return String(feature?.id ?? feature?.featureId ?? feature?.name ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+function featureNameKey(feature) {
+  return String(feature?.name ?? feature?.featureKey ?? "")
+    .trim()
+    .toLowerCase();
+}
+
 
 export default function StoreTypeFeatures() {
   const navigate = useNavigate();
@@ -185,8 +197,7 @@ export default function StoreTypeFeatures() {
         : [...current, feature.id]
     );
   }
-
-  function openAddModal() {
+ function openAddModal() {
     setSelectedFeatures([]);
     setModalSearch("");
     setShowAddModal(true);
@@ -195,7 +206,19 @@ export default function StoreTypeFeatures() {
 
     listFeatures()
       .then((items) => {
-        setFeatureCatalog(items.filter((item) => item?.id));
+        const catalog = items.filter((item) => item?.id);
+        const assignedIds = catalog
+          .filter((feature) =>
+            features.some(
+              (assignedFeature) =>
+                featureKey(assignedFeature) === featureKey(feature) ||
+                featureNameKey(assignedFeature) === featureNameKey(feature)
+            )
+          )
+          .map((feature) => feature.id);
+
+        setFeatureCatalog(catalog);
+        setSelectedFeatures(assignedIds);
       })
       .catch((err) => {
         setError(err.message);
@@ -205,6 +228,7 @@ export default function StoreTypeFeatures() {
       });
   }
 
+
   async function addSelectedFeatures() {
     const selected = featureCatalog.filter((feature) =>
       selectedFeatures.includes(feature.id)
@@ -212,13 +236,29 @@ export default function StoreTypeFeatures() {
 
     if (!storeTypeId || selected.length === 0) return;
 
-    const existingNames = features.map((feature) => feature.name);
+    
+    const uniqueSelected = Array.from(
+      new Map(selected.map((feature) => [featureKey(feature), feature])).values()
+    );
+    const existingIds = new Set(features.map(featureKey));
+    const existingNames = new Set(features.map(featureNameKey));
+    const newFeatures = uniqueSelected.filter(
+      (feature) =>
+        !existingIds.has(featureKey(feature)) &&
+        !existingNames.has(featureNameKey(feature))
+    );
+
+    if (newFeatures.length === 0) {
+      setError("The selected features are already assigned to this store type.");
+      return;
+    }
+
     setSaving(true);
     setError("");
 
     try {
       const createdFeatures = await Promise.all(
-        selected.map((feature, index) =>
+        newFeatures.map((feature, index) =>
           storeTypesApi
             .createFeature(storeTypeId, {
             featureId: feature.id,
@@ -238,7 +278,7 @@ export default function StoreTypeFeatures() {
       if (persistedAssignments.length > 0) {
         setFeatures(persistedAssignments.map(toFeatureRow));
       } else {
-        const additions = selected.map((feature, index) => ({
+        const additions = newFeatures.map((feature, index) => ({
           id: feature.id,
           storeTypeFeatureId:
             createdFeatures[index]?.featureId ||
@@ -255,7 +295,9 @@ export default function StoreTypeFeatures() {
 
         setFeatures((current) => [
           ...current,
-          ...additions.filter((feature) => !existingNames.includes(feature.name)),
+          ...additions.filter(
+            (feature) => !existingNames.has(featureNameKey(feature))
+          ),
         ]);
       }
       setShowAddModal(false);
@@ -298,31 +340,34 @@ export default function StoreTypeFeatures() {
   return (
     <section className="store-features-page">
      {error && <p role="alert">{error}</p>}
-      <button
-        type="button"
-        className="store-features-back"
-        onClick={() => navigate("/store-types/new")}
+     <div className="store-features-top">
+  <button
+    type="button"
+    className="store-features-back"
+    onClick={() => navigate("/store-types/new")}
+    aria-label="Back to Store Types"
+    title="Back to Store Types"
+  >
+    <i className="bi bi-arrow-left" />
+  </button>
+
+  <div className="store-features-title">
+    <div className="store-type-title-line">
+      <h1>{storeType.name}</h1>
+
+      <span
+        className={`store-type-active-badge ${
+          storeType.status === "INACTIVE" ? "inactive" : ""
+        }`}
       >
-        <i className="bi bi-arrow-left" />
-        Back to Store Types
-      </button>
+        <i className="bi bi-circle-fill" />
+        {storeType.status === "INACTIVE" ? "Inactive" : "Active"}
+      </span>
+    </div>
 
-      <div className="store-features-title">
-        <div className="store-type-title-line">
-          <h1>{storeType.name}</h1>
-
-          <span
-            className={`store-type-active-badge ${
-              storeType.status === "INACTIVE" ? "inactive" : ""
-            }`}
-          >
-            <i className="bi bi-circle-fill" />
-            {storeType.status === "INACTIVE" ? "Inactive" : "Active"}
-          </span>
-        </div>
-
-        <p>{storeType.description}</p>
-      </div>
+    <p>{storeType.description}</p>
+  </div>
+</div>
 
       <nav className="store-type-tabs">
         <button
@@ -409,7 +454,7 @@ export default function StoreTypeFeatures() {
           ))}
         </div>
 
-        <div className="store-features-footer">
+        <div className="store-features-footer"> 
           <span>
             Showing 1 to {filteredFeatures.length} of {features.length} entries
           </span>
@@ -490,17 +535,21 @@ export default function StoreTypeFeatures() {
                       </small>
                     </div>
 
-                    {group.options.map((feature) => (
+                    {group.options.map((feature) => {
+                      const alreadyAssigned = selectedFeatures.includes(feature.id);
+
+                      return (
                       <label className="add-feature-option" key={feature.id || feature.name}>
                         <input
                           type="checkbox"
-                          checked={selectedFeatures.includes(feature.id)}
+                          checked={alreadyAssigned}
                           onChange={() => toggleSelectedFeature(feature)}
                           disabled={saving}
                         />
                         <span>{feature.name}</span>
                       </label>
-                    ))}
+                      );
+                    })}
                   </div>
                 ))
               )}
@@ -568,7 +617,7 @@ export default function StoreTypeFeatures() {
               Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
             </p>
 
-            <p className="delete-feature-warning">
+             <p className="delete-feature-warning">
               This action cannot be undone.
             </p>
 

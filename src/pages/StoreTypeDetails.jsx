@@ -67,39 +67,34 @@ export default function StoreTypeDetails() {
 
   return (
     <section className="store-type-details-page">
-      <button
-        type="button"
-        className="store-type-details-back"
-        onClick={() => navigate("/store-types/new")}
-      >
-        <i className="bi bi-arrow-left" />
-        Back to Store Types
-      </button>
+      <div className="store-type-details-top">
+  <button
+    type="button"
+    className="store-type-details-back"
+    onClick={() => navigate("/store-types/new")}
+    aria-label="Back to Store Types"
+    title="Back to Store Types"
+  >
+    <i className="bi bi-arrow-left" />
+  </button>
 
-      {loading && <p>Loading store type...</p>}
-      {error && <p role="alert">{error}</p>}
+  <div className="store-type-details-heading">
+    <div className="store-type-title-line">
+      <h1>{form.name}</h1>
 
-      <div className="store-type-details-heading">
-        <div className="store-type-title-line">
-          <h1>{form.name}</h1>
+    </div>
 
-          <span
-            className={`store-type-active-badge ${
-              form.status === "Inactive" ? "inactive" : ""
-            }`}
-          >
-            <i className="bi bi-circle-fill" />
-            {form.status}
-          </span>
-        </div>
+    <p>{form.description}</p>
+  </div>
+</div>
 
-        <p>{form.description}</p>
-      </div>
+{loading && <p>Loading store type...</p>}
+{error && <p role="alert">{error}</p>}
 
-      <nav className="store-type-tabs" aria-label="Store type sections">
-        <button type="button" className="active">
-          Overview
-        </button>
+<nav className="store-type-tabs" aria-label="Store type sections">
+  <button type="button" className="active">
+    Overview
+  </button>
 
         <button
           type="button"
@@ -136,64 +131,55 @@ export default function StoreTypeDetails() {
           </div>
         </div>
 
-        <div className="store-type-details-grid">
-          <label className="store-type-details-field">
-            <span>
-              Store Type Code <b>*</b>
-            </span>
-            <input
-             name="code"
-              value={form.code}
-               readOnly
-               />
-            <small>
-              Use uppercase letters, numbers, and underscores only.
-            </small>
-          </label>
+        {/* Row 1 */}
+<div className="store-type-details-grid">
+  <label className="store-type-details-field">
+    <span>
+      Store Type Code <b>*</b>
+    </span>
 
-          <label className="store-type-details-field">
-            <span>
-              Status <b>*</b>
-            </span>
+    <input name="code" value={form.code} readOnly />
+    
+  </label>
 
-            <input
-              name="status"
-              value={form.status}
-              readOnly
-              className="store-type-details-status"
-            />
+  <label className="store-type-details-field">
+    <span>
+      Status <b>*</b>
+    </span>
 
-            <small>Inactive types cannot be used for new stores.</small>
-          </label>
-        </div>
+    <input
+      name="status"
+      value={form.status}
+      readOnly
+      className="store-type-details-status"
+    />
 
-        <label className="store-type-details-field store-type-details-name">
-          <span>
-            Store Type Name <b>*</b>
-          </span>
+  </label>
+</div>
 
-          <input
-            name="name"
-            value={form.name}
-            readOnly
-            maxLength="80"
-          />
-        </label>
+{/* Row 2 */}
+<div className="store-type-details-grid">
+  <label className="store-type-details-field">
+    <span>
+      Store Type Name <b>*</b>
+    </span>
 
-        <label className="store-type-details-field store-type-details-description">
-          <span>
-            Description
-          </span>
+    <input name="name" value={form.name} readOnly />
+  </label>
 
-          <textarea
-            name="description"
-            value={form.description}
-            readOnly
-            maxLength="500"
-          />
+  <label className="store-type-details-field store-type-details-description">
+    <span>Description</span>
 
-          <small>{form.description.length}/500</small>
-        </label>
+    <textarea
+      name="description"
+      value={form.description}
+      readOnly
+      maxLength="500"
+    />
+
+    <small>{form.description.length}/500</small>
+  </label>
+</div>
 
       </section>
     </section>

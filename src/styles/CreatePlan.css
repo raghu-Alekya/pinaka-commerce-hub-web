@@ -5,7 +5,10 @@
   color: #10264d;
   background: #f6f7fb;
 }
-
+/* Add this — it's missing for plan-create-grid */
+.plan-create-grid.three-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .plans-create-back {
   display: inline-flex;
   align-items: center;

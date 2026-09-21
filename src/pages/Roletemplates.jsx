@@ -21,10 +21,12 @@ function displayDate(value) {
     return "—";
   }
 
-  return date.toLocaleDateString("en-US", {
-    month: "numeric",
-    day: "numeric",
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "2-digit",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -40,10 +42,10 @@ export default function RoleTemplates() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [roleCodeError, setRoleCodeError] = useState("");
 
   const [deletePopup, setDeletePopup] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState(null);
-
   async function loadTemplates() {
     setLoading(true);
     setError("");
@@ -94,18 +96,6 @@ export default function RoleTemplates() {
     });
   }, [templates, search, statusFilter]);
 
-  // Use existing role-template values as optional form suggestions.
-  // These suggestions are only shown while entering data; they are not added to the table.
-  const roleCodeSuggestions = useMemo(
-    () =>
-      [...new Set(
-        templates
-          .map((template) => String(template.roleCode || "").trim())
-          .filter(Boolean)
-      )],
-    [templates]
-  );
-
   const roleNameSuggestions = useMemo(
     () =>
       [...new Set(
@@ -116,8 +106,33 @@ export default function RoleTemplates() {
     [templates]
   );
 
+  function validateRoleCode(value) {
+    const code = String(value || "").trim();
+
+    if (!code) return "Role Code is required.";
+    if (code.length < 3 || code.length > 30) {
+      return "Role Code must be 3 to 30 characters.";
+    }
+    if (!/^[A-Z0-9_]+$/.test(code)) {
+      return "Use only letters, numbers, and underscores. No spaces or special characters.";
+    }
+
+    return "";
+  }
+
   function handleChange(event) {
     const { name, value } = event.target;
+
+    if (name === "roleCode") {
+      const nextValue = value.toUpperCase();
+      setRoleCodeError(validateRoleCode(nextValue));
+
+      setForm((currentForm) => ({
+        ...currentForm,
+        roleCode: nextValue,
+      }));
+      return;
+    }
 
     setForm((currentForm) => ({
       ...currentForm,
@@ -129,6 +144,7 @@ export default function RoleTemplates() {
     setForm(initialForm);
     setEditingId(null);
     setError("");
+    setRoleCodeError("");
   }
 
   async function saveTemplate() {
@@ -141,13 +157,19 @@ export default function RoleTemplates() {
 
    
 
-    if (!/^[A-Z0-9_]+$/.test(values.roleCode)) {
-      setError(
-        "Role code must contain only uppercase letters, numbers, and underscores."
-      );
+    const codeError = validateRoleCode(values.roleCode);
+
+    if (codeError) {
+      setRoleCodeError(codeError);
       return;
     }
 
+    if (!values.name) {
+      setError("Role Template Name is required.");
+      return;
+    }
+
+    setRoleCodeError("");
     setSaving(true);
     setError("");
 
@@ -180,6 +202,7 @@ export default function RoleTemplates() {
     });
 
     setError("");
+    setRoleCodeError("");
 
     window.scrollTo({
       top: 0,
@@ -234,28 +257,38 @@ export default function RoleTemplates() {
     setStatusFilter("ALL");
   }
 
+  const isFormValid =
+    form.roleCode.length >= 3 &&
+    form.roleCode.length <= 30 &&
+    /^[A-Z0-9_]+$/.test(form.roleCode) &&
+    form.name.trim().length > 0;
+
   return (
     <>
       <section className="role-templates-page">
-        <div className="role-details-card">
-          <div className="role-page-heading">
-            <div className="role-title-wrap">
-              <div className="role-title-icon">
-                <i className="bi bi-grid-1x2" />
-              </div>
+        <div className="role-templates-page-heading">
+          <div>
+            <h1>
+              {editingId !== null
+                ? "Edit Role Template"
+                : "Create Role Template"}
+            </h1>
+            <p>Create and manage role templates using feature permissions.</p>
+          </div>
+        </div>
 
-              <div>
-                <h1>Role Templates</h1>
-                <p>
-                  Create and manage role templates using feature
-                  permissions.
-                </p>
-              </div>
+        <div className="role-details-card">
+          <div className="role-card-heading">
+            <div className="role-heading-icon">
+              <i className="bi bi-grid-1x2" />
             </div>
 
-            <span className="role-mode-pill">
-              {editingId !== null ? "Editing" : "Creating New"}
-            </span>
+            <div>
+              <h2>Role Template Details</h2>
+              <p>
+                Provide the basic details and configuration for this role template.
+              </p>
+            </div>
           </div>
 
           {error && (
@@ -264,12 +297,8 @@ export default function RoleTemplates() {
             </p>
           )}
 
-          <div className="role-section-title">
-            Role Template Details
-          </div>
-
-          <div className="role-form-grid">
-            <label className="role-field">
+          <div className="role-form-grid role-create-fields-grid">
+            <label className="role-field role-code-field">
               <span>
                 Role Code <b>*</b>
               </span>
@@ -282,23 +311,19 @@ export default function RoleTemplates() {
                   value={form.roleCode}
                   onChange={handleChange}
                   placeholder="e.g. CASHIER"
-                  maxLength={50}
-                  list="role-code-suggestions"
+                  maxLength={30}
                   autoComplete="off"
+                  aria-invalid={Boolean(roleCodeError)}
+                  className={roleCodeError ? "role-input-invalid" : ""}
                 />
-                <datalist id="role-code-suggestions">
-                  {roleCodeSuggestions.map((suggestion) => (
-                    <option key={suggestion} value={suggestion} />
-                  ))}
-                </datalist>
               </div>
 
-              <small>
-                Unique code using uppercase letters and underscores.
+              <small className={roleCodeError ? "role-field-error" : ""}>
+                {roleCodeError || "3–30 characters. Letters, numbers, and underscores only. No spaces."}
               </small>
             </label>
 
-            <label className="role-field">
+            <label className="role-field role-name-field">
               <span>
                 Role Template Name <b>*</b>
               </span>
@@ -312,40 +337,12 @@ export default function RoleTemplates() {
                   onChange={handleChange}
                   placeholder="Enter role template name"
                   maxLength={100}
-                  list="role-name-suggestions"
                   autoComplete="off"
                 />
-                <datalist id="role-name-suggestions">
-                  {roleNameSuggestions.map((suggestion) => (
-                    <option key={suggestion} value={suggestion} />
-                  ))}
-                </datalist>
               </div>
 
               <small>
                 Display name for the role template.
-              </small>
-            </label>
-          </div>
-
-          <div className="role-bottom-grid">
-            <label className="role-field role-description-field">
-              <span>Description</span>
-
-              <div className="role-textarea-wrap">
-                <i className="bi bi-file-earmark-text" />
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  placeholder="Enter a brief description..."
-                  rows={3}
-                  maxLength={250}
-                />
-              </div>
-
-              <small>
-                Explain the purpose of this role template.
               </small>
             </label>
 
@@ -354,16 +351,45 @@ export default function RoleTemplates() {
                 Status <b>*</b>
               </span>
 
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-              >
-                <option value="ACTIVE">● Active</option>
-                <option value="INACTIVE">● Inactive</option>
-              </select>
+              <div className="role-select-wrap">
+                <select
+                  name="status"
+                  value={form.status}
+                  onChange={handleChange}
+                  className={form.status === "INACTIVE" ? "status-inactive" : "status-active"}
+                >
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                </select>
+                <i className="bi bi-chevron-down" />
+              </div>
 
               <small>Active or Inactive.</small>
+            </label>
+
+            <label className="role-field role-description-field">
+              <span>Description</span>
+
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                onInput={(event) => {
+                  event.currentTarget.style.height = "44px";
+                  event.currentTarget.style.height = `${Math.max(
+                    44,
+                    event.currentTarget.scrollHeight
+                  )}px`;
+                }}
+                autoComplete="off"
+                placeholder="Enter a brief description..."
+                maxLength={500}
+              />
+
+              <div className="role-description-meta">
+                <small>Explain the purpose of this role template.</small>
+                <span>{form.description.length}/500</span>
+              </div>
             </label>
           </div>
 
@@ -381,7 +407,7 @@ export default function RoleTemplates() {
               type="button"
               className="role-template-submit-button"
               onClick={saveTemplate}
-              disabled={saving}
+              disabled={saving || !isFormValid}
             >
 
 
@@ -444,42 +470,37 @@ export default function RoleTemplates() {
           <div className="role-table-wrap">
             <table className="role-table">
               <colgroup>
-                <col className="role-code-col" />
-                <col className="role-name-col" />
-                <col className="role-description-col" />
-                <col className="role-status-col" />
-                <col className="role-created-col" />
-                <col className="role-updated-col" />
-                <col className="role-actions-col" />
+                <col className="role-code-col role-equal-col" />
+                <col className="role-name-col role-equal-col" />
+                <col className="role-description-col role-equal-col" />
+                <col className="role-status-col role-equal-col" />
+                <col className="role-created-col role-equal-col" />
+                <col className="role-updated-col role-equal-col" />
+                <col className="role-actions-col role-equal-col" />
               </colgroup>
 
               <thead>
                 <tr>
-                  <th className="role-code-col">Role Code</th>
-                  <th className="role-name-col">Role Template Name</th>
-                  <th className="role-description-col">Description</th>
-                  <th className="role-status-col">Status</th>
-                  <th className="role-created-col">Created On</th>
-                  <th className="role-updated-col">Updated On</th>
-                  <th className="role-actions-col">Actions</th>
+                  <th className="role-code-col role-equal-col">Role Code</th>
+                  <th className="role-name-col role-equal-col">Role Template Name</th>
+                  <th className="role-description-col role-equal-col">Description</th>
+                  <th className="role-status-col role-equal-col">Status</th>
+                  <th className="role-created-col role-equal-col">Created At</th>
+                  <th className="role-updated-col role-equal-col">Updated At</th>
+                  <th className="role-actions-col role-equal-col">Actions</th>
                 </tr>
               </thead>
 
               <tbody>
-                {filteredTemplates.map((template, index) => (
+                {filteredTemplates.map((template) => (
                   <tr key={template.id}>
-                    <td className="role-code-cell">
+                    <td className="role-code-cell role-equal-col">
                       <div className="role-key-cell">
-                        <span
-                          className={`role-row-icon role-icon-${(index % 5) + 1}`}
-                        >
-                          <i className="bi bi-person-badge" />
-                        </span>
                         <strong>{template.roleCode || "—"}</strong>
                       </div>
                     </td>
 
-                    <td className="role-name-cell">
+                    <td className="role-name-cell role-equal-col">
                       <button
                         type="button"
                         className="role-name-link"
@@ -490,12 +511,12 @@ export default function RoleTemplates() {
                         }
                         title={template.name || "—"}
                       >
-                        {template.name || "—"}
+                        <strong>{template.name || "—"}</strong>
                       </button>
                     </td>
 
                     <td
-                      className="role-description-cell"
+                      className="role-description-cell role-equal-col"
                       title={template.description || "—"}
                     >
                       <span className="role-description-text">
@@ -503,7 +524,7 @@ export default function RoleTemplates() {
                       </span>
                     </td>
 
-                    <td className="role-status-cell">
+                    <td className="role-status-cell role-equal-col">
                       <span
                         className={`role-status ${String(
                           template.status || ""
@@ -516,7 +537,7 @@ export default function RoleTemplates() {
                       </span>
                     </td>
 
-                    <td className="role-created-cell">
+                    <td className="role-created-cell role-equal-col">
                       {displayDate(
                         template.createdAt ||
                           template.created_at ||
@@ -524,7 +545,7 @@ export default function RoleTemplates() {
                       )}
                     </td>
 
-                    <td className="role-updated-cell">
+                    <td className="role-updated-cell role-equal-col">
                       {displayDate(
                         template.updatedAt ||
                           template.updated_at ||
@@ -532,7 +553,7 @@ export default function RoleTemplates() {
                       )}
                     </td>
 
-                    <td className="role-actions">
+                    <td className="role-actions role-equal-col">
                       <button
                         type="button"
                         className="role-edit-action"
