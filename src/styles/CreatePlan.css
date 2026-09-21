@@ -636,21 +636,22 @@
 }
 
 .plans-table-wrap {
-  overflow-x: auto;
+  overflow: hidden;
   border: 1px solid #e3ecf5;
   border-radius: 8px;
 }
 
 .plans-table {
-  min-width: 950px;
+  min-width: 0;
 }
 
 .plans-row {
   display: grid;
-  grid-template-columns: 150px minmax(220px, 2fr) 150px 130px 120px 120px 110px 80px;
+  grid-template-columns: 120px minmax(120px, 1fr) minmax(150px, 1.5fr) 110px 100px 90px 90px 90px 90px 72px;
+  gap: 4px;
   min-height: 62px;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 8px;
   border-bottom: 1px solid #e6eef6;
   color: #163762;
   font-size: 12px;
@@ -691,9 +692,10 @@
   gap: 4px;
 }
 
-.plan-name-cell span {
+.plan-description-cell {
   color: #6380ae;
   font-size: 11px;
+  line-height: 1.5;
 }
 
 .plan-price-cell {
@@ -730,7 +732,9 @@
 
 .plan-table-actions {
   display: flex;
-  gap: 9px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 
 .plan-table-actions button {
@@ -743,6 +747,7 @@
   color: #274970;
   background: #fff;
   cursor: pointer;
+  padding: 0;
 }
 
 .plan-delete-icon {

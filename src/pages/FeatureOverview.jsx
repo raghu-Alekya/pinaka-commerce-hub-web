@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Gift, Info, ChevronDown } from 'lucide-react';
+import { Gift, Info, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getFeature } from '../api/features';
 import '../styles/featureoverview.css';
@@ -22,6 +22,10 @@ const FeatureOverview = () => {
   const status = feature?.status || 'Inactive';
 
   return <div className="feature-overview-page">
+    <button className="feature-overview-back" type="button" onClick={() => navigate('/features')}>
+      <ArrowLeft size={16} />
+      Back to Features
+    </button>
     <section className="feature-header-card">
       <div className="feature-header-content"><div className="feature-icon-box"><Gift size={25} strokeWidth={2.2} /></div><div className="feature-header-text"><h1>{name}</h1><p>{description}</p></div></div>
       <div className="feature-tabs"><button className="feature-tab active" type="button">Overview</button><button className="feature-tab" type="button" onClick={() => navigate(`/features/${featureId}/store-types`)}>Store Types</button><button className="feature-tab" type="button" onClick={() => navigate(`/features/${featureId}/permissions`)}>Feature Permissions</button></div>

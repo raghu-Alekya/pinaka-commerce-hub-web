@@ -18,15 +18,17 @@ export default function Features() {
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [formErrors, setFormErrors] = useState({});
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
 
   const updateField = (event) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (formErrors[name]) {
-      setFormErrors((prev) => ({ ...prev, [name]: "" }));
+    const field = event.target.dataset.field || event.target.name;
+    const { value } = event.target;
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -97,6 +99,12 @@ export default function Features() {
     try { await deleteFeatureApi(featureId); setFeatures((prev) => prev.filter((item) => item.id !== featureId)); setApiError(""); } catch (e) { setApiError(e.message || "Unable to delete feature."); }
   };
 
+  const confirmDeleteFeature = async () => {
+    if (!deleteTarget) return;
+    await deleteFeature(deleteTarget.id);
+    setDeleteTarget(null);
+  };
+
   const filteredFeatures = useMemo(() => {
     const q = search.trim().toLowerCase();
     return features.filter((item) => {
@@ -139,9 +147,10 @@ export default function Features() {
           <div className="feature-field">
             <label>Feature Code<span>*</span></label>
             <input
-              name="code"
+              data-field="code"
               value={form.code}
               onChange={updateField}
+              autoComplete="off"
               placeholder="Enter a unique code, e.g. INVENTORY_MANAGEMENT"
               className={formErrors.code ? "feature-input-error" : ""}
             />
@@ -155,9 +164,10 @@ export default function Features() {
           <div className="feature-field">
             <label>Feature Name<span>*</span></label>
             <input
-              name="name"
+              data-field="name"
               value={form.name}
               onChange={updateField}
+              autoComplete="off"
               placeholder="Enter a unique feature name, e.g. Inventory Management"
               className={formErrors.name ? "feature-input-error" : ""}
             />
@@ -171,10 +181,15 @@ export default function Features() {
           <div className="feature-field feature-description-field">
             <label>Description</label>
             <textarea
-              name="description"
+              data-field="description"
               value={form.description}
               onChange={updateField}
-              placeholder="Explain what the feature does, where it is used, and its purpose."
+              onInput={(event) => {
+                event.currentTarget.style.height = "44px";
+                event.currentTarget.style.height = `${Math.max(44, event.currentTarget.scrollHeight)}px`;
+              }}
+              autoComplete="off"
+              placeholder="Describe the feature and its purpose."
               maxLength={500}
             />
             <div className="feature-description-meta">
@@ -186,7 +201,7 @@ export default function Features() {
           <div className="feature-field">
             <label>Category<span>*</span></label>
             <div className="select-shell">
-              <select name="category" value={form.category} onChange={updateField}>
+              <select name="category" value={form.category} onChange={updateField} autoComplete="off">
                 <option value="">Select category</option>
                 <option value="Restaurant">Restaurant</option>
                 <option value="Customer Engagement">Customer Engagement</option>
@@ -202,7 +217,7 @@ export default function Features() {
           <div className="feature-field feature-form-status-field">
             <label>Status</label>
             <div className="select-shell">
-              <select name="status" value={form.status} onChange={updateField}>
+              <select name="status" value={form.status} onChange={updateField} autoComplete="off">
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
@@ -243,6 +258,7 @@ export default function Features() {
                 placeholder="Search features..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                autoComplete="off"
               />
             </div>
 
@@ -290,16 +306,18 @@ export default function Features() {
               <col className="col-description" />
               <col className="col-status" />
               <col className="col-created" />
+              <col className="col-updated" />
               <col className="col-actions" />
             </colgroup>
 
             <thead>
               <tr>
-                <th>Feature Name <i className="bi bi-arrow-down-up" /></th>
-                <th>Category <i className="bi bi-arrow-down-up" /></th>
-                <th>Description <i className="bi bi-arrow-down-up" /></th>
-                <th>Status <i className="bi bi-arrow-down-up" /></th>
-                <th>Created At <i className="bi bi-arrow-down-up" /></th>
+                <th>Feature Name</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
                 <th className="actions-col">Actions</th>
               </tr>
             </thead>
@@ -324,6 +342,7 @@ export default function Features() {
                     </span>
                   </td>
                   <td className="feature-created">{item.createdAt}</td>
+                  <td className="feature-updated">{item.updatedAt}</td>
                   <td className="actions-col">
                     <div className="feature-row-actions">
                       <button type="button" className="edit-button" onClick={() => editFeature(item)} aria-label={`Edit ${item.name}`}>
@@ -332,7 +351,7 @@ export default function Features() {
                       <button
                         type="button"
                         className="delete-button"
-                        onClick={() => deleteFeature(item.id)}
+                        onClick={() => setDeleteTarget(item)}
                         aria-label={`Delete ${item.name}`}
                         title={`Delete ${item.name}`}
                       >
@@ -357,6 +376,53 @@ export default function Features() {
           </div>
         </div>
       </section>
+
+      {deleteTarget && (
+        <div
+          className="features-delete-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-feature-title"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div
+            className="features-delete-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="features-delete-icon">
+              <i className="bi bi-trash" />
+            </div>
+
+            <h2 id="delete-feature-title">Delete Feature?</h2>
+
+            <p>
+              Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
+            </p>
+
+            <p className="features-delete-final-warning">
+              This action cannot be undone.
+            </p>
+
+            <div className="features-delete-actions">
+              <button
+                type="button"
+                className="features-delete-keep-button"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="features-delete-confirm-button"
+                onClick={confirmDeleteFeature}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

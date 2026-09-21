@@ -1142,7 +1142,8 @@ export default function CreatePlan() {
           <div className="plans-table">
             <div className="plans-row plans-row-head">
               <div>Plan Code</div>
-              <div>Name / Description</div>
+              <div>Name</div>
+              <div>Description</div>
               <div>Applicable Type</div>
               <div>Billing Model</div>
               <div>Price</div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Gift, Store, Search, Plus, X, Trash2, ChevronDown } from 'lucide-react';
+import { Gift, Store, Search, Plus, X, Trash2, ChevronDown, ArrowLeft } from 'lucide-react';
 import { getFeature } from '../api/features';
 import {
   listMappedStoreTypes,
@@ -131,6 +131,10 @@ const FeatureStoreTypes = () => {
 
   return (
     <div className="store-types-page">
+      <button className="st-back-button" type="button" onClick={() => navigate('/features')}>
+        <ArrowLeft size={16} />
+        Back to Features
+      </button>
       <section className="st-feature-header">
         <div className="st-feature-info">
           <div className="st-feature-icon">
