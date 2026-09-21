@@ -67,39 +67,42 @@ export default function StoreTypeDetails() {
 
   return (
     <section className="store-type-details-page">
-      <button
-        type="button"
-        className="store-type-details-back"
-        onClick={() => navigate("/store-types/new")}
+      <div className="store-type-details-top">
+  <button
+    type="button"
+    className="store-type-details-back"
+    onClick={() => navigate("/store-types/new")}
+    aria-label="Back to Store Types"
+    title="Back to Store Types"
+  >
+    <i className="bi bi-arrow-left" />
+  </button>
+
+  <div className="store-type-details-heading">
+    <div className="store-type-title-line">
+      <h1>{form.name}</h1>
+
+      <span
+        className={`store-type-active-badge ${
+          form.status === "Inactive" ? "inactive" : ""
+        }`}
       >
-        <i className="bi bi-arrow-left" />
-        Back to Store Types
-      </button>
+        <i className="bi bi-circle-fill" />
+        {form.status}
+      </span>
+    </div>
 
-      {loading && <p>Loading store type...</p>}
-      {error && <p role="alert">{error}</p>}
+    <p>{form.description}</p>
+  </div>
+</div>
 
-      <div className="store-type-details-heading">
-        <div className="store-type-title-line">
-          <h1>{form.name}</h1>
+{loading && <p>Loading store type...</p>}
+{error && <p role="alert">{error}</p>}
 
-          <span
-            className={`store-type-active-badge ${
-              form.status === "Inactive" ? "inactive" : ""
-            }`}
-          >
-            <i className="bi bi-circle-fill" />
-            {form.status}
-          </span>
-        </div>
-
-        <p>{form.description}</p>
-      </div>
-
-      <nav className="store-type-tabs" aria-label="Store type sections">
-        <button type="button" className="active">
-          Overview
-        </button>
+<nav className="store-type-tabs" aria-label="Store type sections">
+  <button type="button" className="active">
+    Overview
+  </button>
 
         <button
           type="button"

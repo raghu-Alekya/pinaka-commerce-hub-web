@@ -6,44 +6,56 @@
   background: #f6f7fb;
 }
 
+/* Heading with back arrow */
+
+.store-features-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
 .store-features-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  flex: 0 0 auto;
   padding: 0;
-  border: 0;
+  border: 1px solid #dce8f5;
+  border-radius: 8px;
   color: #684ee3;
-  background: transparent;
+  background: #fff;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
+}
+
+.store-features-back:hover {
+  border-color: #a9baff;
+  background: #f7f6ff;
 }
 
 .store-features-title {
-  margin: 8px 0 20px;
+  margin: 1px 0 0;
 }
 
-.store-type-details-page .store-type-details-heading,
-.store-features-page .store-features-title,
-.role-templates-page .role-templates-title {
-  margin: 8px 0 20px;
-}
-
-.store-type-details-page .store-type-title-line,
-.store-features-page .store-type-title-line,
-.role-templates-page .store-type-title-line {
+.store-type-title-line {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.store-features-page .store-features-title h1 {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.store-features-title h1 {
   margin: 0;
   color: #10254a;
   font-size: 25px;
   font-weight: 600;
+}
+
+.store-features-title p {
+  margin: 5px 0 0;
+  color: #5676aa;
+  font-size: 14px;
 }
 
 .store-features-page .store-type-active-badge {
@@ -68,11 +80,7 @@
   background: #ffe2e7;
 }
 
-.store-features-page .store-features-title p {
-  margin: 5px 0 0;
-  color: #5676aa;
-  font-size: 14px;
-}
+/* Tabs */
 
 .store-features-page .store-type-tabs {
   display: flex;
@@ -93,12 +101,12 @@
   font-weight: 500;
 }
 
-.store-type-tabs button.active {
+.store-features-page .store-type-tabs button.active {
   color: #684ee3;
   font-weight: 700;
 }
 
-.store-type-tabs button.active::after {
+.store-features-page .store-type-tabs button.active::after {
   position: absolute;
   right: 0;
   bottom: -1px;
@@ -107,6 +115,8 @@
   content: "";
   background: #684ee3;
 }
+
+/* Features card */
 
 .store-features-card {
   padding: 17px 16px;
@@ -193,6 +203,8 @@
   font-weight: 700;
 }
 
+/* Features table */
+
 .store-features-table {
   overflow: hidden;
   border: 1px solid #e3ecf5;
@@ -217,7 +229,7 @@
 .store-features-row-head {
   min-height: 45px;
   color: #323a44;
-  background: #f2f8ff;
+  background: #f1f3fd;
   font-size: 14px;
   font-weight: 600;
 }
@@ -273,6 +285,8 @@
   background: #684ee3;
 }
 
+/* Delete feature modal */
+
 .delete-feature-overlay {
   position: fixed;
   inset: 0;
@@ -319,6 +333,9 @@
 
 .delete-feature-warning {
   margin-top: 12px !important;
+  color: #dc2649 !important;
+  font-size: 12px !important;
+  font-weight: 600;
 }
 
 .delete-feature-actions {
@@ -338,8 +355,8 @@
 }
 
 .delete-feature-keep-button {
-  border: 1.5px solid #0873f9;
-  color: #0873f9;
+  border: 1.5px solid #8995a3;
+  color: #8995a3;
   background: #fff;
 }
 
@@ -348,6 +365,8 @@
   color: #fff;
   background: #ef3b5c;
 }
+
+/* Add features modal */
 
 .add-features-overlay {
   position: fixed;
@@ -457,9 +476,9 @@
 
 .add-feature-option {
   display: flex;
+  min-height: 24px;
   align-items: center;
   gap: 9px;
-  min-height: 24px;
   color: #4a6d9f;
   cursor: pointer;
   font-size: 12px;
@@ -473,7 +492,7 @@
 }
 
 .add-features-preview {
-  padding: 12px 18px 0;
+  padding: 18px 18px 0;
 }
 
 .add-features-preview-header {
@@ -489,10 +508,10 @@
 
 .add-features-preview-header strong {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   min-width: 24px;
   height: 22px;
+  align-items: center;
+  justify-content: center;
   padding: 0 7px;
   border-radius: 999px;
   color: #fff;
@@ -502,9 +521,9 @@
 
 .add-features-preview-list {
   display: flex;
+  min-height: 30px;
   flex-wrap: wrap;
   gap: 6px;
-  min-height: 30px;
   padding: 8px 10px;
   border: 1px solid #e3eaf8;
   border-radius: 8px;
@@ -567,6 +586,10 @@
     padding: 18px 16px;
   }
 
+  .store-features-top {
+    gap: 12px;
+  }
+
   .store-features-card-header {
     align-items: flex-start;
     flex-direction: column;
@@ -580,7 +603,7 @@
     flex: 1;
   }
 
-  .store-type-tabs {
+  .store-features-page .store-type-tabs {
     gap: 20px;
     overflow-x: auto;
   }

@@ -330,6 +330,11 @@ export default function CreatePlan() {
     form.billingCycle &&
     form.basePrice !== "";
 
+  const canCreatePlan =
+    canContinueStepOne &&
+    canContinuePricing &&
+    includedFeatures.length > 0;
+
   function updateField(event) {
     const { name, value } = event.target;
 
@@ -1069,7 +1074,7 @@ export default function CreatePlan() {
             <button
               type="button"
               className="plan-submit-button"
-              disabled={savingPlan}
+              disabled={!canCreatePlan || savingPlan}
               onClick={createOrUpdatePlan}
             >
               {savingPlan

@@ -298,31 +298,34 @@ export default function StoreTypeFeatures() {
   return (
     <section className="store-features-page">
      {error && <p role="alert">{error}</p>}
-      <button
-        type="button"
-        className="store-features-back"
-        onClick={() => navigate("/store-types/new")}
+     <div className="store-features-top">
+  <button
+    type="button"
+    className="store-features-back"
+    onClick={() => navigate("/store-types/new")}
+    aria-label="Back to Store Types"
+    title="Back to Store Types"
+  >
+    <i className="bi bi-arrow-left" />
+  </button>
+
+  <div className="store-features-title">
+    <div className="store-type-title-line">
+      <h1>{storeType.name}</h1>
+
+      <span
+        className={`store-type-active-badge ${
+          storeType.status === "INACTIVE" ? "inactive" : ""
+        }`}
       >
-        <i className="bi bi-arrow-left" />
-        Back to Store Types
-      </button>
+        <i className="bi bi-circle-fill" />
+        {storeType.status === "INACTIVE" ? "Inactive" : "Active"}
+      </span>
+    </div>
 
-      <div className="store-features-title">
-        <div className="store-type-title-line">
-          <h1>{storeType.name}</h1>
-
-          <span
-            className={`store-type-active-badge ${
-              storeType.status === "INACTIVE" ? "inactive" : ""
-            }`}
-          >
-            <i className="bi bi-circle-fill" />
-            {storeType.status === "INACTIVE" ? "Inactive" : "Active"}
-          </span>
-        </div>
-
-        <p>{storeType.description}</p>
-      </div>
+    <p>{storeType.description}</p>
+  </div>
+</div>
 
       <nav className="store-type-tabs">
         <button
@@ -409,7 +412,7 @@ export default function StoreTypeFeatures() {
           ))}
         </div>
 
-        <div className="store-features-footer">
+        <div className="store-features-footer"> 
           <span>
             Showing 1 to {filteredFeatures.length} of {features.length} entries
           </span>
@@ -568,7 +571,7 @@ export default function StoreTypeFeatures() {
               Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
             </p>
 
-            <p className="delete-feature-warning">
+             <p className="delete-feature-warning">
               This action cannot be undone.
             </p>
 
