@@ -123,10 +123,24 @@ export default function Features() {
     });
   }, [features, search, categoryFilter, statusFilter]);
 
+
+  const formatFeatureDate = (value) => {
+    if (!value) return "—";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   return (
     <div className="features-page">
       <header className="features-page-heading">
-        <h1>Features</h1>
+        <h1> Create Features</h1>
         <p>Manage platform features and their details.</p>
       </header>
 
@@ -138,7 +152,7 @@ export default function Features() {
             <i className="bi bi-grid-1x2" />
           </div>
           <div>
-            <h2>Feature Details</h2>
+            <h2>{isEditing ? "Edit Feature" : "Add Feature"}</h2>
             <p>Provide the basic details and configuration for this feature.</p>
           </div>
         </div>
@@ -228,11 +242,7 @@ export default function Features() {
         </div>
 
         <div className="feature-form-footer">
-          {isEditing && (
-            <span className="editing-chip">Editing: {editingFeature?.name}</span>
-          )}
-
-          <div className="feature-footer-actions">
+<div className="feature-footer-actions">
             <button className="feature-action secondary" type="button" onClick={clearForm}>
               {isEditing ? "Cancel" : "Clear"}
             </button>
@@ -341,8 +351,8 @@ export default function Features() {
                       <b />{item.status}
                     </span>
                   </td>
-                  <td className="feature-created">{item.createdAt}</td>
-                  <td className="feature-updated">{item.updatedAt}</td>
+                  <td className="feature-created">{formatFeatureDate(item.createdAt)}</td>
+                  <td className="feature-updated">{formatFeatureDate(item.updatedAt)}</td>
                   <td className="actions-col">
                     <div className="feature-row-actions">
                       <button type="button" className="edit-button" onClick={() => editFeature(item)} aria-label={`Edit ${item.name}`}>
