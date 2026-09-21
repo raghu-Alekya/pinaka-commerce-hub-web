@@ -126,6 +126,13 @@ function today() {
   });
 }
 
+const planRowStyle = {
+  display: "grid",
+  gridTemplateColumns:
+    "80px 110px minmax(80px, 1fr) 100px 105px 85px 80px 100px 100px 65px",
+  gap: "6px",
+  alignItems: "center",
+};
 export default function CreatePlan() {
   const navigate = useNavigate();
 
@@ -329,7 +336,45 @@ export default function CreatePlan() {
     form.currency &&
     form.billingCycle &&
     form.basePrice !== "";
+const canContinueFeatures = includedFeatures.length > 0;
 
+function canMoveToStep(targetStep) {
+  if (targetStep <= planStep) {
+    return true;
+  }
+
+  if (targetStep >= 2 && !canContinueStepOne) {
+    return false;
+  }
+
+  if (targetStep >= 3 && !canContinuePricing) {
+    return false;
+  }
+
+  if (targetStep >= 4 && !canContinueFeatures) {
+    return false;
+  }
+
+  return true;
+}
+
+function handleStepClick(step) {
+  // Always allow going backwards
+  if (step < planStep) {
+    setPlanStep(step);
+    return;
+  }
+
+  // Allow current step
+  if (step === planStep) {
+    return;
+  }
+
+  // Only move forward when current step is valid
+  if (canMoveToStep(step)) {
+    setPlanStep(step);
+  }
+}
   function updateField(event) {
     const { name, value } = event.target;
 
@@ -523,9 +568,7 @@ export default function CreatePlan() {
               className={`plan-step ${planStep === step ? "active" : ""} ${
                 planStep > step ? "complete" : ""
               }`}
-              onClick={() => {
-                if (step < planStep) setPlanStep(step);
-              }}
+             onClick={() => handleStepClick(step)}
             >
               <span>{step}</span>
               <strong>{label}</strong>
@@ -562,7 +605,7 @@ export default function CreatePlan() {
                   name="code"
                   value={form.code}
                   onChange={updateField}
-                  placeholder="e.g. BASIC"
+                  placeholder="e.g. Enter plan code"
                 />
               </div>
             </label>
@@ -579,28 +622,13 @@ export default function CreatePlan() {
                   name="name"
                   value={form.name}
                   onChange={updateField}
-                  placeholder="e.g. Basic Plan"
+                  placeholder="e.g. Enter plan name"
                 />
               </div>
             </label>
           </div>
 
-          <label className="plan-field plan-description-field">
-            <span>
-              Description
-            </span>
-
-            <div className="plan-textarea-wrap">
-              <i className="bi bi-file-earmark-text" />
-              <textarea
-                {...textInputProps}
-                name="description"
-                value={form.description}
-                onChange={updateField}
-                placeholder="Describe the plan, its features and target audience..."
-              />
-            </div>
-          </label>
+    
 
           <div className="plan-create-grid plan-bottom-grid">
             <label className="plan-field">
@@ -648,19 +676,37 @@ export default function CreatePlan() {
                 Status <b>*</b>
               </span>
 
-              <select
-                autoComplete="off"
-                name="status"
-                value={form.status}
-                onChange={updateField}
-                className="plan-status-select"
-              >
-                <option value="Active">● Active</option>
-                <option value="Inactive">● Inactive</option>
-              </select>
+         <select
+  autoComplete="off"
+  name="status"
+  value={form.status}
+  onChange={updateField}
+  className={`plan-status-select ${
+    form.status === "Inactive" ? "inactive" : "active"
+  }`}
+>
+  <option value="Active">● Active</option>
+  <option value="Inactive">● Inactive</option>
+</select>
             </label>
           </div>
+{/* Description at the bottom */}
+     <label className="plan-field plan-description-field">
+            <span>
+              Description
+            </span>
 
+            <div className="plan-textarea-wrap">
+              <i className="bi bi-file-earmark-text" />
+              <textarea
+                {...textInputProps}
+                name="description"
+                value={form.description}
+                onChange={updateField}
+                placeholder="Describe the plan, its features and target audience..."
+              />
+            </div>
+          </label>
           <div className="plan-actions">
             <button
               type="button"
@@ -758,7 +804,7 @@ export default function CreatePlan() {
             </label>
           </div>
 
-          <div className="plan-pricing-grid three-columns">
+          <div className="plan-pricing-grid two-columns">
             <label className="plan-field">
               <span>Included Stores <b>*</b></span>
               <input
@@ -783,7 +829,36 @@ export default function CreatePlan() {
               />
             </label>
 
-            <label className="plan-field">
+            {/* <label className="plan-field">
+              <span>Additional Terminal Price</span>
+              <div className="plan-price-input">
+                <input
+                  {...textInputProps}
+                  name="additionalTerminalPrice"
+                  type="number"
+                  min="0"
+                  value={form.additionalTerminalPrice}
+                  onChange={updateField}
+                  placeholder="0.00"
+                />
+                <span>{form.currency || "Currency"}</span>
+              </div>
+            </label> */}
+          </div>
+
+          <div className="plan-pricing-grid two-columns">
+            {/* <label className="plan-field">
+              <span>Included Users/Employees <b>*</b></span>
+              <input
+                {...textInputProps}
+                name="includedUsers"
+                type="number"
+                min="0"
+                value={form.includedUsers}
+                onChange={updateField}
+              />
+            </label> */}
+     <label className="plan-field">
               <span>Additional Terminal Price</span>
               <div className="plan-price-input">
                 <input
@@ -798,21 +873,6 @@ export default function CreatePlan() {
                 <span>{form.currency || "Currency"}</span>
               </div>
             </label>
-          </div>
-
-          <div className="plan-pricing-grid two-columns">
-            <label className="plan-field">
-              <span>Included Users/Employees <b>*</b></span>
-              <input
-                {...textInputProps}
-                name="includedUsers"
-                type="number"
-                min="0"
-                value={form.includedUsers}
-                onChange={updateField}
-              />
-            </label>
-
             <label className="plan-field">
               <span>Additional User Price</span>
               <div className="plan-price-input">
@@ -844,7 +904,17 @@ export default function CreatePlan() {
                 <option value="30 days">30 Days</option>
               </select>
             </label>
-
+     <label className="plan-field">
+              <span>Included Users/Employees <b>*</b></span>
+              <input
+                {...textInputProps}
+                name="includedUsers"
+                type="number"
+                min="0"
+                value={form.includedUsers}
+                onChange={updateField}
+              />
+            </label>
             <label className="plan-field">
               <span>Effective From</span>
               <input
@@ -1133,90 +1203,110 @@ export default function CreatePlan() {
               onClick={resetFilters}
             >
               <i className="bi bi-arrow-counterclockwise" />
-              Reset
+              {/* Reset */}
             </button>
           </div>
         </div>
 
-        <div className="plans-table-wrap">
+        <div className="plans-table-wrap" style={{ overflowX: "auto" }}>
           <div className="plans-table">
-            <div className="plans-row plans-row-head">
-              <div>Plan Code</div>
-              <div>Name</div>
-              <div>Description</div>
-              <div>Applicable Type</div>
-              <div>Billing Model</div>
-              <div>Price</div>
-              <div>Status</div>
-              <div>Created / Updated</div>
-              <div>Actions</div>
-            </div>
+           <div className="plans-row plans-row-head" style={planRowStyle}>
+  <div>Plan Code</div>
+  <div>Name</div>
+  <div>Description</div>
+  <div>Applicable Type</div>
+  <div>Billing Model</div>
+  <div>Price</div>
+  <div>Status</div>
+  <div>Created At</div>
+  <div>Updated At</div>
+  <div>Actions</div>
+</div>
 
-            {filteredPlans.map((plan) => (
-              <div className="plans-row" key={plan.id}>
-                <div className="plan-code-cell">
-                  <strong>{plan.code}</strong>
-                </div>
+{filteredPlans.map((plan) => (
+  <div
+    className="plans-row"
+    key={plan.id}
+    style={planRowStyle}
+  >
+    {/* Plan Code */}
+    <div className="plan-code-cell">
+      <strong>{plan.code}</strong>
+    </div>
 
-                <button type="button"
-                 className="plan-name-cell plan-name-clickable"
-                 onClick={() =>
-                    navigate(`/plans/${plan.id}`, {
-                      state: { plan },
-                    })
-                  } >
-                 <strong>{plan.name}</strong>
-                 <span>{plan.description}</span>
-               </button>
-                <div>
-                  <span className="plan-type-badge">{plan.storeType}</span>
-                </div>
+    {/* Name - Navigation unchanged */}
+    <button
+      type="button"
+      className="plan-name-cell plan-name-clickable"
+      onClick={() =>
+        navigate(`/plans/${plan.id}`, {
+          state: { plan },
+        })
+      }
+    >
+      <strong>{plan.name}</strong>
+    </button>
 
-                <div>{plan.billingModel}</div>
+    {/* Description - Separate column */}
+    <div className="plan-description-cell">
+      {plan.description || "—"}
+    </div>
 
-                <div className="plan-price-cell">
-                  {plan.currency} {plan.price}
-                  <small>/{plan.cycle.toLowerCase()}</small>
-                </div>
+    {/* Applicable Type */}
+    <div>
+      <span className="plan-type-badge">
+        {plan.storeType}
+      </span>
+    </div>
 
-                <div>
-                  <span
-                    className={`plan-status ${
-                      plan.status === "Inactive" ? "inactive" : ""
-                    }`}
-                  >
-                    <i className="bi bi-circle-fill" />
-                    {plan.status}
-                  </span>
-                </div>
+    {/* Billing Model */}
+    <div>{plan.billingModel}</div>
 
-                <div>
-                  <div>{plan.createdOn}</div>
-                  {plan.updatedOn && plan.updatedOn !== plan.createdOn && (
-                    <small>{plan.updatedOn}</small>
-                  )}
-                </div>
+    {/* Price */}
+    <div className="plan-price-cell">
+      {plan.currency} {plan.price}
+      <small>/{plan.cycle.toLowerCase()}</small>
+    </div>
 
-                <div className="plan-table-actions">
-                  <button
-                    type="button"
-                    title="Edit plan"
-                    onClick={() => editPlan(plan)}
-                  >
-                    <i className="bi bi-pencil" />
-                  </button>
+    {/* Status */}
+    <div>
+      <span
+        className={`plan-status ${
+          plan.status === "Inactive" ? "inactive" : ""
+        }`}
+      >
+        <i className="bi bi-circle-fill" />
+        {plan.status}
+      </span>
+    </div>
 
-                  <button
-                    type="button"
-                    className="plan-delete-icon"
-                    title="Delete plan"
-                    onClick={() => setDeleteTarget(plan)}
-                  >
-                    <i className="bi bi-trash3" />
-                  </button>
-                </div>
-              </div>
-            ))}
+    {/* Created At */}
+    <div>{plan.createdOn || "—"}</div>
+
+    {/* Updated At */}
+    <div>{plan.updatedOn || "—"}</div>
+
+    {/* Actions */}
+    <div className="plan-table-actions">
+      <button
+        type="button"
+        title="Edit plan"
+        onClick={() => editPlan(plan)}
+      >
+        <i className="bi bi-pencil" />
+      </button>
+
+      <button
+        type="button"
+        className="plan-delete-icon"
+        title="Delete plan"
+        onClick={() => setDeleteTarget(plan)}
+      >
+        <i className="bi bi-trash3" />
+      </button>
+    </div>
+  </div>
+))}
           </div>
         </div>
 
