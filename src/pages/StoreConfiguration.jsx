@@ -117,18 +117,40 @@ export default function StoreConfiguration() {
   }, [merchantId, storeId]);
 
   useEffect(() => {
-    const saved = getWordpressConnector(storeId);
-    if (saved) {
-      setSiteUrl(saved.siteUrl || "");
-      setJwtToken(saved.jwtToken || "");
-      setConnected(Boolean(saved.connected));
-      setMessage(saved.lastTestMessage || "");
-    } else {
-      setJwtToken("");
-      setConnected(false);
-      setMessage("");
+    let cancelled = false;
+
+    async function loadConnector() {
+      // 1. Initial quick load from local storage
+      const saved = getWordpressConnector(storeId);
+      if (saved && !cancelled) {
+        if (saved.siteUrl) setSiteUrl(saved.siteUrl);
+        if (saved.jwtToken) setJwtToken(saved.jwtToken);
+        setConnected(Boolean(saved.connected));
+        if (saved.lastTestMessage) setMessage(saved.lastTestMessage);
+      }
+
+      // 2. Fetch live connector config from backend API for this store
+      try {
+        const liveData = await fetchWordpressConnector(storeId, merchantId);
+        if (!cancelled && liveData) {
+          if (liveData.siteUrl) setSiteUrl(liveData.siteUrl);
+          if (liveData.jwtToken) setJwtToken(liveData.jwtToken);
+          setConnected(Boolean(liveData.connected));
+          if (liveData.lastTestMessage) setMessage(liveData.lastTestMessage);
+        }
+      } catch (err) {
+        console.warn("Could not fetch remote WordPress connector:", err);
+      }
     }
-  }, [storeId]);
+
+    if (storeId) {
+      loadConnector();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeId, merchantId]);
 
   useEffect(() => {
     if (!siteUrl && store?.url) setSiteUrl(store.url);
@@ -453,7 +475,7 @@ export default function StoreConfiguration() {
                               onClick={handleTest}
                               disabled={testing || saving}
                             >
-                              {testing ? "Testing..." : "Test Connection"}
+                              {testing ? "Syncing Categories & Products..." : "Sync Categories & Products"}
                             </button>
                             <button
                               type="submit"
