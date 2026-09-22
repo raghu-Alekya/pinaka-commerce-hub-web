@@ -3,38 +3,52 @@ import { useNavigate } from "react-router-dom";
 import { storeTypesApi } from "../api/storeTypes";
 
 function toRow(item) {
+  const created = item.createdAt ? new Date(item.createdAt) : null;
+  const updated = item.updatedAt ? new Date(item.updatedAt) : null;
+
   return {
-    id: item.id,
-    code: item.storeTypeCode ?? "",
-    name: item.name ?? "",
-    description: item.description ?? "",
-    status: item.status === "INACTIVE" ? "Inactive" : "Active",
+  id: item.id,
+  code: item.storeTypeCode ?? "",
+  name: item.name ?? "",
+  description: item.description?.trim() || "-",
+  status: item.status === "INACTIVE" ? "Inactive" : "Active",
 
-    createdOn: item.createdAt
-      ? new Date(item.createdAt).toLocaleString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-      : "—",
+  // Add these two lines
+  createdAt: item.createdAt,
+  updatedAt: item.updatedAt,
 
-    updatedOn: item.updatedAt
-      ? new Date(item.updatedAt).toLocaleString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-      : "—",
+  createdDate: created
+    ? created.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      })
+    : "—",
 
-    icon: "bi-shop",
-    tone: "green",
-  };
+  createdTime: created
+    ? created.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "",
+
+  updatedDate: updated
+    ? updated.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      })
+    : "—",
+
+  updatedTime: updated
+    ? updated.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "",
+};
 }
 
 const emptyForm = {
@@ -45,20 +59,14 @@ const emptyForm = {
   status: "Active",
 };
 
-function formatToday() {
-  return new Date().toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
-}
-
 export default function CreateStoreType() {
   const navigate = useNavigate();
   const [storeTypes, setStoreTypes] = useState([]);
   const [form, setForm] = useState(emptyForm);
+  const [originalForm, setOriginalForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
   const [editingId, setEditingId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [message, setMessage] = useState("");
@@ -66,25 +74,40 @@ export default function CreateStoreType() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
-  const [formSnapshot, setFormSnapshot] = useState(emptyForm);
+  const ITEMS_PER_PAGE = 5;
+  const [currentPage, setCurrentPage] = useState(1);
 
   async function loadStoreTypes() {
-    const response = await storeTypesApi.getAll();
-    if (!Array.isArray(response?.storeTypes)) {
-      throw new Error("GET /store-types did not return a storeTypes array.");
-    }
-    setStoreTypes(response.storeTypes.map(toRow));
+  const response = await storeTypesApi.getAll();
+
+  if (!Array.isArray(response?.storeTypes)) {
+    throw new Error("GET /store-types did not return a storeTypes array.");
   }
+
+  const sorted = response.storeTypes.sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+
+  setStoreTypes(sorted.map(toRow));
+  setCurrentPage(1);
+}
 
   useEffect(() => {
     let cancelled = false;
     storeTypesApi.getAll()
       .then((response) => {
-        if (!Array.isArray(response?.storeTypes)) {
-          throw new Error("GET /store-types did not return a storeTypes array.");
-        }
-        if (!cancelled) setStoreTypes(response.storeTypes.map(toRow));
-      })
+  if (!Array.isArray(response?.storeTypes)) {
+    throw new Error("GET /store-types did not return a storeTypes array.");
+  }
+
+  if (!cancelled) {
+    const sorted = response.storeTypes.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    setStoreTypes(sorted.map(toRow));
+  }
+})
       .catch((err) => {
         if (!cancelled) setError(err.message);
       })
@@ -95,19 +118,57 @@ export default function CreateStoreType() {
   }, []);
 
   const filteredStoreTypes = useMemo(() => {
-    const searchValue = search.trim().toLowerCase();
+  const searchValue = search.trim().toLowerCase();
 
-    return storeTypes.filter((item) => {
-      const matchesSearch = `${item.code} ${item.name} ${item.description}`
-        .toLowerCase()
-        .includes(searchValue);
+  const filtered = storeTypes.filter((item) => {
+    const matchesSearch = `${item.code} ${item.name} ${item.description}`
+      .toLowerCase()
+      .includes(searchValue);
 
-      return matchesSearch && (!statusFilter || item.status === statusFilter);
-    });
-  }, [storeTypes, search, statusFilter]);
+    return matchesSearch && (!statusFilter || item.status === statusFilter);
+  });
 
-  const canSubmitStoreType =
-    form.code.trim().length > 0 && form.name.trim().length > 0;
+  return filtered.sort((a, b) => {
+    switch (sortBy) {
+      case "oldest":
+        return new Date(a.createdAt) - new Date(b.createdAt);
+
+      case "name-asc":
+        return a.name.localeCompare(b.name);
+
+      case "name-desc":
+        return b.name.localeCompare(a.name);
+
+      case "newest":
+          default:
+             return new Date(b.createdAt) - new Date(a.createdAt);
+    }
+  });
+}, [storeTypes, search, statusFilter, sortBy]);
+
+  const totalPages = Math.ceil(filteredStoreTypes.length / ITEMS_PER_PAGE);
+
+  const paginatedStoreTypes = filteredStoreTypes.slice(
+   (currentPage - 1) * ITEMS_PER_PAGE,
+   currentPage * ITEMS_PER_PAGE
+);
+useEffect(() => {
+  setCurrentPage(1);
+}, [search, statusFilter]);
+
+useEffect(() => {
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(totalPages);
+  }
+}, [totalPages, currentPage]);
+
+  const hasChanges =
+  form.code.trim() !== (originalForm.code || "").trim() ||
+  form.name.trim() !== (originalForm.name || "").trim() ||
+  form.description.trim() !== (originalForm.description || "").trim() ||
+  form.status !== originalForm.status;
+
+  const canSubmitStoreType = !!form.code.trim() && !!form.name.trim();
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -124,21 +185,22 @@ export default function CreateStoreType() {
   }
 
   function resetForm() {
-  setForm(emptyForm);
-  setEditingId(null);
-  setErrors({});
-}
+    setForm(emptyForm);
+    setOriginalForm(emptyForm);
+    setEditingId(null);
+    setErrors({});
+  }
 
   function resetFilters() {
-    setSearch("");
-    setStatusFilter("");
-  }
+  setSearch("");
+  setStatusFilter("");
+  setSortBy("newest");
+}
 
   function validateForm() {
     const nextErrors = {};
     const code = form.code.trim().toUpperCase();
     const name = form.name.trim();
-    const description = form.description.trim();
 
     if (!code) {
       nextErrors.code = "Store type code is required.";
@@ -147,8 +209,8 @@ export default function CreateStoreType() {
         "Use 3–30 uppercase letters, numbers, or underscores only.";
     } else if (
       storeTypes.some(
-        (item) => item.code.toLowerCase() === code.toLowerCase() &&
-          item.id !== editingId
+        (item) =>
+          item.code.toLowerCase() === code.toLowerCase() && item.id !== editingId
       )
     ) {
       nextErrors.code = "This store type code already exists.";
@@ -158,8 +220,8 @@ export default function CreateStoreType() {
       nextErrors.name = "Display name is required.";
     } else if (
       storeTypes.some(
-        (item) => item.name.toLowerCase() === name.toLowerCase() &&
-          item.id !== editingId
+        (item) =>
+          item.name.toLowerCase() === name.toLowerCase() && item.id !== editingId
       )
     ) {
       nextErrors.name = "This display name already exists.";
@@ -169,7 +231,7 @@ export default function CreateStoreType() {
     return Object.keys(nextErrors).length === 0;
   }
 
-    async function submitForm(event) {
+  async function submitForm(event) {
     event.preventDefault();
 
     if (!validateForm()) {
@@ -192,9 +254,11 @@ export default function CreateStoreType() {
       } else {
         await storeTypesApi.create(values);
       }
-      setMessage(editingId !== null
-        ? "Store type updated successfully."
-        : "Store type created successfully.");
+      setMessage(
+        editingId !== null
+          ? "Store type updated successfully."
+          : "Store type created successfully."
+      );
       resetForm();
       try {
         await loadStoreTypes();
@@ -212,41 +276,50 @@ export default function CreateStoreType() {
     setEditingId(item.id);
     setErrors({});
 
-   const nextForm = {
-  code: item.code,
-  name: item.name,
-  description: item.description,
-  status: item.status,
-};
+    const nextForm = {
+      code: item.code,
+      name: item.name,
+      description: item.description === "-" ? "" : item.description,
+      status: item.status,
+    };
 
-setForm(nextForm);
+    setForm(nextForm);
+    setOriginalForm(nextForm);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return;
-    setSaving(true);
-    setError("");
-    try {
-      await storeTypesApi.remove(deleteTarget.id);
-      await loadStoreTypes();
-      if (editingId === deleteTarget.id) resetForm();
-      setMessage(`${deleteTarget.name} store type deleted.`);
-      setDeleteTarget(null);
-    } catch (err) {
-      setError(err.message);
-      setDeleteTarget(null);
-    } finally {
-      setSaving(false);
+  if (!deleteTarget) return;
+
+  setSaving(true);
+  setError("");
+
+  try {
+    await storeTypesApi.remove(deleteTarget.id); // Hard delete
+
+    await loadStoreTypes();
+
+    if (editingId === deleteTarget.id) {
+      resetForm();
     }
+
+    setMessage("Store type deleted successfully.");
+    setDeleteTarget(null);
+
+  } catch (err) {
+    setError(err.message);
+    setDeleteTarget(null);
+  } finally {
+    setSaving(false);
   }
+}
 
   return (
     <section className="store-types-page">
       <div className="store-types-page-heading">
         <div>
-          <h1>{editingId ? "Edit Store Type" : "Store Type Information"}</h1>
+          <h1>Store Type Information</h1>
           <p>Define a business vertical and its baseline configuration.</p>
         </div>
       </div>
@@ -260,106 +333,93 @@ setForm(nextForm);
           </div>
 
           <div>
-            <h2>Create Store Type</h2>
+            <h2>{editingId ? "Edit Store Type" : "Create Store Type"}</h2>
             <p>Provide the basic details about the store type.</p>
           </div>
         </div>
 
+      <div className="store-type-form-grid">
+        <div className="store-type-field">
+    <label> Store Type Code <span className="required">*</span> </label>
+    <input
+      name="code"
+      value={form.code}
+      onChange={updateField}
+      placeholder="Enter a unique code, e.g. GROCERY"
+      maxLength={30}
+      className={errors.code ? "store-type-input-error" : ""}
+    />
+    {errors.code ? (
+      <small className="field-error">{errors.code}</small>
+    ) : (
+      <small></small>
+    )}
+  </div>
+
+        <div className="store-type-field">
+   <label> Display Name <span className="required">*</span> </label>
+    <input
+      name="name"
+      value={form.name}
+      onChange={updateField}
+      placeholder="Enter display name, e.g. Grocery"
+      maxLength={80}
+      className={errors.name ? "store-type-input-error" : ""}
+    />
+    {errors.name ? (
+      <small className="field-error">{errors.name}</small>
+    ) : (
+      <small></small>
+    )}
+  </div>
+
+        <div className="store-type-field">
+    <label> Status <span className="required">*</span> </label>
+    <div className="select-shell">
+  <select
+    name="status"
+    value={form.status}
+    onChange={updateField}
+    className={form.status === "Active" ? "active" : "inactive"}
+  >
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
+  <i className="bi bi-chevron-down" />
+</div>
+    <small></small>
+  </div>
+</div>
+
         <div className="store-type-form-grid">
-          <label className="store-type-field">
-            <span>
-              Store Type Code <b>*</b>
-            </span>
+  <div className="store-type-field store-type-description-field">
+    <label>Description</label>
 
-            <div className={`store-type-input-wrap ${errors.code ? "has-error" : ""}`}>
-              <i className="bi bi-tag" />
-              <input
-                name="code"
-                value={form.code}
-                onChange={updateField}
-                placeholder="e.g. GROCERY Use 3–30 uppercase letters, numbers, or underscores."
-                maxLength="30"
-                autoComplete="off"
-              />
-            </div>
+    <textarea
+      name="description"
+      value={form.description}
+      onChange={updateField}
+      onInput={(e) => {
+        e.currentTarget.style.height = "44px";
+        e.currentTarget.style.height = `${Math.max(
+          44,
+          e.currentTarget.scrollHeight
+        )}px`;
+      }}
+      placeholder="Enter a brief description about the store type"
+      maxLength={500}
+    />
 
-
-            {errors.code && <em className="field-error">{errors.code}</em>}
-          </label>
-
-          <label className="store-type-field">
-            <span>
-              Display Name <b>*</b>
-            </span>
-
-            <div className={`store-type-input-wrap ${errors.name ? "has-error" : ""}`}>
-              <i className="bi bi-type" />
-              <input
-                name="name"
-                value={form.name}
-                onChange={updateField}
-                placeholder="e.g. Grocery Name displayed throughout the system."
-                maxLength="80"
-                autoComplete="off"
-              />
-            </div>
-
-
-            {errors.name && <em className="field-error">{errors.name}</em>}
-          </label>
-        </div>
-
-        <div className="store-type-form-grid">
-          <label className="store-type-field store-type-description-field">
-            <span>
-              Description
-            </span>
-
-            <div
-              className={`store-type-textarea-wrap ${
-                errors.description ? "has-error" : ""
-              }`}
-            >
-              <i className="bi bi-file-earmark-text" />
-
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={updateField}
-                maxLength="500"
-                placeholder="Describe the vertical, its operating model, and configuration needs..."
-                autoComplete="off"
-              />
-            </div>
-
-            <small className="store-type-character-count">
-              {form.description.length}/500
-            </small>
-
-            {errors.description && (
-              <em className="field-error">{errors.description}</em>
-            )}
-           </label>
-
-           <label className="store-type-field store-type-status-field">
-            <span>
-              Status <b>*</b>
-            </span>
-
-            <select
-              name="status"
-              value={form.status}
-              onChange={updateField}
-              className={`store-type-status-select ${
-                form.status === "Inactive" ? "inactive" : "active"
-              }`}
-            >
-              <option value="Active">● Active</option>
-              <option value="Inactive">● Inactive</option>
-            </select>
-            
-           </label>
-        </div>
+    <div className="store-type-description-meta">
+      {errors.description ? (
+        <small className="field-error">{errors.description}</small>
+      ) : (
+        <small></small>
+      )}
+      <span>{form.description.length}/500</span>
+    </div>
+  </div>
+</div>
 
         <div className="store-type-actions">
           <button
@@ -372,12 +432,19 @@ setForm(nextForm);
           </button>
 
           <button
-            type="submit"
-            className="store-type-submit-button"
-            disabled={!canSubmitStoreType || saving}
-          >
-            {saving ? "Saving..." : editingId ? "Update store type" : "Create store type"}
-          </button>
+             type="submit"
+             className="store-type-submit-button"
+             disabled={
+               saving ||
+               !canSubmitStoreType ||
+                (editingId !== null && !hasChanges)
+                 } >
+              {saving
+              ? "Saving..."
+              : editingId
+               ? "Update Store Type"
+             : "Create Store Type"}
+               </button>
         </div>
       </form>
 
@@ -405,6 +472,16 @@ setForm(nextForm);
               <option value="Inactive">Inactive</option>
             </select>
 
+            <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                 >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="name-asc">Name (A–Z)</option>
+               <option value="name-desc">Name (Z–A)</option>
+            </select>
+
             <button
               type="button"
               className="store-type-reset-button"
@@ -427,25 +504,30 @@ setForm(nextForm);
               <div>Actions</div>
             </div>
 
-            {filteredStoreTypes.map((item) => (
-              <div className="store-types-row" key={item.id}>
+            {paginatedStoreTypes.map((item) => (
+              <div className="store-types-row store-types-row-clickable" key={item.id} onClick={() =>
+                 navigate(`/store-types/${item.id}`, { state: { storeType: item },}) } >
                 <div className="store-type-code-cell">
                   <strong>{item.code}</strong>
                 </div>
 
                 <button
-                  type="button"
-                  className="store-type-name-cell store-type-name-clickable"
-                  onClick={() =>
-                    navigate(`/store-types/${item.id}`, {
-                      state: { storeType: item },
-                    })
-                  }
-                >
-                  <strong>{item.name}</strong>
-                </button>
+  type="button"
+  className="store-type-name-cell store-type-name-clickable"
+  onClick={(e) => {
+    e.stopPropagation();
+    navigate(`/store-types/${item.id}`, {
+      state: { storeType: item },
+    });
+  }}
+>
+  <strong>{item.name}</strong>
+</button>
 
-                <div className="store-type-description-cell">{item.description}</div>
+                <div className="store-type-description-cell"
+                 title={item.description} >
+                  {item.description}
+                </div>
 
                 <div>
                   <span
@@ -458,24 +540,34 @@ setForm(nextForm);
                   </span>
                 </div>
 
-                <div>{item.createdOn}</div>
-                <div>{item.updatedOn}</div>
+                <div className="store-type-date-cell"
+                      title={`${item.createdDate}, ${item.createdTime}`} >
+                      <strong>{item.createdDate}</strong>
+                      <span>{item.createdTime}</span>
+                </div>
+
+
+               <div className="store-type-date-cell"
+                    title={`${item.updatedDate}, ${item.updatedTime}`} >
+                    <strong>{item.updatedDate}</strong>
+                    <span>{item.updatedTime}</span>
+                 </div>
 
                 <div className="store-type-table-actions">
                   <button
-                    type="button"
-                    title="Edit store type"
-                    onClick={() => editStoreType(item)}
-                  >
-                    <i className="bi bi-pencil" />
+                     type="button"
+                     onClick={(e) => {
+                     e.stopPropagation();
+                     editStoreType(item); }} >
+                     <i className="bi bi-pencil" />
                   </button>
 
                   <button
-                    type="button"
-                    className="store-type-delete-icon"
-                    title="Delete store type"
-                    onClick={() => setDeleteTarget(item)}
-                  >
+                      type="button"
+                      className="store-type-delete-icon"
+                      onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTarget(item); }} >
                     <i className="bi bi-trash3" />
                   </button>
                 </div>
@@ -489,21 +581,42 @@ setForm(nextForm);
         </div>
 
         <div className="store-types-pagination">
-          <span>
-            Showing {filteredStoreTypes.length ? 1 : 0} to {filteredStoreTypes.length} of{" "}
-            {filteredStoreTypes.length} entries
-          </span>
+  <span>
+    Showing {filteredStoreTypes.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}
+    {" "}to{" "}
+    {Math.min(currentPage * ITEMS_PER_PAGE, filteredStoreTypes.length)}
+    {" "}of {filteredStoreTypes.length} entries
+  </span>
 
-          <div>
-            <button type="button" aria-label="Previous page">
-              <i className="bi bi-chevron-left" />
-            </button>
-            <button type="button" className="active">1</button>
-            <button type="button" aria-label="Next page">
-              <i className="bi bi-chevron-right" />
-            </button>
-          </div>
-        </div>
+  <div>
+    <button
+      type="button"
+      disabled={currentPage === 1}
+      onClick={() => setCurrentPage((p) => p - 1)}
+    >
+      <i className="bi bi-chevron-left" />
+    </button>
+
+    {Array.from({ length: totalPages }, (_, i) => (
+      <button
+        key={i + 1}
+        type="button"
+        className={currentPage === i + 1 ? "active" : ""}
+        onClick={() => setCurrentPage(i + 1)}
+      >
+        {i + 1}
+      </button>
+    ))}
+
+    <button
+      type="button"
+      disabled={currentPage === totalPages || totalPages === 0}
+      onClick={() => setCurrentPage((p) => p + 1)}
+    >
+      <i className="bi bi-chevron-right" />
+    </button>
+  </div>
+</div>
       </section>
 
       {deleteTarget && (
@@ -522,8 +635,7 @@ setForm(nextForm);
             <h2>Delete Store Type?</h2>
 
             <p>
-              Are you sure you want to Inactive{" "}
-              <strong>{deleteTarget.name}</strong>?
+             Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
             </p>
 
             {deleteTarget.assignedStores > 0 && (
