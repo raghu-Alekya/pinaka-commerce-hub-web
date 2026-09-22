@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "../components/Pagination";
 import ViewDetailsModal from "../components/ViewDetailsModal";
-import { productsSeed } from "../data/data";
+import {
+    productsApi,
+    normalizeCatalog,
+} from "../api/products";
 import "../styles/products.css";
 
 export default function Products({
@@ -23,6 +26,13 @@ export default function Products({
     const [pageSize, setPageSize] = useState(10);
 
     // =========================================================
+    // PRODUCT API STATES
+    // =========================================================
+
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    // =========================================================
     // PRODUCT SYNC STATES
     // =========================================================
 
@@ -37,10 +47,68 @@ export default function Products({
     const [selectedProduct, setSelectedProduct] = useState(null);
 
     // =========================================================
-    // PRODUCTS
+    // LOAD PRODUCTS FROM API
     // =========================================================
 
-    const products = productsSeed || [];
+    const loadProducts = async ({
+        showMessage = false,
+    } = {}) => {
+        if (!storeId) {
+            setProducts([]);
+            setSyncError("Store ID is required to load products.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            if (showMessage) {
+                setSyncing("latest");
+                setSyncMessage("");
+                setSyncError("");
+            }
+
+            const response =
+                await productsApi.getCatalog(storeId);
+
+            const catalog =
+                normalizeCatalog(response);
+
+            setProducts(catalog.products || []);
+
+            if (showMessage) {
+                setSyncMessage(
+                    "Latest product updates completed successfully."
+                );
+            }
+        } catch (error) {
+            console.error(
+                "Failed to load products:",
+                error
+            );
+
+            setProducts([]);
+
+            setSyncError(
+                error?.message ||
+                "Failed to load products."
+            );
+        } finally {
+            setLoading(false);
+
+            if (showMessage) {
+                setSyncing("");
+            }
+        }
+    };
+
+    // =========================================================
+    // INITIAL PRODUCT LOAD
+    // =========================================================
+
+    useEffect(() => {
+        loadProducts();
+    }, [storeId]);
 
     // =========================================================
     // CATEGORIES
@@ -50,7 +118,10 @@ export default function Products({
         return [
             ...new Set(
                 products
-                    .map((product) => product.category)
+                    .map(
+                        (product) =>
+                            product.category
+                    )
                     .filter(Boolean)
             ),
         ];
@@ -64,7 +135,10 @@ export default function Products({
         return [
             ...new Set(
                 products
-                    .map((product) => product.type)
+                    .map(
+                        (product) =>
+                            product.type
+                    )
                     .filter(Boolean)
             ),
         ];
@@ -85,7 +159,9 @@ export default function Products({
 
             const matchesSearch =
                 !search ||
-                text.includes(search.toLowerCase());
+                text.includes(
+                    search.toLowerCase()
+                );
 
             const matchesCategory =
                 !category ||
@@ -97,7 +173,8 @@ export default function Products({
 
             const matchesStock =
                 !stockStatus ||
-                product.stockStatus === stockStatus;
+                product.stockStatus ===
+                    stockStatus;
 
             return (
                 matchesSearch &&
@@ -118,15 +195,18 @@ export default function Products({
     // PAGINATION CALCULATIONS
     // =========================================================
 
-    const totalItems = filteredProducts.length;
+    const totalItems =
+        filteredProducts.length;
 
-    const totalPages = Math.ceil(
-        totalItems / pageSize
-    );
+    const totalPages =
+        Math.ceil(
+            totalItems / pageSize
+        );
 
     const paginatedProducts = useMemo(() => {
         const startIndex =
-            (currentPage - 1) * pageSize;
+            (currentPage - 1) *
+            pageSize;
 
         const endIndex =
             startIndex + pageSize;
@@ -186,42 +266,14 @@ export default function Products({
     // LATEST PRODUCT UPDATES
     // =========================================================
 
-    const handleLatestProductUpdates = async () => {
-        if (syncing) return;
+    const handleLatestProductUpdates =
+        async () => {
+            if (syncing) return;
 
-        setSyncing("latest");
-        setSyncMessage("");
-        setSyncError("");
-
-        try {
-            /*
-             * API WILL BE CONNECTED HERE
-             *
-             * Example later:
-             *
-             * await updateLatestProducts({
-             *     merchantId,
-             *     storeId,
-             * });
-             */
-
-            // Temporary simulation until API is ready
-            await new Promise((resolve) =>
-                setTimeout(resolve, 1000)
-            );
-
-            setSyncMessage(
-                "Latest product updates completed successfully."
-            );
-        } catch (error) {
-            setSyncError(
-                error?.message ||
-                "Failed to update latest products."
-            );
-        } finally {
-            setSyncing("");
-        }
-    };
+            await loadProducts({
+                showMessage: true,
+            });
+        };
 
     // =========================================================
     // PRODUCT DETAILS FIELDS
@@ -271,18 +323,31 @@ export default function Products({
                     value || ""
                 ).toLowerCase();
 
-                let className = "detail-status";
+                let className =
+                    "detail-status";
 
-                if (status === "in stock") {
+                if (
+                    status === "in stock"
+                ) {
                     className += " active";
-                } else if (status === "out of stock") {
-                    className += " inactive";
-                } else if (status === "low stock") {
-                    className += " pending";
+                } else if (
+                    status ===
+                    "out of stock"
+                ) {
+                    className +=
+                        " inactive";
+                } else if (
+                    status ===
+                    "low stock"
+                ) {
+                    className +=
+                        " pending";
                 }
 
                 return (
-                    <span className={className}>
+                    <span
+                        className={className}
+                    >
                         {value || "—"}
                     </span>
                 );
@@ -293,20 +358,25 @@ export default function Products({
             label: "Tags",
             fullWidth: true,
             render: (value) => {
-                if (!Array.isArray(value) || value.length === 0) {
+                if (
+                    !Array.isArray(value) ||
+                    value.length === 0
+                ) {
                     return "—";
                 }
 
                 return (
                     <div className="view-details-list">
-                        {value.map((tag) => (
-                            <span
-                                key={tag}
-                                className="view-details-list-item"
-                            >
-                                {tag}
-                            </span>
-                        ))}
+                        {value.map(
+                            (tag) => (
+                                <span
+                                    key={tag}
+                                    className="view-details-list-item"
+                                >
+                                    {tag}
+                                </span>
+                            )
+                        )}
                     </div>
                 );
             },
@@ -364,7 +434,9 @@ export default function Products({
                     <button
                         type="button"
                         className="product-sync-btn product-sync-update"
-                        onClick={handleLatestProductUpdates}
+                        onClick={
+                            handleLatestProductUpdates
+                        }
                         disabled={Boolean(syncing)}
                     >
                         {syncing === "latest" ? (
@@ -402,10 +474,11 @@ export default function Products({
             </div>
 
             {/* =================================================
-                SYNC MESSAGE
+                API / SYNC MESSAGE
             ================================================= */}
 
-            {(syncMessage || syncError) && (
+            {(syncMessage ||
+                syncError) && (
                 <div
                     className={
                         syncError
@@ -423,7 +496,8 @@ export default function Products({
                     />
 
                     <span>
-                        {syncError || syncMessage}
+                        {syncError ||
+                            syncMessage}
                     </span>
 
                     <button
@@ -455,7 +529,9 @@ export default function Products({
                     </div>
 
                     <div>
-                        <span>Total Products</span>
+                        <span>
+                            Total Products
+                        </span>
 
                         <strong>
                             {products.length}
@@ -473,7 +549,9 @@ export default function Products({
                     </div>
 
                     <div>
-                        <span>In Stock</span>
+                        <span>
+                            In Stock
+                        </span>
 
                         <strong>
                             {
@@ -497,7 +575,9 @@ export default function Products({
                     </div>
 
                     <div>
-                        <span>Low Stock</span>
+                        <span>
+                            Low Stock
+                        </span>
 
                         <strong>
                             {
@@ -521,7 +601,9 @@ export default function Products({
                     </div>
 
                     <div>
-                        <span>Out of Stock</span>
+                        <span>
+                            Out of Stock
+                        </span>
 
                         <strong>
                             {
@@ -561,7 +643,9 @@ export default function Products({
                             placeholder="Search products, SKU, category..."
                             value={search}
                             onChange={(e) =>
-                                setSearch(e.target.value)
+                                setSearch(
+                                    e.target.value
+                                )
                             }
                         />
 
@@ -572,21 +656,25 @@ export default function Products({
                     <select
                         value={category}
                         onChange={(e) =>
-                            setCategory(e.target.value)
+                            setCategory(
+                                e.target.value
+                            )
                         }
                     >
                         <option value="">
                             All Categories
                         </option>
 
-                        {categories.map((item) => (
-                            <option
-                                key={item}
-                                value={item}
-                            >
-                                {item}
-                            </option>
-                        ))}
+                        {categories.map(
+                            (item) => (
+                                <option
+                                    key={item}
+                                    value={item}
+                                >
+                                    {item}
+                                </option>
+                            )
+                        )}
                     </select>
 
                     {/* TYPE */}
@@ -594,21 +682,25 @@ export default function Products({
                     <select
                         value={type}
                         onChange={(e) =>
-                            setType(e.target.value)
+                            setType(
+                                e.target.value
+                            )
                         }
                     >
                         <option value="">
                             All Types
                         </option>
 
-                        {types.map((item) => (
-                            <option
-                                key={item}
-                                value={item}
-                            >
-                                {item}
-                            </option>
-                        ))}
+                        {types.map(
+                            (item) => (
+                                <option
+                                    key={item}
+                                    value={item}
+                                >
+                                    {item}
+                                </option>
+                            )
+                        )}
                     </select>
 
                     {/* STOCK */}
@@ -616,7 +708,9 @@ export default function Products({
                     <select
                         value={stockStatus}
                         onChange={(e) =>
-                            setStockStatus(e.target.value)
+                            setStockStatus(
+                                e.target.value
+                            )
                         }
                     >
                         <option value="">
@@ -641,7 +735,9 @@ export default function Products({
                     <button
                         type="button"
                         className="products-clear-btn"
-                        onClick={clearFilters}
+                        onClick={
+                            clearFilters
+                        }
                     >
                         <i className="bi bi-arrow-counterclockwise" />
                         Clear
@@ -674,116 +770,161 @@ export default function Products({
                 </div>
 
                 {/* =================================================
+                    LOADING
+                ================================================= */}
+
+                {loading && (
+                    <div className="products-loading">
+                        <span className="sync-spinner" />
+                        Loading products...
+                    </div>
+                )}
+
+                {/* =================================================
                     TABLE
                 ================================================= */}
 
-                <div className="products-table-wrapper">
+                {!loading && (
+                    <div className="products-table-wrapper">
 
-                    <table className="products-table">
+                        <table className="products-table">
 
-                        <thead>
+                            <thead>
 
-                            <tr>
+                                <tr>
 
-                                <th>PRODUCT</th>
-                                <th>SKU</th>
-                                <th>STOCK</th>
-                                <th>PRICE</th>
-                                <th>CATEGORY</th>
-                                <th>TAGS</th>
-                                <th>BRAND</th>
-                                <th>UPDATED</th>
-                                <th>STATUS</th>
+                                    <th>PRODUCT</th>
+                                    <th>SKU</th>
+                                    <th>STOCK</th>
+                                    <th>PRICE</th>
+                                    <th>CATEGORY</th>
+                                    <th>TAGS</th>
+                                    <th>BRAND</th>
+                                    <th>UPDATED</th>
+                                    <th>STATUS</th>
 
-                            </tr>
+                                </tr>
 
-                        </thead>
+                            </thead>
 
-                        <tbody>
+                            <tbody>
 
-                            {paginatedProducts.map(
-                                (product) => (
-                                    <ProductRow
-                                        key={product.id}
-                                        product={product}
-                                        onClick={() =>
-                                            setSelectedProduct(product)
-                                        }
-                                    />
-                                )
-                            )}
+                                {paginatedProducts.map(
+                                    (product) => (
+                                        <ProductRow
+                                            key={
+                                                product.id
+                                            }
+                                            product={
+                                                product
+                                            }
+                                            onClick={() =>
+                                                setSelectedProduct(
+                                                    product
+                                                )
+                                            }
+                                        />
+                                    )
+                                )}
 
-                        </tbody>
+                            </tbody>
 
-                    </table>
+                        </table>
 
-                </div>
+                    </div>
+                )}
 
                 {/* =================================================
                     EMPTY STATE
                 ================================================= */}
 
-                {filteredProducts.length === 0 && (
-                    <div className="products-empty">
+                {!loading &&
+                    filteredProducts.length ===
+                        0 && (
+                        <div className="products-empty">
 
-                        <div>
-                            <i className="bi bi-box-seam" />
+                            <div>
+                                <i className="bi bi-box-seam" />
+                            </div>
+
+                            <h3>
+                                No products found
+                            </h3>
+
+                            <p>
+                                {products.length ===
+                                0
+                                    ? "No products are available for this store."
+                                    : "Try changing your search or filters."}
+                            </p>
+
+                            <button
+                                type="button"
+                                onClick={
+                                    clearFilters
+                                }
+                            >
+                                Clear Filters
+                            </button>
+
                         </div>
-
-                        <h3>
-                            No products found
-                        </h3>
-
-                        <p>
-                            Try changing your search
-                            or filters.
-                        </p>
-
-                        <button
-                            type="button"
-                            onClick={clearFilters}
-                        >
-                            Clear Filters
-                        </button>
-
-                    </div>
-                )}
+                    )}
 
                 {/* =================================================
                     PAGINATION
                 ================================================= */}
 
-                {filteredProducts.length > 0 && (
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        totalItems={totalItems}
-                        pageSize={pageSize}
-                        onPageChange={setCurrentPage}
-                        onPageSizeChange={(size) => {
-                            setPageSize(size);
-                            setCurrentPage(1);
-                        }}
-                    />
-                )}
+                {!loading &&
+                    filteredProducts.length >
+                        0 && (
+                        <Pagination
+                            currentPage={
+                                currentPage
+                            }
+                            totalPages={
+                                totalPages
+                            }
+                            totalItems={
+                                totalItems
+                            }
+                            pageSize={
+                                pageSize
+                            }
+                            onPageChange={
+                                setCurrentPage
+                            }
+                            onPageSizeChange={(
+                                size
+                            ) => {
+                                setPageSize(
+                                    size
+                                );
+                                setCurrentPage(
+                                    1
+                                );
+                            }}
+                        />
+                    )}
 
                 {/* =================================================
                     FOOTER
                 ================================================= */}
 
-                {filteredProducts.length > 0 && (
-                    <div className="products-footer">
+                {!loading &&
+                    filteredProducts.length >
+                        0 && (
+                        <div className="products-footer">
 
-                        <span className="products-source">
+                            <span className="products-source">
 
-                            <i className="bi bi-arrow-repeat" />
+                                <i className="bi bi-arrow-repeat" />
 
-                            Synced from WooCommerce
+                                Synced from WooCommerce
 
-                        </span>
+                            </span>
 
-                    </div>
-                )}
+                        </div>
+                    )}
 
             </div>
 
@@ -792,7 +933,9 @@ export default function Products({
             ================================================= */}
 
             <ViewDetailsModal
-                open={Boolean(selectedProduct)}
+                open={Boolean(
+                    selectedProduct
+                )}
                 title="Product Details"
                 subtitle={
                     selectedProduct?.sku
@@ -800,8 +943,14 @@ export default function Products({
                         : ""
                 }
                 data={selectedProduct}
-                fields={productDetailsFields}
-                onClose={() => setSelectedProduct(null)}
+                fields={
+                    productDetailsFields
+                }
+                onClose={() =>
+                    setSelectedProduct(
+                        null
+                    )
+                }
             />
 
         </div>
@@ -817,13 +966,22 @@ function ProductRow({
     product,
     onClick,
 }) {
+    const normalizedStockStatus =
+        String(
+            product.stockStatus || ""
+        ).toLowerCase();
 
     const stockClass =
-        product.stockStatus === "In stock"
+        normalizedStockStatus ===
+        "in stock"
             ? "in-stock"
-            : product.stockStatus === "Low stock"
-                ? "low-stock"
-                : "out-stock";
+            : normalizedStockStatus ===
+              "low stock"
+            ? "low-stock"
+            : normalizedStockStatus ===
+              "out of stock"
+            ? "out-stock"
+            : "out-stock";
 
     return (
         <tr
@@ -844,8 +1002,12 @@ function ProductRow({
 
                         {product.image ? (
                             <img
-                                src={product.image}
-                                alt={product.name}
+                                src={
+                                    product.image
+                                }
+                                alt={
+                                    product.name
+                                }
                             />
                         ) : (
                             <i className="bi bi-image" />
@@ -856,12 +1018,15 @@ function ProductRow({
                     <div>
 
                         <strong>
-                            {product.name}
+                            {product.name ||
+                                "—"}
                         </strong>
 
                         {product.type && (
                             <small>
-                                {product.type}
+                                {
+                                    product.type
+                                }
                             </small>
                         )}
 
@@ -878,7 +1043,8 @@ function ProductRow({
             <td>
 
                 <span className="product-sku">
-                    {product.sku || "—"}
+                    {product.sku ||
+                        "—"}
                 </span>
 
             </td>
@@ -898,15 +1064,23 @@ function ProductRow({
                     <div>
 
                         <strong
-                            className={stockClass}
+                            className={
+                                stockClass
+                            }
                         >
-                            {product.stockStatus}
+                            {product.stockStatus ||
+                                "—"}
                         </strong>
 
                         {product.quantity !==
-                            undefined && (
+                            undefined &&
+                            product.quantity !==
+                                null && (
                                 <small>
-                                    {product.quantity} units
+                                    {
+                                        product.quantity
+                                    }{" "}
+                                    units
                                 </small>
                             )}
 
@@ -923,7 +1097,14 @@ function ProductRow({
             <td>
 
                 <strong className="product-price">
-                    {product.price || "$0.00"}
+                    {product.price !==
+                        undefined &&
+                    product.price !==
+                        null &&
+                    product.price !==
+                        ""
+                        ? product.price
+                        : "$0.00"}
                 </strong>
 
             </td>
@@ -950,15 +1131,18 @@ function ProductRow({
                 <div className="product-tags">
 
                     {product.tags &&
-                    product.tags.length > 0 ? (
-                        product.tags.map((tag) => (
-                            <span
-                                className="product-tag"
-                                key={tag}
-                            >
-                                {tag}
-                            </span>
-                        ))
+                    product.tags.length >
+                        0 ? (
+                        product.tags.map(
+                            (tag) => (
+                                <span
+                                    className="product-tag"
+                                    key={tag}
+                                >
+                                    {tag}
+                                </span>
+                            )
+                        )
                     ) : (
                         <span className="no-tags">
                             —
@@ -976,7 +1160,8 @@ function ProductRow({
             <td>
 
                 <span className="product-brand">
-                    {product.brand || "—"}
+                    {product.brand ||
+                        "—"}
                 </span>
 
             </td>
