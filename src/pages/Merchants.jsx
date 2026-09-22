@@ -1,3 +1,5 @@
+import AddMerchantDevice from "./AddMerchantDevice";
+import { MerchantEmployeeForm } from "./AddMerchantEmployee";
 import { useReferenceData } from "../api/referenceData";
 import { listSubscriptionPlans } from "../api/subscriptions";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -11,8 +13,8 @@ function readValue(value) {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   return typeof value === 'object' ? (value.name || value.label || '—') : String(value);
 }
-function ViewSection({ title, children }) {
-  return <section className="merchant-view-section"><h2>{title}</h2>{children}</section>;
+function ViewSection({ title, children, actions }) {
+  return <section className="merchant-view-section">{actions ? <div className="merchant-section-heading"><h2>{title}</h2>{actions}</div> : <h2>{title}</h2>}{children}</section>;
 }
 function ViewFields({ items }) {
   return <dl className="merchant-view-fields">{items.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{readValue(value)}</dd></div>)}</dl>;
@@ -20,13 +22,19 @@ function ViewFields({ items }) {
 function ViewTable({ headings, rows }) {
   return rows.length ? <div className="table-wrapper"><table className="merchant-table"><thead><tr>{headings.map(title => <th key={title}>{title}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, column) => <td key={column}>{readValue(cell)}</td>)}</tr>)}</tbody></table></div> : <p className="merchant-view-empty">No records provided.</p>;
 }
-function MerchantReadOnly({ merchantId, merchant, onBack, onStores }) {
+function MerchantReadOnly({ merchantId, merchant, onBack, onStores, onSaveEmployee, onSaveDevice }) {
+  const [addingEmployee, setAddingEmployee] = useState(false);
+  const [addingDevice, setAddingDevice] = useState(false);
+  const navigate = useNavigate();
+  const openMerchantCreation = path => navigate(path + '?merchantId=' + encodeURIComponent(merchantId), {
+    state: { merchantId, merchant },
+  });
   const [activeTab, setActiveTab] = useState('overview');
-  const tabs = [['overview', 'Overview'], ['subscription', 'Subscription & Usage'], ['stores', 'Stores'], ['devices', 'Devices'], ['roles', 'Roles & Permissions'], ['payments', 'Payment History']];
+  const tabs = [['overview', 'Overview'], ['subscription', 'Subscription & Usage'], ['stores', 'Stores'], ['employees', 'Employees'], ['devices', 'Devices'], ['roles', 'Roles & Permissions'], ['payments', 'Payment History']];
   function tabKeyDown(event, index) {
     let next;
-    if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
-    else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+    if (event.key === 'ArrowDown') next = (index + 1) % tabs.length;
+    else if (event.key === 'ArrowUp') next = (index + tabs.length - 1) % tabs.length;
     else if (event.key === 'Home') next = 0;
     else if (event.key === 'End') next = tabs.length - 1;
     else return;
@@ -57,6 +65,14 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onStores }) {
   const address = contact.address || raw.businessAddress || {};
   const list = value => Array.isArray(value) ? value : [];
   const stores = list(saved?.stores ?? response.stores ?? raw.stores);
+  const employeeRecords = saved?.employees ?? raw.employees ?? response.employees ?? response.data?.employees ?? merchant?.employees;
+  const employees = list(employeeRecords).filter(employee => {
+    const ownerId = employee.merchantId ?? employee.merchant?.id;
+    return ownerId == null || String(ownerId) === String(merchantId);
+  });
+  const employeeStoreName = employee => employee.storeName || employee.store?.name || stores.find(store =>
+    [store.id, store.storeId, store.code, store.storeCode].some(id => id != null && String(id) === String(employee.storeId))
+  )?.name || employee.storeId;
   const devices = list(saved?.devices ?? raw.devices ?? response.devices);
   const roles = list(saved?.roles ?? raw.roles ?? response.roles);
   const payments = list(saved?.paymentHistory ?? raw.paymentHistory);
@@ -64,6 +80,9 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onStores }) {
   const storeName = device => saved ? stores[device.store]?.name : device.storeName || device.storeId;
   return <div className="page-content merchant-readonly">
     <style>{`
+      .merchant-readonly .merchant-detail-actions{display:flex;flex-direction:column;align-items:stretch;gap:10px;min-width:200px;}
+      .merchant-readonly .merchant-detail-actions .btn{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin:0;width:100%;}
+      @media(max-width:650px){.merchant-readonly .page-header{flex-wrap:wrap;gap:16px;}.merchant-readonly .merchant-detail-actions{width:100%;}}
       .merchant-readonly .merchant-view-section{background:#fff;border:1px solid #e1e4eb;border-radius:10px;margin-bottom:16px;overflow:hidden;}
       .merchant-readonly .merchant-view-section h2{font-size:17px;padding:16px 20px;margin:0;border-bottom:1px solid #edf0f4;color:#17233e;}
       .merchant-readonly .merchant-view-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 28px;padding:20px;margin:0;}
@@ -73,19 +92,23 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onStores }) {
       .merchant-readonly .merchant-view-back{border:0;background:none;color:#5143bc;padding:0;margin-bottom:12px;cursor:pointer;}
       .merchant-readonly .merchant-view-section details{padding:14px 20px;border-top:1px solid #edf0f4;}
       .merchant-readonly .merchant-view-section summary{cursor:pointer;color:#5143bc;}
-      .merchant-readonly .merchant-view-tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid #e1e4eb;margin-bottom:20px;background:#fff;}
-      .merchant-readonly .merchant-view-tabs button{flex:none;white-space:nowrap;border:0;border-bottom:3px solid transparent;background:transparent;padding:14px 18px;color:#758096;font-size:14px;cursor:pointer;}
-      .merchant-readonly .merchant-view-tabs button[aria-selected="true"]{color:#5143bc;border-bottom-color:#5143bc;font-weight:600;background:#f8f7ff;}
+      .merchant-readonly .merchant-view-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:start;}
+      .merchant-readonly .merchant-view-layout > [role="tabpanel"]{grid-column:2;grid-row:1;min-width:0;}
+      .merchant-readonly .merchant-view-tabs{display:flex;flex-direction:column;gap:4px;border:1px solid #e1e4eb;border-radius:10px;padding:8px;background:#fff;}
+      .merchant-readonly .merchant-view-tabs button{flex:none;white-space:nowrap;border:0;border-left:3px solid transparent;text-align:left;background:transparent;padding:14px 18px;color:#758096;font-size:14px;cursor:pointer;}
+      .merchant-readonly .merchant-view-tabs button[aria-selected="true"]{color:#5143bc;border-left-color:#5143bc;font-weight:600;background:#f8f7ff;}
       .merchant-readonly .merchant-view-tabs button:focus-visible{outline:2px solid #5143bc;outline-offset:-4px;}
       .merchant-readonly [role="tabpanel"][hidden]{display:none;}
-      @media(max-width:650px){.merchant-readonly .merchant-view-fields{grid-template-columns:1fr;}}
+      @media(max-width:650px){.merchant-readonly .merchant-view-fields{grid-template-columns:1fr;}.merchant-readonly .merchant-view-layout{grid-template-columns:1fr;}.merchant-readonly .merchant-view-layout > [role="tabpanel"]{grid-column:1;grid-row:2;}}
     `}</style>
     <button type="button" className="merchant-view-back" onClick={onBack}>← Merchants</button>
     <div className="page-header"><div><h1>Merchant Details</h1><p>{readValue(business)} · {merchantId}</p></div>
-      <div className="page-actions"><button type="button" className="btn btn-primary" onClick={onStores}><i className="bi bi-shop" /> View List Of Stores</button></div>
+      <div className="page-actions merchant-detail-actions">
+        <button type="button" className="btn btn-primary" onClick={onStores}><i className="bi bi-shop" /> View List Of Stores</button>
+      </div>
     </div>
-    {loading ? <p role="status">Loading merchant details…</p> : error ? <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div> : <>
-      <div className="merchant-view-tabs" role="tablist" aria-label="Merchant details">
+    {loading ? <p role="status">Loading merchant details…</p> : error ? <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div> : <div className="merchant-view-layout">
+      <div className="merchant-view-tabs" role="tablist" aria-orientation="vertical" aria-label="Merchant details">
         {tabs.map(([id, label], index) => <button key={id} type="button" role="tab" id={'merchant-tab-' + id}
           aria-selected={activeTab === id} aria-controls={'merchant-panel-' + id} tabIndex={activeTab === id ? 0 : -1}
           onClick={() => setActiveTab(id)} onKeyDown={event => tabKeyDown(event, index)}>{label}</button>)}
@@ -115,7 +138,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onStores }) {
           ['Store Allowance', summary.storeLimit ?? subscription.storeLimit],
           ['Registered Devices', saved ? devices.length : raw.deviceCount ?? (Array.isArray(raw.devices) ? devices.length : undefined)],
           ['Device Allowance', subscription.deviceLimit ?? summary.deviceLimit],
-          ['Registered Employees', saved?.employeeCount ?? raw.employeeCount ?? summary.employeeCount],
+          ['Registered Employees', Array.isArray(employeeRecords) ? employees.length : saved?.employeeCount ?? raw.employeeCount ?? summary.employeeCount],
           ['Employee Allowance', summary.employeeLimit ?? subscription.employeeLimit],
         ]} /></ViewSection>
       </div>
@@ -128,8 +151,31 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onStores }) {
           <ViewTable headings={['Day', 'Status', 'Opens', 'Closes', 'Shifts']} rows={list(store.hours).map(day => [day.day, day.status, day.open, day.close, day.shifts])} />
         </details>)}</ViewSection>
       </div>
+      <div role="tabpanel" id="merchant-panel-employees" aria-labelledby="merchant-tab-employees" hidden={activeTab !== 'employees'} tabIndex={0}>
+        <ViewSection title={addingEmployee ? 'Add Employee' : 'Employees'} actions={addingEmployee ? <button type="button" className="merchant-back-employees" onClick={()=>setAddingEmployee(false)}><span aria-hidden="true">←</span> Back to Employees</button> : null}>
+          {addingEmployee ? <MerchantEmployeeForm embedded key={merchantId} merchantId={merchantId} initialMerchant={merchant} onSave={onSaveEmployee} onBack={()=>{setAddingEmployee(false);setAttempt(value=>value+1);}}/> : <>
+          <div style={{display:'flex',justifyContent:'flex-end',padding:'16px 20px'}}>
+            <button type="button" className="btn btn-primary" onClick={()=>setAddingEmployee(true)}><i className="bi bi-person-plus" /> Add Employee</button>
+          </div>
+          {Array.isArray(employeeRecords) ? employees.length ? <ViewTable headings={['Employee Code', 'Employee Name', 'Email', 'Phone', 'Store', 'Role', 'Status']} rows={employees.map(employee => [
+            employee.employeeCode || employee.code || employee.id,
+            employee.name || employee.employeeName || [employee.firstName, employee.lastName].filter(Boolean).join(' '),
+            employee.email, employee.phone || employee.phoneNumber, employeeStoreName(employee),
+            employee.roleName || employee.role?.name || (typeof employee.role === 'string' ? employee.role : undefined) || list(employee.roles).map(role=>typeof role === 'string' ? role : role.name || role.roleName).filter(Boolean).join(', '),
+            employee.status,
+          ])}/> : <p className="merchant-view-empty">No employees registered for this merchant.</p> : <p className="merchant-view-empty">Employee details are not available in this merchant record.</p>}
+          </>}
+        </ViewSection>
+      </div>
       <div role="tabpanel" id="merchant-panel-devices" aria-labelledby="merchant-tab-devices" hidden={activeTab !== 'devices'} tabIndex={0}>
-        <ViewSection title="Devices"><ViewTable headings={['Device', 'Type', 'Store', 'Identifier']} rows={devices.map(device => [device.name, device.type, storeName(device), device.serial || device.serialNumber])} /></ViewSection>
+        <ViewSection title={addingDevice ? 'Add Device' : 'Devices'} actions={addingDevice ? <button type="button" className="merchant-back-employees" onClick={()=>setAddingDevice(false)}>← Back to Devices</button> : null}>
+          {addingDevice ? <AddMerchantDevice key={merchantId} merchantId={merchantId} merchant={merchant} onSave={onSaveDevice} onBack={()=>{setAddingDevice(false);setAttempt(value=>value+1);}}/> : <>
+          <div style={{display:'flex',justifyContent:'flex-end',padding:'16px 20px'}}>
+            <button type="button" className="btn btn-primary" onClick={()=>setAddingDevice(true)}><i className="bi bi-plus-circle" /> Add Device</button>
+          </div>
+          <ViewTable headings={['Device', 'Type', 'Store', 'Identifier']} rows={devices.map(device => [device.name, device.type, storeName(device), device.serial || device.serialNumber])} />
+          </>}
+        </ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-roles" aria-labelledby="merchant-tab-roles" hidden={activeTab !== 'roles'} tabIndex={0}>
         <ViewSection title="Roles & Permissions"><ViewTable headings={['Role', 'Source', 'Scope', 'Permissions']} rows={roles.map(role => [
@@ -141,7 +187,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onStores }) {
           payment.createdAt, payment.plan, [payment.currency, payment.amount].filter(value => value !== undefined && value !== null).join(' '), payment.method, payment.status,
         ])} /></ViewSection>
       </div>
-    </>}
+    </div>}
   </div>;
 }
 
@@ -253,7 +299,7 @@ function storeLimitFor(merchant, masterPlans) {
   return null;
 }
 // Pass your existing delete API function as deleteMerchant until its module contract is connected.
-export default function Merchants({ deleteMerchant, localMerchants = [], onLocalDelete }) {
+export default function Merchants({ deleteMerchant, localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice }) {
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewedId = searchParams.get('view');
@@ -441,7 +487,7 @@ export default function Merchants({ deleteMerchant, localMerchants = [], onLocal
   const statuses = ["Pending Setup", "Active", "Suspended", "Inactive"];
   const locations = [...new Set(merchants.map(m => `${m.country || ''} ${m.state || ''}`.trim()).filter(Boolean))];
 
-  if (viewedId) return <MerchantReadOnly key={viewedId} merchantId={viewedId}
+  if (viewedId) return <MerchantReadOnly key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
     merchant={merchants.find(item => String(item.id) === viewedId)} onBack={closeView}
     onStores={() => nav(`/merchants/${encodeURIComponent(viewedId)}/stores`)} />;
 
