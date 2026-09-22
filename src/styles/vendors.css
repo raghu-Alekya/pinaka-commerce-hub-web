@@ -341,6 +341,31 @@
   gap: 8px;
 }
 
+.vendors-reset-button {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d9e6f4;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #5b79ad;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.vendors-reset-button:hover {
+  border-color: #aeb7ff;
+  background: #f7f6ff;
+  color: #684ee3;
+}
+
+.vendors-reset-button i {
+  font-size: 14px;
+}
+
 .vendors-search {
   display: flex;
   align-items: center;
@@ -395,13 +420,6 @@
   box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
 }
 
-.vendors-link-button {
-  border: 0;
-  background: none;
-  color: #4d53e6;
-  cursor: pointer;
-  font-size: 11px;
-}
 
 
 /* =========================================================
@@ -443,7 +461,7 @@
 .vendors-table th {
   height: 40px;
   padding: 0 10px;
-  background: #f2f8ff;
+  background: #f1f3fd;
   color: #23426e;
   font-size: 11px;
   font-weight: 600;
@@ -514,16 +532,19 @@
 
 .vendors-status {
   display: inline-flex;
-  min-width: 70px;
-  height: 22px;
   align-items: center;
   justify-content: center;
   gap: 5px;
+  min-width: 78px;
+  height: 22px;
   padding: 0 8px;
-  box-sizing: border-box;
   border-radius: 12px;
   font-size: 10px;
   font-weight: 600;
+}
+
+.vendors-status i {
+  font-size: 7px;
 }
 
 .vendors-status.active {
@@ -1328,4 +1349,459 @@
   opacity: 0.6 !important;
   cursor: not-allowed !important;
   transform: none !important;
+}
+
+
+/* =========================================================
+   APPROVED ROLE TEMPLATE-STYLE VENDOR FORM UX
+   ========================================================= */
+
+.vendors-form {
+  padding: 17px 22px 18px;
+}
+
+.vendors-form-grid {
+  column-gap: 14px;
+  row-gap: 11px;
+}
+
+.vendors-form label {
+  gap: 5px;
+  color: #23426e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.vendors-form input,
+.vendors-form select {
+  height: 42px;
+  border: 1px solid #d9e6f4;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #163762;
+  font-size: 12px;
+}
+
+.vendors-form input:focus,
+.vendors-form select:focus {
+  border-color: #aeb7ff;
+  box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
+}
+
+.vendors-field-hint {
+  display: block;
+  margin-top: -1px;
+  color: #6481b0;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.vendors-field-error {
+  display: block;
+  margin-top: -1px;
+  color: #ed304d;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.vendors-form input[aria-invalid="true"] {
+  border-color: #f1a8b4;
+  background: #fffafa;
+}
+
+/* Active / Inactive status field colors. */
+.vendors-form select.vendors-status-select.active {
+  border-color: #b9ead2;
+  background: #f7fffb;
+  color: #08a961;
+  font-weight: 600;
+}
+
+.vendors-form select.vendors-status-select.inactive {
+  border-color: #f3c0c8;
+  background: #fff8f9;
+  color: #ed304d;
+  font-weight: 600;
+}
+
+/* Disabled primary action — same visual language as Role Template. */
+.vendors-save-button:disabled {
+  background: #e4e7ef !important;
+  color: #9aa4b6 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+/* =========================================================
+   AUDIT DATE / TIME — two-line table treatment
+   ========================================================= */
+
+.vendors-audit-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.vendors-audit-date {
+  color: #29466f;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.vendors-audit-time {
+  color: #7890b2;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   APPROVED DELETE CONFIRMATION MODAL
+   ========================================================= */
+
+.vendors-delete-backdrop {
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(2px);
+}
+
+.vendors-delete-modal {
+  width: min(450px, 100%);
+  padding: 32px 30px 30px;
+  border-radius: 15px;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.20);
+}
+
+.vendors-delete-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 17px;
+  border-radius: 50%;
+  background: #ffe7ec;
+  color: #f23d61;
+  font-size: 23px;
+}
+
+.vendors-delete-modal h2 {
+  margin: 0 0 11px;
+  color: #10264d;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.vendors-delete-modal p {
+  margin: 0;
+  color: #5f79a5;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.vendors-delete-modal p strong {
+  color: #183762;
+  font-weight: 650;
+}
+
+.vendors-delete-warning {
+  margin-top: 8px !important;
+  color: #ed304d !important;
+  font-size: 13px !important;
+  font-weight: 500;
+}
+
+.vendors-delete-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.vendors-delete-cancel,
+.vendors-delete-confirm {
+  min-height: 46px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.vendors-delete-cancel {
+  border: 1px solid #aebbcf;
+  background: #ffffff;
+  color: #8795aa;
+}
+
+.vendors-delete-cancel:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.vendors-delete-confirm {
+  border: 1px solid #f03b5d;
+  background: #f03b5d;
+  color: #ffffff;
+}
+
+.vendors-delete-confirm:hover:not(:disabled) {
+  border-color: #df2e50;
+  background: #df2e50;
+}
+
+@media (max-width: 480px) {
+  .vendors-delete-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   VENDOR EDIT MODE — APPROVED ROLE TEMPLATE PATTERN
+   ========================================================= */
+
+.vendors-form-heading {
+  justify-content: flex-start;
+}
+
+.vendors-field-hint,
+.vendors-field-error {
+  min-height: 13px;
+}
+
+.vendors-save-button:disabled {
+  background: #e4e7ef !important;
+  color: #9aa4b6 !important;
+  border-color: #e4e7ef !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+}
+
+.vendors-save-button:not(:disabled) {
+  cursor: pointer;
+}
+
+.vendors-form select.vendors-status-select.active {
+  border-color: #b9ead2 !important;
+  background: #f7fffb !important;
+  color: #08a961 !important;
+}
+
+.vendors-form select.vendors-status-select.inactive {
+  border-color: #f3c0c8 !important;
+  background: #fff8f9 !important;
+  color: #ed304d !important;
+}
+
+
+/* =========================================================
+   VIEW VENDOR - READ ONLY MODE
+   ========================================================= */
+
+.vendors-form-view-mode {
+  position: relative;
+}
+
+.vendors-form-view-mode .vendors-heading-icon {
+  background: #eef1ff;
+  color: #684ee3;
+}
+
+.vendors-form-view-mode .vendors-form-grid input,
+.vendors-form-view-mode .vendors-form-grid select,
+.vendors-form-view-mode .vendors-form-grid textarea {
+  background: #f7f9fc;
+  border-color: #dfe6ef;
+  color: #334a6e;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.vendors-form-view-mode .vendors-form-grid input:disabled,
+.vendors-form-view-mode .vendors-form-grid select:disabled,
+.vendors-form-view-mode .vendors-form-grid textarea:disabled {
+  opacity: 1;
+  -webkit-text-fill-color: #334a6e;
+}
+
+.vendors-form-view-mode .vendors-form-grid input:disabled::placeholder {
+  color: #8b98aa;
+}
+
+.vendors-form-view-mode .vendors-form-actions {
+  justify-content: flex-end;
+}
+
+.vendors-form-view-mode .vendors-save-button {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.vendors-form-view-mode .vendors-clear-button {
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* View action = neutral blue */
+.vendors-actions button.vendors-view-action {
+  color: #4f6f9f;
+}
+
+.vendors-actions button.vendors-view-action:hover:not(:disabled) {
+  color: #355a91;
+  border-color: #b9c9e2;
+  background: #f3f7fc;
+  box-shadow: 0 2px 7px rgba(53, 90, 145, 0.08);
+}
+
+
+/* =========================================================
+   VENDOR TABLE ACTIONS - CLEAR VIEW / EDIT / DELETE
+   ========================================================= */
+.vendors-table th:last-child,
+.vendors-table td:last-child {
+  width: 190px;
+  min-width: 190px;
+  text-align: center;
+}
+
+.vendors-actions {
+  white-space: nowrap;
+  text-align: center;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.vendors-actions button {
+  display: inline-flex;
+  width: auto;
+  min-width: 52px;
+  height: 32px;
+  margin: 0 3px 0 0;
+  padding: 0 9px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  box-sizing: border-box;
+  vertical-align: middle;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.vendors-actions button:last-child {
+  margin-right: 0;
+}
+
+.vendors-actions button span {
+  display: inline-block;
+  line-height: 1;
+}
+
+.vendors-actions button.vendors-delete-action {
+  min-width: 62px;
+}
+
+.vendors-actions button i {
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   VENDOR ACTIONS — ICON ONLY
+   View = Gray | Edit = Blue | Delete = Red
+   ========================================================= */
+.vendors-actions {
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+
+.vendors-actions button {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  margin-right: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+}
+
+.vendors-actions button:last-child {
+  margin-right: 0 !important;
+}
+
+.vendors-actions button span {
+  display: none !important;
+}
+
+/* View — gray */
+.vendors-actions button.vendors-view-action {
+  color: #6b7280 !important;
+  border-color: #d9dee7 !important;
+  background: #f6f7f9 !important;
+}
+
+.vendors-actions button.vendors-view-action i {
+  color: #6b7280 !important;
+}
+
+.vendors-actions button.vendors-view-action:hover:not(:disabled) {
+  color: #4b5563 !important;
+  border-color: #c7ced8 !important;
+  background: #eef0f3 !important;
+}
+
+.vendors-actions button.vendors-view-action:hover:not(:disabled) i {
+  color: #4b5563 !important;
+}
+
+/* Edit — blue */
+.vendors-actions button:not(.vendors-view-action):not(.vendors-delete-action) {
+  color: #1677e8 !important;
+  border-color: #d8e8ff !important;
+  background: #f2f7ff !important;
+}
+
+.vendors-actions button:not(.vendors-view-action):not(.vendors-delete-action) i {
+  color: #1677e8 !important;
+}
+
+.vendors-actions button:not(.vendors-view-action):not(.vendors-delete-action):hover:not(:disabled) {
+  color: #0b63c7 !important;
+  border-color: #bcd9ff !important;
+  background: #e8f2ff !important;
+}
+
+.vendors-actions button:not(.vendors-view-action):not(.vendors-delete-action):hover:not(:disabled) i {
+  color: #0b63c7 !important;
+}
+
+/* Delete — red */
+.vendors-actions button.vendors-delete-action {
+  color: #e34d5b !important;
+  border-color: #f8d9dc !important;
+  background: #fff4f4 !important;
+}
+
+.vendors-actions button.vendors-delete-action i {
+  color: #e34d5b !important;
+}
+
+.vendors-actions button.vendors-delete-action:hover:not(:disabled) {
+  color: #c93443 !important;
+  border-color: #f2bfc5 !important;
+  background: #ffe9eb !important;
+}
+
+.vendors-actions button.vendors-delete-action:hover:not(:disabled) i {
+  color: #c93443 !important;
 }

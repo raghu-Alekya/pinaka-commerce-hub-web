@@ -388,3 +388,57 @@
     border-bottom: 1px solid #dce9f5;
   }
 }
+/* Grid Layout for Plan Details */
+.plan-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* Individual Field Styling */
+.plan-details-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-details-field span {
+  font-size: 13px;
+  color: #42639d;
+  font-weight: 600;
+}
+
+.plan-details-field input,
+.plan-details-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #dce9f5;
+  border-radius: 6px;
+  background-color: #f8fbff;
+  color: #10264d;
+  font-size: 14px;
+}
+
+.plan-details-field small {
+  color: #6380ae;
+  font-size: 11px;
+}
+
+/* Make Description span full grid width (2 columns) */
+.plan-details-description,
+.plan-details-full-field {
+  grid-column: 1 / -1;
+}
+
+.plan-details-description textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* Mobile Responsive adjustment */
+@media (max-width: 700px) {
+  .plan-details-grid {
+    grid-template-columns: 1fr;
+  }
+}

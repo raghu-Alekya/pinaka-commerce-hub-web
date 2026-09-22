@@ -627,8 +627,8 @@
 .feature-permissions-page .fp-search {
   position: relative;
 
-  width: 286px;
-  height: 40px;
+  width: 286dpx;
+  height: 38px;
 }
 
 .feature-permissions-page .fp-search > i {
@@ -685,7 +685,7 @@
   position: relative;
 
   width: 155px;
-  height: 40px;
+  height: 38px;
 
   border: 1px solid #dce3ed;
   border-radius: 7px;
@@ -739,43 +739,29 @@
    ========================================================= */
 
 .feature-permissions-page .fp-reset-btn {
-  min-width: 92px;
-  height: 40px;
-
-  padding: 0 14px;
-
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  gap: 7px;
-
-  border: 1px solid #d8e1ed;
+  border: 1px solid #dce3ed;
   border-radius: 7px;
-
   background: #ffffff;
-
   color: #315a8c;
-
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-
   cursor: pointer;
-
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease;
+  transition: background 0.18s ease, border-color 0.18s ease;
 }
 
 .feature-permissions-page .fp-reset-btn:hover {
   background: #f7f9fc;
-
   border-color: #c9d5e5;
 }
 
 .feature-permissions-page .fp-reset-btn i {
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 1;
 }
 
 
@@ -850,7 +836,7 @@
    ========================================================= */
 
 .feature-permissions-page .fp-table thead {
-  background: #f8fafd;
+  background: #f1f3fd;
 }
 
 .feature-permissions-page .fp-table th {
@@ -1655,11 +1641,11 @@
 }
 
 .feature-permissions-page .fp-table col.fp-col-created {
-  width: 16% !important;
+  width: 14% !important;
 }
 
 .feature-permissions-page .fp-table col.fp-col-updated {
-  width: 16% !important;
+  width: 14% !important;
 }
 
 .feature-permissions-page .fp-table col.fp-col-actions {
@@ -1698,7 +1684,6 @@
     overflow-x: hidden !important;
   }
 }
-
 
 /* =========================================================
    FINAL DESKTOP TABLE LAYOUT
@@ -1859,5 +1844,749 @@
 @media (min-width: 901px) {
   .feature-permissions-page .fp-table-wrap {
     overflow-x: auto !important;
+  }
+}
+
+
+/* =========================================================
+   INACTIVE STATUS BADGE
+   Reference: light pink background + red dot + red text
+   ========================================================= */
+.feature-permissions-page .fp-status-pill.inactive {
+  background: #fde9eb;
+  color: #ef4455;
+  border: none;
+}
+
+.feature-permissions-page .fp-status-pill.inactive b {
+  background: #ef4455;
+}
+
+
+/* =========================================================
+   DELETE PERMISSION CONFIRMATION MODAL
+   ========================================================= */
+.feature-permissions-page .fp-delete-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(35, 45, 63, 0.43);
+  backdrop-filter: blur(1px);
+}
+
+.feature-permissions-page .fp-delete-modal {
+  width: min(500px, calc(100vw - 40px));
+  padding: 36px 42px 34px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(18, 30, 50, 0.18);
+  text-align: center;
+}
+
+.feature-permissions-page .fp-delete-modal-icon {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fff0f2;
+  color: #ef4058;
+}
+
+.feature-permissions-page .fp-delete-modal-icon i {
+  font-size: 27px;
+  line-height: 1;
+}
+
+.feature-permissions-page .fp-delete-modal h2 {
+  margin: 0 0 12px;
+  color: #10264a;
+  font-size: 25px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.feature-permissions-page .fp-delete-modal-message {
+  margin: 0;
+  color: #607ca9;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.feature-permissions-page .fp-delete-modal-message strong {
+  color: #526da0;
+  font-weight: 700;
+}
+
+.feature-permissions-page .fp-delete-modal-warning {
+  margin: 14px 0 28px;
+  color: #ed3852;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.feature-permissions-page .fp-delete-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.feature-permissions-page .fp-delete-cancel-btn,
+.feature-permissions-page .fp-delete-confirm-btn {
+  height: 52px;
+  border-radius: 9px;
+  padding: 0 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, opacity .15s ease;
+}
+
+.feature-permissions-page .fp-delete-cancel-btn {
+  min-width: 150px;
+  border: 1px solid #d7e0ec;
+  background: #ffffff;
+  color: #17345f;
+}
+
+.feature-permissions-page .fp-delete-cancel-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #c8d3e1;
+}
+
+.feature-permissions-page .fp-delete-confirm-btn {
+  min-width: 155px;
+  border: 1px solid #e93f58;
+  background: #e93f58;
+  color: #ffffff;
+}
+
+.feature-permissions-page .fp-delete-confirm-btn:hover:not(:disabled) {
+  background: #dc354d;
+  border-color: #dc354d;
+}
+
+.feature-permissions-page .fp-delete-confirm-btn i {
+  font-size: 16px;
+}
+
+.feature-permissions-page .fp-delete-cancel-btn:disabled,
+.feature-permissions-page .fp-delete-confirm-btn:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+
+@media (max-width: 560px) {
+  .feature-permissions-page .fp-delete-modal {
+    width: calc(100vw - 32px);
+    padding: 30px 22px 26px;
+    border-radius: 14px;
+  }
+
+  .feature-permissions-page .fp-delete-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .feature-permissions-page .fp-delete-cancel-btn,
+  .feature-permissions-page .fp-delete-confirm-btn {
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+  }
+}
+
+/* =========================================================
+   HARD FINAL OVERRIDES — STATUS + DELETE MODAL
+   Keep this block at the very end of this stylesheet.
+   ========================================================= */
+
+/* Inactive badge: exact pink/red treatment */
+.feature-permissions-page .fp-table .fp-status-pill.inactive {
+  min-width: 86px !important;
+  height: 30px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #fde9ec !important;
+  color: #ef4455 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+.feature-permissions-page .fp-table .fp-status-pill.inactive b {
+  width: 7px !important;
+  height: 7px !important;
+  flex: 0 0 7px !important;
+  background: #ef4455 !important;
+  border-radius: 50% !important;
+}
+
+/* Compact delete modal — matches Features reference proportions */
+body .feature-permissions-page .fp-delete-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  background: rgba(35, 45, 63, 0.43) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+body .feature-permissions-page .fp-delete-modal {
+  width: 500px !important;
+  max-width: calc(100vw - 40px) !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 34px 42px 32px !important;
+  border: 0 !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 18px 50px rgba(18, 30, 50, 0.18) !important;
+  text-align: center !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-icon {
+  width: 68px !important;
+  height: 68px !important;
+  min-width: 68px !important;
+  min-height: 68px !important;
+  margin: 0 auto 20px !important;
+  padding: 0 !important;
+  background: #fff0f2 !important;
+  color: #ef4058 !important;
+  border-radius: 50% !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-icon i {
+  font-size: 27px !important;
+  line-height: 1 !important;
+}
+
+body .feature-permissions-page .fp-delete-modal h2 {
+  margin: 0 0 12px !important;
+  padding: 0 !important;
+  color: #10264a !important;
+  font-size: 25px !important;
+  line-height: 1.3 !important;
+  font-weight: 700 !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-message {
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #607ca9 !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-message strong {
+  color: #526da0 !important;
+  font-weight: 700 !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-warning {
+  margin: 14px 0 28px !important;
+  padding: 0 !important;
+  color: #ed3852 !important;
+  font-size: 15px !important;
+  line-height: 1.45 !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-actions {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-actions .fp-delete-cancel-btn,
+body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn {
+  width: auto !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  max-height: 52px !important;
+  margin: 0 !important;
+  padding: 0 28px !important;
+  border-radius: 9px !important;
+  font-family: inherit !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-actions .fp-delete-cancel-btn {
+  min-width: 150px !important;
+  border: 1px solid #d7e0ec !important;
+  background: #ffffff !important;
+  color: #17345f !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn {
+  min-width: 190px !important;
+  border: 1px solid #e93f58 !important;
+  background: #e93f58 !important;
+  color: #ffffff !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn i {
+  font-size: 16px !important;
+}
+
+@media (max-width: 560px) {
+  body .feature-permissions-page .fp-delete-modal {
+    width: calc(100vw - 32px) !important;
+    max-width: calc(100vw - 32px) !important;
+    padding: 28px 20px 24px !important;
+  }
+
+  body .feature-permissions-page .fp-delete-modal-actions {
+    flex-direction: column-reverse !important;
+  }
+
+  body .feature-permissions-page .fp-delete-modal-actions .fp-delete-cancel-btn,
+  body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+/* =========================================================
+   FINAL SIZE CORRECTION — ACTIVE/INACTIVE + SMALLER MODAL
+   ========================================================= */
+
+/* Active and Inactive must use the exact same badge dimensions */
+.feature-permissions-page .fp-table .fp-status-pill.active,
+.feature-permissions-page .fp-table .fp-status-pill.inactive {
+  min-width: 86px !important;
+  width: 86px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 500 !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+}
+
+.feature-permissions-page .fp-table .fp-status-pill.active b,
+.feature-permissions-page .fp-table .fp-status-pill.inactive b {
+  width: 7px !important;
+  height: 7px !important;
+  min-width: 7px !important;
+  flex: 0 0 7px !important;
+  border-radius: 50% !important;
+}
+
+/* Preserve status colors */
+.feature-permissions-page .fp-table .fp-status-pill.active {
+  border: 1px solid #bfe8d6 !important;
+  background: #effaf5 !important;
+  color: #26815a !important;
+}
+
+.feature-permissions-page .fp-table .fp-status-pill.active b {
+  background: #36a56f !important;
+}
+
+.feature-permissions-page .fp-table .fp-status-pill.inactive {
+  border: 0 !important;
+  background: #fde9ec !important;
+  color: #ef4455 !important;
+}
+
+.feature-permissions-page .fp-table .fp-status-pill.inactive b {
+  background: #ef4455 !important;
+}
+
+/* Smaller delete confirmation modal */
+body .feature-permissions-page .fp-delete-modal {
+  width: 440px !important;
+  max-width: calc(100vw - 40px) !important;
+  padding: 28px 34px 27px !important;
+  border-radius: 15px !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-icon {
+  width: 58px !important;
+  height: 58px !important;
+  min-width: 58px !important;
+  min-height: 58px !important;
+  margin: 0 auto 17px !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-icon i {
+  font-size: 23px !important;
+}
+
+body .feature-permissions-page .fp-delete-modal h2 {
+  margin-bottom: 10px !important;
+  font-size: 22px !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-message {
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-warning {
+  margin: 10px 0 23px !important;
+  font-size: 14px !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-actions {
+  gap: 10px !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-actions .fp-delete-cancel-btn,
+body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn {
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+  padding: 0 22px !important;
+  font-size: 14px !important;
+  border-radius: 8px !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-actions .fp-delete-cancel-btn {
+  min-width: 130px !important;
+}
+
+body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn {
+  min-width: 175px !important;
+}
+
+@media (max-width: 560px) {
+  body .feature-permissions-page .fp-delete-modal {
+    width: calc(100vw - 32px) !important;
+    padding: 26px 20px 23px !important;
+  }
+}
+
+/* =========================================================
+   FINAL FEATURES-CONSISTENT STATUS + DATE/TIME LAYOUT
+   ========================================================= */
+
+/* Match the compact Features List pills: same sizing for both states */
+.feature-permissions-page .fp-table .fp-status-pill.active,
+.feature-permissions-page .fp-table .fp-status-pill.inactive {
+  width: auto !important;
+  min-width: 0 !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  border-radius: 999px !important;
+  box-sizing: border-box !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+
+.feature-permissions-page .fp-table .fp-status-pill.active b,
+.feature-permissions-page .fp-table .fp-status-pill.inactive b {
+  width: 7px !important;
+  height: 7px !important;
+  min-width: 7px !important;
+  flex: 0 0 7px !important;
+  border-radius: 50% !important;
+}
+
+/* Active */
+.feature-permissions-page .fp-table .fp-status-pill.active {
+  border: 0 !important;
+  background: #e2f5ee !important;
+  color: #168a67 !important;
+}
+
+.feature-permissions-page .fp-table .fp-status-pill.active b {
+  background: #15936f !important;
+}
+
+/* Inactive */
+.feature-permissions-page .fp-table .fp-status-pill.inactive {
+  border: 0 !important;
+  background: #fde8eb !important;
+  color: #ef4057 !important;
+}
+
+.feature-permissions-page .fp-table .fp-status-pill.inactive b {
+  background: #ef4057 !important;
+}
+
+/* Created At / Updated At: date on first line, time directly below */
+.feature-permissions-page .fp-date-cell {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  vertical-align: middle !important;
+}
+
+.feature-permissions-page .fp-date-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  line-height: 1.25 !important;
+}
+
+.feature-permissions-page .fp-date-value {
+  display: block !important;
+  color: #657a9b !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  white-space: nowrap !important;
+}
+
+.feature-permissions-page .fp-time-value {
+  display: block !important;
+  color: #8795aa !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  white-space: nowrap !important;
+}
+
+/* Keep the latest compact delete confirmation size */
+body .feature-permissions-page .fp-delete-modal {
+  width: 440px !important;
+  max-width: calc(100vw - 40px) !important;
+}
+
+
+/* =========================================================
+   FINAL TABLE POLISH
+   - Active / Inactive identical dimensions
+   - Status text 2px smaller
+   - Permission Key / Name slightly bolder
+   ========================================================= */
+
+.feature-permissions-page .fp-table .fp-status-pill.active,
+.feature-permissions-page .fp-table .fp-status-pill.inactive {
+  width: 73px !important;
+  min-width: 73px !important;
+  max-width: 73px !important;
+  height: 24px !important;
+  min-height: 28px !important;
+  padding: 0 8px !important;
+  gap: 6px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+  justify-content: center !important;
+}
+
+.feature-permissions-page .fp-table .fp-status-pill.active b,
+.feature-permissions-page .fp-table .fp-status-pill.inactive b {
+  width: 6px !important;
+  height: 6px !important;
+  min-width: 6px !important;
+  flex: 0 0 6px !important;
+}
+
+.feature-permissions-page .fp-permission-code-cell {
+  font-weight: 600 !important;
+  color: #34445f !important;
+}
+
+/* Permission Name is the second table column */
+.feature-permissions-page .fp-table tbody td:nth-child(2) {
+  font-weight: 600 !important;
+  color: #34445f !important;
+}
+
+
+/* =========================================================
+   PERMISSIONS LIST SORTING FILTER
+   Toolbar order: Search -> All Status -> Sorting -> Reset
+   ========================================================= */
+
+.feature-permissions-page .fp-sort-filter {
+  position: relative;
+  width: 190px;
+  height: 40px;
+  flex: 0 0 190px;
+  border: 1px solid #dce3ed;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.feature-permissions-page .fp-sort-filter:focus-within {
+  border-color: #8faee0;
+  box-shadow: 0 0 0 3px rgba(92, 130, 190, 0.10);
+}
+
+.feature-permissions-page .fp-sort-filter select {
+  width: 100%;
+  height: 100%;
+  padding: 0 37px 0 13px;
+  border: none;
+  outline: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #34435e;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.feature-permissions-page .fp-sort-filter > i {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  transform: translateY(-50%);
+  color: #71829d;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+@media (max-width: 700px) {
+  .feature-permissions-page .fp-sort-filter {
+    width: 100%;
+    flex: none;
+  }
+}
+
+
+/* =========================================================
+   FINAL TOOLBAR FIT FIX
+   Search -> All Status -> Sorting -> Reset
+   Keeps every control inside the Permissions List card.
+   ========================================================= */
+
+.feature-permissions-page .fp-list-toolbar {
+  min-width: 0;
+}
+
+.feature-permissions-page .fp-list-filters {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.feature-permissions-page .fp-search {
+  width: 248px;
+  min-width: 180px;
+  flex: 1 1 260px;
+  max-width: 300px;
+}
+
+.feature-permissions-page .fp-status-filter {
+  width: 132px;
+  min-width: 132px;
+  flex: 0 0 132px;
+}
+
+.feature-permissions-page .fp-sort-filter {
+  width: 190px;
+  height: 38px;
+  min-width: 190px;
+  flex: 0 0 190px;
+}
+
+.feature-permissions-page .fp-reset-btn {
+ width: 38px;
+  min-width: 38px;
+  flex: 0 0 38px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+@media (max-width: 1200px) and (min-width: 993px) {
+  .feature-permissions-page .fp-list-toolbar {
+    gap: 14px;
+  }
+
+  .feature-permissions-page .fp-list-filters {
+    gap: 8px;
+  }
+
+  .feature-permissions-page .fp-search {
+    width: 210px;
+    min-width: 160px;
+    flex-basis: 210px;
+  }
+
+  .feature-permissions-page .fp-status-filter {
+    width: 132px;
+    min-width: 132px;
+    flex-basis: 132px;
+  }
+
+  .feature-permissions-page .fp-sort-filter {
+    width: 174px;
+    min-width: 174px;
+    flex-basis: 174px;
+  }
+
+  .feature-permissions-page .fp-reset-btn {
+    width: 84px;
+    min-width: 84px;
+    flex-basis: 84px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media (max-width: 992px) {
+  .feature-permissions-page .fp-list-filters {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .feature-permissions-page .fp-search {
+    max-width: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .feature-permissions-page .fp-search,
+  .feature-permissions-page .fp-status-filter,
+  .feature-permissions-page .fp-sort-filter,
+  .feature-permissions-page .fp-reset-btn {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    flex: 0 0 100%;
   }
 }

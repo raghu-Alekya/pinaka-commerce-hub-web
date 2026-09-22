@@ -19,13 +19,13 @@
 .plan-details-back-icon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   border: 1px solid #d8e5f4;
   border-radius: 12px;
   background: #fff;
   color: #0873f9;
-  font-size: 24px;
+  font-size: 15px;
   box-sizing: border-box;
 }
 

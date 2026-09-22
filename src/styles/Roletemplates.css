@@ -325,24 +325,33 @@
   font-size: 13px;
 }
 
-.role-reset-btn {
-  display: inline-flex;
+.role-reset-icon-btn {
+  width: 40px;
   height: 40px;
-  min-width: 92px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid #d7e4f2;
   border-radius: 7px;
-  color: #684ee3;
   background: #fff;
+  color: #684ee3;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.role-reset-btn:hover {
+.role-reset-icon-btn:hover {
   border-color: #a9baff;
   background: #f7f6ff;
+  color: #5b43d1;
+}
+
+.role-reset-icon-btn i {
+  font-size: 16px;
+}
+
+.role-reset-icon-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Updated seven-column table */
@@ -1640,7 +1649,7 @@
 .role-table thead tr,
 .role-table thead th,
 .role-table th.role-actions-col {
-  background: #f1f7ff !important;
+  background: #f1f3fd !important;
 }
 
 .role-table thead th {
@@ -2353,4 +2362,443 @@
     min-width: 0 !important;
     max-width: none !important;
   }
+}
+
+
+/* =========================================================
+   FINAL ROLE TEMPLATE UPDATES
+   - Tender-style table sorting
+   - Two-line Created At / Updated At values
+   - Active / Inactive status dropdown colors
+   - Refined delete confirmation popup
+   ========================================================= */
+
+/* Sorting control */
+.role-filters select {
+  min-width: 155px;
+  box-sizing: border-box;
+}
+
+.role-filters select:last-of-type {
+  min-width: 188px;
+}
+
+/* Active / Inactive form status dropdown */
+.role-create-fields-grid .role-status-field .role-select-wrap {
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-active {
+  border-color: #b8ead2;
+  background: #f7fffb;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-active select {
+  color: #00a762;
+  font-weight: 600;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-inactive {
+  border-color: #f4c3cb;
+  background: #fff9fa;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-inactive select {
+  color: #e34d5b;
+  font-weight: 600;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-active > i {
+  color: #00a762;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-inactive > i {
+  color: #e34d5b;
+}
+
+/* Table date + time: same visual pattern as Tender */
+.role-table td.role-created-cell,
+.role-table td.role-updated-cell {
+  white-space: normal !important;
+  vertical-align: middle;
+  line-height: 1.25;
+}
+
+.role-date-value,
+.role-time-value {
+  display: block;
+  white-space: nowrap;
+}
+
+.role-date-value {
+  color: #173861;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.role-time-value {
+  margin-top: 2px;
+  color: #6c86ad;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+/* Refined delete confirmation popup */
+.role-delete-overlay {
+  background: rgba(15, 27, 55, 0.52);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.role-delete-modal {
+  max-width: 420px;
+  padding: 26px 28px 24px;
+  border: 1px solid #e6ebf3;
+  border-radius: 12px;
+  box-shadow: 0 20px 55px rgba(20, 35, 75, 0.22);
+}
+
+.role-delete-icon {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 14px;
+  color: #e34d5b;
+  background: #fff1f3;
+  border: 1px solid #ffd9de;
+}
+
+.role-delete-modal h3 {
+  margin-bottom: 8px;
+  color: #10254a;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.role-delete-modal p {
+  margin: 0 0 5px;
+  color: #607da9;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.role-delete-modal p strong {
+  color: #173861;
+  font-weight: 650;
+}
+
+.role-delete-actions {
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.role-delete-actions .role-secondary-btn,
+.role-delete-actions .role-delete-confirm-btn {
+  min-width: 112px;
+  height: 40px;
+}
+
+.role-delete-actions .role-secondary-btn {
+  border-color: #d7e3f0;
+  color: #25466f;
+  background: #fff;
+}
+
+.role-delete-actions .role-delete-confirm-btn {
+  border-color: #e34d5b;
+  background: #e34d5b;
+  box-shadow: 0 4px 10px rgba(227, 77, 91, 0.14);
+}
+
+.role-delete-actions .role-delete-confirm-btn:hover {
+  border-color: #c93443;
+  background: #c93443;
+}
+
+/* Keep the edit action clearly blue */
+.role-table .role-actions .role-edit-action {
+  color: #1677e8 !important;
+  background: #f2f7ff !important;
+  border-color: #d8e8ff !important;
+}
+
+.role-table .role-actions .role-edit-action:hover {
+  color: #0b63c7 !important;
+  background: #e8f2ff !important;
+  border-color: #bcd9ff !important;
+}
+
+/* Mobile filter stack */
+@media (max-width: 1100px) {
+  .role-filters select:last-of-type {
+    min-width: 0;
+  }
+}
+
+/* =========================================================
+   FINAL ROLE TEMPLATE UI UPDATE
+   - Fixed outer page heading: Create Role Template
+   - Dynamic card heading: Add/Edit Role Template Details
+   - Edit button stays disabled until a field actually changes
+   - Store Type reference delete popup styling
+   - Active / Inactive select colors
+   ========================================================= */
+
+/* Outer page heading must stay fixed in both create and edit modes. */
+.role-templates-page-heading h1 {
+  margin: 0 0 5px;
+  color: #10254a;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* Creation/edit card heading changes with the mode. */
+.role-card-heading h2 {
+  color: #10264d;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Active status — Store Type reference green treatment. */
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-active {
+  border: 1px solid #b8ead2 !important;
+  background: #f7fffb !important;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-active select {
+  color: #00a762 !important;
+  font-weight: 600;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-active > i {
+  color: #00a762 !important;
+}
+
+/* Inactive status — Store Type reference red treatment. */
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-inactive {
+  border: 1px solid #f4c3cb !important;
+  background: #fff9fa !important;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-inactive select {
+  color: #e5455d !important;
+  font-weight: 600;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-inactive > i {
+  color: #e5455d !important;
+}
+
+/* Update/Create button disabled state. In edit mode it is disabled until a field changes. */
+.role-template-submit-button:disabled {
+  color: #9aa7bb !important;
+  background: #e3e5ec !important;
+  border-color: #e3e5ec !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+}
+
+.role-template-submit-button:not(:disabled) {
+  color: #fff;
+  background: #684ee3;
+  border-color: #684ee3;
+  box-shadow: 0 4px 10px rgba(104, 78, 227, 0.16);
+}
+
+/* =========================================================
+   DELETE POPUP — Store Type reference
+   ========================================================= */
+
+.role-delete-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 27, 55, 0.48) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.role-delete-modal {
+  width: min(450px, calc(100vw - 40px));
+  max-width: 450px;
+  padding: 32px 32px 31px;
+  box-sizing: border-box;
+  border: 0 !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 20px 55px rgba(20, 35, 75, 0.20) !important;
+  text-align: center;
+}
+
+.role-delete-icon {
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  margin: 0 auto 16px;
+  border: 0 !important;
+  border-radius: 50%;
+  color: #f43d60 !important;
+  background: #ffe8ee !important;
+  font-size: 25px;
+}
+
+.role-delete-modal h3 {
+  margin: 0 0 13px;
+  color: #10254a !important;
+  font-size: 24px !important;
+  line-height: 1.25;
+  font-weight: 500 !important;
+}
+
+.role-delete-modal p {
+  margin: 0 0 8px;
+  color: #5877aa !important;
+  font-size: 15px !important;
+  line-height: 1.5;
+}
+
+.role-delete-modal p strong {
+  color: #5877aa !important;
+  font-weight: 650;
+}
+
+.role-delete-modal p:last-of-type {
+  margin-bottom: 0;
+  color: #f43d60 !important;
+  font-size: 14px !important;
+  font-weight: 500;
+}
+
+.role-delete-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 27px;
+}
+
+.role-delete-actions .role-secondary-btn,
+.role-delete-actions .role-delete-confirm-btn {
+  width: 187px;
+  min-width: 0;
+  height: 47px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.role-delete-actions .role-secondary-btn {
+  border: 1px solid #aebbd0 !important;
+  color: #8090a8 !important;
+  background: #fff !important;
+}
+
+.role-delete-actions .role-secondary-btn:hover {
+  border-color: #8fa1bb !important;
+  color: #65758e !important;
+  background: #f8fafc !important;
+}
+
+.role-delete-actions .role-delete-confirm-btn {
+  border: 1px solid #f43d60 !important;
+  color: #fff !important;
+  background: #f43d60 !important;
+  box-shadow: none !important;
+}
+
+.role-delete-actions .role-delete-confirm-btn:hover {
+  border-color: #e63255 !important;
+  background: #e63255 !important;
+}
+
+@media (max-width: 560px) {
+  .role-delete-modal {
+    padding: 28px 20px 24px;
+  }
+
+  .role-delete-actions {
+    flex-direction: column;
+  }
+
+  .role-delete-actions .role-secondary-btn,
+  .role-delete-actions .role-delete-confirm-btn {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   CLICKABLE ROLE TEMPLATE ROW
+   - Entire table row can be selected/clicked
+   - Clear hover state for the complete row
+   - Keyboard focus support
+   - Edit/Delete action buttons remain separate
+   ========================================================= */
+
+.role-table tbody tr.role-template-clickable-row {
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.role-table tbody tr.role-template-clickable-row > td {
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+
+/* Complete row hover */
+.role-table tbody tr.role-template-clickable-row:hover > td {
+  background: #f7f9ff;
+}
+
+/* Keep the sticky Actions cell visually connected to the row */
+.role-table tbody tr.role-template-clickable-row:hover > td.role-actions {
+  background: #f7f9ff;
+  box-shadow: -6px 0 10px rgba(28, 43, 78, 0.06);
+}
+
+/* Keyboard focus when the row is reached with Tab */
+.role-table tbody tr.role-template-clickable-row:focus {
+  outline: none;
+}
+
+.role-table tbody tr.role-template-clickable-row:focus-visible > td {
+  background: #f7f9ff;
+  box-shadow: inset 0 2px 0 #cfdcff, inset 0 -2px 0 #cfdcff;
+}
+
+.role-table tbody tr.role-template-clickable-row:focus-visible > td:first-child {
+  box-shadow:
+    inset 2px 0 0 #cfdcff,
+    inset 0 2px 0 #cfdcff,
+    inset 0 -2px 0 #cfdcff;
+}
+
+.role-table tbody tr.role-template-clickable-row:focus-visible > td:last-child {
+  box-shadow:
+    inset -2px 0 0 #cfdcff,
+    inset 0 2px 0 #cfdcff,
+    inset 0 -2px 0 #cfdcff;
+}
+
+/* Row press feedback */
+.role-table tbody tr.role-template-clickable-row:active > td {
+  background: #f1f5ff;
+}
+
+/* The action controls remain independent clickable controls */
+.role-table tbody tr.role-template-clickable-row .role-actions,
+.role-table tbody tr.role-template-clickable-row .role-actions button {
+  cursor: pointer;
 }

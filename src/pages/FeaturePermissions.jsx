@@ -69,11 +69,20 @@ export default function FeaturePermissions() {
   const [editingId, setEditingId] =
     useState(null);
 
+  const [permissionToDelete, setPermissionToDelete] =
+    useState(null);
+
+  const [isDeleting, setIsDeleting] =
+    useState(false);
+
   const [search, setSearch] =
     useState("");
 
   const [statusFilter, setStatusFilter] =
     useState("All Statuses");
+
+  const [sortBy, setSortBy] =
+    useState("newest");
 
   const isEditing = editingId !== null;
 
@@ -81,6 +90,34 @@ export default function FeaturePermissions() {
     form.key.trim() !== "" &&
     form.name.trim() !== "" &&
     String(form.featureId).trim() !== "";
+
+  const originalEditingPermission = isEditing
+    ? permissions.find(
+        (item) => String(item.id) === String(editingId)
+      )
+    : null;
+
+  const originalEditingStatus =
+    String(originalEditingPermission?.status || "ACTIVE").toUpperCase() === "ACTIVE"
+      ? "Active"
+      : "Inactive";
+
+  const hasEditChanges =
+    !isEditing ||
+    !originalEditingPermission ||
+    form.key.trim().toUpperCase() !==
+      String(originalEditingPermission.key || "").trim().toUpperCase() ||
+    form.name.trim() !==
+      String(originalEditingPermission.name || "").trim() ||
+    String(form.featureId) !==
+      String(originalEditingPermission.featureId ?? "") ||
+    form.description.trim() !==
+      String(originalEditingPermission.description || "").trim() ||
+    form.status !== originalEditingStatus;
+
+  const canSubmit =
+    requiredFieldsComplete &&
+    (!isEditing || hasEditChanges);
 
   const normalizeStatus = (status) =>
     String(status || "ACTIVE").toUpperCase() === "ACTIVE"
@@ -325,23 +362,53 @@ export default function FeaturePermissions() {
      DELETE PERMISSION
      ========================================================= */
 
-  const deletePermission = async (permissionId) => {
-    const permission = permissions.find(
-      (item) => String(item.id) === String(permissionId)
-    );
-    if (!permission?.featureId || !permissionId) {
+  const openDeleteConfirmation = (permission) => {
+    setPermissionToDelete(permission);
+  };
+
+  const closeDeleteConfirmation = () => {
+    if (isDeleting) return;
+    setPermissionToDelete(null);
+  };
+
+  const confirmDeletePermission = async () => {
+    const permission = permissionToDelete;
+    if (!permission) return;
+
+    const permissionId = permission.id;
+    const featureId = permission.featureId;
+
+    if (
+      permissionId === undefined ||
+      permissionId === null ||
+      featureId === undefined ||
+      featureId === null ||
+      String(permissionId).trim() === "" ||
+      String(featureId).trim() === ""
+    ) {
       window.alert("Permission ID or feature ID is missing.");
       return;
     }
 
-    try {
-      await deleteFeaturePermission(permission.featureId, permissionId);
-      await loadData();
+    setIsDeleting(true);
 
-      if (String(editingId) === String(permissionId)) clearForm();
+    try {
+      await deleteFeaturePermission(featureId, permissionId);
+
+      setPermissions((prev) =>
+        prev.filter((item) => String(item.id) !== String(permissionId))
+      );
+
+      if (String(editingId) === String(permissionId)) {
+        clearForm();
+      }
+
+      setPermissionToDelete(null);
     } catch (error) {
       console.error("Delete permission failed:", error);
       window.alert(error?.message || "Unable to delete permission.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -354,6 +421,10 @@ export default function FeaturePermissions() {
 
     setStatusFilter(
       "All Statuses"
+    );
+
+    setSortBy(
+      "newest"
     );
   };
 
@@ -368,25 +439,35 @@ export default function FeaturePermissions() {
           .trim()
           .toLowerCase();
 
-      return permissions.filter(
+      const getCreatedTime = (item) => {
+        const parsed = new Date(item.createdAt || "").getTime();
+        return Number.isNaN(parsed) ? 0 : parsed;
+      };
+
+      const getUpdatedTime = (item) => {
+        const parsed = new Date(item.updatedAt || "").getTime();
+        return Number.isNaN(parsed) ? 0 : parsed;
+      };
+
+      const filtered = permissions.filter(
         (item) => {
           const featureName =
             item.featureName || "";
 
           const matchesSearch =
-            item.key
+            String(item.key || "")
               .toLowerCase()
               .includes(query) ||
 
-            item.name
+            String(item.name || "")
               .toLowerCase()
               .includes(query) ||
 
-            item.description
+            String(item.description || "")
               .toLowerCase()
               .includes(query) ||
 
-            featureName
+            String(featureName)
               .toLowerCase()
               .includes(query);
 
@@ -402,26 +483,62 @@ export default function FeaturePermissions() {
           );
         }
       );
+
+      return [...filtered].sort((a, b) => {
+        if (sortBy === "oldest") {
+          return getCreatedTime(a) - getCreatedTime(b);
+        }
+
+        if (sortBy === "updated") {
+          return getUpdatedTime(b) - getUpdatedTime(a);
+        }
+
+        if (sortBy === "name-asc") {
+          return String(a.name || "").localeCompare(String(b.name || ""));
+        }
+
+        if (sortBy === "name-desc") {
+          return String(b.name || "").localeCompare(String(a.name || ""));
+        }
+
+        return getCreatedTime(b) - getCreatedTime(a);
+      });
     }, [
       permissions,
       search,
       statusFilter,
+      sortBy,
     ]);
 
   const formatPermissionDate = (value) => {
-    if (!value) return "—";
+    if (!value) {
+      return {
+        date: "—",
+        time: "",
+      };
+    }
 
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "—";
+    const parsedDate = new Date(value);
 
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+    if (Number.isNaN(parsedDate.getTime())) {
+      return {
+        date: "—",
+        time: "",
+      };
+    }
+
+    return {
+      date: parsedDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      time: parsedDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }),
+    };
   };
 
   return (
@@ -727,14 +844,14 @@ export default function FeaturePermissions() {
               onClick={clearForm}
             >
 
-              Clear
+              Cancel
 
             </button>
 
             <button
               type="submit"
               className="fp-btn fp-btn-primary"
-              disabled={!requiredFieldsComplete}
+              disabled={!canSubmit}
             >
 
               {isEditing
@@ -804,7 +921,7 @@ export default function FeaturePermissions() {
               >
 
                 <option value="All Statuses">
-                  All Statuses
+                  All Status
                 </option>
 
                 <option value="Active">
@@ -821,19 +938,60 @@ export default function FeaturePermissions() {
 
             </div>
 
+            {/* SORTING FILTER */}
+
+            <div className="fp-sort-filter">
+
+              <select
+                value={
+                  sortBy
+                }
+                onChange={(event) =>
+                  setSortBy(
+                    event.target.value
+                  )
+                }
+                autoComplete="off"
+                aria-label="Sort permissions"
+              >
+
+                <option value="newest">
+                  Newly Created First
+                </option>
+
+                <option value="oldest">
+                  Oldest Created First
+                </option>
+
+                <option value="updated">
+                  Recently Updated First
+                </option>
+
+                <option value="name-asc">
+                  Name A-Z
+                </option>
+
+                <option value="name-desc">
+                  Name Z-A
+                </option>
+
+              </select>
+
+              <i className="bi bi-chevron-down" />
+
+            </div>
+
             {/* RESET FILTER */}
 
-            <button
+           <button
               type="button"
               className="fp-reset-btn"
-              onClick={resetFilters}
-            >
-
-              <i className="bi bi-arrow-repeat" />
-
-              Reset
-
-            </button>
+              title="Reset filters"
+              aria-label="Reset filters"
+               onClick={resetFilters}
+               >
+             <i className="bi bi-arrow-counterclockwise" />
+             </button>
 
           </div>
 
@@ -965,11 +1123,33 @@ export default function FeaturePermissions() {
                     </td>
 
                     <td className="fp-date-cell">
-                      {formatPermissionDate(permission.createdAt)}
+                      {(() => {
+                        const created = formatPermissionDate(permission.createdAt);
+
+                        return (
+                          <div className="fp-date-stack">
+                            <span className="fp-date-value">{created.date}</span>
+                            {created.time && (
+                              <span className="fp-time-value">{created.time}</span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     <td className="fp-date-cell">
-                      {formatPermissionDate(permission.updatedAt)}
+                      {(() => {
+                        const updated = formatPermissionDate(permission.updatedAt);
+
+                        return (
+                          <div className="fp-date-stack">
+                            <span className="fp-date-value">{updated.date}</span>
+                            {updated.time && (
+                              <span className="fp-time-value">{updated.time}</span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     {/* =========================
@@ -1005,8 +1185,8 @@ export default function FeaturePermissions() {
                           className="delete delete-button"
                           aria-label={`Delete ${permission.name}`}
                           onClick={() =>
-                            deletePermission(
-                              permission.id
+                            openDeleteConfirmation(
+                              permission
                             )
                           }
                         >
@@ -1082,6 +1262,65 @@ export default function FeaturePermissions() {
         </div>
 
       </section>
+
+      {permissionToDelete && (
+        <div
+          className="fp-delete-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeDeleteConfirmation();
+            }
+          }}
+        >
+          <div
+            className="fp-delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="fp-delete-modal-title"
+          >
+            <div className="fp-delete-modal-icon">
+              <i className="bi bi-trash3" />
+            </div>
+
+            <h2 id="fp-delete-modal-title">Delete Permission?</h2>
+
+            <p className="fp-delete-modal-message">
+              Are you sure you want to delete{" "}
+              <strong>
+                {permissionToDelete.name ||
+                  permissionToDelete.key ||
+                  "this permission"}
+              </strong>
+              ?
+            </p>
+
+            <p className="fp-delete-modal-warning">
+              This action cannot be undone.
+            </p>
+
+            <div className="fp-delete-modal-actions">
+              <button
+                type="button"
+                className="fp-delete-cancel-btn"
+                onClick={closeDeleteConfirmation}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="fp-delete-confirm-btn"
+                onClick={confirmDeletePermission}
+                disabled={isDeleting}
+              >
+                <i className="bi bi-trash3" />
+                {isDeleting ? "Deleting..." : "Delete Permission"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

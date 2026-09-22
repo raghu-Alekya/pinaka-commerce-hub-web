@@ -113,43 +113,28 @@ function storeTypeDisplayName(value, storeTypes) {
     : String(value ?? "");
 }
 
-function today() {
-  return new Date().toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
-}
-
 const planRowStyle = {
   display: "grid",
   gridTemplateColumns:
-    "75px 45px minmax(80px, 1fr) 100px 105px 85px 80px 100px 100px 65px",
-  gap: "6px",
+    "100px 100px minmax(100px, 1fr) 130px 120px 100px 90px 110px 110px 80px",
+  gap: "10px",
   alignItems: "center",
+  minWidth: "1150px",
 };
+
 export default function CreatePlan() {
   const navigate = useNavigate();
 
-  // ============================================================
-  // STORE TYPE STATE
-  // ============================================================
   const [storeTypes, setStoreTypes] = useState([]);
   const [storeTypesLoading, setStoreTypesLoading] = useState(false);
   const [storeTypesError, setStoreTypesError] = useState("");
 
-  // ============================================================
-  // PLAN API STATE
-  // ============================================================
   const [plans, setPlans] = useState([]);
   const [plansLoading, setPlansLoading] = useState(false);
   const [plansError, setPlansError] = useState("");
   const [savingPlan, setSavingPlan] = useState(false);
   const [deletingPlan, setDeletingPlan] = useState(false);
 
-  // ============================================================
-  // FORM STATE
-  // ============================================================
   const [form, setForm] = useState(emptyForm);
   const [planStep, setPlanStep] = useState(1);
   const [editingId, setEditingId] = useState(null);
@@ -159,24 +144,39 @@ export default function CreatePlan() {
     useState(false);
   const [storeTypeFeaturesError, setStoreTypeFeaturesError] = useState("");
 
-  // ============================================================
-  // FILTER / UI STATE
-  // ============================================================
   const [search, setSearch] = useState("");
   const [billingFilter, setBillingFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [message, setMessage] = useState("");
 
-  // ============================================================
-  // LOAD STORE TYPES
-  // Existing Store Type API behavior is preserved.
-  // ============================================================
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // FIELD VALIDATIONS
+  // FIELD VALIDATIONS
+  const codeError = useMemo(() => {
+    if (!form.code) return "";
+    // Allows letters, numbers, underscores (_), and hyphens (-)
+    if (!/^[a-zA-Z0-9_-]+$/.test(form.code)) {
+      return "Plan Code can only contain letters, numbers, underscores (_), and hyphens (-).";
+    }
+    return "";
+  }, [form.code]);
+
+  const nameError = useMemo(() => {
+    if (!form.name) return "";
+    // Allows letters, numbers, underscores (_), hyphens (-), and spaces
+    if (!/^[a-zA-Z0-9_\- ]+$/.test(form.name)) {
+      return "Plan Name can only contain letters, numbers, underscores (_), hyphens (-), and spaces.";
+    }
+    return "";
+  }, [form.name]);
+
   async function fetchStoreTypes() {
     try {
       setStoreTypesLoading(true);
       setStoreTypesError("");
-
       const response = await storeTypesApi.getAll();
       const normalized = Array.isArray(response?.storeTypes)
         ? response.storeTypes
@@ -187,52 +187,49 @@ export default function CreatePlan() {
             : Array.isArray(response)
               ? response
               : [];
-
-      console.log("Store Types API response:", response);
-      console.log("Normalized store types:", normalized);
       setStoreTypes(normalized);
     } catch (error) {
-      console.error("Failed to fetch store types:", error);
-
       setStoreTypesError(error?.message || "Failed to load store types.");
-
       setStoreTypes([]);
     } finally {
       setStoreTypesLoading(false);
     }
   }
+  function formatDate(value) {
+    if (!value) {
+      return "-";
+    }
 
-  // ============================================================
-  // LOAD PLANS FROM API
-  // GET /plans
-  // Plans are loaded only from the API.
-  // ============================================================
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
   async function fetchPlans() {
     try {
       setPlansLoading(true);
       setPlansError("");
-
       const data = await listPlans();
       const nextPlans = Array.isArray(data) ? data : [];
-
-      console.log("Plans loaded:", nextPlans);
       setPlans(nextPlans);
     } catch (error) {
-      console.error("Failed to fetch plans:", error);
-
       setPlansError(error?.message || "Failed to load plans.");
-
-      // Do not use local/static plan data as a fallback.
       setPlans([]);
     } finally {
       setPlansLoading(false);
     }
   }
 
-  // ============================================================
-  // INITIAL DATA LOAD
-  // Fixed the broken useEffect from the uploaded file.
-  // ============================================================
   useEffect(() => {
     fetchStoreTypes();
     fetchPlans();
@@ -322,56 +319,54 @@ export default function CreatePlan() {
     });
   }, [plans, search, billingFilter, statusFilter]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, billingFilter, statusFilter]);
+
+  const totalPlans = filteredPlans.length;
+  const totalPages = Math.ceil(totalPlans / itemsPerPage) || 1;
+
+  const paginatedPlans = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredPlans.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredPlans, currentPage]);
+
   const canContinueStepOne =
-    form.code.trim() && form.name.trim() && form.applicableStoreType;
+    form.code.trim() &&
+    form.name.trim() &&
+    form.applicableStoreType &&
+    !codeError &&
+    !nameError;
 
   const canContinuePricing =
     form.billingModel &&
     form.currency &&
     form.billingCycle &&
     form.basePrice !== "";
+
   const canContinueFeatures = includedFeatures.length > 0;
 
   function canMoveToStep(targetStep) {
-    if (targetStep <= planStep) {
-      return true;
-    }
-
-    if (targetStep >= 2 && !canContinueStepOne) {
-      return false;
-    }
-
-    if (targetStep >= 3 && !canContinuePricing) {
-      return false;
-    }
-
-    if (targetStep >= 4 && !canContinueFeatures) {
-      return false;
-    }
-
+    if (targetStep <= planStep) return true;
+    if (targetStep >= 2 && !canContinueStepOne) return false;
+    if (targetStep >= 3 && !canContinuePricing) return false;
+    if (targetStep >= 4 && !canContinueFeatures) return false;
     return true;
   }
 
   function handleStepClick(step) {
-    // Always allow going backwards
     if (step < planStep) {
       setPlanStep(step);
       return;
     }
-
-    // Allow current step
-    if (step === planStep) {
-      return;
-    }
-
-    // Only move forward when current step is valid
+    if (step === planStep) return;
     if (canMoveToStep(step)) {
       setPlanStep(step);
     }
   }
+
   function updateField(event) {
     const { name, value } = event.target;
-
     setForm((current) => ({
       ...current,
       [name]: name === "code" ? value.toUpperCase() : value,
@@ -397,13 +392,9 @@ export default function CreatePlan() {
     setSearch("");
     setBillingFilter("");
     setStatusFilter("");
+    setCurrentPage(1);
   }
 
-  // ============================================================
-  // CREATE / UPDATE PLAN
-  // POST /plans for create
-  // PUT /plans/:id for update
-  // ============================================================
   async function createOrUpdatePlan() {
     const planData = {
       ...form,
@@ -417,7 +408,6 @@ export default function CreatePlan() {
       setMessage("");
 
       let savedPlan;
-
       if (editingId) {
         savedPlan = await updatePlan(editingId, planData, includedFeatures);
         setMessage("Plan updated successfully.");
@@ -426,28 +416,16 @@ export default function CreatePlan() {
         setMessage("Plan created successfully.");
       }
 
-      console.log("Plan saved result:", savedPlan);
-
       const refreshedPlans = await listPlans();
-      const parsedPlans = Array.isArray(refreshedPlans) ? refreshedPlans : [];
-
-      console.log("Plans after save:", parsedPlans);
-      setPlans(parsedPlans);
-
+      setPlans(Array.isArray(refreshedPlans) ? refreshedPlans : []);
       resetCreationForm();
     } catch (error) {
-      console.error("Failed to save plan:", error);
-
       setMessage(error?.message || "Failed to save plan.");
     } finally {
       setSavingPlan(false);
     }
   }
 
-  // ============================================================
-  // EDIT PLAN
-  // Loads all API-backed fields into the existing form.
-  // ============================================================
   function editPlan(plan) {
     setEditingId(plan.id);
 
@@ -488,14 +466,8 @@ export default function CreatePlan() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // ============================================================
-  // DELETE PLAN
-  // DELETE /plans/:id
-  // ============================================================
   async function confirmDelete() {
-    if (!deleteTarget?.id || deletingPlan) {
-      return;
-    }
+    if (!deleteTarget?.id || deletingPlan) return;
 
     try {
       setDeletingPlan(true);
@@ -504,17 +476,10 @@ export default function CreatePlan() {
       await deletePlan(deleteTarget.id);
 
       const refreshedPlans = await listPlans();
-      const parsedPlans = Array.isArray(refreshedPlans) ? refreshedPlans : [];
-
-      console.log("Plans after delete:", parsedPlans);
-      setPlans(parsedPlans);
-
+      setPlans(Array.isArray(refreshedPlans) ? refreshedPlans : []);
       setMessage(`${deleteTarget.name} deleted successfully.`);
-
       setDeleteTarget(null);
     } catch (error) {
-      console.error("Failed to delete plan:", error);
-
       setMessage(error?.message || "Failed to delete plan.");
     } finally {
       setDeletingPlan(false);
@@ -530,6 +495,7 @@ export default function CreatePlan() {
           after saving.
         </p>
       </div>
+
       <div className="plan-stepper">
         {[
           ["Plan Information", 1],
@@ -553,42 +519,57 @@ export default function CreatePlan() {
           </div>
         ))}
       </div>
+
       {planStep === 1 && (
         <section className="plan-form-card">
           <div className="plan-card-heading">
             <div className="plan-heading-icon">
               <i className="bi bi-file-earmark-text" />
             </div>
-
             <div>
-              <h2>Plan Information</h2>
+              <h2>{editingId ? "Edit Plan" : "Plan Information"}</h2>
               <p>Provide the basic details for the subscription plan.</p>
             </div>
           </div>
 
-          {/* ONE 3-column grid: Code | Name | Store Type */}
+          {/* 3-COLUMN GRID */}
           <div className="plan-create-grid three-columns">
+            {/* ROW 1, COL 1: PLAN CODE */}
             <label className="plan-field">
               <span>
                 Plan Code <b>*</b>
               </span>
-              <div className="plan-input-wrap">
+              <div
+                className={`plan-input-wrap ${codeError ? "input-error" : ""}`}
+              >
                 <i className="bi bi-tag" />
                 <input
                   {...textInputProps}
                   name="code"
                   value={form.code}
                   onChange={updateField}
-                  placeholder="e.g. Enter plan code"
+                  placeholder="e.g. ENTER_PLAN_CODE"
                 />
+              </div>
+              <div className="plan-field-slot">
+                {codeError ? (
+                  <small className="plan-field-error">{codeError}</small>
+                ) : (
+                  <small className="plan-field-hint">
+                    {/* Unique identifier for this plan. */}
+                  </small>
+                )}
               </div>
             </label>
 
+            {/* ROW 1, COL 2: PLAN NAME */}
             <label className="plan-field">
               <span>
                 Plan Name <b>*</b>
               </span>
-              <div className="plan-input-wrap">
+              <div
+                className={`plan-input-wrap ${nameError ? "input-error" : ""}`}
+              >
                 <i className="bi bi-type" />
                 <input
                   {...textInputProps}
@@ -598,8 +579,18 @@ export default function CreatePlan() {
                   placeholder="e.g. Enter plan name"
                 />
               </div>
+              <div className="plan-field-slot">
+                {nameError ? (
+                  <small className="plan-field-error">{nameError}</small>
+                ) : (
+                  <small className="plan-field-hint">
+                    {/* Display name of the plan. */}
+                  </small>
+                )}
+              </div>
             </label>
 
+            {/* ROW 1, COL 3: APPLICABLE STORE TYPE */}
             <label className="plan-field">
               <span>
                 Applicable Business/Store Type <b>*</b>
@@ -630,21 +621,22 @@ export default function CreatePlan() {
                   </option>
                 ))}
               </select>
-              {storeTypesError && (
-                <small className="plan-field-error">{storeTypesError}</small>
-              )}
+              <div className="plan-field-slot">
+                {storeTypesError ? (
+                  <small className="plan-field-error">{storeTypesError}</small>
+                ) : (
+                  <small className="plan-field-hint">
+                    Applicable store type.
+                  </small>
+                )}
+              </div>
             </label>
-          </div>
-          <div
-            className="plan-create-grid three-columns"
-            style={{ marginTop: 14 }}
-          >
-            {/* Status */}
+
+            {/* ROW 2, COL 1: STATUS */}
             <label className="plan-field">
               <span>
                 Status <b>*</b>
               </span>
-
               <select
                 autoComplete="off"
                 name="status"
@@ -657,16 +649,19 @@ export default function CreatePlan() {
                 <option value="Active">● Active</option>
                 <option value="Inactive">● Inactive</option>
               </select>
+              <div className="plan-field-slot">
+                <small className="plan-field-hint">
+                  {/* Plan assignment status. */}
+                </small>
+              </div>
             </label>
 
-            {/* Description */}
-            <label className="plan-field">
+            {/* ROW 2, COL 2 & 3: DESCRIPTION (SPANS 2 COLUMNS) */}
+            <label className="plan-field span-two">
               <span>Description</span>
-
-              <div className="plan-textarea-wrap">
+              <div className="plan-input-wrap">
                 <i className="bi bi-file-earmark-text" />
-
-                <textarea
+                <input
                   {...textInputProps}
                   name="description"
                   value={form.description}
@@ -674,82 +669,14 @@ export default function CreatePlan() {
                   placeholder="Describe the plan, its features and target audience..."
                 />
               </div>
+              <div className="plan-field-slot">
+                <small className="plan-field-hint">
+                  {/* Brief summary of plan highlights. */}
+                </small>
+              </div>
             </label>
           </div>
 
-          {/* <div className="plan-create-grid plan-bottom-grid">
-            <label className="plan-field">
-              <span>
-                Applicable Business/Store Type <b>*</b>
-              </span>
-
-              <select
-                name="applicableStoreType"
-                value={form.applicableStoreType}
-                onChange={updateField}
-                disabled={storeTypesLoading}
-              >
-                <option value="">
-                  {storeTypesLoading
-                    ? "Loading store types..."
-                    : "Select store type"}
-                </option>
-
-                {storeTypes.map((storeType) => (
-                  <option
-                    key={storeType.id ?? storeType._id ?? storeType.code}
-                    value={
-                      storeType.name ??
-                      storeType.storeTypeName ??
-                      storeType.code
-                    }
-                  >
-                    {storeType.name ??
-                      storeType.storeTypeName ??
-                      storeType.code}
-                  </option>
-                ))}
-              </select>
-
-              {storeTypesError && (
-                <small className="plan-field-error">{storeTypesError}</small>
-              )}
-            </label>
-
-            <label className="plan-field">
-              <span>
-                Status <b>*</b>
-              </span>
-
-              <select
-                autoComplete="off"
-                name="status"
-                value={form.status}
-                onChange={updateField}
-                className={`plan-status-select ${
-                  form.status === "Inactive" ? "inactive" : "active"
-                }`}
-              >
-                <option value="Active">● Active</option>
-                <option value="Inactive">● Inactive</option>
-              </select>
-            </label>
-          </div> */}
-          {/* Description at the bottom */}
-          {/* <label className="plan-field plan-description-field">
-            <span>Description</span>
-
-            <div className="plan-textarea-wrap">
-              <i className="bi bi-file-earmark-text" />
-              <textarea
-                {...textInputProps}
-                name="description"
-                value={form.description}
-                onChange={updateField}
-                placeholder="Describe the plan, its features and target audience..."
-              />
-            </div>
-          </label> */}
           <div className="plan-actions">
             <button
               type="button"
@@ -770,20 +697,19 @@ export default function CreatePlan() {
           </div>
         </section>
       )}
+
       {planStep === 2 && (
         <section className="plan-form-card">
           <div className="plan-card-heading">
             <div className="plan-heading-icon">
               <i className="bi bi-currency-rupee" />
             </div>
-
             <div>
               <h2>Pricing</h2>
               <p>Configure pricing, included resources, and trial period.</p>
             </div>
           </div>
 
-          {/* Row 1: Billing Model | Currency | Billing Cycle */}
           <div className="plan-pricing-grid three-columns">
             <label className="plan-field">
               <span>
@@ -837,13 +763,11 @@ export default function CreatePlan() {
             </label>
           </div>
 
-          {/* Row 2: Base Price | Included Stores | Included Terminals */}
           <div className="plan-pricing-grid three-columns">
             <label className="plan-field">
               <span>
                 Base Price <b>*</b>
               </span>
-
               <div className="plan-price-input">
                 <input
                   {...textInputProps}
@@ -862,7 +786,6 @@ export default function CreatePlan() {
               <span>
                 Included Stores <b>*</b>
               </span>
-
               <input
                 {...textInputProps}
                 name="includedStores"
@@ -877,7 +800,6 @@ export default function CreatePlan() {
               <span>
                 Included Terminals <b>*</b>
               </span>
-
               <input
                 {...textInputProps}
                 name="includedTerminals"
@@ -889,11 +811,9 @@ export default function CreatePlan() {
             </label>
           </div>
 
-          {/* Row 3: Additional Terminal | Additional User | Included Users */}
           <div className="plan-pricing-grid three-columns">
             <label className="plan-field">
               <span>Additional Terminal Price</span>
-
               <div className="plan-price-input">
                 <input
                   {...textInputProps}
@@ -910,7 +830,6 @@ export default function CreatePlan() {
 
             <label className="plan-field">
               <span>Additional User Price</span>
-
               <div className="plan-price-input">
                 <input
                   {...textInputProps}
@@ -929,7 +848,6 @@ export default function CreatePlan() {
               <span>
                 Included Users/Employees <b>*</b>
               </span>
-
               <input
                 {...textInputProps}
                 name="includedUsers"
@@ -941,11 +859,9 @@ export default function CreatePlan() {
             </label>
           </div>
 
-          {/* Row 4: Trial Period | Effective From | Empty */}
           <div className="plan-pricing-grid three-columns">
             <label className="plan-field">
               <span>Trial Period</span>
-
               <select
                 autoComplete="off"
                 name="trialPeriod"
@@ -959,20 +875,9 @@ export default function CreatePlan() {
                 <option value="30 days">30 Days</option>
               </select>
             </label>
-     <label className="plan-field">
-              <span>Included Users/Employees <b>*</b></span>
-              <input
-                {...textInputProps}
-                name="includedUsers"
-                type="number"
-                min="0"
-                value={form.includedUsers}
-                onChange={updateField}
-              />
-            </label>
+
             <label className="plan-field">
               <span>Effective From</span>
-
               <input
                 {...textInputProps}
                 name="effectiveFrom"
@@ -982,7 +887,6 @@ export default function CreatePlan() {
               />
             </label>
 
-            {/* Empty third column keeps the layout aligned */}
             <div />
           </div>
 
@@ -1006,14 +910,13 @@ export default function CreatePlan() {
           </div>
         </section>
       )}
-      ```
+
       {planStep === 3 && (
         <section className="plan-form-card">
           <div className="plan-card-heading">
             <div className="plan-heading-icon">
               <i className="bi bi-boxes" />
             </div>
-
             <div>
               <h2>Features</h2>
               <p>Select the features included in this plan.</p>
@@ -1114,6 +1017,7 @@ export default function CreatePlan() {
           </div>
         </section>
       )}
+
       {planStep === 4 && (
         <section className="plan-form-card plan-review-card">
           <div className="plan-card-heading">
@@ -1283,6 +1187,8 @@ export default function CreatePlan() {
           </div>
         </section>
       )}
+
+      {/* PLANS LIST CARD */}
       <section className="plans-list-card">
         <div className="plans-list-header">
           <div>
@@ -1328,13 +1234,16 @@ export default function CreatePlan() {
               onClick={resetFilters}
             >
               <i className="bi bi-arrow-counterclockwise" />
-              {/* Reset */}
             </button>
           </div>
         </div>
 
-        <div className="plans-table-wrap" style={{ overflowX: "auto" }}>
-          <div className="plans-table">
+        <div
+          className="plans-table-wrap"
+          style={{ overflowX: "auto", width: "100%" }}
+        >
+          <div className="plans-table" style={{ minWidth: "1150px" }}>
+            {/* HEADER ROW */}
             <div className="plans-row plans-row-head" style={planRowStyle}>
               <div>Plan Code</div>
               <div>Name</div>
@@ -1348,105 +1257,144 @@ export default function CreatePlan() {
               <div>Actions</div>
             </div>
 
-            {filteredPlans.map((plan) => (
-              <div className="plans-row" key={plan.id} style={planRowStyle}>
-                {/* Plan Code */}
-                <div className="plan-code-cell">
-                  <strong>{plan.code}</strong>
-                </div>
-
-                {/* Name - Navigation unchanged */}
-                <button
-                  type="button"
-                  className="plan-name-cell plan-name-clickable"
+            {/* DATA ROWS */}
+            {/* DATA ROWS */}
+            {paginatedPlans.map((plan) => {
+              const planId = plan.id ?? plan._id;
+              // FIXED ORDER: Check createdAt / updatedAt first
+              const createdAt =
+                plan.createdAt || plan.created_at || plan.createdOn;
+              const updatedAt =
+                plan.updatedAt || plan.updated_at || plan.updatedOn;
+              return (
+                <div
+                  className="plans-row"
+                  key={planId}
+                  style={{ ...planRowStyle, cursor: "pointer" }}
                   onClick={() =>
-                    navigate(`/plans/${plan.id}`, {
+                    navigate(`/plans/${planId}`, {
                       state: { plan },
                     })
                   }
                 >
-                  <strong>{plan.name}</strong>
-                </button>
+                  <div className="plan-code-cell">
+                    <strong>{plan.code || "—"}</strong>
+                  </div>
 
-                {/* Description - Separate column */}
-                <div className="plan-description-cell">
-                  {plan.description || "—"}
+                  <div className="plan-name-cell">
+                    <strong>{plan.name || "—"}</strong>
+                  </div>
+
+                  <div className="plan-description-cell">
+                    {plan.description || "—"}
+                  </div>
+
+                  <div>
+                    <span className="plan-type-badge">
+                      {plan.storeType || "—"}
+                    </span>
+                  </div>
+
+                  <div>{plan.billingModel || "—"}</div>
+
+                  <div className="plan-price-cell">
+                    {plan.currency} {plan.price}
+                    <small>/{plan.cycle ? plan.cycle.toLowerCase() : ""}</small>
+                  </div>
+
+                  <div>
+                    <span
+                      className={`plan-status ${
+                        plan.status === "Inactive" ? "inactive" : ""
+                      }`}
+                    >
+                      <i className="bi bi-circle-fill" />
+                      {plan.status || "Active"}
+                    </span>
+                  </div>
+
+                  {/* Created At - Date Only (e.g. "Sep 22, 2026") */}
+                  <div>{formatDate(createdAt)}</div>
+
+                  {/* Updated At - Date Only (e.g. "Sep 22, 2026") */}
+                  <div>{formatDate(updatedAt)}</div>
+
+                  <div className="plan-table-actions">
+                    <button
+                      type="button"
+                      title="Edit plan"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        editPlan(plan);
+                      }}
+                    >
+                      <i className="bi bi-pencil" />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="plan-delete-icon"
+                      title="Delete plan"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(plan);
+                      }}
+                    >
+                      <i className="bi bi-trash3" />
+                    </button>
+                  </div>
                 </div>
-
-                {/* Applicable Type */}
-                <div>
-                  <span className="plan-type-badge">{plan.storeType}</span>
-                </div>
-
-                {/* Billing Model */}
-                <div>{plan.billingModel}</div>
-
-                {/* Price */}
-                <div className="plan-price-cell">
-                  {plan.currency} {plan.price}
-                  <small>/{plan.cycle.toLowerCase()}</small>
-                </div>
-
-                {/* Status */}
-                <div>
-                  <span
-                    className={`plan-status ${
-                      plan.status === "Inactive" ? "inactive" : ""
-                    }`}
-                  >
-                    <i className="bi bi-circle-fill" />
-                    {plan.status}
-                  </span>
-                </div>
-
-                {/* Created At */}
-                <div>{plan.createdOn || "—"}</div>
-
-                {/* Updated At */}
-                <div>{plan.updatedOn || "—"}</div>
-
-                {/* Actions */}
-                <div className="plan-table-actions">
-                  <button
-                    type="button"
-                    title="Edit plan"
-                    onClick={() => editPlan(plan)}
-                  >
-                    <i className="bi bi-pencil" />
-                  </button>
-
-                  <button
-                    type="button"
-                    className="plan-delete-icon"
-                    title="Delete plan"
-                    onClick={() => setDeleteTarget(plan)}
-                  >
-                    <i className="bi bi-trash3" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
+        {/* PAGINATION UI (5 PER PAGE) */}
         <div className="plans-pagination">
           <span>
-            Showing 1 to {filteredPlans.length} of {plans.length} entries
+            Showing{" "}
+            {totalPlans === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, totalPlans)} of {totalPlans}{" "}
+            entries
           </span>
 
           <div>
-            <button type="button" aria-label="Previous page">
+            <button
+              type="button"
+              aria-label="Previous page"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            >
               <i className="bi bi-chevron-left" />
             </button>
-            <button type="button" className="active">
-              1
-            </button>
-            <button type="button" aria-label="Next page">
+
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (page) => (
+                <button
+                  key={page}
+                  type="button"
+                  className={currentPage === page ? "active" : ""}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </button>
+              ),
+            )}
+
+            <button
+              type="button"
+              aria-label="Next page"
+              disabled={currentPage >= totalPages}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+            >
               <i className="bi bi-chevron-right" />
             </button>
           </div>
         </div>
       </section>
+
       {deleteTarget && (
         <div
           className="delete-plan-overlay"
@@ -1489,6 +1437,7 @@ export default function CreatePlan() {
           </div>
         </div>
       )}
+
       {message && (
         <div className="plan-toast">
           <span>{message}</span>
@@ -1500,4 +1449,3 @@ export default function CreatePlan() {
     </section>
   );
 }
-//
