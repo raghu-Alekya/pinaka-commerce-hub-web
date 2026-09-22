@@ -104,6 +104,54 @@ function VendorCell({ value, strong = false }) {
   );
 }
 
+function formatAuditDate(value) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return {
+      date: String(value),
+      time: "",
+    };
+  }
+
+  return {
+    date: date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    }),
+    time: date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  };
+}
+
+function VendorAuditCell({ value }) {
+  const formatted = formatAuditDate(value);
+
+  if (!formatted) {
+    return <span className="vendors-cell-value">—</span>;
+  }
+
+  return (
+    <span className="vendors-audit-cell">
+      <span className="vendors-audit-date">
+        {formatted.date}
+      </span>
+      {formatted.time && (
+        <span className="vendors-audit-time">
+          {formatted.time}
+        </span>
+      )}
+    </span>
+  );
+}
+
 /*
 |--------------------------------------------------------------------------
 | COMPONENT
@@ -120,6 +168,11 @@ export default function Vendors({
     useState([]);
 
   const [form, setForm] =
+    useState(emptyForm);
+
+  // Keeps the last saved values while editing so the Update button
+  // remains disabled until the user actually changes a field.
+  const [originalForm, setOriginalForm] =
     useState(emptyForm);
 
   const [editingId, setEditingId] =
@@ -330,6 +383,9 @@ export default function Vendors({
     });
 
     setEditingId(null);
+    setOriginalForm({
+      ...emptyForm,
+    });
     setError("");
   }
 
@@ -402,6 +458,11 @@ export default function Vendors({
   |--------------------------------------------------------------------------
   */
 
+  const isVendorCodeValid =
+    /^(?=.{3,30}$)[A-Za-z0-9_]+$/.test(
+      form.code.trim()
+    );
+
   const isFormComplete =
     Boolean(
       form.code.trim() &&
@@ -418,10 +479,16 @@ export default function Vendors({
       (form.vendorType !== "Organizer" ||
         form.contactPerson.trim())
     ) &&
+    isVendorCodeValid &&
     /^\d{10}$/.test(form.phone.trim()) &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
       form.email.trim()
     );
+
+  const isEditDirty =
+    editingId !== null &&
+    JSON.stringify(form) !==
+      JSON.stringify(originalForm);
 
   /*
   |--------------------------------------------------------------------------
@@ -455,6 +522,14 @@ export default function Vendors({
     ) {
       setError(
         "Please fill all mandatory fields. Address Line 2 is optional."
+      );
+
+      return;
+    }
+
+    if (!isVendorCodeValid) {
+      setError(
+        "Vendor Code must be 3–30 characters and contain only letters, numbers, or underscores. No spaces."
       );
 
       return;
@@ -630,11 +705,7 @@ export default function Vendors({
   function editVendor(
     vendor
   ) {
-    setEditingId(
-      vendor.id
-    );
-
-    setForm({
+    const editForm = {
       name:
         vendor.name || "",
 
@@ -671,19 +742,28 @@ export default function Vendors({
         vendor.city || "",
 
       state:
-        vendor.state || "",
+        vendor.state ||
+        "",
 
       zipCode:
-        vendor.zipCode || "",
+        vendor.zipCode ||
+        "",
 
       country:
-        vendor.country || "",
+        vendor.country ||
+        "",
 
       status:
         vendor.status ||
         "Active",
-    });
+    };
 
+    setEditingId(
+      vendor.id
+    );
+
+    setForm(editForm);
+    setOriginalForm(editForm);
     setError("");
 
     window.scrollTo({
@@ -828,9 +908,7 @@ export default function Vendors({
       <div className="vendors-header">
         <div>
           <h1>
-            {editingId !== null
-              ? "Edit Vendor"
-              : "Vendors"}
+            Vendors
           </h1>
 
           <p>
@@ -886,8 +964,8 @@ export default function Vendors({
             <div>
               <h2>
                 {editingId !== null
-                  ? "Update Vendor"
-                  : "Add Vendor"}
+                  ? "Edit Vendor Details"
+                  : "Add Vendor Details"}
               </h2>
 
               <p>
@@ -933,9 +1011,24 @@ export default function Vendors({
               onChange={handleChange}
               placeholder="Enter vendor code"
               autoComplete="off"
+              maxLength={30}
               required
               disabled={saving}
+              aria-invalid={
+                Boolean(form.code) &&
+                !isVendorCodeValid
+              }
             />
+
+            {form.code && !isVendorCodeValid ? (
+              <small className="vendors-field-error">
+                Use 3–30 characters. Letters, numbers, and underscores only. No spaces.
+              </small>
+            ) : (
+              <small className="vendors-field-hint">
+                Use 3–30 characters. Letters, numbers, and underscores only. No spaces.
+              </small>
+            )}
           </label>
 
           {/* =================================================
@@ -957,6 +1050,10 @@ export default function Vendors({
               required
               disabled={saving}
             />
+
+            <small className="vendors-field-hint">
+              Display name for the vendor.
+            </small>
           </label>
 
           {/* =================================================
@@ -1035,7 +1132,21 @@ export default function Vendors({
               autoComplete="off"
               required
               disabled={saving}
+              aria-invalid={
+                Boolean(form.phone) &&
+                !/^\d{10}$/.test(form.phone)
+              }
             />
+
+            {form.phone && !/^\d{10}$/.test(form.phone) ? (
+              <small className="vendors-field-error">
+                Phone Number must contain exactly 10 digits.
+              </small>
+            ) : (
+              <small className="vendors-field-hint">
+                Enter a 10-digit phone number.
+              </small>
+            )}
           </label>
 
           {/* =================================================
@@ -1055,7 +1166,23 @@ export default function Vendors({
               autoComplete="off"
               required
               disabled={saving}
+              aria-invalid={
+                Boolean(form.email) &&
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                  form.email.trim()
+                )
+              }
             />
+
+            {form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? (
+              <small className="vendors-field-error">
+                Please enter a valid email address.
+              </small>
+            ) : (
+              <small className="vendors-field-hint">
+                Use a valid business email address.
+              </small>
+            )}
           </label>
 
           {/* =================================================
@@ -1221,6 +1348,9 @@ export default function Vendors({
 
               <select
                 name="status"
+                className={`vendors-status-select ${
+                  String(form.status || "active").toLowerCase()
+                }`}
                 value={
                   form.status
                 }
@@ -1259,7 +1389,11 @@ export default function Vendors({
           <button
             type="submit"
             className="vendors-save-button"
-            disabled={saving || !isFormComplete}
+            disabled={
+              saving ||
+              !isFormComplete ||
+              (editingId !== null && !isEditDirty)
+            }
           >
             {saving ? (
               <>
@@ -1272,7 +1406,7 @@ export default function Vendors({
             ) : (
               <>
                 {editingId !== null
-                  ? "Save Changes"
+                  ? "Update Vendor"
                   : "Create Vendor"}
               </>
             )}
@@ -1645,7 +1779,7 @@ export default function Vendors({
                         }
                         onMouseLeave={hideCellTooltip}
                       >
-                        <VendorCell
+                        <VendorAuditCell
                           value={vendor.createdTime}
                         />
                       </td>
@@ -1661,7 +1795,7 @@ export default function Vendors({
                         }
                         onMouseLeave={hideCellTooltip}
                       >
-                        <VendorCell
+                        <VendorAuditCell
                           value={vendor.updatedTime}
                         />
                       </td>
@@ -1781,7 +1915,7 @@ export default function Vendors({
             {/* DELETE ICON */}
 
             <div className="vendors-delete-icon">
-              <i className="bi bi-trash" />
+              <i className="bi bi-exclamation-triangle" />
             </div>
 
             {/* TITLE */}
@@ -1802,8 +1936,7 @@ export default function Vendors({
             </p>
 
             <p className="vendors-delete-warning">
-              This action cannot be
-              undone.
+              This action cannot be undone.
             </p>
 
             {/* ACTIONS */}
@@ -1820,7 +1953,7 @@ export default function Vendors({
                 }
                 disabled={deleting}
               >
-                Cancel
+                No, Keep It
               </button>
 
               <button
@@ -1839,9 +1972,7 @@ export default function Vendors({
                   </>
                 ) : (
                   <>
-                    <i className="bi bi-trash" />
-
-                    Delete Vendor
+                    Yes, Delete
                   </>
                 )}
               </button>

@@ -7,25 +7,58 @@ const emptyForm = {
   name: "",
   status: "Active",
 };
-function formatDate(value) {
+
+const TENDER_CODE_PATTERN = /^[A-Za-z0-9]{3,30}$/;
+function parseDate(value) {
   if (!value) {
-    return "-";
+    return null;
   }
- 
+
   const date = new Date(value);
- 
+
   if (Number.isNaN(date.getTime())) {
-    return value;
+    return null;
   }
- 
-  return date.toLocaleString("en-US", {
+
+  return date;
+}
+
+function formatDateDate(value) {
+  const date = parseDate(value);
+
+  if (!date) {
+    return value ? String(value) : "-";
+  }
+
+  return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
+  });
+}
+
+function formatDateTime(value) {
+  const date = parseDate(value);
+
+  if (!date) {
+    return "";
+  }
+
+  return date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
   });
+}
+
+function formatDate(value) {
+  const date = parseDate(value);
+
+  if (!date) {
+    return value ? String(value) : "-";
+  }
+
+  return `${formatDateDate(date)} ${formatDateTime(date)}`;
 }
  
 function mapTendorToUI(tendor) {
@@ -114,18 +147,23 @@ export default function Tenders() {
   const [tenders, setTenders] = useState([]);
  
   const [form, setForm] = useState(emptyForm);
+  const [originalForm, setOriginalForm] =
+    useState(null);
   const [editingId, setEditingId] = useState(null);
-  const [viewingTender, setViewingTender] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
  
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] =
     useState("All Statuses");
+
+  const [sortBy, setSortBy] =
+    useState("newest");
  
   const [tendersLoading, setTendersLoading] =
     useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmTender, setDeleteConfirmTender] = useState(null);
  
   useEffect(() => {
     fetchTendors();
@@ -140,8 +178,21 @@ export default function Tenders() {
       console.log("Tendors API response:", response);
  
       const list = getTendorList(response);
- 
-      setTenders(list.map(mapTendorToUI));
+
+      const mappedTenders = list.map(mapTendorToUI);
+
+      mappedTenders.sort((a, b) => {
+        const aTime = a.createdAt
+          ? new Date(a.createdAt).getTime()
+          : 0;
+        const bTime = b.createdAt
+          ? new Date(b.createdAt).getTime()
+          : 0;
+
+        return bTime - aTime;
+      });
+
+      setTenders(mappedTenders);
     } catch (error) {
       console.error(
         "Failed to fetch tendors:",
@@ -156,22 +207,51 @@ export default function Tenders() {
  
   const filteredTenders = useMemo(() => {
     const query = search.trim().toLowerCase();
- 
-    return tenders.filter((tender) => {
+
+    const filtered = tenders.filter((tender) => {
       const matchesSearch =
         !query ||
         Object.values(tender)
           .join(" ")
           .toLowerCase()
           .includes(query);
- 
+
       const matchesStatus =
         statusFilter === "All Statuses" ||
         tender.status === statusFilter;
- 
+
       return matchesSearch && matchesStatus;
     });
-  }, [tenders, search, statusFilter]);
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "name-asc") {
+        return String(a.name || "").localeCompare(
+          String(b.name || ""),
+          undefined,
+          { sensitivity: "base" }
+        );
+      }
+
+      if (sortBy === "name-desc") {
+        return String(b.name || "").localeCompare(
+          String(a.name || ""),
+          undefined,
+          { sensitivity: "base" }
+        );
+      }
+
+      const aTime = a.createdAt
+        ? new Date(a.createdAt).getTime()
+        : 0;
+      const bTime = b.createdAt
+        ? new Date(b.createdAt).getTime()
+        : 0;
+
+      return sortBy === "oldest"
+        ? aTime - bTime
+        : bTime - aTime;
+    });
+  }, [tenders, search, statusFilter, sortBy]);
  
   function handleChange(event) {
     const { name, value } = event.target;
@@ -182,18 +262,42 @@ export default function Tenders() {
     }));
   }
  
+  const tenderCodeValid =
+    TENDER_CODE_PATTERN.test(form.code.trim());
+
+  const tenderFormComplete =
+    Boolean(form.code.trim() && form.name.trim()) &&
+    tenderCodeValid;
+
+  const tenderFormChanged =
+    editingId !== null &&
+    originalForm !== null &&
+    (
+      form.code.trim() !== originalForm.code.trim() ||
+      form.name.trim() !== originalForm.name.trim() ||
+      form.status !== originalForm.status
+    );
+
+  const tenderCanSave =
+    tenderFormComplete &&
+    (editingId === null || tenderFormChanged);
+
+  const tenderCodeError = !form.code.trim()
+    ? ""
+    : tenderCodeValid
+    ? ""
+    : "Use 3–30 letters and numbers only. No spaces or special characters.";
+
   function resetForm() {
     setForm(emptyForm);
+    setOriginalForm(null);
     setEditingId(null);
   }
  
   async function saveTender(event) {
     event.preventDefault();
  
-    if (
-      !form.code.trim() ||
-      !form.name.trim()
-    ) {
+    if (!tenderFormComplete) {
       return;
     }
  
@@ -241,80 +345,68 @@ export default function Tenders() {
   }
  
   function editTender(tender) {
-    setEditingId(tender.id);
- 
-    setForm({
+    const editValues = {
       code: tender.code || "",
       name: tender.name || "",
       status: tender.status || "Active",
-    });
- 
+    };
+
+    setEditingId(tender.id);
+    setOriginalForm(editValues);
+    setForm(editValues);
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   }
- 
-  async function viewTender(tender) {
-    try {
-      const response =
-        await tendorsApi.getById(tender.id);
- 
-      const data = getTendorData(response);
- 
-      if (data) {
-        setViewingTender(
-          mapTendorToUI(data)
-        );
-      } else {
-        setViewingTender(tender);
-      }
-    } catch (error) {
-      console.error(
-        "Failed to fetch tendor:",
-        error
-      );
- 
-      setViewingTender(tender);
-    }
-  }
- 
-  async function deleteTender(tender) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${tender.name}"?`
-    );
- 
-    if (!confirmed) {
+
+  function requestDeleteTender(tender) {
+    if (deleting) {
       return;
     }
- 
+
+    setDeleteConfirmTender(tender);
+  }
+
+  function cancelDeleteTender() {
+    if (deleting) {
+      return;
+    }
+
+    setDeleteConfirmTender(null);
+  }
+
+  async function confirmDeleteTender() {
+    if (!deleteConfirmTender) {
+      return;
+    }
+
+    const tender = deleteConfirmTender;
+
     try {
       setDeleting(true);
       setDeletingId(tender.id);
- 
+
       await tendorsApi.delete(tender.id);
- 
+
       setTenders((current) =>
         current.filter(
           (item) => item.id !== tender.id
         )
       );
- 
+
       if (editingId === tender.id) {
         resetForm();
       }
- 
-      if (
-        viewingTender?.id === tender.id
-      ) {
-        setViewingTender(null);
-      }
+
+      setDeleteConfirmTender(null);
     } catch (error) {
       console.error(
         "Failed to delete tendor:",
         error
       );
- 
+
       alert(
         error?.response?.data?.message ||
           error?.message ||
@@ -325,20 +417,15 @@ export default function Tenders() {
       setDeletingId(null);
     }
   }
- 
+
   return (
     <section className="tenders-page">
       <div className="tenders-header">
         <div>
-          <h1>
-            {editingId
-              ? "Edit Tender"
-              : "Tenders"}
-          </h1>
- 
+          <h1>Create Tender</h1>
+
           <p>
-            Manage payment methods and their
-            availability.
+            Create and manage tenders and their availability.
           </p>
         </div>
       </div>
@@ -357,43 +444,42 @@ export default function Tenders() {
             <div>
               <h2>
                 {editingId
-                  ? "Edit Tender"
-                  : "Add Tender"}
+                  ? "Edit Tender Details"
+                  : "Add Tender Details"}
               </h2>
  
-              <p>
-                Provide the tender details.
-              </p>
+              <p>Provide the basic details and configuration for this tender.</p>
             </div>
           </div>
  
-          {editingId && (
-            <button
-              type="button"
-              className="tenders-link-button"
-              onClick={resetForm}
-              disabled={saving}
-            >
-              Cancel edit
-            </button>
-          )}
         </div>
  
-        <div className="tenders-form-grid">
+        <div className="tenders-form-grid tender-create-fields-grid">
           <label>
             <span>
               Tender Code <b>*</b>
             </span>
  
             <input
-            type="text"
-  name="code"
-  value={form.code}
-  onChange={handleChange}
-  placeholder="e.g. TND-CREDIT"
-  required
-  autoComplete="off"
+              type="text"
+              name="code"
+              value={form.code}
+              onChange={handleChange}
+              placeholder="e.g. TNDCREDIT"
+              maxLength={30}
+              required
+              autoComplete="off"
+              aria-invalid={Boolean(tenderCodeError)}
             />
+            {tenderCodeError ? (
+              <small className="tenders-field-error">
+                {tenderCodeError}
+              </small>
+            ) : (
+              <small className="tenders-field-help">
+                3–30 characters. Letters and numbers only. No spaces.
+              </small>
+            )}
           </label>
  
           <label>
@@ -412,12 +498,17 @@ export default function Tenders() {
           </label>
  
           <label>
-            <span>Status</span>
+            <span>Status <b>*</b></span>
  
             <select
               name="status"
               value={form.status}
               onChange={handleChange}
+              className={`tender-status-select ${
+                form.status === "Inactive"
+                  ? "status-inactive"
+                  : "status-active"
+              }`}
             >
               <option value="Active">
                 Active
@@ -437,7 +528,7 @@ export default function Tenders() {
             onClick={resetForm}
             disabled={saving}
           >
-            Clear
+            {editingId ? "Cancel" : "Clear"}
           </button>
  
           <button
@@ -445,14 +536,13 @@ export default function Tenders() {
             className="tenders-save-button"
             disabled={
               saving ||
-              !form.code.trim() ||
-              !form.name.trim()
+              !tenderCanSave
             }
           >
             {saving
               ? "Saving..."
               : editingId
-              ? "Save Changes"
+              ? "Update Tender"
               : "Create Tender"}
           </button>
         </div>
@@ -504,6 +594,43 @@ export default function Tenders() {
                 Inactive
               </option>
             </select>
+            <select
+              className="tenders-sort-select"
+              value={sortBy}
+              onChange={(event) =>
+                setSortBy(event.target.value)
+              }
+              aria-label="Sort tenders"
+            >
+              <option value="newest">
+                Newest to Oldest
+              </option>
+
+              <option value="oldest">
+                Oldest to Newest
+              </option>
+
+              <option value="name-asc">
+                Alphabetical A–Z
+              </option>
+
+              <option value="name-desc">
+                Alphabetical Z–A
+              </option>
+            </select>
+
+
+            <button
+              type="button"
+              className="tenders-reset-button"
+              onClick={() => {
+                setSearch("");
+                setStatusFilter("All Statuses");
+                setSortBy("newest");
+              }}
+            >
+              Reset
+            </button>
           </div>
         </div>
  
@@ -556,32 +683,25 @@ export default function Tenders() {
                       </span>
                     </td>
  
-                    <td>
-                      {formatDate(
-                        tender.createdAt
-                      )}
+                    <td className="tender-date-cell">
+                      <span className="tender-date">
+                        {formatDateDate(tender.createdAt)}
+                      </span>
+                      <span className="tender-time">
+                        {formatDateTime(tender.createdAt)}
+                      </span>
+                    </td>
+
+                    <td className="tender-date-cell">
+                      <span className="tender-date">
+                        {formatDateDate(tender.updatedAt)}
+                      </span>
+                      <span className="tender-time">
+                        {formatDateTime(tender.updatedAt)}
+                      </span>
                     </td>
  
-                    <td>
-                      {formatDate(
-                        tender.updatedAt
-                      )}
-                    </td>
- 
-                    <td className="tenders-actions">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          viewTender(tender)
-                        }
-                        aria-label={`View ${tender.name}`}
-                        title="View"
-                        disabled={deleting}
-                      >
-                        <i className="bi bi-eye" />
-                      </button>
- 
-                      <button
+                    <td className="tenders-actions"><button
                         type="button"
                         onClick={() =>
                           editTender(tender)
@@ -597,7 +717,7 @@ export default function Tenders() {
                         type="button"
                         className="tenders-delete-action"
                         onClick={() =>
-                          deleteTender(tender)
+                          requestDeleteTender(tender)
                         }
                         aria-label={`Delete ${tender.name}`}
                         title="Delete"
@@ -631,92 +751,58 @@ export default function Tenders() {
               </div>
             )}
         </div>
-      </div>
- 
-      {viewingTender && (
+      </div>      {deleteConfirmTender && (
         <div
-          className="tenders-modal-backdrop"
-          onClick={() =>
-            setViewingTender(null)
-          }
+          className="tenders-confirm-backdrop"
+          onClick={cancelDeleteTender}
         >
           <div
-            className="tenders-modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
+            className="tenders-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-tender-title"
+            onClick={(event) => event.stopPropagation()}
           >
-            <div className="tenders-modal-heading">
-              <div>
-                <h2>
-                  {viewingTender.name}
-                </h2>
- 
-                <p>
-                  {viewingTender.code}
-                </p>
-              </div>
- 
+            <div className="tenders-confirm-icon">
+              <i className="bi bi-exclamation-triangle" />
+            </div>
+
+            <div className="tenders-confirm-content">
+              <h2 id="delete-tender-title">Delete Tender?</h2>
+
+              <p>
+                Are you sure you want to delete{" "}
+                <strong>{deleteConfirmTender.name}</strong>?
+              </p>
+
+              <span className="tenders-confirm-warning">
+                This action cannot be undone.
+              </span>
+            </div>
+
+            <div className="tenders-confirm-actions">
               <button
                 type="button"
-                onClick={() =>
-                  setViewingTender(null)
-                }
-                aria-label="Close tender details"
+                className="tenders-confirm-cancel"
+                onClick={cancelDeleteTender}
+                disabled={deleting}
               >
-                <i className="bi bi-x-lg" />
+                No, Keep It
+              </button>
+
+              <button
+                type="button"
+                className="tenders-confirm-delete"
+                onClick={confirmDeleteTender}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
- 
-            <dl>
-              {[
-                [
-                  "Code",
-                  viewingTender.code,
-                ],
-                [
-                  "Tender Name",
-                  viewingTender.name,
-                ],
-                [
-                  "Status",
-                  viewingTender.status,
-                ],
-                [
-                  "Created At",
-                  formatDate(
-                    viewingTender.createdAt
-                  ),
-                ],
-                [
-                  "Updated At",
-                  formatDate(
-                    viewingTender.updatedAt
-                  ),
-                ],
-              ].map(
-                ([label, value]) => (
-                  <div key={label}>
-                    <dt>{label}</dt>
- 
-                    <dd>
-                      {value || "-"}
-                    </dd>
-                  </div>
-                )
-              )}
-            </dl>
- 
-            <p className="tenders-audit">
-              Last changed by{" "}
-              {viewingTender.changedBy} on{" "}
-              {formatDate(
-                viewingTender.changedAt
-              )}
-            </p>
           </div>
         </div>
       )}
+
     </section>
   );
 }
