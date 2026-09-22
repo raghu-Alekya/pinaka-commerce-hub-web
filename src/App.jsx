@@ -45,6 +45,7 @@ import ViewPlanOverview from "./pages/ViewPlanOverview";
 import ViewPlanPricing from "./pages/ViewPlanPricing";
 import ViewPlanFeaturesLimits from "./pages/ViewPlanFeaturesLimits";
 import CashManagement from "./pages/CashManagement";
+import AddMerchantEmployee from "./pages/AddMerchantEmployee";
 
 const placeholders = [
   "Cash Management",
@@ -181,7 +182,7 @@ export default function App() {
           path="/merchants/:merchantId/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
         />
-        
+
         <Route
           path="/cash-management"
           element={<CashManagement />}
@@ -196,6 +197,10 @@ export default function App() {
         <Route
           path="/merchant-subscriptions"
           element={<Subscriptions />}
+        />
+        <Route
+          path="/merchants/:merchantId/employees/new"
+          element={<AddMerchantEmployee />}
         />
 
         {/* Stores */}
@@ -288,11 +293,11 @@ export default function App() {
         <Route path="/store-types/:storeTypeId/features" element={<StoreTypeFeatures />} />
         <Route path="/store-types/:storeTypeId/role-templates" element={<StoreTypeRoleTemplates />} />
         <Route path="/role-templates/:roleId" element={<ViewRoleTemplateOverview />} />
-        <Route path="/role-templates/:roleId/store-types" element={<ViewRoleTemplateStoreTypes />}/>
-        <Route path="/role-templates/:roleId/access" element={<ViewRoleTemplateAccess />}/>
+        <Route path="/role-templates/:roleId/store-types" element={<ViewRoleTemplateStoreTypes />} />
+        <Route path="/role-templates/:roleId/access" element={<ViewRoleTemplateAccess />} />
         <Route path="/plans/:planId" element={<ViewPlanOverview />} />
         <Route path="/plans/:planId/pricing" element={<ViewPlanPricing />} />
-        <Route path="/plans/:planId/features-limits" element={<ViewPlanFeaturesLimits />}/>
+        <Route path="/plans/:planId/features-limits" element={<ViewPlanFeaturesLimits />} />
 
       </Route>
 

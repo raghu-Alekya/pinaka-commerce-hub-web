@@ -146,6 +146,7 @@ function assignedRoleTemplates(response) {
     const template = role.roleTemplate || role.template || role;
     return {
       id: String(role.roleTemplateId || template.id || template._id || role.id || `role-template-${index}`),
+      code: String(template.code || template.roleCode || ''),
       name: String(template.name || template.roleName || template.templateName || template.code || 'Unnamed role template').trim(),
       scope: template.scope || template.roleScope || 'Store',
       active: String(template.status || 'ACTIVE').toUpperCase() !== 'INACTIVE',
@@ -474,7 +475,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
     return ()=>{active=false;};
   },[getNextSequence,codeAttempt,initialValue]);
   const [error, setError] = useState('');
-  const [custom, setCustom] = useState({ open: false, name: '', scope: 'Store', id: null });
+  const [custom, setCustom] = useState({ open: false, code: '', name: '', description: '', status: 'ACTIVE', scope: 'Store', id: null });
   const [returnToReview, setReturnToReview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const headingRef = useRef(null);
@@ -575,7 +576,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   const sampleTax = Math.round(subtotal * 0.086 * 100) / 100;
   const sampleTotal = Math.round((subtotal + sampleTax) * 100) / 100;
   const roleTemplates = roleTemplatesState.items.length ? roleTemplatesState.items.map(role=>role.name) : storeTypeDefaults(state.merchant.type).r;
-  const assignedRoles=state.roles.filter(role=>store.roleIds?.includes(role.id));
+  const assignedRoles=state.roles.filter(role=>String(role.status || 'ACTIVE').toUpperCase()!=='INACTIVE' && store.roleIds?.includes(role.id));
   const currentRole=assignedRoles.find(role=>role.id===state.roles[state.activeRole]?.id) || assignedRoles[0];
   const storePhase = state.phase === 'store';
   const journey = storePhase ? [1,4,3,5,6] : [0,2,5,6];
@@ -613,7 +614,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   }
   function editSection(step, values = {}) {
     setReturnToReview(true);
-    setCustom({ open: false, name: '', scope: 'Store', id: null });
+    setCustom({ open: false, code: '', name: '', description: '', status: 'ACTIVE', scope: 'Store', id: null });
     patch({ ...values, step, done: false });
   }
   const editButton = (label, step, values) => journey.includes(step) ? <button type="button" onClick={() => editSection(step, values)}>{label}</button> : null;
@@ -656,9 +657,9 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
       patch({ step: 6 });
     } else patch({ step: journey[position + 1], furthest: Math.max(state.furthest, position + 1) });
   }
-  function addRole(name, source, scope = 'Store') {
+  function addRole(name, source, scope = 'Store', details = {}) {
     setState(previous => ({ ...previous, activeRole: previous.roles.length, roles: [...previous.roles, {
-      id: `role-${Date.now()}-${previous.roles.length}`, name, source, scope,
+      id: `role-${Date.now()}-${previous.roles.length}`, name, source, scope, ...details,
       perms: catalog.map((feature,index) => source === 'Custom' ? [] : feature.a.filter(action=>(templateDefinitions[source]?.perms?.[index] || []).includes(action))),
     }] }));
   }
@@ -880,26 +881,34 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
         {!storePhase && <>
         <Panel title="Select business roles"><div className="pch-note">Business store type: {state.merchant.type}. Choose roles here; assign them and configure permissions separately for each store.</div>{roleTemplatesState.loading && <p className="pch-note">Loading role templates for {state.merchant.type}…</p>}{roleTemplatesState.error && <div className="pch-error" role="alert">{roleTemplatesState.error}</div>}<div className="pch-grid">{[...new Set([...roleTemplates,...state.roles.filter(role=>role.source!=='Custom').map(role=>role.source)])].map(name=><label className="pch-check pch-role-option" key={name}>
           <input type="checkbox" checked={state.roles.some(role=>role.source===name)} disabled={!roleTemplates.includes(name) && !state.roles.some(role=>role.source===name)} onChange={event=>toggleTemplate(name,event.target.checked)} />{name}{!roleTemplates.includes(name) ? ' (not applicable — deselect)' : ''}
-        </label>)}</div><div className="pch-row pch-between"><span className="pch-pill">{state.roles.length} merchant roles</span><button type="button" onClick={()=>setCustom({open:true,name:'',scope:'Store',id:null})}>+ Custom merchant role</button></div>
-          {custom.open&&<div className="pch-note"><div className="pch-grid"><Field label="Role name" value={custom.name} required={false} onChange={value=>setCustom({...custom,name:value})}/>
-            <Select label="Role scope" value={custom.scope} options={['Store','Merchant']} onChange={value=>setCustom({...custom,scope:value})}/></div>
+        </label>)}</div><div className="pch-row pch-between"><span className="pch-pill">{state.roles.length} merchant roles</span><button type="button" onClick={()=>setCustom({open:true,code:'',name:'',description:'',status:'ACTIVE',scope:'Store',id:null})}>+ Custom merchant role</button></div>
+          {custom.open&&<div className="pch-note"><div className="pch-grid"><Field label="Role code *" value={custom.code} required={false} onChange={value=>setCustom({...custom,code:value})}/><Field label="Role name *" value={custom.name} required={false} onChange={value=>setCustom({...custom,name:value})}/>
+            <Field label="Description" value={custom.description} required={false} onChange={value=>setCustom({...custom,description:value})}/>
+            <Select label="Status *" value={custom.status} options={[{value:'ACTIVE',label:'Active'},{value:'INACTIVE',label:'Inactive'}]} onChange={value=>setCustom({...custom,status:value})}/>
+            </div>
             <div className="pch-row"><button type="button" onClick={()=>{
+              const code=custom.code.trim();
+              if(!code) return setError('Role code is required.');
+              if(!/^[A-Za-z0-9_-]+$/.test(code)) return setError('Role code may contain only letters, numbers, underscores and hyphens.');
+              if([...roleTemplatesState.items,...state.roles.filter(role=>role.id!==custom.id)].some(role=>String(role.code || role.roleCode || '').toLowerCase()===code.toLowerCase())) return setError('Enter a unique role code.');
+              if(!['ACTIVE','INACTIVE'].includes(custom.status)) return setError('Select a valid role status.');
+              const details={code,description:custom.description.trim(),status:custom.status};
               const name=custom.name.trim();if(!name||[...roleTemplates,...state.roles.filter(role=>role.id!==custom.id).map(role=>role.name)].some(item=>item.toLowerCase()===name.toLowerCase()))return setError('Enter a unique role name.');
-              if(custom.id) patch({roles:state.roles.map(role=>role.id===custom.id?{...role,name,scope:custom.scope}:role)}); else addRole(name,'Custom',custom.scope);setCustom({open:false,name:'',scope:'Store',id:null});
+              if(custom.id) patch({roles:state.roles.map(role=>role.id===custom.id?{...role,...details,name,scope:custom.scope}:role)}); else addRole(name,'Custom',custom.scope,details);setError('');setCustom({open:false,code:'',name:'',description:'',status:'ACTIVE',scope:'Store',id:null});
             }}>{custom.id?'Save role':'Add role'}</button><button type="button" onClick={()=>setCustom({...custom,open:false})}>Cancel</button></div></div>}
         </Panel>
-        {state.roles.some(role=>role.source==='Custom')&&<Panel title="Custom merchant roles"><Table headings={['Name','Scope','Actions']} rows={state.roles.filter(role=>role.source==='Custom').map(role=>[role.name,role.scope,<div className="pch-row"><button type="button" onClick={()=>setCustom({open:true,name:role.name,scope:role.scope,id:role.id})}>Edit role</button><button type="button" onClick={()=>patch({roles:state.roles.filter(item=>item.id!==role.id),activeRole:0})}>Remove role</button></div>])}/></Panel>}
+        {state.roles.some(role=>role.source==='Custom')&&<Panel title="Custom merchant roles"><Table headings={['Role code','Role name','Description','Status','Actions']} rows={state.roles.filter(role=>role.source==='Custom').map(role=>[role.code || role.roleCode || '—',role.name,role.description || '—',String(role.status || 'ACTIVE').toUpperCase()==='INACTIVE'?'Inactive':'Active',<div className="pch-row"><button type="button" onClick={()=>setCustom({open:true,code:role.code || role.roleCode || '',name:role.name,description:role.description || '',status:String(role.status || 'ACTIVE').toUpperCase(),scope:role.scope,id:role.id})}>Edit role</button><button type="button" onClick={()=>patch({roles:state.roles.filter(item=>item.id!==role.id),activeRole:0})}>Remove role</button></div>])}/></Panel>}
         </>}
         {storePhase && <Panel title="Map selected business roles to this store">
           <div className="pch-grid">{storePicker}</div>
           <div className="pch-grid">{state.roles.map(role=><label key={role.id} className="pch-check pch-role-option">
-            <input type="checkbox" checked={Boolean(store.roleIds?.includes(role.id))} onChange={event=>{
+            <input type="checkbox" disabled={String(role.status || 'ACTIVE').toUpperCase()==='INACTIVE' && !store.roleIds?.includes(role.id)} checked={Boolean(store.roleIds?.includes(role.id))} onChange={event=>{
               const checked=event.target.checked;
               const permissions={...(store.rolePermissions || {})};
               if(checked && !permissions[role.id]) permissions[role.id]=masterFeatureItems.map(()=>[]);
               if(!checked) delete permissions[role.id];
               setState(previous=>({...previous,stores:previous.stores.map((item,index)=>index===previous.store?{...item,roleIds:toggleItem(item.roleIds || [],role.id,checked),rolePermissions:permissions}:item)}));
-            }}/>{role.name}
+            }}/>{role.name}{String(role.status || 'ACTIVE').toUpperCase()==='INACTIVE' ? ' (Inactive)' : ''}
           </label>)}</div>
           <div className="pch-note">Only business-selected roles appear here. Permissions below apply to this store only.</div>
         </Panel>}
