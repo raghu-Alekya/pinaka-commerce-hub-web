@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Store, Search, Plus, X, Trash2, ChevronDown, ArrowLeft } from 'lucide-react';
+import { Store, Search, Plus, X, Trash2, ArrowLeft } from 'lucide-react';
 import { getFeature } from '../api/features';
 import {
   listMappedStoreTypes,
@@ -138,7 +138,6 @@ const FeatureStoreTypes = () => {
             <ArrowLeft size={28} />
           </button>
           <div className="feature-detail-copy"><h1>{name}</h1><p>{desc}</p></div>
-          <div className="feature-detail-status">{(feature?.status || 'Active').toUpperCase()}</div>
         </div>
         <nav className="feature-detail-tabs" aria-label="Feature sections">
           <button className="feature-detail-tab" type="button" onClick={() => navigate(`/features/${featureId}/overview`)}>Overview</button>
@@ -174,10 +173,10 @@ const FeatureStoreTypes = () => {
           <table className="st-table">
             <thead>
               <tr>
-                <th>Store Type Code <ChevronDown size={13} /></th>
-                <th>Store Type Name <ChevronDown size={13} /></th>
-                <th>Description <ChevronDown size={13} /></th>
-                <th>Actions <ChevronDown size={13} /></th>
+                <th>Store Type Code</th>
+                <th>Store Type Name</th>
+                <th>Description</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
