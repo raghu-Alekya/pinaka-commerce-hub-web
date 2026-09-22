@@ -1329,3 +1329,213 @@
   cursor: not-allowed !important;
   transform: none !important;
 }
+
+
+/* =========================================================
+   APPROVED ROLE TEMPLATE-STYLE VENDOR FORM UX
+   ========================================================= */
+
+.vendors-form {
+  padding: 17px 22px 18px;
+}
+
+.vendors-form-grid {
+  column-gap: 14px;
+  row-gap: 11px;
+}
+
+.vendors-form label {
+  gap: 5px;
+  color: #23426e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.vendors-form input,
+.vendors-form select {
+  height: 42px;
+  border: 1px solid #d9e6f4;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #163762;
+  font-size: 12px;
+}
+
+.vendors-form input:focus,
+.vendors-form select:focus {
+  border-color: #aeb7ff;
+  box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
+}
+
+.vendors-field-hint {
+  display: block;
+  margin-top: -1px;
+  color: #6481b0;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.vendors-field-error {
+  display: block;
+  margin-top: -1px;
+  color: #ed304d;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.vendors-form input[aria-invalid="true"] {
+  border-color: #f1a8b4;
+  background: #fffafa;
+}
+
+/* Active / Inactive status field colors. */
+.vendors-form select.vendors-status-select.active {
+  border-color: #b9ead2;
+  background: #f7fffb;
+  color: #08a961;
+  font-weight: 600;
+}
+
+.vendors-form select.vendors-status-select.inactive {
+  border-color: #f3c0c8;
+  background: #fff8f9;
+  color: #ed304d;
+  font-weight: 600;
+}
+
+/* Disabled primary action — same visual language as Role Template. */
+.vendors-save-button:disabled {
+  background: #e4e7ef !important;
+  color: #9aa4b6 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+/* =========================================================
+   AUDIT DATE / TIME — two-line table treatment
+   ========================================================= */
+
+.vendors-audit-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.vendors-audit-date {
+  color: #29466f;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.vendors-audit-time {
+  color: #7890b2;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   APPROVED DELETE CONFIRMATION MODAL
+   ========================================================= */
+
+.vendors-delete-backdrop {
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(2px);
+}
+
+.vendors-delete-modal {
+  width: min(450px, 100%);
+  padding: 32px 30px 30px;
+  border-radius: 15px;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.20);
+}
+
+.vendors-delete-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 17px;
+  border-radius: 50%;
+  background: #ffe7ec;
+  color: #f23d61;
+  font-size: 23px;
+}
+
+.vendors-delete-modal h2 {
+  margin: 0 0 11px;
+  color: #10264d;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.vendors-delete-modal p {
+  margin: 0;
+  color: #5f79a5;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.vendors-delete-modal p strong {
+  color: #183762;
+  font-weight: 650;
+}
+
+.vendors-delete-warning {
+  margin-top: 8px !important;
+  color: #ed304d !important;
+  font-size: 13px !important;
+  font-weight: 500;
+}
+
+.vendors-delete-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.vendors-delete-cancel,
+.vendors-delete-confirm {
+  min-height: 46px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.vendors-delete-cancel {
+  border: 1px solid #aebbcf;
+  background: #ffffff;
+  color: #8795aa;
+}
+
+.vendors-delete-cancel:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.vendors-delete-confirm {
+  border: 1px solid #f03b5d;
+  background: #f03b5d;
+  color: #ffffff;
+}
+
+.vendors-delete-confirm:hover:not(:disabled) {
+  border-color: #df2e50;
+  background: #df2e50;
+}
+
+@media (max-width: 480px) {
+  .vendors-delete-actions {
+    grid-template-columns: 1fr;
+  }
+}

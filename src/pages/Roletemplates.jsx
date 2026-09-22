@@ -13,21 +13,25 @@ const initialForm = {
 };
 
 function displayDate(value) {
-  if (!value) return "—";
+  if (!value) return null;
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "—";
+    return null;
   }
 
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return {
+    date: date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    }),
+    time: date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  };
 }
 
 export default function RoleTemplates() {
@@ -36,8 +40,10 @@ export default function RoleTemplates() {
   const [form, setForm] = useState(initialForm);
 
   const [editingId, setEditingId] = useState(null);
+  const [originalForm, setOriginalForm] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [sortBy, setSortBy] = useState("NEWEST");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -74,7 +80,7 @@ export default function RoleTemplates() {
   const filteredTemplates = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return templates.filter((template) => {
+    const filtered = templates.filter((template) => {
       const searchableText = [
         template.roleCode,
         template.name,
@@ -94,7 +100,44 @@ export default function RoleTemplates() {
 
       return matchesSearch && matchesStatus;
     });
-  }, [templates, search, statusFilter]);
+
+    const getDateValue = (template) => {
+      const value =
+        template.createdAt ||
+        template.created_at ||
+        template.createdDate;
+
+      const timestamp = value ? new Date(value).getTime() : 0;
+      return Number.isNaN(timestamp) ? 0 : timestamp;
+    };
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "NEWEST") {
+        return getDateValue(b) - getDateValue(a);
+      }
+
+      if (sortBy === "OLDEST") {
+        return getDateValue(a) - getDateValue(b);
+      }
+
+      const nameA = String(a.name || "").trim();
+      const nameB = String(b.name || "").trim();
+
+      if (sortBy === "A_Z") {
+        return nameA.localeCompare(nameB, undefined, {
+          sensitivity: "base",
+        });
+      }
+
+      if (sortBy === "Z_A") {
+        return nameB.localeCompare(nameA, undefined, {
+          sensitivity: "base",
+        });
+      }
+
+      return 0;
+    });
+  }, [templates, search, statusFilter, sortBy]);
 
   const roleNameSuggestions = useMemo(
     () =>
@@ -143,6 +186,7 @@ export default function RoleTemplates() {
   function resetForm() {
     setForm(initialForm);
     setEditingId(null);
+    setOriginalForm(null);
     setError("");
     setRoleCodeError("");
   }
@@ -192,14 +236,16 @@ export default function RoleTemplates() {
   }
 
   function editTemplate(template) {
-    setEditingId(template.id);
-
-    setForm({
+    const nextForm = {
       roleCode: template.roleCode || "",
       name: template.name || "",
       description: template.description || "",
       status: template.status || "ACTIVE",
-    });
+    };
+
+    setEditingId(template.id);
+    setForm(nextForm);
+    setOriginalForm(nextForm);
 
     setError("");
     setRoleCodeError("");
@@ -255,6 +301,7 @@ export default function RoleTemplates() {
   function resetFilters() {
     setSearch("");
     setStatusFilter("ALL");
+    setSortBy("NEWEST");
   }
 
   const isFormValid =
@@ -263,16 +310,24 @@ export default function RoleTemplates() {
     /^[A-Z0-9_]+$/.test(form.roleCode) &&
     form.name.trim().length > 0;
 
+  const hasFormChanges =
+    editingId !== null &&
+    originalForm !== null &&
+    (form.roleCode !== originalForm.roleCode ||
+      form.name !== originalForm.name ||
+      form.description !== originalForm.description ||
+      form.status !== originalForm.status);
+
+  const canSubmit =
+    isFormValid &&
+    (editingId === null || hasFormChanges);
+
   return (
     <>
       <section className="role-templates-page">
         <div className="role-templates-page-heading">
           <div>
-            <h1>
-              {editingId !== null
-                ? "Edit Role Template"
-                : "Create Role Template"}
-            </h1>
+            <h1>Role Template</h1>
             <p>Create and manage role templates using feature permissions.</p>
           </div>
         </div>
@@ -284,7 +339,11 @@ export default function RoleTemplates() {
             </div>
 
             <div>
-              <h2>Role Template Details</h2>
+              <h2>
+                {editingId !== null
+                  ? "Edit Role Template Details"
+                  : "Add Role Template Details"}
+              </h2>
               <p>
                 Provide the basic details and configuration for this role template.
               </p>
@@ -351,12 +410,22 @@ export default function RoleTemplates() {
                 Status <b>*</b>
               </span>
 
-              <div className="role-select-wrap">
+              <div
+                className={`role-select-wrap ${
+                  form.status === "INACTIVE"
+                    ? "role-status-select-inactive"
+                    : "role-status-select-active"
+                }`}
+              >
                 <select
                   name="status"
                   value={form.status}
                   onChange={handleChange}
-                  className={form.status === "INACTIVE" ? "status-inactive" : "status-active"}
+                  className={
+                    form.status === "INACTIVE"
+                      ? "status-inactive"
+                      : "status-active"
+                  }
                 >
                   <option value="ACTIVE">Active</option>
                   <option value="INACTIVE">Inactive</option>
@@ -407,7 +476,7 @@ export default function RoleTemplates() {
               type="button"
               className="role-template-submit-button"
               onClick={saveTemplate}
-              disabled={saving || !isFormValid}
+              disabled={saving || !canSubmit}
             >
 
 
@@ -455,6 +524,17 @@ export default function RoleTemplates() {
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
+              </select>
+
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value)}
+                aria-label="Sort role templates"
+              >
+                <option value="NEWEST">Newest to Oldest</option>
+                <option value="OLDEST">Oldest to Newest</option>
+                <option value="A_Z">A to Z</option>
+                <option value="Z_A">Z to A</option>
               </select>
 
               <button
@@ -538,19 +618,49 @@ export default function RoleTemplates() {
                     </td>
 
                     <td className="role-created-cell role-equal-col">
-                      {displayDate(
-                        template.createdAt ||
-                          template.created_at ||
-                          template.createdDate
-                      )}
+                      {(() => {
+                        const formatted = displayDate(
+                          template.createdAt ||
+                            template.created_at ||
+                            template.createdDate
+                        );
+
+                        return formatted ? (
+                          <>
+                            <span className="role-date-value">
+                              {formatted.date}
+                            </span>
+                            <span className="role-time-value">
+                              {formatted.time}
+                            </span>
+                          </>
+                        ) : (
+                          "—"
+                        );
+                      })()}
                     </td>
 
                     <td className="role-updated-cell role-equal-col">
-                      {displayDate(
-                        template.updatedAt ||
-                          template.updated_at ||
-                          template.updatedDate
-                      )}
+                      {(() => {
+                        const formatted = displayDate(
+                          template.updatedAt ||
+                            template.updated_at ||
+                            template.updatedDate
+                        );
+
+                        return formatted ? (
+                          <>
+                            <span className="role-date-value">
+                              {formatted.date}
+                            </span>
+                            <span className="role-time-value">
+                              {formatted.time}
+                            </span>
+                          </>
+                        ) : (
+                          "—"
+                        );
+                      })()}
                     </td>
 
                     <td className="role-actions role-equal-col">
@@ -650,7 +760,7 @@ export default function RoleTemplates() {
                 onClick={confirmDeleteTemplate}
                 disabled={saving}
               >
-                {saving ? "Deleting..." : "Delete"}
+                {saving ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>
