@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Info, ChevronDown, ArrowLeft } from 'lucide-react';
+import { Info, ChevronDown } from "lucide-react";
 import { useNavigate, useParams } from 'react-router-dom';
 import { getFeature } from '../api/features';
 import '../styles/featureoverview.css';
@@ -25,9 +25,15 @@ const FeatureOverview = () => {
   return <div className="feature-overview-page feature-detail-page">
     <section className="feature-detail-header">
       <div className="feature-detail-top">
-        <button className="feature-detail-back" type="button" onClick={() => navigate('/features')} aria-label="Back to Features">
-          <ArrowLeft size={30} />
-        </button>
+        <button
+           type="button"
+             className="feature-detail-back"
+             onClick={() => navigate("/features")}
+             aria-label="Back to Features"
+             title="Back to Features"
+             >
+            <i className="bi bi-arrow-left" />
+           </button>
         <div className="feature-detail-copy"><h1>{name}</h1><p>{description}</p></div>
       </div>
       <nav className="feature-detail-tabs" aria-label="Feature sections">

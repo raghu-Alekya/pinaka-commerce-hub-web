@@ -983,17 +983,15 @@ export default function FeaturePermissions() {
 
             {/* RESET FILTER */}
 
-            <button
+           <button
               type="button"
               className="fp-reset-btn"
-              onClick={resetFilters}
-            >
-
-              <i className="bi bi-arrow-repeat" />
-
-              Reset
-
-            </button>
+              title="Reset filters"
+              aria-label="Reset filters"
+               onClick={resetFilters}
+               >
+             <i className="bi bi-arrow-counterclockwise" />
+             </button>
 
           </div>
 

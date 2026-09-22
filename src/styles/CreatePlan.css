@@ -646,7 +646,29 @@
   border: 1px solid #e3ecf5;
   border-radius: 8px;
 }
+/* .plans-table-wrap {
+  overflow-x: auto;
+  padding-bottom: 8px;
+} */
 
+/* Custom Scrollbar Styling */
+.plans-table-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.plans-table-wrap::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.plans-table-wrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.plans-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
 .plans-table {
   width: 100%;
   min-width: 0px;
@@ -688,16 +710,16 @@
   border-radius: 999px;
   color: #3f2cac;
   background: #eef2ff;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 9px;
+  font-weight: 500;
 }
 
 .plans-row-head {
   min-height: 39px;
   color: #102d59;
-  background: #f2f8ff;
-  font-size: 11px;
-  font-weight: 700;
+  background: #f1f3fd;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .plan-code-cell strong,
@@ -992,4 +1014,92 @@
 .plan-name-clickable:hover strong {
   color: #684ee3;
   text-decoration: underline;
+}
+/* Red error text styling */
+.plan-field-error {
+  color: #f43d60 !important;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* Highlight input border red when invalid */
+.plan-input-wrap.input-error {
+  border-color: #f43d60 !important;
+}
+/* 3-Column Grid Layout */
+.plan-create-grid.three-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 20px;
+  align-items: start;
+}
+
+/* Description spans 2 columns in Row 2 */
+.plan-field.span-two {
+  grid-column: span 1;
+}
+
+/* Fixed Label Height */
+.plan-field > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #23426e;
+}
+
+/* Uniform Input & Select Box Height */
+.plan-input-wrap,
+.plan-field select {
+  height: 36px !important;
+  box-sizing: border-box;
+}
+
+/* Reserved Error/Hint Slot below input (GUARANTEES CLEAN ALIGNMENT) */
+.plan-field-slot {
+  min-height: 22px;
+  margin-top: 5px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.plan-field-error {
+  color: #f43d60 !important;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.plan-field-hint {
+  color: #6380ae;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+/* Custom Select Arrow Styling with Right Padding */
+.plan-field select,
+.plans-filters select {
+  padding: 0 30px 0 10px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236380b0' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1-.753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px;
+  cursor: pointer;
+}
+
+@media (max-width: 950px) {
+  .plan-create-grid.three-columns {
+    grid-template-columns: 1fr;
+  }
+  .plan-field.span-two {
+    grid-column: auto;
+  }
 }

@@ -403,10 +403,15 @@ export default function Features() {
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
 
-            <button className="reset-filter" type="button" onClick={resetFilters}>
-              <i className="bi bi-arrow-repeat" />
-              Reset
-            </button>
+            <button
+             type="button"
+               className="feature-filter-reset-icon"
+               title="Reset filters"
+               aria-label="Reset filters"
+                onClick={resetFilters}
+                 >
+                 <i className="bi bi-arrow-counterclockwise" />
+                 </button>
           </div>
         </div>
 

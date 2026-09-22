@@ -1026,7 +1026,6 @@ export default function Vendors({
               </small>
             ) : (
               <small className="vendors-field-hint">
-                Use 3–30 characters. Letters, numbers, and underscores only. No spaces.
               </small>
             )}
           </label>
@@ -1052,7 +1051,6 @@ export default function Vendors({
             />
 
             <small className="vendors-field-hint">
-              Display name for the vendor.
             </small>
           </label>
 
@@ -1140,11 +1138,9 @@ export default function Vendors({
 
             {form.phone && !/^\d{10}$/.test(form.phone) ? (
               <small className="vendors-field-error">
-                Phone Number must contain exactly 10 digits.
               </small>
             ) : (
               <small className="vendors-field-hint">
-                Enter a 10-digit phone number.
               </small>
             )}
           </label>
@@ -1176,11 +1172,9 @@ export default function Vendors({
 
             {form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? (
               <small className="vendors-field-error">
-                Please enter a valid email address.
               </small>
             ) : (
               <small className="vendors-field-hint">
-                Use a valid business email address.
               </small>
             )}
           </label>
@@ -1383,7 +1377,7 @@ export default function Vendors({
             onClick={resetForm}
             disabled={saving}
           >
-            Clear
+            Cancel
           </button>
 
           <button
@@ -1441,79 +1435,51 @@ export default function Vendors({
           </div>
 
           <div className="vendors-filters">
+  {/* SEARCH */}
+  <div className="vendors-search">
+    <i className="bi bi-search" />
+    <input
+      type="text"
+      value={search}
+      onChange={(event) => setSearch(event.target.value)}
+      placeholder="Search vendors..."
+      autoComplete="off"
+      data-lpignore="true"
+      data-1p-ignore="true"
+    />
+  </div>
 
-            {/* SEARCH */}
+  {/* Vendor Type */}
+  <select
+    value={vendorTypeFilter}
+    onChange={(event) => setVendorTypeFilter(event.target.value)}
+  >
+    <option>All Vendor Types</option>
+    <option value="Supplier">Supplier</option>
+    <option value="Organizer">Organizer</option>
+  </select>
 
-            <div className="vendors-search">
+  {/* Status */}
+  <select
+    value={statusFilter}
+    onChange={(event) => setStatusFilter(event.target.value)}
+  >
+    <option>All Statuses</option>
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
 
-              <i className="bi bi-search" />
-
-              <input
-                type="text"
-                value={search}
-                onChange={(event) =>
-                  setSearch(
-                    event.target.value
-                  )
-                }
-                autoComplete="off"
-              data-lpignore="true"
-              data-1p-ignore="true"
-              />
-
-            </div>
-
-            {/* VENDOR TYPE */}
-
-            <select
-              value={
-                vendorTypeFilter
-              }
-              onChange={(event) =>
-                setVendorTypeFilter(
-                  event.target.value
-                )
-              }
-            >
-              <option>
-                All Vendor Types
-              </option>
-
-              <option value="Supplier">
-                Supplier
-              </option>
-
-              <option value="Organizer">
-                Organizer
-              </option>
-            </select>
-
-            {/* STATUS */}
-
-            <select
-              value={
-                statusFilter
-              }
-              onChange={(event) =>
-                setStatusFilter(
-                  event.target.value
-                )
-              }
-            >
-              <option>
-                All Statuses
-              </option>
-
-              <option value="Active">
-                Active
-              </option>
-
-              <option value="Inactive">
-                Inactive
-              </option>
-            </select>
-
-          </div>
+  {/* Reset Icon */}
+  <button
+    type="button"
+    className="vendors-reset-button"
+    onClick={clearFilters}
+    title="Reset filters"
+    aria-label="Reset filters"
+  >
+    <i className="bi bi-arrow-counterclockwise" />
+  </button>
+</div>
 
         </div>
 
@@ -1746,27 +1712,13 @@ export default function Vendors({
 
                       {/* STATUS */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(
-                            event,
-                            vendor.status || "—"
-                          )
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
-                        <span
-                          className={`vendors-status ${
-                            String(
-                              vendor.status ||
-                                ""
-                            ).toLowerCase()
-                          }`}
-                        >
-                          {vendor.status ||
-                            "—"}
-                        </span>
-                      </td>
+                     <td>
+                           <span className={`vendors-status ${
+                             String(vendor.status || "").toLowerCase() }`} >
+                             <i className="bi bi-circle-fill" />
+                              {vendor.status || "—"}
+                                 </span>
+                     </td>
 
                       {/* CREATED TIME */}
 

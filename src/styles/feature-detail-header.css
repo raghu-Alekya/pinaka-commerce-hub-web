@@ -24,23 +24,27 @@
 }
 
 .feature-detail-back {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: 46px;
-  flex: 0 0 46px;
-  margin-top: 0;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  flex: 0 0 auto;
   padding: 0;
-  color: #1677ff;
-  background: #fff;
-  border: 1px solid #d7e3f4;
-  border-radius: 11px;
+  border: 1px solid #dce8f5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #684ee3;
   cursor: pointer;
+  font-size: 16px;
 }
 
 .feature-detail-back:hover {
-  background: #f8fbff;
+  border-color: #a9baff;
+  background: #f7f6ff;
+}
+.feature-detail-back i {
+  font-size: 16px;
+  line-height: 1;
 }
 
 .feature-detail-copy {

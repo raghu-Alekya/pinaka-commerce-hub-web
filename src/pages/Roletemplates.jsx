@@ -537,13 +537,15 @@ export default function RoleTemplates() {
                 <option value="Z_A">Z to A</option>
               </select>
 
-              <button
-                type="button"
-                className="role-reset-btn"
-                onClick={resetFilters}
-              >
-                Reset
-              </button>
+             <button
+               type="button"
+               className="role-reset-icon-btn"
+               title="Reset filters"
+               aria-label="Reset filters"
+               onClick={resetFilters}
+                   >
+                <i className="bi bi-arrow-counterclockwise" />
+                </button>
             </div>
           </div>
 

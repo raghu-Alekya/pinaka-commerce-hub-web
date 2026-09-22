@@ -325,24 +325,33 @@
   font-size: 13px;
 }
 
-.role-reset-btn {
-  display: inline-flex;
+.role-reset-icon-btn {
+  width: 40px;
   height: 40px;
-  min-width: 92px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid #d7e4f2;
   border-radius: 7px;
-  color: #684ee3;
   background: #fff;
+  color: #684ee3;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.role-reset-btn:hover {
+.role-reset-icon-btn:hover {
   border-color: #a9baff;
   background: #f7f6ff;
+  color: #5b43d1;
+}
+
+.role-reset-icon-btn i {
+  font-size: 16px;
+}
+
+.role-reset-icon-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Updated seven-column table */
@@ -1640,7 +1649,7 @@
 .role-table thead tr,
 .role-table thead th,
 .role-table th.role-actions-col {
-  background: #f1f7ff !important;
+  background: #f1f3fd !important;
 }
 
 .role-table thead th {

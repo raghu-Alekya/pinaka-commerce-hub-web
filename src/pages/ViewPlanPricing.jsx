@@ -91,14 +91,14 @@ export default function ViewPlanPricing() {
     <section className="plan-details-page" aria-busy={loading}>
       {" "}
       {/* ===================================================== BACK BUTTON ===================================================== */}{" "}
-      <button
+      {/* <button
         type="button"
         className="plan-details-back"
         onClick={() => navigate("/plans/new")}
       >
         {" "}
         <i className="bi bi-arrow-left" /> Back to Plans{" "}
-      </button>{" "}
+      </button>{" "} */}
       {/* ===================================================== LOADING ===================================================== */}{" "}
       {loading && <p role="status"> Loading plan pricing... </p>}{" "}
       {/* ===================================================== ERROR ===================================================== */}{" "}
@@ -121,13 +121,23 @@ export default function ViewPlanPricing() {
             {" "}
             <div className="plan-details-title-line">
               {" "}
+              <button
+                type="button"
+                className="plan-details-back"
+                onClick={() => navigate("/plans/new")}
+                aria-label="Back to Plans"
+              >
+                <span className="plan-details-back-icon">
+                  <i className="bi bi-arrow-left" />
+                </span>
+              </button>
               <h1> {plan.name || "Unnamed plan"} </h1>{" "}
-              <span
+              {/* <span
                 className={`plan-details-active-badge ${plan.status === "Inactive" ? "plan-details-inactive-badge" : ""}`}
               >
                 {" "}
                 <i className="bi bi-circle-fill" /> {plan.status || "—"}{" "}
-              </span>{" "}
+              </span>{" "} */}
             </div>{" "}
             <p> {plan.description || "No description provided."} </p>{" "}
           </div>{" "}

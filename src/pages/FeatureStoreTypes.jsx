@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Store, Search, Plus, X, Trash2, ArrowLeft } from 'lucide-react';
+import { Store, Search, Plus, X, Trash2 } from "lucide-react";
 import { getFeature } from '../api/features';
 import {
   listMappedStoreTypes,
@@ -134,9 +134,15 @@ const FeatureStoreTypes = () => {
     <div className="store-types-page feature-detail-page">
       <section className="feature-detail-header">
         <div className="feature-detail-top">
-          <button className="feature-detail-back" type="button" onClick={() => navigate('/features')} aria-label="Back to Features">
-            <ArrowLeft size={28} />
-          </button>
+         <button
+           type="button"
+           className="feature-detail-back"
+           onClick={() => navigate("/features")}
+           aria-label="Back to Features"
+           title="Back to Features"
+>
+  <i className="bi bi-arrow-left" />
+</button>
           <div className="feature-detail-copy"><h1>{name}</h1><p>{desc}</p></div>
         </div>
         <nav className="feature-detail-tabs" aria-label="Feature sections">

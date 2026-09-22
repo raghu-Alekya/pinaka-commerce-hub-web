@@ -1,16 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Store, Search, Plus, X, Trash2 } from "lucide-react";
 import { getFeature } from '../api/features';
 import { listFeaturePermissions, createFeaturePermission, deleteFeaturePermission } from '../api/featurePermissionsApi';
-import {
-  ShieldCheck,
-  Search,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Trash2,
-  ArrowLeft,
-} from "lucide-react";
 
 import "../styles/featurepermissiondetails.css";
 import "../styles/feature-detail-header.css";
@@ -97,9 +89,15 @@ const created = await createFeaturePermission(featureId, {
     <div className="fp-page feature-detail-page">
       <section className="feature-detail-header">
         <div className="feature-detail-top">
-          <button className="feature-detail-back" type="button" onClick={() => navigate('/features')} aria-label="Back to Features">
-            <ArrowLeft size={28} />
-          </button>
+          <button
+  type="button"
+  className="feature-detail-back"
+  onClick={() => navigate("/features")}
+  aria-label="Back to Features"
+  title="Back to Features"
+>
+  <i className="bi bi-arrow-left" />
+</button>
           <div className="feature-detail-copy"><h1>{feature?.name || "Feature"}</h1><p>{feature?.description || "Manage permissions for this feature."}</p></div>
         </div>
         <nav className="feature-detail-tabs" aria-label="Feature sections">

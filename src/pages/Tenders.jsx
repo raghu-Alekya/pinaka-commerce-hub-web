@@ -477,7 +477,6 @@ export default function Tenders() {
               </small>
             ) : (
               <small className="tenders-field-help">
-                3–30 characters. Letters and numbers only. No spaces.
               </small>
             )}
           </label>
@@ -528,7 +527,8 @@ export default function Tenders() {
             onClick={resetForm}
             disabled={saving}
           >
-            {editingId ? "Cancel" : "Clear"}
+           
+            {editingId ? "Cancel" : "Cancel"}
           </button>
  
           <button
@@ -620,17 +620,18 @@ export default function Tenders() {
             </select>
 
 
-            <button
-              type="button"
-              className="tenders-reset-button"
-              onClick={() => {
-                setSearch("");
-                setStatusFilter("All Statuses");
-                setSortBy("newest");
-              }}
-            >
-              Reset
-            </button>
+           <button type="button"
+                   className="tenders-reset-button"
+                   onClick={() => {
+                 setSearch("");
+                 setStatusFilter("All Statuses");
+                 setSortBy("newest");
+                      }}
+                    title="Reset filters"
+                  aria-label="Reset filters"
+                    >
+                   <i className="bi bi-arrow-counterclockwise" />
+              </button>
           </div>
         </div>
  
@@ -675,13 +676,14 @@ export default function Tenders() {
  
                     <td>
                       <span
-                        className={`tenders-status ${String(
-                          tender.status
-                        ).toLowerCase()}`}
-                      >
-                        {tender.status}
-                      </span>
-                    </td>
+                         className={`tenders-status ${String(
+                         tender.status
+                         ).toLowerCase()}`}
+                           >
+                         <i className="bi bi-circle-fill" />
+                         {tender.status}
+                          </span>
+                            </td>
  
                     <td className="tender-date-cell">
                       <span className="tender-date">
