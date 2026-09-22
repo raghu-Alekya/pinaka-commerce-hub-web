@@ -8,7 +8,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronsUpDown,
   Trash2,
   ArrowLeft,
 } from "lucide-react";
@@ -29,6 +28,8 @@ const FeaturePermissions = () => {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
   const [form, setForm] = useState({ key: '', name: '', description: '', status: 'Active' });
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filteredPermissions = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -49,7 +50,22 @@ const FeaturePermissions = () => {
     });
   }, [permissions, search, filter]);
 
-  const deletePermission = async (key) => { const item = permissions.find(p => p.key === key); if (!item?.id) return; try { await deleteFeaturePermission(featureId, item.id); setPermissions(current => current.filter(p => p.id !== item.id)); } catch(e) { setError(e.message || 'Unable to delete permission.'); } };
+  const confirmDeletePermission = async () => {
+    if (!deleteTarget?.id || deleting) return;
+    try {
+      setDeleting(true);
+      setError('');
+      await deleteFeaturePermission(featureId, deleteTarget.id);
+      setPermissions((current) =>
+        current.filter((permission) => permission.id !== deleteTarget.id)
+      );
+      setDeleteTarget(null);
+    } catch (e) {
+      setError(e.message || 'Unable to delete permission.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const openCreateModal = () => {
     setForm({ key: '', name: '', description: '', status: 'Active' });
@@ -85,7 +101,6 @@ const created = await createFeaturePermission(featureId, {
             <ArrowLeft size={28} />
           </button>
           <div className="feature-detail-copy"><h1>{feature?.name || "Feature"}</h1><p>{feature?.description || "Manage permissions for this feature."}</p></div>
-          <div className="feature-detail-status">{(feature?.status || 'Active').toUpperCase()}</div>
         </div>
         <nav className="feature-detail-tabs" aria-label="Feature sections">
           <button type="button" className="feature-detail-tab" onClick={() => navigate(`/features/${featureId}/overview`)}>Overview</button>
@@ -184,7 +199,6 @@ const created = await createFeaturePermission(featureId, {
                 <th>
                   <div className="fp-table-heading">
                     Permission Key
-                    <ChevronsUpDown size={11} strokeWidth={1.8} />
                   </div>
                 </th>
 
@@ -192,7 +206,6 @@ const created = await createFeaturePermission(featureId, {
                 <th>
                   <div className="fp-table-heading">
                     Permission Name
-                    <ChevronsUpDown size={11} strokeWidth={1.8} />
                   </div>
                 </th>
 
@@ -200,7 +213,6 @@ const created = await createFeaturePermission(featureId, {
                 <th>
                   <div className="fp-table-heading">
                     Feature
-                    <ChevronsUpDown size={11} strokeWidth={1.8} />
                   </div>
                 </th>
 
@@ -208,7 +220,6 @@ const created = await createFeaturePermission(featureId, {
                 <th>
                   <div className="fp-table-heading">
                     Description
-                    <ChevronsUpDown size={11} strokeWidth={1.8} />
                   </div>
                 </th>
 
@@ -264,9 +275,7 @@ const created = await createFeaturePermission(featureId, {
                     <button
                       type="button"
                       className="fp-delete"
-                      onClick={() =>
-                        deletePermission(permission.key)
-                      }
+                      onClick={() => setDeleteTarget(permission)}
                       aria-label={`Delete ${permission.name}`}
                     >
 
@@ -366,12 +375,33 @@ const created = await createFeaturePermission(featureId, {
               <div className="fp-create-grid">
                 <label>Permission Key <span>*</span><input value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value })} placeholder="e.g. refunds.view" autoFocus /></label>
                 <label>Permission Name <span>*</span><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. View Refunds" /></label>
-                <label className="fp-create-full">Description<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe what this permission allows users to do" rows={3} /></label>
+                <label className="fp-create-description">Description<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe what this permission allows users to do" rows={3} /></label>
                 <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label>
               </div>
               {formError && <p className="fp-modal-error" role="alert">{formError}</p>}
               <div className="fp-modal-actions"><button type="button" className="fp-modal-cancel" onClick={() => !saving && setIsCreateOpen(false)} disabled={saving}>Cancel</button><button type="submit" className="fp-modal-save" disabled={saving}>{saving ? 'Saving...' : 'Save Permission'}</button></div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="fp-delete-overlay" role="dialog" aria-modal="true"
+          aria-labelledby="fp-delete-title"
+          onMouseDown={() => !deleting && setDeleteTarget(null)}>
+          <div className="fp-delete-modal" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="fp-delete-modal-icon"><Trash2 size={23} strokeWidth={2} /></div>
+            <h2 id="fp-delete-title">Delete Permission?</h2>
+            <p>Are you sure you want to delete <strong>{deleteTarget.name || deleteTarget.key}</strong>?</p>
+            <p className="fp-delete-warning">This action cannot be undone.</p>
+            <div className="fp-delete-modal-actions">
+              <button type="button" className="fp-delete-cancel-button"
+                onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button>
+              <button type="button" className="fp-delete-confirm-button"
+                onClick={confirmDeletePermission} disabled={deleting}>
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}

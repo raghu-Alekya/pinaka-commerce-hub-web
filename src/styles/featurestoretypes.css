@@ -631,8 +631,6 @@
 ========================================================= */
 
 .st-table tbody tr {
-  height: 40px;
-
   background: #ffffff;
 
   transition: background-color 0.12s ease;
@@ -645,16 +643,17 @@
 
 
 .st-table td {
-  height: 40px;
-
-  padding: 0 12px;
+  min-width: 0;
+  padding: 12px;
 
   border-bottom: 1px solid #e4ebf5;
 
   color: #42618f;
 
   font-size: 10px;
-  line-height: 14px;
+  line-height: 16px;
+  overflow-wrap: anywhere;
+  white-space: normal;
 
   vertical-align: middle;
 }
@@ -679,6 +678,8 @@
 
 .st-table .st-description {
   color: #42618f;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 
@@ -1023,4 +1024,113 @@
 .store-types-page .st-section-heading h2 {
   font-size: 14px;
   line-height: 20px;
+}
+
+
+/* =========================================================
+   DELETE STORE TYPE CONFIRMATION MODAL
+   Same interaction pattern as Features delete confirmation
+   ========================================================= */
+
+.st-delete-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 27, 55, 0.45);
+}
+
+.st-delete-modal {
+  width: 100%;
+  max-width: 390px;
+  padding: 28px 30px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 55px rgba(20, 35, 75, 0.2);
+  text-align: center;
+}
+
+.st-delete-modal-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  margin: 0 auto 15px;
+  border-radius: 50%;
+  color: #e5455d;
+  background: #fff0f2;
+}
+
+.st-delete-modal h2 {
+  margin: 0 0 10px;
+  color: #10254a;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.st-delete-modal p {
+  margin: 0 0 6px;
+  color: #5b79ad;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.st-delete-modal p strong {
+  color: #10254a;
+  font-weight: 600;
+}
+
+.st-delete-warning {
+  margin-top: 12px !important;
+  color: #dc2649 !important;
+  font-size: 12px !important;
+}
+
+.st-delete-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.st-delete-cancel-button,
+.st-delete-confirm-button {
+  min-width: 120px;
+  height: 42px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.st-delete-cancel-button {
+  border: 1px solid #dce8f4;
+  background: #ffffff;
+  color: #25466f;
+}
+
+.st-delete-confirm-button {
+  border: 1px solid #e5455d;
+  background: #e5455d;
+  color: #ffffff;
+}
+
+.st-delete-cancel-button:hover:not(:disabled) {
+  background: #f8faff;
+}
+
+.st-delete-confirm-button:hover:not(:disabled) {
+  border-color: #cc3f4d;
+  background: #cc3f4d;
+}
+
+.st-delete-cancel-button:disabled,
+.st-delete-confirm-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }

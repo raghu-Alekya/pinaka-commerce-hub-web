@@ -48,8 +48,8 @@ export default function Features() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
+  const [sortBy, setSortBy] = useState("newest");
   const [formErrors, setFormErrors] = useState({});
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -60,6 +60,24 @@ export default function Features() {
     form.code.trim() !== "" &&
     form.name.trim() !== "" &&
     form.category.trim() !== "";
+
+  const hasEditChanges =
+    !isEditing ||
+    !editingFeature ||
+    form.code.trim().toUpperCase() !==
+      String(
+        editingFeature.code ||
+          editingFeature.name?.toUpperCase().replace(/\s+/g, "_") ||
+          ""
+      ).trim().toUpperCase() ||
+    form.name.trim() !== String(editingFeature.name || "").trim() ||
+    form.description.trim() !== String(editingFeature.description || "").trim() ||
+    form.category !== String(editingFeature.category || "") ||
+    form.status !== String(editingFeature.status || "Active");
+
+  const canSubmitFeature =
+    requiredFieldsComplete &&
+    (!isEditing || hasEditChanges);
 
   const updateField = (event) => {
     const field = event.target.dataset.field || event.target.name;
@@ -142,8 +160,8 @@ export default function Features() {
 
   const resetFilters = () => {
     setSearch("");
-    setCategoryFilter("All Categories");
     setStatusFilter("All Statuses");
+    setSortBy("newest");
   };
 
   const deleteFeature = async (featureId) => {
@@ -158,38 +176,62 @@ export default function Features() {
 
   const filteredFeatures = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return features.filter((item) => {
-      const matchesSearch =
-        item.name.toLowerCase().includes(q) ||
-        (item.code || "").toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q);
 
-      const matchesCategory =
-        categoryFilter === "All Categories" || item.category === categoryFilter;
+    const getCreatedTime = (item) => {
+      const value = item.createdAt || item.createdOn || item.createdDate || item.created_at;
+      const time = value ? new Date(value).getTime() : 0;
+      return Number.isNaN(time) ? 0 : time;
+    };
+
+    const getUpdatedTime = (item) => {
+      const value = item.updatedAt || item.updatedOn || item.updatedDate || item.updated_at;
+      const time = value ? new Date(value).getTime() : 0;
+      return Number.isNaN(time) ? 0 : time;
+    };
+
+    const result = features.filter((item) => {
+      const matchesSearch =
+        String(item.name || "").toLowerCase().includes(q) ||
+        String(item.code || "").toLowerCase().includes(q) ||
+        String(item.category || "").toLowerCase().includes(q) ||
+        String(item.description || "").toLowerCase().includes(q);
 
       const matchesStatus =
         statusFilter === "All Statuses" || item.status === statusFilter;
 
-      return matchesSearch && matchesCategory && matchesStatus;
+      return matchesSearch && matchesStatus;
     });
-  }, [features, search, categoryFilter, statusFilter]);
+
+    return result.sort((a, b) => {
+      if (sortBy === "oldest") return getCreatedTime(a) - getCreatedTime(b);
+      if (sortBy === "updated") return getUpdatedTime(b) - getUpdatedTime(a);
+      if (sortBy === "name-asc") return String(a.name || "").localeCompare(String(b.name || ""));
+      if (sortBy === "name-desc") return String(b.name || "").localeCompare(String(a.name || ""));
+      return getCreatedTime(b) - getCreatedTime(a);
+    });
+  }, [features, search, statusFilter, sortBy]);
 
 
   const formatFeatureDate = (value) => {
-    if (!value) return "—";
+    if (!value) return { date: "—", time: "" };
 
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return { date: String(value), time: "" };
+    }
 
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+    return {
+      date: parsedDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      time: parsedDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }),
+    };
   };
 
   return (
@@ -303,13 +345,13 @@ export default function Features() {
         <div className="feature-form-footer">
 <div className="feature-footer-actions">
             <button className="feature-action secondary" type="button" onClick={clearForm}>
-              {isEditing ? "Cancel" : "Clear"}
+              {isEditing ? "Cancel" : "Cancel"}
             </button>
             <button
               className="feature-action primary"
               type="button"
               onClick={isEditing ? updateFeature : saveFeature}
-              disabled={!requiredFieldsComplete}
+              disabled={!canSubmitFeature}
             >
               {isEditing ? "Update Feature" : "Save Feature"}
             </button>
@@ -334,29 +376,29 @@ export default function Features() {
 
             <div className="feature-filter-control">
               <select
-                className="features-filter-select"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-              >
-                <option value="All Categories">All Categories</option>
-                <option value="Restaurant">Restaurant</option>
-                <option value="Customer Engagement">Customer Engagement</option>
-                <option value="Orders">Orders</option>
-                <option value="Cash Management">Cash Management</option>
-                <option value="Stock Control">Stock Control</option>
-              </select>
-              <i className="bi bi-chevron-down feature-filter-chevron" />
-            </div>
-
-            <div className="feature-filter-control">
-              <select
                 className="features-filter-select features-status-select"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
-                <option value="All Statuses">All Statuses</option>
+                <option value="All Statuses">All Status</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
+              </select>
+              <i className="bi bi-chevron-down feature-filter-chevron" />
+            </div>
+
+            <div className="feature-filter-control feature-sort-control">
+              <select
+                className="features-filter-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                aria-label="Sort features"
+              >
+                <option value="newest">Newly Created First</option>
+                <option value="oldest">Oldest Created First</option>
+                <option value="updated">Recently Updated First</option>
+                <option value="name-asc">Name A-Z</option>
+                <option value="name-desc">Name Z-A</option>
               </select>
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
@@ -371,8 +413,8 @@ export default function Features() {
         <div className="features-table-wrap">
           <table className="features-table">
             <colgroup>
-              <col className="col-name" />
               <col className="col-code" />
+              <col className="col-name" />
               <col className="col-category" />
               <col className="col-description" />
               <col className="col-status" />
@@ -383,8 +425,8 @@ export default function Features() {
 
             <thead>
               <tr>
-                <th>Feature Name</th>
                 <th>Feature Code</th>
+                <th>Feature Name</th>
                 <th>Category</th>
                 <th>Description</th>
                 <th>Status</th>
@@ -397,6 +439,9 @@ export default function Features() {
             <tbody>
               {filteredFeatures.map((item) => (
                 <tr key={item.id}>
+                  <td className="feature-code-cell">
+                    {(item.code || item.name?.replace(/\s+/g, "_") || "—").toUpperCase()}
+                  </td>
                   <td>
                     <button
                       type="button"
@@ -406,9 +451,6 @@ export default function Features() {
                       {item.name}
                     </button>
                   </td>
-                  <td className="feature-code-cell">
-                    {(item.code || item.name?.replace(/\s+/g, "_") || "—").toUpperCase()}
-                  </td>
                   <td>{item.category}</td>
                   <FeatureDescriptionCell description={item.description} />
                   <td>
@@ -416,8 +458,28 @@ export default function Features() {
                       <b />{item.status}
                     </span>
                   </td>
-                  <td className="feature-created">{formatFeatureDate(item.createdAt)}</td>
-                  <td className="feature-updated">{formatFeatureDate(item.updatedAt)}</td>
+                  <td className="feature-created">
+                    {(() => {
+                      const created = formatFeatureDate(item.createdAt);
+                      return (
+                        <div className="feature-date-stack">
+                          <span>{created.date}</span>
+                          {created.time && <span className="feature-time">{created.time}</span>}
+                        </div>
+                      );
+                    })()}
+                  </td>
+                  <td className="feature-updated">
+                    {(() => {
+                      const updated = formatFeatureDate(item.updatedAt);
+                      return (
+                        <div className="feature-date-stack">
+                          <span>{updated.date}</span>
+                          {updated.time && <span className="feature-time">{updated.time}</span>}
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td className="actions-col">
                     <div className="feature-row-actions">
                       <button type="button" className="edit-button" onClick={() => editFeature(item)} aria-label={`Edit ${item.name}`}>
