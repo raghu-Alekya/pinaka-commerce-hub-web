@@ -575,26 +575,35 @@ export default function RoleTemplates() {
 
               <tbody>
                 {filteredTemplates.map((template) => (
-                  <tr key={template.id}>
+                  <tr
+                    key={template.id}
+                    className="role-template-clickable-row"
+                    onClick={() =>
+                      navigate(`/role-templates/${template.id}`, {
+                        state: { roleTemplate: template },
+                      })
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        navigate(`/role-templates/${template.id}`, {
+                          state: { roleTemplate: template },
+                        });
+                      }
+                    }}
+                    tabIndex={0}
+                  >
                     <td className="role-code-cell role-equal-col">
                       <div className="role-key-cell">
                         <strong>{template.roleCode || "—"}</strong>
                       </div>
                     </td>
 
-                    <td className="role-name-cell role-equal-col">
-                      <button
-                        type="button"
-                        className="role-name-link"
-                        onClick={() =>
-                          navigate(`/role-templates/${template.id}`, {
-                            state: { roleTemplate: template },
-                          })
-                        }
-                        title={template.name || "—"}
-                      >
-                        <strong>{template.name || "—"}</strong>
-                      </button>
+                    <td
+                      className="role-name-cell role-equal-col"
+                      title={template.name || "—"}
+                    >
+                      <strong>{template.name || "—"}</strong>
                     </td>
 
                     <td
@@ -669,7 +678,10 @@ export default function RoleTemplates() {
                       <button
                         type="button"
                         className="role-edit-action"
-                        onClick={() => editTemplate(template)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          editTemplate(template);
+                        }}
                         disabled={saving}
                         aria-label={`Edit ${
                           template.name || template.roleCode
@@ -682,7 +694,10 @@ export default function RoleTemplates() {
                       <button
                         type="button"
                         className="role-delete-action"
-                        onClick={() => openDeletePopup(template)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openDeletePopup(template);
+                        }}
                         disabled={saving}
                         aria-label={`Delete ${
                           template.name || template.roleCode
