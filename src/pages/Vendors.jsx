@@ -178,6 +178,10 @@ export default function Vendors({
   const [editingId, setEditingId] =
     useState(null);
 
+  // Read-only vendor view mode.
+  const [viewingId, setViewingId] =
+    useState(null);
+
   const [deleteTarget, setDeleteTarget] =
     useState(null);
 
@@ -383,6 +387,7 @@ export default function Vendors({
     });
 
     setEditingId(null);
+    setViewingId(null);
     setOriginalForm({
       ...emptyForm,
     });
@@ -487,8 +492,11 @@ export default function Vendors({
 
   const isEditDirty =
     editingId !== null &&
-    JSON.stringify(form) !==
-      JSON.stringify(originalForm);
+    Object.keys(emptyForm).some(
+      (field) =>
+        String(form[field] ?? "") !==
+        String(originalForm[field] ?? "")
+    );
 
   /*
   |--------------------------------------------------------------------------
@@ -698,6 +706,47 @@ export default function Vendors({
 
   /*
   |--------------------------------------------------------------------------
+  | VIEW VENDOR
+  |--------------------------------------------------------------------------
+  | Populate the same form in read-only mode.
+  */
+
+  function viewVendor(
+    vendor
+  ) {
+    const viewForm = {
+      name: vendor.name || "",
+      code: vendor.code || "",
+      vendorType: normalizeVendorType(
+        vendor.vendorType
+      ),
+      contactPerson: vendor.contactPerson || "",
+      phone: vendor.phone || "",
+      email: vendor.email || "",
+      category: vendor.category || "",
+      addressLine1: vendor.addressLine1 || "",
+      addressLine2: vendor.addressLine2 || "",
+      city: vendor.city || "",
+      state: vendor.state || "",
+      zipCode: vendor.zipCode || "",
+      country: vendor.country || "",
+      status: vendor.status || "Active",
+    };
+
+    setViewingId(vendor.id);
+    setEditingId(null);
+    setForm(viewForm);
+    setOriginalForm(viewForm);
+    setError("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /*
+  |--------------------------------------------------------------------------
   | EDIT VENDOR
   |--------------------------------------------------------------------------
   */
@@ -761,6 +810,7 @@ export default function Vendors({
     setEditingId(
       vendor.id
     );
+    setViewingId(null);
 
     setForm(editForm);
     setOriginalForm(editForm);
@@ -948,7 +998,11 @@ export default function Vendors({
       ===================================================== */}
 
       <form
-        className="vendors-form"
+        className={`vendors-form ${
+          viewingId !== null
+            ? "vendors-form-view-mode"
+            : ""
+        }`}
         onSubmit={saveVendor}
         autoComplete="off"
       >
@@ -958,34 +1012,32 @@ export default function Vendors({
           <div className="vendors-heading-content">
 
             <div className="vendors-heading-icon">
-              <i className="bi bi-truck" />
+              <i
+                className={
+                  viewingId !== null
+                    ? "bi bi-lock-fill"
+                    : "bi bi-truck"
+                }
+              />
             </div>
 
             <div>
               <h2>
-                {editingId !== null
+                {viewingId !== null
+                  ? `View Vendor - ${form.name || "Vendor"}`
+                  : editingId !== null
                   ? "Edit Vendor Details"
                   : "Add Vendor Details"}
               </h2>
 
               <p>
-                Provide the vendor and
-                business details.
+                {viewingId !== null
+                  ? "View vendor and business details. Editing is disabled."
+                  : "Provide the vendor and business details."}
               </p>
             </div>
 
           </div>
-
-          {editingId !== null && (
-            <button
-              type="button"
-              className="vendors-link-button"
-              onClick={resetForm}
-              disabled={saving}
-            >
-              Cancel Edit
-            </button>
-          )}
 
         </div>
 
@@ -1013,7 +1065,7 @@ export default function Vendors({
               autoComplete="off"
               maxLength={30}
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
               aria-invalid={
                 Boolean(form.code) &&
                 !isVendorCodeValid
@@ -1048,7 +1100,7 @@ export default function Vendors({
               placeholder="Enter vendor name"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
 
             <small className="vendors-field-hint">
@@ -1072,7 +1124,7 @@ export default function Vendors({
               }
               onChange={handleChange}
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             >
               <option value="Supplier">
                 Supplier
@@ -1082,6 +1134,10 @@ export default function Vendors({
                 Organizer
               </option>
             </select>
+
+            <small className="vendors-field-hint">
+              Select the vendor business type.
+            </small>
           </label>
 
           {/* =================================================
@@ -1105,10 +1161,15 @@ export default function Vendors({
                 onChange={
                   handleChange
                 }
+                placeholder="Enter contact person name"
                 autoComplete="off"
                 required
-                disabled={saving}
+                disabled={saving || viewingId !== null}
               />
+
+              <small className="vendors-field-hint">
+                Primary contact person for the organizer.
+              </small>
             </label>
           )}
 
@@ -1131,7 +1192,7 @@ export default function Vendors({
               maxLength={10}
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
               aria-invalid={
                 Boolean(form.phone) &&
                 !/^\d{10}$/.test(form.phone)
@@ -1165,7 +1226,7 @@ export default function Vendors({
               onChange={handleChange}
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
               aria-invalid={
                 Boolean(form.email) &&
                 !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
@@ -1201,10 +1262,15 @@ export default function Vendors({
                 form.category
               }
               onChange={handleChange}
+              placeholder="Enter product or category"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
+
+            <small className="vendors-field-hint">
+              Enter the main product or category supplied.
+            </small>
           </label>
 
           {/* =================================================
@@ -1226,8 +1292,12 @@ export default function Vendors({
               placeholder="Enter street address"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
+
+            <small className="vendors-field-hint">
+              Enter the primary street address.
+            </small>
           </label>
 
           {/* =================================================
@@ -1248,8 +1318,12 @@ export default function Vendors({
               onChange={handleChange}
               placeholder="Apartment, suite, unit"
               autoComplete="off"
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
+
+            <small className="vendors-field-hint">
+              Optional apartment, suite, or unit details.
+            </small>
           </label>
 
           {/* =================================================
@@ -1266,10 +1340,15 @@ export default function Vendors({
               name="city"
               value={form.city}
               onChange={handleChange}
+              placeholder="Enter city"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
+
+            <small className="vendors-field-hint">
+              Enter the vendor city.
+            </small>
           </label>
 
           {/* =================================================
@@ -1286,10 +1365,15 @@ export default function Vendors({
               name="state"
               value={form.state}
               onChange={handleChange}
+              placeholder="Enter state"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
+
+            <small className="vendors-field-hint">
+              Enter the vendor state or province.
+            </small>
           </label>
 
           {/* =================================================
@@ -1308,10 +1392,15 @@ export default function Vendors({
                 form.zipCode
               }
               onChange={handleChange}
+              placeholder="Enter ZIP code"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
+
+            <small className="vendors-field-hint">
+              Enter the postal or ZIP code.
+            </small>
           </label>
 
           {/* =================================================
@@ -1330,17 +1419,23 @@ export default function Vendors({
                 form.country
               }
               onChange={handleChange}
+              placeholder="Enter country"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
+
+            <small className="vendors-field-hint">
+              Enter the vendor country.
+            </small>
           </label>
 
           {/* =================================================
               STATUS
           ================================================= */}
 
-          {editingId !== null && (
+          {(editingId !== null ||
+            viewingId !== null) && (
             <label>
               <span>
                 Status <b>*</b>
@@ -1356,7 +1451,7 @@ export default function Vendors({
                 }
                 onChange={handleChange}
                 required
-                disabled={saving}
+                disabled={saving || viewingId !== null}
               >
                 <option value="Active">
                   Active
@@ -1366,6 +1461,10 @@ export default function Vendors({
                   Inactive
                 </option>
               </select>
+
+              <small className="vendors-field-hint">
+                Select whether the vendor is active or inactive.
+              </small>
             </label>
           )}
 
@@ -1391,6 +1490,7 @@ export default function Vendors({
             className="vendors-save-button"
             disabled={
               saving ||
+              viewingId !== null ||
               !isFormComplete ||
               (editingId !== null && !isEditDirty)
             }
@@ -1803,6 +1903,26 @@ export default function Vendors({
                       {/* ACTIONS */}
 
                       <td className="vendors-actions">
+
+                        {/* VIEW */}
+
+                        <button
+                          type="button"
+                          className="vendors-view-action"
+                          onClick={() =>
+                            viewVendor(
+                              vendor
+                            )
+                          }
+                          aria-label={`View ${vendor.name}`}
+                          title="View"
+                          disabled={
+                            saving ||
+                            deleting
+                          }
+                        >
+                          <i className="bi bi-eye" />
+                        </button>
 
                         {/* EDIT */}
 
