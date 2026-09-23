@@ -1,23 +1,672 @@
-/* Uses the existing merchant-store classes; overrides only the embedded layout. */
-.merchant-readonly .merchant-stores-embedded{padding:0;margin:0;min-width:0;width:100%;}
-.merchant-readonly .merchant-stores-embedded .store-item{flex-wrap:wrap;gap:12px;}
-.merchant-readonly .merchant-stores-embedded .store-item-info{min-width:0;overflow-wrap:anywhere;}
-.merchant-readonly .merchant-stores-embedded .store-item-actions{display:flex;flex-wrap:wrap;gap:8px;}
-.merchant-readonly .merchant-stores-embedded .stores-card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
-.merchant-readonly .merchant-stores-embedded .merchant-dashboard-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+/* =========================================================
+   MERCHANT STORES
+   Matches Merchant Vendors UI
+========================================================= */
+
+.merchant-stores-embedded {
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #17233e;
+    min-width: 0;
+    width: 100%;
 }
+
+.merchant-stores-embedded * {
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.merchant-stores-embedded {
+    padding: 0;
+    margin: 0;
+}
+
+
+/* =========================================================
+   COMMON CARD
+========================================================= */
+
+.merchant-stores-embedded .stores-card {
+    background: #fff;
+    border: 1px solid #e1e4eb;
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+
+/* =========================================================
+   TOP HEADER
+========================================================= */
+
+.merchant-stores-embedded .stores-header-card {
+    margin-bottom: 16px;
+}
+
+.merchant-stores-embedded .stores-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    min-height: auto;
+    border: 0;
+}
+
+.merchant-stores-embedded .stores-card-header h2 {
+    margin: 0 0 4px;
+    padding: 0;
+    border: 0;
+
+    font-size: 18px;
+    line-height: 1.5;
+    font-weight: 600;
+
+    color: #17233e;
+}
+
+.merchant-stores-embedded .stores-card-header p {
+    margin: 4px 0 12px;
+
+    color: #81899a;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   NEW STORE BUTTON
+   Same as Vendors .mv-primary
+========================================================= */
+
+.merchant-stores-embedded .btn-new-store {
+    min-height: auto;
+    height: auto;
+
+    padding: 8px 12px;
+
+    border: 1px solid #5143bc;
+    border-radius: 5px;
+
+    background: #5143bc;
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.merchant-stores-embedded .btn-new-store:hover {
+    background: #4538a6;
+    border-color: #4538a6;
+}
+
+.merchant-stores-embedded .btn-new-store i {
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   STORE LIST CARD
+========================================================= */
+
+.merchant-stores-embedded .store-list-card {
+    padding: 18px;
+}
+
+.merchant-stores-embedded .store-list-heading {
+    margin: 0 0 4px;
+    padding: 0;
+}
+
+.merchant-stores-embedded .store-list-heading h2 {
+    margin: 0 0 4px;
+    padding: 0;
+    border: 0;
+
+    font-size: 18px;
+    line-height: 1.5;
+    font-weight: 600;
+
+    color: #17233e;
+}
+
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
+
+.merchant-stores-embedded .store-list-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 12px;
+
+    margin: 14px 0;
+}
+
+.merchant-stores-embedded .store-search-box {
+    width: 100%;
+    max-width: 460px;
+}
+
+.merchant-stores-embedded .store-search-box input {
+    height: 40px;
+
+    width: 100%;
+    min-width: 0;
+
+    border: 1px solid #dfe3eb;
+    border-radius: 6px;
+
+    padding: 10px 12px;
+
+    background: #ffffff;
+    color: #17233e;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    outline: none;
+}
+
+.merchant-stores-embedded .store-search-box input::placeholder {
+    color: #9aa2b3;
+}
+
+.merchant-stores-embedded .store-search-box input:focus {
+    border-color: #5143bc;
+    box-shadow: 0 0 0 1px rgba(81, 67, 188, 0.08);
+}
+
+
+/* =========================================================
+   RESET BUTTON
+========================================================= */
+
+.merchant-stores-embedded .store-reset-btn {
+    padding: 8px 12px;
+
+    border: 1px solid #dfe3eb;
+    border-radius: 5px;
+
+    background: #fff;
+    color: #5143bc;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+}
+
+.merchant-stores-embedded .store-reset-btn:hover {
+    background: #f8f7ff;
+    border-color: #5143bc;
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+========================================================= */
+
+.merchant-stores-embedded .store-table-wrapper {
+    overflow: auto;
+
+    border: 1px solid #e5ebf4;
+    border-radius: 6px;
+
+    width: 100%;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.merchant-stores-embedded .store-table {
+    border-collapse: collapse;
+
+    width: 100%;
+
+    white-space: nowrap;
+
+    table-layout: auto;
+}
+
+
+/* =========================================================
+   TABLE HEADER + CELLS
+========================================================= */
+
+.merchant-stores-embedded .store-table th,
+.merchant-stores-embedded .store-table td {
+    text-align: left;
+
+    padding: 13px 12px;
+
+    border-bottom: 1px solid #edf0f5;
+}
+
+.merchant-stores-embedded .store-table th {
+    background: #fafbfc;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    color: #17233e;
+}
+
+.merchant-stores-embedded .store-table td {
+    font-size: 14px;
+    color: #64748b;
+
+    vertical-align: middle;
+}
+
+.merchant-stores-embedded .store-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.merchant-stores-embedded .store-table tbody tr:hover {
+    background: #fcfcfe;
+}
+
+
+/* =========================================================
+   COLUMN WIDTHS
+   Keep close to Vendors natural table layout
+========================================================= */
+
+.merchant-stores-embedded .store-table th:nth-child(1) {
+    width: 20%;
+}
+
+.merchant-stores-embedded .store-table th:nth-child(2) {
+    width: 12%;
+}
+
+.merchant-stores-embedded .store-table th:nth-child(3) {
+    width: 35%;
+}
+
+.merchant-stores-embedded .store-table th:nth-child(4) {
+    width: 10%;
+}
+
+.merchant-stores-embedded .store-table th:nth-child(5) {
+    width: 23%;
+}
+
+
+/* =========================================================
+   STORE NAME
+========================================================= */
+
+.merchant-stores-embedded .store-name-cell {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    min-width: 0;
+}
+
+.merchant-stores-embedded .store-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    flex: 0 0 32px;
+
+    border-radius: 50%;
+
+    background: #eeeaff;
+    color: #5143bc;
+
+    font-size: 17px;
+}
+
+.merchant-stores-embedded .store-icon i {
+    font-size: 15px;
+}
+
+.merchant-stores-embedded .store-name-info {
+    min-width: 0;
+}
+
+.merchant-stores-embedded .store-name-info strong {
+    display: block;
+
+    margin: 0;
+
+    color: #17233e;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.merchant-stores-embedded .store-name-info span {
+    display: block;
+
+    margin-top: 2px;
+
+    color: #81899a;
+
+    font-size: 12px;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   TYPE
+========================================================= */
+
+.merchant-stores-embedded .store-type {
+    color: #64748b;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   LOCATION
+========================================================= */
+
+.merchant-stores-embedded .store-location {
+    display: block;
+
+    max-width: 100%;
+
+    color: #64748b;
+
+    font-size: 14px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.merchant-stores-embedded .store-status-badge {
+    display: inline-block;
+
+    padding: 2px 10px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+    font-weight: 400;
+
+    white-space: nowrap;
+}
+
+.merchant-stores-embedded .store-status-badge.active {
+    background: #daf9ed;
+    color: #169b72;
+}
+
+.merchant-stores-embedded .store-status-badge.inactive {
+    background: #f0f1f5;
+    color: #667085;
+}
+
+.merchant-stores-embedded .store-status-badge.pending {
+    background: #fff3d6;
+    color: #a16207;
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.merchant-stores-embedded .store-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    white-space: nowrap;
+}
+
+
+/* Store Configuration */
+
+.merchant-stores-embedded .store-config-btn {
+    padding: 8px 12px;
+
+    border: 1px solid #5143bc;
+    border-radius: 5px;
+
+    background: #5143bc;
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+}
+
+.merchant-stores-embedded .store-config-btn:hover {
+    background: #4538a6;
+    border-color: #4538a6;
+}
+
+
+/* Edit */
+
+.merchant-stores-embedded .store-edit-btn {
+    padding: 8px 12px;
+
+    border: 1px solid #dfe3eb;
+    border-radius: 5px;
+
+    background: #fff;
+    color: #5143bc;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+}
+
+.merchant-stores-embedded .store-edit-btn:hover {
+    border-color: #5143bc;
+    background: #f8f7ff;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.merchant-stores-embedded .store-empty-row {
+    padding: 13px 12px !important;
+
+    height: auto;
+
+    color: #17233e !important;
+
+    font-size: 14px !important;
+
+    text-align: left;
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.merchant-stores-embedded .store-pagination {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 12px;
+
+    margin: 14px 0 0;
+
+    font-size: 12px;
+}
+
+.merchant-stores-embedded .store-pagination-info {
+    color: #17233e;
+
+    font-size: 12px;
+}
+
+.merchant-stores-embedded .store-pagination-controls {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+.merchant-stores-embedded .store-pagination-controls button {
+    padding: 6px;
+
+    border: 1px solid #dfe3eb;
+    border-radius: 5px;
+
+    background: #fff;
+    color: #5143bc;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+.merchant-stores-embedded
+.store-pagination-controls
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.merchant-stores-embedded .store-pagination-controls span {
+    min-width: 28px;
+
+    text-align: center;
+
+    color: #5143bc;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   REMOVE OLD STORE LIST STYLES
+========================================================= */
+
+.merchant-stores-embedded .stores-list {
+    display: none;
+}
+
+.merchant-stores-embedded .store-item {
+    display: none;
+}
+
+
+/* =========================================================
+   FOCUS
+========================================================= */
+
+.merchant-stores-embedded :focus-visible {
+    outline: 2px solid #5143bc;
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
 @media (max-width: 900px) {
-  .merchant-readonly .merchant-stores-embedded .merchant-dashboard-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+
+    .merchant-stores-embedded .store-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .merchant-stores-embedded .store-table {
+        min-width: 1000px;
+    }
 }
 
+
 @media (max-width: 600px) {
-  .merchant-readonly .merchant-stores-embedded .merchant-dashboard-cards {
-    grid-template-columns: 1fr;
-  }
+
+    .merchant-stores-embedded .stores-card-header,
+    .merchant-stores-embedded .store-pagination {
+        flex-wrap: wrap;
+    }
+
+    .merchant-stores-embedded .stores-card-header {
+        align-items: flex-start;
+    }
+
+    .merchant-stores-embedded .btn-new-store {
+        width: auto;
+    }
+
+    .merchant-stores-embedded .store-list-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .merchant-stores-embedded .store-search-box {
+        max-width: 100%;
+    }
+
+    .merchant-stores-embedded .store-pagination {
+        align-items: center;
+    }
 }
