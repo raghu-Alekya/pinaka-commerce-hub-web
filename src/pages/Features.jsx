@@ -237,7 +237,7 @@ export default function Features() {
   return (
     <div className="features-page">
       <header className="features-page-heading">
-        <h1> Create Features</h1>
+        <h1>Features</h1>
         <p>Manage platform features and their details.</p>
       </header>
 
@@ -332,7 +332,13 @@ export default function Features() {
           <div className="feature-field feature-form-status-field">
             <label>Status</label>
             <div className="select-shell">
-              <select name="status" value={form.status} onChange={updateField} autoComplete="off">
+              <select
+                name="status"
+                value={form.status}
+                onChange={updateField}
+                autoComplete="off"
+                className={`feature-form-status-select ${form.status === "Inactive" ? "inactive" : "active"}`}
+              >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
@@ -394,24 +400,19 @@ export default function Features() {
                 onChange={(e) => setSortBy(e.target.value)}
                 aria-label="Sort features"
               >
-                <option value="newest">Newly Created First</option>
-                <option value="oldest">Oldest Created First</option>
-                <option value="updated">Recently Updated First</option>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="updated">Recently Updated</option>
                 <option value="name-asc">Name A-Z</option>
                 <option value="name-desc">Name Z-A</option>
               </select>
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
 
-            <button
-             type="button"
-               className="feature-filter-reset-icon"
-               title="Reset filters"
-               aria-label="Reset filters"
-                onClick={resetFilters}
-                 >
-                 <i className="bi bi-arrow-counterclockwise" />
-                 </button>
+            <button className="reset-filter" type="button" onClick={resetFilters}>
+              <i className="bi bi-arrow-counterclockwise" />
+            
+            </button>
           </div>
         </div>
 
@@ -443,18 +444,33 @@ export default function Features() {
 
             <tbody>
               {filteredFeatures.map((item) => (
-                <tr key={item.id}>
+                <tr
+                  key={item.id}
+                  className="feature-clickable-row"
+                  onClick={() =>
+                    navigate(`/features/${item.id}/overview`, {
+                      state: { feature: item },
+                    })
+                  }
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      navigate(`/features/${item.id}/overview`, {
+                        state: { feature: item },
+                      });
+                    }
+                  }}
+                  aria-label={`Open ${item.name} feature overview`}
+                >
                   <td className="feature-code-cell">
                     {(item.code || item.name?.replace(/\s+/g, "_") || "—").toUpperCase()}
                   </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="feature-name feature-name-button"
-                      onClick={() => navigate(`/features/${item.id}/overview`, { state: { feature: item } })}
-                    >
+                  <td className="feature-name-cell">
+                    <span className="feature-name feature-name-button">
                       {item.name}
-                    </button>
+                    </span>
                   </td>
                   <td>{item.category}</td>
                   <FeatureDescriptionCell description={item.description} />
@@ -465,10 +481,10 @@ export default function Features() {
                   </td>
                   <td className="feature-created">
                     {(() => {
-                      const created = formatFeatureDate(item.createdAt);
+                      const created = formatFeatureDate(item.createdAt || item.createdOn || item.createdDate || item.created_at);
                       return (
                         <div className="feature-date-stack">
-                          <span>{created.date}</span>
+                          <strong>{created.date}</strong>
                           {created.time && <span className="feature-time">{created.time}</span>}
                         </div>
                       );
@@ -476,10 +492,10 @@ export default function Features() {
                   </td>
                   <td className="feature-updated">
                     {(() => {
-                      const updated = formatFeatureDate(item.updatedAt);
+                      const updated = formatFeatureDate(item.updatedAt || item.updatedOn || item.updatedDate || item.updated_at);
                       return (
                         <div className="feature-date-stack">
-                          <span>{updated.date}</span>
+                          <strong>{updated.date}</strong>
                           {updated.time && <span className="feature-time">{updated.time}</span>}
                         </div>
                       );
@@ -487,13 +503,24 @@ export default function Features() {
                   </td>
                   <td className="actions-col">
                     <div className="feature-row-actions">
-                      <button type="button" className="edit-button" onClick={() => editFeature(item)} aria-label={`Edit ${item.name}`}>
+                      <button
+                        type="button"
+                        className="edit-button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          editFeature(item);
+                        }}
+                        aria-label={`Edit ${item.name}`}
+                      >
                         <i className="bi bi-pencil" />
                       </button>
                       <button
                         type="button"
                         className="delete-button"
-                        onClick={() => setDeleteTarget(item)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setDeleteTarget(item);
+                        }}
                         aria-label={`Delete ${item.name}`}
                         title={`Delete ${item.name}`}
                       >

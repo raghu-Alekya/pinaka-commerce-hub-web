@@ -1737,7 +1737,7 @@
   display: flex;
   align-items: center;
   gap: 13px;
-  margin: 0 0 20px;
+  margin: 0 0 28px;
 }
 
 .role-heading-icon {
@@ -1755,7 +1755,7 @@
 .role-card-heading h2 {
   margin: 0 0 4px;
   color: #10264d;
-  font-size: 16px;
+  font-size: 19px;
   line-height: 1.25;
   font-weight: 650;
 }
@@ -2557,7 +2557,7 @@
 /* Creation/edit card heading changes with the mode. */
 .role-card-heading h2 {
   color: #10264d;
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 600;
 }
 
@@ -2801,4 +2801,243 @@
 .role-table tbody tr.role-template-clickable-row .role-actions,
 .role-table tbody tr.role-template-clickable-row .role-actions button {
   cursor: pointer;
+}
+
+
+/* =========================================================
+   23 SEP 2026 — FEATURES REFERENCE UI ALIGNMENT
+   UI-only overrides. Existing Role Template functionality unchanged.
+   ========================================================= */
+
+/* Role Code + Role Template Name: placeholder only, no leading icons */
+.role-create-fields-grid .role-code-field .role-input-wrap,
+.role-create-fields-grid .role-name-field .role-input-wrap {
+  gap: 0 !important;
+  padding: 0 13px !important;
+}
+
+.role-create-fields-grid .role-code-field .role-input-wrap input,
+.role-create-fields-grid .role-name-field .role-input-wrap input {
+  padding: 0 !important;
+}
+
+/* Status field — same neutral shell used by Features.
+   Only the selected text communicates Active/Inactive. */
+.role-create-fields-grid .role-status-field .role-select-wrap,
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-active,
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-inactive,
+.role-create-fields-grid .role-select-wrap:has(select.status-active),
+.role-create-fields-grid .role-select-wrap:has(select.status-inactive) {
+  position: relative;
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  overflow: hidden;
+  border: 1px solid #dce3ed !important;
+  border-radius: 7px;
+  background: #ffffff !important;
+  box-shadow: none;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap:focus-within {
+  border-color: #8c7cf0 !important;
+  box-shadow: 0 0 0 3px rgba(104, 78, 227, 0.08) !important;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap select {
+  width: 100%;
+  height: 100%;
+  padding: 0 38px 0 13px;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent !important;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap select.status-active {
+  color: #00a762 !important;
+  font-weight: 500 !important;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap select.status-inactive {
+  color: #e5455d !important;
+  font-weight: 500 !important;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap select option {
+  color: #25314c;
+  background: #ffffff;
+  font-weight: 400;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap select option[value="ACTIVE"] {
+  color: #00a762;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap select option[value="INACTIVE"] {
+  color: #e5455d;
+}
+
+.role-create-fields-grid .role-status-field .role-select-wrap > i,
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-active > i,
+.role-create-fields-grid .role-status-field .role-select-wrap.role-status-select-inactive > i {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  transform: translateY(-50%);
+  color: #75819a !important;
+  font-size: 14px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Role Templates List toolbar — same dimensions as Features */
+.role-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.role-list-header > div:first-child {
+  min-width: max-content;
+  flex: 0 0 auto;
+}
+
+.role-list-header h2 {
+  margin: 0 !important;
+  color: #10264d;
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 600;
+  white-space: nowrap !important;
+}
+
+.role-filters {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.role-search {
+  width: 250px !important;
+  min-width: 250px !important;
+  max-width: 250px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  flex: 0 0 250px !important;
+  padding: 0 12px !important;
+  box-sizing: border-box;
+}
+
+.role-search input {
+  height: 36px;
+}
+
+.role-filters > select:first-of-type {
+  width: 140px !important;
+  min-width: 140px !important;
+  max-width: 140px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  flex: 0 0 140px !important;
+  box-sizing: border-box;
+}
+
+.role-filters > select:last-of-type {
+  width: 190px !important;
+  min-width: 190px !important;
+  max-width: 190px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  flex: 0 0 190px !important;
+  box-sizing: border-box;
+}
+
+.role-reset-icon-btn {
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 !important;
+  flex: 0 0 38px !important;
+  box-sizing: border-box;
+}
+
+/* Edit/Delete — exact Features reference dimensions and visual treatment */
+.role-table .role-actions {
+  white-space: nowrap;
+  text-align: center;
+}
+
+.role-table .role-actions .role-edit-action,
+.role-table .role-actions .role-delete-action {
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #edf0f5 !important;
+  border-radius: 7px !important;
+  background: #f8faff !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.role-table .role-actions .role-edit-action {
+  color: #5367f0 !important;
+}
+
+.role-table .role-actions .role-delete-action {
+  margin-left: 8px !important;
+  color: #d9485f !important;
+}
+
+.role-table .role-actions .role-edit-action:hover,
+.role-table .role-actions .role-delete-action:hover {
+  background: #f0f3fb !important;
+  border-color: #edf0f5 !important;
+}
+
+.role-table .role-actions .role-edit-action i,
+.role-table .role-actions .role-delete-action i {
+  font-size: 14px !important;
+  line-height: 1;
+}
+
+@media (max-width: 1100px) {
+  .role-list-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .role-filters {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 700px) {
+  .role-search,
+  .role-filters > select:first-of-type,
+  .role-filters > select:last-of-type {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    flex: 1 1 100% !important;
+  }
 }
