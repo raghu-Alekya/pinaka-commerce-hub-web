@@ -1,15 +1,18 @@
+import "../styles/merchant-stores-embedded.css";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getMerchant } from "../api/merchants";
 import { ApiError } from "../api/http";
 
-export default function MerchantStores() {
-  const { merchantId } = useParams();
+export default function MerchantStores({ merchantId: selectedMerchantId, embedded = false }) {
+  const params = useParams();
+  const merchantId = selectedMerchantId ?? params.merchantId;
   const nav = useNavigate();
   const [merchant, setMerchant] = useState(null);
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -18,10 +21,12 @@ export default function MerchantStores() {
       setLoading(true);
       setError("");
       try {
+        if (!merchantId) throw new Error("A merchant must be selected.");
         const result = await getMerchant(merchantId);
         if (!cancelled) {
+          if (!result?.merchant) throw new Error("Merchant details were not returned.");
           setMerchant(result.merchant);
-          setStores(result.stores);
+          setStores(Array.isArray(result.stores) ? result.stores : []);
         }
       } catch (err) {
         if (!cancelled) {
@@ -40,149 +45,25 @@ export default function MerchantStores() {
     return () => {
       cancelled = true;
     };
-  }, [merchantId]);
+  }, [merchantId, attempt]);
 
-  const statusClass = (merchant?.status || "active").toLowerCase().replace(/\s+/g, "-");
-  // Merchant dashboard card statistics
-const totalStores = stores.length;
-
-const activeStores = stores.filter(
-  (store) => (store.status || "").toLowerCase() === "active"
-).length;
-
-const inactiveStores = totalStores - activeStores;
-
-const totalPosDevices = stores.reduce(
-  (total, store) =>
-    total + Number(store.posDevices || store.pos_devices || 0),
-  0
-);
-
-const totalEmployees = stores.reduce(
-  (total, store) =>
-    total + Number(store.employees || store.employeeCount || 0),
-  0
-);
-
-const subscriptionPlan = merchant?.plan || "—";
   return (
-    <div className="page-content merchant-store-page">
-      <div className="breadcrumb-area">
+    <div className={embedded ? "merchant-store-page merchant-stores-embedded" : "page-content merchant-store-page"}>
+      {!embedded && <div className="breadcrumb-area">
         <button className="link-button" onClick={() => nav("/merchants")}>
           <i className="bi bi-arrow-left" /> Merchants
         </button>
         <span>/</span>
         <span>Merchant Stores</span>
-      </div>
+      </div>}
 
 
       {loading ? (
         <section className="merchant-summary-card">Loading merchant details...</section>
       ) : error ? (
-        <section className="merchant-summary-card">{error}</section>
+        <section className="merchant-summary-card" role="alert">{error} <button type="button" onClick={()=>setAttempt(value=>value+1)}>Retry</button></section>
       ) : (
         <>
-          <section className="merchant-summary-card">
-            <div className="merchant-summary-left">
-              <div className="merchant-avatar">{merchant.initials}</div>
-              <div>
-                <h2>{merchant.name}</h2>
-                <p>{merchant.id}</p>
-              </div>
-            </div>
-            <div className="merchant-summary-details">
-              <div className="summary-item">
-                <span>Contact</span>
-                <strong>{merchant.email || "—"}</strong>
-              </div>
-              <div className="summary-item">
-                <span>Status</span>
-                <strong className={`status-badge ${statusClass}`}>
-                  {merchant.status}
-                </strong>
-              </div>
-              <div className="summary-item">
-                <span>Subscription</span>
-                <strong>{merchant.plan || "—"}</strong>
-              </div>
-            </div>
-          </section>
-
-          {/* Merchant Dashboard Cards */}
-        <section className="merchant-dashboard-cards">
-
-          {/* Total Stores */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon purple">
-              <i className="bi bi-shop" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Total Stores</span>
-              <h3>{totalStores}</h3>
-            </div>
-          </div>
-
-          {/* Active Stores */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon green">
-              <i className="bi bi-check-circle" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Active Stores</span>
-              <h3>{activeStores}</h3>
-            </div>
-          </div>
-
-          {/* Inactive Stores */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon red">
-              <i className="bi bi-wifi-off" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Inactive Stores</span>
-              <h3>{inactiveStores}</h3>
-            </div>
-          </div>
-
-          {/* Total POS Devices */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon blue">
-              <i className="bi bi-display" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Total POS Devices</span>
-              <h3>{totalPosDevices}</h3>
-            </div>
-          </div>
-
-          {/* Total Employees */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon green">
-              <i className="bi bi-people" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Total Employees</span>
-              <h3>{totalEmployees}</h3>
-            </div>
-          </div>
-
-          {/* Subscription Plan */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon orange">
-              <i className="bi bi-award" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Subscription Plan</span>
-              <h3 className="subscription-plan-text">
-                {subscriptionPlan}
-              </h3>
-              <small className="subscription-active">
-                ● Active
-              </small>
-            </div>
-          </div>
-
-        </section>
           <section className="stores-card">
             <div className="stores-card-header">
               <div>
@@ -221,7 +102,7 @@ const subscriptionPlan = merchant?.plan || "—";
                       </div>
                     </div>
                     <div className="store-item-status">
-                      <span className={`store-status ${store.status.toLowerCase()}`}>
+                      <span className={`store-status ${String(store.status || 'unknown').toLowerCase()}`}>
                         {store.status}
                       </span>
                     </div>
