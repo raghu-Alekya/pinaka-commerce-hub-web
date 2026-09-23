@@ -24,6 +24,32 @@ import {
 import "../styles/Employees.css";
 
 /* =========================================================
+   AVATAR COMPONENT WITH SAFE FALLBACK
+========================================================= */
+function EmployeeAvatar({ src, name, initials, colorClass }) {
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => {
+    setImgError(false);
+  }, [src]);
+  return (
+    <div className={`employee-avatar ${colorClass || "purple"}`}>
+      {src && !imgError ? (
+        <img
+          src={src}
+          alt={name || "Employee"}
+          className="employee-avatar-img"
+          onError={() => setImgError(true)}
+        />
+      ) : initials ? (
+        <span>{initials}</span>
+      ) : (
+        <User size={18} />
+      )}
+    </div>
+  );
+}
+
+/* =========================================================
    EMPLOYEE DATA
 ========================================================= */
 
@@ -173,6 +199,17 @@ const employees = [
   },
 ];
 
+export async function listMerchants() {
+  const data = await api.get(endpoints.merchants);
+  const items = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.merchants)
+      ? data.merchants
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
+  return items;
+}
 /* =========================================================
    STAT CARD
 ========================================================= */
@@ -579,6 +616,8 @@ export default function Employees() {
                   <tr key={employee.rowKey}>
                     {/* EMPLOYEE */}
 
+                    {/* EMPLOYEE COLUMN */}
+                    {/* EMPLOYEE COLUMN */}
                     <td>
                       <div className="employee-person">
                         <div className={`employee-avatar ${employee.avatar}`}>
@@ -594,7 +633,6 @@ export default function Employees() {
 
                         <div>
                           <div className="employee-name">{employee.name}</div>
-
                           <div className="employee-id">{employee.id}</div>
                         </div>
                       </div>
@@ -656,11 +694,12 @@ export default function Employees() {
                       <div className="employee-actions">
                         <button
                           title="Edit employee"
-                          onClick={() => navigate("/employees/edit", { state: { employee } })}
+                          onClick={() =>
+                            navigate("/employees/edit", { state: { employee } })
+                          }
                         >
                           <Pencil size={17} />
                         </button>
-
                       </div>
                     </td>
                   </tr>

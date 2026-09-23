@@ -9,6 +9,15 @@ export const endpoints = {
   merchant: (id) => `/merchants/${id}`,
 
   stores: "/stores",
+  // Employee Endpoints (Matching Postman Collection)
+  employees: "/merchants/employees",
+  employee: (id) => `/merchants/employees/${encodeURIComponent(id)}`,
+  merchantEmployees: (merchantId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/employees`,
+  merchantEmployee: (merchantId, employeeId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/employees/${encodeURIComponent(employeeId)}`,
+  employeeProfileImage: (employeeId) =>
+    `/merchants/employees/${encodeURIComponent(employeeId)}/profile-image`,
   store: (id) => `/stores/${id}`,
   storeTypes: "/store-types",
   storeType: (id) => `/store-types/${encodeURIComponent(id)}`,
@@ -16,8 +25,7 @@ export const endpoints = {
   storeTypeFeature: (storeTypeId, featureId) =>
     `/store-types/${encodeURIComponent(storeTypeId)}/features/${encodeURIComponent(featureId)}`,
   storeConnector: (id) => `/stores/${id}/connector`,
-  merchantStores: (merchantId) =>
-    `/merchants/${merchantId}/stores`,
+  merchantStores: (merchantId) => `/merchants/${merchantId}/stores`,
 
   features: "/features",
   feature: (id) => `/features/${id}`,
@@ -28,16 +36,14 @@ export const endpoints = {
 
   plans: "/plans",
 
-  plan: (id) =>
-    `/plans/${encodeURIComponent(id)}`,
+  plan: (id) => `/plans/${encodeURIComponent(id)}`,
 
-  planStatus: (id) =>
-    `/plans/${encodeURIComponent(id)}`,
+  planStatus: (id) => `/plans/${encodeURIComponent(id)}`,
 
   tendors: "/tendors",
   tendor: (id) => `/tendors/${id}`,
 
-tendors: "/tendors",
+  tendors: "/tendors",
   tendor: (id) => `/tendors/${id}`,
 
   employees: "/employees",

@@ -1,201 +1,97 @@
-import { getAccessToken } from "../auth/tokenStore";
-import { endpoints } from "./endpoints";
- 
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "/connector/api/v1";
- 
-function extractStoreTypesList(payload) {
-  const source =
-    payload?.storeTypes ??
-    payload?.items ??
-    payload?.data ??
-    payload;
- 
-  if (Array.isArray(source)) {
-    return source;
-  }
- 
-  if (source && Array.isArray(source.storeTypes)) {
-    return source.storeTypes;
-  }
- 
-  if (source && Array.isArray(source.items)) {
-    return source.items;
-  }
- 
-  if (source && Array.isArray(source.data)) {
-    return source.data;
-  }
- 
-  return [];
+import { api } from "./http";
+
+export function normalizeStoreType(item) {
+  if (!item) return item;
+  return {
+    ...item,
+    id: item.id,
+    code: item.storeTypeCode || item.code || "",
+    storeTypeCode: item.storeTypeCode || item.code || "",
+    name: item.name || "",
+    description: item.description || "",
+    status: (item.status || "ACTIVE").toUpperCase() === "ACTIVE" ? "Active" : "Inactive",
+    createdOn: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "—",
+    createdDate: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "—",
+    createdTime: item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+    updatedDate: item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : "—",
+    updatedTime: item.updatedAt ? new Date(item.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+    icon: "bi-shop",
+    tone: "blue",
+  };
 }
- 
-export function normalizeStoreTypeList(payload) {
-  const list = extractStoreTypesList(payload);
- 
-  return list.map((item, index) => {
-    const id =
-      item?.id ??
-      item?._id ??
-      item?.storeTypeId ??
-      item?.storeTypeID ??
-      item?.code ??
-      index;
- 
-    const name =
-      item?.name ??
-      item?.storeTypeName ??
-      item?.type ??
-      item?.code ??
-      `Store Type ${index + 1}`;
- 
-    const code =
-      item?.storeTypeCode ??
-      item?.code ??
-      item?.slug ??
-      String(name).trim();
- 
-    const active =
-      item?.active ??
-      item?.isActive ??
-      item?.status ??
-      true;
- 
-    return {
-      ...item,
-      id: String(id),
-      name: String(name).trim(),
-      code: String(code).trim(),
-      active:
-        typeof active === "string"
-          ? active.toUpperCase() !== "INACTIVE"
-          : Boolean(active),
-    };
-  });
-}
- 
-async function request(path, { token, ...options } = {}) {
-  const accessToken = token ?? getAccessToken();
-  const requestUrl = path.startsWith("/connector/")
-    ? path
-    : `${BASE_URL}${path}`;
- 
-  const response = await fetch(requestUrl, {
-    ...options,
-    credentials: "include",
-    headers: {
-      Accept: "application/json",
-      ...(options.body
-        ? {
-            "Content-Type": "application/json",
-          }
-        : {}),
-      ...(accessToken
-        ? {
-            Authorization: `Bearer ${accessToken}`,
-          }
-        : {}),
-      ...options.headers,
-    },
-  });
- 
-  const raw = await response.text();
- 
-  let data = null;
- 
-  if (raw) {
-    try {
-      data = JSON.parse(raw);
-    } catch {
-      throw new Error(
-        `API returned a non-JSON response (${response.status}).`
-      );
-    }
-  }
- 
-  if (!response.ok || data?.success === false) {
-    throw new Error(
-      data?.message ??
-        data?.error ??
-        `Request failed (${response.status}).`
-    );
-  }
- 
-  return data;
-}
- 
-function storeTypePath(id) {
-  return endpoints.storeType(id);
-}
- 
+
+const path = (id) => `/store-types/${encodeURIComponent(id)}`;
+
+const payload = (form) => ({
+  storeTypeCode: (form.storeTypeCode || form.code || "").trim().toUpperCase(),
+  name: (form.name || "").trim(),
+  description: (form.description || "").trim(),
+  status: (form.status || "Active").toUpperCase(),
+});
+
+export const listStoreTypes = async () => {
+  const res = await api.get("/store-types");
+  const items = res?.storeTypes || res?.data?.storeTypes || (Array.isArray(res) ? res : []);
+  return items.map(normalizeStoreType);
+};
+
+export const getStoreType = async (id) => {
+  const res = await api.get(path(id));
+  return normalizeStoreType(res?.storeType || res?.data?.storeType || res);
+};
+
+export const createStoreType = async (form) => {
+  const res = await api.post("/store-types", payload(form));
+  return normalizeStoreType(res?.storeType || res?.data?.storeType || res);
+};
+
+export const updateStoreType = async (id, form) => {
+  const res = await api.put(path(id), payload(form));
+  return normalizeStoreType(res?.storeType || res?.data?.storeType || res);
+};
+
+export const deleteStoreType = (id) => api.delete(path(id));
+
 export const storeTypesApi = {
-  // GET /store-types
-  async getAll(token) {
-    const response = await request(endpoints.storeTypes, { token });
-    const normalized = normalizeStoreTypeList(response);
- 
-    return {
-      ...(response || {}),
-      storeTypes: normalized,
-      items: normalized,
-      data: normalized,
-    };
+  getAll: async () => {
+    const res = await api.get("/store-types");
+    const storeTypes = (res?.storeTypes || res?.data?.storeTypes || (Array.isArray(res) ? res : [])).map(normalizeStoreType);
+    return { success: true, storeTypes, data: storeTypes };
   },
- 
-  // GET /store-types/:id
-  getOne(id, token) {
-    return request(storeTypePath(id), {
-      token,
-    });
+  getById: async (id) => {
+    const res = await api.get(path(id));
+    const storeType = normalizeStoreType(res?.storeType || res?.data?.storeType || res);
+    return { success: true, storeType, data: storeType };
   },
- 
-  // POST /store-types
-  create(values, token) {
-    return request("/store-types", {
-      method: "POST",
-      body: JSON.stringify(values),
-      token,
-    });
+  create: async (form) => {
+    const res = await api.post("/store-types", payload(form));
+    const storeType = normalizeStoreType(res?.storeType || res?.data?.storeType || res);
+    return { success: true, storeType, data: storeType };
   },
- 
-  // PUT /store-types/:id
-  update(id, values, token) {
-    return request(storeTypePath(id), {
-      method: "PUT",
-      body: JSON.stringify(values),
-      token,
-    });
+  update: async (id, form) => {
+    const res = await api.put(path(id), payload(form));
+    const storeType = normalizeStoreType(res?.storeType || res?.data?.storeType || res);
+    return { success: true, storeType, data: storeType };
   },
- 
-  // POST /store-types/:id/features
-  createFeature(id, values, token) {
-    return request(endpoints.storeTypeFeatures(id), {
-      method: "POST",
-      body: JSON.stringify(values),
-      token,
-    });
+  delete: async (id) => {
+    return api.delete(path(id));
   },
- 
-  // GET /store-types/:id/features
-  getFeatures(id, token) {
-    return request(endpoints.storeTypeFeatures(id), {
-      token,
-    });
+  getFeatures: async (storeTypeId) => {
+    return api.get(`/store-types/${encodeURIComponent(storeTypeId)}/features`);
   },
- 
-  // DELETE /store-types/:id/features/:featureId
-  removeFeature(storeTypeId, featureId, token) {
-    return request(endpoints.storeTypeFeature(storeTypeId, featureId), {
-      method: "DELETE",
-      token,
-    });
+  addFeature: async (storeTypeId, featureId) => {
+    return api.post(`/store-types/${encodeURIComponent(storeTypeId)}/features`, { featureId });
   },
- 
-  // DELETE /store-types/:id
-  remove(id, token) {
-    return request(storeTypePath(id), {
-      method: "DELETE",
-      token,
-    });
+  removeFeature: async (storeTypeId, featureId) => {
+    return api.delete(`/store-types/${encodeURIComponent(storeTypeId)}/features/${encodeURIComponent(featureId)}`);
+  },
+  getRoleTemplates: async (storeTypeId) => {
+    return api.get(`/store-types/${encodeURIComponent(storeTypeId)}/role-templates`);
+  },
+  addRoleTemplate: async (storeTypeId, roleTemplateId) => {
+    return api.post(`/store-types/${encodeURIComponent(storeTypeId)}/role-templates`, { roleTemplateId });
+  },
+  removeRoleTemplate: async (storeTypeId, roleTemplateId) => {
+    return api.delete(`/store-types/${encodeURIComponent(storeTypeId)}/role-templates/${encodeURIComponent(roleTemplateId)}`);
   },
 };
