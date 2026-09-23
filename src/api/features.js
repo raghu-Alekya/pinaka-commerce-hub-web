@@ -5,6 +5,7 @@ const normalize = (item) => ({ ...item, description: item.description || "", cat
   type: item.featureType || "TEXT", status: item.status === "ACTIVE" ? "Active" : "Inactive",
   createdAt: item.createdAt ? new Date(item.createdAt).toLocaleString() : "—", icon: "bi-diamond", tone: "purple" });
 const payload = (form) => ({ name: form.name.trim(), description: form.description.trim(), category: form.category.trim(), featureType: form.type.trim(), status: form.status.toUpperCase() });
+export const getFeature = async (id) => normalize((await api.get(path(id))).feature);
 export const listFeatures = async () => (await api.get("/features")).features.map(normalize);
 export const createFeature = async (form) => normalize((await api.post("/features", { ...payload(form), featureKey: form.featureKey.trim() })).feature);
 export const updateFeature = async (id, form) => normalize((await api.put(path(id), payload(form))).feature);

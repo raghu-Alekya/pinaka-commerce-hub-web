@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllCategories, listFeatures, createFeature, updateFeature as persistFeature, deleteFeature, setFeatureStatus } from "../api/features";
 import "../styles/features.css";
-import { listFeatures, createFeature as createFeatureApi, updateFeature as updateFeatureApi, deleteFeature as deleteFeatureApi } from "../api/features";
 
 const emptyForm = { featureKey: "", name: "", description: "", category: "", type: "", status: "Active" };
 
@@ -151,7 +150,7 @@ export default function Features() {
   };
 
   const deleteFeature = async (featureId) => {
-    try { await deleteFeatureApi(featureId); setFeatures((prev) => prev.filter((item) => item.id !== featureId)); setApiError(""); } catch (e) { setApiError(e.message || "Unable to delete feature."); }
+    try { await deleteFeature(featureId); setFeatures((prev) => prev.filter((item) => item.id !== featureId)); setApiError(""); } catch (e) { setApiError(e.message || "Unable to delete feature."); }
   };
 
   const confirmDeleteFeature = async () => {
@@ -178,6 +177,8 @@ export default function Features() {
     } catch (e) { setError(e.message); } finally { setBusy(false); }
   };
 
+    const filteredFeatures = useMemo(() => {
+    const q = search.trim().toLowerCase();
     const getCreatedTime = (item) => {
       const value = item.createdAt || item.createdOn || item.createdDate || item.created_at;
       const time = value ? new Date(value).getTime() : 0;
@@ -274,7 +275,8 @@ export default function Features() {
 
         <h2 className="feature-details-heading">Feature Details</h2>
 
-        <fieldset disabled={busy || loading} className="feature-form-grid" style={{ border: 0, padding: 0, margin: 0 }}>
+        <fieldset disabled={busy || loading} style={{ border: 0, padding: 0, margin: 0 }}>
+        <div className="feature-form-grid">
           <div className="feature-field">
             <label>Feature Key<span>*</span></label>
             <input name="featureKey" value={form.featureKey} onChange={updateField} disabled={isEditing} maxLength={100} placeholder="e.g. LOYALTY" />
@@ -376,6 +378,7 @@ export default function Features() {
             >
               {isEditing ? "Update Feature" : "Save Feature"}
             </button>
+          </div>
           </div>
         </fieldset>
       </section>
