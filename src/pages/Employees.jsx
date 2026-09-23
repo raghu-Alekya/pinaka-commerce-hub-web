@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { listEmployees } from "../api/employees";
 
 import {
   Search,
@@ -234,6 +235,22 @@ export default function Employees() {
 
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const [employeeRows, setEmployeeRows] = useState([]);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    listEmployees()
+      .then((items) => {
+        if (active) setEmployeeRows(items);
+      })
+      .catch((error) => {
+        if (active) setLoadError(error.message || "Unable to load employees.");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   /* FILTERS */
 
   const [merchant, setMerchant] = useState("All Merchants");
@@ -255,7 +272,7 @@ export default function Employees() {
   ===================================================== */
 
   const filteredEmployees = useMemo(() => {
-    return employees.filter((employee) => {
+    return employeeRows.filter((employee) => {
       const searchValue = search.trim().toLowerCase();
 
       const matchesSearch =
@@ -285,7 +302,7 @@ export default function Employees() {
         matchesStatus
       );
     });
-  }, [search, merchant, store, role, status]);
+  }, [employeeRows, search, merchant, store, role, status]);
 
   /* =====================================================
      PAGINATION CALCULATIONS
@@ -489,7 +506,7 @@ export default function Employees() {
             onChange={handleMerchantChange}
             options={[
               "All Merchants",
-              ...Array.from(new Set(employees.map((e) => e.merchant))),
+              ...Array.from(new Set(employeeRows.map((e) => e.merchant))),
             ]}
           />
 
@@ -500,7 +517,7 @@ export default function Employees() {
             onChange={handleStoreChange}
             options={[
               "All Stores",
-              ...Array.from(new Set(employees.map((e) => e.store))),
+              ...Array.from(new Set(employeeRows.map((e) => e.store))),
             ]}
           />
 
@@ -511,7 +528,7 @@ export default function Employees() {
             onChange={handleRoleChange}
             options={[
               "All Roles",
-              ...Array.from(new Set(employees.map((e) => e.role))),
+              ...Array.from(new Set(employeeRows.map((e) => e.role))),
             ]}
           />
 
@@ -553,15 +570,26 @@ export default function Employees() {
             </thead>
 
             <tbody>
-              {visibleEmployees.length > 0 ? (
+              {loadError ? (
+                <tr>
+                  <td colSpan="9" className="employees-no-results">{loadError}</td>
+                </tr>
+              ) : visibleEmployees.length > 0 ? (
                 visibleEmployees.map((employee) => (
-                  <tr key={employee.id}>
+                  <tr key={employee.rowKey}>
                     {/* EMPLOYEE */}
 
                     <td>
                       <div className="employee-person">
                         <div className={`employee-avatar ${employee.avatar}`}>
-                          {employee.initials}
+                          {employee.profilePhoto ? (
+                            <img
+                              src={employee.profilePhoto}
+                              alt={`${employee.name} profile`}
+                            />
+                          ) : (
+                            employee.initials
+                          )}
                         </div>
 
                         <div>

@@ -547,6 +547,13 @@
   font-weight: 700;
 }
 
+.employee-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .employee-avatar.purple {
   color: #5d3dda;
   background: #eee9ff;
