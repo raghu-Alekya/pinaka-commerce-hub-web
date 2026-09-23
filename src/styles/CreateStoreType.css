@@ -690,6 +690,40 @@
   background: #ef3b5c;
 }
 
+.store-filter-select {
+  position: relative;
+}
+
+.store-filter-select select {
+  width: 100%;
+  height: 34px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #D9E6F4;
+  border-radius: 7px;
+  background: #fff;
+  color: #294A76;
+  font-size: 13px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+}
+
+.store-filter-select i {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748B;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.store-filter-select select:focus {
+  border-color: #684EE3;
+  outline: none;
+}
+
 @media (max-width: 900px) {
   .store-type-form-grid,
   .store-type-bottom-grid {

@@ -177,6 +177,8 @@ export default function ViewRoleTemplateAccess() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [savingFeatureId, setSavingFeatureId] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showLeaveWarning, setShowLeaveWarning] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -257,6 +259,7 @@ export default function ViewRoleTemplateAccess() {
   async function toggleFeature(featureId) {
     const isEnabled = enabledFeatures.includes(featureId);
     const feature = featurePermissions.find((item) => item.id === featureId);
+    setHasUnsavedChanges(true);
 
     if (!isEnabled) {
       const permissionIds = feature?.permissions
@@ -324,6 +327,7 @@ export default function ViewRoleTemplateAccess() {
 
   async function togglePermission(featureId, permissionId) {
     const feature = featurePermissions.find((item) => item.id === featureId);
+    setHasUnsavedChanges(true);
 
     if (!selectedPermissions.includes(permissionId)) {
       const permission = feature?.permissions.find((item) => item.id === permissionId);
@@ -404,31 +408,58 @@ export default function ViewRoleTemplateAccess() {
     }
   }
 
-  function selectAll() {
-    setEnabledFeatures(featurePermissions.map((feature) => feature.id));
+ function selectAll() {
+  setEnabledFeatures(featurePermissions.map((feature) => feature.id));
 
-    setSelectedPermissions(
-      featurePermissions.flatMap((feature) =>
-        feature.permissions.map((permission) => permission.id)
-      )
-    );
+  setSelectedPermissions(
+    featurePermissions.flatMap((feature) =>
+      feature.permissions.map((permission) => permission.id)
+    )
+  );
+
+  setHasUnsavedChanges(true);
+}
+
+function clearAll() {
+  setEnabledFeatures([]);
+  setSelectedPermissions([]);
+  setHasUnsavedChanges(true);
+}
+
+  function requestLeave() {
+  if (hasUnsavedChanges) {
+    setShowLeaveWarning(true);
+    return;
   }
 
-  function clearAll() {
-    setEnabledFeatures([]);
-    setSelectedPermissions([]);
-  }
+  navigate("/role-templates");
+}
+
+function discardAndLeave() {
+  setShowLeaveWarning(false);
+  setHasUnsavedChanges(false);
+  navigate("/role-templates");
+}
+
+function saveAndLeave() {
+  setShowLeaveWarning(false);
+  setHasUnsavedChanges(false);
+
+  navigate(`/role-templates/${roleId}`, {
+    state: { roleTemplate },
+  });
+}
 
   return (
     <section className="role-details-page">
       <button
-        type="button"
-        className="role-details-back"
-        onClick={() => navigate("/role-templates")}
-        aria-label="Back to role templates"
-      >
-        <i className="bi bi-arrow-left" />
-      </button>
+  type="button"
+  className="role-details-back"
+  onClick={requestLeave}
+  aria-label="Back to role templates"
+>
+  <i className="bi bi-arrow-left" />
+</button>
 
       <div className="role-details-heading">
         <div>
@@ -448,7 +479,14 @@ export default function ViewRoleTemplateAccess() {
             type="button"
             key={id}
             className={id === "access" ? "active" : ""}
-            onClick={() => navigate(path, { state: { roleTemplate } })}
+            onClick={() => {
+  if (hasUnsavedChanges) {
+    setShowLeaveWarning(true);
+    return;
+  }
+
+  navigate(path, { state: { roleTemplate } });
+}}
           >
             {label}
           </button>
@@ -582,6 +620,73 @@ export default function ViewRoleTemplateAccess() {
                 })}
               </div>
             )}
+
+<div className="role-details-actions">
+  <button
+    type="button"
+    className="role-details-secondary-btn"
+    onClick={requestLeave}
+  >
+    Cancel
+  </button>
+
+  <button
+    type="button"
+    className="role-details-primary-btn"
+    onClick={saveAndLeave}
+  >
+    Save Changes
+  </button>
+</div>
+
+{showLeaveWarning && (
+  <div
+    className="role-leave-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="role-leave-title"
+  >
+    <div className="role-leave-modal">
+      <div className="role-leave-icon">
+        <i className="bi bi-exclamation-triangle" />
+      </div>
+
+      <h3 id="role-leave-title">Leave without saving?</h3>
+
+      <p>
+        You have changed feature or permission access. Do you want to save
+        your changes before leaving?
+      </p>
+
+      <div className="role-leave-actions">
+        <button
+          type="button"
+          className="role-leave-cancel-btn"
+          onClick={() => setShowLeaveWarning(false)}
+        >
+          Keep Editing
+        </button>
+
+        <button
+          type="button"
+          className="role-leave-discard-btn"
+          onClick={discardAndLeave}
+        >
+          Leave Anyway
+        </button>
+
+        <button
+          type="button"
+          className="role-leave-save-btn"
+          onClick={saveAndLeave}
+        >
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
           </>
         )}
       </section>
