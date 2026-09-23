@@ -1,101 +1,77 @@
+import StoreTypeDialog from "../components/StoreTypeDialog";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { storeTypesApi } from "../api/storeTypes";
 
-const initialStoreType = {
-  code: "RESTAURANT",
-  name: "Restaurant",
-  status: "Active",
-  description:
-    "Full-service and quick service restaurant vertical with kitchen and dining operations.",
-};
+import { getStoreType, updateStoreType } from "../api/storeTypes";
 
 export default function StoreTypeDetails() {
   const navigate = useNavigate();
   const location = useLocation();
   const { storeTypeId } = useParams();
-  const initialState = location.state?.storeType;
+  const [activeTab, setActiveTab] = useState("overview");
+  const [form, setForm] = useState({ code: "", name: "", description: "", status: "Active" });
 
-  const [form, setForm] = useState(() => ({
-    ...initialStoreType,
-    ...(initialState
-      ? {
-          code: initialState.code ?? initialState.storeTypeCode ?? "",
-          name: initialState.name ?? initialStoreType.name,
-          status: initialState.status ?? initialStoreType.status,
-          description:
-            initialState.description ?? initialStoreType.description,
-        }
-      : {}),
-  }));
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-
+  const [message, setMessage] = useState("");
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    let cancelled = false;
+    let active = true;
+    setLoading(true); setError(""); setMessage("");
+    getStoreType(storeTypeId).then(item => { if (active) setForm(item); })
+      .catch(e => { if (active) setError(e.message); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [storeTypeId, attempt]);
+  async function save() {
+    if (busy || !form.id) return;
+    if (!form.code.trim() || !form.name.trim()) { setError("Code and name are required."); return; }
+    setBusy(true); setError(""); setMessage(""); setMessage("");
+    try { setForm(await updateStoreType(form.id, form)); setMessage("Store type updated."); }
+    catch (e) { setError(e.message); } finally { setBusy(false); }
+  }
 
-    storeTypesApi
-      .getOne(storeTypeId)
-      .then((response) => {
-        const storeType = response?.storeType ?? response?.data ?? response;
+  function updateField(event) {
+    const { name, value } = event.target;
 
-        if (!storeType || typeof storeType !== "object") {
-          throw new Error("GET /store-types/:id did not return a store type.");
-        }
-
-        if (!cancelled) {
-          setForm({
-            code: storeType.storeTypeCode ?? storeType.code ?? "",
-            name: storeType.name ?? "",
-            status: storeType.status === "INACTIVE" ? "Inactive" : "Active",
-            description: storeType.description ?? "",
-          });
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [storeTypeId]);
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
 
   return (
     <section className="store-type-details-page">
-      <div className="store-type-details-top">
-  <button
-    type="button"
-    className="store-type-details-back"
-    onClick={() => navigate("/store-types/new")}
-    aria-label="Back to Store Types"
-    title="Back to Store Types"
-  >
-    <i className="bi bi-arrow-left" />
-  </button>
+      {loading && <p role="status">Loading store type...</p>}
+      <button
+        type="button"
+        className="store-type-details-back"
+        onClick={() => navigate("/store-types/new")}
+      >
+        <i className="bi bi-arrow-left" />
+        Back to Store Types
+      </button>
 
-  <div className="store-type-details-heading">
-    <div className="store-type-title-line">
-      <h1>{form.name}</h1>
+      <div className="store-type-details-heading">
+        <div>
+          <div className="store-type-title-line">
+            <h1>{form.name}</h1>
+            <span className="store-type-active-badge">
+              <i className="bi bi-circle-fill" />
+              {form.status}
+            </span>
+          </div>
 
-    </div>
+          <p>
+            {form.description}
+          </p>
+        </div>
+      </div>
 
-    <p>{form.description}</p>
-  </div>
-</div>
-
-{loading && <p>Loading store type...</p>}
-{error && <p role="alert">{error}</p>}
-
-<nav className="store-type-tabs" aria-label="Store type sections">
-  <button type="button" className="active">
-    Overview
-  </button>
-
+      <nav className="store-type-tabs" aria-label="Store type sections">
         <button
           type="button"
           onClick={() =>
@@ -125,63 +101,79 @@ export default function StoreTypeDetails() {
             <i className="bi bi-info-circle" />
           </div>
 
-          <div>
-            <h2>Basic Information</h2>
-            <p>View and update the core store type details.</p>
+          <fieldset disabled={loading || busy || !form.id} style={{ border: 0, padding: 0, margin: 0 }}>
+          <div className="store-type-details-grid">
+            <label className="store-type-details-field">
+              <span>
+                Store Type Code <b>*</b>
+              </span>
+
+              <input
+                name="code"
+                value={form.code}
+                onChange={updateField}
+              />
+            </label>
+
+            <label className="store-type-details-field">
+              <span>Status</span>
+
+              <select
+                name="status"
+                value={form.status}
+                onChange={updateField}
+                className="store-type-details-status"
+              >
+                <option value="Active">● Active</option>
+                <option value="Inactive">● Inactive</option>
+              </select>
+            </label>
           </div>
         </div>
 
-        {/* Row 1 */}
-<div className="store-type-details-grid">
-  <label className="store-type-details-field">
-    <span>
-      Store Type Code <b>*</b>
-    </span>
+          <label className="store-type-details-field store-type-details-name">
+            <span>
+              Store Type Name <b>*</b>
+            </span>
 
-    <input name="code" value={form.code} readOnly />
-    
-  </label>
+            <input
+              name="name"
+              value={form.name}
+              onChange={updateField}
+            />
+          </label>
 
-  <label className="store-type-details-field">
-    <span>
-      Status <b>*</b>
-    </span>
+          <label className="store-type-details-field store-type-details-description">
+            <span>
+              Description <b>*</b>
+            </span>
 
-    <input
-      name="status"
-      value={form.status}
-      readOnly
-      className="store-type-details-status"
-    />
+            <textarea
+              name="description"
+              maxLength="500"
+              value={form.description}
+              onChange={updateField}
+            />
 
-  </label>
-</div>
-
-{/* Row 2 */}
-<div className="store-type-details-grid">
-  <label className="store-type-details-field">
-    <span>
-      Store Type Name <b>*</b>
-    </span>
-
-    <input name="name" value={form.name} readOnly />
-  </label>
-
-  <label className="store-type-details-field store-type-details-description">
-    <span>Description</span>
-
-    <textarea
-      name="description"
-      value={form.description}
-      readOnly
-      maxLength="500"
-    />
-
-    <small>{form.description.length}/500</small>
-  </label>
-</div>
-
-      </section>
+            <small>{form.description.length}/500</small>
+          </label>
+          <button type="button" className="store-type-submit-button" onClick={save}>{busy ? "Saving..." : "Save changes"}</button>
+          </fieldset>
+        </section>
+      ) : (
+        <section className="store-type-details-card store-type-empty-tab">
+          <i className="bi bi-gear" />
+          <h2>
+            {activeTab === "features" && "Features"}
+            {activeTab === "roles" && "Role Templates"}
+          </h2>
+          <p>
+            Configure this store type section here.
+          </p>
+        </section>
+      )}
+      {error && <StoreTypeDialog title="Unable to Complete Request" variant="error" confirmLabel={form.id ? "OK" : "Retry"} onConfirm={() => { setError(""); if (!form.id) setAttempt(n => n + 1); }} onClose={() => setError("")}>{error}</StoreTypeDialog>}
+      {message && !error && <StoreTypeDialog title="Store Type Saved" onClose={() => setMessage("")}>{message}</StoreTypeDialog>}
     </section>
   );
 }

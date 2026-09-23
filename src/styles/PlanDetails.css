@@ -197,15 +197,14 @@
 }
 
 .plan-details-field input {
-  height: 42px;
-  padding: 0 13px;
+  height: 36px;
+  padding: 0 12px;
 }
 
 .plan-details-field textarea {
-  min-height: 88px;
-  padding: 12px;
-  line-height: 1.5;
-  resize: none;
+  min-height: 72px;
+  padding: 9px 12px;
+  line-height: 1.4;
 }
 
 .plan-details-field small {
@@ -225,18 +224,16 @@
 }
 
 .plan-details-full-field {
-  margin-top: 17px;
+  margin-top: 14px;
 }
 
 .plan-details-description {
-  position: relative;
-  margin-top: 17px;
+  margin-top: 10px;
 }
 
 .plan-details-description small {
-  position: absolute;
   right: 9px;
-  bottom: 8px;
+  bottom: 6px;
 }
 
 /* Pricing page */
