@@ -609,13 +609,11 @@ export default function Employees() {
             <tbody>
               {loadError ? (
                 <tr>
-                  <td colSpan="9" className="employees-no-results">
-                    {loadError}
-                  </td>
+                  <td colSpan="9" className="employees-no-results">{loadError}</td>
                 </tr>
               ) : visibleEmployees.length > 0 ? (
                 visibleEmployees.map((employee) => (
-                  <tr key={employee.id}>
+                  <tr key={employee.rowKey}>
                     {/* EMPLOYEE */}
 
                     {/* EMPLOYEE COLUMN */}
@@ -623,18 +621,13 @@ export default function Employees() {
                     <td>
                       <div className="employee-person">
                         <div className={`employee-avatar ${employee.avatar}`}>
-                          {employee.profileImage ? (
+                          {employee.profilePhoto ? (
                             <img
-                              src={employee.profileImage}
-                              alt={employee.name}
-                              className="employee-avatar-img"
-                              onError={(e) => {
-                                // Fallback to initials if image fails to load
-                                e.currentTarget.style.display = "none";
-                              }}
+                              src={employee.profilePhoto}
+                              alt={`${employee.name} profile`}
                             />
                           ) : (
-                            <span>{employee.initials}</span>
+                            employee.initials
                           )}
                         </div>
 

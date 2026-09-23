@@ -45,4 +45,8 @@ export const endpoints = {
 
   tendors: "/tendors",
   tendor: (id) => `/tendors/${id}`,
+
+  employees: "/employees",
+  employeeList: "/merchants/employees",
 };
+
