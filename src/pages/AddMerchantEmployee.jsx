@@ -1,5 +1,4 @@
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { getMerchant } from "../api/merchants";
 import React, { useEffect, useState } from "react";
 import PhoneInputModule from "react-phone-input-2";
 
@@ -8,7 +7,6 @@ import "react-phone-input-2/lib/style.css";
 import {
   User,
   Camera,
-  BriefcaseBusiness,
   MapPin,
   Settings,
   Upload,
@@ -33,34 +31,9 @@ export default function AddMerchantEmployee({ onSave }) {
 }
 
 export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBack, embedded = false }) {
-  const [merchantDetails, setMerchantDetails] = useState(null);
-  const [contextLoading, setContextLoading] = useState(true);
-  const [contextError, setContextError] = useState('');
-  const [loadAttempt, setLoadAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  useEffect(() => {
-    if (!merchantId) { setContextError('Open Add Employee from a merchant details page.'); setContextLoading(false); return; }
-    let active = true;
-    setContextLoading(true); setContextError('');
-    const draft = initialMerchant?._onboarding;
-    const request = draft && String(initialMerchant.id) === merchantId ? Promise.resolve({ merchant: initialMerchant, stores: draft.stores, roles: draft.roles }) : Promise.resolve().then(() => getMerchant(merchantId));
-    request.then(result => { if (active) setMerchantDetails(result); }).catch(error => { if (active) setContextError(error.message || 'Unable to load merchant stores.'); }).finally(() => { if (active) setContextLoading(false); });
-    return () => { active = false; };
-  }, [merchantId, initialMerchant, loadAttempt]);
-  const response = merchantDetails?.raw || merchantDetails || {};
-  const raw = response.merchant || response.data?.merchant || response.data || response;
-  const draft = raw._onboarding;
-  const merchantName = draft?.merchant?.business || raw.businessName || raw.legalBusinessName || raw.name || initialMerchant?.name || merchantId;
-  const storesSource = draft?.stores ?? response.stores ?? response.data?.stores ?? raw.stores;
-  const merchantRoles = draft?.roles ?? response.roles ?? response.data?.roles ?? raw.roles ?? [];
-  const availableStores = (Array.isArray(storesSource) ? storesSource : []).filter(store => store.merchantId == null || String(store.merchantId) === merchantId).map(store => ({ ...store, id: String(store.id ?? store.storeId ?? store.code ?? store.storeCode ?? ''), name: store.name || store.storeName || store.code || store.storeCode })).filter(store => store.id);
-  const rolesForStore = storeId => {
-    const store = availableStores.find(item => item.id === storeId);
-    if (!store) return [];
-    const roles = Array.isArray(store.roles) ? store.roles : Array.isArray(store.roleIds) && Array.isArray(merchantRoles) ? merchantRoles.filter(role => store.roleIds.map(String).includes(String(role.id))) : [];
-    return roles.filter(role => typeof role === 'string' || String(role.status || 'ACTIVE').toUpperCase() !== 'INACTIVE').map(role => typeof role === 'string' ? role : role.name || role.roleName).filter(Boolean);
-  };
+  const contextError = merchantId ? '' : 'Open Add Employee from a merchant details page.';
   const [showPassword, setShowPassword] = useState(false);
 
   // Profile image preview
@@ -79,20 +52,13 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
     state: "",
     pinCode: "",
     country: "India",
-    role: "",
     merchant: merchantId,
-    store: "",
-    employeeLoginPin: "",
     manager: "",
     username: "",
     password: "",
     sendCredentials: true,
   });
 
-  // Store + role assignments.
-  // Nothing is pre-populated: the user adds a store and then selects
-  // one or more roles for that store.
-  const [storeAssignments, setStoreAssignments] = useState([]);
   const [errors, setErrors] = useState({});
 
   const validateField = (name, value) => {
@@ -192,10 +158,6 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
         if (!trimmed) return "Merchant is required.";
         return "";
 
-      case "employeeLoginPin":
-        if (!/^\d{6}$/.test(trimmed)) return "Employee Login PIN must be exactly 6 digits.";
-        return "";
-
       case "username":
         if (!trimmed) return "Username is required.";
         if (!/^[A-Za-z0-9_]{4,30}$/.test(trimmed)) {
@@ -224,7 +186,7 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
       "firstName", "lastName", "email", "phone",
       "dob", "gender",
       "address1", "city", "state", "pinCode", "country",
-      "merchant", "employeeLoginPin", "username", "password"
+      "merchant", "username", "password"
     ];
 
     requiredFields.forEach((name) => {
@@ -237,91 +199,8 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
       if (error) nextErrors.address2 = error;
     }
 
-    if (storeAssignments.length === 0) {
-      nextErrors.storeAssignments = "Please assign at least one store.";
-    } else {
-      const stores = new Set();
-
-      storeAssignments.forEach((assignment) => {
-        const storeErrorKey = `store-${assignment.id}`;
-        const roleErrorKey = `roles-${assignment.id}`;
-
-        if (!assignment.store) {
-          nextErrors[storeErrorKey] = "Please select a store.";
-        }
-
-        if (assignment.store) {
-          if (stores.has(assignment.store)) {
-            nextErrors[storeErrorKey] = "This store is already assigned.";
-          }
-          stores.add(assignment.store);
-        }
-
-        if (!assignment.roles || assignment.roles.length === 0) {
-          nextErrors[roleErrorKey] =
-            "Please select at least one role for this store.";
-        }
-      });
-    }
-
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
-  };
-
-  const addStoreAssignment = () => {
-    const firstUnassignedStore = availableStores.find(
-      (store) =>
-        !storeAssignments.some((assignment) => assignment.store === store.id)
-    );
-
-    if (!firstUnassignedStore) {
-      return;
-    }
-
-    setStoreAssignments((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        store: "",
-        roles: [],
-      },
-    ]);
-  };
-
-  const updateStore = (id, store) => {
-    setStoreAssignments((prev) =>
-      prev.map((assignment) =>
-        assignment.id === id ? { ...assignment, store, roles: [] } : assignment
-      )
-    );
-
-    if (errors[`store-${id}`]) {
-      setErrors((prev) => ({
-        ...prev,
-        [`store-${id}`]: "",
-      }));
-    }
-  };
-
-  const updateStoreRoles = (id, roles) => {
-    setStoreAssignments((prev) =>
-      prev.map((assignment) =>
-        assignment.id === id ? { ...assignment, roles } : assignment
-      )
-    );
-
-    if (errors[`roles-${id}`]) {
-      setErrors((prev) => ({
-        ...prev,
-        [`roles-${id}`]: "",
-      }));
-    }
-  };
-
-  const removeStoreAssignment = (id) => {
-    setStoreAssignments((prev) =>
-      prev.filter((assignment) => assignment.id !== id)
-    );
   };
 
   /* =========================================================
@@ -337,9 +216,7 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
     }));
 
     const nextValue =
-      name === "employeeLoginPin"
-        ? value.replace(/\D/g, "").slice(0, 6)
-        : name === "pinCode"
+      name === "pinCode"
           ? value.replace(/\D/g, "").slice(0, 6)
           : type === "checkbox"
             ? checked
@@ -407,7 +284,7 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (saving || contextLoading || contextError) return;
+    if (saving || contextError) return;
     setSaveError('');
 
 
@@ -421,11 +298,10 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
       return;
     }
 
-    if (storeAssignments.some(assignment => !availableStores.some(store => store.id === assignment.store) || assignment.roles.some(role => !rolesForStore(assignment.store).includes(role)))) { setSaveError('Select valid stores and their assigned roles.'); return; }
     if (typeof onSave !== 'function') { setSaveError('Employee saving is not connected. Pass your employee save handler to AddMerchantEmployee.'); return; }
     setSaving(true);
     try {
-      await onSave({ ...formData, merchant: merchantId, merchantId, storeAssignments: storeAssignments.map(({ store, roles }) => ({ storeId: store, roles })), profileImage });
+      await onSave({ ...formData, merchant: merchantId, merchantId, profileImage });
       onBack();
     } catch (error) { setSaveError(error.message || 'Unable to save employee.'); }
     finally { setSaving(false); }
@@ -479,13 +355,10 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
           FORM
       ===================================================== */}
 
-      <div className="pch-merchant-context" aria-label="Selected merchant"><span>Merchant</span><strong>{merchantName || merchantId}</strong><small>{merchantId}</small></div>
-      {contextLoading && <p role="status">Loading merchant stores…</p>}
-      {contextError && <div role="alert">{contextError} <button type="button" onClick={() => setLoadAttempt(value => value + 1)}>Retry</button></div>}
-      {!contextLoading && !contextError && !availableStores.length && <p role="status">No stores available for this merchant. Add a store before creating an employee.</p>}
+      {contextError && <p role="alert" className="field-error">{contextError}</p>}
       {saveError && <p className="field-error" role="alert">{saveError}</p>}
       <form onSubmit={handleSave} autoComplete="off">
-        <fieldset disabled={saving || contextLoading || Boolean(contextError) || !availableStores.length} className="merchant-employee-fieldset">
+        <fieldset disabled={saving || Boolean(contextError)} className="merchant-employee-fieldset">
           <div className="add-employee-layout">
             {/* =================================================
               LEFT COLUMN
@@ -741,83 +614,9 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
                 </div>
               </section>
 
-              {/* =================================================
-                WORK INFORMATION
-            ================================================= */}
+              
 
-              <section className="employee-card work-information-card">
-                <CardHeader
-                  icon={<BriefcaseBusiness size={21} />}
-                  title="Work Information"
-                  description="Select stores and roles under the merchant shown above."
-                />
 
-                {/* EMPLOYEE LOGIN PIN */}
-                <div className="employee-login-pin-field">
-                  <label>
-                    Employee Login PIN <span>*</span>
-                  </label>
-
-                  <input
-                    type="text"
-                    name="employeeLoginPin"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    maxLength={6}
-                    pattern="[0-9]{6}"
-                    placeholder="Enter 6-digit PIN"
-                    value={formData.employeeLoginPin}
-                    onChange={handleChange}
-                    className={errors.employeeLoginPin ? "field-invalid" : ""}
-                  />
-
-                  {errors.employeeLoginPin ? (
-                    <span className="field-error">{errors.employeeLoginPin}</span>
-                  ) : (
-                    <span className="employee-login-pin-help">
-                      Use this 6-digit PIN for employee login.
-                    </span>
-                  )}
-                </div>
-
-                {/* STORE + ROLE ASSIGNMENTS */}
-                <div className="store-role-assignment-section">
-                  <div className="store-role-heading">
-                    <div>
-                      <label className="store-role-label">
-                        Store Role Assignments <span>*</span>
-                      </label>
-                      <p>Select stores and assign role(s) for each store.</p>
-                    </div>
-                  </div>
-
-                  <div className="store-assignment-list">
-                    {storeAssignments.map((assignment) => (
-                      <StoreRoleAssignment
-                        key={assignment.id}
-                        assignment={assignment}
-                        availableStores={availableStores}
-                        availableRoles={rolesForStore(assignment.store)}
-                        onStoreChange={updateStore}
-                        onRolesChange={updateStoreRoles}
-                        onRemove={removeStoreAssignment}
-                        storeError={errors[`store-${assignment.id}`]}
-                        roleError={errors[`roles-${assignment.id}`]}
-                      />
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="add-another-store-btn"
-                    onClick={addStoreAssignment}
-                    disabled={storeAssignments.length >= availableStores.length}
-                  >
-                    <span className="add-store-plus">+</span>
-                    Add Another Store
-                  </button>
-                </div>
-              </section>
 
               {/* =================================================
                 ACCOUNT SETTINGS
@@ -898,123 +697,7 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
   );
 }
 
-/* =========================================================
-   STORE + ROLE ASSIGNMENT
-========================================================= */
 
-function StoreRoleAssignment({
-  assignment,
-  availableStores,
-  availableRoles,
-  onStoreChange,
-  onRolesChange,
-  onRemove,
-  storeError,
-  roleError,
-}) {
-  const [open, setOpen] = useState(false);
-
-  const toggleRole = (role) => {
-    const roles = assignment.roles.includes(role)
-      ? assignment.roles.filter((item) => item !== role)
-      : [...assignment.roles, role];
-
-    onRolesChange(assignment.id, roles);
-  };
-
-  return (
-    <div className="store-assignment-card">
-      <div className="store-assignment-info">
-        <div className="store-assignment-icon">
-          <BriefcaseBusiness size={20} />
-        </div>
-
-        <div className="store-assignment-name">
-          <strong>Store</strong>
-
-          <div className="store-select-inline">
-            <select
-              value={assignment.store}
-              onChange={(event) =>
-                onStoreChange(assignment.id, event.target.value)
-              }
-              aria-label="Select store"
-              className={storeError ? "field-invalid" : ""}
-            >
-              <option value="">Select store</option>
-
-              {availableStores.map((store) => (
-                <option key={store.id} value={store.id}>
-                  {store.name}
-                </option>
-              ))}
-            </select>
-
-            <ChevronDown size={15} />
-          </div>
-        </div>
-      </div>
-
-      <div className="store-role-field">
-        <label>
-          Role(s) <span>*</span>
-        </label>
-
-        <div className="role-multi-select-wrapper">
-          <div
-            className={`role-multi-select ${open ? "open" : ""} ${roleError ? "field-invalid" : ""
-              }`}
-            onClick={() => setOpen(!open)}
-          >
-            <span>
-              {assignment.roles.length === 0
-                ? "Select role(s)"
-                : assignment.roles.join(", ")}
-            </span>
-
-            <ChevronDown size={17} />
-          </div>
-
-          {open && (
-            <div className="role-dropdown">
-              {availableRoles.map((role) => {
-                const checked = assignment.roles.includes(role);
-
-                return (
-                  <label key={role} className="role-checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleRole(role)}
-                    />
-
-                    <span>{role}</span>
-                  </label>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {roleError && <span className="field-error">{roleError}</span>}
-      </div>
-
-      <button
-        type="button"
-        className="remove-assignment-btn"
-        onClick={() => onRemove(assignment.id)}
-      >
-        Remove
-      </button>
-
-      {storeError && <span className="field-error">{storeError}</span>}
-    </div>
-  );
-}
-
-/* =========================================================
-   CARD HEADER
-========================================================= */
 
 function CardHeader({ icon, title, description }) {
   return (

@@ -1,3 +1,6 @@
+import MerchantTenders from "./MerchantTenders";
+import MerchantVendors from "./MerchantVendors";
+import MerchantStores from "./MerchantStores";
 import AddMerchantDevice from "./AddMerchantDevice";
 import { MerchantEmployeeForm } from "./AddMerchantEmployee";
 import { useReferenceData } from "../api/referenceData";
@@ -22,15 +25,41 @@ function ViewFields({ items }) {
 function ViewTable({ headings, rows }) {
   return rows.length ? <div className="table-wrapper"><table className="merchant-table"><thead><tr>{headings.map(title => <th key={title}>{title}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, column) => <td key={column}>{readValue(cell)}</td>)}</tr>)}</tbody></table></div> : <p className="merchant-view-empty">No records provided.</p>;
 }
-function MerchantReadOnly({ merchantId, merchant, onBack, onStores, onSaveEmployee, onSaveDevice }) {
+function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSaveDevice, masterVendors, vendorAssignments, onSaveVendorAssignments, vendorsLoading, vendorsError, masterTenders, tenderAssignments, onSaveTenderAssignments, tendersLoading, tendersError }) {
   const [addingEmployee, setAddingEmployee] = useState(false);
+  const [createdEmployees, setCreatedEmployees] = useState([]);
+  async function saveEmployeeAndRefresh(values) {
+    if(typeof onSaveEmployee !== 'function') throw new Error('Connect onSaveEmployee to your employee creation API.');
+    const result=await onSaveEmployee(values);
+    if(result?.success===false)throw new Error(result.message || 'Employee creation failed.');
+    const record=result?.employee || result?.data?.employee || result?.data || result;
+    // Never retain password, login PIN, or temporary photo URL in the list.
+    const source=record && typeof record==='object' && !Array.isArray(record) ? record : {};
+    const employee={id:source.id || source.employeeId || source.employeeCode || crypto.randomUUID(), employeeCode:source.employeeCode || '', merchantId,
+      name:source.name || source.employeeName || [values.firstName,values.lastName].filter(Boolean).join(' '),
+      email:source.email || values.email,phone:source.phone || source.phoneNumber || values.phone,
+      gender:source.gender || values.gender,username:source.username || values.username,
+      status:source.status || 'Not provided',createdAt:source.createdAt || new Date().toISOString()};
+    setCreatedEmployees(old=>[employee,...old.filter(item=>String(item.id)!==String(employee.id))]);
+    return result;
+  }
   const [addingDevice, setAddingDevice] = useState(false);
+  const [createdDevices,setCreatedDevices]=useState([]);
+  async function saveDeviceAndRefresh(values) {
+    if(typeof onSaveDevice!=='function')throw new Error('Connect onSaveDevice to your device creation API.');
+    const result=await onSaveDevice(values);
+    if(result?.success===false)throw new Error(result.message || 'Device creation failed.');
+    const returned=result?.device || result?.data?.device || result?.data || result;
+    const record=returned && typeof returned==='object' && !Array.isArray(returned)?returned:{};
+    const device={id:record.id || record.deviceId || crypto.randomUUID(),merchantId,name:record.name || record.deviceName || values.deviceName,type:record.type || record.deviceType || values.deviceType,serialNumber:record.serialNumber || record.serial || values.serialNumber,storeId:record.storeId || values.storeId,storeName:record.storeName,status:record.connectionStatus || record.status || values.status || 'Unknown'};
+    setCreatedDevices(old=>[device,...old.filter(item=>String(item.id)!==String(device.id))]);return result;
+  }
   const navigate = useNavigate();
   const openMerchantCreation = path => navigate(path + '?merchantId=' + encodeURIComponent(merchantId), {
     state: { merchantId, merchant },
   });
   const [activeTab, setActiveTab] = useState('overview');
-  const tabs = [['overview', 'Overview'], ['subscription', 'Subscription & Usage'], ['stores', 'Stores'], ['employees', 'Employees'], ['devices', 'Devices'], ['roles', 'Roles & Permissions'], ['payments', 'Payment History']];
+  const tabs = [['overview', 'Overview'], ['subscription', 'Subscription & Usage'], ['stores', 'Stores'], ['employees', 'Employees'], ['devices', 'Devices'], ['vendors', 'Vendors'], ['tenders', 'Tenders'], ['roles', 'Roles & Permissions'], ['payments', 'Payment History']];
   function tabKeyDown(event, index) {
     let next;
     if (event.key === 'ArrowDown') next = (index + 1) % tabs.length;
@@ -66,18 +95,18 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onStores, onSaveEmploy
   const list = value => Array.isArray(value) ? value : [];
   const stores = list(saved?.stores ?? response.stores ?? raw.stores);
   const employeeRecords = saved?.employees ?? raw.employees ?? response.employees ?? response.data?.employees ?? merchant?.employees;
-  const employees = list(employeeRecords).filter(employee => {
+  const employees = [...createdEmployees, ...list(employeeRecords).filter(employee=>!createdEmployees.some(item=>String(item.id)===String(employee.id || employee.employeeId) || (item.email && item.email===employee.email)))].filter(employee => {
     const ownerId = employee.merchantId ?? employee.merchant?.id;
     return ownerId == null || String(ownerId) === String(merchantId);
   });
   const employeeStoreName = employee => employee.storeName || employee.store?.name || stores.find(store =>
     [store.id, store.storeId, store.code, store.storeCode].some(id => id != null && String(id) === String(employee.storeId))
   )?.name || employee.storeId;
-  const devices = list(saved?.devices ?? raw.devices ?? response.devices);
+  const devices = [...createdDevices,...list(saved?.devices ?? raw.devices ?? response.devices).filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))].filter(device=>device.merchantId==null || String(device.merchantId)===String(merchantId));
   const roles = list(saved?.roles ?? raw.roles ?? response.roles);
   const payments = list(saved?.paymentHistory ?? raw.paymentHistory);
   const business = contact.business || raw.legalBusinessName || raw.businessName || summary.name;
-  const storeName = device => saved ? stores[device.store]?.name : device.storeName || device.storeId;
+  const storeName = device => device.storeName || stores.find(store=>device.storeId!=null && [store.id,store.code,store.storeId].some(id=>id!=null && String(id)===String(device.storeId)))?.name || (saved && typeof device.store==='number' ? stores[device.store]?.name : '') || device.storeId || '—';
   return <div className="page-content merchant-readonly">
     <style>{`
       .merchant-readonly .merchant-detail-actions{display:flex;flex-direction:column;align-items:stretch;gap:10px;min-width:200px;}
@@ -103,9 +132,6 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onStores, onSaveEmploy
     `}</style>
     <button type="button" className="merchant-view-back" onClick={onBack}>← Merchants</button>
     <div className="page-header"><div><h1>Merchant Details</h1><p>{readValue(business)} · {merchantId}</p></div>
-      <div className="page-actions merchant-detail-actions">
-        <button type="button" className="btn btn-primary" onClick={onStores}><i className="bi bi-shop" /> View List Of Stores</button>
-      </div>
     </div>
     {loading ? <p role="status">Loading merchant details…</p> : error ? <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div> : <div className="merchant-view-layout">
       <div className="merchant-view-tabs" role="tablist" aria-orientation="vertical" aria-label="Merchant details">
@@ -143,39 +169,25 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onStores, onSaveEmploy
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-stores" aria-labelledby="merchant-tab-stores" hidden={activeTab !== 'stores'} tabIndex={0}>
-        <ViewSection title="Stores"><ViewTable headings={['Store ID', 'Store Name', 'Type', 'Location', 'Licensed']} rows={stores.map(store => [
-          store.code || store.storeCode || store.id, store.name || store.storeName, store.type || store.storeTypeName || store.storeType,
-          [store.city, store.state, store.country].filter(Boolean).join(', '), store.licensed,
-        ])} />{stores.map((store, index) => <details key={store.code || store.id || index}><summary>{store.name || store.storeName || 'Store'} — Details & Timings</summary>
-          <ViewFields items={[["Base URL", store.url || store.baseUrl], ["Time Zone", store.timezone], ["Address", typeof store.address === 'object' ? store.address?.street : store.address], ["Postal Code", store.postal || store.postalCode]]} />
-          <ViewTable headings={['Day', 'Status', 'Opens', 'Closes', 'Shifts']} rows={list(store.hours).map(day => [day.day, day.status, day.open, day.close, day.shifts])} />
-        </details>)}</ViewSection>
+        {activeTab === 'stores' && <MerchantStores merchantId={merchantId} embedded />}
+      </div>
+      <div role="tabpanel" id="merchant-panel-vendors" aria-labelledby="merchant-tab-vendors" hidden={activeTab !== 'vendors'} tabIndex={0}>
+        <MerchantVendors merchantId={merchantId} masterVendors={masterVendors} assignedVendorIds={vendorAssignments?.[merchantId] ?? saved?.vendorIds ?? raw.vendorIds ?? raw.vendors ?? []} onSaveAssignments={onSaveVendorAssignments} loading={vendorsLoading} error={vendorsError}/>
+      </div>
+      <div role="tabpanel" id="merchant-panel-tenders" aria-labelledby="merchant-tab-tenders" hidden={activeTab !== 'tenders'} tabIndex={0}>
+        <MerchantTenders merchantId={merchantId} masterTenders={masterTenders} assignedTenderIds={tenderAssignments?.[merchantId] ?? saved?.tenderIds ?? raw.tenderIds ?? raw.tenders ?? []} onSaveAssignments={onSaveTenderAssignments} loading={tendersLoading} error={tendersError}/>
       </div>
       <div role="tabpanel" id="merchant-panel-employees" aria-labelledby="merchant-tab-employees" hidden={activeTab !== 'employees'} tabIndex={0}>
-        <ViewSection title={addingEmployee ? 'Add Employee' : 'Employees'} actions={addingEmployee ? <button type="button" className="merchant-back-employees" onClick={()=>setAddingEmployee(false)}><span aria-hidden="true">←</span> Back to Employees</button> : null}>
-          {addingEmployee ? <MerchantEmployeeForm embedded key={merchantId} merchantId={merchantId} initialMerchant={merchant} onSave={onSaveEmployee} onBack={()=>{setAddingEmployee(false);setAttempt(value=>value+1);}}/> : <>
-          <div style={{display:'flex',justifyContent:'flex-end',padding:'16px 20px'}}>
-            <button type="button" className="btn btn-primary" onClick={()=>setAddingEmployee(true)}><i className="bi bi-person-plus" /> Add Employee</button>
-          </div>
-          {Array.isArray(employeeRecords) ? employees.length ? <ViewTable headings={['Employee Code', 'Employee Name', 'Email', 'Phone', 'Store', 'Role', 'Status']} rows={employees.map(employee => [
-            employee.employeeCode || employee.code || employee.id,
-            employee.name || employee.employeeName || [employee.firstName, employee.lastName].filter(Boolean).join(' '),
-            employee.email, employee.phone || employee.phoneNumber, employeeStoreName(employee),
-            employee.roleName || employee.role?.name || (typeof employee.role === 'string' ? employee.role : undefined) || list(employee.roles).map(role=>typeof role === 'string' ? role : role.name || role.roleName).filter(Boolean).join(', '),
-            employee.status,
-          ])}/> : <p className="merchant-view-empty">No employees registered for this merchant.</p> : <p className="merchant-view-empty">Employee details are not available in this merchant record.</p>}
-          </>}
-        </ViewSection>
+        {addingEmployee ? <ViewSection title="Add Employee" actions={<button type="button" className="merchant-back-employees" onClick={()=>setAddingEmployee(false)}>← Back to Employees</button>}>
+          <MerchantEmployeeForm embedded key={merchantId} merchantId={merchantId} initialMerchant={merchant} onSave={saveEmployeeAndRefresh} onBack={()=>setAddingEmployee(false)}/>
+        </ViewSection> : <MerchantEmployeeList employees={employees} merchantName={business} onAdd={()=>setAddingEmployee(true)}/>}
+
       </div>
       <div role="tabpanel" id="merchant-panel-devices" aria-labelledby="merchant-tab-devices" hidden={activeTab !== 'devices'} tabIndex={0}>
-        <ViewSection title={addingDevice ? 'Add Device' : 'Devices'} actions={addingDevice ? <button type="button" className="merchant-back-employees" onClick={()=>setAddingDevice(false)}>← Back to Devices</button> : null}>
-          {addingDevice ? <AddMerchantDevice key={merchantId} merchantId={merchantId} merchant={merchant} onSave={onSaveDevice} onBack={()=>{setAddingDevice(false);setAttempt(value=>value+1);}}/> : <>
-          <div style={{display:'flex',justifyContent:'flex-end',padding:'16px 20px'}}>
-            <button type="button" className="btn btn-primary" onClick={()=>setAddingDevice(true)}><i className="bi bi-plus-circle" /> Add Device</button>
-          </div>
-          <ViewTable headings={['Device', 'Type', 'Store', 'Identifier']} rows={devices.map(device => [device.name, device.type, storeName(device), device.serial || device.serialNumber])} />
-          </>}
-        </ViewSection>
+        {addingDevice ? <ViewSection title="Add Device" actions={<button type="button" className="merchant-back-employees" onClick={()=>setAddingDevice(false)}>← Back to Devices</button>}>
+          <AddMerchantDevice key={merchantId} merchantId={merchantId} merchant={merchant} onSave={saveDeviceAndRefresh} onBack={()=>setAddingDevice(false)}/>
+        </ViewSection> : <MerchantDeviceList devices={devices} storeName={storeName} onAdd={()=>setAddingDevice(true)}/>}
+
       </div>
       <div role="tabpanel" id="merchant-panel-roles" aria-labelledby="merchant-tab-roles" hidden={activeTab !== 'roles'} tabIndex={0}>
         <ViewSection title="Roles & Permissions"><ViewTable headings={['Role', 'Source', 'Scope', 'Permissions']} rows={roles.map(role => [
@@ -299,7 +311,7 @@ function storeLimitFor(merchant, masterPlans) {
   return null;
 }
 // Pass your existing delete API function as deleteMerchant until its module contract is connected.
-export default function Merchants({ deleteMerchant, localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice }) {
+export default function Merchants({ deleteMerchant, localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewedId = searchParams.get('view');
@@ -487,9 +499,9 @@ export default function Merchants({ deleteMerchant, localMerchants = [], onLocal
   const statuses = ["Pending Setup", "Active", "Suspended", "Inactive"];
   const locations = [...new Set(merchants.map(m => `${m.country || ''} ${m.state || ''}`.trim()).filter(Boolean))];
 
-  if (viewedId) return <MerchantReadOnly key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
+  if (viewedId) return <MerchantReadOnly masterTenders={masterTenders} tenderAssignments={tenderAssignments} onSaveTenderAssignments={onSaveTenderAssignments} tendersLoading={tendersLoading} tendersError={tendersError} masterVendors={masterVendors} vendorAssignments={vendorAssignments} onSaveVendorAssignments={onSaveVendorAssignments} vendorsLoading={vendorsLoading} vendorsError={vendorsError} key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
     merchant={merchants.find(item => String(item.id) === viewedId)} onBack={closeView}
-    onStores={() => nav(`/merchants/${encodeURIComponent(viewedId)}/stores`)} />;
+    />;
 
   return (
     <div className="page-content">
@@ -736,4 +748,39 @@ export default function Merchants({ deleteMerchant, localMerchants = [], onLocal
       </dialog>}
     </div>
   );
+}
+
+function MerchantEmployeeList({employees,merchantName,onAdd}) {
+  const blank={query:''};
+  const [filters,setFilters]=useState(blank),[page,setPage]=useState(1),[view,setView]=useState(null);
+  const dialog=useRef(null),lastFocus=useRef(null);
+  useEffect(()=>{if(view)dialog.current?.showModal();else if(dialog.current?.open){dialog.current.close();lastFocus.current?.focus();}},[view]);
+  const employeeName=e=>e.name || e.employeeName || [e.firstName,e.lastName].filter(Boolean).join(' ') || '—';
+  const storeNames=e=>[e.storeName,e.store?.name,...(Array.isArray(e.stores)?e.stores.map(v=>typeof v==='string'?v:v.name || v.storeName):[])].filter(Boolean);
+  const roleNames=e=>[e.roleName,typeof e.role==='string'?e.role:e.role?.name,...(Array.isArray(e.roles)?e.roles.map(v=>typeof v==='string'?v:v.name || v.roleName):[])].filter(Boolean);
+  const update=(key,value)=>{setFilters(old=>({...old,[key]:value}));setPage(1);};
+  const filtered=employees.filter(e=>[employeeName(e),e.id,e.employeeCode,e.username,e.phone,e.phoneNumber,e.email].join(' ').toLowerCase().includes(filters.query.trim().toLowerCase())).sort((a,b)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0));
+  const pages=Math.max(1,Math.ceil(filtered.length/10)),current=Math.min(page,pages);
+  return <div className="mel"><header className="mel-card mel-heading"><div><h2>Employees</h2><p>These are the employees connected to this merchant.</p></div><button className="mel-primary" onClick={onAdd}>＋ Add Employee</button></header>
+    <section className="mel-card"><h3>Employee List</h3><div className="mel-search"><input aria-label="Search employees" placeholder="Search employee, ID, username, phone or email…" value={filters.query} onChange={e=>update('query',e.target.value)}/><button onClick={()=>{setFilters(blank);setPage(1);}}>↺ Reset</button></div>
+    <div className="mel-scroll"><table><thead><tr>{['Employee','Email','Phone','Gender','Actions'].map(title=><th key={title}>{title}</th>)}</tr></thead><tbody>{filtered.slice((current-1)*10,current*10).map((e,index)=><tr key={e.id || e.employeeCode || index}><td><strong>{employeeName(e)}</strong>{e.employeeCode&&<small>{e.employeeCode}</small>}</td><td>{e.email || '—'}</td><td>{e.phone || e.phoneNumber || '—'}</td><td>{e.gender || '—'}</td><td><button aria-label={'View '+employeeName(e)} onClick={event=>{lastFocus.current=event.currentTarget;setView(e);}}>View</button></td></tr>)}{!filtered.length&&<tr><td colSpan={5}>No employees found for this merchant.</td></tr>}</tbody></table></div>
+      <footer><span>Showing {filtered.length?(current-1)*10+1:0} to {Math.min(current*10,filtered.length)} of {filtered.length} entries</span><div className="mel-pages"><button disabled={current===1} onClick={()=>setPage(current-1)}>‹</button><span>{current} / {pages}</span><button disabled={current===pages} onClick={()=>setPage(current+1)}>›</button></div></footer>
+    </section>
+    <dialog ref={dialog} className="mel-dialog" aria-labelledby="mel-title" onCancel={event=>{event.preventDefault();setView(null);}}><header className="mel-heading"><h2 id="mel-title">Employee Details</h2><button onClick={()=>setView(null)} aria-label="Close employee details">×</button></header>{view&&<dl>{Object.entries({Name:employeeName(view),Email:view.email,Phone:view.phone || view.phoneNumber,Username:view.username,Gender:view.gender,Status:view.status,Stores:storeNames(view).join(', '),Roles:roleNames(view).join(', ')}).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value || '—'}</dd></div>)}</dl>}</dialog>
+  </div>;
+}
+
+function MerchantDeviceList({devices,storeName,onAdd}) {
+  const [query,setQuery]=useState(''),[page,setPage]=useState(1),[sort,setSort]=useState({key:'name',direction:1}),[view,setView]=useState(null);
+  const dialog=useRef(null),lastFocus=useRef(null);
+  useEffect(()=>{if(view)dialog.current?.showModal();else if(dialog.current?.open){dialog.current.close();lastFocus.current?.focus();}},[view]);
+  const rows=devices.map(d=>({...d,name:d.name || d.deviceName || '—',type:d.type || d.deviceType || '—',storeLabel:storeName(d),serial:d.serial || d.serialNumber || '—',status:d.connectionStatus || d.status || 'Unknown'})).filter(d=>[d.name,d.type,d.serial,d.storeLabel].join(' ').toLowerCase().includes(query.trim().toLowerCase())).sort((a,b)=>String(a[sort.key]).localeCompare(String(b[sort.key]))*sort.direction);
+  const pages=Math.max(1,Math.ceil(rows.length/10)),current=Math.min(page,pages);
+  const badge=value=>['online','active'].includes(String(value).toLowerCase())?'mdl-good':['offline','inactive'].includes(String(value).toLowerCase())?'mdl-off':'mdl-unknown';
+  return <div className="mdl"><header className="mdl-card mdl-header"><div><h2>Devices</h2><p>These are the devices connected to this merchant.</p></div><button className="mdl-primary" onClick={onAdd}>＋ Add Device</button></header>
+    <section className="mdl-card"><h3>Device List</h3><div className="mdl-toolbar"><input aria-label="Search devices" placeholder="Search devices by name, type or serial…" value={query} onChange={e=>{setQuery(e.target.value);setPage(1);}}/><button onClick={()=>{setQuery('');setPage(1);setSort({key:'name',direction:1});}}>↺ Reset</button></div>
+    <div className="mdl-scroll"><table><thead><tr>{[['name','Device'],['type','Type'],['storeLabel','Store'],['serial','Serial No.'],['status','Status']].map(([key,title])=><th key={key} aria-sort={sort.key===key?(sort.direction===1?'ascending':'descending'):'none'}><button className="mdl-sort" onClick={()=>setSort(old=>({key,direction:old.key===key?-old.direction:1}))}>{title} {sort.key===key?(sort.direction===1?'↑':'↓'):'↕'}</button></th>)}<th>Actions</th></tr></thead><tbody>{rows.slice((current-1)*10,current*10).map((d,index)=><tr key={d.id || d.deviceId || index}><td><span className="mdl-name"><span className="mdl-icon" aria-hidden="true">▣</span><strong>{d.name}</strong></span></td><td>{d.type}</td><td>{d.storeLabel}</td><td>{d.serial}</td><td><span className={'mdl-badge '+badge(d.status)}>● {d.status}</span></td><td><button aria-label={'View '+d.name} onClick={e=>{lastFocus.current=e.currentTarget;setView(d);}}>View</button></td></tr>)}{!rows.length&&<tr><td colSpan={6}>No devices found for this merchant.</td></tr>}</tbody></table></div>
+    <footer><span>Showing {rows.length?(current-1)*10+1:0} to {Math.min(current*10,rows.length)} of {rows.length} entries</span><div><button aria-label="Previous page" disabled={current===1} onClick={()=>setPage(current-1)}>‹</button><span>{current} / {pages}</span><button aria-label="Next page" disabled={current===pages} onClick={()=>setPage(current+1)}>›</button></div></footer></section>
+    <dialog className="mdl-dialog" ref={dialog} aria-labelledby="mdl-title" onCancel={e=>{e.preventDefault();setView(null);}}><header className="mdl-header"><h2 id="mdl-title">Device Details</h2><button aria-label="Close device details" onClick={()=>setView(null)}>×</button></header>{view&&<dl>{Object.entries({Device:view.name,Type:view.type,Store:view.storeLabel,'Serial No.':view.serial,Status:view.status,'Device ID':view.id || view.deviceId}).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value || '—'}</dd></div>)}</dl>}</dialog>
+  </div>;
 }
