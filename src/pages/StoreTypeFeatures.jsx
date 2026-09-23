@@ -1,179 +1,387 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { listFeatures } from "../api/features";
+import { storeTypesApi } from "../api/storeTypes";
 
-const initialFeatures = [
-  {
-    id: 1,
-    name: "KDS",
-    icon: "bi-chat-square-text",
-    category: "Restaurant",
-    defaultEnabled: true,
-    required: false,
-    order: 1,
-  },
-  {
-    id: 2,
-    name: "Tables",
-    icon: "bi-cup-hot",
-    category: "Restaurant",
-    defaultEnabled: true,
-    required: false,
-    order: 2,
-  },
-  {
-    id: 3,
-    name: "Tips",
-    icon: "bi-key",
-    category: "Restaurant",
-    defaultEnabled: true,
-    required: false,
-    order: 3,
-  },
-  {
-    id: 4,
-    name: "Service Charges",
-    icon: "bi-truck",
-    category: "Restaurant",
-    defaultEnabled: true,
-    required: false,
-    order: 4,
-  },
-  {
-    id: 5,
-    name: "Delivery",
-    icon: "bi-bag-heart",
-    category: "Integration",
-    defaultEnabled: true,
-    required: false,
-    order: 5,
-  },
-];
-
-const featureOptions = {
-  Restaurant: ["KDS", "Tables", "Tips", "Service Charge", "Dining"],
-  Integration: ["Delivery", "Online Ordering", "Payment Gateway"],
-  POS: ["Fast Keys", "Customer Display", "Printer", "Cash Management"],
+const initialStoreType = {
+  name: "Store Type",
+  description: "Manage the features assigned to this store type.",
+  status: "ACTIVE",
 };
+
+// const featureOptions = {
+//   Restaurant: ["KDS", "Tables", "Tips", "Service Charges", "Dining"],
+//   Integration: ["Delivery", "Online Ordering", "Payment Gateway"],
+//   POS: ["Fast Keys", "Customer Display", "Printer", "Cash Management"],
+// };
+
+function getFeatureAssignments(response) {
+  if (Array.isArray(response)) return response;
+
+  const containers = [response, response?.data, response?.result];
+
+  for (const container of containers) {
+    if (!container || typeof container !== "object") continue;
+
+    const assignments =
+      container.features ??
+      container.storeTypeFeatures ??
+      container.items ??
+      container.results;
+
+    if (Array.isArray(assignments)) return assignments;
+  }
+
+  return [];
+}
+
+function toFeatureRow(assignment, index) {
+  const feature =
+    assignment.feature ??
+    assignment.featureDetails ??
+    assignment.featureDefinition ??
+    assignment;
+  const assignmentData = assignment.data ?? assignment.storeTypeFeature ?? {};
+
+  return {
+    id: feature.id ?? assignment.featureId ?? assignment.id,
+    storeTypeFeatureId:
+      assignment.featureId ??
+      feature.id ??
+      assignment.id ??
+      assignment.storeTypeFeatureId ??
+      assignment.featureAssignmentId ??
+      assignmentData.id ??
+      assignmentData.storeTypeFeatureId ??
+      assignmentData.featureId,
+    name: feature.name ?? feature.featureKey ?? "Unnamed feature",
+    category: feature.category ?? "Uncategorized",
+    active: assignment.defaultEnabled ?? true,
+    order: assignment.displayOrder ?? index + 1,
+  };
+}
+function featureKey(feature) {
+  return String(feature?.id ?? feature?.featureId ?? feature?.name ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+function featureNameKey(feature) {
+  return String(feature?.name ?? feature?.featureKey ?? "")
+    .trim()
+    .toLowerCase();
+}
+
 
 export default function StoreTypeFeatures() {
   const navigate = useNavigate();
   const { storeTypeId } = useParams();
-  const [features, setFeatures] = useState(initialFeatures);
+
+  const [storeType, setStoreType] = useState(initialStoreType);
+  const [features, setFeatures] = useState([]);
+  const [featureCatalog, setFeatureCatalog] = useState([]);
   const [search, setSearch] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
   const [modalSearch, setModalSearch] = useState("");
-  const [selectedFeatures, setSelectedFeatures] = useState([
-    "KDS",
-    "Tables",
-    "Tips",
-    "Delivery",
-  ]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [selectedFeatures, setSelectedFeatures] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    storeTypesApi
+      .getOne(storeTypeId)
+      .then((response) => {
+        const item = response?.storeType ?? response?.data ?? response;
+
+        if (!item || typeof item !== "object" || cancelled) return;
+
+        setStoreType({
+          name: item.name ?? initialStoreType.name,
+          description: item.description ?? initialStoreType.description,
+          status: item.status ?? initialStoreType.status,
+        });
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeTypeId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    storeTypesApi
+      .getFeatures(storeTypeId)
+      .then((response) => {
+        const assignments = getFeatureAssignments(response);
+
+        if (cancelled) return;
+
+        setFeatures(assignments.map(toFeatureRow));
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeTypeId]);
 
   const filteredFeatures = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
     return features.filter((feature) =>
-      feature.name.toLowerCase().includes(search.toLowerCase())
+      feature.name.toLowerCase().includes(query)
     );
   }, [features, search]);
 
-  const filteredGroups = useMemo(() => {
-    const query = modalSearch.toLowerCase().trim();
+  const featureGroups = useMemo(() => {
+    return featureCatalog.reduce((groups, feature) => {
+      const category = feature.category || "Uncategorized";
+      const group = groups.find((item) => item.category === category);
 
-    return Object.entries(featureOptions)
-      .map(([category, options]) => ({
-        category,
-        options: options.filter((feature) =>
-          feature.toLowerCase().includes(query)
+      if (group) group.options.push(feature);
+      else groups.push({ category, options: [feature] });
+
+      return groups;
+    }, []);
+  }, [featureCatalog]);
+
+  const filteredGroups = useMemo(() => {
+    const query = modalSearch.trim().toLowerCase();
+
+    return featureGroups
+      .map((group) => ({
+        ...group,
+        options: group.options.filter((feature) =>
+          feature.name.toLowerCase().includes(query)
         ),
       }))
       .filter((group) => group.options.length > 0);
-  }, [modalSearch]);
+  }, [featureGroups, modalSearch]);
 
-  function toggleFeature(id, field) {
+  const selectedFeatureDetails = useMemo(
+    () =>
+      featureCatalog.filter((feature) => selectedFeatures.includes(feature.id)),
+    [featureCatalog, selectedFeatures]
+  );
+
+  const addFeatureModalStyle = {
+    maxHeight: `${Math.min(78, 40 + selectedFeatures.length * 4 + filteredGroups.length * 5)}vh`,
+  };
+
+  function toggleFeature(id) {
     setFeatures((current) =>
       current.map((feature) =>
         feature.id === id
-          ? { ...feature, [field]: !feature[field] }
+          ? { ...feature, active: !feature.active }
           : feature
       )
     );
   }
 
-  function toggleSelectedFeature(featureName) {
+  function toggleSelectedFeature(feature) {
+    if (!feature.id) return;
+
     setSelectedFeatures((current) =>
-      current.includes(featureName)
-        ? current.filter((item) => item !== featureName)
-        : [...current, featureName]
+      current.includes(feature.id)
+        ? current.filter((item) => item !== feature.id)
+        : [...current, feature.id]
     );
   }
-
-  function addSelectedFeatures() {
-    const existingNames = features.map((feature) => feature.name);
-
-    const additions = selectedFeatures
-      .filter((featureName) => !existingNames.includes(featureName))
-      .map((featureName, index) => {
-        const category = Object.entries(featureOptions).find(([, options]) =>
-          options.includes(featureName)
-        )?.[0];
-
-        return {
-          id: Date.now() + index,
-          name: featureName,
-          icon: "bi-grid",
-          category: category || "Restaurant",
-          defaultEnabled: true,
-          required: false,
-          order: features.length + index + 1,
-        };
-      });
-
-    setFeatures((current) => [...current, ...additions]);
-    setShowAddModal(false);
+ function openAddModal() {
+    setSelectedFeatures([]);
     setModalSearch("");
+    setShowAddModal(true);
+    setLoadingCatalog(true);
+    setError("");
+
+    listFeatures()
+      .then((items) => {
+        const catalog = items.filter((item) => item?.id);
+        const assignedIds = catalog
+          .filter((feature) =>
+            features.some(
+              (assignedFeature) =>
+                featureKey(assignedFeature) === featureKey(feature) ||
+                featureNameKey(assignedFeature) === featureNameKey(feature)
+            )
+          )
+          .map((feature) => feature.id);
+
+        setFeatureCatalog(catalog);
+        setSelectedFeatures(assignedIds);
+      })
+      .catch((err) => {
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoadingCatalog(false);
+      });
+  }
+
+
+  async function addSelectedFeatures() {
+    const selected = featureCatalog.filter((feature) =>
+      selectedFeatures.includes(feature.id)
+    );
+
+    if (!storeTypeId || selected.length === 0) return;
+
+    
+    const uniqueSelected = Array.from(
+      new Map(selected.map((feature) => [featureKey(feature), feature])).values()
+    );
+    const existingIds = new Set(features.map(featureKey));
+    const existingNames = new Set(features.map(featureNameKey));
+    const newFeatures = uniqueSelected.filter(
+      (feature) =>
+        !existingIds.has(featureKey(feature)) &&
+        !existingNames.has(featureNameKey(feature))
+    );
+
+    if (newFeatures.length === 0) {
+      setError("The selected features are already assigned to this store type.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
+    try {
+      const createdFeatures = await Promise.all(
+        newFeatures.map((feature, index) =>
+          storeTypesApi
+            .createFeature(storeTypeId, {
+            featureId: feature.id,
+            defaultEnabled: true,
+            required: false,
+            displayOrder: features.length + index + 1,
+            configurationJson: {
+              showInPos: true,
+            },
+            })
+        )
+      );
+
+      const refreshed = await storeTypesApi.getFeatures(storeTypeId);
+      const persistedAssignments = getFeatureAssignments(refreshed);
+
+      if (persistedAssignments.length > 0) {
+        setFeatures(persistedAssignments.map(toFeatureRow));
+      } else {
+        const additions = newFeatures.map((feature, index) => ({
+          id: feature.id,
+          storeTypeFeatureId:
+            createdFeatures[index]?.featureId ||
+            createdFeatures[index]?.feature?.id ||
+            createdFeatures[index]?.feature?.featureId ||
+            createdFeatures[index]?.data?.id ||
+            createdFeatures[index]?.storeTypeFeature?.id ||
+            createdFeatures[index]?.data?.storeTypeFeature?.id,
+          name: feature.name,
+          category: feature.category || "Uncategorized",
+          active: true,
+          order: features.length + index + 1,
+        }));
+
+        setFeatures((current) => [
+          ...current,
+          ...additions.filter(
+            (feature) => !existingNames.has(featureNameKey(feature))
+          ),
+        ]);
+      }
+      setShowAddModal(false);
+      setSelectedFeatures([]);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function confirmDeleteFeature() {
+    if (!deleteTarget) return;
+
+    const featureId =
+      deleteTarget.storeTypeFeatureId ??
+      (typeof deleteTarget.id === "string" ? deleteTarget.id : null);
+
+    if (!storeTypeId || !featureId) {
+      setError("This feature is missing its store-type assignment ID.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
+    try {
+      await storeTypesApi.removeFeature(storeTypeId, featureId);
+      setFeatures((current) =>
+        current.filter((feature) => feature.id !== deleteTarget.id)
+      );
+      setDeleteTarget(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <section className="store-features-page">
-      <button
-        type="button"
-        className="store-features-back"
-        onClick={() => navigate("/store-types/new")}
-      >
-        <i className="bi bi-arrow-left" />
-        Back to Store Types
-      </button>
-
-      <div className="store-features-title">
-        <div>
-          <h1>Restaurant <span>Active</span></h1>
-          <p>
-            Store type for restaurant vertical with full service and quick
-            service operations.
-          </p>
-        </div>
-      </div>
-
-     <div className="store-type-tabs">
+     {error && <p role="alert">{error}</p>}
+     <div className="store-features-top">
   <button
     type="button"
-    onClick={() => navigate(`/store-types/${storeTypeId}`)}
+    className="store-features-back"
+    onClick={() => navigate("/store-types/new")}
+    aria-label="Back to Store Types"
+    title="Back to Store Types"
   >
-    Overview
+    <i className="bi bi-arrow-left" />
   </button>
 
-  <button type="button" className="active">
-    Features
-  </button>
+  <div className="store-features-title">
+    <div className="store-type-title-line">
+      <h1>{storeType.name}</h1>
+  
+    </div>
 
-  <button
-    type="button"
-    onClick={() =>
-      navigate(`/store-types/${storeTypeId}/role-templates`)
-    }
-  >
-    Role Templates
-  </button>
+    <p>{storeType.description}</p>
+  </div>
 </div>
+
+      <nav className="store-type-tabs">
+        <button
+          type="button"
+          onClick={() => navigate(`/store-types/${storeTypeId}`)}
+        >
+          Overview
+        </button>
+
+        <button type="button" className="active">
+          Features
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            navigate(`/store-types/${storeTypeId}/role-templates`)
+          }
+        >
+          Role Templates
+        </button>
+      </nav>
 
       <section className="store-features-card">
         <div className="store-features-card-header">
@@ -202,7 +410,7 @@ export default function StoreTypeFeatures() {
             <button
               type="button"
               className="store-features-add-button"
-              onClick={() => setShowAddModal(true)}
+              onClick={openAddModal}
             >
               <i className="bi bi-plus-lg" />
               Add Feature
@@ -211,49 +419,52 @@ export default function StoreTypeFeatures() {
         </div>
 
         <div className="store-features-table">
-         <div className="store-features-row store-features-row-head">
-           <div>Feature</div>
-           <div>Category</div>
-           <div>Active</div>
-           <div>Order</div>
-           <div>Action</div>
-        </div>
+          <div className="store-features-row store-features-row-head">
+            <div>Feature</div>
+            <div>Category</div>
+            <div>Action</div>
+          </div>
 
           {filteredFeatures.map((feature) => (
             <div className="store-features-row" key={feature.id}>
-               <div className="store-features-name">
-                 <span className="store-feature-icon">
-                 <i className={`bi ${feature.icon}`} />
-                 </span>
-                 {feature.name}
-               </div>
-                <div>{feature.category}</div>
+              <div className="store-features-name">{feature.name}</div>
 
-                 <div>
-                    <button
-                     type="button"
-                     className={`feature-toggle ${feature.defaultEnabled ? "enabled" : ""}`}
-                     onClick={() => toggleFeature(feature.id, "defaultEnabled")}
-                     aria-label={`Toggle ${feature.name} active`}
-                      >
-                     <span />
-                   </button>
-                 </div>
+              <div>{feature.category}</div>
 
-                   <div>{feature.order}</div>
-
-                    <div>
-                      <button type="button" className="feature-more-button">
-                      <i className="bi bi-three-dots-vertical" />
-                      </button>
-                   </div>
+              <div>
+                <button
+                  type="button"
+                  className="feature-delete-button"
+                  title={`Delete ${feature.name}`}
+                  aria-label={`Delete ${feature.name}`}
+                  onClick={() => setDeleteTarget(feature)}
+                >
+                  <i className="bi bi-trash3" />
+                </button>
+              </div>
             </div>
-           ))}
+          ))}
         </div>
 
-        <p className="store-features-count">
-          Showing 1 to {filteredFeatures.length} of {features.length} entries
-        </p>
+        <div className="store-features-footer"> 
+          <span>
+            Showing 1 to {filteredFeatures.length} of {features.length} entries
+          </span>
+
+          <div className="store-features-pagination">
+            <button type="button" aria-label="Previous page">
+              <i className="bi bi-chevron-left" />
+            </button>
+
+            <button type="button" className="active">
+              1
+            </button>
+
+            <button type="button" aria-label="Next page">
+              <i className="bi bi-chevron-right" />
+            </button>
+          </div>
+        </div>
       </section>
 
       {showAddModal && (
@@ -263,6 +474,7 @@ export default function StoreTypeFeatures() {
         >
           <div
             className="add-features-modal"
+            style={addFeatureModalStyle}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="add-features-modal-header">
@@ -271,7 +483,7 @@ export default function StoreTypeFeatures() {
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                aria-label="Close"
+                aria-label="Close dialog"
               >
                 <i className="bi bi-x-lg" />
               </button>
@@ -289,37 +501,71 @@ export default function StoreTypeFeatures() {
             </label>
 
             <div className="add-features-groups">
-              {filteredGroups.map((group) => (
-                <div className="add-features-group" key={group.category}>
-                  <div className="add-features-group-title">
-                    <span>
-                      <i className="bi bi-chevron-down" />
-                      {group.category}
-                    </span>
+              {loadingCatalog ? (
+                <p>Loading features...</p>
+              ) : error ? (
+                <p role="alert">{error}</p>
+              ) : filteredGroups.length === 0 ? (
+                <p>No features available.</p>
+              ) : (
+                filteredGroups.map((group) => (
+                  <div className="add-features-group" key={group.category}>
+                    <div className="add-features-group-title">
+                      <span>
+                        <i className="bi bi-chevron-down" />
+                        {group.category}
+                      </span>
 
-                    <small>
-                      (
-                      {
-                        selectedFeatures.filter((item) =>
-                          featureOptions[group.category].includes(item)
-                        ).length
-                      }
-                      /{featureOptions[group.category].length})
-                    </small>
+                      <small>
+                        (
+                        {
+                          group.options.filter((feature) =>
+                            selectedFeatures.includes(feature.id)
+                          ).length
+                        }
+                        /{group.options.length})
+                      </small>
+                    </div>
+
+                    {group.options.map((feature) => {
+                      const alreadyAssigned = selectedFeatures.includes(feature.id);
+
+                      return (
+                      <label className="add-feature-option" key={feature.id || feature.name}>
+                        <input
+                          type="checkbox"
+                          checked={alreadyAssigned}
+                          onChange={() => toggleSelectedFeature(feature)}
+                          disabled={saving}
+                        />
+                        <span>{feature.name}</span>
+                      </label>
+                      );
+                    })}
                   </div>
+                ))
+              )}
+            </div>
 
-                  {group.options.map((featureName) => (
-                    <label className="add-feature-option" key={featureName}>
-                      <input
-                        type="checkbox"
-                        checked={selectedFeatures.includes(featureName)}
-                        onChange={() => toggleSelectedFeature(featureName)}
-                      />
-                      <span>{featureName}</span>
-                    </label>
-                  ))}
-                </div>
-              ))}
+            <div className="add-features-preview">
+              <div className="add-features-preview-header">
+                <span>Selected Features</span>
+                <strong>{selectedFeatures.length}</strong>
+              </div>
+
+              <div className="add-features-preview-list">
+                {selectedFeatureDetails.length > 0 ? (
+                  selectedFeatureDetails.map((feature) => (
+                    <span className="add-features-preview-pill" key={feature.id}>
+                      {feature.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="add-features-preview-empty">
+                    No features selected yet
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="add-features-modal-actions">
@@ -335,8 +581,56 @@ export default function StoreTypeFeatures() {
                 type="button"
                 className="add-features-confirm"
                 onClick={addSelectedFeatures}
+                disabled={selectedFeatures.length === 0 || saving}
               >
-                Add Selected
+                {saving ? "Adding..." : "Add Selected"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="delete-feature-overlay"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div
+            className="delete-feature-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="delete-feature-icon">
+              <i className="bi bi-exclamation-triangle" />
+            </div>
+
+            <h2>Delete Feature?</h2>
+
+            <p>
+              Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
+            </p>
+
+             <p className="delete-feature-warning">
+              This action cannot be undone.
+            </p>
+
+            {error && <p role="alert">{error}</p>}
+
+            <div className="delete-feature-actions">
+              <button
+                type="button"
+                className="delete-feature-keep-button"
+                onClick={() => setDeleteTarget(null)}
+              >
+                No, Keep It
+              </button>
+
+              <button
+                type="button"
+                className="delete-feature-confirm-button"
+                onClick={confirmDeleteFeature}
+                disabled={saving}
+              >
+                {saving ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>

@@ -1,15 +1,27 @@
-import { useEffect, useState } from "react";
+import "../styles/merchant-stores-embedded.css";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getMerchant } from "../api/merchants";
 import { ApiError } from "../api/http";
 
-export default function MerchantStores() {
-  const { merchantId } = useParams();
+export default function MerchantStores({
+  merchantId: selectedMerchantId,
+  embedded = false,
+}) {
+  const params = useParams();
+  const merchantId = selectedMerchantId ?? params.merchantId;
   const nav = useNavigate();
+
   const [merchant, setMerchant] = useState(null);
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const pageSize = 5;
 
   useEffect(() => {
     let cancelled = false;
@@ -17,11 +29,21 @@ export default function MerchantStores() {
     async function loadMerchant() {
       setLoading(true);
       setError("");
+
       try {
+        if (!merchantId) {
+          throw new Error("A merchant must be selected.");
+        }
+
         const result = await getMerchant(merchantId);
+
         if (!cancelled) {
+          if (!result?.merchant) {
+            throw new Error("Merchant details were not returned.");
+          }
+
           setMerchant(result.merchant);
-          setStores(result.stores);
+          setStores(Array.isArray(result.stores) ? result.stores : []);
         }
       } catch (err) {
         if (!cancelled) {
@@ -32,244 +54,480 @@ export default function MerchantStores() {
           );
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadMerchant();
+
     return () => {
       cancelled = true;
     };
-  }, [merchantId]);
+  }, [merchantId, attempt]);
 
-  const statusClass = (merchant?.status || "active").toLowerCase().replace(/\s+/g, "-");
-  // Merchant dashboard card statistics
-const totalStores = stores.length;
+  /* =========================
+     SEARCH
+  ========================== */
 
-const activeStores = stores.filter(
-  (store) => (store.status || "").toLowerCase() === "active"
-).length;
+  const filteredStores = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-const inactiveStores = totalStores - activeStores;
+    if (!query) {
+      return stores;
+    }
 
-const totalPosDevices = stores.reduce(
-  (total, store) =>
-    total + Number(store.posDevices || store.pos_devices || 0),
-  0
-);
+    return stores.filter((store) => {
+      const searchableText = [
+        store.name,
+        store.id,
+        store.storeId,
+        store.type,
+        store.storeType,
+        store.location,
+        store.address,
+        store.city,
+        store.state,
+        store.status,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-const totalEmployees = stores.reduce(
-  (total, store) =>
-    total + Number(store.employees || store.employeeCount || 0),
-  0
-);
+      return searchableText.includes(query);
+    });
+  }, [stores, search]);
 
-const subscriptionPlan = merchant?.plan || "—";
+  /* =========================
+     PAGINATION
+  ========================== */
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredStores.length / pageSize)
+  );
+
+  const currentPage = Math.min(page, totalPages);
+
+  const visibleStores = filteredStores.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  const handleReset = () => {
+    setSearch("");
+    setPage(1);
+  };
+
+  /* =========================
+     HELPERS
+  ========================== */
+
+  const getStoreId = (store) =>
+    store.storeId ??
+    store.id ??
+    store.code ??
+    store.storeCode ??
+    "—";
+
+  const getStoreName = (store) =>
+    store.name ??
+    store.storeName ??
+    "Unnamed Store";
+
+  const getStoreType = (store) =>
+    store.type ??
+    store.storeType ??
+    store.store_type ??
+    "Retail";
+
+  const getStoreLocation = (store) => {
+    if (store.location) {
+      return store.location;
+    }
+
+    if (store.address) {
+      return store.address;
+    }
+
+    return [
+      store.addressLine1,
+      store.addressLine2,
+      store.city,
+      store.state,
+      store.country,
+    ]
+      .filter(Boolean)
+      .join(", ") || "—";
+  };
+
+  const getStoreStatus = (store) =>
+    store.status ??
+    "Active";
+
+  const getStatusClass = (status) =>
+    String(status || "active")
+      .toLowerCase()
+      .replace(/\s+/g, "-");
+
+  /* =========================
+     NAVIGATION
+  ========================== */
+
+  const handleNewStore = () => {
+    nav(`/merchants/${merchant.id}/stores/new`);
+  };
+
+  const handleStoreConfiguration = (store) => {
+    nav(
+      `/merchants/${merchant.id}/stores/${getStoreId(
+        store
+      )}/configuration/website`
+    );
+  };
+
+  const handleEdit = (store) => {
+    nav(
+      `/merchants/${merchant.id}/stores/edit/${getStoreId(
+        store
+      )}`
+    );
+  };
+
   return (
-    <div className="page-content merchant-store-page">
-      <div className="breadcrumb-area">
-        <button className="link-button" onClick={() => nav("/merchants")}>
-          <i className="bi bi-arrow-left" /> Merchants
-        </button>
-        <span>/</span>
-        <span>Merchant Stores</span>
-      </div>
+    <div
+      className={
+        embedded
+          ? "merchant-store-page merchant-stores-embedded"
+          : "page-content merchant-store-page"
+      }
+    >
+      {/* =====================================
+          BREADCRUMB
+      ====================================== */}
 
+      {!embedded && (
+        <div className="breadcrumb-area">
+          <button
+            className="link-button"
+            onClick={() => nav("/merchants")}
+          >
+            <i className="bi bi-arrow-left" /> Merchants
+          </button>
+
+          <span>/</span>
+
+          <span>Merchant Stores</span>
+        </div>
+      )}
+
+      {/* =====================================
+          LOADING
+      ====================================== */}
 
       {loading ? (
-        <section className="merchant-summary-card">Loading merchant details...</section>
-      ) : error ? (
-        <section className="merchant-summary-card">{error}</section>
-      ) : (
-        <>
-          <section className="merchant-summary-card">
-            <div className="merchant-summary-left">
-              <div className="merchant-avatar">{merchant.initials}</div>
-              <div>
-                <h2>{merchant.name}</h2>
-                <p>{merchant.id}</p>
-              </div>
-            </div>
-            <div className="merchant-summary-details">
-              <div className="summary-item">
-                <span>Contact</span>
-                <strong>{merchant.email || "—"}</strong>
-              </div>
-              <div className="summary-item">
-                <span>Status</span>
-                <strong className={`status-badge ${statusClass}`}>
-                  {merchant.status}
-                </strong>
-              </div>
-              <div className="summary-item">
-                <span>Subscription</span>
-                <strong>{merchant.plan || "—"}</strong>
-              </div>
-            </div>
-          </section>
-
-          {/* Merchant Dashboard Cards */}
-        <section className="merchant-dashboard-cards">
-
-          {/* Total Stores */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon purple">
-              <i className="bi bi-shop" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Total Stores</span>
-              <h3>{totalStores}</h3>
-            </div>
-          </div>
-
-          {/* Active Stores */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon green">
-              <i className="bi bi-check-circle" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Active Stores</span>
-              <h3>{activeStores}</h3>
-            </div>
-          </div>
-
-          {/* Inactive Stores */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon red">
-              <i className="bi bi-wifi-off" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Inactive Stores</span>
-              <h3>{inactiveStores}</h3>
-            </div>
-          </div>
-
-          {/* Total POS Devices */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon blue">
-              <i className="bi bi-display" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Total POS Devices</span>
-              <h3>{totalPosDevices}</h3>
-            </div>
-          </div>
-
-          {/* Total Employees */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon green">
-              <i className="bi bi-people" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Total Employees</span>
-              <h3>{totalEmployees}</h3>
-            </div>
-          </div>
-
-          {/* Subscription Plan */}
-          <div className="merchant-dashboard-card">
-            <div className="dashboard-card-icon orange">
-              <i className="bi bi-award" />
-            </div>
-            <div className="dashboard-card-content">
-              <span>Subscription Plan</span>
-              <h3 className="subscription-plan-text">
-                {subscriptionPlan}
-              </h3>
-              <small className="subscription-active">
-                ● Active
-              </small>
-            </div>
-          </div>
-
+        <section className="merchant-summary-card">
+          Loading merchant details...
         </section>
-          <section className="stores-card">
+      ) : error ? (
+        <section
+          className="merchant-summary-card"
+          role="alert"
+        >
+          {error}
+
+          <button
+            type="button"
+            onClick={() =>
+              setAttempt((value) => value + 1)
+            }
+          >
+            Retry
+          </button>
+        </section>
+      ) : (
+        <div className="merchant-stores-layout">
+
+          {/* =====================================
+              TOP HEADER
+          ====================================== */}
+
+          <section className="stores-card stores-header-card">
             <div className="stores-card-header">
               <div>
                 <h2>Stores</h2>
-                <p>Manage the store locations for this merchant.</p>
+
+                <p>
+                  Manage the store locations for this
+                  merchant.
+                </p>
               </div>
+
               <button
                 className="btn-new-store"
-                onClick={() => nav(`/merchants/${merchant.id}/stores/new`)}
+                type="button"
+                onClick={handleNewStore}
               >
-                <i className="bi bi-plus-lg" /> New Store
+                <i className="bi bi-plus-lg" />
+                New Store
               </button>
-            </div>
-            <div className="stores-list">
-              {stores.length === 0 ? (
-                <div className="store-item">
-                  <div className="store-item-info">
-                    <h3>No stores found</h3>
-                    <div className="store-meta">
-                      <span>This merchant does not have any stores yet.</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                stores.map((store) => (
-                  <div className="store-item" key={store.id}>
-                    <div className="store-item-icon">
-                      <i className="bi bi-shop" />
-                    </div>
-                    <div className="store-item-info">
-                      <h3>{store.name}</h3>
-                      <div className="store-meta">
-                        <span>Store ID: {store.id}</span>
-                        <span>{store.type}</span>
-                        <span>{store.location}</span>
-                      </div>
-                    </div>
-                    <div className="store-item-status">
-                      <span className={`store-status ${store.status.toLowerCase()}`}>
-                        {store.status}
-                      </span>
-                    </div>
-                    <div className="store-item-actions">
-                      <button
-                        className="store-config-btn"
-                        onClick={() =>
-                          nav(
-                            `/merchants/${merchant.id}/stores/${store.id}/configuration/website`
-                          )
-                        }
-                      >
-                        <i className="bi bi-sliders" /> Store Configuration
-                      </button>
-                      <button
-                        className="store-edit-btn"
-                        onClick={() =>
-                          nav(`/merchants/${merchant.id}/stores/edit/${store.id}`)
-                        }
-                      >
-                        <i className="bi bi-pencil" /> Edit
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
             </div>
           </section>
 
-          {/* <section className="employees-action-card">
-            <div>
-              <h2>Employees</h2>
-              <p>Manage employees associated with this merchant.</p>
+          {/* =====================================
+              STORE LIST
+          ====================================== */}
+
+          <section className="stores-card store-list-card">
+
+            <div className="store-list-heading">
+              <h2>Store List</h2>
             </div>
-            <button
-              className="btn-create-employees"
-              onClick={() => {
-                localStorage.setItem(
-                  "pchCurrentStore",
-                  JSON.stringify(stores[0] || {})
-                );
-                nav(`/merchants/${merchant.id}/users`);
-              }}
-            >
-              <i className="bi bi-people" /> Create Employees
-            </button>
-          </section> */}
-        </>
+
+            {/* SEARCH + RESET */}
+
+            <div className="store-list-toolbar">
+
+              <div className="store-search-box">
+                <input
+                  type="text"
+                  value={search}
+                  placeholder="Search stores by name, type or location..."
+                  onChange={(event) =>
+                    setSearch(event.target.value)
+                  }
+                />
+              </div>
+
+              <button
+                type="button"
+                className="store-reset-btn"
+                onClick={handleReset}
+              >
+                <i className="bi bi-arrow-counterclockwise" />
+                Reset
+              </button>
+
+            </div>
+
+            {/* =====================================
+                TABLE
+            ====================================== */}
+
+            <div className="store-table-wrapper">
+
+              <table className="store-table">
+
+                <thead>
+                  <tr>
+                    <th>Store ↑</th>
+                    <th>Type ↕</th>
+                    <th>Location ↕</th>
+                    <th>Status ↕</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  {visibleStores.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="5"
+                        className="store-empty-row"
+                      >
+                        No stores found for this merchant.
+                      </td>
+                    </tr>
+                  ) : (
+                    visibleStores.map((store, index) => {
+
+                      const storeId =
+                        getStoreId(store);
+
+                      const storeName =
+                        getStoreName(store);
+
+                      const storeType =
+                        getStoreType(store);
+
+                      const location =
+                        getStoreLocation(store);
+
+                      const status =
+                        getStoreStatus(store);
+
+                      return (
+                        <tr
+                          key={
+                            store.id ??
+                            store.storeId ??
+                            `store-${index}`
+                          }
+                        >
+
+                          {/* STORE */}
+
+                          <td>
+                            <div className="store-name-cell">
+
+                              <div className="store-icon">
+                                <i className="bi bi-shop" />
+                              </div>
+
+                              <div className="store-name-info">
+
+                                <strong>
+                                  {storeName}
+                                </strong>
+
+                                <span>
+                                  Store ID: {storeId}
+                                </span>
+
+                              </div>
+
+                            </div>
+                          </td>
+
+                          {/* TYPE */}
+
+                          <td>
+                            <span className="store-type">
+                              {storeType}
+                            </span>
+                          </td>
+
+                          {/* LOCATION */}
+
+                          <td>
+                            <span className="store-location">
+                              {location}
+                            </span>
+                          </td>
+
+                          {/* STATUS */}
+
+                          <td>
+                            <span
+                              className={`store-status-badge ${getStatusClass(
+                                status
+                              )}`}
+                            >
+                              {status}
+                            </span>
+                          </td>
+
+                          {/* ACTIONS */}
+
+                          <td>
+                            <div className="store-actions">
+
+                              <button
+                                type="button"
+                                className="store-config-btn"
+                                onClick={() =>
+                                  handleStoreConfiguration(
+                                    store
+                                  )
+                                }
+                              >
+                                <i className="bi bi-sliders" />
+                                Store Configuration
+                              </button>
+
+                              <button
+                                type="button"
+                                className="store-edit-btn"
+                                onClick={() =>
+                                  handleEdit(store)
+                                }
+                              >
+                                <i className="bi bi-pencil" />
+                                Edit
+                              </button>
+
+                            </div>
+                          </td>
+
+                        </tr>
+                      );
+                    })
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+            {/* =====================================
+                PAGINATION
+            ====================================== */}
+
+            <div className="store-pagination">
+
+              <span className="store-pagination-info">
+                Showing{" "}
+                {filteredStores.length === 0
+                  ? 0
+                  : (currentPage - 1) *
+                      pageSize +
+                    1}{" "}
+                to{" "}
+                {Math.min(
+                  currentPage * pageSize,
+                  filteredStores.length
+                )}{" "}
+                of {filteredStores.length} entries
+              </span>
+
+              <div className="store-pagination-controls">
+
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() =>
+                    setPage((value) =>
+                      Math.max(1, value - 1)
+                    )
+                  }
+                >
+                  ‹
+                </button>
+
+                <span>
+                  {currentPage} / {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={
+                    currentPage === totalPages
+                  }
+                  onClick={() =>
+                    setPage((value) =>
+                      Math.min(
+                        totalPages,
+                        value + 1
+                      )
+                    )
+                  }
+                >
+                  ›
+                </button>
+
+              </div>
+
+            </div>
+
+          </section>
+        </div>
       )}
     </div>
   );

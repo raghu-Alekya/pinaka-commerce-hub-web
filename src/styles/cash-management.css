@@ -1,0 +1,1032 @@
+/* =========================================================
+   CASH MANAGEMENT PAGE
+========================================================= */
+
+.cash-management-page {
+  width: 100%;
+  color: #172b4d;
+  padding-bottom: 30px;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.cash-page-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.cash-page-icon {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f0ebff;
+  border-radius: 14px;
+
+  color: #684ee8;
+  font-size: 22px;
+}
+
+.cash-page-header h1 {
+  margin: 0 0 4px;
+
+  color: #17233e;
+
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.cash-page-header p {
+  margin: 0;
+
+  color: #7d8697;
+
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   KPI GRID
+========================================================= */
+
+.cash-kpi-grid {
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 18px;
+
+  margin-bottom: 16px;
+}
+
+
+/* =========================================================
+   KPI CARDS
+   Same compact style as Stores
+========================================================= */
+
+.cash-kpi-card {
+  position: relative;
+
+  min-height: 105px;
+  height: 105px;
+
+  padding: 16px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  background: #ffffff;
+
+  border: 1px solid #e4e7ed;
+
+  border-radius: 8px;
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+
+  box-shadow: none;
+}
+
+
+/* Remove colored card borders */
+
+.cash-kpi-card.purple,
+.cash-kpi-card.green,
+.cash-kpi-card.orange,
+.cash-kpi-card.blue {
+  border-color: #e4e7ed;
+}
+
+
+/* =========================================================
+   KPI ICON
+========================================================= */
+
+.cash-kpi-icon {
+  width: 43px;
+  height: 43px;
+
+  flex: 0 0 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  font-size: 19px;
+}
+
+.cash-kpi-card.purple .cash-kpi-icon {
+  background: #eeeaff;
+  color: #6250cf;
+}
+
+.cash-kpi-card.green .cash-kpi-icon {
+  background: #e5f6eb;
+  color: #35a467;
+}
+
+.cash-kpi-card.orange .cash-kpi-icon {
+  background: #fff1dc;
+  color: #e59c2d;
+}
+
+.cash-kpi-card.blue .cash-kpi-icon {
+  background: #e4f0ff;
+  color: #4181d5;
+}
+
+
+/* =========================================================
+   KPI CONTENT
+========================================================= */
+
+.cash-kpi-content {
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  min-width: 0;
+}
+
+
+/* Label */
+
+.cash-kpi-content > span {
+  display: block;
+
+  color: #697286;
+
+  font-size: 12px;
+
+  line-height: 1.2;
+
+  margin-bottom: 3px;
+}
+
+
+/* Value */
+
+.cash-kpi-content > strong {
+  display: block;
+
+  color: #1d2942;
+
+  font-size: 20px;
+
+  line-height: 1.1;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   KPI TREND
+========================================================= */
+
+.cash-kpi-content small {
+  display: flex;
+  align-items: center;
+
+  gap: 3px;
+
+  margin-top: 5px;
+
+  font-size: 8px;
+
+  line-height: 1.2;
+
+  white-space: nowrap;
+}
+
+.cash-kpi-content small i {
+  font-size: 9px;
+}
+
+.cash-kpi-content small span {
+  color: #8d95a5;
+
+  font-size: 8px;
+
+  font-weight: 400;
+
+  margin-left: 2px;
+}
+
+.cash-kpi-positive {
+  color: #35a467;
+}
+
+.cash-kpi-negative {
+  color: #df5964;
+}
+
+
+/* =========================================================
+   DECORATIVE LINE
+========================================================= */
+
+.cash-kpi-line {
+  display: none;
+}
+
+
+/* =========================================================
+   FILTER BAR
+   Compact like Stores toolbar
+========================================================= */
+
+.cash-filter-bar {
+  min-height: 58px;
+
+  padding: 11px 13px;
+
+  margin-bottom: 16px;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(270px, 2fr)
+    minmax(125px, 1fr)
+    minmax(125px, 1fr)
+    minmax(125px, 1fr)
+    90px;
+
+  gap: 8px;
+
+  align-items: center;
+
+  background: #ffffff;
+
+  border: 1px solid #e4e7ed;
+
+  border-radius: 8px;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.cash-search-box {
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 0 9px;
+
+  background: #ffffff;
+
+  border: 1px solid #dfe3ea;
+
+  border-radius: 5px;
+
+  box-sizing: border-box;
+}
+
+.cash-search-box > i {
+  color: #929aaa;
+
+  font-size: 12px;
+}
+
+.cash-search-box input {
+  width: 100%;
+
+  border: 0;
+  outline: 0;
+
+  padding-left: 2px;
+
+  background: transparent;
+
+  color: #3e485d;
+
+  font-size: 10px;
+}
+
+.cash-search-box input::placeholder {
+  color: #9ca3b1;
+}
+
+
+/* =========================================================
+   SELECT
+========================================================= */
+
+.cash-select-wrapper {
+  position: relative;
+
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 0 9px;
+
+  background: #ffffff;
+
+  border: 1px solid #dfe3ea;
+
+  border-radius: 5px;
+
+  box-sizing: border-box;
+}
+
+.cash-select-wrapper > i:first-child {
+  color: #667994;
+
+  font-size: 12px;
+
+  flex: 0 0 auto;
+}
+
+.cash-select-wrapper select {
+  width: 100%;
+
+  height: 100%;
+
+  padding: 0 20px 0 0;
+
+  border: none;
+
+  outline: none;
+
+  appearance: none;
+
+  background: transparent;
+
+  color: #596378;
+
+  font-size: 9px;
+
+  cursor: pointer;
+}
+
+.cash-select-arrow {
+  position: absolute;
+
+  right: 9px;
+
+  color: #596378 !important;
+
+  font-size: 10px !important;
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   CLEAR BUTTON
+========================================================= */
+
+.cash-clear-button {
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 0 11px;
+
+  border: 1px solid #dfe3ea;
+
+  border-radius: 5px;
+
+  background: #ffffff;
+
+  color: #596378;
+
+  font-size: 9px;
+
+  font-weight: 400;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.cash-clear-button i {
+  font-size: 11px;
+}
+
+.cash-clear-button:hover {
+  background: #f5f6fa;
+
+  border-color: #cfd5df;
+
+  color: #172b4d;
+}
+
+
+/* =========================================================
+   TABLE CARD
+========================================================= */
+
+.cash-table-card {
+  background: #ffffff;
+
+  border: 1px solid #e4e7ed;
+
+  border-radius: 8px;
+
+  overflow: hidden;
+
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.cash-table-header {
+  min-height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 18px;
+
+  border-bottom: 1px solid #eceef2;
+
+  box-sizing: border-box;
+}
+
+.cash-table-title {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.cash-table-title h2 {
+  margin: 0;
+
+  color: #17233e;
+
+  font-size: 18px;
+
+  font-weight: 700;
+}
+
+.cash-table-title > span {
+  min-width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 8px;
+
+  border-radius: 50%;
+
+  background: #eeeaff;
+
+  color: #6250cf;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   READ ONLY
+========================================================= */
+
+.cash-read-only {
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 0 12px;
+
+  background: #f4f6fa;
+
+  border-radius: 7px;
+
+  color: #62728c;
+
+  font-size: 11px;
+
+  font-weight: 500;
+}
+
+.cash-read-only i {
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+========================================================= */
+
+.cash-table-wrapper {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.cash-table {
+  width: 100%;
+
+  min-width: 1120px;
+
+  border-collapse: collapse;
+
+  table-layout: fixed;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.cash-table th {
+  height: 50px;
+
+  padding: 0 12px;
+
+  background: #fafbfc;
+
+  border-right: 1px solid #e9ebef;
+
+  border-bottom: 1px solid #e9ebef;
+
+  color: #9199aa;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  text-align: left;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.2px;
+
+  vertical-align: middle;
+}
+
+.cash-table th:last-child {
+  border-right: none;
+}
+
+
+/* =========================================================
+   TABLE CELLS
+========================================================= */
+
+.cash-table td {
+  height: 64px;
+
+  padding: 10px 12px;
+
+  border-right: 1px solid #f0f1f4;
+
+  border-bottom: 1px solid #f0f1f4;
+
+  color: #5e687b;
+
+  font-size: 12px;
+
+  vertical-align: middle;
+
+  box-sizing: border-box;
+}
+
+.cash-table td:last-child {
+  border-right: none;
+}
+
+.cash-table tbody tr:hover {
+  background: #fafbff;
+}
+
+
+/* =========================================================
+   COLUMN WIDTHS
+========================================================= */
+
+.cash-table th:nth-child(1),
+.cash-table td:nth-child(1) {
+  width: 17%;
+}
+
+.cash-table th:nth-child(2),
+.cash-table td:nth-child(2) {
+  width: 9%;
+}
+
+.cash-table th:nth-child(3),
+.cash-table td:nth-child(3) {
+  width: 9%;
+}
+
+.cash-table th:nth-child(4),
+.cash-table td:nth-child(4) {
+  width: 10%;
+}
+
+.cash-table th:nth-child(5),
+.cash-table td:nth-child(5) {
+  width: 10%;
+}
+
+.cash-table th:nth-child(6),
+.cash-table td:nth-child(6) {
+  width: 10%;
+}
+
+.cash-table th:nth-child(7),
+.cash-table td:nth-child(7) {
+  width: 11%;
+}
+
+.cash-table th:nth-child(8),
+.cash-table td:nth-child(8) {
+  width: 12%;
+}
+
+.cash-table th:nth-child(9),
+.cash-table td:nth-child(9) {
+  width: 8%;
+}
+
+.cash-table th:nth-child(10),
+.cash-table td:nth-child(10) {
+  width: 4%;
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.cash-title {
+  display: block;
+
+  color: #684ee8;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  line-height: 1.35;
+
+  text-decoration: none;
+}
+
+.cash-title:hover {
+  color: #573adf;
+
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   SORT
+========================================================= */
+
+.cash-sort-icon {
+  margin-left: 4px;
+
+  color: #8493a8;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   CHANGE AMOUNT
+========================================================= */
+
+.cash-change-positive {
+  color: #008f24 !important;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   DATE
+========================================================= */
+
+.cash-date {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.cash-date strong {
+  color: #526784;
+
+  font-size: 11px;
+
+  font-weight: 500;
+}
+
+.cash-date span {
+  color: #8b9ab0;
+
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   ACTION
+========================================================= */
+
+.cash-action-button {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #788195;
+
+  border-radius: 4px;
+
+  cursor: pointer;
+}
+
+.cash-action-button:hover {
+  background: #f1f2f6;
+}
+
+.cash-action-button i {
+  font-size: 15px;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.cash-empty-row {
+  height: 100px !important;
+
+  text-align: center !important;
+
+  color: #7c899e !important;
+
+  font-size: 12px !important;
+}
+
+
+/* =========================================================
+   TABLE FOOTER
+========================================================= */
+
+.cash-table-footer {
+  min-height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 14px;
+
+  border-top: 1px solid #eceef2;
+
+  box-sizing: border-box;
+}
+
+.cash-table-footer > span {
+  color: #8b93a3;
+
+  font-size: 9px;
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.cash-pagination {
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+}
+
+.cash-pagination button {
+  min-width: 26px;
+  height: 26px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #e0e3e9;
+
+  border-radius: 4px;
+
+  background: #ffffff;
+
+  color: #667085;
+
+  font-size: 8px;
+
+  cursor: pointer;
+}
+
+.cash-pagination button:hover {
+  background: #f5f4ff;
+}
+
+.cash-pagination button.active {
+  background: #5547c7;
+
+  border-color: #5547c7;
+
+  color: #ffffff;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1250px) {
+
+  .cash-filter-bar {
+    grid-template-columns:
+      2fr
+      1fr
+      1fr;
+  }
+
+  .cash-search-box {
+    grid-column: span 2;
+  }
+
+  .cash-clear-button {
+    grid-column: span 1;
+  }
+
+  .cash-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+
+@media (max-width: 900px) {
+
+  .cash-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+
+@media (max-width: 767px) {
+
+  .cash-management-page {
+    padding: 12px;
+  }
+
+  .cash-page-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .cash-page-icon {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+    font-size: 20px;
+  }
+
+  .cash-page-header h1 {
+    font-size: 24px;
+  }
+
+  .cash-page-header p {
+    font-size: 11px;
+  }
+
+  .cash-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cash-filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .cash-search-box {
+    grid-column: auto;
+  }
+
+  .cash-clear-button {
+    grid-column: auto;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .cash-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cash-kpi-card {
+    min-height: 105px;
+    height: 105px;
+  }
+
+}
+
+
+@media (max-width: 500px) {
+
+  .cash-page-header {
+    margin-bottom: 16px;
+  }
+
+  .cash-page-icon {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+    font-size: 19px;
+  }
+
+  .cash-page-header h1 {
+    font-size: 22px;
+  }
+
+  .cash-kpi-card {
+    padding: 14px;
+  }
+
+  .cash-kpi-icon {
+    width: 43px;
+    height: 43px;
+    flex-basis: 43px;
+    font-size: 18px;
+  }
+
+  .cash-kpi-content > span {
+    font-size: 12px;
+  }
+
+  .cash-kpi-content > strong {
+    font-size: 20px;
+  }
+
+  .cash-kpi-content small {
+    font-size: 8px;
+  }
+
+}

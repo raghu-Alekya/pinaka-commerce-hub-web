@@ -1,417 +1,788 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const initialRoleTemplates = [
-  {
-    id: 1,
-    key: "STORE_MANAGER",
-    name: "Store Manager",
-    description: "Full store operations access.",
-    status: "Active",
-    createdOn: "Jan 10, 2024",
-    icon: "bi-person-badge",
-  },
-  {
-    id: 2,
-    key: "CASHIER",
-    name: "Cashier",
-    description: "Handles sales and payments.",
-    status: "Active",
-    createdOn: "Jan 12, 2024",
-    icon: "bi-person",
-  },
-  {
-    id: 3,
-    key: "KITCHEN_STAFF",
-    name: "Kitchen Staff",
-    description: "Manages kitchen operations.",
-    status: "Active",
-    createdOn: "Jan 15, 2024",
-    icon: "bi-shop-window",
-  },
-  {
-    id: 4,
-    key: "SUPERVISOR",
-    name: "Supervisor",
-    description: "Supervises daily operations.",
-    status: "Inactive",
-    createdOn: "Feb 01, 2024",
-    icon: "bi-person-check",
-  },
-  {
-    id: 5,
-    key: "ACCOUNTANT",
-    name: "Accountant",
-    description: "Handles financial operations.",
-    status: "Active",
-    createdOn: "Feb 10, 2024",
-    icon: "bi-person",
-  },
-];
+import {
+  roleTemplatesApi,
+  readRoleTemplatesList,
+} from "../api/roleTemplatesApi";
 
 const initialForm = {
-  key: "",
+  roleCode: "",
   name: "",
   description: "",
-  status: "Active",
+  status: "ACTIVE",
 };
+
+function displayDate(value) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return {
+    date: date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    }),
+    time: date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  };
+}
 
 export default function RoleTemplates() {
   const navigate = useNavigate();
-  const [templates, setTemplates] = useState(initialRoleTemplates);
+  const [templates, setTemplates] = useState([]);
   const [form, setForm] = useState(initialForm);
+
   const [editingId, setEditingId] = useState(null);
+  const [originalForm, setOriginalForm] = useState(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All Statuses");
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [sortBy, setSortBy] = useState("NEWEST");
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [roleCodeError, setRoleCodeError] = useState("");
+
+  const [deletePopup, setDeletePopup] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState(null);
+  async function loadTemplates() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await roleTemplatesApi.getAll();
+      const items = readRoleTemplatesList(response);
+
+      const validItems = items.filter((item) => item?.id != null);
+
+      setTemplates(validItems);
+
+    } catch (err) {
+      setError(
+        err?.message || "Unable to load role templates."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
 
   const filteredTemplates = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return templates.filter((template) => {
+    const filtered = templates.filter((template) => {
+      const searchableText = [
+        template.roleCode,
+        template.name,
+        template.description,
+        template.status,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
       const matchesSearch =
-        !query ||
-        [template.key, template.name, template.description, template.status]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
+        !query || searchableText.includes(query);
 
       const matchesStatus =
-        statusFilter === "All Statuses" || template.status === statusFilter;
+        statusFilter === "ALL" ||
+        String(template.status).toUpperCase() === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
-  }, [templates, search, statusFilter]);
 
-  const allVisibleSelected =
-    filteredTemplates.length > 0 &&
-    filteredTemplates.every((template) => selectedIds.includes(template.id));
+    const getDateValue = (template) => {
+      const value =
+        template.createdAt ||
+        template.created_at ||
+        template.createdDate;
+
+      const timestamp = value ? new Date(value).getTime() : 0;
+      return Number.isNaN(timestamp) ? 0 : timestamp;
+    };
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "NEWEST") {
+        return getDateValue(b) - getDateValue(a);
+      }
+
+      if (sortBy === "OLDEST") {
+        return getDateValue(a) - getDateValue(b);
+      }
+
+      const nameA = String(a.name || "").trim();
+      const nameB = String(b.name || "").trim();
+
+      if (sortBy === "A_Z") {
+        return nameA.localeCompare(nameB, undefined, {
+          sensitivity: "base",
+        });
+      }
+
+      if (sortBy === "Z_A") {
+        return nameB.localeCompare(nameA, undefined, {
+          sensitivity: "base",
+        });
+      }
+
+      return 0;
+    });
+  }, [templates, search, statusFilter, sortBy]);
+
+  const roleNameSuggestions = useMemo(
+    () =>
+      [...new Set(
+        templates
+          .map((template) => String(template.name || "").trim())
+          .filter(Boolean)
+      )],
+    [templates]
+  );
+
+  function validateRoleCode(value) {
+    const code = String(value || "").trim();
+
+    if (!code) return "Role Code is required.";
+    if (code.length < 3 || code.length > 30) {
+      return "Role Code must be 3 to 30 characters.";
+    }
+    if (!/^[A-Z0-9_]+$/.test(code)) {
+      return "Use only letters, numbers, and underscores. No spaces or special characters.";
+    }
+
+    return "";
+  }
 
   function handleChange(event) {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
+
+    if (name === "roleCode") {
+      const nextValue = value.toUpperCase();
+      setRoleCodeError(validateRoleCode(nextValue));
+
+      setForm((currentForm) => ({
+        ...currentForm,
+        roleCode: nextValue,
+      }));
+      return;
+    }
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      [name]: value,
+    }));
   }
 
   function resetForm() {
     setForm(initialForm);
     setEditingId(null);
+    setOriginalForm(null);
+    setError("");
+    setRoleCodeError("");
   }
 
-  function saveTemplate() {
-    const key = form.key.trim().toUpperCase();
-    const name = form.name.trim();
-
-    if (!key || !name) return;
-
-    if (editingId) {
-      setTemplates((current) =>
-        current.map((template) =>
-          template.id === editingId
-            ? {
-                ...template,
-                key,
-                name,
-                description: form.description.trim(),
-                status: form.status,
-              }
-            : template
-        )
-      );
-    } else {
-      const newTemplate = {
-        id: Date.now(),
-        key,
-        name,
-        description: form.description.trim(),
-        status: form.status,
-        createdOn: "Today",
-        icon: "bi-person",
-      };
-      setTemplates((current) => [newTemplate, ...current]);
-    }
-
-    resetForm();
-  }
-
-  function editTemplate(template) {
-    setEditingId(template.id);
-    setForm({
-      key: template.key,
-      name: template.name,
-      description: template.description,
-      status: template.status,
-    });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function duplicateTemplate(template) {
-    const copy = {
-      ...template,
-      id: Date.now(),
-      key: `${template.key}_COPY`,
-      name: `${template.name} Copy`,
-      createdOn: "Today",
+  async function saveTemplate() {
+    const values = {
+      roleCode: form.roleCode.trim().toUpperCase(),
+      name: form.name.trim(),
+      description: form.description.trim(),
+      status: form.status,
     };
-    setTemplates((current) => [copy, ...current]);
-  }
 
-  function toggleSelection(id) {
-    setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
-    );
-  }
+   
 
-  function toggleAllVisible() {
-    if (allVisibleSelected) {
-      setSelectedIds((current) =>
-        current.filter((id) => !filteredTemplates.some((item) => item.id === id))
-      );
+    const codeError = validateRoleCode(values.roleCode);
+
+    if (codeError) {
+      setRoleCodeError(codeError);
       return;
     }
 
-    setSelectedIds((current) => [
-      ...new Set([...current, ...filteredTemplates.map((item) => item.id)]),
-    ]);
+    if (!values.name) {
+      setError("Role Template Name is required.");
+      return;
+    }
+
+    setRoleCodeError("");
+    setSaving(true);
+    setError("");
+
+    try {
+      if (editingId !== null) {
+        await roleTemplatesApi.update(editingId, values);
+      } else {
+        await roleTemplatesApi.create(values);
+      }
+
+      await loadTemplates();
+      resetForm();
+    } catch (err) {
+      setError(
+        err?.message || "Unable to save role template."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function editTemplate(template) {
+    const nextForm = {
+      roleCode: template.roleCode || "",
+      name: template.name || "",
+      description: template.description || "",
+      status: template.status || "ACTIVE",
+    };
+
+    setEditingId(template.id);
+    setForm(nextForm);
+    setOriginalForm(nextForm);
+
+    setError("");
+    setRoleCodeError("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function openDeletePopup(template) {
+    setTemplateToDelete(template);
+    setDeletePopup(true);
+    setError("");
+  }
+
+  function closeDeletePopup() {
+    if (saving) return;
+
+    setDeletePopup(false);
+    setTemplateToDelete(null);
+  }
+
+  async function confirmDeleteTemplate() {
+    if (!templateToDelete?.id) return;
+
+    setSaving(true);
+    setError("");
+
+    try {
+      await roleTemplatesApi.remove(templateToDelete.id);
+
+      setTemplates((currentTemplates) =>
+        currentTemplates.filter(
+          (template) => template.id !== templateToDelete.id
+        )
+      );
+
+      if (editingId === templateToDelete.id) {
+        resetForm();
+      }
+
+      closeDeletePopup();
+    } catch (err) {
+      setError(
+        err?.message || "Unable to delete role template."
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   function resetFilters() {
     setSearch("");
-    setStatusFilter("All Statuses");
-    setSelectedIds([]);
+    setStatusFilter("ALL");
+    setSortBy("NEWEST");
   }
 
+  const isFormValid =
+    form.roleCode.length >= 3 &&
+    form.roleCode.length <= 30 &&
+    /^[A-Z0-9_]+$/.test(form.roleCode) &&
+    form.name.trim().length > 0;
+
+  const hasFormChanges =
+    editingId !== null &&
+    originalForm !== null &&
+    (form.roleCode !== originalForm.roleCode ||
+      form.name !== originalForm.name ||
+      form.description !== originalForm.description ||
+      form.status !== originalForm.status);
+
+  const canSubmit =
+    isFormValid &&
+    (editingId === null || hasFormChanges);
+
   return (
-    <section className="role-templates-page">
-      <div className="role-details-card">
-        <div className="role-page-heading">
-          <div className="role-title-wrap">
-            <div className="role-title-icon">
+    <>
+      <section className="role-templates-page">
+        <div className="role-templates-page-heading">
+          <div>
+            <h1>Role Template</h1>
+            <p>Create and manage role templates using feature permissions.</p>
+          </div>
+        </div>
+
+        <div className="role-details-card">
+          <div className="role-card-heading">
+            <div className="role-heading-icon">
               <i className="bi bi-grid-1x2" />
             </div>
+
             <div>
-              <h1>Role Templates</h1>
-              <p>Create and manage role templates using feature permissions.</p>
+              <h2>
+                {editingId !== null
+                  ? "Edit Role Template Details"
+                  : "Add Role Template Details"}
+              </h2>
+              <p>
+                Provide the basic details and configuration for this role template.
+              </p>
             </div>
           </div>
 
-          <div className="role-heading-actions">
-            <span className="role-mode-pill">
-              {editingId ? "Editing" : "Creating New"}
-            </span>
+          {error && (
+            <p className="role-error-message" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="role-form-grid role-create-fields-grid">
+            <label className="role-field role-code-field">
+              <span>
+                Role Code <b>*</b>
+              </span>
+
+              <div className="role-input-wrap">
+                <i className="bi bi-tag" />
+                <input
+                  type="text"
+                  name="roleCode"
+                  value={form.roleCode}
+                  onChange={handleChange}
+                  placeholder="e.g. CASHIER"
+                  maxLength={30}
+                  autoComplete="off"
+                  aria-invalid={Boolean(roleCodeError)}
+                  className={roleCodeError ? "role-input-invalid" : ""}
+                />
+              </div>
+
+              <small className={roleCodeError ? "role-field-error" : ""}>
+                {roleCodeError || "3–30 characters. Letters, numbers, and underscores only. No spaces."}
+              </small>
+            </label>
+
+            <label className="role-field role-name-field">
+              <span>
+                Role Template Name <b>*</b>
+              </span>
+
+              <div className="role-input-wrap">
+                <i className="bi bi-type" />
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="Enter role template name"
+                  maxLength={100}
+                  autoComplete="off"
+                />
+              </div>
+
+              <small>
+                Display name for the role template.
+              </small>
+            </label>
+
+            <label className="role-field role-status-field">
+              <span>
+                Status <b>*</b>
+              </span>
+
+              <div
+                className={`role-select-wrap ${
+                  form.status === "INACTIVE"
+                    ? "role-status-select-inactive"
+                    : "role-status-select-active"
+                }`}
+              >
+                <select
+                  name="status"
+                  value={form.status}
+                  onChange={handleChange}
+                  className={
+                    form.status === "INACTIVE"
+                      ? "status-inactive"
+                      : "status-active"
+                  }
+                >
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                </select>
+                <i className="bi bi-chevron-down" />
+              </div>
+
+              <small>Active or Inactive.</small>
+            </label>
+
+            <label className="role-field role-description-field">
+              <span>Description</span>
+
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                onInput={(event) => {
+                  event.currentTarget.style.height = "44px";
+                  event.currentTarget.style.height = `${Math.max(
+                    44,
+                    event.currentTarget.scrollHeight
+                  )}px`;
+                }}
+                autoComplete="off"
+                placeholder="Enter a brief description..."
+                maxLength={500}
+              />
+
+              <div className="role-description-meta">
+                <small>Explain the purpose of this role template.</small>
+                <span>{form.description.length}/500</span>
+              </div>
+            </label>
+          </div>
+
+          <div className="role-form-actions">
             <button
               type="button"
-              className="role-secondary-btn"
+              className="role-template-cancel-button"
               onClick={resetForm}
+              disabled={saving}
             >
               Cancel
             </button>
+
             <button
               type="button"
-              className="role-primary-btn"
+              className="role-template-submit-button"
               onClick={saveTemplate}
+              disabled={saving || !canSubmit}
             >
-              <i className="bi bi-floppy" />
-              {editingId ? "Update Role Template" : "Save & Configure Permissions"}
+
+
+              {saving
+                ? "Saving..."
+                : editingId !== null
+                ? "Update Role Template"
+                : "Create Role Template"}
             </button>
           </div>
         </div>
 
-        <div className="role-section-title">Role Template Details</div>
+        <div className="role-list-card">
+          <div className="role-list-header">
+            <div>
+              <h2>Role Templates List</h2>
 
-        <div className="role-form-grid">
-          <label className="role-field">
-            <span>
-              Role Code <b>*</b> 
-            </span>
-            <input
-              name="key"
-              value={form.key}
-              onChange={handleChange}
-              placeholder="e.g. CASHIER"
-              maxLength={50}
-            />
-            <small>Unique key for the role template. Use UPPERCASE with underscores.</small>
-          </label>
-
-          <label className="role-field">
-            <span>
-              Template Name <b>*</b>
-            </span>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Enter template name"
-              maxLength={100}
-            />
-            <small>Display name for the role template.</small>
-          </label>
-
-          <label className="role-field">
-            <span1>
-              Status <b>*</b>
-            </span1>
-            <select name="status" value={form.status} onChange={handleChange}>
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
-            <small>Active or Inactive.</small>
-          </label>
-
-          <label className="role-field role-description-field">
-            <span>Description</span>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              placeholder="Enter a brief description..."
-              rows="3"
-              maxLength={250}
-            />
-            <small>Explain the purpose of this role template.</small>
-          </label>
-        </div>
-      </div>
-
-      <div className="role-list-card">
-        <div className="role-list-header">
-          <div>
-            <h2>Role Templates List</h2>
-            <p>Manage role templates and their assigned feature permissions.</p>
-          </div>
-
-          <div className="role-filters">
-            <div className="role-search">
-              <i className="bi bi-search" />
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search role templates..."
-              />
+              <p>
+                Manage role templates and their assigned feature
+                permissions.
+              </p>
             </div>
 
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
-              <option>All Statuses</option>
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
+            <div className="role-filters">
+              <div className="role-search">
+                <i className="bi bi-search" />
 
-            <button
-              type="button"
-              className="role-reset-btn"
-              onClick={resetFilters}
-            >
-              <i className="bi bi-arrow-repeat" />
-              Reset
-            </button>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(event) =>
+                    setSearch(event.target.value)
+                  }
+                  placeholder="Search role templates..."
+                />
+              </div>
+
+              <select
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(event.target.value)
+                }
+                aria-label="Filter by status"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+              </select>
+
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value)}
+                aria-label="Sort role templates"
+              >
+                <option value="NEWEST">Newest to Oldest</option>
+                <option value="OLDEST">Oldest to Newest</option>
+                <option value="A_Z">A to Z</option>
+                <option value="Z_A">Z to A</option>
+              </select>
+
+             <button
+               type="button"
+               className="role-reset-icon-btn"
+               title="Reset filters"
+               aria-label="Reset filters"
+               onClick={resetFilters}
+                   >
+                <i className="bi bi-arrow-counterclockwise" />
+                </button>
+            </div>
           </div>
-        </div>
 
-        <div className="role-table-wrap">
-          <table className="role-table">
-            <thead>
-              <tr>
-                <th className="role-check-col">
-                  <input
-                    type="checkbox"
-                    checked={allVisibleSelected}
-                    onChange={toggleAllVisible}
-                    aria-label="Select all role templates"
-                  />
-                </th>
-                <th>Template Key <span>↕</span></th>
-                <th>Template Name <span>↕</span></th>
-                <th>Description <span>↕</span></th>
-                <th>Status <span>↕</span></th>
-                <th>Created On <span>↕</span></th>
-                <th className="role-actions-col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTemplates.map((template) => (
-                <tr key={template.id}>
-                  <td className="role-check-col">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(template.id)}
-                      onChange={() => toggleSelection(template.id)}
-                      aria-label={`Select ${template.name}`}
-                    />
-                  </td>
-                  <td>
-                    <div className="role-key-cell">
-                      <span className={`role-row-icon role-icon-${template.id}`}>
-                        <i className={`bi ${template.icon}`} />
-                      </span>
-                      <strong>{template.key}</strong>
-                    </div>
-                  </td>
-                  <td>{template.name}</td>
-                  <td className="role-description-cell">{template.description}</td>
-                  <td>
-                    <span className={`role-status ${template.status.toLowerCase()}`}>
-                      <i />
-                      {template.status}
-                    </span>
-                  </td>
-                  <td>{template.createdOn}</td>
-                  <td className="role-actions">
-                    <button
-                      type="button"
-                      onClick={() => editTemplate(template)}
-                      aria-label={`Edit ${template.name}`}
-                    >
-                      <i className="bi bi-pencil" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => duplicateTemplate(template)}
-                      aria-label={`Duplicate ${template.name}`}
-                    >
-                      <i className="bi bi-copy" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`More options for ${template.name}`}
-                      onClick={() => window.alert(`More options for ${template.name}`)}
-                    >
-                      <i className="bi bi-three-dots-vertical" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+          <div className="role-table-wrap">
+            <table className="role-table">
+              <colgroup>
+                <col className="role-code-col role-equal-col" />
+                <col className="role-name-col role-equal-col" />
+                <col className="role-description-col role-equal-col" />
+                <col className="role-status-col role-equal-col" />
+                <col className="role-created-col role-equal-col" />
+                <col className="role-updated-col role-equal-col" />
+                <col className="role-actions-col role-equal-col" />
+              </colgroup>
 
-              {filteredTemplates.length === 0 && (
+              <thead>
                 <tr>
-                  <td colSpan="7" className="role-empty-state">
-                    No role templates found.
-                  </td>
+                  <th className="role-code-col role-equal-col">Role Code</th>
+                  <th className="role-name-col role-equal-col">Role Template Name</th>
+                  <th className="role-description-col role-equal-col">Description</th>
+                  <th className="role-status-col role-equal-col">Status</th>
+                  <th className="role-created-col role-equal-col">Created At</th>
+                  <th className="role-updated-col role-equal-col">Updated At</th>
+                  <th className="role-actions-col role-equal-col">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
 
-        <div className="role-pagination">
-          <span>
-            Showing {filteredTemplates.length ? 1 : 0} to {filteredTemplates.length} of 5 entries
-          </span>
-          <div>
-            <button type="button" aria-label="Previous page">‹</button>
-            <button type="button" className="current-page">1</button>
-            <button type="button">2</button>
-            <button type="button">3</button>
-            <span>…</span>
-            <button type="button">71</button>
-            <button type="button" aria-label="Next page">›</button>
+              <tbody>
+                {filteredTemplates.map((template) => (
+                  <tr
+                    key={template.id}
+                    className="role-template-clickable-row"
+                    onClick={() =>
+                      navigate(`/role-templates/${template.id}`, {
+                        state: { roleTemplate: template },
+                      })
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        navigate(`/role-templates/${template.id}`, {
+                          state: { roleTemplate: template },
+                        });
+                      }
+                    }}
+                    tabIndex={0}
+                  >
+                    <td className="role-code-cell role-equal-col">
+                      <div className="role-key-cell">
+                        <strong>{template.roleCode || "—"}</strong>
+                      </div>
+                    </td>
+
+                    <td
+                      className="role-name-cell role-equal-col"
+                      title={template.name || "—"}
+                    >
+                      <strong>{template.name || "—"}</strong>
+                    </td>
+
+                    <td
+                      className="role-description-cell role-equal-col"
+                      title={template.description || "—"}
+                    >
+                      <span className="role-description-text">
+                        {template.description || "—"}
+                      </span>
+                    </td>
+
+                    <td className="role-status-cell role-equal-col">
+                      <span
+                        className={`role-status ${String(
+                          template.status || ""
+                        ).toLowerCase()}`}
+                      >
+                        <i />
+                        {String(template.status).toUpperCase() === "ACTIVE"
+                          ? "Active"
+                          : "Inactive"}
+                      </span>
+                    </td>
+
+                    <td className="role-created-cell role-equal-col">
+                      {(() => {
+                        const formatted = displayDate(
+                          template.createdAt ||
+                            template.created_at ||
+                            template.createdDate
+                        );
+
+                        return formatted ? (
+                          <>
+                            <span className="role-date-value">
+                              {formatted.date}
+                            </span>
+                            <span className="role-time-value">
+                              {formatted.time}
+                            </span>
+                          </>
+                        ) : (
+                          "—"
+                        );
+                      })()}
+                    </td>
+
+                    <td className="role-updated-cell role-equal-col">
+                      {(() => {
+                        const formatted = displayDate(
+                          template.updatedAt ||
+                            template.updated_at ||
+                            template.updatedDate
+                        );
+
+                        return formatted ? (
+                          <>
+                            <span className="role-date-value">
+                              {formatted.date}
+                            </span>
+                            <span className="role-time-value">
+                              {formatted.time}
+                            </span>
+                          </>
+                        ) : (
+                          "—"
+                        );
+                      })()}
+                    </td>
+
+                    <td className="role-actions role-equal-col">
+                      <button
+                        type="button"
+                        className="role-edit-action"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          editTemplate(template);
+                        }}
+                        disabled={saving}
+                        aria-label={`Edit ${
+                          template.name || template.roleCode
+                        }`}
+                        title="Edit role template"
+                      >
+                        <i className="bi bi-pencil" />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="role-delete-action"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openDeletePopup(template);
+                        }}
+                        disabled={saving}
+                        aria-label={`Delete ${
+                          template.name || template.roleCode
+                        }`}
+                        title="Delete role template"
+                      >
+                        <i className="bi bi-trash" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+
+                {filteredTemplates.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="role-empty-state">
+                      {loading
+                        ? "Loading role templates..."
+                        : "No role templates found."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="role-pagination">
+            <span>
+              Showing {filteredTemplates.length} of{" "}
+              {templates.length} entries
+            </span>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {deletePopup && templateToDelete && (
+        <div
+          className="role-delete-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-role-template-title"
+        >
+          <div className="role-delete-modal">
+            <div className="role-delete-icon">
+              <i className="bi bi-trash" />
+            </div>
+
+            <h3 id="delete-role-template-title">
+              Delete Role Template?
+            </h3>
+
+            <p>
+              Are you sure you want to delete{" "}
+              <strong>
+                {templateToDelete.name ||
+                  templateToDelete.roleCode}
+              </strong>
+              ?
+            </p>
+
+            <p>
+              This action cannot be undone.
+            </p>
+
+            <div className="role-delete-actions">
+              <button
+                type="button"
+                className="role-secondary-btn"
+                onClick={closeDeletePopup}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="role-delete-confirm-btn"
+                onClick={confirmDeleteTemplate}
+                disabled={saving}
+              >
+                {saving ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

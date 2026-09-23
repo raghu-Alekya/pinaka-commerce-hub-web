@@ -9,6 +9,10 @@ import Orders from "./Orders";
 import StoreDevices from "./StoreDevices";
 import StoreCustomers from "./StoreCustomers";
 import FastKeys from "./FastKeys";
+import StoreCategories from "./StoreCategories";
+import StoreShifts from "./StoreShifts";
+import StorePaymentRecords from "./StorePaymentRecords";
+import VendorPayments from "./VendorPayments"
 import { ApiError } from "../api/http";
 import {
   getWordpressConnector,
@@ -22,13 +26,18 @@ const navItems = [
   ["overview", "bi-shop", "Store Overview"],
   // ["details", "bi-pencil-square", "Store Details"],
   ["users", "bi-people", "Employees"],
-  ["pos", "bi-phone", "POS Settings"],
+  ["pos", "bi-phone", "POS Configurations"],
   ["products", "bi-box-seam", "Products"],
+  ["categories", "bi-tags", "Categories"],
   ["coupons", "bi-ticket-perforated", "Coupons"],
   ["orders", "bi-receipt", "Orders"],
   ["devices", "bi-pc-display", "Devices"],
   ["customers", "bi-person-lines-fill", "Customers"],
   ["fastkeys", "bi-key-fill", "Fast Keys"],
+  ["shifts", "bi-clock-history", "Shift Management"],
+  ["paymentrecords", "bi-credit-card", "Payment Records"],
+  ["vendors", "bi-truck", "Vendors"],
+
 
 
 
@@ -108,18 +117,40 @@ export default function StoreConfiguration() {
   }, [merchantId, storeId]);
 
   useEffect(() => {
-    const saved = getWordpressConnector(storeId);
-    if (saved) {
-      setSiteUrl(saved.siteUrl || "");
-      setJwtToken(saved.jwtToken || "");
-      setConnected(Boolean(saved.connected));
-      setMessage(saved.lastTestMessage || "");
-    } else {
-      setJwtToken("");
-      setConnected(false);
-      setMessage("");
+    let cancelled = false;
+
+    async function loadConnector() {
+      // 1. Initial quick load from local storage
+      const saved = getWordpressConnector(storeId);
+      if (saved && !cancelled) {
+        if (saved.siteUrl) setSiteUrl(saved.siteUrl);
+        if (saved.jwtToken) setJwtToken(saved.jwtToken);
+        setConnected(Boolean(saved.connected));
+        if (saved.lastTestMessage) setMessage(saved.lastTestMessage);
+      }
+
+      // 2. Fetch live connector config from backend API for this store
+      try {
+        const liveData = await fetchWordpressConnector(storeId, merchantId);
+        if (!cancelled && liveData) {
+          if (liveData.siteUrl) setSiteUrl(liveData.siteUrl);
+          if (liveData.jwtToken) setJwtToken(liveData.jwtToken);
+          setConnected(Boolean(liveData.connected));
+          if (liveData.lastTestMessage) setMessage(liveData.lastTestMessage);
+        }
+      } catch (err) {
+        console.warn("Could not fetch remote WordPress connector:", err);
+      }
     }
-  }, [storeId]);
+
+    if (storeId) {
+      loadConnector();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeId, merchantId]);
 
   useEffect(() => {
     if (!siteUrl && store?.url) setSiteUrl(store.url);
@@ -303,8 +334,25 @@ export default function StoreConfiguration() {
                       store={store}
                       embedded
                     />
+                  ) : section === "categories" ? (
+                    <StoreCategories
+                      merchantId={merchantId}
+                      storeId={storeId}
+                      store={store}
+                      embedded
+                    />
 
-                  ) : section === "coupons" ? (
+                  ) 
+                  : section === "vendors" ? (
+                    <VendorPayments
+                      merchantId={merchantId}
+                      storeId={storeId}
+                      store={store}
+                      embedded
+                    />
+
+                  ) 
+                  : section === "coupons" ? (
                     <Coupons
                       merchantId={merchantId}
                       storeId={storeId}
@@ -329,99 +377,116 @@ export default function StoreConfiguration() {
                     />
 
                   ) : section === "fastkeys" ? (
-                <FastKeys />
-              ) : section === "customers" ? (
-                    <StoreCustomers
+                    <FastKeys />
+
+                  )
+                  : section === "shifts" ? (
+                    <StoreShifts
                       merchantId={merchantId}
                       storeId={storeId}
                       store={store}
                       embedded
                     />
+                  )
+                    : section === "paymentrecords" ? (
+                      <StorePaymentRecords
+                        merchantId={merchantId}
+                        storeId={storeId}
+                        store={store}
+                        embedded
+                      />
+                    ) : section === "customers" ? (
+                      <StoreCustomers
+                        merchantId={merchantId}
+                        storeId={storeId}
+                        store={store}
+                        embedded
+                      />
 
-                  ) :
-                  (
-                    <form className="store-panel" onSubmit={handleSave}>
-                      <div className="store-panel-heading">
-                        <div>
-                          <h2>Website Connection</h2>
-                          <p>
-                            Paste the JWT token generated by the WordPress site to
-                            connect this store.
-                          </p>
-                        </div>
-                        <span
-                          className={`connection-pill ${connected ? "connected" : "disconnected"
-                            }`}
-                        >
-                          {connected ? "Connected" : "Not connected"}
-                        </span>
-                      </div>
+                    ) :
+                      (
+                        <form className="store-panel" onSubmit={handleSave}>
+                          <div className="store-panel-heading">
+                            <div>
+                              <h2>Website Connection</h2>
+                              <p>
+                                Paste the JWT token generated by the WordPress site to
+                                connect this store.
+                              </p>
+                            </div>
+                            <span
+                              className={`connection-pill ${connected ? "connected" : "disconnected"
+                                }`}
+                            >
+                              {connected ? "Connected" : "Not connected"}
+                            </span>
+                          </div>
 
-                      <label className="store-field">
-                        WordPress Site URL
-                        <input
-                          type="url"
-                          placeholder="https://your-store.com"
-                          value={siteUrl}
-                          onChange={(event) => setSiteUrl(event.target.value)}
-                          required
-                        />
-                      </label>
+                          <label className="store-field">
+                            WordPress Site URL
+                            <input
+                              type="url"
+                              placeholder="https://your-store.com"
+                              value={siteUrl}
+                              onChange={(event) => setSiteUrl(event.target.value)}
+                              required
+                            />
+                          </label>
 
-                      <label className="store-field">
-                        WordPress JWT Token
-                        <div className="token-input">
-                          <textarea
-                            rows={5}
-                            placeholder="Paste the JWT generated by WordPress"
-                            value={jwtToken}
-                            onChange={(event) => setJwtToken(event.target.value)}
-                            required
-                            spellCheck={false}
-                            style={{
-                              WebkitTextSecurity: showToken ? "none" : "disc",
-                            }}
-                          />
-                          <button
-                            type="button"
-                            className="token-toggle-btn"
-                            onClick={() => setShowToken((current) => !current)}
-                          >
-                            <i className={`bi ${showToken ? "bi-eye-slash" : "bi-eye"}`} />
-                            {showToken ? "Hide Token" : "Show Token"}
-                          </button>
-                        </div>
-                      </label>
+                          <label className="store-field">
+                            WordPress JWT Token
+                            <div className="token-input">
+                              <textarea
+                                rows={5}
+                                placeholder="Paste the JWT generated by WordPress"
+                                value={jwtToken}
+                                onChange={(event) => setJwtToken(event.target.value)}
+                                required
+                                spellCheck={false}
+                                style={{
+                                  WebkitTextSecurity: showToken ? "none" : "disc",
+                                }}
+                              />
+                              <button
+                                type="button"
+                                className="token-toggle-btn"
+                                onClick={() => setShowToken((current) => !current)}
+                              >
+                                <i className={`bi ${showToken ? "bi-eye-slash" : "bi-eye"}`} />
+                                {showToken ? "Hide Token" : "Show Token"}
+                              </button>
+                            </div>
+                          </label>
 
-                      {message ? (
-                        <div
-                          role="status"
-                          className={`store-message ${connected ? "success" : "info"
-                            }`}
-                        >
-                          {message}
-                        </div>
-                      ) : null}
+                          {message ? (
+                            <div
+                              role="status"
+                              className={`store-message ${connected ? "success" : "info"
+                                }`}
+                            >
+                              {message}
+                            </div>
+                          ) : null}
 
-                      <div className="store-form-actions">
-                        <button
-                          type="button"
-                          className="store-edit-btn"
-                          onClick={handleTest}
-                          disabled={testing || saving}
-                        >
-                          {testing ? "Testing..." : "Test Connection"}
-                        </button>
-                        <button
-                          type="submit"
-                          className="store-config-btn"
-                          disabled={saving || testing}
-                        >
-                          {saving ? "Saving..." : "Save JWT Token"}
-                        </button>
-                      </div>
-                    </form>
-                  )}
+                          <div className="store-form-actions">
+                            <button
+                              type="button"
+                              className="store-edit-btn"
+                              onClick={handleTest}
+                              disabled={testing || saving}
+                            >
+                              {testing ? "Syncing Categories & Products..." : "Sync Categories & Products"}
+                            </button>
+                            <button
+                              type="submit"
+                              className="store-config-btn"
+                              disabled={saving || testing}
+                            >
+                              {saving ? "Saving..." : "Save JWT Token"}
+                            </button>
+                          </div>
+                        </form>
+                      )}
             </section>
           </div>
         </>

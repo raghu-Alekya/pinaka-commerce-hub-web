@@ -27,17 +27,27 @@ import "./styles/StoreTypeFeatures.css";
 import "./styles/StoreTypeRoleTemplates.css";
 import "./styles/features.css";
 import "./styles/featurepermissions.css";
+import "./styles/featureoverview.css";
 import "./styles/Roletemplates.css";
+import "./styles/vendors.css";
+import "./styles/tenders.css";
 import "./styles/devices.css";
 import "./styles/add-device.css";
 import "./styles/employees.css";
 import "./styles/add-employee.css";
 import "./styles/Merchant-subscriptions.css";
-
+import "./styles/ViewRoleTemplateDetails.css";
+import "./styles/PlanDetails.css";
+import './styles/cash-management.css';
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AuthProvider>
         <App />
       </AuthProvider>

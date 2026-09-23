@@ -1,0 +1,1807 @@
+/* =========================================================
+   VENDORS PAGE
+   Layout aligned with Store Type reference UI
+   ========================================================= */
+
+.vendors-page {
+  flex: 1;
+  min-height: calc(100vh - 72px);
+  padding: 18px 28px 30px;
+  background: #f6f7fb;
+  color: #10264d;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.vendors-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 13px;
+}
+
+.vendors-header h1 {
+  margin: 0 0 6px;
+  color: #10264d;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.7px;
+}
+
+.vendors-header p {
+  margin: 0;
+  color: #5575a8;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
+
+.vendors-primary-button,
+.vendors-save-button {
+  border: 0;
+  border-radius: 8px;
+  background: #684ee3;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.vendors-primary-button {
+  min-height: 42px;
+  padding: 0 18px;
+  box-shadow: 0 4px 10px rgba(8, 115, 249, 0.2);
+}
+
+.vendors-primary-button i {
+  margin-right: 6px;
+}
+
+.vendors-primary-button:hover,
+.vendors-save-button:hover {
+  background: #5b43d1;
+}
+
+.vendors-primary-button:active,
+.vendors-save-button:active {
+  transform: translateY(1px);
+}
+
+
+/* =========================================================
+   FORM CARD
+   ========================================================= */
+
+.vendors-form {
+  padding: 17px 22px 18px;
+  margin: 13px 0 20px;
+  border: 1px solid #e1ebf5;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 3px 12px rgba(21, 67, 129, 0.04);
+}
+
+
+/* =========================================================
+   FORM HEADING
+   ========================================================= */
+
+.vendors-form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 13px;
+}
+
+.vendors-heading-content {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.vendors-heading-icon {
+  display: grid;
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+  background: #e6f2ff;
+  color: #684ee3;
+  font-size: 20px;
+}
+
+.vendors-form h2 {
+  margin: 0 0 3px;
+  color: #10264d;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.vendors-heading-content p {
+  margin: 0;
+  color: #5b79ad;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   FORM GRID
+   ========================================================= */
+
+.vendors-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 13px;
+  row-gap: 10px;
+  align-items: start;
+}
+
+
+/* =========================================================
+   FORM FIELD
+   ========================================================= */
+
+.vendors-form label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  color: #23426e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.vendors-form label b {
+  color: #f43d60;
+}
+
+.vendors-form label span {
+  color: #23426e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   INPUTS / SELECT / TEXTAREA
+   ========================================================= */
+
+.vendors-form input,
+.vendors-form select,
+.vendors-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d9e6f4;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #163762;
+  font-size: 12px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.vendors-form input,
+.vendors-form select {
+  height: 42px;
+  min-width: 0;
+  padding: 0 11px;
+}
+
+.vendors-form textarea {
+  min-height: 75px;
+  padding: 10px;
+  resize: vertical;
+}
+
+.vendors-form input::placeholder,
+.vendors-form textarea::placeholder {
+  color: #9ba9bd;
+}
+
+.vendors-form input:focus,
+.vendors-form select:focus,
+.vendors-form textarea:focus {
+  border-color: #aeb7ff;
+  box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
+}
+
+
+/* =========================================================
+   COUNTRY / STATE / ZIP
+   ========================================================= */
+
+.vendors-country-field,
+.vendors-state-field,
+.vendors-zip-field,
+.vendors-city-field {
+  min-width: 0;
+}
+
+
+/* =========================================================
+   FORM ERROR
+   ========================================================= */
+
+.vendors-field-error {
+  margin: 2px 0 0;
+  color: #ed304d;
+  font-size: 9px;
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   FORM ACTIONS
+   ========================================================= */
+
+.vendors-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding-top: 0;
+  margin-top: 10px;
+}
+
+.vendors-clear-button,
+.vendors-save-button {
+  width: 180px;
+  height: 42px;
+  padding: 0 21px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.vendors-clear-button {
+  border: 1px solid #dce8f4;
+  background: #ffffff;
+  color: #25466f;
+}
+
+.vendors-clear-button:hover {
+  border-color: #c8d8eb;
+  background: #f8fbff;
+}
+
+.vendors-save-button {
+  border: 0;
+  background: #684ee3;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(8, 115, 249, 0.2);
+}
+
+
+/* =========================================================
+   LIST CARD
+   ========================================================= */
+
+.vendors-list-card {
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  border: 1px solid #e1ebf5;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 3px 12px rgba(21, 67, 129, 0.04);
+}
+
+
+/* =========================================================
+   LIST HEADER
+   ========================================================= */
+
+.vendors-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 17px;
+}
+
+.vendors-list-toolbar h2 {
+  margin: 0 0 3px;
+  color: #18213c;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.vendors-list-toolbar p {
+  margin: 0;
+  color: #778198;
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   FILTERS
+   ========================================================= */
+
+.vendors-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vendors-reset-button {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d9e6f4;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #5b79ad;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.vendors-reset-button:hover {
+  border-color: #aeb7ff;
+  background: #f7f6ff;
+  color: #684ee3;
+}
+
+.vendors-reset-button i {
+  font-size: 14px;
+}
+
+.vendors-search {
+  display: flex;
+  align-items: center;
+  width: 240px;
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: 1px solid #d9e6f4;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #6380b0;
+}
+
+.vendors-search i {
+  flex-shrink: 0;
+  margin-right: 7px;
+  color: #75819a;
+}
+
+.vendors-search input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #163762;
+  font-size: 11px;
+}
+
+.vendors-search input::placeholder {
+  color: #9ba5b8;
+}
+
+.vendors-search:focus-within {
+  border-color: #aeb7ff;
+  box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
+}
+
+.vendors-filters select {
+  width: 170px;
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid #d9e6f4;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #294a76;
+  font-size: 11px;
+  outline: none;
+}
+
+.vendors-filters select:focus {
+  border-color: #aeb7ff;
+  box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
+}
+
+
+
+/* =========================================================
+   TABLE
+   Store Type reference styling
+   ========================================================= */
+
+.vendors-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #dfe9f4;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.vendors-table {
+  width: 100%;
+  min-width: 1320px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.vendors-table th,
+.vendors-table td {
+  width: 8.333333%;
+  height: 45px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #e3eaf3;
+  text-align: left;
+  vertical-align: middle;
+  color: #29466f;
+  font-size: 11px;
+  line-height: 1.35;
+  overflow: visible;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.vendors-table th {
+  height: 40px;
+  padding: 0 10px;
+  background: #f1f3fd;
+  color: #23426e;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.vendors-table tbody tr:hover td {
+  background: #fbfdff;
+}
+
+.vendors-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.vendors-table td strong {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: #172343;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.vendors-table td small {
+  display: block;
+  margin-top: 4px;
+  color: #8994aa;
+  font-size: 10px;
+}
+
+.vendors-table td .vendors-cell-value {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: inherit;
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Keep the complete Actions column inside the same table row treatment. */
+.vendors-table th:last-child,
+.vendors-table td:last-child {
+  text-align: center;
+}
+
+.vendors-table th:last-child {
+  color: #23426e;
+  background: #f2f8ff;
+}
+
+.vendors-table td:last-child {
+  background: #ffffff;
+}
+
+.vendors-table tbody tr:hover td:last-child {
+  background: #fbfdff;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.vendors-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 78px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.vendors-status i {
+  font-size: 7px;
+}
+
+.vendors-status.active {
+  background: #dff9eb;
+  color: #08a961;
+}
+
+.vendors-status.inactive {
+  background: #ffe2e7;
+  color: #ed304d;
+}
+
+
+/* =========================================================
+   TABLE ACTIONS
+   ========================================================= */
+
+.vendors-actions {
+  white-space: nowrap;
+  text-align: center;
+}
+
+.vendors-actions button {
+  display: inline-grid;
+  width: 36px;
+  height: 34px;
+  margin-right: 6px;
+  place-items: center;
+  border: 1px solid #dce8f4;
+  border-radius: 7px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  vertical-align: middle;
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.vendors-actions button:last-child {
+  margin-right: 0;
+}
+
+/* Edit = blue */
+.vendors-actions button:first-child {
+  color: #355a91;
+}
+
+/* Delete = red */
+.vendors-actions button.vendors-delete-action {
+  color: #ef4763 !important;
+}
+
+/* Same subtle hover treatment used for the Role Template actions. */
+.vendors-actions button:hover:not(:disabled) {
+  border-color: #a9baff;
+  background: #f7f6ff;
+  box-shadow: 0 2px 7px rgba(53, 90, 145, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Keep the delete icon red on hover while using the same hover surface. */
+.vendors-actions button.vendors-delete-action:hover:not(:disabled) {
+  color: #dc3545 !important;
+  border-color: #f3b4bf;
+  background: #fff1f2 !important;
+  box-shadow: 0 2px 7px rgba(220, 53, 69, 0.10);
+}
+
+.vendors-actions button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.vendors-actions button i {
+  font-size: 14px;
+}
+
+.vendors-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.vendors-empty {
+  padding: 38px;
+  text-align: center;
+  color: #8994aa;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.vendors-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(18, 28, 55, 0.32);
+}
+
+.vendors-modal {
+  width: min(520px, 100%);
+  box-sizing: border-box;
+  padding: 22px;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 40px rgba(18, 28, 55, 0.2);
+}
+
+.vendors-modal-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e7ebf2;
+}
+
+.vendors-modal-heading h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.vendors-modal-heading p {
+  margin: 4px 0 0;
+  color: #778198;
+  font-size: 11px;
+}
+
+.vendors-modal-heading button {
+  border: 0;
+  background: none;
+  color: #66728a;
+  cursor: pointer;
+}
+
+.vendors-modal dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.vendors-modal dl div {
+  min-width: 0;
+}
+
+.vendors-modal dt {
+  color: #8994aa;
+  font-size: 10px;
+}
+
+.vendors-modal dd {
+  margin: 4px 0 0;
+  color: #26314b;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.vendors-audit {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid #e7ebf2;
+  color: #778198;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   DELETE MODAL BACKDROP
+   ========================================================= */
+
+.vendors-delete-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(15, 23, 42, 0.45);
+
+  backdrop-filter: blur(2px);
+}
+
+
+/* =========================================================
+   DELETE MODAL
+   ========================================================= */
+
+.vendors-delete-modal {
+  width: min(420px, 100%);
+
+  background: #ffffff;
+
+  border-radius: 14px;
+
+  padding: 30px;
+
+  text-align: center;
+
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.18);
+
+  animation: vendorsDeleteModalIn 0.18s ease-out;
+}
+
+
+/* =========================================================
+   DELETE ICON
+   ========================================================= */
+
+.vendors-delete-icon {
+  width: 52px;
+  height: 52px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #fff1f2;
+
+  color: #dc3545;
+
+  font-size: 22px;
+}
+
+
+/* =========================================================
+   DELETE TITLE
+   ========================================================= */
+
+.vendors-delete-modal h2 {
+  margin: 0 0 10px;
+
+  font-size: 20px;
+
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+
+/* =========================================================
+   DELETE MESSAGE
+   ========================================================= */
+
+.vendors-delete-modal p {
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+.vendors-delete-modal p strong {
+  color: #1f2937;
+}
+
+.vendors-delete-warning {
+  margin-top: 4px !important;
+
+  font-size: 13px !important;
+
+  color: #94a3b8 !important;
+}
+
+
+/* =========================================================
+   DELETE ACTION BUTTONS
+   ========================================================= */
+
+.vendors-delete-actions {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  margin-top: 24px;
+}
+
+
+/* =========================================================
+   CANCEL
+   ========================================================= */
+
+.vendors-delete-cancel {
+  min-width: 100px;
+
+  padding: 10px 18px;
+
+  border: 1px solid #d1d5db;
+
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  color: #475569;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.vendors-delete-cancel:hover {
+  background: #f8fafc;
+}
+
+
+/* =========================================================
+   DELETE
+   ========================================================= */
+
+.vendors-delete-confirm {
+  min-width: 130px;
+
+  padding: 10px 18px;
+
+  border: 1px solid #dc3545;
+
+  border-radius: 7px;
+
+  background: #dc3545;
+
+  color: #ffffff;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 7px;
+}
+
+.vendors-delete-confirm:hover {
+  background: #bb2d3b;
+
+  border-color: #bb2d3b;
+}
+
+.vendors-error {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 13px;
+  padding: 10px 13px;
+  border: 1px solid #f3c5ca;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #b42318;
+  font-size: 12px;
+}
+
+.vendors-error>i {
+  font-size: 14px;
+}
+
+.vendors-error span {
+  flex: 1;
+}
+
+.vendors-error button {
+  border: 0;
+  background: transparent;
+  color: #b42318;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.vendors-loading-cell {
+  height: 120px;
+  text-align: center;
+  color: #63748b;
+  font-size: 12px;
+}
+
+.vendors-loading-icon {
+  display: inline-block;
+  margin-right: 7px;
+  animation: vendorsLoadingSpin 0.9s linear infinite;
+}
+
+.vendors-save-button:disabled,
+.vendors-clear-button:disabled,
+.vendors-link-button:disabled,
+.vendors-actions button:disabled,
+.vendors-delete-cancel:disabled,
+.vendors-delete-confirm:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@keyframes vendorsLoadingSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes vendorsDeleteModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .vendors-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vendors-address-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .vendors-filters {
+    flex-wrap: wrap;
+  }
+}
+
+
+/* =========================================================
+   MOBILE - DELETE
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .vendors-delete-modal {
+    padding: 24px 20px;
+  }
+
+  .vendors-delete-actions {
+    flex-direction: column;
+  }
+
+  .vendors-delete-cancel,
+  .vendors-delete-confirm {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .vendors-page {
+    padding: 16px;
+  }
+
+  .vendors-header,
+  .vendors-list-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .vendors-filters {
+    width: 100%;
+  }
+
+  .vendors-search {
+    flex: 1;
+    width: auto;
+  }
+
+  .vendors-filters select {
+    flex: 1;
+  }
+
+  .vendors-form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .vendors-clear-button,
+  .vendors-save-button {
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 560px) {
+  .vendors-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .vendors-filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .vendors-search,
+  .vendors-filters select {
+    width: 100%;
+  }
+
+  .vendors-modal dl {
+    grid-template-columns: 1fr;
+  }
+}
+.vendors-table td {
+  position: relative;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vendors-table td .vendors-cell-value {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Full value tooltip */
+.vendors-table td .vendors-cell-value[data-tooltip] {
+  cursor: default;
+}
+
+.vendors-table td .vendors-cell-value[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+
+  width: max-content;
+  max-width: 320px;
+
+  padding: 8px 10px;
+  border-radius: 6px;
+
+  background: #163762;
+  color: #fff;
+
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+
+  white-space: normal;
+  word-break: break-word;
+
+  box-shadow: 0 6px 18px rgba(15, 35, 65, 0.18);
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+
+  z-index: 1000;
+}
+
+.vendors-table td .vendors-cell-value[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+
+/* =========================================================
+   TABLE CELL VALUE
+   ========================================================= */
+
+.vendors-table td .vendors-cell-value {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: inherit;
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   HOVER FULL-VALUE TOOLTIP
+   ========================================================= */
+
+.vendors-hover-tooltip {
+  position: fixed;
+
+  transform: translate(-50%, -100%);
+
+  width: max-content;
+  max-width: 320px;
+
+  padding: 8px 10px;
+
+  border-radius: 6px;
+
+  background: #163762;
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+
+  box-shadow: 0 6px 18px rgba(15, 35, 65, 0.18);
+
+  pointer-events: none;
+
+  z-index: 99999;
+}
+
+
+/* =========================================================
+   FINAL VENDOR FORM / TABLE UX OVERRIDES
+   ========================================================= */
+
+/* Primary action stays visibly disabled until the required form
+   fields are complete and valid. */
+.vendors-save-button:disabled {
+  border: 0;
+  background: #e4e7ef !important;
+  color: #9aa4b6 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
+
+/* The full-value tooltip appears only from the JSX overflow check.
+   Keep it light and simple instead of the dark-blue tooltip. */
+.vendors-hover-tooltip {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  width: max-content;
+  max-width: 320px;
+  padding: 8px 10px;
+  border: 1px solid #dfe6ef;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #263b5a;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+  box-shadow: 0 3px 12px rgba(31, 55, 87, 0.14);
+  pointer-events: none;
+  z-index: 99999;
+}
+
+/* Small neutral arrow for the light tooltip. */
+.vendors-hover-tooltip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid #dfe6ef;
+  border-bottom: 1px solid #dfe6ef;
+  background: #ffffff;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+
+/* =========================================================
+   ROLE TEMPLATE ACTION STYLE — VENDOR TABLE REFERENCE
+   Keep Vendor action buttons visually identical to the
+   previously approved Role Template table actions.
+   ========================================================= */
+
+.vendors-actions button {
+  width: 36px !important;
+  height: 34px !important;
+  margin-right: 6px !important;
+  border: 1px solid #d8e8ff !important;
+  border-radius: 7px !important;
+  background: #f2f7ff !important;
+  color: #1677e8 !important;
+  box-shadow: none !important;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+/* Edit icon — approved Role Template blue */
+.vendors-actions button:not(.vendors-delete-action) {
+  color: #1677e8 !important;
+  border-color: #d8e8ff !important;
+  background: #f2f7ff !important;
+}
+
+.vendors-actions button:not(.vendors-delete-action) i {
+  color: #1677e8 !important;
+}
+
+/* Edit hover */
+.vendors-actions button:not(.vendors-delete-action):hover:not(:disabled) {
+  color: #0b63c7 !important;
+  border-color: #bcd9ff !important;
+  background: #e8f2ff !important;
+  box-shadow: none !important;
+  transform: translateY(-1px);
+}
+
+.vendors-actions button:not(.vendors-delete-action):hover:not(:disabled) i {
+  color: #0b63c7 !important;
+}
+
+/* Delete icon — approved Role Template red */
+.vendors-actions button.vendors-delete-action {
+  color: #e34d5b !important;
+  border-color: #f8d9dc !important;
+  background: #fff4f4 !important;
+  box-shadow: none !important;
+}
+
+.vendors-actions button.vendors-delete-action i {
+  color: #e34d5b !important;
+}
+
+/* Delete hover */
+.vendors-actions button.vendors-delete-action:hover:not(:disabled) {
+  color: #c93443 !important;
+  border-color: #f2bfc5 !important;
+  background: #ffe9eb !important;
+  box-shadow: none !important;
+  transform: translateY(-1px);
+}
+
+.vendors-actions button.vendors-delete-action:hover:not(:disabled) i {
+  color: #c93443 !important;
+}
+
+/* Press effect */
+.vendors-actions button:active:not(:disabled) {
+  transform: translateY(0) !important;
+  box-shadow: none !important;
+}
+
+/* Disabled actions */
+.vendors-actions button:disabled,
+.vendors-actions button:disabled i {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+
+/* =========================================================
+   APPROVED ROLE TEMPLATE-STYLE VENDOR FORM UX
+   ========================================================= */
+
+.vendors-form {
+  padding: 17px 22px 18px;
+}
+
+.vendors-form-grid {
+  column-gap: 14px;
+  row-gap: 11px;
+}
+
+.vendors-form label {
+  gap: 5px;
+  color: #23426e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.vendors-form input,
+.vendors-form select {
+  height: 42px;
+  border: 1px solid #d9e6f4;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #163762;
+  font-size: 12px;
+}
+
+.vendors-form input:focus,
+.vendors-form select:focus {
+  border-color: #aeb7ff;
+  box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
+}
+
+.vendors-field-hint {
+  display: block;
+  margin-top: -1px;
+  color: #6481b0;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.vendors-field-error {
+  display: block;
+  margin-top: -1px;
+  color: #ed304d;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.vendors-form input[aria-invalid="true"] {
+  border-color: #f1a8b4;
+  background: #fffafa;
+}
+
+/* Active / Inactive status field colors. */
+.vendors-form select.vendors-status-select.active {
+  border-color: #b9ead2;
+  background: #f7fffb;
+  color: #08a961;
+  font-weight: 600;
+}
+
+.vendors-form select.vendors-status-select.inactive {
+  border-color: #f3c0c8;
+  background: #fff8f9;
+  color: #ed304d;
+  font-weight: 600;
+}
+
+/* Disabled primary action — same visual language as Role Template. */
+.vendors-save-button:disabled {
+  background: #e4e7ef !important;
+  color: #9aa4b6 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+/* =========================================================
+   AUDIT DATE / TIME — two-line table treatment
+   ========================================================= */
+
+.vendors-audit-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.vendors-audit-date {
+  color: #29466f;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.vendors-audit-time {
+  color: #7890b2;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   APPROVED DELETE CONFIRMATION MODAL
+   ========================================================= */
+
+.vendors-delete-backdrop {
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(2px);
+}
+
+.vendors-delete-modal {
+  width: min(450px, 100%);
+  padding: 32px 30px 30px;
+  border-radius: 15px;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.20);
+}
+
+.vendors-delete-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 17px;
+  border-radius: 50%;
+  background: #ffe7ec;
+  color: #f23d61;
+  font-size: 23px;
+}
+
+.vendors-delete-modal h2 {
+  margin: 0 0 11px;
+  color: #10264d;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.vendors-delete-modal p {
+  margin: 0;
+  color: #5f79a5;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.vendors-delete-modal p strong {
+  color: #183762;
+  font-weight: 650;
+}
+
+.vendors-delete-warning {
+  margin-top: 8px !important;
+  color: #ed304d !important;
+  font-size: 13px !important;
+  font-weight: 500;
+}
+
+.vendors-delete-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.vendors-delete-cancel,
+.vendors-delete-confirm {
+  min-height: 46px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.vendors-delete-cancel {
+  border: 1px solid #aebbcf;
+  background: #ffffff;
+  color: #8795aa;
+}
+
+.vendors-delete-cancel:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.vendors-delete-confirm {
+  border: 1px solid #f03b5d;
+  background: #f03b5d;
+  color: #ffffff;
+}
+
+.vendors-delete-confirm:hover:not(:disabled) {
+  border-color: #df2e50;
+  background: #df2e50;
+}
+
+@media (max-width: 480px) {
+  .vendors-delete-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   VENDOR EDIT MODE — APPROVED ROLE TEMPLATE PATTERN
+   ========================================================= */
+
+.vendors-form-heading {
+  justify-content: flex-start;
+}
+
+.vendors-field-hint,
+.vendors-field-error {
+  min-height: 13px;
+}
+
+.vendors-save-button:disabled {
+  background: #e4e7ef !important;
+  color: #9aa4b6 !important;
+  border-color: #e4e7ef !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+}
+
+.vendors-save-button:not(:disabled) {
+  cursor: pointer;
+}
+
+.vendors-form select.vendors-status-select.active {
+  border-color: #b9ead2 !important;
+  background: #f7fffb !important;
+  color: #08a961 !important;
+}
+
+.vendors-form select.vendors-status-select.inactive {
+  border-color: #f3c0c8 !important;
+  background: #fff8f9 !important;
+  color: #ed304d !important;
+}
+
+
+/* =========================================================
+   VIEW VENDOR - READ ONLY MODE
+   ========================================================= */
+
+.vendors-form-view-mode {
+  position: relative;
+}
+
+.vendors-form-view-mode .vendors-heading-icon {
+  background: #eef1ff;
+  color: #684ee3;
+}
+
+.vendors-form-view-mode .vendors-form-grid input,
+.vendors-form-view-mode .vendors-form-grid select,
+.vendors-form-view-mode .vendors-form-grid textarea {
+  background: #f7f9fc;
+  border-color: #dfe6ef;
+  color: #334a6e;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.vendors-form-view-mode .vendors-form-grid input:disabled,
+.vendors-form-view-mode .vendors-form-grid select:disabled,
+.vendors-form-view-mode .vendors-form-grid textarea:disabled {
+  opacity: 1;
+  -webkit-text-fill-color: #334a6e;
+}
+
+.vendors-form-view-mode .vendors-form-grid input:disabled::placeholder {
+  color: #8b98aa;
+}
+
+.vendors-form-view-mode .vendors-form-actions {
+  justify-content: flex-end;
+}
+
+.vendors-form-view-mode .vendors-save-button {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.vendors-form-view-mode .vendors-clear-button {
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* View action = neutral blue */
+.vendors-actions button.vendors-view-action {
+  color: #4f6f9f;
+}
+
+.vendors-actions button.vendors-view-action:hover:not(:disabled) {
+  color: #355a91;
+  border-color: #b9c9e2;
+  background: #f3f7fc;
+  box-shadow: 0 2px 7px rgba(53, 90, 145, 0.08);
+}
+
+
+/* =========================================================
+   VENDOR TABLE ACTIONS - CLEAR VIEW / EDIT / DELETE
+   ========================================================= */
+.vendors-table th:last-child,
+.vendors-table td:last-child {
+  width: 190px;
+  min-width: 190px;
+  text-align: center;
+}
+
+.vendors-actions {
+  white-space: nowrap;
+  text-align: center;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.vendors-actions button {
+  display: inline-flex;
+  width: auto;
+  min-width: 52px;
+  height: 32px;
+  margin: 0 3px 0 0;
+  padding: 0 9px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  box-sizing: border-box;
+  vertical-align: middle;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.vendors-actions button:last-child {
+  margin-right: 0;
+}
+
+.vendors-actions button span {
+  display: inline-block;
+  line-height: 1;
+}
+
+.vendors-actions button.vendors-delete-action {
+  min-width: 62px;
+}
+
+.vendors-actions button i {
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   VENDOR ACTIONS — ICON ONLY
+   View = Gray | Edit = Blue | Delete = Red
+   ========================================================= */
+.vendors-actions {
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+
+.vendors-actions button {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  margin-right: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+}
+
+.vendors-actions button:last-child {
+  margin-right: 0 !important;
+}
+
+.vendors-actions button span {
+  display: none !important;
+}
+
+/* View — gray */
+.vendors-actions button.vendors-view-action {
+  color: #6b7280 !important;
+  border-color: #d9dee7 !important;
+  background: #f6f7f9 !important;
+}
+
+.vendors-actions button.vendors-view-action i {
+  color: #6b7280 !important;
+}
+
+.vendors-actions button.vendors-view-action:hover:not(:disabled) {
+  color: #4b5563 !important;
+  border-color: #c7ced8 !important;
+  background: #eef0f3 !important;
+}
+
+.vendors-actions button.vendors-view-action:hover:not(:disabled) i {
+  color: #4b5563 !important;
+}
+
+/* Edit — blue */
+.vendors-actions button:not(.vendors-view-action):not(.vendors-delete-action) {
+  color: #1677e8 !important;
+  border-color: #d8e8ff !important;
+  background: #f2f7ff !important;
+}
+
+.vendors-actions button:not(.vendors-view-action):not(.vendors-delete-action) i {
+  color: #1677e8 !important;
+}
+
+.vendors-actions button:not(.vendors-view-action):not(.vendors-delete-action):hover:not(:disabled) {
+  color: #0b63c7 !important;
+  border-color: #bcd9ff !important;
+  background: #e8f2ff !important;
+}
+
+.vendors-actions button:not(.vendors-view-action):not(.vendors-delete-action):hover:not(:disabled) i {
+  color: #0b63c7 !important;
+}
+
+/* Delete — red */
+.vendors-actions button.vendors-delete-action {
+  color: #e34d5b !important;
+  border-color: #f8d9dc !important;
+  background: #fff4f4 !important;
+}
+
+.vendors-actions button.vendors-delete-action i {
+  color: #e34d5b !important;
+}
+
+.vendors-actions button.vendors-delete-action:hover:not(:disabled) {
+  color: #c93443 !important;
+  border-color: #f2bfc5 !important;
+  background: #ffe9eb !important;
+}
+
+.vendors-actions button.vendors-delete-action:hover:not(:disabled) i {
+  color: #c93443 !important;
+}

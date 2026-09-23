@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 
 const sections = [
   {
@@ -12,6 +12,7 @@ const sections = [
       ["/merchants", "bi-person-badge", "Merchants"],
       ["/stores", "bi-shop", "Stores"],
       ["/subscriptions", "bi-cart3", "Subscriptions"],
+      ["/vendors", "bi-truck", "Vendors"],
     ],
   },
   {
@@ -23,11 +24,13 @@ const sections = [
         "Master Setup",
         true,
         [
-["/store-types/new", "bi-shop", "Store Types"],
-["/features", "bi-grid-1x2", "Features"],          ["/permissions", "bi-shield-check", "Permissions"],
+          ["/store-types/new", "bi-shop", "Store Types"],
+          ["/features", "bi-grid-1x2", "Features"],
+          ["/permissions", "bi-shield-check", "Feature Permissions"],
           ["/role-templates", "bi-person-badge", "Role Templates"],
           ["/plans/new", "bi-credit-card", "Plans"],
-        
+          // ["/vendors", "bi-truck", "Vendors"],
+          ["/tenders", "bi-cash-coin", "Tenders"],
         ],
       ],
     ],
@@ -53,7 +56,6 @@ const sections = [
       ["/notifications", "bi-bell", "Notifications"],
     ],
   },
-
 ];
 
 export default function Sidebar({
@@ -62,7 +64,23 @@ export default function Sidebar({
   mobileOpen,
   setMobileOpen,
 }) {
-  const [masterSetupOpen, setMasterSetupOpen] = useState(false);
+  const location = useLocation();
+
+  const isMasterSetupRoute =
+    location.pathname.startsWith("/store-types") ||
+    location.pathname.startsWith("/features") ||
+    location.pathname.startsWith("/permissions") ||
+    location.pathname.startsWith("/role-templates") ||
+    location.pathname.startsWith("/plans") ||
+    location.pathname.startsWith("/tenders");
+
+  const [masterSetupOpen, setMasterSetupOpen] = useState(isMasterSetupRoute);
+
+  useEffect(() => {
+    if (isMasterSetupRoute) {
+      setMasterSetupOpen(true);
+    }
+  }, [isMasterSetupRoute]);
 
   return (
     <aside
@@ -134,11 +152,15 @@ export default function Sidebar({
                               key={subTo}
                               to={subTo}
                               onClick={() => setMobileOpen(false)}
-                              className={({ isActive }) =>
-                                `master-setup-submenu-item ${
-                                  isActive ? "active" : ""
-                                }`
-                              }
+                              className={({ isActive }) => {
+                                const featureChildActive =
+                                  subTo === "/features" &&
+                                  location.pathname.startsWith("/features/");
+
+                                return `master-setup-submenu-item ${
+                                  isActive || featureChildActive ? "active" : ""
+                                }`;
+                              }}
                             >
                               <i className={`bi ${subIcon}`} />
                               <span>{subLabel}</span>

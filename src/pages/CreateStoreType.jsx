@@ -8,6 +8,7 @@ const emptyForm = {
   code: "",
   name: "",
   description: "",
+  category: "",
   status: "Active",
 };
 
@@ -15,11 +16,59 @@ export default function CreateStoreType() {
   const navigate = useNavigate();
   const [storeTypes, setStoreTypes] = useState([]);
   const [form, setForm] = useState(emptyForm);
+  const [originalForm, setOriginalForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
   const [editingId, setEditingId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const ITEMS_PER_PAGE = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  async function loadStoreTypes() {
+  const response = await storeTypesApi.getAll();
+
+  if (!Array.isArray(response?.storeTypes)) {
+    throw new Error("GET /store-types did not return a storeTypes array.");
+  }
+
+  const sorted = response.storeTypes.sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+
+  setStoreTypes(sorted.map(toRow));
+  setCurrentPage(1);
+}
+
+  useEffect(() => {
+    let cancelled = false;
+    storeTypesApi.getAll()
+      .then((response) => {
+  if (!Array.isArray(response?.storeTypes)) {
+    throw new Error("GET /store-types did not return a storeTypes array.");
+  }
+
+  if (!cancelled) {
+    const sorted = response.storeTypes.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    setStoreTypes(sorted.map(toRow));
+  }
+})
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -35,31 +84,77 @@ export default function CreateStoreType() {
   }, [attempt]);
 
   const filteredStoreTypes = useMemo(() => {
-    const value = search.toLowerCase();
+  const searchValue = search.trim().toLowerCase();
 
-    return storeTypes.filter((item) => {
-      const matchesSearch = `${item.code} ${item.name} ${item.description}`
-        .toLowerCase()
-        .includes(value);
+  const filtered = storeTypes.filter((item) => {
+    const matchesSearch = `${item.code} ${item.name} ${item.description}`
+      .toLowerCase()
+      .includes(searchValue);
 
-      const matchesStatus = !statusFilter || item.status === statusFilter;
+    return matchesSearch && (!statusFilter || item.status === statusFilter);
+  });
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [storeTypes, search, statusFilter]);
+  return filtered.sort((a, b) => {
+    switch (sortBy) {
+      case "oldest":
+        return new Date(a.createdAt) - new Date(b.createdAt);
+
+      case "name-asc":
+        return a.name.localeCompare(b.name);
+
+      case "name-desc":
+        return b.name.localeCompare(a.name);
+
+      case "newest":
+          default:
+             return new Date(b.createdAt) - new Date(a.createdAt);
+    }
+  });
+}, [storeTypes, search, statusFilter, sortBy]);
+
+  const totalPages = Math.ceil(filteredStoreTypes.length / ITEMS_PER_PAGE);
+
+  const paginatedStoreTypes = filteredStoreTypes.slice(
+   (currentPage - 1) * ITEMS_PER_PAGE,
+   currentPage * ITEMS_PER_PAGE
+);
+useEffect(() => {
+  setCurrentPage(1);
+}, [search, statusFilter]);
+
+useEffect(() => {
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(totalPages);
+  }
+}, [totalPages, currentPage]);
+
+  const hasChanges =
+  form.code.trim() !== (originalForm.code || "").trim() ||
+  form.name.trim() !== (originalForm.name || "").trim() ||
+  form.description.trim() !== (originalForm.description || "").trim() ||
+  form.status !== originalForm.status;
+
+  const canSubmitStoreType = !!form.code.trim() && !!form.name.trim();
 
   function updateField(event) {
     const { name, value } = event.target;
 
     setForm((current) => ({
       ...current,
-      [name]: value,
+      [name]: name === "code" ? value.toUpperCase() : value,
+    }));
+
+    setErrors((current) => ({
+      ...current,
+      [name]: "",
     }));
   }
 
   function resetForm() {
     setForm(emptyForm);
+    setOriginalForm(emptyForm);
     setEditingId(null);
+    setErrors({});
   }
 
   function resetFilters() {
@@ -82,13 +177,17 @@ export default function CreateStoreType() {
 
   function editStoreType(item) {
     setEditingId(item.id);
+    setErrors({});
 
-    setForm({
+    const nextForm = {
       code: item.code,
       name: item.name,
-      description: item.description,
+      description: item.description === "-" ? "" : item.description,
       status: item.status,
-    });
+    };
+
+    setForm(nextForm);
+    setOriginalForm(nextForm);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -104,24 +203,27 @@ export default function CreateStoreType() {
       setDeleteTarget(null);
     } catch (e) { setError(e.message); } finally { setBusy(false); }
   }
+}
 
   return (
     <section className="store-types-page">
       <div className="store-types-page-heading">
         <div>
-          <h1>{editingId ? "Edit Store Type" : "Create Store Type"}</h1>
+          <h1>Store Type Information</h1>
           <p>Define a business vertical and its baseline configuration.</p>
         </div>
       </div>
 
-      <form className="store-type-form-card" onSubmit={submitForm}>
+      {error && <p role="alert" className="store-type-error">{error}</p>}
+
+      <form className="store-type-form-card" onSubmit={submitForm} autoComplete="off">
         <div className="store-type-card-heading">
           <div className="store-type-heading-icon">
             <i className="bi bi-shop" />
           </div>
 
           <div>
-            <h2>Store Type Information</h2>
+            <h2>{editingId ? "Edit Store Type" : "Create Store Type"}</h2>
             <p>Provide the basic details about the store type.</p>
           </div>
         </div>
@@ -146,71 +248,60 @@ export default function CreateStoreType() {
             <small>Unique key (e.g. REFUNDS / KIDS / LOYALTY)</small>
           </label>
 
-          <label className="store-type-field">
-            <span>
-              Display Name <b>*</b>
-            </span>
+        <div className="store-type-form-grid">
+  <div className="store-type-field store-type-description-field">
+    <label>Description</label>
 
-            <div className="store-type-input-wrap">
-              <i className="bi bi-type" />
-              <input
-                name="name"
-                value={form.name}
-                onChange={updateField}
-                placeholder="e.g. Grocery"
-              />
-            </div>
+    <textarea
+      name="description"
+      value={form.description}
+      onChange={updateField}
+      onInput={(e) => {
+        e.currentTarget.style.height = "44px";
+        e.currentTarget.style.height = `${Math.max(
+          44,
+          e.currentTarget.scrollHeight
+        )}px`;
+      }}
+      placeholder="Enter a brief description about the store type"
+      maxLength={500}
+    />
 
-            <small>Name shown in the system</small>
-          </label>
-        </div>
-
-        <label className="store-type-field store-type-description-field">
-          <span>
-            Description <b>*</b>
-          </span>
-
-          <div className="store-type-textarea-wrap">
-            <i className="bi bi-file-earmark-text" />
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={updateField}
-              maxLength="500"
-              placeholder="Describe the vertical, its operating model, and configuration needs..."
-            />
-          </div>
-
-          <small className="store-type-character-count">
-            {form.description.length}/500
-          </small>
-        </label>
-
-        <label className="store-type-field store-type-status-field">
-          <span>
-            Status <b>*</b>
-          </span>
-
-          <select name="status" value={form.status} onChange={updateField}>
-            <option value="Active">● Active</option>
-            <option value="Inactive">● Inactive</option>
-          </select>
-
-          <small>Active or Inactive.</small>
-        </label>
+    <div className="store-type-description-meta">
+      {errors.description ? (
+        <small className="field-error">{errors.description}</small>
+      ) : (
+        <small></small>
+      )}
+      <span>{form.description.length}/500</span>
+    </div>
+  </div>
+</div>
 
         <div className="store-type-actions">
           <button
             type="button"
             className="store-type-cancel-button"
             onClick={resetForm}
+            disabled={saving}
           >
             Cancel
           </button>
 
-          <button type="submit" className="store-type-submit-button">
-            {editingId ? "Update store type" : "Create store type"}
-          </button>
+          <button
+             type="submit"
+             className="store-type-submit-button"
+             disabled={
+               saving ||
+               !canSubmitStoreType ||
+                (editingId !== null && !hasChanges)
+                 } >
+              {saving
+              ? "Saving..."
+              : editingId
+               ? "Update Store Type"
+             : "Create Store Type"}
+               </button>
         </div>
         </fieldset>
       </form>
@@ -238,27 +329,61 @@ export default function CreateStoreType() {
             <option value="Inactive">Inactive</option>
           </select>
 
-          <button
-            type="button"
-            className="store-type-reset-button"
-            title="Reset filters"
-            onClick={resetFilters}
-          >
-            <i className="bi bi-arrow-clockwise" />
-            Reset
-          </button>
+          <div className="store-types-filters">
+            <label className="store-type-search">
+              <i className="bi bi-search" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search store types..."
+                autoComplete="off"
+              />
+            </label>
+
+            <div className="store-filter-select">
+  <select
+    value={statusFilter}
+    onChange={(e) => setStatusFilter(e.target.value)}
+  >
+    <option value="">All Statuses</option>
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
+  <i className="bi bi-chevron-down" />
+</div>
+
+          <div className="store-filter-select">
+  <select
+    value={sortBy}
+    onChange={(e) => setSortBy(e.target.value)}
+  >
+    <option value="newest">Newest First</option>
+    <option value="oldest">Oldest First</option>
+    <option value="name-asc">Name (A–Z)</option>
+    <option value="name-desc">Name (Z–A)</option>
+  </select>
+  <i className="bi bi-chevron-down" />
+</div>
+
+            <button
+              type="button"
+              className="store-type-reset-button"
+              onClick={resetFilters}
+            >
+              <i className="bi bi-arrow-counterclockwise" />
+            </button>
+          </div>
         </div>
 
         <div className="store-types-table-wrap">
           <div className="store-types-table">
             <div className="store-types-row store-types-row-head">
-              <div>
-                <input type="checkbox" aria-label="Select all" />
-              </div>
               <div>Store Type Code</div>
-              <div>Name / Description</div>
+              <div>Name</div>
+              <div>Description</div>
               <div>Status</div>
-              <div>Created On</div>
+              <div>Created At</div>
+              <div>Updated At</div>
               <div>Actions</div>
             </div>
 
@@ -271,19 +396,26 @@ export default function CreateStoreType() {
                 </div>
 
                 <div className="store-type-code-cell">
-                  <span className={`store-type-item-icon ${item.tone}`}>
-                    <i className={`bi ${item.icon}`} />
-                  </span>
                   <strong>{item.code}</strong>
                 </div>
 
-                <div
-                   className="store-type-name-cell store-type-name-clickable"
-                     onClick={() => navigate(`/store-types/${item.id}`)}
-                   >
-                        <strong>{item.name}</strong>
-                       <span>{item.description}</span>
-                    </div>
+                <button
+  type="button"
+  className="store-type-name-cell store-type-name-clickable"
+  onClick={(e) => {
+    e.stopPropagation();
+    navigate(`/store-types/${item.id}`, {
+      state: { storeType: item },
+    });
+  }}
+>
+  <strong>{item.name}</strong>
+</button>
+
+                <div className="store-type-description-cell"
+                 title={item.description} >
+                  {item.description}
+                </div>
 
                 <div>
                   <span
@@ -296,7 +428,18 @@ export default function CreateStoreType() {
                   </span>
                 </div>
 
-                <div>{item.createdOn}</div>
+                <div className="store-type-date-cell"
+                      title={`${item.createdDate}, ${item.createdTime}`} >
+                      <strong>{item.createdDate}</strong>
+                      <span>{item.createdTime}</span>
+                </div>
+
+
+               <div className="store-type-date-cell"
+                    title={`${item.updatedDate}, ${item.updatedTime}`} >
+                    <strong>{item.updatedDate}</strong>
+                    <span>{item.updatedTime}</span>
+                 </div>
 
                 <div className="store-type-table-actions">
                   <button
@@ -318,6 +461,10 @@ export default function CreateStoreType() {
                 </div>
               </div>
             ))}
+            {loading && <div className="store-types-row">Loading store types...</div>}
+            {!loading && filteredStoreTypes.length === 0 && (
+              <div className="store-types-row">No store types found.</div>
+            )}
           </div>
         </div>
 

@@ -1,11 +1,14 @@
 import StoreTypeDialog from "../components/StoreTypeDialog";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { storeTypesApi } from "../api/storeTypes";
 
 import { getStoreType, updateStoreType } from "../api/storeTypes";
 
 export default function StoreTypeDetails() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { storeTypeId } = useParams();
   const [activeTab, setActiveTab] = useState("overview");
   const [form, setForm] = useState({ code: "", name: "", description: "", status: "Active" });
@@ -71,37 +74,31 @@ export default function StoreTypeDetails() {
       <nav className="store-type-tabs" aria-label="Store type sections">
         <button
           type="button"
-          className={activeTab === "overview" ? "active" : ""}
-          onClick={() => setActiveTab("overview")}
+          onClick={() =>
+            navigate(`/store-types/${storeTypeId}/features`, {
+              state: { storeType: form },
+            })
+          }
         >
-          Overview
-        </button>
-
-       <button
-          type="button"
-         onClick={() => navigate(`/store-types/${storeTypeId}/features`)}
->
           Features
         </button>
 
         <button
           type="button"
-          className={activeTab === "roles" ? "active" : ""}
-          onClick={() => setActiveTab("roles")}
+          onClick={() =>
+            navigate(`/store-types/${storeTypeId}/role-templates`, {
+              state: { storeType: form },
+            })
+          }
         >
           Role Templates
         </button>
-
       </nav>
 
-      {activeTab === "overview" ? (
-        <section className="store-type-details-card">
-          <div className="store-type-details-card-heading">
-            <div className="store-type-details-icon">
-              <i className="bi bi-record-circle" />
-            </div>
-
-            <h2>Basic Information</h2>
+      <section className="store-type-details-card">
+        <div className="store-type-details-card-heading">
+          <div className="store-type-details-icon">
+            <i className="bi bi-info-circle" />
           </div>
 
           <fieldset disabled={loading || busy || !form.id} style={{ border: 0, padding: 0, margin: 0 }}>
@@ -132,6 +129,7 @@ export default function StoreTypeDetails() {
               </select>
             </label>
           </div>
+        </div>
 
           <label className="store-type-details-field store-type-details-name">
             <span>

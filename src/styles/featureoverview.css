@@ -1,0 +1,477 @@
+/* =========================================================
+   FEATURE OVERVIEW PAGE
+========================================================= */
+
+.feature-overview-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 16px 19px 24px;
+  background: #f6f9fe;
+  color: #14213d;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  box-sizing: border-box;
+}
+
+.feature-overview-page *,
+.feature-overview-page *::before,
+.feature-overview-page *::after {
+  box-sizing: border-box;
+}
+
+.feature-overview-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #684ee3;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.feature-overview-back:hover {
+  color: #5138d3;
+}
+
+
+/* =========================================================
+   FEATURE HEADER CARD
+========================================================= */
+
+.feature-header-card {
+  width: 100%;
+  min-height: 88px;
+  background: #ffffff;
+  border: 1px solid #edf1f7;
+  border-radius: 7px;
+  box-shadow: 0 2px 12px rgba(28, 53, 87, 0.035);
+  overflow: hidden;
+}
+
+
+/* Header Content */
+
+.feature-header-content {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 10px 5px;
+}
+
+
+/* Gift Icon */
+
+.feature-icon-box {
+  width: 39px;
+  height: 39px;
+  flex: 0 0 39px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #4f46ff;
+  background: #eeecff;
+  border-radius: 6px;
+}
+
+
+/* Header Text */
+
+.feature-header-text {
+  min-width: 0;
+}
+
+.feature-header-text h1 {
+  margin: 0 0 2px;
+  color: #17233d;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+.feature-header-text p {
+  margin: 0;
+  color: #496999;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 400;
+}
+
+
+/* =========================================================
+   TABS
+========================================================= */
+
+.feature-tabs {
+  height: 34px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding-left: 10px;
+}
+
+.feature-tab {
+  position: relative;
+
+  height: 34px;
+  padding: 0 4px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  outline: none;
+  background: transparent;
+
+  color: #496999;
+  font-size: 8px;
+  line-height: 14px;
+  font-weight: 600;
+
+  font-family: inherit;
+  cursor: pointer;
+
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.feature-tab:hover {
+  color: #1677ff;
+}
+
+.feature-tab.active {
+  color: #1677ff;
+  font-weight: 600;
+}
+
+
+/* Active Tab Underline */
+
+.feature-tab.active::after {
+  content: "";
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 2px;
+  background: #1677ff;
+  border-radius: 2px 2px 0 0;
+}
+
+
+/* =========================================================
+   FEATURE INFORMATION CARD
+========================================================= */
+
+.feature-info-card {
+  width: 100%;
+  margin-top: 10px;
+  padding: 15px 18px 37px;
+
+  background: #ffffff;
+  border: 1px solid #edf1f7;
+  border-radius: 7px;
+
+  box-shadow: 0 2px 12px rgba(28, 53, 87, 0.035);
+}
+
+
+/* =========================================================
+   INFORMATION HEADER
+========================================================= */
+
+.feature-info-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+
+/* Info Icon */
+
+.info-icon-box {
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 1px;
+
+  color: #1683ff;
+  background: #eaf4ff;
+  border-radius: 50%;
+}
+
+
+/* Header Typography */
+
+.feature-info-title h2 {
+  margin: 0 0 1px;
+
+  color: #15213b;
+  font-size: 13px;
+  line-height: 17px;
+  font-weight: 700;
+}
+
+.feature-info-title p {
+  margin: 0;
+
+  color: #56729c;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 400;
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.feature-info-form {
+  margin-top: 14px;
+  width: min(100%, 868px);
+}
+
+
+/* Two Column Row */
+
+.feature-form-row {
+  width: 100%;
+}
+
+.feature-two-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 420px));
+  gap: 28px;
+}
+
+.feature-details-row {
+  margin-top: 16px;
+}
+
+
+/* =========================================================
+   FORM FIELD
+========================================================= */
+
+.feature-field {
+  min-width: 0;
+}
+
+.feature-field label {
+  display: block;
+
+  margin: 0 0 5px;
+
+  color: #16223d;
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 700;
+}
+
+
+/* Full Width Fields */
+
+.feature-full-width {
+  width: min(100%, 420px);
+  margin-top: 16px;
+}
+
+
+/* =========================================================
+   READ ONLY INPUT
+========================================================= */
+
+.feature-readonly-input {
+  width: 100%;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 10px;
+
+  color: #304d78;
+  background: #f8fbff;
+
+  border: 1px solid #dce7f5;
+  border-radius: 5px;
+
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 400;
+
+  box-shadow:
+    inset 0 1px 2px rgba(26, 65, 110, 0.015),
+    0 1px 2px rgba(26, 65, 110, 0.015);
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.feature-status-field {
+  width: 100%;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 9px 0 10px;
+
+  background: #f1fbf7;
+
+  border: 1px solid #cdeee0;
+  border-radius: 5px;
+
+  color: #079653;
+
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 500;
+}
+
+.feature-status-value {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.feature-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+
+  background: #10ae61;
+  border-radius: 50%;
+}
+
+.feature-status-chevron {
+  color: #009c60;
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.feature-description-box {
+  width: 100%;
+  height: 64px;
+
+  padding: 10px;
+
+  color: #304d78;
+  background: #f8fbff;
+
+  border: 1px solid #dce7f5;
+  border-radius: 5px;
+
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 400;
+
+  box-shadow:
+    inset 0 1px 2px rgba(26, 65, 110, 0.015),
+    0 1px 2px rgba(26, 65, 110, 0.015);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+  .feature-two-columns {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .feature-info-card {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .feature-info-form {
+    width: min(100%, 420px);
+  }
+
+  .feature-two-columns {
+    grid-template-columns: minmax(0, 420px);
+  }
+}
+
+
+@media (max-width: 600px) {
+  .feature-overview-page {
+    padding: 12px;
+  }
+
+  .feature-tabs {
+    gap: 6px;
+    overflow-x: auto;
+  }
+
+  .feature-tab {
+    white-space: nowrap;
+  }
+
+  .feature-header-content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .feature-info-card {
+    margin-top: 8px;
+  }
+}
+
+.feature-overview-page .feature-overview-back {
+  font-size: 13px;
+}
+
+.feature-overview-page .feature-header-text h1 {
+  font-size: 18px;
+  line-height: 22px;
+}
+
+.feature-overview-page .feature-header-text p,
+.feature-overview-page .feature-info-title p {
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.feature-overview-page .feature-tab {
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.feature-overview-page .feature-info-title h2 {
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.feature-overview-page .feature-field label,
+.feature-overview-page .feature-readonly-input,
+.feature-overview-page .feature-status-field,
+.feature-overview-page .feature-description-box {
+  font-size: 13px;
+  line-height: 18px;
+}

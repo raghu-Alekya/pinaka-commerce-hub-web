@@ -520,3 +520,116 @@ export const customersSeed = [
     updatedAt: "Sep 07, 2026",
   },
 ];
+export const categoriesSeed = [
+  {
+    id: "CAT-001",
+    name: "Beverages",
+    slug: "beverages",
+    parent: "",
+    productCount: 245,
+    status: "Active",
+    description: "Drinks and beverages",
+  },
+  {
+    id: "CAT-002",
+    name: "Snacks",
+    slug: "snacks",
+    parent: "",
+    productCount: 318,
+    status: "Active",
+    description: "Snacks and quick bites",
+  },
+  {
+    id: "CAT-003",
+    name: "Dairy",
+    slug: "dairy",
+    parent: "",
+    productCount: 126,
+    status: "Active",
+    description: "Milk and dairy products",
+  },
+  {
+    id: "CAT-004",
+    name: "Chips",
+    slug: "chips",
+    parent: "Snacks",
+    productCount: 94,
+    status: "Active",
+    description: "Packaged chips",
+  },
+  {
+    id: "CAT-005",
+    name: "Soft Drinks",
+    slug: "soft-drinks",
+    parent: "Beverages",
+    productCount: 82,
+    status: "Active",
+    description: "Carbonated soft drinks",
+  },
+];
+
+export const tagsSeed = [
+  {
+    id: "TAG-001",
+    name: "Popular",
+    slug: "popular",
+    productCount: 145,
+    status: "Active",
+  },
+  {
+    id: "TAG-002",
+    name: "New Arrival",
+    slug: "new-arrival",
+    productCount: 58,
+    status: "Active",
+  },
+  {
+    id: "TAG-003",
+    name: "Best Seller",
+    slug: "best-seller",
+    productCount: 96,
+    status: "Active",
+  },
+  {
+    id: "TAG-004",
+    name: "Featured",
+    slug: "featured",
+    productCount: 74,
+    status: "Active",
+  },
+];
+
+export const attributesSeed = [
+  {
+    id: "ATTR-001",
+    name: "Size",
+    slug: "size",
+    terms: ["Small", "Medium", "Large"],
+    productCount: 214,
+    status: "Active",
+  },
+  {
+    id: "ATTR-002",
+    name: "Flavor",
+    slug: "flavor",
+    terms: ["Original", "Lemon", "Orange", "Mint"],
+    productCount: 186,
+    status: "Active",
+  },
+  {
+    id: "ATTR-003",
+    name: "Brand",
+    slug: "brand",
+    terms: ["Brand A", "Brand B", "Brand C"],
+    productCount: 428,
+    status: "Active",
+  },
+  {
+    id: "ATTR-004",
+    name: "Pack Size",
+    slug: "pack-size",
+    terms: ["1 Pack", "2 Pack", "6 Pack", "12 Pack"],
+    productCount: 132,
+    status: "Active",
+  },
+];

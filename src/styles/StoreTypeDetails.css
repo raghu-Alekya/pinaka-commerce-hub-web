@@ -3,41 +3,59 @@
   min-height: calc(100vh - 72px);
   padding: 18px 20px 30px;
   color: #10264d;
- background: #f6f7fb;
+  background: #f6f7fb;
 }
 
+/* Heading with back arrow */
+
+.store-type-details-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}  
+
 .store-type-details-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  flex: 0 0 auto;
   padding: 0;
-  border: 0;
-  color: #076cf0;
-  background: transparent;
+  border: 1px solid #dce8f5;
+  border-radius: 8px;
+  color: #684ee3;
+  background: #fff;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
+}
+
+.store-type-details-back:hover {
+  border-color: #a9baff;
+  background: #f7f6ff;
 }
 
 .store-type-details-heading {
-  margin: 8px 0 20px;
+  margin: 1px 0 0;
 }
 
 .store-type-title-line {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 12px;
 }
 
 .store-type-title-line h1 {
   margin: 0;
   color: #10254a;
   font-size: 25px;
+  font-weight: 600;
 }
 
 .store-type-details-heading p {
   margin: 5px 0 0;
   color: #5676aa;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .store-type-active-badge {
@@ -50,17 +68,24 @@
   color: #0aa763;
   background: #dff9eb;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .store-type-active-badge i {
   font-size: 6px;
 }
 
+.store-type-active-badge.inactive {
+  color: #ed304d;
+  background: #ffe2e7;
+}
+
+/* Tabs */
+
 .store-type-tabs {
   display: flex;
   gap: 37px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   border-bottom: 1px solid #d9e7f6;
 }
 
@@ -77,7 +102,7 @@
 }
 
 .store-type-tabs button.active {
-  color: #0873f9;
+  color: #684ee3;
   font-weight: 700;
 }
 
@@ -86,18 +111,20 @@
   right: 0;
   bottom: -1px;
   left: 0;
+  display: block;
   height: 2px;
   border-radius: 2px;
   content: "";
-  background: #0873f9;
+  background: #684ee3;
 }
 
+/* Details card */
+
 .store-type-details-card {
-  min-height: 306px;
   padding: 17px 16px;
   border: 1px solid #e0eaf5;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.95);
+  background: #fff;
   box-shadow: 0 3px 10px rgba(39, 85, 148, 0.03);
 }
 
@@ -105,7 +132,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 13px;
+  margin-bottom: 14px;
 }
 
 .store-type-details-icon {
@@ -114,110 +141,167 @@
   height: 36px;
   place-items: center;
   border-radius: 50%;
-  color: #0873f9;
-  background: #e7f2ff;
+  color: #684ee3;
+  background: #eff0ff;
   font-size: 18px;
 }
 
 .store-type-details-card-heading h2 {
-  margin: 0;
+  margin: 0 0 3px;
   color: #10254a;
-  font-size: 20px;
+  font-size: 16px;
 }
+
+.store-type-details-card-heading p {
+  margin: 0;
+  color: #5b79ad;
+  font-size: 12px;
+}
+
+/* Fields */
 
 .store-type-details-grid {
   display: grid;
-  grid-template-columns: 1.08fr 0.92fr;
-  gap: 18px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 18px;
 }
 
 .store-type-details-field {
   display: grid;
   gap: 6px;
   color: #23426e;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .store-type-details-field b {
   color: #f43d60;
 }
 
+.store-type-details-field small {
+  color: #6380ae;
+  font-size: 10px;
+  font-weight: 400;
+}
+
 .store-type-details-field input,
 .store-type-details-field select,
 .store-type-details-field textarea {
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid #d8e6f4;
-  border-radius: 6px;
+  border-radius: 7px;
   outline: 0;
   color: #173861;
   background: #fff;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .store-type-details-field input,
 .store-type-details-field select {
-  height: 40px;
-  padding: 0 16px;
+  height: 34px;
+  padding: 0 10px;
+}
+
+.store-type-details-field textarea {
+  height: 42px;
+  min-height: 42px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: none;
+  text-align: left;
+  vertical-align: middle;
 }
 
 .store-type-details-status {
   color: #0ba965 !important;
 }
 
-.store-type-details-name {
-  margin-top: 13px;
-}
-
 .store-type-details-description {
   position: relative;
-  margin-top: 13px;
 }
 
 .store-type-details-description textarea {
-  min-height: 70px;
-  padding: 10px;
-  resize: vertical;
+  height: 42px;
+  min-height: 42px;
+  resize: none;
 }
 
 .store-type-details-description small {
   position: absolute;
   right: 8px;
-  bottom: 7px;
+  bottom: 8px;
   color: #7290ba;
   font-size: 10px;
-  font-weight: 400;
 }
 
-.store-type-empty-tab {
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 7px;
-  color: #6482ad;
-  text-align: center;
+/* Read-only fields */
+
+.store-type-details-field input[readonly],
+.store-type-details-field textarea[readonly] {
+  color: #475569;
+  background: #f8fafc;
+  cursor: default;
 }
 
-.store-type-empty-tab > i {
-  color: #0873f9;
-  font-size: 30px;
+.store-type-details-field select:disabled {
+  color: #475569;
+  background: #f8fafc;
+  opacity: 1;
+  cursor: default;
 }
 
-.store-type-empty-tab h2 {
-  margin: 0;
-  color: #173861;
-  font-size: 18px;
+/* Actions */
+
+.store-type-details-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-.store-type-empty-tab p {
-  margin: 0;
+.store-type-details-cancel,
+.store-type-details-save {
+  width: 150px;
+  height: 40px;
+  border-radius: 8px;
   font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.store-type-details-cancel {
+  border: 1px solid #dce8f4;
+  color: #25466f;
+  background: #fff;
+}
+
+.store-type-details-save {
+  border: 0;
+  color: #fff;
+  background: #684ee3;
+  box-shadow: 0 4px 10px rgba(104, 78, 227, 0.2);
+}
+
+.store-type-details-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.store-type-details-toast i {
+  color: #32d583;
 }
 
 @media (max-width: 700px) {
   .store-type-details-page {
     padding: 18px 16px;
+  }
+
+  .store-type-details-top {
+    gap: 12px;
   }
 
   .store-type-details-grid {
@@ -227,5 +311,15 @@
   .store-type-tabs {
     gap: 20px;
     overflow-x: auto;
+  }
+
+  .store-type-details-actions {
+    justify-content: stretch;
+  }
+
+  .store-type-details-cancel,
+  .store-type-details-save {
+    flex: 1;
+    width: auto;
   }
 }

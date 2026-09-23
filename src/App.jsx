@@ -4,7 +4,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import GuestRoute from "./auth/GuestRoute";
 import AppLayout from "./layouts/AppLayout";
-
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Merchants from "./pages/Merchants";
@@ -33,9 +32,20 @@ import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
+import FeatureOverview from "./pages/FeatureOverview";
+import FeatureStoreTypes from "./pages/FeatureStoreTypes";
+import FeaturePermissionDetails from "./pages/FeaturePermissionDetails";
 import RoleTemplates from "./pages/Roletemplates";
-
-
+import Vendors from "./pages/Vendors";
+import Tenders from "./pages/Tenders";
+import ViewRoleTemplateOverview from "./pages/ViewRoleTemplateDetails";
+import ViewRoleTemplateStoreTypes from "./pages/ViewRoleTemplateStoreTypes";
+import ViewRoleTemplateAccess from "./pages/ViewRoleTemplateAccess";
+import ViewPlanOverview from "./pages/ViewPlanOverview";
+import ViewPlanPricing from "./pages/ViewPlanPricing";
+import ViewPlanFeaturesLimits from "./pages/ViewPlanFeaturesLimits";
+import CashManagement from "./pages/CashManagement";
+import AddMerchantEmployee from "./pages/AddMerchantEmployee";
 
 const placeholders = [
   "Cash Management",
@@ -173,6 +183,11 @@ export default function App() {
           element={<StoreConfiguration />}
         />
 
+        <Route
+          path="/cash-management"
+          element={<CashManagement />}
+        />
+
         {/* Subscriptions */}
         <Route
           path="/subscriptions"
@@ -182,6 +197,10 @@ export default function App() {
         <Route
           path="/merchant-subscriptions"
           element={<Subscriptions />}
+        />
+        <Route
+          path="/merchants/:merchantId/employees/new"
+          element={<AddMerchantEmployee />}
         />
 
         {/* Stores */}
@@ -241,34 +260,45 @@ export default function App() {
             element={<Placeholder title={title} />}
           />
         ))}
-        <Route path="/employees/edit" element={<EditEmployee />} />
-        <Route path="/employees/add" element={<AddEmployee />} />
 
+        {/* Features */}
         <Route path="/features" element={<Features />} />
+        <Route
+          path="/features/:featureId/overview"
+          element={<FeatureOverview />}
+        />
+        <Route
+          path="/features/:featureId/store-types"
+          element={<FeatureStoreTypes />}
+        />
+        <Route
+          path="/features/:featureId/permissions"
+          element={<FeaturePermissionDetails />}
+        />
+
+        {/* Feature Permissions */}
         <Route path="/permissions" element={<FeaturePermissions />} />
+        <Route
+          path="/permissions/:featureId"
+          element={<FeaturePermissions />}
+        />
+//
+        {/* Master Setup */}
+        <Route path="/vendors" element={<Vendors />} />
+        <Route path="/tenders" element={<Tenders />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
         <Route path="/store-types/:storeTypeId" element={<StoreTypeDetails />} />
-        <Route
-          path="/store-types/:storeTypeId/features"
-          element={<StoreTypeFeatures />}
-        />
-        <Route
-          path="/store-types/:storeTypeId/role-templates"
-          element={<StoreTypeRoleTemplates />}
-        />
+        <Route path="/store-types/:storeTypeId/features" element={<StoreTypeFeatures />} />
+        <Route path="/store-types/:storeTypeId/role-templates" element={<StoreTypeRoleTemplates />} />
+        <Route path="/role-templates/:roleId" element={<ViewRoleTemplateOverview />} />
+        <Route path="/role-templates/:roleId/store-types" element={<ViewRoleTemplateStoreTypes />} />
+        <Route path="/role-templates/:roleId/access" element={<ViewRoleTemplateAccess />} />
+        <Route path="/plans/:planId" element={<ViewPlanOverview />} />
+        <Route path="/plans/:planId/pricing" element={<ViewPlanPricing />} />
+        <Route path="/plans/:planId/features-limits" element={<ViewPlanFeaturesLimits />} />
 
-        {placeholders.map((title) => {
-          const path = `/${title.toLowerCase().replaceAll(" ", "-")}`;
-          return (
-            <Route
-              key={title}
-              path={path}
-              element={<Placeholder title={title} />}
-            />
-          );
-        })}
       </Route>
 
       <Route
