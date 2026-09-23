@@ -354,15 +354,7 @@ export default function StoreTypeFeatures() {
   <div className="store-features-title">
     <div className="store-type-title-line">
       <h1>{storeType.name}</h1>
-
-      <span
-        className={`store-type-active-badge ${
-          storeType.status === "INACTIVE" ? "inactive" : ""
-        }`}
-      >
-        <i className="bi bi-circle-fill" />
-        {storeType.status === "INACTIVE" ? "Inactive" : "Active"}
-      </span>
+  
     </div>
 
     <p>{storeType.description}</p>

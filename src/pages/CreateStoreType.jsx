@@ -463,24 +463,30 @@ useEffect(() => {
               />
             </label>
 
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
-              <option value="">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
+            <div className="store-filter-select">
+  <select
+    value={statusFilter}
+    onChange={(e) => setStatusFilter(e.target.value)}
+  >
+    <option value="">All Statuses</option>
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
+  <i className="bi bi-chevron-down" />
+</div>
 
-            <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                 >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="name-asc">Name (A–Z)</option>
-               <option value="name-desc">Name (Z–A)</option>
-            </select>
+          <div className="store-filter-select">
+  <select
+    value={sortBy}
+    onChange={(e) => setSortBy(e.target.value)}
+  >
+    <option value="newest">Newest First</option>
+    <option value="oldest">Oldest First</option>
+    <option value="name-asc">Name (A–Z)</option>
+    <option value="name-desc">Name (Z–A)</option>
+  </select>
+  <i className="bi bi-chevron-down" />
+</div>
 
             <button
               type="button"
