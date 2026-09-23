@@ -1,26 +1,28 @@
 import { api } from "./http";
 import { endpoints } from "./endpoints";
 
-export function toEmployeePayload(data, storeAssignments) {
+export function toEmployeePayload(data = {}, storeAssignments) {
+  const assignments = storeAssignments || data.storeAssignments || [];
   return {
-    merchantId: data.merchant,
-    employeeCode: data.employeeCode.trim(),
-    firstName: data.firstName.trim(),
-    lastName: data.lastName.trim(),
-    email: data.email.trim(),
-    phone: data.phone.trim(),
-    dateOfBirth: data.dob,
+    merchantId: data.merchantId || data.merchant,
+    employeeCode: data.employeeCode?.trim(),
+    firstName: data.firstName?.trim(),
+    lastName: data.lastName?.trim(),
+    email: data.email?.trim(),
+    phone: data.phone?.trim(),
+    dateOfBirth: data.dateOfBirth || data.dob,
     gender: data.gender,
-    addressLine1: data.address1.trim(),
-    addressLine2: data.address2.trim(),
-    city: data.city.trim(),
-    state: data.state.trim(),
-    postalCode: data.pinCode,
+    addressLine1: data.addressLine1 || data.address1?.trim() || "",
+    addressLine2: data.addressLine2 || data.address2?.trim() || "",
+    city: data.city?.trim() || "",
+    state: data.state?.trim() || "",
+    postalCode: data.postalCode || data.pinCode,
     country: data.country,
-    username: data.username.trim(),
-    temporaryPassword: data.password,
+    username: data.username?.trim(),
+    temporaryPassword: data.temporaryPassword || data.password,
     sendCredentials: Boolean(data.sendCredentials),
-    status: "ACTIVE",
+    status: data.status || "ACTIVE",
+    storeAssignments: assignments.length ? assignments : undefined,
   };
 }
 
@@ -29,6 +31,21 @@ export function createEmployee(data, storeAssignments) {
     endpoints.employees,
     toEmployeePayload(data, storeAssignments)
   );
+}
+
+export function updateEmployee(id, data, storeAssignments) {
+  return api.put(
+    endpoints.employee(id),
+    toEmployeePayload(data, storeAssignments)
+  );
+}
+
+export function getEmployee(id) {
+  return api.get(endpoints.employee(id));
+}
+
+export function deleteEmployee(id) {
+  return api.delete(endpoints.employee(id));
 }
 
 function formatDate(value) {
