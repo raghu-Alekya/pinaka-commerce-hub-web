@@ -38,27 +38,27 @@ const storeRoleStyles = `
     font-size: 12px;
     line-height: 1.3;
   }
-
+ 
   .field-invalid {
     border-color: #dc2626 !important;
   }
-
+ 
   .employee-phone-invalid .form-control {
     border-color: #dc2626 !important;
   }
-
+ 
   .work-information-card {
     overflow: visible;
   }
-
+ 
   .work-merchant-field {
     margin-top: 24px;
   }
-
+ 
   .employee-login-pin-field {
     margin-top: 20px;
   }
-
+ 
   .employee-login-pin-field label {
     display: block;
     margin-bottom: 7px;
@@ -66,11 +66,11 @@ const storeRoleStyles = `
     font-size: 15px;
     font-weight: 600;
   }
-
+ 
   .employee-login-pin-field label span {
     color: #e11d48;
   }
-
+ 
   .employee-login-pin-field input {
     width: 100%;
     height: 46px;
@@ -84,24 +84,24 @@ const storeRoleStyles = `
     box-sizing: border-box;
     letter-spacing: 2px;
   }
-
+ 
   .employee-login-pin-field input::placeholder {
     color: #91a3bd;
     letter-spacing: 0;
   }
-
+ 
   .employee-login-pin-field input:focus {
     border-color: #8172ef;
     box-shadow: 0 0 0 3px rgba(129, 114, 239, .10);
   }
-
+ 
   .employee-login-pin-help {
     display: block;
     margin-top: 6px;
     color: #7b8da8;
     font-size: 12px;
   }
-
+ 
   .employee-api-error {
     margin-bottom: 15px;
     padding: 11px 14px;
@@ -111,12 +111,12 @@ const storeRoleStyles = `
     color: #b91c1c;
     font-size: 13px;
   }
-
+ 
   .save-employee-btn:disabled {
     opacity: .6;
     cursor: not-allowed;
   }
-
+ 
   @media (max-width: 900px) {
     .store-assignment-card {
       grid-template-columns: minmax(0, 1fr) 36px;
@@ -612,9 +612,8 @@ export default function EditEmployee() {
 
                 {/* PHONE */}
                 <div
-                  className={`employee-field ${
-                    errors.phone ? "employee-phone-invalid" : ""
-                  }`}
+                  className={`employee-field ${errors.phone ? "employee-phone-invalid" : ""
+                    }`}
                 >
                   <label>
                     Phone Number <span>*</span>
