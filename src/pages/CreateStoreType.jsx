@@ -406,7 +406,7 @@ useEffect(() => {
           e.currentTarget.scrollHeight
         )}px`;
       }}
-      placeholder="Enter a brief description about the store type"
+      placeholder="Briefly describe this store type"
       maxLength={500}
     />
 
@@ -482,6 +482,7 @@ useEffect(() => {
   >
     <option value="newest">Newest First</option>
     <option value="oldest">Oldest First</option>
+    <option value="updated">Recently Updated</option>
     <option value="name-asc">Name (A–Z)</option>
     <option value="name-desc">Name (Z–A)</option>
   </select>

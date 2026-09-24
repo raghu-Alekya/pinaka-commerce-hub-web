@@ -555,7 +555,7 @@ export default function FeaturePermissions() {
           <div>
 
             <h1>
-              Create Feature Permissions
+              Feature Permissions
             </h1>
 
             <p>
@@ -812,6 +812,9 @@ export default function FeaturePermissions() {
                   value={form.status}
                   onChange={updateField}
                   autoComplete="off"
+                  className={`fp-form-status-select ${
+                    form.status === "Inactive" ? "inactive" : "active"
+                  }`}
                 >
 
                   <option value="Active">
@@ -875,11 +878,7 @@ export default function FeaturePermissions() {
         <div className="fp-list-toolbar">
 
           <h2>
-            Permissions List (
-            {
-              filteredPermissions.length
-            }
-            )
+            Permissions List 
           </h2>
 
           <div className="fp-list-filters">
@@ -956,15 +955,15 @@ export default function FeaturePermissions() {
               >
 
                 <option value="newest">
-                  Newly Created First
+                  Newest First
                 </option>
 
                 <option value="oldest">
-                  Oldest Created First
+                  Oldest First
                 </option>
 
                 <option value="updated">
-                  Recently Updated First
+                  Recently Updated
                 </option>
 
                 <option value="name-asc">

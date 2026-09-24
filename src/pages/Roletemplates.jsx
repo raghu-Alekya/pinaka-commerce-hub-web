@@ -341,8 +341,8 @@ export default function RoleTemplates() {
             <div>
               <h2>
                 {editingId !== null
-                  ? "Edit Role Template Details"
-                  : "Add Role Template Details"}
+                  ? "Edit Role Template"
+                  : "Add Role Template"}
               </h2>
               <p>
                 Provide the basic details and configuration for this role template.
@@ -363,7 +363,6 @@ export default function RoleTemplates() {
               </span>
 
               <div className="role-input-wrap">
-                <i className="bi bi-tag" />
                 <input
                   type="text"
                   name="roleCode"
@@ -378,7 +377,7 @@ export default function RoleTemplates() {
               </div>
 
               <small className={roleCodeError ? "role-field-error" : ""}>
-                {roleCodeError || "3–30 characters. Letters, numbers, and underscores only. No spaces."}
+                {roleCodeError || ""}
               </small>
             </label>
 
@@ -388,7 +387,6 @@ export default function RoleTemplates() {
               </span>
 
               <div className="role-input-wrap">
-                <i className="bi bi-type" />
                 <input
                   type="text"
                   name="name"
@@ -401,7 +399,7 @@ export default function RoleTemplates() {
               </div>
 
               <small>
-                Display name for the role template.
+            
               </small>
             </label>
 
@@ -433,7 +431,7 @@ export default function RoleTemplates() {
                 <i className="bi bi-chevron-down" />
               </div>
 
-              <small>Active or Inactive.</small>
+              <small></small>
             </label>
 
             <label className="role-field role-description-field">
@@ -456,7 +454,7 @@ export default function RoleTemplates() {
               />
 
               <div className="role-description-meta">
-                <small>Explain the purpose of this role template.</small>
+                <small> </small>
                 <span>{form.description.length}/500</span>
               </div>
             </label>
@@ -494,10 +492,7 @@ export default function RoleTemplates() {
             <div>
               <h2>Role Templates List</h2>
 
-              <p>
-                Manage role templates and their assigned feature
-                permissions.
-              </p>
+      
             </div>
 
             <div className="role-filters">
