@@ -1,5 +1,5 @@
 import { storeTypesApi } from "../api/storeTypes";
-import { getMerchant, updateMerchant } from "../api/merchants";
+import { createMerchant, getMerchant, updateMerchant } from "../api/merchants";
 import { listPlans } from "../api/plans";
 import { listFeatures } from "../api/features";
 import { listFeaturePermissions } from "../api/featurePermissionsApi";
