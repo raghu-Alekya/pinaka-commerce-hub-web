@@ -1103,3 +1103,385 @@
     grid-column: auto;
   }
 }
+
+/* =========================================================
+   CREATE PLAN - FEATURES SCREEN CONSISTENCY OVERRIDES
+   ========================================================= */
+.plan-information-card {
+  padding: 22px 28px 30px;
+  border: 1px solid #dfe9f5;
+  border-radius: 12px;
+}
+
+.plan-information-heading {
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.plan-information-heading .plan-heading-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 50%;
+  background: #eef3ff;
+  color: #5b50e9;
+  font-size: 21px;
+}
+
+.plan-information-heading h2 {
+  margin: 0 0 5px;
+  color: #10264d;
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.plan-information-heading p {
+  margin: 0;
+  color: #5b79ad;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.plan-information-grid {
+  column-gap: 28px !important;
+  row-gap: 22px !important;
+}
+
+.plan-information-grid .plan-field {
+  gap: 7px;
+  color: #173d70;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.plan-information-grid .plan-field > span {
+  height: auto;
+  margin: 0;
+  color: #173d70;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.plan-information-grid .plan-field input,
+.plan-information-grid .plan-field select,
+.plan-information-grid .plan-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dce3ed;
+  border-radius: 7px;
+  background: #fff;
+  color: #25314c;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.plan-information-grid .plan-field input,
+.plan-information-grid .plan-field select {
+  height: 44px !important;
+  padding: 0 13px;
+}
+
+.plan-information-grid .plan-field input::placeholder,
+.plan-information-grid .plan-field textarea::placeholder {
+  color: #9aa8bd;
+  opacity: 1;
+}
+
+.plan-information-grid .plan-field input:focus,
+.plan-information-grid .plan-field textarea:focus,
+.plan-information-grid .plan-field select:focus {
+  border-color: #8c7cf0;
+  box-shadow: 0 0 0 3px rgba(104, 78, 227, 0.08);
+}
+
+.plan-information-grid .plan-field input.input-error {
+  border-color: #e25d6f;
+}
+
+.plan-information-grid .plan-field-slot {
+  min-height: 16px;
+  margin-top: 0;
+}
+
+.plan-information-grid .plan-description-field {
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+  max-width: none;
+  margin-top: 0;
+}
+
+.plan-information-grid .plan-description-field textarea {
+  display: block;
+  height: 44px;
+  min-height: 44px;
+  max-height: 90px;
+  padding: 11px 13px;
+  line-height: 20px;
+  resize: vertical;
+}
+
+.plan-information-grid .plan-description-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 16px;
+}
+
+.plan-information-grid .plan-description-meta small {
+  color: #7d8da7;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.plan-information-grid .plan-information-status-field {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.plan-information-grid .plan-status-select.active { color: #1c9b4d; }
+.plan-information-grid .plan-status-select.inactive { color: #d72d47; }
+.plan-information-grid .plan-status-select option { color: #25314c; }
+.plan-information-grid .plan-status-select option[value="Inactive"] { color: #d72d47; }
+
+.plan-information-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 0;
+}
+
+.plan-information-actions .plan-cancel-button,
+.plan-information-actions .plan-submit-button {
+  height: 44px;
+  box-sizing: border-box;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.plan-information-actions .plan-cancel-button {
+  min-width: 180px;
+  padding: 0 24px;
+}
+
+.plan-information-actions .plan-submit-button {
+  min-width: 180px;
+  padding: 0 24px;
+}
+
+/* Plans list filters - same sizing system as Features */
+.plans-filters { gap: 10px; }
+.plan-search {
+  flex: 0 1 250px;
+  max-width: 250px;
+  height: 38px;
+  padding: 0 12px;
+}
+.plans-filters select,
+.plan-reset-button {
+  height: 38px;
+  font-size: 12px;
+}
+.plans-filters select { flex: 0 0 170px; }
+.plan-reset-button { width: 44px; padding: 0; }
+
+/* Dates always render as exactly two lines */
+.plan-date-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+.plan-date-cell strong {
+  color: #4d5970;
+  font-weight: 600;
+}
+.plan-date-cell span { font-weight: 400; }
+
+/* Preserve requested action icon treatment */
+.plan-table-actions button:first-child { color: #5b67ff; }
+.plan-table-actions .plan-delete-icon { color: #ef3b5c !important; }
+
+@media (max-width: 950px) {
+  .plan-information-grid .plan-description-field,
+  .plan-information-grid .plan-information-status-field {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+
+/* =========================================================
+   FINAL CREATE PLAN UI FIXES - 24 SEP
+   ========================================================= */
+
+/* Description: fixed compact field, no resize controls */
+.plan-information-grid .plan-description-field textarea,
+.plan-description-field textarea,
+.plan-textarea-wrap textarea {
+  resize: vertical !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 90px !important;
+  overflow-y: hiddden !important;
+
+}
+
+/* Plan Information status: keep native/custom chevron visible */
+.plan-information-grid .plan-information-status-field select,
+.plan-information-grid .plan-status-select {
+  height: 44px !important;
+  padding: 0 38px 0 13px !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-color: #fff !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath fill='%236380b0' d='M3.2 5.5 8 10.3l4.8-4.8 1 1L8 12.3 2.2 6.5z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 13px center !important;
+  background-size: 12px 12px !important;
+}
+
+/* List toolbar: Features-screen compact 38px controls */
+.plans-list-card .plans-filters {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+}
+
+.plans-list-card .plan-search {
+  flex: 0 1 250px !important;
+  width: 250px !important;
+  max-width: 250px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 12px !important;
+  box-sizing: border-box !important;
+}
+
+.plans-list-card .plan-search input {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+}
+
+.plans-list-card .plans-filters select {
+  flex: 0 0 170px !important;
+  width: 170px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 34px 0 12px !important;
+  box-sizing: border-box !important;
+  font-size: 12px !important;
+}
+
+.plans-list-card .plan-reset-button {
+  flex: 0 0 44px !important;
+  width: 44px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Table horizontal scrollbar: match Features screen */
+.plans-table-wrap {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: auto;
+  scrollbar-color: #8b8b8b #f4f6f9;
+}
+
+.plans-table-wrap::-webkit-scrollbar {
+  height: 16px !important;
+}
+
+.plans-table-wrap::-webkit-scrollbar-track {
+  background: #f4f6f9 !important;
+  border-radius: 8px !important;
+}
+
+.plans-table-wrap::-webkit-scrollbar-thumb {
+  background: #8b8b8b !important;
+  border: 4px solid #f4f6f9 !important;
+  border-radius: 10px !important;
+  min-width: 80px;
+}
+
+.plans-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #777 !important;
+}
+
+
+/* FINAL TWO FIXES - 24 SEP */
+
+/* 1. Description: preserve native bottom-right resize handle */
+.plan-information-grid .plan-description-field textarea {
+  resize: vertical !important;
+  min-height: 44px !important;
+  max-height: 90px !important;
+}
+
+/* 2. Applicable Business/Store Type: exact JSX select target */
+.plan-information-grid .plan-field:has(select[name="applicableStoreType"]) {
+  position: relative;
+}
+
+.plan-information-grid select[name="applicableStoreType"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  padding-right: 40px !important;
+  background-image: none !important;
+  cursor: pointer;
+}
+
+/* Simple CSS chevron — no data:image URL */
+.plan-information-grid .plan-field:has(select[name="applicableStoreType"])::after {
+  content: "";
+  position: absolute;
+  top: 43px;
+  right: 16px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid #6380b0;
+  border-bottom: 1.5px solid #6380b0;
+  transform: rotate(45deg);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* FINAL DESCRIPTION FIX */
+.plan-information-grid .plan-description-field textarea {
+  box-sizing: border-box !important;
+
+  width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 90px !important;
+
+  padding: 11px 13px !important;
+
+  resize: vertical !important;
+
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+}
+
+/* Chrome / Edge - hide textarea scrollbar completely */
+.plan-information-grid .plan-description-field textarea::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

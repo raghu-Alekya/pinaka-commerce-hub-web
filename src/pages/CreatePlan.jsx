@@ -195,25 +195,26 @@ export default function CreatePlan() {
       setStoreTypesLoading(false);
     }
   }
-  function formatDate(value) {
-    if (!value) {
-      return "-";
+  function formatDateParts(value) {
+    if (!value) return { date: "—", time: "" };
+
+    const dateValue = new Date(value);
+    if (Number.isNaN(dateValue.getTime())) {
+      return { date: String(value), time: "" };
     }
 
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return value;
-    }
-
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+    return {
+      date: dateValue.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      time: dateValue.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }),
+    };
   }
   async function fetchPlans() {
     try {
@@ -521,8 +522,8 @@ export default function CreatePlan() {
       </div>
 
       {planStep === 1 && (
-        <section className="plan-form-card">
-          <div className="plan-card-heading">
+        <section className="plan-form-card plan-information-card">
+          <div className="plan-card-heading plan-information-heading">
             <div className="plan-heading-icon">
               <i className="bi bi-file-earmark-text" />
             </div>
@@ -532,92 +533,52 @@ export default function CreatePlan() {
             </div>
           </div>
 
-          {/* 3-COLUMN GRID */}
-          <div className="plan-create-grid three-columns">
-            {/* ROW 1, COL 1: PLAN CODE */}
+          <div className="plan-create-grid three-columns plan-information-grid">
             <label className="plan-field">
-              <span>
-                Plan Code <b>*</b>
-              </span>
-              <div
-                className={`plan-input-wrap ${codeError ? "input-error" : ""}`}
-              >
-                <i className="bi bi-tag" />
-                <input
-                  {...textInputProps}
-                  name="code"
-                  value={form.code}
-                  onChange={updateField}
-                  placeholder="e.g. ENTER_PLAN_CODE"
-                />
-              </div>
+              <span>Plan Code <b>*</b></span>
+              <input
+                {...textInputProps}
+                name="code"
+                value={form.code}
+                onChange={updateField}
+                placeholder="e.g. ENTER_PLAN_CODE"
+                className={codeError ? "input-error" : ""}
+              />
               <div className="plan-field-slot">
-                {codeError ? (
-                  <small className="plan-field-error">{codeError}</small>
-                ) : (
-                  <small className="plan-field-hint">
-                    {/* Unique identifier for this plan. */}
-                  </small>
-                )}
+                {codeError ? <small className="plan-field-error">{codeError}</small> : <small />}
               </div>
             </label>
 
-            {/* ROW 1, COL 2: PLAN NAME */}
             <label className="plan-field">
-              <span>
-                Plan Name <b>*</b>
-              </span>
-              <div
-                className={`plan-input-wrap ${nameError ? "input-error" : ""}`}
-              >
-                <i className="bi bi-type" />
-                <input
-                  {...textInputProps}
-                  name="name"
-                  value={form.name}
-                  onChange={updateField}
-                  placeholder="e.g. Enter plan name"
-                />
-              </div>
+              <span>Plan Name <b>*</b></span>
+              <input
+                {...textInputProps}
+                name="name"
+                value={form.name}
+                onChange={updateField}
+                placeholder="e.g. Enter plan name"
+                className={nameError ? "input-error" : ""}
+              />
               <div className="plan-field-slot">
-                {nameError ? (
-                  <small className="plan-field-error">{nameError}</small>
-                ) : (
-                  <small className="plan-field-hint">
-                    {/* Display name of the plan. */}
-                  </small>
-                )}
+                {nameError ? <small className="plan-field-error">{nameError}</small> : <small />}
               </div>
             </label>
 
-            {/* ROW 1, COL 3: APPLICABLE STORE TYPE */}
             <label className="plan-field">
-              <span>
-                Applicable Business/Store Type <b>*</b>
-              </span>
+              <span>Applicable Business/Store Type <b>*</b></span>
               <select
                 name="applicableStoreType"
                 value={form.applicableStoreType}
                 onChange={updateField}
                 disabled={storeTypesLoading}
               >
-                <option value="">
-                  {storeTypesLoading
-                    ? "Loading store types..."
-                    : "Select store type"}
-                </option>
+                <option value="">{storeTypesLoading ? "Loading store types..." : "Select store type"}</option>
                 {storeTypes.map((storeType) => (
                   <option
                     key={storeType.id ?? storeType._id ?? storeType.code}
-                    value={
-                      storeType.name ??
-                      storeType.storeTypeName ??
-                      storeType.code
-                    }
+                    value={storeType.name ?? storeType.storeTypeName ?? storeType.code}
                   >
-                    {storeType.name ??
-                      storeType.storeTypeName ??
-                      storeType.code}
+                    {storeType.name ?? storeType.storeTypeName ?? storeType.code}
                   </option>
                 ))}
               </select>
@@ -625,67 +586,46 @@ export default function CreatePlan() {
                 {storeTypesError ? (
                   <small className="plan-field-error">{storeTypesError}</small>
                 ) : (
-                  <small className="plan-field-hint">
-                    Applicable store type.
-                  </small>
+                  <small className="plan-field-hint"></small>
                 )}
               </div>
             </label>
 
-            {/* ROW 2, COL 1: STATUS */}
-            <label className="plan-field">
-              <span>
-                Status <b>*</b>
-              </span>
+            <label className="plan-field plan-description-field">
+              <span>Description</span>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={updateField}
+                maxLength={500}
+                placeholder="Describe the plan, its features and target audience..."
+              />
+              <div className="plan-description-meta">
+                <small />
+                <small>{form.description.length}/500</small>
+              </div>
+            </label>
+
+            <label className="plan-field plan-information-status-field">
+              <span>Status <b>*</b></span>
               <select
                 autoComplete="off"
                 name="status"
                 value={form.status}
                 onChange={updateField}
-                className={`plan-status-select ${
-                  form.status === "Inactive" ? "inactive" : "active"
-                }`}
+                className={`plan-status-select ${form.status === "Inactive" ? "inactive" : "active"}`}
               >
-                <option value="Active">● Active</option>
-                <option value="Inactive">● Inactive</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
               </select>
-              <div className="plan-field-slot">
-                <small className="plan-field-hint">
-                  {/* Plan assignment status. */}
-                </small>
-              </div>
-            </label>
-
-            {/* ROW 2, COL 2 & 3: DESCRIPTION (SPANS 2 COLUMNS) */}
-            <label className="plan-field span-two">
-              <span>Description</span>
-              <div className="plan-input-wrap">
-                <i className="bi bi-file-earmark-text" />
-                <input
-                  {...textInputProps}
-                  name="description"
-                  value={form.description}
-                  onChange={updateField}
-                  placeholder="Describe the plan, its features and target audience..."
-                />
-              </div>
-              <div className="plan-field-slot">
-                <small className="plan-field-hint">
-                  {/* Brief summary of plan highlights. */}
-                </small>
-              </div>
+              <div className="plan-field-slot"><small /></div>
             </label>
           </div>
 
-          <div className="plan-actions">
-            <button
-              type="button"
-              className="plan-cancel-button"
-              onClick={resetCreationForm}
-            >
+          <div className="plan-actions plan-information-actions">
+            <button type="button" className="plan-cancel-button" onClick={resetCreationForm}>
               Cancel
             </button>
-
             <button
               type="button"
               className="plan-submit-button"
@@ -1223,7 +1163,7 @@ export default function CreatePlan() {
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
             >
-              <option value="">All Statuses</option>
+              <option value="">All Status</option>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
@@ -1313,11 +1253,25 @@ export default function CreatePlan() {
                     </span>
                   </div>
 
-                  {/* Created At - Date Only (e.g. "Sep 22, 2026") */}
-                  <div>{formatDate(createdAt)}</div>
+                  {(() => {
+                    const parts = formatDateParts(createdAt);
+                    return (
+                      <div className="plan-date-cell">
+                        <strong>{parts.date}</strong>
+                        {parts.time && <span>{parts.time}</span>}
+                      </div>
+                    );
+                  })()}
 
-                  {/* Updated At - Date Only (e.g. "Sep 22, 2026") */}
-                  <div>{formatDate(updatedAt)}</div>
+                  {(() => {
+                    const parts = formatDateParts(updatedAt);
+                    return (
+                      <div className="plan-date-cell">
+                        <strong>{parts.date}</strong>
+                        {parts.time && <span>{parts.time}</span>}
+                      </div>
+                    );
+                  })()}
 
                   <div className="plan-table-actions">
                     <button
