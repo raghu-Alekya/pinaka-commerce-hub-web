@@ -284,11 +284,6 @@ export function validate(state, storeTypesState, availablePackages = fallbackPac
       if (employeeCountFor(state) !== null && employeeCountFor(state) > limits[2]) return 'The selected plan cannot accommodate registered employees.';
       if (state.stores.length > limits[0] || state.devices.length > limits[1]) return 'The selected plan cannot accommodate existing stores or devices.';
     }
-    if (stage === 5 || stage === 6) {
-      if(!state.roles.length) return 'Select at least one business role or create a custom role.';
-      if(state.roles.some(role=>!String(role.name || '').trim())) return 'Role names are required.';
-      if(new Set(state.roles.map(role=>role.name.trim().toLowerCase())).size!==state.roles.length) return 'Role names must be unique.';
-    }
     return '';
   }
   if (!state.stores.length) return 'Add at least one store.';
@@ -661,7 +656,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   const journey = storePhase ? [1,4,3,5,6] : [0,2,6];
   const stepLabels = storePhase
     ? [['Store details','Location & optional operating schedule'],['Subscription & features','Inherited plan and store enablement'],['Devices','Register & allocate licenses'],['Roles & permissions','Templates and custom roles'],['Review & save','Review store configuration']]
-    : [['Merchant details','Business & primary contact'],['Choose plan','Country pricing & subscription limits'],['Review Plan & Subscribe','Merchant review and billing summary'],['Subscription Confirmed','Subscription details saved']];
+    : [['Merchant details','Business & primary contact'],['Choose plan','Country pricing & subscription limits'],['Review & Subscribe','Plan review & billing summary']];
   const position = journey.indexOf(state.step);
   const patch = values => { setError(''); setState(previous => ({ ...previous, ...values })); };
   const changeMerchant = (key, value) => { setError(''); setState(previous => ({ ...previous, merchant: { ...previous.merchant, [key]: value } })); };
