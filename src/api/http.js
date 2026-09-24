@@ -62,14 +62,8 @@ export async function apiRequest(
     method,
     url: requestUrl,
     path,
-    token,
     payload,
-    headers: {
-      Accept: "application/json",
-      ...(payload !== undefined ? { "Content-Type": "application/json" } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
+    authenticated: Boolean(token),
   });
  
   const response = await fetch(requestUrl, {
@@ -89,7 +83,6 @@ export async function apiRequest(
   console.log("[API RESPONSE]", {
     method,
     url: requestUrl,
-    token,
     status: response.status,
     ok: response.ok,
     data,

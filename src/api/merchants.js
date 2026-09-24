@@ -100,6 +100,11 @@ function formatRelative(value) {
   return formatDate(value);
 }
 
+function merchantApiId(merchant) {
+  const values = [merchant?.id, merchant?.merchantId].filter(Boolean);
+  return values.find(value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value))) || values[0] || '';
+}
+
 export function mapMerchantToRow(merchant) {
   const name =
     merchant.businessName ||
@@ -114,6 +119,7 @@ export function mapMerchantToRow(merchant) {
 
   return {
     id: merchant.id || merchant.merchantId,
+    merchantId: merchantApiId(merchant),
     name,
     email: merchant.email || "",
     phone: merchant.phone || "",
@@ -130,7 +136,7 @@ export function mapMerchantToRow(merchant) {
 
 export async function getMerchant(id) {
   const data = await api.get(endpoints.merchant(id));
-  const merchant = data?.merchant || data?.data || data;
+  const merchant = data?.merchant || data?.data?.merchant || data?.data || data;
   const stores = Array.isArray(data?.stores)
     ? data.stores
     : Array.isArray(merchant?.stores)
