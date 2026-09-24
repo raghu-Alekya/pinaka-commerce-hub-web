@@ -6,41 +6,48 @@ const REMEMBER_KEY = "pch.rememberMe";
 let accessToken = null;
 
 function getStoredValue(key) {
-  return sessionStorage.getItem(key) || localStorage.getItem(key) || null;
+  const value = localStorage.getItem(key) || sessionStorage.getItem(key) || null;
+  // Sync from sessionStorage to localStorage if found, so newly opened tabs have access
+  if (value && !localStorage.getItem(key)) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // ignore
+    }
+  }
+  return value;
 }
 
 export function getAccessToken() {
   return accessToken || getStoredValue(ACCESS_KEY);
 }
 
-export function setAccessToken(token, remember = getRememberMe()) {
+export function setAccessToken(token, remember = true) {
   accessToken = token || null;
   sessionStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(ACCESS_KEY);
 
   if (!token) return;
 
-  const store = remember ? localStorage : sessionStorage;
-  store.setItem(ACCESS_KEY, token);
+  // Storing in localStorage ensures all tabs in the same browser share the session
+  localStorage.setItem(ACCESS_KEY, token);
 }
 
 export function getRefreshToken() {
   return getStoredValue(REFRESH_KEY);
 }
 
-export function setRefreshToken(token, remember = false) {
+export function setRefreshToken(token, remember = true) {
   sessionStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(REFRESH_KEY);
 
   if (!token) return;
 
-  const store = remember ? localStorage : sessionStorage;
-  store.setItem(REFRESH_KEY, token);
+  localStorage.setItem(REFRESH_KEY, token);
 }
 
 export function getStoredUser() {
-  const raw =
-    sessionStorage.getItem(USER_KEY) || localStorage.getItem(USER_KEY);
+  const raw = getStoredValue(USER_KEY);
   if (!raw) return null;
 
   try {
@@ -50,14 +57,13 @@ export function getStoredUser() {
   }
 }
 
-export function setStoredUser(user, remember = false) {
+export function setStoredUser(user, remember = true) {
   sessionStorage.removeItem(USER_KEY);
   localStorage.removeItem(USER_KEY);
 
   if (!user) return;
 
-  const store = remember ? localStorage : sessionStorage;
-  store.setItem(USER_KEY, JSON.stringify(user));
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
 export function getRememberMe() {
