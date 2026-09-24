@@ -7,7 +7,7 @@ import { useReferenceData } from "../api/referenceData";
 import { listSubscriptionPlans } from "../api/subscriptions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { listMerchants, getMerchant } from "../api/merchants";
+import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant } from "../api/merchants";
 import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
 import "../styles/merchants.css";
@@ -335,7 +335,7 @@ function storeLimitFor(merchant, masterPlans) {
   return null;
 }
 // Pass your existing delete API function as deleteMerchant until its module contract is connected.
-export default function Merchants({ deleteMerchant, localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
+export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewedId = searchParams.get('view');
@@ -364,7 +364,9 @@ export default function Merchants({ deleteMerchant, localMerchants = [], onLocal
     deleteInFlight.current = true; setDeleting(true); setDeleteError('');
     const target = deleteTarget;
     try {
-      await deleteMerchant(target.id);
+      const targetId = target.merchantId || target.id;
+      const res = await deleteMerchant(targetId);
+      console.log("[DELETE MERCHANT API RESPONSE]", res);
       onLocalDelete?.(target.id);
       if (!mounted.current) return;
       setMerchants(previous => previous.filter(item => item.id !== target.id));
