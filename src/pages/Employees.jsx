@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { listEmployees } from "../api/employees";
 
 import {
   Search,
@@ -21,6 +22,32 @@ import {
 } from "lucide-react";
 
 import "../styles/Employees.css";
+
+/* =========================================================
+   AVATAR COMPONENT WITH SAFE FALLBACK
+========================================================= */
+function EmployeeAvatar({ src, name, initials, colorClass }) {
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => {
+    setImgError(false);
+  }, [src]);
+  return (
+    <div className={`employee-avatar ${colorClass || "purple"}`}>
+      {src && !imgError ? (
+        <img
+          src={src}
+          alt={name || "Employee"}
+          className="employee-avatar-img"
+          onError={() => setImgError(true)}
+        />
+      ) : initials ? (
+        <span>{initials}</span>
+      ) : (
+        <User size={18} />
+      )}
+    </div>
+  );
+}
 
 /* =========================================================
    EMPLOYEE DATA
@@ -172,6 +199,17 @@ const employees = [
   },
 ];
 
+export async function listMerchants() {
+  const data = await api.get(endpoints.merchants);
+  const items = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.merchants)
+      ? data.merchants
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
+  return items;
+}
 /* =========================================================
    STAT CARD
 ========================================================= */
@@ -234,6 +272,22 @@ export default function Employees() {
 
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const [employeeRows, setEmployeeRows] = useState([]);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    listEmployees()
+      .then((items) => {
+        if (active) setEmployeeRows(items);
+      })
+      .catch((error) => {
+        if (active) setLoadError(error.message || "Unable to load employees.");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   /* FILTERS */
 
   const [merchant, setMerchant] = useState("All Merchants");
@@ -255,7 +309,7 @@ export default function Employees() {
   ===================================================== */
 
   const filteredEmployees = useMemo(() => {
-    return employees.filter((employee) => {
+    return employeeRows.filter((employee) => {
       const searchValue = search.trim().toLowerCase();
 
       const matchesSearch =
@@ -285,7 +339,7 @@ export default function Employees() {
         matchesStatus
       );
     });
-  }, [search, merchant, store, role, status]);
+  }, [employeeRows, search, merchant, store, role, status]);
 
   /* =====================================================
      PAGINATION CALCULATIONS
@@ -489,7 +543,7 @@ export default function Employees() {
             onChange={handleMerchantChange}
             options={[
               "All Merchants",
-              ...Array.from(new Set(employees.map((e) => e.merchant))),
+              ...Array.from(new Set(employeeRows.map((e) => e.merchant))),
             ]}
           />
 
@@ -500,7 +554,7 @@ export default function Employees() {
             onChange={handleStoreChange}
             options={[
               "All Stores",
-              ...Array.from(new Set(employees.map((e) => e.store))),
+              ...Array.from(new Set(employeeRows.map((e) => e.store))),
             ]}
           />
 
@@ -511,7 +565,7 @@ export default function Employees() {
             onChange={handleRoleChange}
             options={[
               "All Roles",
-              ...Array.from(new Set(employees.map((e) => e.role))),
+              ...Array.from(new Set(employeeRows.map((e) => e.role))),
             ]}
           />
 
@@ -553,20 +607,32 @@ export default function Employees() {
             </thead>
 
             <tbody>
-              {visibleEmployees.length > 0 ? (
+              {loadError ? (
+                <tr>
+                  <td colSpan="9" className="employees-no-results">{loadError}</td>
+                </tr>
+              ) : visibleEmployees.length > 0 ? (
                 visibleEmployees.map((employee) => (
-                  <tr key={employee.id}>
+                  <tr key={employee.rowKey}>
                     {/* EMPLOYEE */}
 
+                    {/* EMPLOYEE COLUMN */}
+                    {/* EMPLOYEE COLUMN */}
                     <td>
                       <div className="employee-person">
                         <div className={`employee-avatar ${employee.avatar}`}>
-                          {employee.initials}
+                          {employee.profilePhoto ? (
+                            <img
+                              src={employee.profilePhoto}
+                              alt={`${employee.name} profile`}
+                            />
+                          ) : (
+                            employee.initials
+                          )}
                         </div>
 
                         <div>
                           <div className="employee-name">{employee.name}</div>
-
                           <div className="employee-id">{employee.id}</div>
                         </div>
                       </div>
@@ -628,11 +694,12 @@ export default function Employees() {
                       <div className="employee-actions">
                         <button
                           title="Edit employee"
-                          onClick={() => navigate("/employees/edit", { state: { employee } })}
+                          onClick={() =>
+                            navigate("/employees/edit", { state: { employee } })
+                          }
                         >
                           <Pencil size={17} />
                         </button>
-
                       </div>
                     </td>
                   </tr>

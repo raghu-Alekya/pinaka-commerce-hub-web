@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 
 import "../styles/add-employee.css";
+import { createEmployee } from "../api/employees";
+import { listMerchants } from "../api/merchants";
 
 /*
  * Store Role Assignment UI styles.
@@ -402,6 +404,7 @@ export default function AddEmployee() {
   const [profileImage, setProfileImage] = useState(null);
 
   const [formData, setFormData] = useState({
+    employeeCode: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -429,11 +432,39 @@ export default function AddEmployee() {
   // one or more roles for that store.
   const [storeAssignments, setStoreAssignments] = useState([]);
   const [errors, setErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [merchantOptions, setMerchantOptions] = useState([]);
+  const [merchantLoadError, setMerchantLoadError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    listMerchants()
+      .then((merchants) => {
+        if (active) setMerchantOptions(merchants);
+      })
+      .catch((error) => {
+        if (active) setMerchantLoadError(error.message || "Unable to load merchants.");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const validateField = (name, value) => {
     const trimmed = typeof value === "string" ? value.trim() : value;
 
     switch (name) {
+      case "employeeCode":
+        if (!trimmed) return "Employee Code is required.";
+        if (!/^[A-Za-z0-9-]{2,30}$/.test(trimmed)) {
+          return "Employee Code must be 2-30 characters and use only letters, numbers and hyphens.";
+        }
+        return "";
+
       case "firstName":
         if (!trimmed) return "First Name is required.";
         if (!/^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/.test(trimmed)) {
@@ -556,10 +587,10 @@ export default function AddEmployee() {
     const nextErrors = {};
 
     const requiredFields = [
-      "firstName", "lastName", "email", "phone",
+      "employeeCode", "firstName", "lastName", "email", "phone",
       "dob", "gender",
       "address1", "city", "state", "pinCode", "country",
-      "merchant", "employeeLoginPin", "username", "password"
+      "merchant", "username", "password"
     ];
 
     requiredFields.forEach((name) => {
@@ -572,58 +603,24 @@ export default function AddEmployee() {
       if (error) nextErrors.address2 = error;
     }
 
-    if (storeAssignments.length === 0) {
-      nextErrors.storeAssignments = "Please assign at least one store.";
-    } else {
-      const stores = new Set();
-
-      storeAssignments.forEach((assignment) => {
-        const storeErrorKey = `store-${assignment.id}`;
-        const roleErrorKey = `roles-${assignment.id}`;
-
-        if (!assignment.store) {
-          nextErrors[storeErrorKey] = "Please select a store.";
-        }
-
-        if (assignment.store) {
-          if (stores.has(assignment.store)) {
-            nextErrors[storeErrorKey] = "This store is already assigned.";
-          }
-          stores.add(assignment.store);
-        }
-
-        if (!assignment.roles || assignment.roles.length === 0) {
-          nextErrors[roleErrorKey] =
-            "Please select at least one role for this store.";
-        }
-      });
-    }
-
     setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    return nextErrors;
   };
 
   // Keep these as the available master-data options used by the form.
   // The assignments themselves are never hard-coded.
   const availableStores = [
-    "Banjara Hills",
-    "Jubilee Hills",
-    "Madhapur",
-    "Hitech City",
-    "Gachibowli",
+    { id: "66666666-6666-4666-8666-666666666661", name: "Banjara Hills" },
   ];
 
   const availableRoles = [
-    "Admin",
-    "Store Manager",
-    "Cashier",
-    "Sales Associate",
+    { id: "543b1d7e-a021-481f-a842-4534124a8925", name: "Admin" },
   ];
 
   const addStoreAssignment = () => {
     const firstUnassignedStore = availableStores.find(
       (store) =>
-        !storeAssignments.some((assignment) => assignment.store === store)
+        !storeAssignments.some((assignment) => assignment.store === store.id)
     );
 
     if (!firstUnassignedStore) {
@@ -634,7 +631,7 @@ export default function AddEmployee() {
       ...prev,
       {
         id: Date.now(),
-        store: firstUnassignedStore,
+        store: firstUnassignedStore.id,
         roles: [],
       },
     ]);
@@ -736,9 +733,9 @@ export default function AddEmployee() {
     }
 
     // Create preview URL
-    const imageUrl = URL.createObjectURL(file);
-
-    setProfileImage(imageUrl);
+    const reader = new FileReader();
+    reader.onload = () => setProfileImage(reader.result);
+    reader.readAsDataURL(file);
   };
 
   /* =========================================================
@@ -757,27 +754,76 @@ export default function AddEmployee() {
      SAVE EMPLOYEE
   ========================================================= */
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    console.log("Employee details:", formData);
+    setSubmitError("");
+    setSuccessMessage("");
 
-    console.log("Employee details:", formData);
+    const validationErrors = validateForm();
 
-    if (!validateForm()) {
+    if (Object.keys(validationErrors).length > 0) {
+      const invalidFields = [...new Set(
+        Object.keys(validationErrors).map((field) => {
+          if (field === "storeAssignments" || field.startsWith("store-") || field.startsWith("roles-")) {
+            return "store and role assignments";
+          }
+          return field
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (character) => character.toUpperCase());
+        })
+      )];
+      setSubmitError(`Please fix: ${invalidFields.join(", ")}.`);
       requestAnimationFrame(() => {
         const firstInvalid = document.querySelector(
           ".field-invalid, .employee-phone-invalid .form-control"
         );
         firstInvalid?.focus?.();
+        firstInvalid?.scrollIntoView?.({ behavior: "smooth", block: "center" });
       });
       return;
     }
 
-    console.log("Employee details:", formData);
-    console.log("Store role assignments:", storeAssignments);
-    console.log("Profile image:", profileImage);
-
-    alert("Employee saved successfully");
+    try {
+      setIsSaving(true);
+      await createEmployee(formData, storeAssignments);
+      if (profileImage && formData.employeeCode) {
+        window.localStorage.setItem(
+          `employee-profile-photo:${formData.employeeCode}`,
+          profileImage,
+        );
+      }
+      setFormData({
+        employeeCode: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        dob: "",
+        gender: "",
+        address1: "",
+        address2: "",
+        city: "",
+        state: "",
+        pinCode: "",
+        country: "India",
+        role: "",
+        merchant: "",
+        store: "",
+        employeeLoginPin: "",
+        manager: "",
+        username: "",
+        password: "",
+        sendCredentials: true,
+      });
+      setStoreAssignments([]);
+      setErrors({});
+      setProfileImage(null);
+      setSuccessMessage("Employee created successfully.");
+    } catch (error) {
+      setSubmitError(error.message || "Unable to save employee.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   /* =========================================================
@@ -1134,12 +1180,14 @@ export default function AddEmployee() {
                     onChange={handleChange}
                     className={errors.merchant ? "field-invalid" : ""}
                   >
-                    <option value="">Select merchant</option>
-                    <option value="Acme Retail Pvt Ltd">Acme Retail Pvt Ltd</option>
-                    <option value="FreshMart">FreshMart</option>
-                    <option value="TechWorld">TechWorld</option>
-                    <option value="FashionHub">FashionHub</option>
-                    <option value="ElectroPlus">ElectroPlus</option>
+                    <option value="">
+                      {merchantLoadError ? "Unable to load merchants" : "Select merchant"}
+                    </option>
+                    {merchantOptions.map((merchant) => (
+                      <option key={merchant.id} value={merchant.id}>
+                        {merchant.name}
+                      </option>
+                    ))}
                   </select>
                   <ChevronDown size={17} className="employee-select-arrow" />
                 </div>
@@ -1148,71 +1196,17 @@ export default function AddEmployee() {
                 )}
               </div>
 
+              <FormField
+                label="Employee Code"
+                required
+                name="employeeCode"
+                placeholder="e.g. EMP-1008"
+                value={formData.employeeCode}
+                onChange={handleChange}
+                error={errors.employeeCode}
+              />
+
               {/* EMPLOYEE LOGIN PIN */}
-              <div className="employee-login-pin-field">
-                <label>
-                  Employee Login PIN <span>*</span>
-                </label>
-
-                <input
-                  type="text"
-                  name="employeeLoginPin"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  maxLength={6}
-                  pattern="[0-9]{6}"
-                  placeholder="Enter 6-digit PIN"
-                  value={formData.employeeLoginPin}
-                  onChange={handleChange}
-                  className={errors.employeeLoginPin ? "field-invalid" : ""}
-                />
-
-                {errors.employeeLoginPin ? (
-                  <span className="field-error">{errors.employeeLoginPin}</span>
-                ) : (
-                  <span className="employee-login-pin-help">
-                    Use this 6-digit PIN for employee login.
-                  </span>
-                )}
-              </div>
-
-              {/* STORE + ROLE ASSIGNMENTS */}
-              <div className="store-role-assignment-section">
-                <div className="store-role-heading">
-                  <div>
-                    <label className="store-role-label">
-                      Store Role Assignments <span>*</span>
-                    </label>
-                    <p>Select stores and assign role(s) for each store.</p>
-                  </div>
-                </div>
-
-                <div className="store-assignment-list">
-                  {storeAssignments.map((assignment) => (
-                    <StoreRoleAssignment
-                      key={assignment.id}
-                      assignment={assignment}
-                      availableStores={availableStores}
-                      availableRoles={availableRoles}
-                      onStoreChange={updateStore}
-                      onRolesChange={updateStoreRoles}
-                      onRemove={removeStoreAssignment}
-                      storeError={errors[`store-${assignment.id}`]}
-                      roleError={errors[`roles-${assignment.id}`]}
-                    />
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  className="add-another-store-btn"
-                  onClick={addStoreAssignment}
-                  disabled={storeAssignments.length >= availableStores.length}
-                >
-                  <span className="add-store-plus">+</span>
-                  Add Another Store
-                </button>
-              </div>
             </section>
 
             {/* =================================================
@@ -1276,6 +1270,11 @@ export default function AddEmployee() {
         ===================================================== */}
 
         <div className="employee-form-actions">
+          {submitError && <span className="field-error">{submitError}</span>}
+          {successMessage && (
+            <span className="employee-success-message">{successMessage}</span>
+          )}
+
           <button
             type="button"
             className="cancel-employee-btn"
@@ -1284,8 +1283,8 @@ export default function AddEmployee() {
             Cancel
           </button>
 
-          <button type="submit" className="save-employee-btn">
-            Save Employee
+          <button type="submit" className="save-employee-btn" disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save Employee"}
           </button>
         </div>
       </form>
@@ -1339,8 +1338,8 @@ function StoreRoleAssignment({
               <option value="">Select store</option>
 
               {availableStores.map((store) => (
-                <option key={store} value={store}>
-                  {store}
+                <option key={store.id} value={store.id}>
+                  {store.name}
                 </option>
               ))}
             </select>
@@ -1365,7 +1364,9 @@ function StoreRoleAssignment({
             <span>
               {assignment.roles.length === 0
                 ? "Select role(s)"
-                : assignment.roles.join(", ")}
+                : assignment.roles
+                    .map((roleId) => availableRoles.find((role) => role.id === roleId)?.name || roleId)
+                    .join(", ")}
             </span>
 
             <ChevronDown size={17} />
@@ -1374,17 +1375,17 @@ function StoreRoleAssignment({
           {open && (
             <div className="role-dropdown">
               {availableRoles.map((role) => {
-                const checked = assignment.roles.includes(role);
+                const checked = assignment.roles.includes(role.id);
 
                 return (
-                  <label key={role} className="role-checkbox-item">
+                  <label key={role.id} className="role-checkbox-item">
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => toggleRole(role)}
+                      onChange={() => toggleRole(role.id)}
                     />
 
-                    <span>{role}</span>
+                    <span>{role.name}</span>
                   </label>
                 );
               })}

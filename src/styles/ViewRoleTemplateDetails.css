@@ -787,53 +787,61 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid #e5edf6;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 0;
+  border-top: 0;
 }
 
-.role-details-actions button {
-  height: 40px;
-  min-width: 120px;
-  padding: 0 17px;
-  border-radius: 7px;
+.role-details-secondary-btn,
+.role-details-primary-btn {
+  width: 180px;
+  height: 45px;
+  padding: 0 21px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  box-sizing: border-box;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease,
-    box-shadow 0.15s ease;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.role-details-actions .role-details-secondary-btn {
-  border: 1px solid #dce8f5;
-  color: #4d6280;
-  background: #ffffff;
+.role-details-secondary-btn {
+  border: 1px solid #dce8f4;
+  color: #25466f;
+  background: #fff;
 }
 
-.role-details-actions .role-details-secondary-btn:hover {
-  border-color: #c5d4e7;
-  background: #f8fbff;
+.role-details-secondary-btn:hover {
+  border-color: #becdea;
+  background: #f7f9ff;
 }
 
-.role-details-actions .role-details-primary-btn {
-  border: 1px solid #684ee3;
-  color: #ffffff;
+.role-details-primary-btn {
+  border: 0;
+  color: #fff;
   background: #684ee3;
-  box-shadow: 0 3px 8px rgba(104, 78, 227, 0.14);
+  box-shadow: 0 4px 10px rgba(104, 78, 227, 0.16);
 }
 
-.role-details-actions .role-details-primary-btn:hover {
-  border-color: #5b43d1;
+.role-details-primary-btn:hover {
   background: #5b43d1;
-  box-shadow: 0 4px 10px rgba(104, 78, 227, 0.18);
 }
 
-.role-details-actions button i {
-  margin-right: 6px;
+.role-details-primary-btn:disabled,
+.role-details-secondary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .role-details-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .role-details-secondary-btn,
+  .role-details-primary-btn {
+    width: 100%;
+  }
 }
 
 
