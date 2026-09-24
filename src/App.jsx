@@ -46,6 +46,7 @@ import ViewPlanPricing from "./pages/ViewPlanPricing";
 import ViewPlanFeaturesLimits from "./pages/ViewPlanFeaturesLimits";
 import CashManagement from "./pages/CashManagement";
 import AddMerchantEmployee from "./pages/AddMerchantEmployee";
+import { createEmployee } from "./api/employees";
 
 const placeholders = [
   "Cash Management",
@@ -128,6 +129,7 @@ export default function App() {
             <Merchants
               localMerchants={localMerchants}
               onLocalDelete={removeLocalMerchant}
+              onSaveEmployee={createEmployee}
             />
           }
         />

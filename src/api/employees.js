@@ -208,16 +208,26 @@ export function mapEmployeeToRow(employee) {
   };
 }
 
+function mapEmployeeList(data) {
+  const listKeys = ['employees', 'items', 'results', 'records', 'content', 'docs', 'data'];
+  function findItems(value, depth = 0) {
+    if (Array.isArray(value)) return value;
+    if (!value || typeof value !== 'object' || depth > 4) return [];
+    for (const key of listKeys) {
+      const items = findItems(value[key], depth + 1);
+      if (items.length) return items;
+    }
+    return [];
+  }
+  const items = findItems(data);
+
+  return items.filter(item => item && typeof item === 'object').map(mapEmployeeToRow);
+}
+
 export async function listEmployees() {
-  const data = await api.get(endpoints.employees);
+  return mapEmployeeList(await api.get(endpoints.employees));
+}
 
-  const items = Array.isArray(data)
-    ? data
-    : Array.isArray(data?.employees)
-      ? data.employees
-      : Array.isArray(data?.data)
-        ? data.data
-        : [];
-
-  return items.map(mapEmployeeToRow);
+export async function listMerchantEmployees(merchantId) {
+  return mapEmployeeList(await api.get(endpoints.merchantEmployees(merchantId)));
 }
