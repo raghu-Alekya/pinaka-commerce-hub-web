@@ -807,14 +807,12 @@ export default function FeaturePermissions() {
               <div className="fp-select-wrap">
 
                 <select
+                  className={`fp-form-status-select ${form.status === "Inactive" ? "inactive" : "active"}`}
                   id="permission-status"
                   name="status"
                   value={form.status}
                   onChange={updateField}
                   autoComplete="off"
-                  className={`fp-form-status-select ${
-                    form.status === "Inactive" ? "inactive" : "active"
-                  }`}
                 >
 
                   <option value="Active">
@@ -859,7 +857,7 @@ export default function FeaturePermissions() {
 
               {isEditing
                 ? "Update Permission"
-                : "Save Permission"}
+                : "Create Permission"}
 
             </button>
 
@@ -1313,8 +1311,7 @@ export default function FeaturePermissions() {
                 onClick={confirmDeletePermission}
                 disabled={isDeleting}
               >
-                <i className="bi bi-trash3" />
-                {isDeleting ? "Deleting..." : "Delete Permission"}
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

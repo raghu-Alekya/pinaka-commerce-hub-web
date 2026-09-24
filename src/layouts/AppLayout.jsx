@@ -7,7 +7,9 @@ export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
-  const hideHeader = /^\/plans\//.test(pathname) || /^\/role-templates\//.test(pathname);
+  const hideHeader =
+    (/^\/plans\//.test(pathname) && pathname !== "/plans/new") ||
+    /^\/role-templates\//.test(pathname);
 
   return (
     <div className={`dashboard-app ${collapsed ? "sidebar-collapsed" : ""}`}>

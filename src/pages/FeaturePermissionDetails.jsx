@@ -156,16 +156,15 @@ const FeaturePermissions = () => {
     setFormError("");
 
     try {
-      const created = await createFeaturePermission(
-        featureId,
-        {
-          permissionKey: key,
-          name,
-          featureId,
-          description: form.description.trim(),
-          status: form.status.toUpperCase(),
-        }
-      );
+     const created = await createFeaturePermission(
+  featureId,
+  {
+    permissionKey: key.toUpperCase(),
+    name,
+    description: form.description.trim(),
+    status: form.status.toUpperCase(),
+  }
+);
 
       const item =
         created?.data ||

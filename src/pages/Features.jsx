@@ -52,6 +52,8 @@ export default function Features() {
   const [sortBy, setSortBy] = useState("newest");
   const [formErrors, setFormErrors] = useState({});
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
@@ -140,22 +142,32 @@ export default function Features() {
     if (!validateFeature()) return;
     try {
       const payload = { ...form, code: form.code.trim().toUpperCase() };
-      const created = await createFeatureApi(payload);
-      setFeatures((prev) => [created, ...prev]);
+      await createFeatureApi(payload);
+      const latestFeatures = await listFeatures();
+
+      setFeatures(latestFeatures);
+      setCurrentPage(1);
       clearForm();
       setApiError("");
-    } catch (e) { setApiError(e.message || "Unable to create feature."); }
+    } catch (e) {
+      setApiError(e.message || "Unable to create feature.");
+    }
   };
 
   const updateFeature = async () => {
     if (!validateFeature()) return;
     try {
       const payload = { ...form, code: form.code.trim().toUpperCase() };
-      const updated = await updateFeatureApi(editingId, payload);
-      setFeatures((prev) => prev.map((item) => item.id === editingId ? updated : item));
+      await updateFeatureApi(editingId, payload);
+      const latestFeatures = await listFeatures();
+
+      setFeatures(latestFeatures);
+      setCurrentPage(1);
       clearForm();
       setApiError("");
-    } catch (e) { setApiError(e.message || "Unable to update feature."); }
+    } catch (e) {
+      setApiError(e.message || "Unable to update feature.");
+    }
   };
 
   const resetFilters = () => {
@@ -165,13 +177,27 @@ export default function Features() {
   };
 
   const deleteFeature = async (featureId) => {
-    try { await deleteFeatureApi(featureId); setFeatures((prev) => prev.filter((item) => item.id !== featureId)); setApiError(""); } catch (e) { setApiError(e.message || "Unable to delete feature."); }
+    try {
+      await deleteFeatureApi(featureId);
+
+      // Re-fetch from the API after delete so the table reflects the persisted backend state.
+      const latestFeatures = await listFeatures();
+      setFeatures(latestFeatures);
+      setApiError("");
+    } catch (e) {
+      setApiError(e.message || "Unable to delete feature.");
+      throw e;
+    }
   };
 
   const confirmDeleteFeature = async () => {
     if (!deleteTarget) return;
-    await deleteFeature(deleteTarget.id);
-    setDeleteTarget(null);
+    try {
+      await deleteFeature(deleteTarget.id);
+      setDeleteTarget(null);
+    } catch {
+      // Keep the modal open when the delete request fails.
+    }
   };
 
   const filteredFeatures = useMemo(() => {
@@ -210,6 +236,21 @@ export default function Features() {
       return getCreatedTime(b) - getCreatedTime(a);
     });
   }, [features, search, statusFilter, sortBy]);
+
+  const totalEntries = filteredFeatures.length;
+  const totalPages = Math.max(1, Math.ceil(totalEntries / itemsPerPage));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, sortBy]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
+  const startIndex = totalEntries === 0 ? 0 : (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalEntries);
+  const paginatedFeatures = filteredFeatures.slice(startIndex, endIndex);
 
 
   const formatFeatureDate = (value) => {
@@ -310,16 +351,30 @@ export default function Features() {
           </div>
 
           <div className="feature-field">
-            <label>Category<span>*</span></label>
+            <label>Feature Category<span>*</span></label>
             <div className="select-shell">
-              <select name="category" value={form.category} onChange={updateField} autoComplete="off">
-                <option value="">Select category</option>
-                <option value="Restaurant">Restaurant</option>
-                <option value="Customer Engagement">Customer Engagement</option>
-                <option value="Orders">Orders</option>
-                <option value="Cash Management">Cash Management</option>
-                <option value="Stock Control">Stock Control</option>
-              </select>
+              <select
+                  name="category"
+                  value={form.category}
+                  onChange={updateField}
+                  autoComplete="off"
+                >
+                  <option value="">Select category</option>
+                  <option value="Inventory">Inventory</option>
+                  <option value="Payments">Payments</option>
+                  <option value="Operations">Operations</option>
+                  <option value="Cash Management">Cash Management</option>
+                  <option value="Refund">Refund</option>
+                  <option value="Promotions">Promotions</option>
+                  <option value="Peripheral">Peripheral</option>
+                  <option value="Billing">Billing</option>
+                  <option value="Store Management">Store Management</option>
+                  <option value="Reports">Reports</option>
+                  <option value="Administration">Administration</option>
+                  <option value="Integration">Integration</option>
+                  <option value="KOT Management">KOT Management</option>
+                  <option value="Kitchen Management">Kitchen Management</option>
+                </select>
               <i className="bi bi-chevron-down" />
             </div>
             {formErrors.category ? (
@@ -359,7 +414,7 @@ export default function Features() {
               onClick={isEditing ? updateFeature : saveFeature}
               disabled={!canSubmitFeature}
             >
-              {isEditing ? "Update Feature" : "Save Feature"}
+              {isEditing ? "Update Feature" : "Create Feature"}
             </button>
           </div>
         </div>
@@ -433,7 +488,7 @@ export default function Features() {
               <tr>
                 <th>Feature Code</th>
                 <th>Feature Name</th>
-                <th>Category</th>
+                <th>Feature Category</th>
                 <th>Description</th>
                 <th>Status</th>
                 <th>Created At</th>
@@ -443,7 +498,7 @@ export default function Features() {
             </thead>
 
             <tbody>
-              {filteredFeatures.map((item) => (
+              {paginatedFeatures.map((item) => (
                 <tr
                   key={item.id}
                   className="feature-clickable-row"
@@ -535,13 +590,39 @@ export default function Features() {
         </div>
 
         <div className="feature-pagination-row">
-          <span>Showing 1 to 5 of 18 entries</span>
+          <span>
+            Showing {totalEntries === 0 ? 0 : startIndex + 1} to {endIndex} of {totalEntries} entries
+          </span>
           <div className="feature-pagination">
-            <button type="button" aria-label="Previous page"><i className="bi bi-chevron-left" /></button>
-            <button type="button" className="current">1</button>
-            <button type="button">2</button>
-            <button type="button">3</button>
-            <button type="button" aria-label="Next page"><i className="bi bi-chevron-right" /></button>
+            <button
+              type="button"
+              aria-label="Previous page"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+            >
+              <i className="bi bi-chevron-left" />
+            </button>
+
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                className={currentPage === page ? "current" : ""}
+                onClick={() => setCurrentPage(page)}
+                aria-current={currentPage === page ? "page" : undefined}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              aria-label="Next page"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <i className="bi bi-chevron-right" />
+            </button>
           </div>
         </div>
       </section>

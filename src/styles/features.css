@@ -319,7 +319,7 @@
 }
 
 .feature-action.secondary {
-  min-width: 150px;
+  min-width: 180px;
   padding: 0 24px;
   border: 1px solid #dce8f4;
   background: #ffffff;
@@ -327,7 +327,7 @@
 }
 
 .feature-action.primary {
-  min-width: 205px;
+  min-width: 180px;
   padding: 0 24px;
   border: 0;
   background: #684ee3;
@@ -445,7 +445,7 @@
 }
 
 .feature-filter-control .features-filter-select {
-  width: 100%;
+  width: 138.7px;
   height: 100%;
   padding: 0 34px 0 12px;
   border: 0;
@@ -522,7 +522,7 @@
 .features-table .col-actions { width: 8%; }
 
 .features-table thead {
-  background: #f8f9fc;
+  background: #f1f3fd;
 }
 
 .features-table th {
@@ -530,7 +530,7 @@
   padding: 0 14px;
   border: 0;
   border-bottom: 1px solid #dfe5ef;
-  background: #f8f9fc;
+  background: #f1f3fd;
   color: #394052;
   text-align: left;
   vertical-align: middle;
@@ -695,6 +695,7 @@
 }
 
 .feature-status.active {
+  width: 78px !important;
   background: #e4f6ef;
   color: #17895f;
 }
@@ -704,6 +705,7 @@
 }
 
 .feature-status.inactive {
+  width: 78px !important;
   background: #fdeaea;
   color: #e95050;
 }
@@ -1161,8 +1163,8 @@
    Search -> All Status -> Sorting -> Reset
    ========================================================= */
 .features-filters .feature-sort-control {
-  width: 190px;
-  flex: 0 0 190px;
+  width: 140px;
+  flex: 0 0 140px;
 }
 
 @media (max-width: 700px) {
@@ -1223,4 +1225,11 @@
 .features-table tbody tr.feature-clickable-row:focus-visible {
   outline: 2px solid #dfe5ef;
   outline-offset: -2px;
+}
+
+
+/* Dynamic pagination: disabled Previous / Next state */
+.feature-pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
