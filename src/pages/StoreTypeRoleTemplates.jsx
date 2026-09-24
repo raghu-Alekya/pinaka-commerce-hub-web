@@ -65,7 +65,7 @@ export default function StoreTypeRoleTemplates() {
     let cancelled = false;
 
     storeTypesApi
-      .getOne(storeTypeId)
+       .getById(storeTypeId)
       .then((response) => {
         const item = response?.storeType ?? response?.data ?? response;
 
