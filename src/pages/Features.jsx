@@ -351,16 +351,30 @@ export default function Features() {
           </div>
 
           <div className="feature-field">
-            <label>Category<span>*</span></label>
+            <label>Feature Category<span>*</span></label>
             <div className="select-shell">
-              <select name="category" value={form.category} onChange={updateField} autoComplete="off">
-                <option value="">Select category</option>
-                <option value="Restaurant">Restaurant</option>
-                <option value="Customer Engagement">Customer Engagement</option>
-                <option value="Orders">Orders</option>
-                <option value="Cash Management">Cash Management</option>
-                <option value="Stock Control">Stock Control</option>
-              </select>
+              <select
+                  name="category"
+                  value={form.category}
+                  onChange={updateField}
+                  autoComplete="off"
+                >
+                  <option value="">Select category</option>
+                  <option value="Inventory">Inventory</option>
+                  <option value="Payments">Payments</option>
+                  <option value="Operations">Operations</option>
+                  <option value="Cash Management">Cash Management</option>
+                  <option value="Refund">Refund</option>
+                  <option value="Promotions">Promotions</option>
+                  <option value="Peripheral">Peripheral</option>
+                  <option value="Billing">Billing</option>
+                  <option value="Store Management">Store Management</option>
+                  <option value="Reports">Reports</option>
+                  <option value="Administration">Administration</option>
+                  <option value="Integration">Integration</option>
+                  <option value="KOT Management">KOT Management</option>
+                  <option value="Kitchen Management">Kitchen Management</option>
+                </select>
               <i className="bi bi-chevron-down" />
             </div>
             {formErrors.category ? (
@@ -474,7 +488,7 @@ export default function Features() {
               <tr>
                 <th>Feature Code</th>
                 <th>Feature Name</th>
-                <th>Category</th>
+                <th>Feature Category</th>
                 <th>Description</th>
                 <th>Status</th>
                 <th>Created At</th>
