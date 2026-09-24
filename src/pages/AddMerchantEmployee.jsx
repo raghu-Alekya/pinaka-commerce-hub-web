@@ -1,4 +1,9 @@
-import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import PhoneInputModule from "react-phone-input-2";
 
@@ -20,20 +25,45 @@ import {
 import "../styles/add-merchant-employee.css";
 import "../styles/merchant-form-shared.css";
 
-
 export default function AddMerchantEmployee({ onSave }) {
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
   const [searchParams] = useSearchParams();
-  const merchantId = String(params.merchantId || searchParams.get('merchantId') || location.state?.merchantId || '');
-  return <MerchantEmployeeForm key={merchantId} merchantId={merchantId} initialMerchant={location.state?.merchant} onSave={onSave} onBack={() => navigate('/merchants' + (merchantId ? '?view=' + encodeURIComponent(merchantId) : ''))} />;
+  const merchantId = String(
+    params.merchantId ||
+      searchParams.get("merchantId") ||
+      location.state?.merchantId ||
+      "",
+  );
+  return (
+    <MerchantEmployeeForm
+      key={merchantId}
+      merchantId={merchantId}
+      initialMerchant={location.state?.merchant}
+      onSave={onSave}
+      onBack={() =>
+        navigate(
+          "/merchants" +
+            (merchantId ? "?view=" + encodeURIComponent(merchantId) : ""),
+        )
+      }
+    />
+  );
 }
 
-export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBack, embedded = false }) {
+export function MerchantEmployeeForm({
+  merchantId,
+  initialMerchant,
+  onSave,
+  onBack,
+  embedded = false,
+}) {
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState('');
-  const contextError = merchantId ? '' : 'Open Add Employee from a merchant details page.';
+  const [saveError, setSaveError] = useState("");
+  const contextError = merchantId
+    ? ""
+    : "Open Add Employee from a merchant details page.";
   const [showPassword, setShowPassword] = useState(false);
 
   // Profile image preview
@@ -93,17 +123,17 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
         }
         return "";
 
-      case "phone": {
-        if (!trimmed) return "Phone Number is required.";
+      case "phone":
+        {
+          if (!trimmed) return "Phone Number is required.";
 
-        const phoneDigits = trimmed.replace(/\D/g, "");
+          const phoneDigits = trimmed.replace(/\D/g, "");
 
-        if (phoneDigits.length < 8 || phoneDigits.length > 15) {
-          return "Enter a valid phone number.";
+          if (phoneDigits.length < 8 || phoneDigits.length > 15) {
+            return "Enter a valid phone number.";
+          }
         }
-      }
         return "";
-
 
       case "dob":
         if (!trimmed) return "Date of Birth is required.";
@@ -130,7 +160,8 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
         return "";
 
       case "address2":
-        if (trimmed && trimmed.length > 150) return "Address Line 2 cannot exceed 150 characters.";
+        if (trimmed && trimmed.length > 150)
+          return "Address Line 2 cannot exceed 150 characters.";
         return "";
 
       case "city":
@@ -138,7 +169,8 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
         if (!/^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/.test(trimmed)) {
           return "City can contain letters, spaces, apostrophes and hyphens only.";
         }
-        if (trimmed.length < 2 || trimmed.length > 50) return "City must be between 2 and 50 characters.";
+        if (trimmed.length < 2 || trimmed.length > 50)
+          return "City must be between 2 and 50 characters.";
         return "";
 
       case "state":
@@ -146,7 +178,8 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
         return "";
 
       case "pinCode":
-        if (!/^\d{6}$/.test(trimmed)) return "PIN Code must be exactly 6 digits.";
+        if (!/^\d{6}$/.test(trimmed))
+          return "PIN Code must be exactly 6 digits.";
         if (trimmed.startsWith("0")) return "PIN Code cannot start with 0.";
         return "";
 
@@ -167,9 +200,15 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
 
       case "password":
         if (!trimmed) return "Temporary Password is required.";
-        if (trimmed.length < 8) return "Password must be at least 8 characters.";
+        if (trimmed.length < 8)
+          return "Password must be at least 8 characters.";
         if (trimmed.length > 64) return "Password cannot exceed 64 characters.";
-        if (!/[A-Z]/.test(trimmed) || !/[a-z]/.test(trimmed) || !/\d/.test(trimmed) || !/[^A-Za-z0-9]/.test(trimmed)) {
+        if (
+          !/[A-Z]/.test(trimmed) ||
+          !/[a-z]/.test(trimmed) ||
+          !/\d/.test(trimmed) ||
+          !/[^A-Za-z0-9]/.test(trimmed)
+        ) {
           return "Password must contain uppercase, lowercase, number and special character.";
         }
         return "";
@@ -183,10 +222,20 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
     const nextErrors = {};
 
     const requiredFields = [
-      "firstName", "lastName", "email", "phone",
-      "dob", "gender",
-      "address1", "city", "state", "pinCode", "country",
-      "merchant", "username", "password"
+      "firstName",
+      "lastName",
+      "email",
+      "phone",
+      "dob",
+      "gender",
+      "address1",
+      "city",
+      "state",
+      "pinCode",
+      "country",
+      "merchant",
+      "username",
+      "password",
     ];
 
     requiredFields.forEach((name) => {
@@ -217,10 +266,10 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
 
     const nextValue =
       name === "pinCode"
-          ? value.replace(/\D/g, "").slice(0, 6)
-          : type === "checkbox"
-            ? checked
-            : value;
+        ? value.replace(/\D/g, "").slice(0, 6)
+        : type === "checkbox"
+          ? checked
+          : value;
 
     setFormData((prev) => ({
       ...prev,
@@ -285,26 +334,38 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
   const handleSave = async (e) => {
     e.preventDefault();
     if (saving || contextError) return;
-    setSaveError('');
-
+    setSaveError("");
 
     if (!validateForm()) {
       requestAnimationFrame(() => {
         const firstInvalid = document.querySelector(
-          ".field-invalid, .employee-phone-invalid .form-control"
+          ".field-invalid, .employee-phone-invalid .form-control",
         );
         firstInvalid?.focus?.();
       });
       return;
     }
 
-    if (typeof onSave !== 'function') { setSaveError('Employee saving is not connected. Pass your employee save handler to AddMerchantEmployee.'); return; }
+    if (typeof onSave !== "function") {
+      setSaveError(
+        "Employee saving is not connected. Pass your employee save handler to AddMerchantEmployee.",
+      );
+      return;
+    }
     setSaving(true);
     try {
-      await onSave({ ...formData, merchant: merchantId, merchantId, profileImage });
+      await onSave({
+        ...formData,
+        merchant: merchantId,
+        merchantId,
+        profileImage,
+      });
       onBack();
-    } catch (error) { setSaveError(error.message || 'Unable to save employee.'); }
-    finally { setSaving(false); }
+    } catch (error) {
+      setSaveError(error.message || "Unable to save employee.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   /* =========================================================
@@ -316,10 +377,13 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
   };
 
   return (
-    <div className={embedded ? 'add-employee-page merchant-employee-embedded pch-context-form' : 'add-employee-page pch-context-form'}>
-
-
-
+    <div
+      className={
+        embedded
+          ? "add-employee-page merchant-employee-embedded pch-context-form"
+          : "add-employee-page pch-context-form"
+      }
+    >
       {/* =====================================================
           PAGE HEADER
       ===================================================== */}
@@ -355,10 +419,21 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
           FORM
       ===================================================== */}
 
-      {contextError && <p role="alert" className="field-error">{contextError}</p>}
-      {saveError && <p className="field-error" role="alert">{saveError}</p>}
+      {contextError && (
+        <p role="alert" className="field-error">
+          {contextError}
+        </p>
+      )}
+      {saveError && (
+        <p className="field-error" role="alert">
+          {saveError}
+        </p>
+      )}
       <form onSubmit={handleSave} autoComplete="off">
-        <fieldset disabled={saving || Boolean(contextError)} className="merchant-employee-fieldset">
+        <fieldset
+          disabled={saving || Boolean(contextError)}
+          className="merchant-employee-fieldset"
+        >
           <div className="add-employee-layout">
             {/* =================================================
               LEFT COLUMN
@@ -409,7 +484,9 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
                   />
 
                   {/* PHONE */}
-                  <div className={`employee-field employee-phone-field${errors.phone ? " employee-phone-invalid" : ""}`}>
+                  <div
+                    className={`employee-field employee-phone-field${errors.phone ? " employee-phone-invalid" : ""}`}
+                  >
                     <label>
                       Phone Number <span>*</span>
                     </label>
@@ -433,13 +510,14 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
                         autoComplete: "tel",
                       }}
                     />
-                    {errors.phone && <span className="field-error">{errors.phone}</span>}
+                    {errors.phone && (
+                      <span className="field-error">{errors.phone}</span>
+                    )}
                   </div>
 
                   {/* DATE OF BIRTH */}
 
                   <div className="employee-field">
-
                     <label>
                       Date of Birth <span>*</span>
                     </label>
@@ -455,13 +533,19 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
 
                       <CalendarDays size={17} />
                     </div>
-                    {errors.dob && <span className="field-error">{errors.dob}</span>}
+                    {errors.dob && (
+                      <span className="field-error">{errors.dob}</span>
+                    )}
                   </div>
 
                   {/* GENDER */}
 
                   <SelectField
-                    label="Gender"
+                    label={
+                      <>
+                        Gender <span>*</span>
+                      </>
+                    }
                     name="gender"
                     value={formData.gender}
                     onChange={handleChange}
@@ -485,7 +569,11 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
 
                 <div className="employee-form-grid two-columns">
                   <FormField
-                    label="Address Line 1"
+                    label={
+                      <>
+                        Address Line 1 <span>*</span>
+                      </>
+                    }
                     name="address1"
                     placeholder="Enter address line 1"
                     value={formData.address1}
@@ -505,7 +593,11 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
 
                 <div className="employee-form-grid two-columns">
                   <FormField
-                    label="City"
+                    label={
+                      <>
+                        City <span>*</span>
+                      </>
+                    }
                     name="city"
                     placeholder="Enter city"
                     value={formData.city}
@@ -514,7 +606,11 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
                   />
 
                   <SelectField
-                    label="State"
+                    label={
+                      <>
+                        State <span>*</span>
+                      </>
+                    }
                     name="state"
                     value={formData.state}
                     onChange={handleChange}
@@ -532,7 +628,11 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
                 </div>
                 <div className="employee-form-grid two-columns">
                   <FormField
-                    label="PIN Code"
+                    label={
+                      <>
+                        PIN Code <span>*</span>
+                      </>
+                    }
                     name="pinCode"
                     placeholder="Enter PIN code"
                     value={formData.pinCode}
@@ -545,7 +645,8 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
                     value={formData.country}
                     onChange={handleChange}
                     error={errors.country}
-                    options={["India",
+                    options={[
+                      "India",
                       "United States",
                       "United Kingdom",
                       "Australia",
@@ -614,10 +715,6 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
                 </div>
               </section>
 
-              
-
-
-
               {/* =================================================
                 ACCOUNT SETTINGS
             ================================================= */}
@@ -662,7 +759,11 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                        {showPassword ? (
+                          <EyeOff size={17} />
+                        ) : (
+                          <Eye size={17} />
+                        )}
                       </button>
                     </div>
                     {errors.password && (
@@ -696,8 +797,6 @@ export function MerchantEmployeeForm({ merchantId, initialMerchant, onSave, onBa
     </div>
   );
 }
-
-
 
 function CardHeader({ icon, title, description }) {
   return (

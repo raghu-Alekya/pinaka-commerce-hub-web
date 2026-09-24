@@ -1,41 +1,27 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  UserRound,
-  Camera,
-  Link2,
-  MapPin,
-  Settings,
-  FileText,
-  UploadCloud,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowLeft, Settings, ChevronDown } from "lucide-react";
 
 import "../styles/add-device.css";
+import { devicesApi } from "../api/devices";
 
 export default function AddDevice() {
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
-
-  const [deviceImage, setDeviceImage] = useState(null);
 
   const [formData, setFormData] = useState({
     deviceName: "",
+    deviceCode: "",
     deviceType: "",
     serialNumber: "",
-    macAddress: "",
-    model: "",
-    manufacturer: "",
-    merchant: "",
-    store: "",
+    merchantId: "",
+    storeId: "",
     status: "Active",
-    timeZone: "(UTC+05:30) Asia/Kolkata",
-    location: "",
-    floor: "",
     notes: "",
     enableImmediately: true,
   });
+
+  const [saving, setSaving] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -46,58 +32,67 @@ export default function AddDevice() {
     }));
   };
 
-  /* =====================================================
-     IMAGE UPLOAD
-  ===================================================== */
-
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-
-    if (!["image/jpeg", "image/png"].includes(file.type)) {
-      alert("Please upload a JPG or PNG image.");
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Image size must be less than 2MB.");
-      return;
-    }
-
-    const imageUrl = URL.createObjectURL(file);
-
-    setDeviceImage({
-      file,
-      url: imageUrl,
-    });
-  };
-
-  /* =====================================================
-     SAVE
-  ===================================================== */
-
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
 
-    const savedDevice = {
-      ...formData,
-      image: deviceImage?.file?.name || null,
-    };
+    if (saving) return;
 
-    console.log("Device saved:", savedDevice);
+    setApiError("");
 
-    alert("Device saved successfully!");
+    // Basic frontend validation
+    if (!formData.deviceName.trim()) {
+      setApiError("Device name is required.");
+      return;
+    }
 
-    navigate("/devices");
+    if (!formData.deviceType) {
+      setApiError("Device type is required.");
+      return;
+    }
+
+    if (!formData.serialNumber.trim()) {
+      setApiError("Device serial number is required.");
+      return;
+    }
+
+    if (!formData.merchantId) {
+      setApiError("Merchant is required.");
+      return;
+    }
+
+    if (!formData.storeId) {
+      setApiError("Store is required.");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      console.log("Creating device with form data:", formData);
+
+      const response = await devicesApi.create(formData);
+
+      console.log("Create device response:", response);
+
+      alert("Device saved successfully!");
+
+      navigate("/devices");
+    } catch (error) {
+      console.error("Create device failed:", error);
+
+      setApiError(
+        error?.message ||
+          error?.response?.message ||
+          "Failed to create device. Please try again.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="add-device-page">
-      {/* =================================================
-          PAGE HEADER
-      ================================================= */}
-
+      {/* HEADER */}
       <div className="add-device-header">
         <div>
           <h1>Add Device</h1>
@@ -121,288 +116,135 @@ export default function AddDevice() {
         </button>
       </div>
 
-      {/* =================================================
-          FORM
-      ================================================= */}
+      {/* ERROR */}
+      {apiError && <div className="device-api-error">{apiError}</div>}
 
-      <form className="add-device-layout" onSubmit={handleSave}>
-        {/* =================================================
-            LEFT COLUMN
-        ================================================= */}
+      {/* FORM */}
+      <form
+        id="add-device-form"
+        className="add-device-form"
+        onSubmit={handleSave}
+      >
+        <section className="device-card">
+          <CardHeader
+            icon={<Settings size={19} />}
+            title="Device Details"
+            subtitle="Enter the device information, assignment details and settings."
+          />
 
-        <div className="add-device-left">
-          {/* DEVICE INFORMATION */}
-
-          <section className="device-card">
-            <CardHeader
-              icon={<UserRound size={19} />}
-              title="Device Information"
-              subtitle="Enter the basic details of the device."
-            />
-
-            <div className="device-form-grid">
-              <FormField label="Device Name" required>
-                <input
-                  name="deviceName"
-                  value={formData.deviceName}
-                  onChange={handleChange}
-                  placeholder="Enter device name (e.g. POS Terminal 01)"
-                  required
-                />
-              </FormField>
-
-              <FormField label="Device Type" required>
-                <SelectField
-                  name="deviceType"
-                  value={formData.deviceType}
-                  onChange={handleChange}
-                  placeholder="Select device type"
-                  options={[
-                    "POS Terminal",
-                    "Kitchen Display",
-                    "Barcode Scanner",
-                    "Receipt Printer",
-                    "Customer Display",
-                  ]}
-                  required
-                />
-              </FormField>
-
-              <FormField label="Serial Number" required>
-                <input
-                  name="serialNumber"
-                  value={formData.serialNumber}
-                  onChange={handleChange}
-                  placeholder="Enter serial number"
-                  required
-                />
-              </FormField>
-
-              <FormField label="MAC Address">
-                <input
-                  name="macAddress"
-                  value={formData.macAddress}
-                  onChange={handleChange}
-                  placeholder="Enter MAC address (optional)"
-                />
-              </FormField>
-
-              <FormField label="Model">
-                <input
-                  name="model"
-                  value={formData.model}
-                  onChange={handleChange}
-                  placeholder="Enter device model (optional)"
-                />
-              </FormField>
-
-              <FormField label="Manufacturer">
-                <input
-                  name="manufacturer"
-                  value={formData.manufacturer}
-                  onChange={handleChange}
-                  placeholder="Enter manufacturer (optional)"
-                />
-              </FormField>
-            </div>
-          </section>
-
-          {/* ASSIGNMENT DETAILS */}
-
-          <section className="device-card">
-            <CardHeader
-              icon={<Link2 size={19} />}
-              title="Assignment Details"
-              subtitle="Assign the device to a merchant and store."
-            />
-
-            <div className="device-form-grid">
-              <FormField label="Merchant" required>
-                <SelectField
-                  name="merchant"
-                  value={formData.merchant}
-                  onChange={handleChange}
-                  placeholder="Select merchant"
-                  options={[
-                    "FreshMart",
-                    "TechWorld",
-                    "FashionHub",
-                    "ElectroPlus",
-                  ]}
-                  required
-                />
-              </FormField>
-
-              <FormField label="Store" required>
-                <SelectField
-                  name="store"
-                  value={formData.store}
-                  onChange={handleChange}
-                  placeholder="Select store"
-                  options={[
-                    "Banjara Hills",
-                    "Jubilee Hills",
-                    "Madhapur",
-                    "Hitech City",
-                    "Gachibowli",
-                  ]}
-                  required
-                />
-              </FormField>
-            </div>
-          </section>
-
-          {/* DEVICE SETTINGS */}
-
-          <section className="device-card">
-            <CardHeader
-              icon={<Settings size={19} />}
-              title="Device Settings"
-              subtitle="Configure additional settings for the device."
-            />
-
-            <div className="device-form-grid">
-              <FormField label="Status" required>
-                <SelectField
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  options={["Active", "Inactive"]}
-                />
-              </FormField>
-
-              <FormField label="Time Zone">
-                <SelectField
-                  name="timeZone"
-                  value={formData.timeZone}
-                  onChange={handleChange}
-                  options={[
-                    "(UTC+05:30) Asia/Kolkata",
-                    "(UTC+00:00) UTC",
-                    "(UTC-05:00) America/New_York",
-                  ]}
-                />
-              </FormField>
-            </div>
-
-            <label className="device-checkbox">
+          <div className="device-form-grid">
+            {/* DEVICE NAME */}
+            <FormField label="Device Name" required>
               <input
-                type="checkbox"
-                name="enableImmediately"
-                checked={formData.enableImmediately}
+                name="deviceName"
+                value={formData.deviceName}
                 onChange={handleChange}
+                placeholder="Enter device name (e.g. POS Terminal 01)"
+                required
               />
+            </FormField>
 
-              <span>Enable device for usage immediately</span>
-            </label>
-          </section>
-        </div>
-
-        {/* =================================================
-            RIGHT COLUMN
-        ================================================= */}
-
-        <div className="add-device-right">
-          {/* DEVICE IMAGE */}
-
-          <section className="device-card">
-            <CardHeader
-              icon={<Camera size={19} />}
-              title="Device Image"
-              subtitle="Upload a photo of the device (optional)."
-            />
-
-            <div
-              className="device-upload-box"
-              onClick={() => fileInputRef.current?.click()}
-            >
+            {/* DEVICE CODE */}
+            <FormField label="Device Code" required>
               <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg"
-                onChange={handleImageChange}
-                hidden
+                name="deviceCode"
+                value={formData.deviceCode}
+                onChange={handleChange}
+                placeholder="Enter device code"
+                required
               />
+            </FormField>
 
-              {deviceImage ? (
-                <div className="uploaded-device-image">
-                  <img src={deviceImage.url} alt="Device preview" />
+            {/* SERIAL NUMBER */}
+            <FormField label="Device Serial Number" required>
+              <input
+                name="serialNumber"
+                value={formData.serialNumber}
+                onChange={handleChange}
+                placeholder="Enter device serial number"
+                required
+              />
+            </FormField>
 
-                  <button
-                    type="button"
-                    className="change-image-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRef.current?.click();
-                    }}
-                  >
-                    Change Photo
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <UploadCloud size={27} className="upload-cloud-icon" />
+            {/* DEVICE TYPE */}
+            <FormField label="Device Type" required>
+              <SelectField
+                name="deviceType"
+                value={formData.deviceType}
+                onChange={handleChange}
+                placeholder="Select device type"
+                options={[
+                  "POS Terminal",
+                  "Kitchen Display",
+                  "Barcode Scanner",
+                  "Receipt Printer",
+                  "Customer Display",
+                ]}
+                required
+              />
+            </FormField>
 
-                  <div className="upload-main-text">
-                    Drag and drop an image here, or
-                  </div>
+            {/* MERCHANT */}
+            <FormField label="Merchant" required>
+              <SelectField
+                name="merchantId"
+                value={formData.merchantId}
+                onChange={handleChange}
+                placeholder="Select merchant"
+                options={[
+                  "FreshMart",
+                  "TechWorld",
+                  "FashionHub",
+                  "ElectroPlus",
+                ]}
+                required
+              />
+            </FormField>
 
-                  <button
-                    type="button"
-                    className="choose-file-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRef.current?.click();
-                    }}
-                  >
-                    Choose File
-                  </button>
+            {/* STORE */}
+            <FormField label="Store" required>
+              <SelectField
+                name="storeId"
+                value={formData.storeId}
+                onChange={handleChange}
+                placeholder="Select store"
+                options={[
+                  "Banjara Hills",
+                  "Jubilee Hills",
+                  "Madhapur",
+                  "Hitech City",
+                  "Gachibowli",
+                ]}
+                required
+              />
+            </FormField>
 
-                  <div className="upload-hint">JPG, PNG (Max 2MB)</div>
-                </>
-              )}
-            </div>
-          </section>
+            {/* STATUS */}
+            <FormField label="Status" required>
+              <SelectField
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                options={["Active", "Inactive"]}
+                required
+              />
+            </FormField>
+          </div>
 
-          {/* LOCATION DETAILS */}
-
-          <section className="device-card">
-            <CardHeader
-              icon={<MapPin size={19} />}
-              title="Location Details"
-              subtitle="Specify where the device is being used."
+          {/* ENABLE */}
+          <label className="device-checkbox">
+            <input
+              type="checkbox"
+              name="enableImmediately"
+              checked={formData.enableImmediately}
+              onChange={handleChange}
             />
 
-            <div className="device-single-column">
-              <FormField label="Location / Area">
-                <input
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="Enter location or area (e.g., Billing Counter)"
-                />
-              </FormField>
+            <span>Enable device for usage immediately</span>
+          </label>
 
-              <FormField label="Floor / Section">
-                <input
-                  name="floor"
-                  value={formData.floor}
-                  onChange={handleChange}
-                  placeholder="Enter floor or section (optional)"
-                />
-              </FormField>
-            </div>
-          </section>
-
-          {/* ADDITIONAL INFORMATION */}
-
-          <section className="device-card">
-            <CardHeader
-              icon={<FileText size={19} />}
-              title="Additional Information"
-              subtitle="Add any notes or remarks about this device."
-            />
-
+          {/* NOTES */}
+          <div className="device-additional-information">
             <FormField label="Notes">
               <textarea
                 name="notes"
@@ -415,19 +257,17 @@ export default function AddDevice() {
 
               <div className="notes-counter">{formData.notes.length}/500</div>
             </FormField>
-          </section>
-        </div>
+          </div>
+        </section>
       </form>
 
-      {/* =================================================
-          ACTIONS
-      ================================================= */}
-
+      {/* ACTIONS */}
       <div className="add-device-actions">
         <button
           type="button"
           className="device-cancel-btn"
           onClick={() => navigate("/devices")}
+          disabled={saving}
         >
           Cancel
         </button>
@@ -436,9 +276,9 @@ export default function AddDevice() {
           type="submit"
           form="add-device-form"
           className="device-save-btn"
-          onClick={handleSave}
+          disabled={saving}
         >
-          Save Device
+          {saving ? "Saving..." : "Save Device"}
         </button>
       </div>
     </div>

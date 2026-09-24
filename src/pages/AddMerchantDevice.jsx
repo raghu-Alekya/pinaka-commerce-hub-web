@@ -15,25 +15,65 @@ import {
 import "../styles/add-merchant-device.css";
 import "../styles/merchant-form-shared.css";
 
-export default function AddMerchantDevice({ merchantId, merchant, onBack, onSave }) {
-  const [details,setDetails]=useState(null);
-  const [loading,setLoading]=useState(true);
-  const [error,setError]=useState('');
-  const [attempt,setAttempt]=useState(0);
-  const [saving,setSaving]=useState(false);
-  const savingRef=useRef(false);
-  const formRef=useRef(null);
-  useEffect(()=>{
-    let active=true;setLoading(true);setError('');
-    const request=merchant?._onboarding && String(merchant.id)===String(merchantId) ? Promise.resolve({merchant,stores:merchant._onboarding.stores}) : Promise.resolve().then(()=>{if(!merchantId)throw Error('Select a merchant first.');return getMerchant(merchantId);});
-    request.then(value=>{if(active)setDetails(value);}).catch(failure=>{if(active)setError(failure.message || 'Unable to load stores.');}).finally(()=>{if(active)setLoading(false);});
-    return()=>{active=false;};
-  },[merchantId,merchant,attempt]);
-  const response=details?.raw || details || {};
-  const raw=response.merchant || response.data?.merchant || response.data || response;
-  const source=raw._onboarding?.stores ?? response.stores ?? response.data?.stores ?? raw.stores;
-  const stores=(Array.isArray(source)?source:[]).filter(store=>store.merchantId==null || String(store.merchantId)===String(merchantId)).map(store=>({id:String(store.id ?? store.storeId ?? store.code ?? store.storeCode ?? ''),name:store.name || store.storeName || store.code || store.storeCode})).filter(store=>store.id);
-  const merchantName=raw._onboarding?.merchant?.business || raw.businessName || raw.legalBusinessName || raw.name || merchant?.name || merchantId;
+export default function AddMerchantDevice({
+  merchantId,
+  merchant,
+  onBack,
+  onSave,
+}) {
+  const [details, setDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+  const formRef = useRef(null);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError("");
+    const request =
+      merchant?._onboarding && String(merchant.id) === String(merchantId)
+        ? Promise.resolve({ merchant, stores: merchant._onboarding.stores })
+        : Promise.resolve().then(() => {
+            if (!merchantId) throw Error("Select a merchant first.");
+            return getMerchant(merchantId);
+          });
+    request
+      .then((value) => {
+        if (active) setDetails(value);
+      })
+      .catch((failure) => {
+        if (active) setError(failure.message || "Unable to load stores.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [merchantId, merchant, attempt]);
+  const response = details?.raw || details || {};
+  const raw =
+    response.merchant || response.data?.merchant || response.data || response;
+  const source =
+    raw._onboarding?.stores ??
+    response.stores ??
+    response.data?.stores ??
+    raw.stores;
+  const stores = (Array.isArray(source) ? source : [])
+    .filter(
+      (store) =>
+        store.merchantId == null ||
+        String(store.merchantId) === String(merchantId),
+    )
+    .map((store) => ({
+      id: String(
+        store.id ?? store.storeId ?? store.code ?? store.storeCode ?? "",
+      ),
+      name: store.name || store.storeName || store.code || store.storeCode,
+    }))
+    .filter((store) => store.id);
   const fileInputRef = useRef(null);
 
   const [deviceImage, setDeviceImage] = useState(null);
@@ -95,18 +135,50 @@ export default function AddMerchantDevice({ merchantId, merchant, onBack, onSave
      SAVE
   ===================================================== */
 
-  useEffect(()=>()=>{if(deviceImage?.url)URL.revokeObjectURL(deviceImage.url);},[deviceImage]);
+  useEffect(
+    () => () => {
+      if (deviceImage?.url) URL.revokeObjectURL(deviceImage.url);
+    },
+    [deviceImage],
+  );
   const handleSave = async (e) => {
     e.preventDefault();
-    if(savingRef.current || loading)return;
-    if(!formRef.current?.reportValidity())return;
-    if(!stores.some(store=>store.id===formData.store)){setError('Select a store belonging to this merchant.');return;}
-    if(!formData.deviceName.trim() || !formData.serialNumber.trim()){setError('Device name and serial number are required.');return;}
-    if(typeof onSave!=='function'){setError('Device saving is not connected. Pass your device API handler as onSaveDevice to Merchants.');return;}
-    savingRef.current=true;setSaving(true);setError('');
-    try{await onSave({...formData,deviceName:formData.deviceName.trim(),serialNumber:formData.serialNumber.trim(),merchant:merchantId,merchantId,storeId:formData.store,image:deviceImage?.file || null});onBack();}
-    catch(failure){setError(failure.message || 'Unable to save device.');}
-    finally{savingRef.current=false;setSaving(false);}
+    if (savingRef.current || loading) return;
+    if (!formRef.current?.reportValidity()) return;
+    if (!stores.some((store) => store.id === formData.store)) {
+      setError("Select a store belonging to this merchant.");
+      return;
+    }
+    if (!formData.deviceName.trim() || !formData.serialNumber.trim()) {
+      setError("Device name and serial number are required.");
+      return;
+    }
+    if (typeof onSave !== "function") {
+      setError(
+        "Device saving is not connected. Pass your device API handler as onSaveDevice to Merchants.",
+      );
+      return;
+    }
+    savingRef.current = true;
+    setSaving(true);
+    setError("");
+    try {
+      await onSave({
+        ...formData,
+        deviceName: formData.deviceName.trim(),
+        serialNumber: formData.serialNumber.trim(),
+        merchant: merchantId,
+        merchantId,
+        storeId: formData.store,
+        image: deviceImage?.file || null,
+      });
+      onBack();
+    } catch (failure) {
+      setError(failure.message || "Unable to save device.");
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
   };
 
   return (
@@ -115,11 +187,31 @@ export default function AddMerchantDevice({ merchantId, merchant, onBack, onSave
           PAGE HEADER
       ================================================= */}
 
-      <div className="pch-merchant-context" aria-label="Selected merchant"><span>Merchant</span><strong>{merchantName || merchantId}</strong><small>{merchantId}</small></div>
       {loading && <p role="status">Loading merchant stores…</p>}
-      {error && <div className="merchant-device-error" role="alert">{error} {!details && <button type="button" onClick={()=>setAttempt(value=>value+1)}>Retry</button>}</div>}
-      {!loading && details && !stores.length && <p role="status">No stores available. Add a store for this merchant first.</p>}
-      <form id="add-merchant-device-form" ref={formRef} className="add-device-layout" onSubmit={handleSave}>
+      {error && (
+        <div className="merchant-device-error" role="alert">
+          {error}{" "}
+          {!details && (
+            <button
+              type="button"
+              onClick={() => setAttempt((value) => value + 1)}
+            >
+              Retry
+            </button>
+          )}
+        </div>
+      )}
+      {!loading && details && !stores.length && (
+        <p role="status">
+          No stores available. Add a store for this merchant first.
+        </p>
+      )}
+      <form
+        id="add-merchant-device-form"
+        ref={formRef}
+        className="add-device-layout"
+        onSubmit={handleSave}
+      >
         {/* =================================================
             LEFT COLUMN
         ================================================= */}
@@ -207,15 +299,29 @@ export default function AddMerchantDevice({ merchantId, merchant, onBack, onSave
             <CardHeader
               icon={<Link2 size={19} />}
               title="Assignment Details"
-              subtitle="Select a store belonging to the merchant shown above."
+              subtitle="Select a store belonging to this merchant."
             />
 
             <div className="device-form-grid">
-
               <FormField label="Store" required>
-                <div className="device-select-wrapper"><select aria-label="Store" name="store" value={formData.store} onChange={handleChange} required disabled={loading || saving || !stores.length}>
-                  <option value="">Select store</option>{stores.map(store=><option key={store.id} value={store.id}>{store.name}</option>)}
-                </select><ChevronDown size={16} className="device-select-arrow" /></div>
+                <div className="device-select-wrapper">
+                  <select
+                    aria-label="Store"
+                    name="store"
+                    value={formData.store}
+                    onChange={handleChange}
+                    required
+                    disabled={loading || saving || !stores.length}
+                  >
+                    <option value="">Select store</option>
+                    {stores.map((store) => (
+                      <option key={store.id} value={store.id}>
+                        {store.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} className="device-select-arrow" />
+                </div>
               </FormField>
             </div>
           </section>
@@ -392,11 +498,7 @@ export default function AddMerchantDevice({ merchantId, merchant, onBack, onSave
       ================================================= */}
 
       <div className="add-device-actions">
-        <button
-          type="button"
-          className="device-cancel-btn"
-          onClick={onBack}
-        >
+        <button type="button" className="device-cancel-btn" onClick={onBack}>
           Cancel
         </button>
 
