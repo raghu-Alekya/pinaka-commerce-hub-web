@@ -1,49 +1,57 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllCategories, listFeatures, createFeature, updateFeature as persistFeature, deleteFeature, setFeatureStatus } from "../api/features";
 import "../styles/features.css";
+import { listFeatures, createFeature as createFeatureApi, updateFeature as updateFeatureApi, deleteFeature as deleteFeatureApi } from "../api/features";
 
-const emptyForm = { featureKey: "", name: "", description: "", category: "", type: "", status: "Active" };
+const initialFeatures = [];
+
+const emptyForm = { code: "", name: "", description: "", category: "", status: "Active" };
+
+
+function FeatureDescriptionCell({ description = "" }) {
+  const textRef = useRef(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useEffect(() => {
+    const checkTruncation = () => {
+      const element = textRef.current;
+      if (!element) return;
+      setIsTruncated(element.scrollHeight > element.clientHeight + 1);
+    };
+
+    checkTruncation();
+    window.addEventListener("resize", checkTruncation);
+    return () => window.removeEventListener("resize", checkTruncation);
+  }, [description]);
+
+  return (
+    <td className="feature-description">
+      <div className="feature-description-tooltip-wrap">
+        <span ref={textRef} className="feature-description-clamp">
+          {description || "—"}
+        </span>
+        {isTruncated && (
+          <div className="feature-description-tooltip" role="tooltip">
+            {description}
+          </div>
+        )}
+      </div>
+    </td>
+  );
+}
 
 export default function Features() {
   const navigate = useNavigate();
-  const actionMenuRef = useRef(null);
-
-  const [features, setFeatures] = useState([]);
+  const [features, setFeatures] = useState(initialFeatures);
+  const [apiError, setApiError] = useState("");
+  useEffect(() => { listFeatures().then(setFeatures).catch((e) => setApiError(e.message || "Unable to load features.")); }, []);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
-  const [actionMenu, setActionMenu] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesError, setCategoriesError] = useState("");
-  const [categoriesAttempt, setCategoriesAttempt] = useState(0);
-
-  useEffect(() => {
-    let active = true;
-    setCategoriesLoading(true);
-    setCategoriesError("");
-    getAllCategories()
-      .then((items) => { if (active) setCategories(items); })
-      .catch((error) => { if (active) setCategoriesError(error.message || "Unable to load categories"); })
-      .finally(() => { if (active) setCategoriesLoading(false); });
-    return () => { active = false; };
-  }, [categoriesAttempt]);
-
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    let active = true;
-    setLoading(true); setError("");
-    listFeatures().then(items => { if (active) setFeatures(items); })
-      .catch(e => { if (active) setError(e.message); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [attempt]);
+  const [sortBy, setSortBy] = useState("newest");
+  const [formErrors, setFormErrors] = useState({});
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
@@ -118,7 +126,7 @@ export default function Features() {
   const editFeature = (feature) => {
     setEditingId(feature.id);
     setForm({
-      featureKey: feature.featureKey,
+      code: feature.code || feature.name.toUpperCase().replace(/\s+/g, "_"),
       name: feature.name,
       description: feature.description,
       category: feature.category,
@@ -129,19 +137,26 @@ export default function Features() {
   };
 
   const saveFeature = async () => {
-    if (busy) return;
-    if (!form.featureKey.trim() || !form.name.trim() || !form.category.trim() || !form.type.trim()) {
-      setError("Feature key, name, category and type are required."); return;
-    }
-    setBusy(true); setError(""); setMessage("");
+    if (!validateFeature()) return;
     try {
-      const saved = isEditing ? await persistFeature(editingId, form) : await createFeature(form);
-      setFeatures(items => isEditing ? items.map(item => item.id === editingId ? saved : item) : [saved, ...items]);
-      setMessage(isEditing ? "Feature updated." : "Feature created.");
+      const payload = { ...form, code: form.code.trim().toUpperCase() };
+      const created = await createFeatureApi(payload);
+      setFeatures((prev) => [created, ...prev]);
       clearForm();
-    } catch (e) { setError(e.message); } finally { setBusy(false); }
+      setApiError("");
+    } catch (e) { setApiError(e.message || "Unable to create feature."); }
   };
-  const updateFeature = saveFeature;
+
+  const updateFeature = async () => {
+    if (!validateFeature()) return;
+    try {
+      const payload = { ...form, code: form.code.trim().toUpperCase() };
+      const updated = await updateFeatureApi(editingId, payload);
+      setFeatures((prev) => prev.map((item) => item.id === editingId ? updated : item));
+      clearForm();
+      setApiError("");
+    } catch (e) { setApiError(e.message || "Unable to update feature."); }
+  };
 
   const resetFilters = () => {
     setSearch("");
@@ -150,7 +165,7 @@ export default function Features() {
   };
 
   const deleteFeature = async (featureId) => {
-    try { await deleteFeature(featureId); setFeatures((prev) => prev.filter((item) => item.id !== featureId)); setApiError(""); } catch (e) { setApiError(e.message || "Unable to delete feature."); }
+    try { await deleteFeatureApi(featureId); setFeatures((prev) => prev.filter((item) => item.id !== featureId)); setApiError(""); } catch (e) { setApiError(e.message || "Unable to delete feature."); }
   };
 
   const confirmDeleteFeature = async () => {
@@ -159,26 +174,9 @@ export default function Features() {
     setDeleteTarget(null);
   };
 
-  const handleToggleFeatureStatus = async () => {
-    if (busy || !actionMenu?.feature) return;
-    const selected = actionMenu.feature;
-    if (selected.status === "Active" && !window.confirm('Deactivate ' + selected.name + '?')) return;
-    setBusy(true); setError(""); setMessage("");
-    closeActionMenu();
-    try {
-      let saved;
-      if (selected.status === "Active") {
-        await deleteFeature(selected.id);
-        saved = { ...selected, status: "Inactive" };
-      } else { saved = await setFeatureStatus(selected.id, "ACTIVE"); }
-      setFeatures(items => items.map(item => item.id === saved.id ? saved : item));
-      if (editingId === saved.id) setForm(current => ({ ...current, status: saved.status }));
-      setMessage("Feature status updated.");
-    } catch (e) { setError(e.message); } finally { setBusy(false); }
-  };
-
-    const filteredFeatures = useMemo(() => {
+  const filteredFeatures = useMemo(() => {
     const q = search.trim().toLowerCase();
+
     const getCreatedTime = (item) => {
       const value = item.createdAt || item.createdOn || item.createdDate || item.created_at;
       const time = value ? new Date(value).getTime() : 0;
@@ -238,54 +236,40 @@ export default function Features() {
 
   return (
     <div className="features-page">
-      {error && <div role="alert">{error} <button onClick={() => setAttempt(n => n + 1)}>Retry list</button></div>}
-      {message && <p role="status">{message}</p>}
+      <header className="features-page-heading">
+        <h1>Features</h1>
+        <p>Manage platform features and their details.</p>
+      </header>
+
+      {apiError && <p role="alert">{apiError}</p>}
+
       <section className="feature-details-card">
         <div className="feature-section-heading">
           <div className="feature-title-icon">
             <i className="bi bi-grid-1x2" />
           </div>
-
-          <div className="feature-header-actions">
-            {isEditing ? (
-              <>
-                <span className="editing-chip">Editing: {editingFeature?.name}</span>
-                <button className="feature-action secondary" type="button" disabled={busy || loading} onClick={clearForm}>
-                  Cancel
-                </button>
-                <button className="feature-action primary" type="button" disabled={busy || loading} onClick={updateFeature}>
-                  <i className="bi bi-floppy" />
-                  Update Feature
-                </button>
-              </>
-            ) : (
-              <>
-                <button className="feature-action secondary blue-text" type="button" disabled={busy || loading} onClick={clearForm}>
-                  <i className="bi bi-arrow-repeat" />
-                  Clear
-                </button>
-                <button className="feature-action primary" type="button" disabled={busy || loading} onClick={saveFeature}>
-                  <i className="bi bi-floppy" />
-                  Save Feature
-                </button>
-              </>
-            )}
+          <div>
+            <h2>{isEditing ? "Edit Feature" : "Add Feature"}</h2>
+            <p>Provide the basic details and configuration for this feature.</p>
           </div>
         </div>
 
-        <h2 className="feature-details-heading">Feature Details</h2>
-
-        <fieldset disabled={busy || loading} style={{ border: 0, padding: 0, margin: 0 }}>
         <div className="feature-form-grid">
           <div className="feature-field">
-            <label>Feature Key<span>*</span></label>
-            <input name="featureKey" value={form.featureKey} onChange={updateField} disabled={isEditing} maxLength={100} placeholder="e.g. LOYALTY" />
-            <small>Unique key; cannot be changed after creation.</small>
-          </div>
-          <div className="feature-field">
-            <label>Name:</label>
-            <input name="name" maxLength={150} value={form.name} onChange={updateField} placeholder="e.g. REFUNDS" />
-            <small>Display name shown in the system</small>
+            <label>Feature Code<span>*</span></label>
+            <input
+              data-field="code"
+              value={form.code}
+              onChange={updateField}
+              autoComplete="off"
+              placeholder="Enter a unique code, e.g. INVENTORY_MANAGEMENT"
+              className={formErrors.code ? "feature-input-error" : ""}
+            />
+            {formErrors.code ? (
+              <small className="feature-error-text">{formErrors.code}</small>
+            ) : (
+              <small></small>
+            )}
           </div>
 
           <div className="feature-field">
@@ -328,34 +312,33 @@ export default function Features() {
           <div className="feature-field">
             <label>Category<span>*</span></label>
             <div className="select-shell">
-              <select name="category" value={form.category} onChange={updateField} disabled={categoriesLoading || Boolean(categoriesError)}>
-                <option value="">{categoriesLoading ? "Loading categories..." : categoriesError ? "Unable to load categories" : categories.length ? "Select category" : "No categories available"}</option>
-                {form.category && !categories.includes(form.category) && (
-                  <option value={form.category}>{form.category}</option>
-                )}
-                {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+              <select name="category" value={form.category} onChange={updateField} autoComplete="off">
+                <option value="">Select category</option>
+                <option value="Restaurant">Restaurant</option>
+                <option value="Customer Engagement">Customer Engagement</option>
+                <option value="Orders">Orders</option>
+                <option value="Cash Management">Cash Management</option>
+                <option value="Stock Control">Stock Control</option>
               </select>
               <i className="bi bi-chevron-down" />
             </div>
-            <small>e.g. POS / Orders / Cash / Workforce / etc.</small>
-            {categoriesError && (
-              <div role="alert">
-                {categoriesError}{" "}
-                <button type="button" onClick={() => setCategoriesAttempt((attempt) => attempt + 1)}>Retry</button>
-              </div>
+            {formErrors.category ? (
+              <small className="feature-error-text">{formErrors.category}</small>
+            ) : (
+              <small></small>
             )}
-          </div>
-
-          <div className="feature-field">
-            <label>Feature Type<span>*</span></label>
-            <input name="type" maxLength={20} value={form.type} onChange={updateField} placeholder="Enter feature type" />
-            <small>BOOLEAN / LIMIT / CONFIG</small>
           </div>
 
           <div className="feature-field feature-form-status-field">
             <label>Status</label>
             <div className="select-shell">
-              <select name="status" value={form.status} onChange={updateField} autoComplete="off">
+              <select
+                name="status"
+                value={form.status}
+                onChange={updateField}
+                autoComplete="off"
+                className={`feature-form-status-select ${form.status === "Inactive" ? "inactive" : "active"}`}
+              >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
@@ -379,8 +362,7 @@ export default function Features() {
               {isEditing ? "Update Feature" : "Save Feature"}
             </button>
           </div>
-          </div>
-        </fieldset>
+        </div>
       </section>
 
       <section className="features-list-card">
@@ -400,13 +382,13 @@ export default function Features() {
 
             <div className="feature-filter-control">
               <select
-                className="features-filter-select"
-                value={categoryFilter}
-                disabled={categoriesLoading || Boolean(categoriesError)}
-                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="features-filter-select features-status-select"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
               >
-                <option value="All Categories">All Categories</option>
-                {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+                <option value="All Statuses">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
               </select>
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
@@ -418,24 +400,19 @@ export default function Features() {
                 onChange={(e) => setSortBy(e.target.value)}
                 aria-label="Sort features"
               >
-                <option value="newest">Newly Created First</option>
-                <option value="oldest">Oldest Created First</option>
-                <option value="updated">Recently Updated First</option>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="updated">Recently Updated</option>
                 <option value="name-asc">Name A-Z</option>
                 <option value="name-desc">Name Z-A</option>
               </select>
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
 
-            <button
-             type="button"
-               className="feature-filter-reset-icon"
-               title="Reset filters"
-               aria-label="Reset filters"
-                onClick={resetFilters}
-                 >
-                 <i className="bi bi-arrow-counterclockwise" />
-                 </button>
+            <button className="reset-filter" type="button" onClick={resetFilters}>
+              <i className="bi bi-arrow-counterclockwise" />
+            
+            </button>
           </div>
         </div>
 
@@ -466,21 +443,34 @@ export default function Features() {
             </thead>
 
             <tbody>
-              {loading && <tr><td colSpan={7} role="status">Loading features...</td></tr>}
-              {!loading && !error && !filteredFeatures.length && <tr><td colSpan={7}>No features found.</td></tr>}
               {filteredFeatures.map((item) => (
-                <tr key={item.id}>
+                <tr
+                  key={item.id}
+                  className="feature-clickable-row"
+                  onClick={() =>
+                    navigate(`/features/${item.id}/overview`, {
+                      state: { feature: item },
+                    })
+                  }
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      navigate(`/features/${item.id}/overview`, {
+                        state: { feature: item },
+                      });
+                    }
+                  }}
+                  aria-label={`Open ${item.name} feature overview`}
+                >
                   <td className="feature-code-cell">
                     {(item.code || item.name?.replace(/\s+/g, "_") || "—").toUpperCase()}
                   </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="feature-name feature-name-button"
-                      onClick={() => navigate(`/features/${item.id}/overview`, { state: { feature: item } })}
-                    >
+                  <td className="feature-name-cell">
+                    <span className="feature-name feature-name-button">
                       {item.name}
-                    </button>
+                    </span>
                   </td>
                   <td>{item.category}</td>
                   <FeatureDescriptionCell description={item.description} />
@@ -491,10 +481,10 @@ export default function Features() {
                   </td>
                   <td className="feature-created">
                     {(() => {
-                      const created = formatFeatureDate(item.createdAt);
+                      const created = formatFeatureDate(item.createdAt || item.createdOn || item.createdDate || item.created_at);
                       return (
                         <div className="feature-date-stack">
-                          <span>{created.date}</span>
+                          <strong>{created.date}</strong>
                           {created.time && <span className="feature-time">{created.time}</span>}
                         </div>
                       );
@@ -502,10 +492,10 @@ export default function Features() {
                   </td>
                   <td className="feature-updated">
                     {(() => {
-                      const updated = formatFeatureDate(item.updatedAt);
+                      const updated = formatFeatureDate(item.updatedAt || item.updatedOn || item.updatedDate || item.updated_at);
                       return (
                         <div className="feature-date-stack">
-                          <span>{updated.date}</span>
+                          <strong>{updated.date}</strong>
                           {updated.time && <span className="feature-time">{updated.time}</span>}
                         </div>
                       );
@@ -513,15 +503,26 @@ export default function Features() {
                   </td>
                   <td className="actions-col">
                     <div className="feature-row-actions">
-                      <button type="button" className="edit-button" disabled={busy} onClick={() => editFeature(item)} aria-label={`Edit ${item.name}`}>
+                      <button
+                        type="button"
+                        className="edit-button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          editFeature(item);
+                        }}
+                        aria-label={`Edit ${item.name}`}
+                      >
                         <i className="bi bi-pencil" />
                       </button>
                       <button
                         type="button"
-                        className={`more-action-button ${actionMenu?.feature?.id === item.id ? "active" : ""}`}
-                        disabled={busy} onClick={(event) => openActionMenu(event, item)}
-                        aria-label={`More options for ${item.name}`}
-                        aria-expanded={actionMenu?.feature?.id === item.id}
+                        className="delete-button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setDeleteTarget(item);
+                        }}
+                        aria-label={`Delete ${item.name}`}
+                        title={`Delete ${item.name}`}
                       >
                         <i className="bi bi-trash" />
                       </button>
@@ -534,7 +535,14 @@ export default function Features() {
         </div>
 
         <div className="feature-pagination-row">
-          <span>Showing {filteredFeatures.length} of {features.length} entries</span>
+          <span>Showing 1 to 5 of 18 entries</span>
+          <div className="feature-pagination">
+            <button type="button" aria-label="Previous page"><i className="bi bi-chevron-left" /></button>
+            <button type="button" className="current">1</button>
+            <button type="button">2</button>
+            <button type="button">3</button>
+            <button type="button" aria-label="Next page"><i className="bi bi-chevron-right" /></button>
+          </div>
         </div>
       </section>
 

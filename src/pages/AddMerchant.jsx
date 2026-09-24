@@ -1,5 +1,5 @@
 import { storeTypesApi } from "../api/storeTypes";
-import { getMerchant, updateMerchant } from "../api/merchants";
+import { createMerchant, getMerchant, updateMerchant } from "../api/merchants";
 import { listPlans } from "../api/plans";
 import { listFeatures } from "../api/features";
 import { listFeaturePermissions } from "../api/featurePermissionsApi";
@@ -103,16 +103,25 @@ function featureIndexes(features = []) {
   }, []);
 }
 
-function planMatchesStoreType(plan, storeType) {
-  if (!storeType) return false;
-  const planType = plan.applicableStoreType ?? plan.storeType ?? plan.store_type;
-  if (planType && typeof planType === 'object') {
-    return [planType.id, planType._id, planType.storeTypeId, planType.code, planType.name, planType.storeTypeName]
-      .filter(Boolean).some(value => String(value).toLowerCase() === String(storeType.id).toLowerCase() || String(value).toLowerCase() === storeType.name.toLowerCase() || String(value).toLowerCase() === storeType.code.toLowerCase());
+function getPlanStoreTypeName(item, storeTypesList = []) {
+  const planType = item.applicableStoreType ?? item.storeType ?? item.store_type;
+  if (!planType) return 'General Plans';
+  if (typeof planType === 'object') {
+    return planType.name || planType.storeTypeName || planType.title || planType.code || 'General Plans';
   }
-  const value = String(planType || '').trim().toLowerCase();
-  return [storeType.id, storeType.name, storeType.code].filter(Boolean).some(item => String(item).trim().toLowerCase() === value);
+  const str = String(planType).trim();
+  if (!str || ['all', 'any', '*'].includes(str.toLowerCase())) {
+    return 'General Plans';
+  }
+  const matched = storeTypesList.find(st => 
+    String(st.id).toLowerCase() === str.toLowerCase() || 
+    String(st.code).toLowerCase() === str.toLowerCase() || 
+    String(st.name).toLowerCase() === str.toLowerCase()
+  );
+  if (matched) return matched.name;
+  return str;
 }
+
 
 function toMerchantPlan(plan) {
   return {
@@ -255,17 +264,14 @@ export function validateSchedule(hours = []) {
 
 export function validate(state, storeTypesState, availablePackages = fallbackPackages, availableRoleTemplates = []) {
   const stage = state.step;
-  if(!state.merchant.code || (state.phase === 'store' && state.stores.some(store=>!store.code))) return 'Wait for automatic code generation.';
+  if (state.phase === 'store' && state.stores.some(store=>!store.code)) return 'Wait for automatic code generation.';
   if (state.phase !== 'store') {
     if (stage === 0 || stage === 6) {
-      if (!storeTypesState || storeTypesState.loading) return 'Wait for the business store-type list to load.';
-      if (storeTypesState.error) return 'Retry loading the business store-type list.';
-      if (!findStoreType(state.merchant,storeTypesState.items)?.active) return 'Select an active business store type.';
       const addressError = validateAddress(state.merchant, 'Primary contact');
       if (addressError) return addressError;
       const phoneError = validatePhone(state.merchant.phone, state.merchant.country);
       if (phoneError) return phoneError;
-      if (['code','name','business','display','email','phone','addressLine1','city','state','postal','country'].some(key => !String(state.merchant[key] ?? '').trim())) return 'Complete all merchant and primary contact fields.';
+      if (['name','business','display','email','phone','addressLine1','city','state','postal','country'].some(key => !String(state.merchant[key] ?? '').trim())) return 'Complete all merchant and primary contact fields.';
       if (!validEmail(state.merchant.email)) return 'Enter a valid email such as name@example.com.';
     }
     if (stage === 2 || stage === 5 || stage === 6) {
@@ -277,12 +283,6 @@ export function validate(state, storeTypesState, availablePackages = fallbackPac
       if (!limits.every(value => Number.isInteger(value) && value > 0)) return 'License limits must be positive whole numbers.';
       if (employeeCountFor(state) !== null && employeeCountFor(state) > limits[2]) return 'The selected plan cannot accommodate registered employees.';
       if (state.stores.length > limits[0] || state.devices.length > limits[1]) return 'The selected plan cannot accommodate existing stores or devices.';
-    }
-    if (stage === 5 || stage === 6) {
-      if(!state.roles.length) return 'Select at least one business role or create a custom role.';
-      if(state.roles.some(role=>!String(role.name || '').trim())) return 'Role names are required.';
-      if(new Set(state.roles.map(role=>role.name.trim().toLowerCase())).size!==state.roles.length) return 'Role names must be unique.';
-      if(state.roles.some(role=>role.source !== 'Custom' && !(availableRoleTemplates.length ? availableRoleTemplates : storeTypeDefaults(state.merchant.type).r).includes(role.source))) return 'Remove roles that do not match the business store type.';
     }
     return '';
   }
@@ -505,15 +505,89 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
     return()=>{active=false;};
   },[selectedStoreType?.id]);
   const packages = useMemo(() => {
-    if (!selectedStoreType) return [];
-    return allPlans
-      .filter(plan => String(plan.status || '').toUpperCase() !== 'INACTIVE')
-      .filter(plan => planMatchesStoreType(plan, selectedStoreType))
-      .map(toMerchantPlan);
-  }, [allPlans, selectedStoreType]);
-  useEffect(()=>{
-    if(state.plan >= 0 && !packages[state.plan]) patch({plan:-1,cycle:'',start:''});
-  },[packages]);
+    const activePlans = (allPlans || []).filter(plan => String(plan.status || '').toUpperCase() !== 'INACTIVE');
+    if (activePlans.length > 0) {
+      return activePlans.map(toMerchantPlan);
+    }
+    return fallbackPackages.map(toMerchantPlan);
+  }, [allPlans]);
+  const groupedPackages = useMemo(() => {
+    const groups = {};
+    packages.forEach((item, index) => {
+      const groupName = getPlanStoreTypeName(item, storeTypesState.items);
+      if (!groups[groupName]) {
+        groups[groupName] = [];
+      }
+      groups[groupName].push({ ...item, originalIndex: index });
+    });
+    return Object.entries(groups).map(([storeType, items]) => ({
+      storeType,
+      items,
+    }));
+  }, [packages, storeTypesState.items]);
+  const handleSelectPlan = (originalIndex) => {
+    const item = packages[originalIndex];
+    if (!item) return;
+    const planType = item.applicableStoreType ?? item.storeType ?? item.store_type;
+    let typeFields = {};
+    if (planType && typeof planType === 'object') {
+      typeFields = {
+        type: planType.name || planType.storeTypeName || '',
+        storeTypeId: planType.id || planType._id || planType.storeTypeId || '',
+        storeTypeCode: planType.code || planType.storeTypeCode || ''
+      };
+    } else if (planType && typeof planType === 'string' && !['all', 'any', '*'].includes(planType.toLowerCase())) {
+      const matched = storeTypesState.items.find(st => 
+        String(st.id).toLowerCase() === planType.toLowerCase() || 
+        String(st.code).toLowerCase() === planType.toLowerCase() || 
+        String(st.name).toLowerCase() === planType.toLowerCase()
+      );
+      if (matched) {
+        typeFields = {
+          type: matched.name,
+          storeTypeId: matched.id,
+          storeTypeCode: matched.code
+        };
+      } else {
+        typeFields = { type: planType };
+      }
+    }
+    setError('');
+    patch({
+      plan: originalIndex,
+      planId: item.id,
+      planName: item.name,
+      merchant: {
+        ...state.merchant,
+        ...typeFields
+      },
+      stores: state.stores.map(store => ({
+        ...store,
+        ...typeFields
+      }))
+    });
+  };
+  useEffect(() => {
+    if (plansLoading || !packages.length) return;
+    if (state.plan >= 0 && packages[state.plan]) return;
+    const targetId = state.planId || initialValue?.planId || initialValue?.planDetails?.id || initialValue?.subscription?.planId || initialValue?.subscription?.plan_id;
+    const targetName = String(state.planName || initialValue?.planName || initialValue?.plan || initialValue?.subscription?.planName || initialValue?.subscription?.planCode || '').toLowerCase();
+    let matchedIdx = -1;
+    if (targetId) {
+      matchedIdx = packages.findIndex(p => String(p.id).toLowerCase() === String(targetId).toLowerCase());
+    }
+    if (matchedIdx === -1 && targetName) {
+      matchedIdx = packages.findIndex(p => {
+        const pName = String(p.name || p.planName || p.code || '').toLowerCase();
+        return pName.includes(targetName) || targetName.includes(pName);
+      });
+    }
+    if (matchedIdx >= 0) {
+      patch({ plan: matchedIdx });
+    } else if (state.plan >= 0 && !packages[state.plan]) {
+      patch({ plan: -1 });
+    }
+  }, [packages, plansLoading, initialValue, state.planId, state.planName]);
   const plan = packages[state.plan] || {name:'',f:[],stores:0,devices:0};
   const planFeatureItems = useMemo(() => {
     const assigned = storeTypeFeaturesState.items;
@@ -579,10 +653,10 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   const assignedRoles=state.roles.filter(role=>String(role.status || 'ACTIVE').toUpperCase()!=='INACTIVE' && store.roleIds?.includes(role.id));
   const currentRole=assignedRoles.find(role=>role.id===state.roles[state.activeRole]?.id) || assignedRoles[0];
   const storePhase = state.phase === 'store';
-  const journey = storePhase ? [1,4,3,5,6] : [0,2,5,6];
+  const journey = storePhase ? [1,4,3,5,6] : [0,2,6];
   const stepLabels = storePhase
     ? [['Store details','Location & optional operating schedule'],['Subscription & features','Inherited plan and store enablement'],['Devices','Register & allocate licenses'],['Roles & permissions','Templates and custom roles'],['Review & save','Review store configuration']]
-    : [['Merchant details','Business & primary contact'],['Choose plan','Country pricing & subscription limits'],['Business roles','Select templates or custom roles'],['Review Plan & Subscribe','Merchant review and billing summary'],['Subscription Confirmed','Subscription details saved']];
+    : [['Merchant details','Business & primary contact'],['Choose plan','Country pricing & subscription limits'],['Review & Subscribe','Plan review & billing summary']];
   const position = journey.indexOf(state.step);
   const patch = values => { setError(''); setState(previous => ({ ...previous, ...values })); };
   const changeMerchant = (key, value) => { setError(''); setState(previous => ({ ...previous, merchant: { ...previous.merchant, [key]: value } })); };
@@ -639,7 +713,8 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
         const billingChanged = !lastBilling || lastBilling.plan !== historyEntry.plan ||
           lastBilling.cycle !== historyEntry.cycle || lastBilling.currency !== historyEntry.currency ||
           lastBilling.amount !== historyEntry.amount;
-        const saved = {...state,planDetails:plan,stores:state.stores.map(item=>({...item,roleIds:(item.roleIds || []).filter(id=>state.roles.some(role=>role.id===id)),rolePermissions:Object.fromEntries(Object.entries(item.rolePermissions || {}).filter(([id])=>state.roles.some(role=>String(role.id)===id)))})), done:true, merchantSaved:true,
+        const calculatedRenewal = renewalDate(state.start, state.cycle);
+        const saved = {...state, renewalDate: calculatedRenewal, planDetails:plan,stores:state.stores.map(item=>({...item,roleIds:(item.roleIds || []).filter(id=>state.roles.some(role=>role.id===id)),rolePermissions:Object.fromEntries(Object.entries(item.rolePermissions || {}).filter(([id])=>state.roles.some(role=>String(role.id)===id)))})), done:true, merchantSaved:true,
           paymentHistory:!storePhase && billingChanged ? [historyEntry,...previousHistory] : previousHistory};
         const backendResult = await onComplete?.(structuredClone(saved));
         patch({
@@ -690,8 +765,8 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
           {[storeLimit + ' Store' + (storeLimit === 1 ? '' : 's'), 'Up to ' + deviceLimit + ' Devices', 'Up to ' + employeeLimit + ' Employees', ...planFeatureItems.slice(0,4).map(feature=>feature.name)].map(item=><li key={item}><span aria-hidden="true">✓</span>{item}</li>)}
         </ul>
         <details className="pch-all-features"><summary>View all features ({planFeatureItems.length})</summary><ul>{planFeatureItems.map(feature=><li key={feature.id}>{feature.name}</li>)}</ul></details>
-        <div className="pch-review-links">{editButton('Change plan',2)}{editButton('Edit merchant details',0)}{editButton('Edit selected roles',5)}</div>
-        <details className="pch-all-features"><summary>Review merchant details</summary><p>Store type: {state.merchant.type}<br/>Selected roles: {state.roles.map(role=>role.name).join(', ')}</p>
+        <div className="pch-review-links">{editButton('Change plan',2)}{editButton('Edit merchant details',0)}</div>
+        <details className="pch-all-features"><summary>Review merchant details</summary><p>Store type: {state.merchant.type}</p>
           <p>{state.merchant.business}<br/>{state.merchant.name}<br/>{state.merchant.email}<br/>{state.merchant.phone}</p>
           <p>{['addressLine1','addressLine2','city','state','postal','country'].map(key=>state.merchant[key]).filter(Boolean).join(', ')}</p>
         </details>
@@ -766,25 +841,6 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
       case 0: return <>
         <Panel title="Business Details"><div className="pch-grid">
           {merchantField('Legal / Business Name','business')}{merchantField('Business Display Name','display')}
-          <label className="pch-field">Store Type *
-            <select required disabled={storeTypesState.loading || Boolean(storeTypesState.error)}
-              value={findStoreType(state.merchant,storeTypesState.items)?.id || (state.merchant.type || state.merchant.storeTypeId ? '__unavailable__' : '')}
-              onChange={event=>{
-                const selected=storeTypesState.items.find(item=>item.id===event.target.value && item.active);
-                if(!selected)return;
-                setError('');setState(previous=>{
-                  const fields={type:selected.name,storeTypeId:selected.id,storeTypeCode:selected.code};
-                  return {...previous,merchant:{...previous.merchant,...fields},stores:previous.stores.map(item=>({...item,...fields}))};
-                });
-              }}>
-              <option value="" disabled>{storeTypesState.loading?'Loading store types…':'Select store type'}</option>
-              {!findStoreType(state.merchant,storeTypesState.items) && (state.merchant.type || state.merchant.storeTypeId) && <option value="__unavailable__" disabled>{state.merchant.type || state.merchant.storeTypeId} — unavailable</option>}
-              {storeTypesState.items.map(item=><option key={item.id} value={item.id} disabled={!item.active}>{item.name}{item.active?'':' (Inactive)'}</option>)}
-            </select>
-          </label>
-          {storeTypesState.error && <div role="alert" className="pch-error">{storeTypesState.error} <button type="button" onClick={()=>setStoreTypesAttempt(value=>value+1)}>Retry store types</button></div>}
-          {!storeTypesState.loading && !storeTypesState.error && !storeTypesState.items.some(item=>item.active) && <div className="pch-note">No active store types are available. Add or activate a type in master data, then <button type="button" onClick={()=>setStoreTypesAttempt(value=>value+1)}>Refresh store types</button>.</div>}
-
           <Field label="Merchant code" value={state.merchant.code} readOnly /><Field label="Initial status" value={state.subscriptionStatus || 'Pending activation'} readOnly />
         </div></Panel>
         <Panel title="Primary Contact"><div className="pch-grid">
@@ -831,16 +887,51 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
         })} /><p className="pch-small pch-muted">Timings and shift counts are optional. Earlier closing times mean next-day closing.</p></Panel>
       </>;
       case 2: return <>
-        <Panel title="Merchant subscription"><div className="pch-row pch-between"><h3>{state.merchant.display}</h3><span className="pch-pill">{selectedStoreType?.name || state.merchant.type} · {planCurrency}</span></div>
-          {plansLoading && <p className="pch-note">Loading current plans for {selectedStoreType?.name || 'the selected store type'}…</p>}
+        <Panel title="Merchant subscription"><div className="pch-row pch-between"><h3>{state.merchant.display || 'Choose Plan'}</h3><span className="pch-pill">{(selectedStoreType?.name || state.merchant.type || 'All Store Types')} · {planCurrency}</span></div>
+          {plansLoading && <p className="pch-note">Loading plans…</p>}
           {plansError && <div className="pch-error" role="alert">{plansError}</div>}
-          {!plansLoading && !plansError && !selectedStoreType && <p className="pch-note">Select an active store type to view its current plans.</p>}
-          {!plansLoading && !plansError && selectedStoreType && !packages.length && <p className="pch-note">No active plans are available for {selectedStoreType.name}.</p>}
-          <div className="pch-plans">{packages.map((item, index) => <div key={item.id || item.code || item.name} className={`pch-plan ${state.plan === index ? 'pch-selected' : ''}`}>
-            <h2>{item.name}</h2><div className="pch-price">{formatPrice(item.price, item.currency || region.currency)}</div><span className="pch-small pch-muted">per merchant / {item.billingCycle || 'month'}</span>
-            <div>{item.stores ?? 'Custom'} stores<br />{item.devices ?? 'Custom'} devices<br />{item.employees ?? 'Custom'} employees</div><details><summary>Store type features ({storeTypeFeaturesState.items.length})</summary><ul>{storeTypeFeaturesState.items.map(feature=><li key={feature.id}>{feature.name}</li>)}</ul></details>
-            <button type="button" onClick={() => patch({ plan: index })}>{state.plan === index ? '✓ Selected' : `Select ${item.name}`}</button>
-          </div>)}</div>
+          {!plansLoading && !plansError && !packages.length && <p className="pch-note">No active plans are available.</p>}
+          {!plansLoading && !plansError && groupedPackages.map(group => (
+            <div key={group.storeType} className="pch-plan-group" style={{ marginBottom: '24px' }}>
+              <div style={{
+                padding: '8px 16px 6px 16px',
+                fontSize: '12px',
+                fontWeight: '700',
+                color: 'var(--pch-primary, #5143bc)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                borderBottom: '2px solid #e1e4eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '12px'
+              }}>
+                <span>{group.storeType}</span>
+                <span className="pch-pill" style={{ fontSize: '10px' }}>{group.items.length} {group.items.length === 1 ? 'plan' : 'plans'}</span>
+              </div>
+              <div className="pch-plans">
+                {group.items.map(item => (
+                  <div key={item.id || item.code || item.name} className={`pch-plan ${state.plan === item.originalIndex ? 'pch-selected' : ''}`}>
+                    <h2>{item.name}</h2>
+                    <div className="pch-price">{formatPrice(item.price, item.currency || region.currency)}</div>
+                    <span className="pch-small pch-muted">per merchant / {item.billingCycle || 'month'}</span>
+                    <div>
+                      {item.stores ?? 'Custom'} stores<br />
+                      {item.devices ?? 'Custom'} devices<br />
+                      {item.employees ?? 'Custom'} employees
+                    </div>
+                    <details>
+                      <summary>Store type features ({storeTypeFeaturesState.items.length})</summary>
+                      <ul>{storeTypeFeaturesState.items.map(feature => <li key={feature.id}>{feature.name}</li>)}</ul>
+                    </details>
+                    <button type="button" onClick={() => handleSelectPlan(item.originalIndex)}>
+                      {state.plan === item.originalIndex ? '✓ Selected' : `Select ${item.name}`}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </Panel>
         <Panel title="Subscription agreement"><div className="pch-grid">
           <Select label="Billing cycle" value={state.cycle} options={['Monthly','Annual']} onChange={value => patch({ cycle: value })} />
@@ -1160,7 +1251,11 @@ export function merchantDetailToDraft(result, fallback={}) {
   const draft=initialState();
   const address=raw.businessAddress || raw.address || '';
   const subscription=result.subscription || raw.subscription || {};
-  const matchPlan=String(subscription.planName||subscription.planCode||raw.plan||fallback.plan||'').toLowerCase().replace(/[^a-z]/g,'').replace(/plan$/,'');
+  const planId = subscription.planId || subscription.plan_id || raw.planId || raw.plan_id || '';
+  const planName = subscription.planName || subscription.planCode || raw.plan || fallback.plan || '';
+  const matchPlan=String(planName).toLowerCase().replace(/[^a-z]/g,'').replace(/plan$/,'');
+  draft.planId = planId;
+  draft.planName = planName;
   draft.plan=fallbackPackages.findIndex(plan=>plan.name.toLowerCase()===matchPlan);
   const cycle=String(subscription.billingCycle||raw.billingCycle||'').toLowerCase();draft.cycle=cycle==='monthly'?'Monthly':cycle==='annual'||cycle==='yearly'?'Annual':'';
   draft.subscriptionStatus=subscription.status || 'Pending activation';
@@ -1175,7 +1270,8 @@ export function merchantDetailToDraft(result, fallback={}) {
     const a=item.address||{};const type=String(item.storeType||item.type||'').toLowerCase();
     return {...store,roleIds:item.roleIds,rolePermissions:item.rolePermissions,name:item.storeName||item.name||'',type:(typeof item.storeType==='object' ? item.storeType?.name : item.storeTypeName || item.storeType || item.type) || '',storeTypeId:item.storeTypeId ?? (typeof item.storeType==='object' ? item.storeType?.id : undefined),storeTypeCode:item.storeTypeCode || '',addressLine1:item.addressLine1||(typeof a==='string'?a:a.addressLine1||a.street||''),addressLine2:item.addressLine2||(typeof a==='object'?a.addressLine2||a.unit||'':''),city:item.city||a.city||'',state:item.state||a.state||'',postal:item.postalCode||item.zip||a.zipCode||'',country:item.country||a.country||'',timezone:item.timezone||'',url:item.baseUrl||item.url||'',logo:item.logo||'',licensed:item.licensed===true,off:Array.isArray(item.off)?item.off:store.off,hours:Array.isArray(item.hours)&&item.hours.length===7?item.hours:store.hours};
   });
-  draft.roles=Array.isArray(raw.roles)?raw.roles.filter(role=>role.name&&Array.isArray(role.perms)&&role.perms.length===catalog.length).map((role,index)=>({...role,id:role.id||'saved-role-'+index,source:role.source||'Custom',scope:role.scope||'Store'})):[];
+  draft.roleIds = Array.isArray(raw.roleIds) ? raw.roleIds : (Array.isArray(response.roleIds) ? response.roleIds : []);
+  draft.roles=Array.isArray(raw.roles)?raw.roles.filter(role=>role.name&&Array.isArray(role.perms)&&role.perms.length===catalog.length).map((role,index)=>({...role,id:role.id||'saved-role-'+index,source:role.source||'Custom',scope:role.scope||'Store'})):(draft.roleIds.length ? draft.roleIds.map((id, index) => ({ id, name: `Role ${index + 1}`, source: 'Custom', scope: 'Store', perms: catalog.map(f => f.a) })) : []);
   draft.employeeCount=raw.employeeCount ?? result.merchant?.employeeCount ?? fallback.employeeCount ?? (Array.isArray(raw.employees)?raw.employees.length:null);
   draft.enterpriseEmployees=raw.enterpriseEmployees ?? subscription.employeeLimit ?? '';
   draft.devices=Array.isArray(raw.devices)?raw.devices.map(device=>({...device,store:typeof device.store==='number'?device.store:draft.stores.findIndex(store=>store.code===String(device.storeId))})):[];
@@ -1202,18 +1298,22 @@ function MerchantRouteEditor({merchantId,localMerchants,onSave}) {
     let savedData = data;
     let serverResult;
 
+    console.log("[SUBSCRIBE NOW] Selected Plan details:", data.planDetails, "Roles:", data.roles);
+
     if (merchantId) {
       serverResult = await updateMerchant(merchantId, data);
+      console.log("[UPDATE MERCHANT API RESPONSE]", serverResult);
+    } else {
+      serverResult = await createMerchant(data);
+      console.log("[CREATE MERCHANT API RESPONSE]", serverResult);
     }
-    // Stores are created explicitly through Add First Store / Add location.
-
 
     const savedMerchant = serverResult?.merchant || serverResult?.data?.merchant;
-    const savedDataWithId = savedData; // Record IDs must never overwrite display codes.
+    const savedDataWithId = savedData;
     const summary=onboardingToRow(savedDataWithId);
     if(!merchantId && !savedRow.current && localMerchants.some(row=>String(row.id)===String(summary.id))) throw new Error('Merchant code already exists.');
     const existing=savedRow.current || loaded.row;
-    const row={...existing,...summary,id:existing?.id||savedMerchant?.id||serverResult?.merchantId||summary.id,createdAt:existing?.createdAt||summary.createdAt,joined:existing?.joined||summary.joined,status:existing?.status||summary.status};
+    const row={...existing,...summary,id:existing?.id||savedMerchant?.id||serverResult?.merchantId||summary.id,merchantId:savedMerchant?.id||serverResult?.merchantId||existing?.id||summary.id,createdAt:existing?.createdAt||summary.createdAt,joined:existing?.joined||summary.joined,status:existing?.status||summary.status};
     await onSave(row);
     savedRow.current=row;
     const subscription = serverResult?.subscription || serverResult?.data?.subscription;

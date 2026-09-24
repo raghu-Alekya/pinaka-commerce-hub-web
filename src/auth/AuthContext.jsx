@@ -57,6 +57,26 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  useEffect(() => {
+    function handleStorageChange(event) {
+      if (event.key === "pch.accessToken") {
+        if (!event.newValue) {
+          clearSession();
+          setUser(null);
+          setIsAuthenticated(false);
+        } else {
+          setUser(getStoredUser());
+          setIsAuthenticated(true);
+        }
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
   const value = useMemo(
     () => ({
       user,

@@ -121,6 +121,7 @@ export default function App() {
           path="/merchants"
           element={
             <Merchants
+              deleteMerchant={deleteMerchant}
               localMerchants={localMerchants}
               onLocalDelete={removeLocalMerchant}
             />
