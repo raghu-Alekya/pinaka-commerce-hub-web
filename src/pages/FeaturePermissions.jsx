@@ -84,6 +84,11 @@ export default function FeaturePermissions() {
   const [sortBy, setSortBy] =
     useState("newest");
 
+  const [currentPage, setCurrentPage] =
+    useState(1);
+
+  const recordsPerPage = 10;
+
   const isEditing = editingId !== null;
 
   const requiredFieldsComplete =
@@ -311,6 +316,8 @@ export default function FeaturePermissions() {
               String(item.id) !== String(createdPermission.id)
           ),
         ]);
+
+        setCurrentPage(1);
       }
 
       clearForm();
@@ -426,6 +433,8 @@ export default function FeaturePermissions() {
     setSortBy(
       "newest"
     );
+
+    setCurrentPage(1);
   };
 
   /* =========================================================
@@ -509,6 +518,52 @@ export default function FeaturePermissions() {
       statusFilter,
       sortBy,
     ]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, sortBy]);
+
+  const totalEntries = filteredPermissions.length;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(totalEntries / recordsPerPage)
+  );
+
+  useEffect(() => {
+    setCurrentPage((page) =>
+      Math.min(Math.max(page, 1), totalPages)
+    );
+  }, [totalPages]);
+
+  const safeCurrentPage = Math.min(
+    Math.max(currentPage, 1),
+    totalPages
+  );
+
+  const startIndex =
+    (safeCurrentPage - 1) * recordsPerPage;
+
+  const paginatedPermissions =
+    filteredPermissions.slice(
+      startIndex,
+      startIndex + recordsPerPage
+    );
+
+  const showingFrom =
+    totalEntries === 0 ? 0 : startIndex + 1;
+
+  const showingTo =
+    totalEntries === 0
+      ? 0
+      : Math.min(
+          startIndex + recordsPerPage,
+          totalEntries
+        );
+
+  const pageNumbers = Array.from(
+    { length: totalPages },
+    (_, index) => index + 1
+  );
 
   const formatPermissionDate = (value) => {
     if (!value) {
@@ -1064,7 +1119,7 @@ export default function FeaturePermissions() {
 
             <tbody>
 
-              {filteredPermissions.map(
+              {paginatedPermissions.map(
                 (permission) => (
 
                   <tr
@@ -1214,17 +1269,7 @@ export default function FeaturePermissions() {
         <div className="fp-list-footer">
 
           <span>
-
-            Showing 1 to{" "}
-            {
-              filteredPermissions.length
-            }{" "}
-            of{" "}
-            {
-              filteredPermissions.length
-            }{" "}
-            entries
-
+            Showing {showingFrom} to {showingTo} of {totalEntries} entries
           </span>
 
           <div className="fp-pagination">
@@ -1232,26 +1277,50 @@ export default function FeaturePermissions() {
             <button
               type="button"
               aria-label="Previous page"
+              onClick={() =>
+                setCurrentPage((page) =>
+                  Math.max(1, page - 1)
+                )
+              }
+              disabled={safeCurrentPage === 1}
             >
-
               <i className="bi bi-chevron-left" />
-
             </button>
 
-            <button
-              type="button"
-              className="current"
-            >
-              1
-            </button>
+            {pageNumbers.map((page) => (
+              <button
+                key={page}
+                type="button"
+                className={
+                  page === safeCurrentPage
+                    ? "current"
+                    : ""
+                }
+                aria-label={`Page ${page}`}
+                aria-current={
+                  page === safeCurrentPage
+                    ? "page"
+                    : undefined
+                }
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            ))}
 
             <button
               type="button"
               aria-label="Next page"
+              onClick={() =>
+                setCurrentPage((page) =>
+                  Math.min(totalPages, page + 1)
+                )
+              }
+              disabled={
+                safeCurrentPage === totalPages
+              }
             >
-
               <i className="bi bi-chevron-right" />
-
             </button>
 
           </div>

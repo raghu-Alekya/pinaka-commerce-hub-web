@@ -45,6 +45,10 @@ export default function RoleTemplates() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState("NEWEST");
 
+  // Client-side pagination over the real API-backed list.
+  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -139,6 +143,29 @@ export default function RoleTemplates() {
     });
   }, [templates, search, statusFilter, sortBy]);
 
+  const totalEntries = filteredTemplates.length;
+  const totalPages = Math.max(1, Math.ceil(totalEntries / PAGE_SIZE));
+
+  const paginatedTemplates = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredTemplates.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredTemplates, currentPage]);
+
+  const showingFrom = totalEntries === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const showingTo = totalEntries === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, totalEntries);
+
+  // Search/filter/sort changes always start from the first valid page.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, sortBy]);
+
+  // If a delete makes the current page invalid, move to the last valid page.
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   const roleNameSuggestions = useMemo(
     () =>
       [...new Set(
@@ -218,6 +245,8 @@ export default function RoleTemplates() {
     setError("");
 
     try {
+      const isCreating = editingId === null;
+
       if (editingId !== null) {
         await roleTemplatesApi.update(editingId, values);
       } else {
@@ -225,6 +254,7 @@ export default function RoleTemplates() {
       }
 
       await loadTemplates();
+      if (isCreating) setCurrentPage(1);
       resetForm();
     } catch (err) {
       setError(
@@ -569,7 +599,7 @@ export default function RoleTemplates() {
               </thead>
 
               <tbody>
-                {filteredTemplates.map((template) => (
+                {paginatedTemplates.map((template) => (
                   <tr
                     key={template.id}
                     className="role-template-clickable-row"
@@ -719,10 +749,45 @@ export default function RoleTemplates() {
           </div>
 
           <div className="role-pagination">
-            <span>
-              Showing {filteredTemplates.length} of{" "}
-              {templates.length} entries
+            <span className="role-pagination-info">
+              Showing {showingFrom} to {showingTo} of {totalEntries} entries
             </span>
+
+            {totalEntries > 0 && (
+              <div className="role-pagination-controls" aria-label="Role templates pagination">
+                <button
+                  type="button"
+                  className="role-page-btn role-page-arrow"
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="Previous page"
+                >
+                  <i className="bi bi-chevron-left" />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    className={`role-page-btn ${currentPage === page ? "active" : ""}`}
+                    onClick={() => setCurrentPage(page)}
+                    aria-current={currentPage === page ? "page" : undefined}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  className="role-page-btn role-page-arrow"
+                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  disabled={currentPage === totalPages}
+                  aria-label="Next page"
+                >
+                  <i className="bi bi-chevron-right" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>

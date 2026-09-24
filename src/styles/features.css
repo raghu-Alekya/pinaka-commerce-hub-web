@@ -7,7 +7,7 @@
   flex: 1;
   width: 100%;
   min-height: calc(100vh - 72px);
-  padding: 18px 32px 30px;
+  padding: 18px 28px 30px;
   background: #f6f7fb;
   color: #10264d;
   box-sizing: border-box;
@@ -445,8 +445,8 @@
 }
 
 .feature-filter-control .features-filter-select {
-  width: 138.7px;
-  height: 100%;
+  width: 150px;
+  height: 38px;
   padding: 0 34px 0 12px;
   border: 0;
   outline: 0;
@@ -874,12 +874,12 @@
 }
 
 .feature-pagination button {
-  min-width: 31px;
-  height: 31px;
+  min-width: 32px;
+  height: 32px;
   padding: 0 8px;
-  border: 0;
+  border: 1px solid #dce9f5;
   border-radius: 7px;
-  background: #f7f9fd;
+  background: #FFFFFF;
   color: #71809b;
   font-family: inherit;
   font-size: 11px;
@@ -1231,5 +1231,6 @@
 /* Dynamic pagination: disabled Previous / Next state */
 .feature-pagination button:disabled {
   opacity: 0.45;
+  border: 1px solid #dce9f5;
   cursor: not-allowed;
 }

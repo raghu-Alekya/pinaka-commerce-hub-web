@@ -1,7 +1,7 @@
 .plans-page {
   flex: 1;
   min-height: calc(100vh - 72px);
-  padding: 18px 20px 30px;
+  padding: 18px 28px 30px;
   color: #10264d;
   background: #f6f7fb;
 }
@@ -35,7 +35,7 @@
 .plans-page-heading p {
   margin: 0;
   color: #5575a8;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .plan-stepper {
@@ -62,7 +62,8 @@
   color: #6a86ae;
   background: transparent;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 14px;
+  font-weight: 400;
 }
 
 .plan-step span {
@@ -73,8 +74,8 @@
   border-radius: 50%;
   color: #5a7cab;
   background: #edf3fb;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 400;
 }
 
 .plan-step.active,
@@ -718,12 +719,13 @@
   min-height: 39px;
   color: #102d59;
   background: #f1f3fd;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .plan-code-cell strong,
 .plan-name-cell strong {
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -734,24 +736,25 @@
 
 .plan-description-cell {
   color: #6380ae;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
 .plan-price-cell {
+  font-size: 12px;
   font-weight: 700;
 }
 
 .plan-price-cell small {
   color: #6380ae;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
 }
 
 .plan-status {
   display: inline-flex;
-  min-width: 70px;
-  height: 22px;
+  min-width: 76px;
+  height: 26px;
   align-items: center;
   justify-content: center;
   gap: 5px;
@@ -810,8 +813,8 @@
 
 .plans-pagination button {
   display: grid;
-  width: 29px;
-  height: 29px;
+  width: 32px;
+  height: 32px;
   place-items: center;
   border: 1px solid #dce9f5;
   border-radius: 6px;
@@ -1378,8 +1381,8 @@
 }
 
 .plans-list-card .plans-filters select {
-  flex: 0 0 170px !important;
-  width: 170px !important;
+  flex: 0 0 150px !important;
+  width: 150px !important;
   height: 38px !important;
   min-height: 38px !important;
   padding: 0 34px 0 12px !important;
@@ -1388,11 +1391,12 @@
 }
 
 .plans-list-card .plan-reset-button {
-  flex: 0 0 44px !important;
-  width: 44px !important;
+  flex: 0 0 38px !important;
+  width: 38px !important;
   height: 38px !important;
   min-height: 38px !important;
   padding: 0 !important;
+  font-size: 15px !important;
   box-sizing: border-box !important;
 }
 

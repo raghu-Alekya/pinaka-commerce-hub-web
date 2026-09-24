@@ -501,7 +501,7 @@ export default function CreatePlan() {
         {[
           ["Plan Information", 1],
           ["Pricing", 2],
-          ["Features and Limits", 3],
+          ["Features", 3],
           ["Review and Create", 4],
         ].map(([label, step], index) => (
           <div className="plan-stepper-item" key={step}>
