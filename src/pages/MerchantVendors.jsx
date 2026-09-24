@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "../styles/merchant-vendors.css";
+import { getVendors } from "../api/vendors";
 
 const idOf = (value) =>
     String(
@@ -25,6 +26,14 @@ const normalize = (value) => ({
         value.type ||
         value.vendorType ||
         "—",
+
+    phone:
+        value.phone ||
+        value.mobile ||
+        value.mobileNumber ||
+        value.phoneNumber ||
+        value.contactPhone ||
+        "",
 
     contact:
         value.contactName ||
@@ -76,7 +85,7 @@ const matches = (
 
 export default function MerchantVendors({
     merchantId,
-    masterVendors = [],
+    masterVendors: initialMasterVendors = [],
     assignedVendorIds = [],
     onSaveAssignments,
     loading = false,
@@ -110,6 +119,15 @@ export default function MerchantVendors({
         useState(false);
 
     const [saveError, setSaveError] =
+        useState("");
+
+    const [masterVendors, setMasterVendors] =
+        useState(initialMasterVendors);
+
+    const [masterLoading, setMasterLoading] =
+        useState(false);
+
+    const [masterError, setMasterError] =
         useState("");
 
     const lock = useRef(false);
@@ -217,6 +235,45 @@ export default function MerchantVendors({
         available.filter(active);
 
     // =========================================================
+    // LOAD MASTER VENDORS
+    // =========================================================
+
+    async function openAddVendorModal() {
+        if (masterLoading) {
+            return;
+        }
+
+        setMasterLoading(true);
+        setMasterError("");
+        setSelection([]);
+        setSearch("");
+        setSaveError("");
+
+        try {
+            const vendors = await getVendors();
+
+            setMasterVendors(
+                Array.isArray(vendors) ? vendors : []
+            );
+
+            setModal({
+                type: "select",
+            });
+        } catch (e) {
+            setMasterError(
+                e?.message ||
+                    "Unable to load master vendors."
+            );
+
+            setModal({
+                type: "select",
+            });
+        } finally {
+            setMasterLoading(false);
+        }
+    }
+
+    // =========================================================
     // CLOSE
     // =========================================================
 
@@ -224,6 +281,7 @@ export default function MerchantVendors({
         if (!lock.current) {
             setModal(null);
             setSaveError("");
+            setMasterError("");
         }
     };
 
@@ -292,13 +350,6 @@ export default function MerchantVendors({
 
     const name = (vendor) => (
         <span className="mv-name">
-            <span
-                className="mv-avatar"
-                aria-hidden="true"
-            >
-                ▤
-            </span>
-
             <strong>
                 {vendor.name}
             </strong>
@@ -368,13 +419,21 @@ export default function MerchantVendors({
                     </th>
                 )}
 
-                {[
-                    "name",
-                    "type",
-                    "contact",
-                    "assignedStoreCount",
-                    "status",
-                ].map((key) => (
+                {(select
+                    ? [
+                          "name",
+                          "type",
+                          "contact",
+                          "status",
+                      ]
+                    : [
+                          "name",
+                          "type",
+                          "contact",
+                          "assignedStoreCount",
+                          "status",
+                      ]
+                ).map((key) => (
                     <th key={key}>
                         {select ? (
                             {
@@ -461,18 +520,15 @@ export default function MerchantVendors({
                     ref={addButton}
                     className="mv-primary"
                     disabled={
-                        loading || !!error
+                        loading ||
+                        !!error ||
+                        masterLoading
                     }
-                    onClick={() => {
-                        setSelection([]);
-                        setSearch("");
-                        setSaveError("");
-                        setModal({
-                            type: "select",
-                        });
-                    }}
+                    onClick={openAddVendorModal}
                 >
-                    ＋ Add Vendor
+                    {masterLoading
+                        ? "Loading Vendors…"
+                        : "＋ Add Vendor"}
                 </button>
 
             </header>
@@ -489,7 +545,7 @@ export default function MerchantVendors({
 
                     <input
                         aria-label="Search assigned vendors"
-                        placeholder="Search vendors by name, type or contact…"
+                        placeholder="Search vendors by name, type or phone…"
                         value={query}
                         onChange={(e) => {
                             setQuery(
@@ -793,6 +849,21 @@ export default function MerchantVendors({
                     {modal?.type ===
                     "select" ? (
                         <>
+                            {masterLoading && (
+                                <p role="status">
+                                    Loading master vendors…
+                                </p>
+                            )}
+
+                            {masterError && (
+                                <p
+                                    role="alert"
+                                    className="mv-error"
+                                >
+                                    {masterError}
+                                </p>
+                            )}
+
                             <input
                                 className="mv-search"
                                 autoFocus
@@ -882,15 +953,9 @@ export default function MerchantVendors({
                                                     </td>
 
                                                     <td>
-                                                        {
-                                                            vendor.contact
-                                                        }
-                                                    </td>
-
-                                                    <td>
-                                                        {
-                                                            vendor.assignedStoreCount
-                                                        }
+                                                        {vendor.phone ||
+                                                            vendor.contact ||
+                                                            "—"}
                                                     </td>
 
                                                     <td>
@@ -907,7 +972,7 @@ export default function MerchantVendors({
                                             <tr>
                                                 <td
                                                     colSpan={
-                                                        6
+                                                        5
                                                     }
                                                 >
                                                     No

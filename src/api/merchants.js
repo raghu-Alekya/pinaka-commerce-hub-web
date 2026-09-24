@@ -2,27 +2,56 @@ import { api } from "./http";
 import { endpoints } from "./endpoints";
 
 export function toMerchantPayload(data) {
-  const primaryStore = data.stores?.[0] || {};
+  if (!data) return {};
+  const m = data.merchant || data;
+  const s = data.subscription || data;
+  const primaryStore = (Array.isArray(data.stores) && data.stores[0]) || {};
+
+  const businessName = m.business || m.businessName || m.legalBusinessName || data.businessName || "Business";
+  const businessDisplayName = m.display || m.businessDisplayName || m.businessName || businessName;
+  const merchantName = m.name || m.merchantName || m.ownerName || [m.firstName, m.lastName].filter(Boolean).join(" ") || businessDisplayName;
+  const merchantEmail = m.email || m.merchantEmail || data.email || "";
+  const merchantPhoneNumber = m.phone || m.merchantPhoneNumber || data.phone || "";
+  const addressLine1 = m.addressLine1 || data.addressLine1 || data.businessAddress || primaryStore.address || "100 Main St";
+  const addressLine2 = m.addressLine2 || data.addressLine2 || "";
+  const city = m.city || data.city || primaryStore.city || "City";
+  const state = m.state || data.state || primaryStore.state || "State";
+  const pinCode = m.postal || m.pinCode || m.postalCode || data.postalCode || primaryStore.zip || "10001";
+  const country = m.country || data.country || "USA";
+  const initialStatus = m.initialStatus || m.status || data.status || "ACTIVE";
+  const storeTypeId = m.storeTypeId || data.storeTypeId || "a1b2c3d4-e5f6-4a1b-8c2d-000000000001";
+  const planId = s.planId || data.planId || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+  const billingCycle = String(s.billingCycle || data.billingCycle || "MONTHLY").toUpperCase();
+  const startDate = s.startDate || s.start || data.startDate || new Date().toISOString().slice(0, 10);
+  const renewalDate = s.renewalDate || data.renewalDate || "";
+  const agreementPrice = s.agreementPrice !== undefined ? Number(s.agreementPrice) : (data.agreementPrice !== undefined ? Number(data.agreementPrice) : 99);
+  const tax = Number(data.tax || m.tax || 8.25);
+  const totalDueToday = Number(data.totalDueToday || (agreementPrice + tax));
+  const paymentMethod = data.paymentMethod || m.paymentMethod || "CARD";
+  const roleIds = Array.isArray(data.roleIds) ? data.roleIds : (Array.isArray(m.roleIds) ? m.roleIds : []);
 
   return {
-    merchantId: data.merchantId,
-    businessName: data.businessName,
-    legalBusinessName: data.legalBusinessName,
-    businessType: data.businessType,
-    retailSubCategory: data.retailType,
-    country: data.country,
-    state: data.state || primaryStore.state || "",
-    city: data.city || primaryStore.city || "",
-    postalCode: data.postalCode || primaryStore.zip || "",
-    businessAddress: data.businessAddress || primaryStore.address || "",
-    taxId: data.taxId || "",
-    firstName: data.firstName,
-    lastName: data.lastName,
-    email: data.email,
-    phone: data.phone,
-    jobTitle: data.jobTitle || "",
-    alternatePhone: data.alternatePhone || "",
-    billingContact: Boolean(data.billingContact),
+    merchant: {
+      business: businessName,
+      display: businessDisplayName,
+      name: merchantName,
+      email: merchantEmail,
+      phone: merchantPhoneNumber,
+      country,
+      city,
+      state,
+      addressLine1,
+      addressLine2,
+      postal: pinCode,
+      storeTypeId,
+    },
+    subscription: {
+      planId,
+      billingCycle,
+      startDate,
+      renewalDate: renewalDate || undefined,
+      agreementPrice,
+    },
     stores: (data.stores || []).map((store) => ({
       name: store.name,
       id: store.id,
@@ -37,10 +66,29 @@ export function toMerchantPayload(data) {
       state: store.state,
       zip: store.zip,
     })),
-    plan: data.plan,
-    billingCycle: data.billingCycle,
-    trialPeriod: String(data.trialPeriod ?? ""),
-    onboardingStatus: data.onboardingStatus || "Completed",
+    roleIds,
+    merchantName,
+    merchantEmail,
+    merchantPhoneNumber,
+    businessName,
+    businessDisplayName,
+    initialStatus,
+    addressLine1,
+    addressLine2,
+    city,
+    state,
+    pinCode,
+    country,
+    storeTypeId,
+    planId,
+    billingCycle,
+    startDate,
+    renewalDate: renewalDate || undefined,
+    agreementPrice,
+    tax,
+    totalDueToday,
+    paymentMethod,
+    onboardingStatus: initialStatus,
   };
 }
 
@@ -54,7 +102,7 @@ export async function listMerchants() {
         ? data.data
         : [];
 
-  return items.map(mapMerchantToRow);
+  return items.map(mapMerchantToRow).filter(Boolean);
 }
 
 function titleCase(value) {
@@ -100,37 +148,90 @@ function formatRelative(value) {
   return formatDate(value);
 }
 
-export function mapMerchantToRow(merchant) {
+function merchantApiId(merchant) {
+  const values = [merchant?.id, merchant?.merchantId].filter(Boolean);
+  return values.find(value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value))) || values[0] || '';
+}
+
+export function mapMerchantToRow(item) {
+  if (!item) return null;
+  const merchant = item.merchant || item.data?.merchant || item;
+  const plan = item.plan || merchant.plan || item.subscription?.plan || {};
+  const subscription = item.subscription || merchant.subscription || {};
+
   const name =
+    merchant.businessDisplayName ||
     merchant.businessName ||
     merchant.legalBusinessName ||
+    merchant.merchantName ||
     merchant.ownerName ||
     merchant.name ||
     "Merchant";
 
-  const stores = Array.isArray(merchant.stores)
-    ? merchant.stores.length
+  const id = merchant.merchantId || merchant.id || merchant.code || "";
+  const email = merchant.merchantEmail || merchant.email || "";
+  const phone = merchant.merchantPhoneNumber || merchant.phone || "";
+  const stores = Array.isArray(merchant.stores || item.stores)
+    ? (merchant.stores || item.stores).length
     : merchant.storeCount ?? merchant.storesCount ?? 0;
 
+  const planName =
+    subscription.planName ||
+    plan.name ||
+    subscription.planCode ||
+    plan.code ||
+    merchant.plan ||
+    merchant.subscriptionPlan ||
+    "—";
+
+  const renewal =
+    subscription.renewalDate ||
+    subscription.renewal_date ||
+    merchant.renewal ||
+    merchant.renewsOn ||
+    "";
+
+  const status =
+    merchant.initialStatus ||
+    merchant.status ||
+    merchant.onboardingStatus ||
+    "ACTIVE";
+
+  const createdAt =
+    merchant.createdDate ||
+    merchant.createdAt ||
+    merchant.joined ||
+    "";
+
+  const updatedAt =
+    merchant.updatedDate ||
+    merchant.updatedAt ||
+    createdAt;
+
   return {
-    id: merchant.id || merchant.merchantId,
+    id,
+    merchantId: merchantApiId(merchant) || id,
     name,
-    email: merchant.email || "",
-    phone: merchant.phone || "",
+    email,
+    phone,
     stores,
-    plan: merchant.subscription?.planName || merchant.plan || merchant.subscriptionPlan || "—",
-    renewal: merchant.renewal || merchant.renewsOn || "",
-    status: titleCase(merchant.status || merchant.onboardingStatus),
-    joined: formatDate(merchant.createdAt || merchant.joined),
-    active: formatRelative(merchant.updatedAt || merchant.createdAt),
+    plan: planName,
+    renewal: renewal ? formatDate(renewal) : "—",
+    status: titleCase(status),
+    joined: formatDate(createdAt),
+    active: formatRelative(updatedAt),
     initials: toInitials(name),
-    createdAt: merchant.createdAt,
+    createdAt,
+    country: merchant.country || "",
+    state: merchant.state || "",
+    city: merchant.city || "",
+    _raw: item,
   };
 }
 
 export async function getMerchant(id) {
   const data = await api.get(endpoints.merchant(id));
-  const merchant = data?.merchant || data?.data || data;
+  const merchant = data?.merchant || data?.data?.merchant || data?.data || data;
   const stores = Array.isArray(data?.stores)
     ? data.stores
     : Array.isArray(merchant?.stores)
@@ -145,7 +246,7 @@ export async function getMerchant(id) {
         subscription?.planName ||
         subscription?.planCode ||
         mapMerchantToRow(merchant).plan,
-      phone: merchant?.phone || "",
+      phone: merchant?.merchantPhoneNumber || merchant?.phone || "",
       city: merchant?.city || "",
       state: merchant?.state || "",
       country: merchant?.country || "",
@@ -180,10 +281,8 @@ function mapStoreToRow(store) {
 }
 
 export async function createMerchant(data) {
-  const result = await api.post(
-    endpoints.createMerchant,
-    toMerchantPayload(data)
-  );
+  const payload = toMerchantPayload(data);
+  const result = await api.post(endpoints.createMerchant, payload);
 
   if (result && result.success === false) {
     throw new Error(result.message || "Unable to create merchant.");
@@ -192,22 +291,30 @@ export async function createMerchant(data) {
   return result;
 }
 
-export function updateMerchant(id, data) {
-  return api.put(endpoints.merchant(id), toMerchantPayload(data));
+export async function updateMerchant(id, data) {
+  const payload = toMerchantPayload(data);
+  const result = await api.put(endpoints.merchant(id), payload);
+
+  if (result && result.success === false) {
+    throw new Error(result.message || "Unable to update merchant.");
+  }
+
+  return result;
 }
 
 export async function getMerchantForm(id) {
   const { raw } = await getMerchant(id);
-  const merchant = raw.merchant;
+  const merchant = raw.merchant || raw;
   const subscription = raw.subscription;
   return {
-    ...merchant, merchantId: merchant.id,
-    businessType: titleCase(merchant.businessType),
-    retailType: titleCase(merchant.retailSubCategory),
-    firstName: merchant.firstName || merchant.ownerName?.split(" ")[0] || "",
-    lastName: merchant.lastName || merchant.ownerName?.split(" ").slice(1).join(" ") || "",
-    plan: subscription?.planCode || "",
-    billingCycle: subscription?.billingCycle || "",
+    ...merchant,
+    merchantId: merchant.merchantId || merchant.id,
+    businessType: titleCase(merchant.businessType || "Retail"),
+    retailType: titleCase(merchant.retailSubCategory || "Grocery"),
+    firstName: merchant.firstName || merchant.ownerName?.split(" ")[0] || merchant.merchantName?.split(" ")[0] || "",
+    lastName: merchant.lastName || merchant.ownerName?.split(" ").slice(1).join(" ") || merchant.merchantName?.split(" ").slice(1).join(" ") || "",
+    plan: subscription?.planCode || subscription?.plan_id || "",
+    billingCycle: subscription?.billingCycle || subscription?.billing_cycle || "",
     trialPeriod: String(subscription?.trialDays ?? 0),
     stores: (raw.stores || []).map(store => ({
       persisted: true, id: store.id, name: store.storeName, type: titleCase(store.storeType),

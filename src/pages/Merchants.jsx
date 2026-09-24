@@ -8,6 +8,7 @@ import { listSubscriptionPlans } from "../api/subscriptions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { listMerchants, getMerchant } from "../api/merchants";
+import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
 import "../styles/merchants.css";
 
@@ -35,7 +36,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
     const record=result?.employee || result?.data?.employee || result?.data || result;
     // Never retain password, login PIN, or temporary photo URL in the list.
     const source=record && typeof record==='object' && !Array.isArray(record) ? record : {};
-    const employee={id:source.id || source.employeeId || source.employeeCode || crypto.randomUUID(), employeeCode:source.employeeCode || '', merchantId,
+    const employee={id:source.id || source.employeeId || source.employeeCode || crypto.randomUUID(), employeeCode:source.employeeCode || '', merchantId:apiMerchantId,
       name:source.name || source.employeeName || [values.firstName,values.lastName].filter(Boolean).join(' '),
       email:source.email || values.email,phone:source.phone || source.phoneNumber || values.phone,
       gender:source.gender || values.gender,username:source.username || values.username,
@@ -75,6 +76,9 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const [loading, setLoading] = useState(!draft);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
+  const [apiEmployees, setApiEmployees] = useState(null);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
+  const [employeesError, setEmployeesError] = useState('');
   useEffect(() => {
     if (draft) { setLoading(false); setError(''); return; }
     let active = true;
@@ -87,6 +91,22 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   }, [merchantId, draft, attempt]);
   const response = result?.raw || result || {};
   const raw = response.merchant || response.data?.merchant || response.data || response;
+  const merchantIds = [merchant?.merchantId, result?.merchant?.merchantId, raw.merchantId, raw.id, merchantId].filter(Boolean);
+  const apiMerchantId = merchantIds.find(value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value))) || merchantIds[0];
+  useEffect(() => {
+    let active = true;
+    setEmployeesLoading(true);
+    setEmployeesError('');
+    setApiEmployees(null);
+    listMerchantEmployees(apiMerchantId).then(value => {
+      if (active) setApiEmployees(value);
+    }).catch(failure => {
+      if (active) setEmployeesError(failure.message || 'Unable to load merchant employees.');
+    }).finally(() => {
+      if (active) setEmployeesLoading(false);
+    });
+    return () => { active = false; };
+  }, [apiMerchantId]);
   const saved = draft || raw._onboarding;
   const summary = { ...(result?.merchant || {}), ...(merchant || {}) };
   const contact = saved?.merchant || raw;
@@ -94,10 +114,12 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const address = contact.address || raw.businessAddress || {};
   const list = value => Array.isArray(value) ? value : [];
   const stores = list(saved?.stores ?? response.stores ?? raw.stores);
-  const employeeRecords = saved?.employees ?? raw.employees ?? response.employees ?? response.data?.employees ?? merchant?.employees;
-  const employees = [...createdEmployees, ...list(employeeRecords).filter(employee=>!createdEmployees.some(item=>String(item.id)===String(employee.id || employee.employeeId) || (item.email && item.email===employee.email)))].filter(employee => {
+  const employeeRecords = apiEmployees ?? saved?.employees ?? raw.employees ?? response.employees ?? response.data?.employees ?? merchant?.employees;
+  const employeeRows = list(employeeRecords).filter(employee=>!createdEmployees.some(item=>String(item.id)===String(employee.id || employee.employeeId) || (item.email && item.email===employee.email)));
+  const employees = [...createdEmployees, ...employeeRows].filter(employee => {
+    if (apiEmployees) return true;
     const ownerId = employee.merchantId ?? employee.merchant?.id;
-    return ownerId == null || String(ownerId) === String(merchantId);
+    return ownerId == null || String(ownerId) === String(apiMerchantId);
   });
   const employeeStoreName = employee => employee.storeName || employee.store?.name || stores.find(store =>
     [store.id, store.storeId, store.code, store.storeCode].some(id => id != null && String(id) === String(employee.storeId))
@@ -178,8 +200,10 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
         <MerchantTenders merchantId={merchantId} masterTenders={masterTenders} assignedTenderIds={tenderAssignments?.[merchantId] ?? saved?.tenderIds ?? raw.tenderIds ?? raw.tenders ?? []} onSaveAssignments={onSaveTenderAssignments} loading={tendersLoading} error={tendersError}/>
       </div>
       <div role="tabpanel" id="merchant-panel-employees" aria-labelledby="merchant-tab-employees" hidden={activeTab !== 'employees'} tabIndex={0}>
+        {employeesError && <div className="alert alert-danger" role="alert">{employeesError}</div>}
+        {employeesLoading && <p role="status">Loading employees...</p>}
         {addingEmployee ? <ViewSection title="Add Employee" actions={<button type="button" className="merchant-back-employees" onClick={()=>setAddingEmployee(false)}>← Back to Employees</button>}>
-          <MerchantEmployeeForm embedded key={merchantId} merchantId={merchantId} initialMerchant={merchant} onSave={saveEmployeeAndRefresh} onBack={()=>setAddingEmployee(false)}/>
+          <MerchantEmployeeForm embedded key={apiMerchantId} merchantId={apiMerchantId} initialMerchant={merchant} onSave={saveEmployeeAndRefresh} onBack={()=>setAddingEmployee(false)}/>
         </ViewSection> : <MerchantEmployeeList employees={employees} merchantName={business} onAdd={()=>setAddingEmployee(true)}/>}
 
       </div>
