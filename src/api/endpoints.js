@@ -48,5 +48,7 @@ export const endpoints = {
 
   employees: "/employees",
   employeeList: "/merchants/employees",
+  // Devices
+  devices: "/devices",
+  device: (id) => `/devices/${encodeURIComponent(id)}`,
 };
-

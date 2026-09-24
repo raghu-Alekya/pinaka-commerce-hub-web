@@ -22,6 +22,8 @@ import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
 import Devices from "./pages/Devices";
 import AddDevice from "./pages/AddDevice";
+import DeviceView from "./pages/DeviceView";
+import EditDevice from "./pages/EditDevice";
 import Products from "./pages/Products";
 import Coupons from "./pages/Coupons";
 import Orders from "./pages/Orders";
@@ -46,7 +48,6 @@ import ViewPlanPricing from "./pages/ViewPlanPricing";
 import ViewPlanFeaturesLimits from "./pages/ViewPlanFeaturesLimits";
 import CashManagement from "./pages/CashManagement";
 import AddMerchantEmployee from "./pages/AddMerchantEmployee";
-import { createEmployee } from "./api/employees";
 
 const placeholders = [
   "Cash Management",
@@ -71,14 +72,14 @@ export default function App() {
 
     setLocalMerchants((previous) => {
       const exists = previous.some(
-        (item) => String(item.id) === String(merchant.id)
+        (item) => String(item.id) === String(merchant.id),
       );
 
       if (exists) {
         return previous.map((item) =>
           String(item.id) === String(merchant.id)
             ? { ...item, ...merchant }
-            : item
+            : item,
         );
       }
 
@@ -88,9 +89,7 @@ export default function App() {
 
   function removeLocalMerchant(merchantId) {
     setLocalMerchants((previous) =>
-      previous.filter(
-        (item) => String(item.id) !== String(merchantId)
-      )
+      previous.filter((item) => String(item.id) !== String(merchantId)),
     );
   }
 
@@ -115,13 +114,8 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route
-          index
-          element={<Navigate to="/dashboard" replace />}
-        />
-
+        <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
-
         {/* Merchant list, creation, and editing */}
         <Route
           path="/merchants"
@@ -129,11 +123,9 @@ export default function App() {
             <Merchants
               localMerchants={localMerchants}
               onLocalDelete={removeLocalMerchant}
-              onSaveEmployee={createEmployee}
             />
           }
         />
-
         <Route
           path="/merchants/new"
           element={
@@ -143,7 +135,6 @@ export default function App() {
             />
           }
         />
-
         <Route
           path="/merchants/:merchantId/edit"
           element={
@@ -153,107 +144,65 @@ export default function App() {
             />
           }
         />
-
         {/* Merchant stores */}
         <Route
           path="/merchants/:merchantId/stores"
           element={<MerchantStores />}
         />
-
         <Route
           path="/merchants/:merchantId/stores/new"
           element={<AddStore />}
         />
-
         <Route
           path="/merchants/:merchantId/stores/edit/:storeId"
           element={<AddStore />}
         />
-
-        <Route
-          path="/merchants/:merchantId/users"
-          element={<Users />}
-        />
-
+        <Route path="/merchants/:merchantId/users" element={<Users />} />
         <Route
           path="/merchants/:merchantId/stores/:storeId/configuration"
           element={<StoreConfiguration />}
         />
-
         <Route
           path="/merchants/:merchantId/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
         />
-
-        <Route
-          path="/cash-management"
-          element={<CashManagement />}
-        />
-
+        <Route path="/cash-management" element={<CashManagement />} />
         {/* Subscriptions */}
-        <Route
-          path="/subscriptions"
-          element={<Subscriptions />}
-        />
-
-        <Route
-          path="/merchant-subscriptions"
-          element={<Subscriptions />}
-        />
+        <Route path="/subscriptions" element={<Subscriptions />} />
+        <Route path="/merchant-subscriptions" element={<Subscriptions />} />
         <Route
           path="/merchants/:merchantId/employees/new"
           element={<AddMerchantEmployee />}
         />
-
         {/* Stores */}
         <Route path="/stores" element={<Stores />} />
         <Route path="/stores/new" element={<AddStore />} />
-        <Route
-          path="/stores/:storeId/edit"
-          element={<AddStore />}
-        />
-
+        <Route path="/stores/:storeId/edit" element={<AddStore />} />
         <Route
           path="/stores/:storeId/configuration"
           element={<StoreConfiguration />}
         />
-
         <Route
           path="/stores/:storeId/configuration/:section"
           element={<StoreConfiguration />}
         />
-
         {/* Products and orders */}
         <Route path="/products" element={<Products />} />
         <Route path="/coupons" element={<Coupons />} />
         <Route path="/orders" element={<Orders />} />
-
         {/* Users and POS */}
         <Route path="/users" element={<Users />} />
-        <Route
-          path="/pos-configuration"
-          element={<PosConfiguration />}
-        />
-
+        <Route path="/pos-configuration" element={<PosConfiguration />} />
         {/* Employees */}
         <Route path="/employees" element={<Employees />} />
-        <Route
-          path="/employees/add"
-          element={<AddEmployee />}
-        />
-        <Route
-          path="/employees/edit"
-          element={<EditEmployee />}
-        />
-        <Route
-          path="/editemployee"
-          element={<EditEmployee />}
-        />
-
+        <Route path="/employees/add" element={<AddEmployee />} />
+        <Route path="/employees/edit" element={<EditEmployee />} />
+        <Route path="/editemployee" element={<EditEmployee />} />
         {/* Devices */}
         <Route path="/devices" element={<Devices />} />
         <Route path="/devices/add" element={<AddDevice />} />
-
+        <Route path="/devices/:deviceId/edit" element={<EditDevice />} />
+        <Route path="/devices/:deviceId" element={<DeviceView />} />
         {/* Remaining sections */}
         {placeholders.map((title) => (
           <Route
@@ -262,7 +211,6 @@ export default function App() {
             element={<Placeholder title={title} />}
           />
         ))}
-
         {/* Features */}
         <Route path="/features" element={<Features />} />
         <Route
@@ -277,36 +225,52 @@ export default function App() {
           path="/features/:featureId/permissions"
           element={<FeaturePermissionDetails />}
         />
-
         {/* Feature Permissions */}
         <Route path="/permissions" element={<FeaturePermissions />} />
         <Route
           path="/permissions/:featureId"
           element={<FeaturePermissions />}
         />
-//
+        //
         {/* Master Setup */}
         <Route path="/vendors" element={<Vendors />} />
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
-        <Route path="/store-types/:storeTypeId" element={<StoreTypeDetails />} />
-        <Route path="/store-types/:storeTypeId/features" element={<StoreTypeFeatures />} />
-        <Route path="/store-types/:storeTypeId/role-templates" element={<StoreTypeRoleTemplates />} />
-        <Route path="/role-templates/:roleId" element={<ViewRoleTemplateOverview />} />
-        <Route path="/role-templates/:roleId/store-types" element={<ViewRoleTemplateStoreTypes />} />
-        <Route path="/role-templates/:roleId/access" element={<ViewRoleTemplateAccess />} />
+        <Route
+          path="/store-types/:storeTypeId"
+          element={<StoreTypeDetails />}
+        />
+        <Route
+          path="/store-types/:storeTypeId/features"
+          element={<StoreTypeFeatures />}
+        />
+        <Route
+          path="/store-types/:storeTypeId/role-templates"
+          element={<StoreTypeRoleTemplates />}
+        />
+        <Route
+          path="/role-templates/:roleId"
+          element={<ViewRoleTemplateOverview />}
+        />
+        <Route
+          path="/role-templates/:roleId/store-types"
+          element={<ViewRoleTemplateStoreTypes />}
+        />
+        <Route
+          path="/role-templates/:roleId/access"
+          element={<ViewRoleTemplateAccess />}
+        />
         <Route path="/plans/:planId" element={<ViewPlanOverview />} />
         <Route path="/plans/:planId/pricing" element={<ViewPlanPricing />} />
-        <Route path="/plans/:planId/features-limits" element={<ViewPlanFeaturesLimits />} />
-
+        <Route
+          path="/plans/:planId/features-limits"
+          element={<ViewPlanFeaturesLimits />}
+        />
       </Route>
 
-      <Route
-        path="*"
-        element={<Navigate to="/login" replace />}
-      />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

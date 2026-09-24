@@ -446,7 +446,8 @@ export default function AddEmployee() {
         if (active) setMerchantOptions(merchants);
       })
       .catch((error) => {
-        if (active) setMerchantLoadError(error.message || "Unable to load merchants.");
+        if (active)
+          setMerchantLoadError(error.message || "Unable to load merchants.");
       });
 
     return () => {
@@ -493,17 +494,17 @@ export default function AddEmployee() {
         }
         return "";
 
-      case "phone": {
-        if (!trimmed) return "Phone Number is required.";
+      case "phone":
+        {
+          if (!trimmed) return "Phone Number is required.";
 
-        const phoneDigits = trimmed.replace(/\D/g, "");
+          const phoneDigits = trimmed.replace(/\D/g, "");
 
-        if (phoneDigits.length < 8 || phoneDigits.length > 15) {
-          return "Enter a valid phone number.";
+          if (phoneDigits.length < 8 || phoneDigits.length > 15) {
+            return "Enter a valid phone number.";
+          }
         }
-            }
         return "";
-
 
       case "dob":
         if (!trimmed) return "Date of Birth is required.";
@@ -530,7 +531,8 @@ export default function AddEmployee() {
         return "";
 
       case "address2":
-        if (trimmed && trimmed.length > 150) return "Address Line 2 cannot exceed 150 characters.";
+        if (trimmed && trimmed.length > 150)
+          return "Address Line 2 cannot exceed 150 characters.";
         return "";
 
       case "city":
@@ -538,7 +540,8 @@ export default function AddEmployee() {
         if (!/^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/.test(trimmed)) {
           return "City can contain letters, spaces, apostrophes and hyphens only.";
         }
-        if (trimmed.length < 2 || trimmed.length > 50) return "City must be between 2 and 50 characters.";
+        if (trimmed.length < 2 || trimmed.length > 50)
+          return "City must be between 2 and 50 characters.";
         return "";
 
       case "state":
@@ -546,7 +549,8 @@ export default function AddEmployee() {
         return "";
 
       case "pinCode":
-        if (!/^\d{6}$/.test(trimmed)) return "PIN Code must be exactly 6 digits.";
+        if (!/^\d{6}$/.test(trimmed))
+          return "PIN Code must be exactly 6 digits.";
         if (trimmed.startsWith("0")) return "PIN Code cannot start with 0.";
         return "";
 
@@ -559,7 +563,8 @@ export default function AddEmployee() {
         return "";
 
       case "employeeLoginPin":
-        if (!/^\d{6}$/.test(trimmed)) return "Employee Login PIN must be exactly 6 digits.";
+        if (!/^\d{6}$/.test(trimmed))
+          return "Employee Login PIN must be exactly 6 digits.";
         return "";
 
       case "username":
@@ -571,9 +576,15 @@ export default function AddEmployee() {
 
       case "password":
         if (!trimmed) return "Temporary Password is required.";
-        if (trimmed.length < 8) return "Password must be at least 8 characters.";
+        if (trimmed.length < 8)
+          return "Password must be at least 8 characters.";
         if (trimmed.length > 64) return "Password cannot exceed 64 characters.";
-        if (!/[A-Z]/.test(trimmed) || !/[a-z]/.test(trimmed) || !/\d/.test(trimmed) || !/[^A-Za-z0-9]/.test(trimmed)) {
+        if (
+          !/[A-Z]/.test(trimmed) ||
+          !/[a-z]/.test(trimmed) ||
+          !/\d/.test(trimmed) ||
+          !/[^A-Za-z0-9]/.test(trimmed)
+        ) {
           return "Password must contain uppercase, lowercase, number and special character.";
         }
         return "";
@@ -587,10 +598,21 @@ export default function AddEmployee() {
     const nextErrors = {};
 
     const requiredFields = [
-      "employeeCode", "firstName", "lastName", "email", "phone",
-      "dob", "gender",
-      "address1", "city", "state", "pinCode", "country",
-      "merchant", "username", "password"
+      "employeeCode",
+      "firstName",
+      "lastName",
+      "email",
+      "phone",
+      "dob",
+      "gender",
+      "address1",
+      "city",
+      "state",
+      "pinCode",
+      "country",
+      "merchant",
+      "username",
+      "password",
     ];
 
     requiredFields.forEach((name) => {
@@ -620,7 +642,7 @@ export default function AddEmployee() {
   const addStoreAssignment = () => {
     const firstUnassignedStore = availableStores.find(
       (store) =>
-        !storeAssignments.some((assignment) => assignment.store === store.id)
+        !storeAssignments.some((assignment) => assignment.store === store.id),
     );
 
     if (!firstUnassignedStore) {
@@ -640,8 +662,8 @@ export default function AddEmployee() {
   const updateStore = (id, store) => {
     setStoreAssignments((prev) =>
       prev.map((assignment) =>
-        assignment.id === id ? { ...assignment, store } : assignment
-      )
+        assignment.id === id ? { ...assignment, store } : assignment,
+      ),
     );
 
     if (errors[`store-${id}`]) {
@@ -655,8 +677,8 @@ export default function AddEmployee() {
   const updateStoreRoles = (id, roles) => {
     setStoreAssignments((prev) =>
       prev.map((assignment) =>
-        assignment.id === id ? { ...assignment, roles } : assignment
-      )
+        assignment.id === id ? { ...assignment, roles } : assignment,
+      ),
     );
 
     if (errors[`roles-${id}`]) {
@@ -669,7 +691,7 @@ export default function AddEmployee() {
 
   const removeStoreAssignment = (id) => {
     setStoreAssignments((prev) =>
-      prev.filter((assignment) => assignment.id !== id)
+      prev.filter((assignment) => assignment.id !== id),
     );
   };
 
@@ -762,20 +784,26 @@ export default function AddEmployee() {
     const validationErrors = validateForm();
 
     if (Object.keys(validationErrors).length > 0) {
-      const invalidFields = [...new Set(
-        Object.keys(validationErrors).map((field) => {
-          if (field === "storeAssignments" || field.startsWith("store-") || field.startsWith("roles-")) {
-            return "store and role assignments";
-          }
-          return field
-            .replace(/([A-Z])/g, " $1")
-            .replace(/^./, (character) => character.toUpperCase());
-        })
-      )];
+      const invalidFields = [
+        ...new Set(
+          Object.keys(validationErrors).map((field) => {
+            if (
+              field === "storeAssignments" ||
+              field.startsWith("store-") ||
+              field.startsWith("roles-")
+            ) {
+              return "store and role assignments";
+            }
+            return field
+              .replace(/([A-Z])/g, " $1")
+              .replace(/^./, (character) => character.toUpperCase());
+          }),
+        ),
+      ];
       setSubmitError(`Please fix: ${invalidFields.join(", ")}.`);
       requestAnimationFrame(() => {
         const firstInvalid = document.querySelector(
-          ".field-invalid, .employee-phone-invalid .form-control"
+          ".field-invalid, .employee-phone-invalid .form-control",
         );
         firstInvalid?.focus?.();
         firstInvalid?.scrollIntoView?.({ behavior: "smooth", block: "center" });
@@ -946,39 +974,40 @@ export default function AddEmployee() {
                     />
                   </div>
                 </div>
-                
-              <div className="employee-field employee-phone-field">
-                <label>
-                  Phone Number <span>*</span>
-                </label>
 
-                <PhoneInput
-                  country="in"
-                  enableSearch
-                  countryCodeEditable={false}
-                  autoFormat
-                  placeholder="Enter phone number"
-                  value={formData.phone}
-                  onChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      phone: value,
-                    }))
-                  }
-                  inputProps={{
-                    name: "phone",
-                    required: true,
-                    autoComplete: "tel",
-                  }}
-                />
-                {errors.phone && <span className="field-error">{errors.phone}</span>}
-              </div>
+                <div className="employee-field employee-phone-field">
+                  <label>
+                    Phone Number <span>*</span>
+                  </label>
+
+                  <PhoneInput
+                    country="in"
+                    enableSearch
+                    countryCodeEditable={false}
+                    autoFormat
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        phone: value,
+                      }))
+                    }
+                    inputProps={{
+                      name: "phone",
+                      required: true,
+                      autoComplete: "tel",
+                    }}
+                  />
+                  {errors.phone && (
+                    <span className="field-error">{errors.phone}</span>
+                  )}
+                </div>
 
                 {/* DATE OF BIRTH */}
 
                 <div className="employee-field">
-
-                  <label>Date of Birth</label>
+                  {/* <label>Date of Birth</label> */}
                   <label>
                     Date of Birth <span>*</span>
                   </label>
@@ -994,13 +1023,19 @@ export default function AddEmployee() {
 
                     <CalendarDays size={17} />
                   </div>
-                  {errors.dob && <span className="field-error">{errors.dob}</span>}
+                  {errors.dob && (
+                    <span className="field-error">{errors.dob}</span>
+                  )}
                 </div>
 
                 {/* GENDER */}
 
                 <SelectField
-                  label="Gender"
+                  label={
+                    <>
+                      Gender <span>*</span>
+                    </>
+                  }
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
@@ -1024,7 +1059,11 @@ export default function AddEmployee() {
 
               <div className="employee-form-grid two-columns">
                 <FormField
-                  label="Address Line 1"
+                  label={
+                    <>
+                      Address Line 1 <span>*</span>
+                    </>
+                  }
                   name="address1"
                   placeholder="Enter address line 1"
                   value={formData.address1}
@@ -1044,7 +1083,11 @@ export default function AddEmployee() {
 
               <div className="employee-form-grid three-columns">
                 <FormField
-                  label="City"
+                  label={
+                    <>
+                      City <span>*</span>
+                    </>
+                  }
                   name="city"
                   placeholder="Enter city"
                   value={formData.city}
@@ -1053,7 +1096,11 @@ export default function AddEmployee() {
                 />
 
                 <SelectField
-                  label="State"
+                  label={
+                    <>
+                      State <span>*</span>
+                    </>
+                  }
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
@@ -1070,7 +1117,11 @@ export default function AddEmployee() {
                 />
 
                 <FormField
-                  label="PIN Code"
+                  label={
+                    <>
+                      PIN Code <span>*</span>
+                    </>
+                  }
                   name="pinCode"
                   placeholder="Enter PIN code"
                   value={formData.pinCode}
@@ -1181,7 +1232,9 @@ export default function AddEmployee() {
                     className={errors.merchant ? "field-invalid" : ""}
                   >
                     <option value="">
-                      {merchantLoadError ? "Unable to load merchants" : "Select merchant"}
+                      {merchantLoadError
+                        ? "Unable to load merchants"
+                        : "Select merchant"}
                     </option>
                     {merchantOptions.map((merchant) => (
                       <option key={merchant.id} value={merchant.id}>
@@ -1283,7 +1336,11 @@ export default function AddEmployee() {
             Cancel
           </button>
 
-          <button type="submit" className="save-employee-btn" disabled={isSaving}>
+          <button
+            type="submit"
+            className="save-employee-btn"
+            disabled={isSaving}
+          >
             {isSaving ? "Saving..." : "Save Employee"}
           </button>
         </div>
@@ -1365,7 +1422,11 @@ function StoreRoleAssignment({
               {assignment.roles.length === 0
                 ? "Select role(s)"
                 : assignment.roles
-                    .map((roleId) => availableRoles.find((role) => role.id === roleId)?.name || roleId)
+                    .map(
+                      (roleId) =>
+                        availableRoles.find((role) => role.id === roleId)
+                          ?.name || roleId,
+                    )
                     .join(", ")}
             </span>
 
