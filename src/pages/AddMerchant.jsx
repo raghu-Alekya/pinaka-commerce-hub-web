@@ -658,10 +658,10 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   const assignedRoles=state.roles.filter(role=>String(role.status || 'ACTIVE').toUpperCase()!=='INACTIVE' && store.roleIds?.includes(role.id));
   const currentRole=assignedRoles.find(role=>role.id===state.roles[state.activeRole]?.id) || assignedRoles[0];
   const storePhase = state.phase === 'store';
-  const journey = storePhase ? [1,4,3,5,6] : [0,2,5,6];
+  const journey = storePhase ? [1,4,3,5,6] : [0,2,6];
   const stepLabels = storePhase
     ? [['Store details','Location & optional operating schedule'],['Subscription & features','Inherited plan and store enablement'],['Devices','Register & allocate licenses'],['Roles & permissions','Templates and custom roles'],['Review & save','Review store configuration']]
-    : [['Merchant details','Business & primary contact'],['Choose plan','Country pricing & subscription limits'],['Business roles','Select templates or custom roles'],['Review Plan & Subscribe','Merchant review and billing summary'],['Subscription Confirmed','Subscription details saved']];
+    : [['Merchant details','Business & primary contact'],['Choose plan','Country pricing & subscription limits'],['Review Plan & Subscribe','Merchant review and billing summary'],['Subscription Confirmed','Subscription details saved']];
   const position = journey.indexOf(state.step);
   const patch = values => { setError(''); setState(previous => ({ ...previous, ...values })); };
   const changeMerchant = (key, value) => { setError(''); setState(previous => ({ ...previous, merchant: { ...previous.merchant, [key]: value } })); };
@@ -770,8 +770,8 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
           {[storeLimit + ' Store' + (storeLimit === 1 ? '' : 's'), 'Up to ' + deviceLimit + ' Devices', 'Up to ' + employeeLimit + ' Employees', ...planFeatureItems.slice(0,4).map(feature=>feature.name)].map(item=><li key={item}><span aria-hidden="true">✓</span>{item}</li>)}
         </ul>
         <details className="pch-all-features"><summary>View all features ({planFeatureItems.length})</summary><ul>{planFeatureItems.map(feature=><li key={feature.id}>{feature.name}</li>)}</ul></details>
-        <div className="pch-review-links">{editButton('Change plan',2)}{editButton('Edit merchant details',0)}{editButton('Edit selected roles',5)}</div>
-        <details className="pch-all-features"><summary>Review merchant details</summary><p>Store type: {state.merchant.type}<br/>Selected roles: {state.roles.map(role=>role.name).join(', ')}</p>
+        <div className="pch-review-links">{editButton('Change plan',2)}{editButton('Edit merchant details',0)}</div>
+        <details className="pch-all-features"><summary>Review merchant details</summary><p>Store type: {state.merchant.type}</p>
           <p>{state.merchant.business}<br/>{state.merchant.name}<br/>{state.merchant.email}<br/>{state.merchant.phone}</p>
           <p>{['addressLine1','addressLine2','city','state','postal','country'].map(key=>state.merchant[key]).filter(Boolean).join(', ')}</p>
         </details>
