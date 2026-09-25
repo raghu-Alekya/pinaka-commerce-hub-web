@@ -33,12 +33,16 @@ const FeaturePermissions = () => {
         setFeature(f);
 
         setPermissions(
-          list.map((p) => ({
+          (Array.isArray(list) ? list : []).map((p) => ({
             ...p,
             key: p.permissionKey || p.key || "",
+            name: p.permissionName || p.name || "",
             feature: f?.name || p.feature?.name || "",
-            active: String(p.status || "").toUpperCase() === "ACTIVE",
-          })),
+            description:
+              p.permissionDescription || p.description || "",
+            active:
+              String(p.status || "ACTIVE").toUpperCase() === "ACTIVE",
+          }))
         );
       })
       .catch((e) => setError(e.message || "Unable to load permissions."));
@@ -252,14 +256,14 @@ const FeaturePermissions = () => {
           {/* TOOLBAR */}
 
           <div className="fp-toolbar">
-            <button
+            {/* <button
               type="button"
               className="fp-create-permission-btn"
               onClick={openCreateModal}
-            >
-              <span aria-hidden="true">+</span>
+            > */}
+            {/* <span aria-hidden="true">+</span>
               Create Feature Permission
-            </button>
+            </button> */}
 
             {/* SEARCH */}
 
