@@ -1,678 +1,1103 @@
 /* =========================================================
-   ADD DEVICE PAGE
-========================================================= */
 
-.add-device-page {
+   MERCHANT DETAILS - DEVICES
+
+   Matches the supplied Merchant Details / Devices UI
+
+   ========================================================= */
+ 
+.merchant-device-page {
+
   width: 100%;
-  min-height: calc(100vh - 64px);
+
+  min-height: 100%;
 
   box-sizing: border-box;
 
-  padding: 18px 24px 24px;
+  padding: 24px 34px 34px 45px;
 
-  background: #f5f7fb;
+  background: #f7f8fc;
 
-  color: #183354;
+  color: #172f50;
+
+  font-family: inherit;
+
 }
-
+ 
 /* =========================================================
-   HEADER
-========================================================= */
 
-.add-device-header {
+   TOP BAR
+
+   ========================================================= */
+ 
+.merchant-device-topbar {
+
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
 
-  margin-bottom: 20px;
-}
-
-.add-device-header h1 {
-  margin: 3330;
-
-  color: #132d50;
-
-  font-size: 27px;
-  line-height: 32px;
-
-  font-weight: 750;
-}
-
-.add-device-breadcrumb {
-  display: flex;
   align-items: center;
 
-  gap: 8px;
+  justify-content: space-between;
 
-  margin-top: 5px;
+  margin-bottom: 8px;
 
-  color: #8193ad;
-
-  font-size: 12px;
 }
+ 
+.merchant-back-link {
 
-.add-device-breadcrumb strong {
-  color: #405b7d;
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 4px;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #4d38cf;
+
+  font-size: 20px;
 
   font-weight: 500;
-}
 
-.back-devices-btn {
-  height: 42px;
+  line-height: 1;
+
+  cursor: pointer;
+
+}
+ 
+.merchant-back-link svg {
+
+  stroke-width: 1.8;
+
+}
+ 
+.view-stores-button {
+
+  height: 47px;
+
+  min-width: 309px;
 
   padding: 0 17px;
 
-  display: flex;
+  display: inline-flex;
+
   align-items: center;
 
-  gap: 9px;
-
-  border: 1px solid #d7e1ed;
-
-  border-radius: 6px;
-
-  background: #fff;
-
-  color: #294466;
-
-  font-family: inherit;
-
-  font-size: 12px;
-
-  cursor: pointer;
-}
-
-.back-devices-btn:hover {
-  border-color: #6845dc;
-  color: #5c3ddd;
-}
-
-/* =========================================================
-   TWO COLUMN LAYOUT
-========================================================= */
-
-.add-device-layout {
-  width: 100%;
-
-  display: grid;
-
-  grid-template-columns:
-    minmax(0, 1.45fr)
-    minmax(350px, 0.85fr);
-
-  gap: 12px;
-
-  box-sizing: border-box;
-}
-
-.add-device-left,
-.add-device-right {
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 12px;
-}
-
-/* =========================================================
-   CARD
-========================================================= */
-
-.device-card {
-  width: 100%;
-
-  box-sizing: border-box;
-
-  padding: 15px;
-
-  background: #fff;
-
-  border: 1px solid #e1e8f1;
-
-  border-radius: 8px;
-}
-
-.device-card-header {
-  display: flex;
-  align-items: center;
-
-  gap: 11px;
-
-  margin-bottom: 15px;
-}
-
-.device-card-icon {
-  width: 38px;
-  height: 38px;
-
-  min-width: 38px;
-
-  display: flex;
-  align-items: center;
   justify-content: center;
 
-  border-radius: 50%;
+  gap: 10px;
 
-  background: #eeeaff;
+  border: 0;
 
-  color: #5d3ddd;
-}
+  border-radius: 7px;
 
-.device-card-header h2 {
-  margin: 0 0 2px;
+  background: linear-gradient(90deg, #4d2ed0 0%, #6042d7 100%);
 
-  color: #183354;
+  color: #fff;
 
-  font-size: 15px;
-
-  font-weight: 700;
-}
-
-.device-card-header p {
-  margin: 0;
-
-  color: #8194ae;
-
-  font-size: 10px;
-}
-
-/* =========================================================
-   FORM GRID
-========================================================= */
-
-.device-form-grid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-
-  gap: 11px 12px;
-}
-
-.device-single-column {
-  display: flex;
-  flex-direction: column;
-
-  gap: 11px;
-}
-
-/* =========================================================
-   FIELD
-========================================================= */
-
-.device-field {
-  min-width: 0;
-
-  position: relative;
-}
-
-.device-field label {
-  display: block;
-
-  margin-bottom: 6px;
-
-  color: #243e60;
-
-  font-size: 10px;
+  font-size: 16px;
 
   font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 12px rgba(80, 51, 208, 0.16);
+
 }
+ 
+.view-stores-button:hover {
 
-.required-star {
-  margin-left: 3px;
+  filter: brightness(1.04);
 
-  color: #ed4052;
 }
-
+ 
 /* =========================================================
-   INPUT
-========================================================= */
 
-.device-field input,
-.device-field textarea,
-.device-select-wrapper select {
+   PAGE HEADING
+
+   ========================================================= */
+ 
+.merchant-page-heading {
+
+  margin-bottom: 24px;
+
+}
+ 
+.merchant-page-heading h1 {
+
+  margin: 0 0 7px;
+
+  color: #142d4d;
+
+  font-size: 34px;
+
+  line-height: 1.1;
+
+  font-weight: 750;
+
+  letter-spacing: -0.5px;
+
+}
+ 
+.merchant-page-heading p {
+
+  margin: 0;
+
+  color: #7d8ca6;
+
+  font-size: 16px;
+
+  line-height: 1.4;
+
+}
+ 
+.merchant-page-heading p span {
+
+  margin: 0 3px;
+
+}
+ 
+.merchant-page-heading strong {
+
+  color: #60728d;
+
+  font-weight: 500;
+
+}
+ 
+/* =========================================================
+
+   MAIN LAYOUT
+
+   ========================================================= */
+ 
+.merchant-device-content {
+  grid-template-columns: 324px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  display: block;
   width: 100%;
+
+}
+
+ 
+/* =========================================================
+
+   MAIN CONTENT
+
+   ========================================================= */
+ 
+.merchant-device-main {
+width: 100%;
+  max-width: 100%;
+
+}
+ 
+.devices-panel,
+
+.devices-table-card {
+
+  width: 100%;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  background: #FFFFFF;
+
+}
+ 
+.devices-panel {
+
+  overflow: hidden;
+
+}
+ 
+.devices-panel-header {
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid #ECEFF5;
+
+}
+ 
+.devices-panel-header h2 {
+
+  margin: 0;
+
+  color: #142d4d;
+
+  font-size: 25px;
+
+  font-weight: 700;
+
+}
+ 
+.add-device-button {
+
+  height: 42px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 8px;
+  background: #0A66E8;
+  color: #FFF;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+}
+ 
+.add-device-button:hover {
+
+  background: #075fc5;
+
+}
+ 
+/* =========================================================
+
+   ADD DEVICE CARD
+
+   ========================================================= */
+ 
+.add-device-card {
+
+  margin: 17px 27px 20px;
+
+  padding: 27px 27px 16px;
 
   box-sizing: border-box;
 
-  border: 1px solid #d5e0ed;
+  border: 1px solid #e3e7f0;
 
-  border-radius: 5px;
+  border-radius: 13px;
+
+  background: linear-gradient(
+
+    115deg,
+
+    #f7f6ff 0%,
+
+    #fafaff 52%,
+
+    #f6f6ff 100%
+
+  );
+
+}
+ 
+.add-device-copy h3 {
+
+  margin: 0 0 7px;
+
+  color: #172e4e;
+
+  font-size: 24px;
+
+  font-weight: 700;
+
+}
+ 
+.add-device-copy p {
+
+  margin: 0;
+
+  color: #697d9c;
+
+  font-size: 16px;
+
+  line-height: 1.45;
+
+}
+ 
+.add-device-fields {
+
+ display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 20px;
+  align-items: end;
+}
+ 
+.device-form-field label {
+
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #172d4d;
+
+  font-size: 16px;
+
+  font-weight: 650;
+
+}
+ 
+.device-form-field label span {
+
+  color: #e93e4c;
+
+}
+ 
+.device-select {
+
+  position: relative;
+
+}
+ 
+.device-select select {
+
+  width: 100%;
+
+  height: 52px;
+
+  padding: 0 43px 0 17px;
+
+  box-sizing: border-box;
+
+  appearance: none;
+
+  -webkit-appearance: none;
+
+  border: 1px solid #d4ddea;
+
+  border-radius: 9px;
+
+  outline: 0;
 
   background: #fff;
 
-  color: #294668;
-
-  outline: none;
+  color: #6e809b;
 
   font-family: inherit;
 
-  font-size: 10px;
-}
-
-.device-field input,
-.device-select-wrapper select {
-  height: 35px;
-
-  padding: 0 10px;
-}
-
-.device-field textarea {
-  min-height: 70px;
-
-  padding: 9px 10px;
-
-  resize: vertical;
-}
-
-.device-field input::placeholder,
-.device-field textarea::placeholder {
-  color: #8ca0b9;
-}
-
-.device-field input:focus,
-.device-field textarea:focus,
-.device-select-wrapper select:focus {
-  border-color: #6744dc;
-
-  box-shadow:
-    0 0 0 2px rgba(103, 68, 220, 0.08);
-}
-
-/* =========================================================
-   SELECT
-========================================================= */
-
-.device-select-wrapper {
-  position: relative;
-
-  width: 100%;
-}
-
-.device-select-wrapper select {
-  appearance: none;
-  -webkit-appearance: none;
-
-  padding-right: 32px;
+  font-size: 16px;
 
   cursor: pointer;
-}
 
-.device-select-arrow {
+}
+ 
+.device-select svg {
+
   position: absolute;
 
-  right: 10px;
   top: 50%;
+
+  right: 16px;
 
   transform: translateY(-50%);
 
   pointer-events: none;
 
-  color: #425b79;
+  color: #526984;
+
 }
+ 
+.device-select select:focus {
 
-/* =========================================================
-   CHECKBOX
-========================================================= */
+  border-color: #6844db;
 
-.device-checkbox {
+  box-shadow: 0 0 0 3px rgba(104, 68, 219, 0.09);
+
+}
+ 
+.quantity-control {
+
+   display: grid;
+  grid-template-columns: 52px 1fr 52px;
+  height: 48px;
+  border: 1px solid #D8DEEA;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #FFF;
+
+}
+ 
+.quantity-control button {
+
   display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+  border: none;
+  background: #F8FAFC;
+  color: #64748B;
+
+}
+ 
+.quantity-control button:first-child {
+
+  border-right: 1px solid #d9dfe8;
+
+}
+ 
+.quantity-control button:last-child {
+
+  border-left: 1px solid #d9dfe8;
+
+  background: #fff;
+
+}
+ 
+.quantity-control button:hover:not(:disabled) {
+
+  background: #efedff;
+
+  color: #5238d1;
+
+}
+ 
+.quantity-control button:disabled {
+
+  opacity: 0.45;
+
+  cursor: not-allowed;
+
+}
+ 
+.quantity-control span {
+
+   display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #122B49;
+
+}
+ 
+.add-device-actions {
+
+ display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+
+}
+ 
+.cancel-button,
+
+.save-button {
+
+  height: 50px;
+
+  padding: 0 21px;
+
+  border-radius: 9px;
+
+  font-family: inherit;
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+}
+ 
+.cancel-button {
+
+  min-width: 100px;
+  height: 42px;
+  border: 1px solid #D7DDE8;
+  background: #FFF;
+  color: #556987;
+  border-radius: 8px;
+
+}
+ 
+.cancel-button:hover {
+
+  background: #f8f9fc;
+
+}
+ 
+.save-button {
+
+  min-width: 100px;
+  height: 42px;
+  border: none;
+  border-radius: 8px;
+  color: #FFF;
+  background: linear-gradient(90deg,#5138D6,#6547DC);
+
+}
+ 
+.save-button:hover:not(:disabled) {
+
+  filter: brightness(1.05);
+
+}
+ 
+.save-button:disabled {
+
+  opacity: 0.65;
+
+  cursor: not-allowed;
+
+}
+ 
+/* =========================================================
+
+   TABLE
+
+   ========================================================= */
+ 
+.devices-table-card {
+
+  margin-top: 18px;
+
+  min-height: 286px;
+
+  padding: 17px 17px 20px;
+
+}
+ 
+.devices-table {
+
+    width: 100%;
+
+  overflow: hidden;
+
+  border-radius: 8px;
+
+}
+ 
+.table-header,
+
+.table-row {
+
+  display: grid;
+  grid-template-columns: 60px 2fr 120px 180px 140px 100px;
+  align-items: center;
+  min-width: 100%;
+
+}
+ 
+.table-header {
+
+  background: #F8FAFC;
+  height: 52px;
+  font-weight: 600;
+  color: #526581;
+  border-radius: 8px;
+
+}
+ 
+.table-row {
+
+  min-height: 57px;
+
+  padding: 0 12px;
+
+  box-sizing: border-box;
+
+  border-top: 1px solid #edf0f5;
+
+  color: #425b7a;
+
+  font-size: 15px;
+    height: 56px;
+  border-bottom: 1px solid #EEF2F7;
+
+}
+ 
+.row-actions {
+
+  display: flex;
+
   align-items: center;
 
   gap: 7px;
 
-  margin-top: 10px;
+}
+ 
+.row-actions button {
 
-  color: #344e70;
+  width: 31px;
 
-  font-size: 10px;
+  height: 31px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: 1px solid #dce3ec;
+
+  border-radius: 6px;
+
+  background: #fff;
+
+  color: #5d7190;
 
   cursor: pointer;
+
 }
+ 
+.row-actions button:hover {
 
-.device-checkbox input {
-  width: 14px;
-  height: 14px;
+  color: #563bd2;
 
-  margin: 0;
+  border-color: #cfc6f5;
 
-  accent-color: #5d3ddd;
+  background: #f8f6ff;
+
 }
-
+ 
 /* =========================================================
-   IMAGE UPLOAD
-========================================================= */
 
-.device-upload-box {
-  min-height: 105px;
+   EMPTY STATE
+
+   ========================================================= */
+ 
+.empty-devices {
+
+  min-height: 193px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  color: #7387a4;
+
+}
+ 
+.empty-devices p {
+
+  margin: 13px 0 5px;
+
+  font-size: 17px;
+
+}
+ 
+.empty-devices > span {
+
+  font-size: 16px;
+
+}
+ 
+.empty-device-icon {
+
+  position: relative;
+
+  width: 72px;
+
+  height: 57px;
+
+}
+ 
+.empty-box {
+
+  position: absolute;
+
+  left: 13px;
+
+  top: 19px;
+
+  width: 44px;
+
+  height: 33px;
 
   box-sizing: border-box;
 
-  padding: 12px;
+  border: 2px solid #9badc5;
 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  border-radius: 3px 3px 7px 7px;
 
-  border: 1px dashed #d4ddeb;
+  background: #f9fbfe;
 
-  border-radius: 6px;
-
-  background: #fbfcfe;
-
-  cursor: pointer;
 }
+ 
+.empty-box::before {
 
-.upload-cloud-icon {
-  margin-bottom: 5px;
+  content: "";
 
-  color: #647e9f;
-}
-
-.upload-main-text {
-  margin-bottom: 6px;
-
-  color: #6d819d;
-
-  font-size: 9px;
-}
-
-.choose-file-btn {
-  height: 27px;
-
-  padding: 0 14px;
-
-  border: 1px solid #6744dc;
-
-  border-radius: 4px;
-
-  background: #fff;
-
-  color: #5d3ddd;
-
-  font-family: inherit;
-
-  font-size: 9px;
-
-  cursor: pointer;
-}
-
-.upload-hint {
-  margin-top: 5px;
-
-  color: #8b9bb0;
-
-  font-size: 8px;
-}
-
-/* =========================================================
-   UPLOADED IMAGE
-========================================================= */
-
-.uploaded-device-image {
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 15px;
-}
-
-.uploaded-device-image img {
-  width: 90px;
-  height: 70px;
-
-  object-fit: cover;
-
-  border-radius: 5px;
-
-  border: 1px solid #dce4ef;
-}
-
-.change-image-btn {
-  height: 30px;
-
-  padding: 0 12px;
-
-  border: 1px solid #6744dc;
-
-  border-radius: 5px;
-
-  background: #fff;
-
-  color: #5d3ddd;
-
-  font-family: inherit;
-
-  font-size: 9px;
-
-  cursor: pointer;
-}
-
-/* =========================================================
-   NOTES
-========================================================= */
-
-.notes-counter {
   position: absolute;
 
-  right: 7px;
-  bottom: 5px;
+  left: 8px;
 
-  color: #91a0b3;
+  right: 8px;
 
-  font-size: 8px;
+  top: -13px;
+
+  height: 13px;
+
+  border: 2px solid #9badc5;
+
+  border-bottom: 0;
+
+  border-radius: 8px 8px 0 0;
+
+  transform: skewX(-22deg);
+
 }
+ 
+.empty-box span {
 
+  position: absolute;
+
+  left: 8px;
+
+  right: 8px;
+
+  top: 0;
+
+  height: 7px;
+
+  border-top: 2px solid #9badc5;
+
+}
+ 
+.empty-device-icon i,
+
+.empty-device-icon b {
+
+  position: absolute;
+
+  display: block;
+
+  width: 2px;
+
+  height: 9px;
+
+  top: 0;
+
+  background: #75cde9;
+
+  border-radius: 2px;
+
+}
+ 
+.empty-device-icon i {
+
+  left: 31px;
+
+}
+ 
+.empty-device-icon b {
+
+  left: 42px;
+
+  transform: rotate(18deg);
+
+}
+ 
+.empty-device-icon::before {
+
+  content: "";
+
+  position: absolute;
+
+  left: 21px;
+
+  top: 3px;
+
+  width: 2px;
+
+  height: 8px;
+
+  background: #75cde9;
+
+  transform: rotate(-25deg);
+
+  border-radius: 2px;
+
+}
+ 
+.empty-device-icon::after {
+
+  content: "";
+
+  position: absolute;
+
+  left: 52px;
+
+  top: 5px;
+
+  width: 2px;
+
+  height: 7px;
+
+  background: #75cde9;
+
+  transform: rotate(28deg);
+
+  border-radius: 2px;
+
+}
+ 
 /* =========================================================
-   ACTIONS
-========================================================= */
 
-.add-device-actions {
-  width: 100%;
+   MESSAGES
 
-  margin-top: 14px;
+   ========================================================= */
+ 
+.merchant-device-message {
 
-  padding-top: 13px;
+  margin: 0 0 15px;
 
-  display: flex;
-  justify-content: flex-end;
+  padding: 11px 14px;
 
-  gap: 10px;
+  border: 1px solid #dce5f0;
 
-  border-top: 1px solid #e2e8f0;
-}
-
-.device-cancel-btn,
-.device-save-btn {
-  height: 39px;
-
-  padding: 0 19px;
-
-  border-radius: 6px;
-
-  font-family: inherit;
-
-  font-size: 11px;
-
-  cursor: pointer;
-}
-
-.device-cancel-btn {
-  border: 1px solid #d6e0ec;
+  border-radius: 8px;
 
   background: #fff;
 
-  color: #334e70;
+  color: #5e718d;
+
 }
+ 
+.merchant-device-error {
 
-.device-save-btn {
-  border: none;
+  margin: 0 0 15px;
 
-  background: linear-gradient(
-    90deg,
-    #5d3ddd,
-    #6740e5
-  );
+  padding: 11px 14px;
 
-  color: #fff;
+  border: 1px solid #f3c7c4;
 
-  box-shadow:
-    0 4px 10px
-    rgba(93, 61, 221, 0.18);
+  border-radius: 8px;
+
+  background: #fff3f2;
+
+  color: #b42318;
+
 }
-
+ 
 /* =========================================================
-   LAPTOP
-========================================================= */
 
-@media (max-width: 1300px) {
-
-  .add-device-page {
-    padding: 15px 18px 20px;
-  }
-
-  .device-card {
-    padding: 13px;
-  }
-
-  .device-card-header {
-    margin-bottom: 12px;
-  }
-
-  .device-card-icon {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-  }
-
-  .device-card-header h2 {
-    font-size: 13px;
-  }
-
-  .device-card-header p {
-    font-size: 9px;
-  }
-
-  .device-field label {
-    font-size: 9px;
-  }
-
-  .device-field input,
-  .device-select-wrapper select {
-    height: 32px;
-
-    font-size: 9px;
-  }
-
-  .device-upload-box {
-    min-height: 94px;
-  }
-
-}
-
-/* =========================================================
-   SMALL LAPTOP
-========================================================= */
-
-@media (max-width: 1100px) {
-
-  .add-device-page {
-    padding: 13px 14px 18px;
-  }
-
-  .add-device-layout {
-    grid-template-columns:
-      minmax(0, 1.35fr)
-      minmax(310px, 0.85fr);
-
-    gap: 9px;
-  }
-
-  .add-device-left,
-  .add-device-right {
-    gap: 9px;
-  }
-
-  .device-card {
-    padding: 11px;
-  }
-
-  .device-form-grid {
-    gap: 8px 10px;
-  }
-
-  .device-card-header {
-    gap: 8px;
-  }
-
-  .device-card-icon {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-  }
-
-  .device-card-header h2 {
-    font-size: 12px;
-  }
-
-  .device-card-header p {
-    font-size: 8px;
-  }
-
-  .device-field label {
-    margin-bottom: 4px;
-
-    font-size: 8px;
-  }
-
-  .device-field input,
-  .device-select-wrapper select {
-    height: 30px;
-
-    padding: 0 8px;
-
-    font-size: 8px;
-  }
-
-  .device-field textarea {
-    min-height: 58px;
-
-    font-size: 8px;
-  }
-
-  .device-checkbox {
-    font-size: 8px;
-  }
-
-}
-
-/* =========================================================
    RESPONSIVE
-========================================================= */
 
-@media (max-width: 800px) {
+   ========================================================= */
+ 
+@media (max-width: 1250px) {
 
-  .add-device-header {
+  .merchant-device-page {
+
+    padding-left: 25px;
+
+    padding-right: 25px;
+
+  }
+ 
+  .merchant-device-content {
+
+    grid-template-columns: 265px minmax(0, 1fr);
+
+    gap: 20px;
+
+  }
+ 
+  .merchant-device-sidebar button {
+
+    padding-left: 22px;
+
+    font-size: 15px;
+
+  }
+ 
+  .add-device-fields {
+
+    grid-template-columns: minmax(0, 1fr) 245px;
+
+  }
+
+}
+ 
+@media (max-width: 1000px) {
+
+  .merchant-device-content {
+
+    grid-template-columns: 1fr;
+
+  }
+ 
+  .merchant-device-sidebar {
+
+    min-height: auto;
+
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    padding: 8px;
+
+  }
+ 
+  .merchant-device-sidebar button {
+
+    min-height: 48px;
+
+    border-left: 0;
+
+    border-bottom: 3px solid transparent;
+
+    padding: 0 10px;
+
+    justify-content: center;
+
+    text-align: center;
+
+    font-size: 13px;
+
+  }
+ 
+  .merchant-device-sidebar button.active {
+
+    border-left: 0;
+
+    border-bottom-color: #5a38dd;
+
+  }
+
+}
+ 
+@media (max-width: 720px) {
+
+  .merchant-device-page {
+
+    padding: 18px 14px 24px;
+
+  }
+ 
+  .merchant-device-topbar {
+
+    align-items: flex-start;
+
+    gap: 15px;
+
+  }
+ 
+  .view-stores-button {
+
+    min-width: auto;
+
+    height: 42px;
+
+    padding: 0 12px;
+
+    font-size: 13px;
+
+  }
+ 
+  .merchant-page-heading h1 {
+
+    font-size: 28px;
+
+  }
+ 
+  .merchant-device-sidebar {
+
+    grid-template-columns: repeat(2, 1fr);
+
+  }
+ 
+  .devices-panel-header {
+
+    padding: 0 16px;
+
+  }
+ 
+  .devices-panel-header h2 {
+
+    font-size: 22px;
+  font-weight: 700;
+  color: #122B49;
+
+  }
+ 
+  .add-device-button {
+
+    height: 42px;
+
+    font-size: 14px;
+
+  }
+ 
+  .add-device-card {
+
+    margin: 14px;
+
+    padding: 20px 16px 15px;
+
+  }
+ 
+  .add-device-fields {
+
+    grid-template-columns: 1fr;
+
+    gap: 18px;
+
+  }
+ 
+  .add-device-copy h3 {
+
+     margin-bottom: 6px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #122B49;
+  }
+ 
+  .add-device-copy p {
+
+    font-size: 14px;
+     color: #64748B;
+  margin-bottom: 22px;
+
+  }
+ 
+  .add-device-actions {
+
+    margin-top: 18px;
+
+  }
+ 
+  .devices-table-card {
+
+   margin-top: 20px;
+  padding: 20px;
+
+    overflow-x: auto;
+
+  }
+
+}
+ 
+@media (max-width: 480px) {
+
+  .merchant-device-topbar {
+
     flex-direction: column;
 
-    gap: 12px;
   }
+ 
+  .view-stores-button {
 
-  .add-device-layout {
-    grid-template-columns: 1fr;
+    width: 100%;
+
   }
+ 
+  .merchant-device-sidebar {
 
-  .device-form-grid {
     grid-template-columns: 1fr;
+
+  }
+ 
+  .merchant-device-sidebar button {
+
+    justify-content: flex-start;
+
+    padding-left: 18px;
+
   }
 
 }
-/* Merchant Devices tab */
-.merchant-device-embedded.add-device-page{padding:20px;margin:0;min-height:0;width:100%;box-sizing:border-box;}
-.merchant-device-embedded .add-device-layout{grid-template-columns:minmax(0,1fr);}
-.merchant-device-embedded .add-device-layout > *{min-width:0;}
-.merchant-device-error{padding:12px;margin-bottom:16px;color:#b42318;background:#fff1f0;border-radius:6px;}
+
+ 
