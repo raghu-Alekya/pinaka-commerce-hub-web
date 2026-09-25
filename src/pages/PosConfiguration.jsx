@@ -2918,14 +2918,86 @@ function MappingConfiguration({ value, registers, onSave, onBack, onManageRegist
                 <p>{registers.length ? "All registers already have a mapping. Cancel to edit an existing mapping, or add and save a new register first." : "Add and save a register before creating its device mapping."}</p>
                 <button type="button" className="pc-button" onClick={onManageRegisters}>Open Cash Register Settings</button>
             </div>}
-            <div className="pc-form-grid">
-            <ConfigField label="Register"><select autoFocus required value={editor.registerId} onChange={(e) => update("registerId", e.target.value)}><option value="">Select register</option>{registers.filter((register) => !rows.some((row) => row.id !== editor.id && row.registerId === register.id)).map((register) => <option key={register.id} value={register.id}>{register.name}</option>)}</select></ConfigField>
-            <ConfigField label="POS Device"><input readOnly value={registers.find((register) => register.id === editor.registerId)?.pos || ""} placeholder="Select a register" /></ConfigField>
-            <ConfigField label="Card Terminal"><input value={editor.terminal} onChange={(e) => update("terminal", e.target.value)} placeholder="LANE3000-004" /></ConfigField>
-            <ConfigField label="Printer"><input value={editor.printer} onChange={(e) => update("printer", e.target.value)} placeholder="STAR-04" /></ConfigField>
-            <ConfigField label="Cash Drawer"><input value={editor.drawer} onChange={(e) => update("drawer", e.target.value)} placeholder="DRAWER-04" /></ConfigField>
-            <ConfigField label="Status"><select value={editor.status} onChange={(e) => update("status", e.target.value)}><option>Active</option><option>Inactive</option><option>Setup</option></select></ConfigField>
-        </div><div className="pc-editor-actions pos-form-actions"><button type="button" className="pc-button" onClick={() => settings.requestLeave(null)}>Cancel</button><button type="submit" className="pc-button pc-primary" disabled={!editor.registerId}>Apply Mapping</button></div></form>}
+           <div className="pc-form-grid">
+  {/* Device Name */}
+  <ConfigField label="Device Name">
+    <input
+      value={editor.deviceName}
+      onChange={(e) => update("deviceName", e.target.value)}
+      placeholder="POS Terminal 01"
+      required
+    />
+  </ConfigField>
+
+  {/* Device Type */}
+  <ConfigField label="Device Type">
+    <select
+      value={editor.deviceType}
+      onChange={(e) => update("deviceType", e.target.value)}
+      required
+    >
+      <option value="">Select Device Type</option>
+      <option value="POS Terminal">POS Terminal</option>
+      <option value="Barcode Scanner">Barcode Scanner</option>
+      <option value="Kitchen Display">Kitchen Display</option>
+      <option value="Customer Display">Customer Display</option>
+      <option value="Receipt Printer">Receipt Printer</option>
+    </select>
+  </ConfigField>
+
+  {/* Device ID */}
+  <ConfigField label="Device ID">
+    <input
+      value={editor.deviceId}
+      onChange={(e) => update("deviceId", e.target.value)}
+      placeholder="POS-001"
+    />
+  </ConfigField>
+
+  {/* Serial Number */}
+  <ConfigField label="Device Serial Number">
+    <input
+      value={editor.serialNumber}
+      onChange={(e) => update("serialNumber", e.target.value)}
+      placeholder="SN-POS-001"
+    />
+  </ConfigField>
+
+  {/* Finger Print */}
+  <ConfigField label="Device Finger Print">
+    <input
+      value={editor.fingerPrint}
+      onChange={(e) => update("fingerPrint", e.target.value)}
+      placeholder="FP-POS-001"
+    />
+  </ConfigField>
+
+  {/* Quantity */}
+  <ConfigField label="Quantity">
+    <input
+      type="number"
+      min="1"
+      value={editor.quantity}
+      onChange={(e) => update("quantity", e.target.value)}
+      placeholder="1"
+      required
+    />
+  </ConfigField>
+
+  {/* Status */}
+  <ConfigField label="Status">
+    <select
+      value={editor.status}
+      onChange={(e) => update("status", e.target.value)}
+      required
+    >
+      <option>Active</option>
+      <option>Inactive</option>
+      <option>Setup</option>
+    </select>
+  </ConfigField>
+</div>
+        <div className="pc-editor-actions pos-form-actions"><button type="button" className="pc-button" onClick={() => settings.requestLeave(null)}>Cancel</button><button type="submit" className="pc-button pc-primary" disabled={!editor.registerId}>Apply Mapping</button></div></form>}
         {error && <p className="pc-error" role="alert">{error}</p>}
         <div className="pc-table-wrap"><table className="pc-table"><caption className="pc-sr-only">Terminal and register mappings</caption><thead><tr>{["Register", "POS Device", "Card Terminal", "Printer", "Cash Drawer", "Status", "Actions"].map((heading) => <th key={heading} scope="col">{heading}</th>)}</tr></thead><tbody>
             {rows.map((row) => { const register = registers.find((item) => item.id === row.registerId); return <tr key={row.id}><th scope="row">{register?.name || "Missing register"}</th><td>{register?.pos || "—"}</td><td>{row.terminal || "—"}</td><td>{row.printer || "—"}</td><td>{row.drawer || "—"}</td><td><ConfigBadge>{row.status}</ConfigBadge></td><td><div className="pc-row-actions"><button type="button" disabled={!!editor} aria-label={`Edit mapping for ${register?.name}`} onClick={() => { setEditor({ ...row }); setError(""); setMessage(""); }}>Edit</button><button type="button" disabled={!!editor} className="pc-danger" aria-label={`Remove mapping for ${register?.name}`} onClick={() => { setRows((current) => current.filter((item) => item.id !== row.id)); setError(""); setMessage("Mapping removed from the draft. Save Changes to keep this change."); }}>Remove</button></div></td></tr>; })}

@@ -31,7 +31,7 @@ import { stores as mockStores } from "../data/data";
 const navGroups = [
   {
     id: "store-setup",
-    label: "Store Overview & Setup",
+    label: "Store Overview",
     items: [
       ["overview", "bi-shop", "Store Overview & Setup"],
     ],
@@ -47,7 +47,7 @@ const navGroups = [
 
   {
     id: "people",
-    label: "Employees & Customers",
+    label: "People",
     items: [
       ["users", "bi-people", "Employees"],
       ["customers", "bi-person-lines-fill", "Customers"],
@@ -56,7 +56,7 @@ const navGroups = [
 
   {
     id: "catalog",
-    label: "Catalog, Inventory & Vendors",
+    label: "Catalog",
     items: [
       ["categories", "bi-tags", "Categories"],
       ["products", "bi-box-seam", "Products"],
@@ -76,7 +76,7 @@ const navGroups = [
 
   {
     id: "promotions",
-    label: "Promotions & Loyalty",
+    label: "Promotions",
     items: [
       ["coupons", "bi-ticket-perforated", "Coupons"],
     ],
