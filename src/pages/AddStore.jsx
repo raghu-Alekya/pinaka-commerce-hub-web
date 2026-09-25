@@ -9,11 +9,50 @@ import "../styles/merchant-form.css";
 
 // Supported countries and time zones match the merchant onboarding form.
 const COUNTRY_SETTINGS = {
-  "United States": {currency: "USD", symbol: "$", zones: ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"]},
-  India: {currency: "INR", symbol: "₹", zones: ["Asia/Kolkata"]},
-  Canada: {currency: "CAD", symbol: "C$", zones: ["America/Toronto", "America/Vancouver", "America/Edmonton", "America/Winnipeg", "America/Halifax", "America/St_Johns", "America/Regina", "America/Whitehorse"]},
-  "United Kingdom": {currency: "GBP", symbol: "£", zones: ["Europe/London"]},
-  Australia: {currency: "AUD", symbol: "A$", zones: ["Australia/Sydney", "Australia/Melbourne", "Australia/Brisbane", "Australia/Adelaide", "Australia/Perth", "Australia/Darwin", "Australia/Hobart", "Australia/Broken_Hill", "Australia/Lord_Howe"]},
+  "United States": {
+    currency: "USD",
+    symbol: "$",
+    zones: [
+      "America/New_York",
+      "America/Chicago",
+      "America/Denver",
+      "America/Phoenix",
+      "America/Los_Angeles",
+      "America/Anchorage",
+      "Pacific/Honolulu",
+    ],
+  },
+  India: { currency: "INR", symbol: "₹", zones: ["Asia/Kolkata"] },
+  Canada: {
+    currency: "CAD",
+    symbol: "C$",
+    zones: [
+      "America/Toronto",
+      "America/Vancouver",
+      "America/Edmonton",
+      "America/Winnipeg",
+      "America/Halifax",
+      "America/St_Johns",
+      "America/Regina",
+      "America/Whitehorse",
+    ],
+  },
+  "United Kingdom": { currency: "GBP", symbol: "£", zones: ["Europe/London"] },
+  Australia: {
+    currency: "AUD",
+    symbol: "A$",
+    zones: [
+      "Australia/Sydney",
+      "Australia/Melbourne",
+      "Australia/Brisbane",
+      "Australia/Adelaide",
+      "Australia/Perth",
+      "Australia/Darwin",
+      "Australia/Hobart",
+      "Australia/Broken_Hill",
+      "Australia/Lord_Howe",
+    ],
+  },
 };
 
 function applyCountry(store, country) {
@@ -24,7 +63,9 @@ function applyCountry(store, country) {
     currency: settings?.currency || "",
     timezone: settings?.zones.includes(store.timezone)
       ? store.timezone
-      : settings?.zones.length === 1 ? settings.zones[0] : "",
+      : settings?.zones.length === 1
+        ? settings.zones[0]
+        : "",
   };
 }
 
@@ -62,21 +103,41 @@ const ROLE_TEMPLATES = [
 const DEVICE_TYPES = ["POS", "KDS", "Printer", "Scanner"];
 
 const listFrom = (response) => {
-  const rows = response?.features ?? response?.storeTypeFeatures ?? response?.items ?? response?.data ?? response;
+  const rows =
+    response?.features ??
+    response?.storeTypeFeatures ??
+    response?.items ??
+    response?.data ??
+    response;
   return Array.isArray(rows) ? rows : [];
 };
-const featureName = (item) => typeof item === "string" ? item :
-  item?.name ?? item?.featureName ?? item?.featureKey ?? item?.code ?? "";
-const actionsFrom = (items) => Array.isArray(items)
-  ? items.map(item => typeof item === "string" ? item : item?.name ?? item?.action ?? item?.code).filter(Boolean)
-  : [];
+const featureName = (item) =>
+  typeof item === "string"
+    ? item
+    : (item?.name ?? item?.featureName ?? item?.featureKey ?? item?.code ?? "");
+const actionsFrom = (items) =>
+  Array.isArray(items)
+    ? items
+        .map((item) =>
+          typeof item === "string"
+            ? item
+            : (item?.name ?? item?.action ?? item?.code),
+        )
+        .filter(Boolean)
+    : [];
 const limitFrom = (...values) => {
-  const value = values.find(value => value !== undefined && value !== null && value !== "" && !Array.isArray(value));
+  const value = values.find(
+    (value) =>
+      value !== undefined &&
+      value !== null &&
+      value !== "" &&
+      !Array.isArray(value),
+  );
   if (value === undefined) return null;
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? number : null;
 };
-const displayLimit = value => value == null ? "Unavailable" : value;
+const displayLimit = (value) => (value == null ? "Unavailable" : value);
 
 const emptyHours = () =>
   DAYS.map((day) => ({
@@ -110,13 +171,7 @@ const initialStore = (merchantId = "") => ({
 // Store address format: Address Line 1, optional Address Line 2, City,
 // State/Province, ZIP/Postal Code, and Country.
 
-const Field = ({
-  label,
-  value,
-  onChange,
-  type = "text",
-  ...props
-}) => (
+const Field = ({ label, value, onChange, type = "text", ...props }) => (
   <label className="pch-field">
     {label}
     <input
@@ -128,13 +183,7 @@ const Field = ({
   </label>
 );
 
-const Select = ({
-  label,
-  value,
-  onChange,
-  options,
-  disabled = false,
-}) => (
+const Select = ({ label, value, onChange, options, disabled = false }) => (
   <label className="pch-field">
     {label}
     <select
@@ -149,7 +198,7 @@ const Select = ({
           <option key={o.value} value={o.value}>
             {o.label}
           </option>
-        )
+        ),
       )}
     </select>
   </label>
@@ -180,20 +229,36 @@ function merchantIdOf(value) {
 
 function merchantConfiguration(result) {
   const response = result.raw || {};
-  const raw = response.merchant || response.data?.merchant || response.data || response;
+  const raw =
+    response.merchant || response.data?.merchant || response.data || response;
   const draft = raw._onboarding || result.merchant?._onboarding;
-  const owner = {...(draft?.merchant || {}), ...raw, ...result.merchant};
+  const owner = { ...(draft?.merchant || {}), ...raw, ...result.merchant };
   const type = owner.storeType;
   return {
     merchant: owner,
     type: {
-      id: String(owner.storeTypeId ?? type?.id ?? draft?.merchant?.storeTypeId ?? ""),
-      name: owner.storeTypeName || (typeof type === "string" ? type : type?.name) || owner.type || "",
-      code: owner.storeTypeCode || type?.code || draft?.merchant?.storeTypeCode || "",
+      id: String(
+        owner.storeTypeId ?? type?.id ?? draft?.merchant?.storeTypeId ?? "",
+      ),
+      name:
+        owner.storeTypeName ||
+        (typeof type === "string" ? type : type?.name) ||
+        owner.type ||
+        "",
+      code:
+        owner.storeTypeCode ||
+        type?.code ||
+        draft?.merchant?.storeTypeCode ||
+        "",
     },
     subscription: result.subscription ?? raw.subscription ?? null,
-    roles: Array.isArray(result.roles) ? result.roles : Array.isArray(raw.roles) ? raw.roles :
-      Array.isArray(result.merchant?.roles) ? result.merchant.roles : draft?.roles || [],
+    roles: Array.isArray(result.roles)
+      ? result.roles
+      : Array.isArray(raw.roles)
+        ? raw.roles
+        : Array.isArray(result.merchant?.roles)
+          ? result.merchant.roles
+          : draft?.roles || [],
   };
 }
 
@@ -202,11 +267,13 @@ export default function AddStore() {
   const { merchantId: routeMerchantId, storeId } = useParams();
   const editing = Boolean(storeId);
 
-  const [store, setStore] = useState(() =>
-    initialStore(routeMerchantId)
-  );
+  const [store, setStore] = useState(() => initialStore(routeMerchantId));
   const [merchant, setMerchant] = useState(null);
-  const [merchantType, setMerchantType] = useState({id: "", name: "", code: ""});
+  const [merchantType, setMerchantType] = useState({
+    id: "",
+    name: "",
+    code: "",
+  });
   const [merchantRoles, setMerchantRoles] = useState([]);
   const [loadedMerchantId, setLoadedMerchantId] = useState("");
   const [merchantLoading, setMerchantLoading] = useState(false);
@@ -219,7 +286,13 @@ export default function AddStore() {
   const [storeTypes, setStoreTypes] = useState([]);
   const [mastersLoading, setMastersLoading] = useState(true);
   const [mastersError, setMastersError] = useState("");
-  const [typeData, setTypeData] = useState({id: "", features: [], roles: [], loading: false, error: ""});
+  const [typeData, setTypeData] = useState({
+    id: "",
+    features: [],
+    roles: [],
+    loading: false,
+    error: "",
+  });
 
   // Store-level roles: layered on top of whatever roles are inherited from
   // the merchant. A store admin can pick from templates, add a custom role,
@@ -258,13 +331,25 @@ export default function AddStore() {
 
           if (!cancelled) {
             setStore({
-              ...initialStore(routeMerchantId || merchantIdOf(saved.merchantId ?? saved.merchant)),
+              ...initialStore(
+                routeMerchantId ||
+                  merchantIdOf(saved.merchantId ?? saved.merchant),
+              ),
               ...saved,
               name: saved.storeName || saved.name || "",
-              type: saved.storeType?.name || saved.storeTypeName || saved.storeType || saved.type || "",
-              storeTypeId: String(saved.storeTypeId ?? saved.storeType?.id ?? ""),
+              type:
+                saved.storeType?.name ||
+                saved.storeTypeName ||
+                saved.storeType ||
+                saved.type ||
+                "",
+              storeTypeId: String(
+                saved.storeTypeId ?? saved.storeType?.id ?? "",
+              ),
               id: saved.storeID || saved.id || "",
-              merchantId: routeMerchantId || merchantIdOf(saved.merchantId ?? saved.merchant),
+              merchantId:
+                routeMerchantId ||
+                merchantIdOf(saved.merchantId ?? saved.merchant),
               addressLine1:
                 saved.addressLine1 ||
                 saved.address?.addressLine1 ||
@@ -278,37 +363,50 @@ export default function AddStore() {
               city: saved.city || saved.address?.city || "",
               state: saved.state || saved.address?.state || "",
               zip:
-                saved.zip ||
-                saved.postalCode ||
-                saved.address?.zipCode ||
-                "",
-              country:
-                saved.country ||
-                saved.address?.country ||
-                "",
+                saved.zip || saved.postalCode || saved.address?.zipCode || "",
+              country: saved.country || saved.address?.country || "",
               hours: saved.hours || emptyHours(),
             });
-            setDevices(Array.isArray(saved.devices) ? saved.devices.map(d => ({
-              ...d,
-              name: d.name || d.deviceName || "",
-              type: d.type || d.deviceType || "",
-              serial: d.serial || d.identifier || ""
-            })) : []);
+            setDevices(
+              Array.isArray(saved.devices)
+                ? saved.devices.map((d) => ({
+                    ...d,
+                    name: d.name || d.deviceName || "",
+                    type: d.type || d.deviceType || "",
+                    serial: d.serial || d.identifier || "",
+                  }))
+                : [],
+            );
             if (Array.isArray(saved.features) && saved.features.length) {
-              setEnabledFeatures(saved.features.map((feature) => typeof feature === "string" ? feature : feature.name || feature.featureName).filter(Boolean));
+              setEnabledFeatures(
+                saved.features
+                  .map((feature) =>
+                    typeof feature === "string"
+                      ? feature
+                      : feature.name || feature.featureName,
+                  )
+                  .filter(Boolean),
+              );
             }
             if (Array.isArray(saved.storeRoles) && saved.storeRoles.length) {
-              const savedStoreRoles = saved.storeRoles.map((role) => typeof role === "string" ? role : role.name || role.roleName).filter(Boolean);
+              const savedStoreRoles = saved.storeRoles
+                .map((role) =>
+                  typeof role === "string" ? role : role.name || role.roleName,
+                )
+                .filter(Boolean);
               setStoreRoles(savedStoreRoles);
               setActiveStoreRole(savedStoreRoles[0] || "");
             }
-            if (saved.storeRolePermissions && typeof saved.storeRolePermissions === "object") {
+            if (
+              saved.storeRolePermissions &&
+              typeof saved.storeRolePermissions === "object"
+            ) {
               setStoreRolePermissions(saved.storeRolePermissions);
             }
             setFurthest(STEPS.length - 1);
           }
         } else {
-          const id = await allocateId("store");
+          const id = "";
 
           if (!cancelled) {
             setStore((current) => ({
@@ -323,7 +421,7 @@ export default function AddStore() {
           setError(
             err instanceof ApiError
               ? err.message
-              : "Unable to load the store setup."
+              : "Unable to load the store setup.",
           );
         }
       } finally {
@@ -345,7 +443,7 @@ export default function AddStore() {
   useEffect(() => {
     let cancelled = false;
     setMerchant(null);
-    setMerchantType({id: "", name: "", code: ""});
+    setMerchantType({ id: "", name: "", code: "" });
     setMerchantRoles([]);
     setMerchantStores([]);
     setSubscription(null);
@@ -359,7 +457,8 @@ export default function AddStore() {
       try {
         const result = await getMerchant(selectedMerchantId);
         if (cancelled) return;
-        if (!result?.merchant) throw new Error("Merchant details are unavailable.");
+        if (!result?.merchant)
+          throw new Error("Merchant details are unavailable.");
         const inherited = merchantConfiguration(result);
         setMerchant(inherited.merchant);
         setMerchantType(inherited.type);
@@ -369,7 +468,9 @@ export default function AddStore() {
         setLoadedMerchantId(selectedMerchantId);
       } catch (err) {
         if (!cancelled) {
-          setMerchantError(err?.message || "Unable to load the selected merchant.");
+          setMerchantError(
+            err?.message || "Unable to load the selected merchant.",
+          );
         }
       } finally {
         if (!cancelled) setMerchantLoading(false);
@@ -377,99 +478,206 @@ export default function AddStore() {
     }
 
     loadMerchant();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [selectedMerchantId]);
 
   const currentMerchant = useMemo(
     () =>
       (loadedMerchantId === selectedMerchantId ? merchant : null) ||
       merchants.find((item) => merchantIdOf(item) === selectedMerchantId),
-    [merchant, merchants, loadedMerchantId, selectedMerchantId]
+    [merchant, merchants, loadedMerchantId, selectedMerchantId],
   );
 
-  const merchantReady = Boolean(selectedMerchantId) &&
-    loadedMerchantId === selectedMerchantId && !merchantLoading && !merchantError;
+  const merchantReady =
+    Boolean(selectedMerchantId) &&
+    loadedMerchantId === selectedMerchantId &&
+    !merchantLoading &&
+    !merchantError;
 
   useEffect(() => {
     let active = true;
-    storeTypesApi.getAll().then(types => {
-      if (!active) return;
-      if (!Array.isArray(types?.storeTypes)) {
-        throw new Error("The store-type API returned an unexpected response.");
-      }
-      setStoreTypes(types.storeTypes);
-    }).catch(err => { if (active) setMastersError(err.message || "Unable to load master data."); })
-      .finally(() => { if (active) setMastersLoading(false); });
-    return () => { active = false; };
+    storeTypesApi
+      .getAll()
+      .then((types) => {
+        if (!active) return;
+        if (!Array.isArray(types?.storeTypes)) {
+          throw new Error(
+            "The store-type API returned an unexpected response.",
+          );
+        }
+        setStoreTypes(types.storeTypes);
+      })
+      .catch((err) => {
+        if (active)
+          setMastersError(err.message || "Unable to load master data.");
+      })
+      .finally(() => {
+        if (active) setMastersLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const selectedStoreType = storeTypes.find(item =>
-    merchantReady && (merchantType.id ? String(item.id) === merchantType.id :
-      String(item.name).toLowerCase() === String(merchantType.name).toLowerCase()));
-  const inheritedTypeName = merchantReady ? selectedStoreType?.name || merchantType.name : "";
-  const inheritedTypeId = merchantReady ? String(selectedStoreType?.id ?? merchantType.id) : "";
-  const inheritedTypeCode = merchantReady ? selectedStoreType?.storeTypeCode || merchantType.code : "";
-  const roles = merchantReady ? merchantRoles.map(role => typeof role === "string" ? role :
-    role.name || role.roleName || role.templateName || "").filter(Boolean) : [];
+  const selectedStoreType = storeTypes.find(
+    (item) =>
+      merchantReady &&
+      (merchantType.id
+        ? String(item.id) === merchantType.id
+        : String(item.name).toLowerCase() ===
+          String(merchantType.name).toLowerCase()),
+  );
+  const inheritedTypeName = merchantReady
+    ? selectedStoreType?.name || merchantType.name
+    : "";
+  const inheritedTypeId = merchantReady
+    ? String(selectedStoreType?.id ?? merchantType.id)
+    : "";
+  const inheritedTypeCode = merchantReady
+    ? selectedStoreType?.storeTypeCode || merchantType.code
+    : "";
+  const roles = merchantReady
+    ? merchantRoles
+        .map((role) =>
+          typeof role === "string"
+            ? role
+            : role.name || role.roleName || role.templateName || "",
+        )
+        .filter(Boolean)
+    : [];
 
   useEffect(() => {
     const id = selectedStoreType?.id;
     if (id == null) {
-      setTypeData({id: "", features: [], roles: [], loading: false, error: ""});
+      setTypeData({
+        id: "",
+        features: [],
+        roles: [],
+        loading: false,
+        error: "",
+      });
       return;
     }
     let active = true;
-    setTypeData({id: String(id), features: [], roles: [], loading: true, error: ""});
-    storeTypesApi.getFeatures(id)
-      .then(featureResponse => {
+    setTypeData({
+      id: String(id),
+      features: [],
+      roles: [],
+      loading: true,
+      error: "",
+    });
+    storeTypesApi
+      .getFeatures(id)
+      .then((featureResponse) => {
         if (!active) return;
-        const features = listFrom(featureResponse).map(assignment => {
-          const feature = assignment.feature ?? assignment.featureDetails ?? assignment.featureDefinition ?? assignment;
-          return {name: featureName(feature), actions: actionsFrom(feature.actions),
-            active: assignment.defaultEnabled !== false && String(feature.status || "").toUpperCase() !== "INACTIVE"};
-        }).filter(feature => feature.name && feature.active);
-        setTypeData({id: String(id), features, roles: [], loading: false, error: ""});
-      }).catch(err => { if(active) setTypeData({id: String(id), features: [], roles: [], loading: false, error: err.message || "Unable to load inherited store-type features."}); });
-    return () => { active = false; };
+        const features = listFrom(featureResponse)
+          .map((assignment) => {
+            const feature =
+              assignment.feature ??
+              assignment.featureDetails ??
+              assignment.featureDefinition ??
+              assignment;
+            return {
+              name: featureName(feature),
+              actions: actionsFrom(feature.actions),
+              active:
+                assignment.defaultEnabled !== false &&
+                String(feature.status || "").toUpperCase() !== "INACTIVE",
+            };
+          })
+          .filter((feature) => feature.name && feature.active);
+        setTypeData({
+          id: String(id),
+          features,
+          roles: [],
+          loading: false,
+          error: "",
+        });
+      })
+      .catch((err) => {
+        if (active)
+          setTypeData({
+            id: String(id),
+            features: [],
+            roles: [],
+            loading: false,
+            error:
+              err.message || "Unable to load inherited store-type features.",
+          });
+      });
+    return () => {
+      active = false;
+    };
   }, [selectedStoreType?.id]);
 
-  const FEATURES = typeData.features.map(feature => feature.name);
-  const actionsForFeature = (name) => typeData.features.find((f) => f.name === name)?.actions || [];
-  const assignedPlan = subscription?.plan && typeof subscription.plan === "object" ? subscription.plan : null;
-  const planName = subscription?.planName || subscription?.planCode || assignedPlan?.name || (typeof currentMerchant?.plan === "string" ? currentMerchant.plan : "") || "Unavailable";
-  const storeLimit = limitFrom(subscription?.storeLimit, subscription?.stores, subscription?.maxStores,
-    subscription?.locationLimit, assignedPlan?.includedStores);
-  const deviceLimit = limitFrom(subscription?.deviceLimit, subscription?.maxDevices,
-    subscription?.devices, assignedPlan?.includedTerminals);
-  const entitledFeatures = listFrom(subscription?.includedFeatures ?? assignedPlan?.includedFeatures ?? [])
-    .map(featureName).map(name => String(name).toLowerCase());
-  const featureAvailable = name => entitledFeatures.includes(String(name).toLowerCase());
+  const FEATURES = typeData.features.map((feature) => feature.name);
+  const actionsForFeature = (name) =>
+    typeData.features.find((f) => f.name === name)?.actions || [];
+  const assignedPlan =
+    subscription?.plan && typeof subscription.plan === "object"
+      ? subscription.plan
+      : null;
+  const planName =
+    subscription?.planName ||
+    subscription?.planCode ||
+    assignedPlan?.name ||
+    (typeof currentMerchant?.plan === "string" ? currentMerchant.plan : "") ||
+    "Unavailable";
+  const storeLimit = limitFrom(
+    subscription?.storeLimit,
+    subscription?.stores,
+    subscription?.maxStores,
+    subscription?.locationLimit,
+    assignedPlan?.includedStores,
+  );
+  const deviceLimit = limitFrom(
+    subscription?.deviceLimit,
+    subscription?.maxDevices,
+    subscription?.devices,
+    assignedPlan?.includedTerminals,
+  );
+  const entitledFeatures = listFrom(
+    subscription?.includedFeatures ?? assignedPlan?.includedFeatures ?? [],
+  )
+    .map(featureName)
+    .map((name) => String(name).toLowerCase());
+  const featureAvailable = (name) =>
+    entitledFeatures.includes(String(name).toLowerCase());
 
   const enrolledStores = merchantStores.length;
 
   const existingDevices = Array.isArray(subscription?.devices)
     ? subscription.devices
     : Array.isArray(subscription?.registeredDevices)
-    ? subscription.registeredDevices
-    : [];
+      ? subscription.registeredDevices
+      : [];
 
   const enrolledDeviceCount = Number(
     subscription?.usedDevices ||
       subscription?.deviceCount ||
       subscription?.devicesUsed ||
       existingDevices.length ||
-      0
+      0,
   );
 
   const persistedDeviceCount = useMemo(() => {
     if (!editing) return 0;
-    return existingDevices.filter(device => String(device.storeId ?? device.store?.id ?? device.store) === String(storeId)).length;
+    return existingDevices.filter(
+      (device) =>
+        String(device.storeId ?? device.store?.id ?? device.store) ===
+        String(storeId),
+    ).length;
   }, [editing, existingDevices, storeId]);
-  const usedDevices = Math.max(0, enrolledDeviceCount - persistedDeviceCount) + devices.length;
+  const usedDevices =
+    Math.max(0, enrolledDeviceCount - persistedDeviceCount) + devices.length;
 
-  const remainingStores = storeLimit == null ? null : Math.max(0, storeLimit - enrolledStores);
+  const remainingStores =
+    storeLimit == null ? null : Math.max(0, storeLimit - enrolledStores);
 
-  const remainingDevices = deviceLimit == null ? null : Math.max(0, deviceLimit - usedDevices);
+  const remainingDevices =
+    deviceLimit == null ? null : Math.max(0, deviceLimit - usedDevices);
 
   const countrySettings = COUNTRY_SETTINGS[store.country];
   const currencyDisplay = countrySettings
@@ -478,15 +686,18 @@ export default function AddStore() {
 
   // Normalize existing stores as well as country changes.
   useEffect(() => {
-    setStore(current => {
+    setStore((current) => {
       const next = applyCountry(current, current.country);
-      return next.currency === current.currency && next.timezone === current.timezone ? current : next;
+      return next.currency === current.currency &&
+        next.timezone === current.timezone
+        ? current
+        : next;
     });
   }, [store.country]);
 
-  const changeCountry = country => {
+  const changeCountry = (country) => {
     setError("");
-    setStore(current => applyCountry(current, country));
+    setStore((current) => applyCountry(current, country));
   };
 
   const change = (key, value) => {
@@ -499,11 +710,7 @@ export default function AddStore() {
   };
 
   const backToStores = () =>
-    nav(
-      routeMerchantId
-        ? `/merchants/${routeMerchantId}/stores`
-        : "/stores"
-    );
+    nav(routeMerchantId ? `/merchants/${routeMerchantId}/stores` : "/stores");
 
   const updateHours = (index, key, value) =>
     change(
@@ -514,51 +721,80 @@ export default function AddStore() {
               ...item,
               [key]: value,
             }
-          : item
-      )
+          : item,
+      ),
     );
 
   const validateStep = (currentStep) => {
     if (currentStep === 0) {
       if (!selectedMerchantId) return "Please select a merchant.";
       if (merchantError) return merchantError;
-      if (!merchantReady) return "Please wait for the merchant details to load.";
-      if (!store.merchantId && !routeMerchantId) return "Please select a merchant.";
+      if (!merchantReady)
+        return "Please wait for the merchant details to load.";
+      if (!store.merchantId && !routeMerchantId)
+        return "Please select a merchant.";
       if (mastersLoading) return "Please wait for master data to load.";
       if (mastersError) return mastersError;
-      if (!selectedStoreType) return "The merchant has no resolvable store type. Update the merchant profile first.";
-      if (typeData.loading || typeData.id !== String(selectedStoreType.id)) return "Please wait for store-type details to load.";
+      if (!selectedStoreType)
+        return "The merchant has no resolvable store type. Update the merchant profile first.";
+      if (typeData.loading || typeData.id !== String(selectedStoreType.id))
+        return "Please wait for store-type details to load.";
       if (typeData.error) return typeData.error;
-      if (!store.name || !String(store.name).trim()) return "Store name is required.";
-      if (!store.url || !String(store.url).trim()) return "Store Base URL is required.";
+      if (!store.name || !String(store.name).trim())
+        return "Store name is required.";
+      if (!store.url || !String(store.url).trim())
+        return "Store Base URL is required.";
       try {
         new URL(store.url);
       } catch {
         return "Please enter a valid URL.";
       }
-      if (!store.phone || !String(store.phone).trim()) return "Store phone is required.";
-      if (!store.addressLine1 || !String(store.addressLine1).trim()) return "Address Line 1 is required.";
-      if (store.country === "United States" && !/^\d+[A-Za-z]?\s+\S.+$/.test(String(store.addressLine1).trim())) return "Address Line 1 must include the street number and street name.";
+      if (!store.phone || !String(store.phone).trim())
+        return "Store phone is required.";
+      if (!store.addressLine1 || !String(store.addressLine1).trim())
+        return "Address Line 1 is required.";
+      if (
+        store.country === "United States" &&
+        !/^\d+[A-Za-z]?\s+\S.+$/.test(String(store.addressLine1).trim())
+      )
+        return "Address Line 1 must include the street number and street name.";
       if (!store.city || !String(store.city).trim()) return "City is required.";
-      if (!store.state || !String(store.state).trim()) return "State is required.";
-      if (!store.zip || !String(store.zip).trim()) return "ZIP code is required.";
-      if (store.country === "United States" && !/^\d{5}(-\d{4})?$/.test(String(store.zip).trim())) return "Enter a valid 5-digit ZIP code or ZIP+4, for example 85001 or 85001-1234.";
-      if (!store.country || !String(store.country).trim()) return "Country is required.";
-      if (!COUNTRY_SETTINGS[store.country]) return "Please select a supported country.";
-      if (!COUNTRY_SETTINGS[store.country].zones.includes(store.timezone)) return "Please select a time zone for the selected country.";
+      if (!store.state || !String(store.state).trim())
+        return "State is required.";
+      if (!store.zip || !String(store.zip).trim())
+        return "ZIP code is required.";
+      if (
+        store.country === "United States" &&
+        !/^\d{5}(-\d{4})?$/.test(String(store.zip).trim())
+      )
+        return "Enter a valid 5-digit ZIP code or ZIP+4, for example 85001 or 85001-1234.";
+      if (!store.country || !String(store.country).trim())
+        return "Country is required.";
+      if (!COUNTRY_SETTINGS[store.country])
+        return "Please select a supported country.";
+      if (!COUNTRY_SETTINGS[store.country].zones.includes(store.timezone))
+        return "Please select a time zone for the selected country.";
     } else if (currentStep === 1) {
-      if (!editing && storeLimit == null) return "Store license limit is unavailable. Check the merchant subscription.";
-      if (!editing && remainingStores <= 0) return "The merchant has no remaining store licenses.";
+      if (!editing && storeLimit == null)
+        return "Store license limit is unavailable. Check the merchant subscription.";
+      if (!editing && remainingStores <= 0)
+        return "The merchant has no remaining store licenses.";
     } else if (currentStep === 2) {
-      if (devices.length && deviceLimit == null) return "Device license limit is unavailable. Check the merchant subscription.";
-      if (deviceLimit != null && usedDevices > deviceLimit) return "Assigned devices exceed the merchant's device limit.";
+      if (devices.length && deviceLimit == null)
+        return "Device license limit is unavailable. Check the merchant subscription.";
+      if (deviceLimit != null && usedDevices > deviceLimit)
+        return "Assigned devices exceed the merchant's device limit.";
       for (let d of devices) {
-        if (!d.type || !String(d.type).trim()) return "Device type is required for all devices.";
-        if (!d.name || !String(d.name).trim()) return "Device name is required for all devices.";
-        if (!d.serial || !String(d.serial).trim()) return "Device identifier is required for all devices.";
+        if (!d.type || !String(d.type).trim())
+          return "Device type is required for all devices.";
+        if (!d.name || !String(d.name).trim())
+          return "Device name is required for all devices.";
+        if (!d.serial || !String(d.serial).trim())
+          return "Device identifier is required for all devices.";
       }
     } else if (currentStep === 4) {
-      if (customRoleOpen) return "Finish or cancel the custom role you're creating before continuing.";
+      if (customRoleOpen)
+        return "Finish or cancel the custom role you're creating before continuing.";
     }
     return null;
   };
@@ -602,7 +838,7 @@ export default function AddStore() {
     setEnabledFeatures((items) =>
       items.includes(feature)
         ? items.filter((item) => item !== feature)
-        : [...items, feature]
+        : [...items, feature],
     );
 
   const toggleStoreRole = (role) =>
@@ -612,7 +848,7 @@ export default function AddStore() {
         : [...items, role];
 
       setActiveStoreRole((current) =>
-        next.includes(current) ? current : next[0] || ""
+        next.includes(current) ? current : next[0] || "",
       );
 
       return next;
@@ -636,10 +872,13 @@ export default function AddStore() {
     });
 
   const addDevice = () => {
-    if (deviceLimit == null) return setError("Device license limit is unavailable from the subscription.");
+    if (deviceLimit == null)
+      return setError(
+        "Device license limit is unavailable from the subscription.",
+      );
     if (usedDevices >= deviceLimit) {
       return setError(
-        "All device licenses in this plan are in use. Upgrade the merchant plan to add another device."
+        "All device licenses in this plan are in use. Upgrade the merchant plan to add another device.",
       );
     }
 
@@ -661,8 +900,8 @@ export default function AddStore() {
               ...item,
               [key]: value,
             }
-          : item
-      )
+          : item,
+      ),
     );
 
   async function submit(event) {
@@ -688,9 +927,15 @@ export default function AddStore() {
         type: inheritedTypeName,
         storeTypeId: inheritedTypeId,
         storeTypeCode: inheritedTypeCode,
-        features: enabledFeatures.filter(name => FEATURES.includes(name) && featureAvailable(name)),
+        features: enabledFeatures.filter(
+          (name) => FEATURES.includes(name) && featureAvailable(name),
+        ),
         devices,
-        roleIds: merchantRoles.map(role => typeof role === "object" ? role.id ?? role.roleId : null).filter(id => id != null),
+        roleIds: merchantRoles
+          .map((role) =>
+            typeof role === "object" ? (role.id ?? role.roleId) : null,
+          )
+          .filter((id) => id != null),
         storeRoles,
         storeRolePermissions,
       };
@@ -703,10 +948,10 @@ export default function AddStore() {
       if (editing) {
         await updateStore(storeId, payload);
       } else {
-        await createStore(
-          payload,
-          routeMerchantId || store.merchantId
-        );
+        // await createStore(
+        //   payload,
+        //   routeMerchantId || store.merchantId
+        // );
       }
 
       backToStores();
@@ -714,9 +959,7 @@ export default function AddStore() {
       setError(
         err instanceof ApiError
           ? err.message
-          : `Unable to ${
-              editing ? "update" : "create"
-            } this store.`
+          : `Unable to ${editing ? "update" : "create"} this store.`,
       );
     } finally {
       setSaving(false);
@@ -780,7 +1023,10 @@ export default function AddStore() {
 
             <Field
               label="Store type (from merchant)"
-              value={inheritedTypeName || (merchantLoading ? "Loading…" : "Not configured on merchant")}
+              value={
+                inheritedTypeName ||
+                (merchantLoading ? "Loading…" : "Not configured on merchant")
+              }
               onChange={() => {}}
               readOnly
             />
@@ -819,8 +1065,8 @@ export default function AddStore() {
 
           <div className="pch-note">
             Store type and subscription entitlements are inherited from the
-            merchant and managed on the merchant profile. Store-level roles
-            and permissions can still be configured here.
+            merchant and managed on the merchant profile. Store-level roles and
+            permissions can still be configured here.
           </div>
         </Panel>
 
@@ -854,10 +1100,18 @@ export default function AddStore() {
             />
 
             <Field
-              label={store.country === "United States" ? "ZIP Code" : "ZIP / Postal Code"}
+              label={
+                store.country === "United States"
+                  ? "ZIP Code"
+                  : "ZIP / Postal Code"
+              }
               value={store.zip}
               onChange={(value) => change("zip", value)}
-              placeholder={store.country === "United States" ? "85001 or 85001-1234" : undefined}
+              placeholder={
+                store.country === "United States"
+                  ? "85001 or 85001-1234"
+                  : undefined
+              }
             />
 
             <Select
@@ -865,18 +1119,29 @@ export default function AddStore() {
               value={store.country}
               onChange={changeCountry}
               options={[
-                {value: "", label: "Select country"},
-                ...Object.keys(COUNTRY_SETTINGS).map(country => ({value: country, label: country})),
+                { value: "", label: "Select country" },
+                ...Object.keys(COUNTRY_SETTINGS).map((country) => ({
+                  value: country,
+                  label: country,
+                })),
               ]}
             />
             <Select
               label="Time zone"
               value={store.timezone}
-              onChange={value => change("timezone", value)}
+              onChange={(value) => change("timezone", value)}
               disabled={!countrySettings}
               options={[
-                {value: "", label: countrySettings ? "Select time zone" : "Select country first"},
-                ...(countrySettings?.zones || []).map(zone => ({value: zone, label: zone.replaceAll("_", " ")})),
+                {
+                  value: "",
+                  label: countrySettings
+                    ? "Select time zone"
+                    : "Select country first",
+                },
+                ...(countrySettings?.zones || []).map((zone) => ({
+                  value: zone,
+                  label: zone.replaceAll("_", " "),
+                })),
               ]}
             />
             <Field
@@ -886,8 +1151,16 @@ export default function AddStore() {
               placeholder="Select country first"
               readOnly
             />
-            <Select label="Status" value={store.status} onChange={value => change("status", value)}
-              options={[{value: "", label: "Select status"}, "Active", "Inactive"]} />
+            <Select
+              label="Status"
+              value={store.status}
+              onChange={(value) => change("status", value)}
+              options={[
+                { value: "", label: "Select status" },
+                "Active",
+                "Inactive",
+              ]}
+            />
           </div>
         </Panel>
 
@@ -913,11 +1186,7 @@ export default function AddStore() {
                       <select
                         value={day.status}
                         onChange={(e) =>
-                          updateHours(
-                            index,
-                            "status",
-                            e.target.value
-                          )
+                          updateHours(index, "status", e.target.value)
                         }
                       >
                         <option value="">Select status</option>
@@ -933,11 +1202,7 @@ export default function AddStore() {
                         disabled={day.status !== "Open"}
                         value={day.open}
                         onChange={(e) =>
-                          updateHours(
-                            index,
-                            "open",
-                            e.target.value
-                          )
+                          updateHours(index, "open", e.target.value)
                         }
                       />
                     </td>
@@ -948,11 +1213,7 @@ export default function AddStore() {
                         disabled={day.status !== "Open"}
                         value={day.close}
                         onChange={(e) =>
-                          updateHours(
-                            index,
-                            "close",
-                            e.target.value
-                          )
+                          updateHours(index, "close", e.target.value)
                         }
                       />
                     </td>
@@ -963,11 +1224,7 @@ export default function AddStore() {
                         min="0"
                         value={day.shifts}
                         onChange={(e) =>
-                          updateHours(
-                            index,
-                            "shifts",
-                            e.target.value
-                          )
+                          updateHours(index, "shifts", e.target.value)
                         }
                       />
                     </td>
@@ -989,21 +1246,17 @@ export default function AddStore() {
             <div>
               <Detail
                 label="Merchant"
-                value={
-                  currentMerchant?.name ||
-                  "Selected merchant"
-                }
+                value={currentMerchant?.name || "Selected merchant"}
               />
 
-              <Detail
-                label="Current plan"
-                value={planName}
-              />
+              <Detail label="Current plan" value={planName} />
 
               <Detail
                 label="Billing cycle"
                 value={
-                  subscription?.billingCycle || assignedPlan?.billingCycle || "Unavailable"
+                  subscription?.billingCycle ||
+                  assignedPlan?.billingCycle ||
+                  "Unavailable"
                 }
               />
             </div>
@@ -1027,7 +1280,9 @@ export default function AddStore() {
           </div>
 
           <div className="pch-note">
-            {editing ? "This store is already covered by the merchant’s existing license. The subscription and billing are unchanged." : "This store will use one of the merchant’s existing store licenses. The subscription and billing are unchanged."}
+            {editing
+              ? "This store is already covered by the merchant’s existing license. The subscription and billing are unchanged."
+              : "This store will use one of the merchant’s existing store licenses. The subscription and billing are unchanged."}
           </div>
         </Panel>
 
@@ -1049,16 +1304,30 @@ export default function AddStore() {
                     <td>{item.id}</td>
                     <td>{item.name}</td>
                     <td>{item.type}</td>
-                    <td>{item.licensed === true ? "Licensed" : item.licensed === false ? "Not licensed" : "Unavailable"}</td>
+                    <td>
+                      {item.licensed === true
+                        ? "Licensed"
+                        : item.licensed === false
+                          ? "Not licensed"
+                          : "Unavailable"}
+                    </td>
                   </tr>
                 ))}
 
-                {!editing && <tr>
-                  <td>{store.id || "New"}</td>
-                  <td>{store.name || "New store"}</td>
-                  <td>{inheritedTypeName}</td>
-                  <td>{remainingStores == null ? "Limit unavailable" : remainingStores > 0 ? "Will be licensed" : "Upgrade required"}</td>
-                </tr>}
+                {!editing && (
+                  <tr>
+                    <td>{store.id || "New"}</td>
+                    <td>{store.name || "New store"}</td>
+                    <td>{inheritedTypeName}</td>
+                    <td>
+                      {remainingStores == null
+                        ? "Limit unavailable"
+                        : remainingStores > 0
+                          ? "Will be licensed"
+                          : "Upgrade required"}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -1073,9 +1342,7 @@ export default function AddStore() {
         <Panel title="Device license allocation">
           <div className="pch-grid">
             <div>
-              <span className="pch-muted">
-                Already assigned
-              </span>
+              <span className="pch-muted">Already assigned</span>
 
               <div className="pch-price">
                 {usedDevices} / {displayLimit(deviceLimit)}
@@ -1083,20 +1350,15 @@ export default function AddStore() {
             </div>
 
             <div>
-              <span className="pch-muted">
-                Remaining licenses
-              </span>
+              <span className="pch-muted">Remaining licenses</span>
 
-              <div className="pch-price">
-                {displayLimit(remainingDevices)}
-              </div>
+              <div className="pch-price">{displayLimit(remainingDevices)}</div>
             </div>
           </div>
 
           <div className="pch-note">
-            Assign devices to this store if needed. Each POS,
-            KDS, printer, and scanner consumes one device
-            license.
+            Assign devices to this store if needed. Each POS, KDS, printer, and
+            scanner consumes one device license.
           </div>
         </Panel>
 
@@ -1116,29 +1378,13 @@ export default function AddStore() {
                 <tbody>
                   {existingDevices.map((device, index) => (
                     <tr key={device.id || index}>
-                      <td>
-                        {device.name ||
-                          device.deviceName ||
-                          "Device"}
-                      </td>
+                      <td>{device.name || device.deviceName || "Device"}</td>
 
-                      <td>
-                        {device.type ||
-                          device.deviceType ||
-                          "—"}
-                      </td>
+                      <td>{device.type || device.deviceType || "—"}</td>
 
-                      <td>
-                        {device.storeName ||
-                          device.store ||
-                          "—"}
-                      </td>
+                      <td>{device.storeName || device.store || "—"}</td>
 
-                      <td>
-                        {device.serial ||
-                          device.identifier ||
-                          "—"}
-                      </td>
+                      <td>{device.serial || device.identifier || "—"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1167,11 +1413,7 @@ export default function AddStore() {
                       <input
                         value={device.name}
                         onChange={(e) =>
-                          changeDevice(
-                            index,
-                            "name",
-                            e.target.value
-                          )
+                          changeDevice(index, "name", e.target.value)
                         }
                         placeholder="POS 01"
                       />
@@ -1181,11 +1423,7 @@ export default function AddStore() {
                       <select
                         value={device.type}
                         onChange={(e) =>
-                          changeDevice(
-                            index,
-                            "type",
-                            e.target.value
-                          )
+                          changeDevice(index, "type", e.target.value)
                         }
                       >
                         <option value="">Select type</option>
@@ -1195,19 +1433,13 @@ export default function AddStore() {
                       </select>
                     </td>
 
-                    <td>
-                      {store.name || "New store"}
-                    </td>
+                    <td>{store.name || "New store"}</td>
 
                     <td>
                       <input
                         value={device.serial}
                         onChange={(e) =>
-                          changeDevice(
-                            index,
-                            "serial",
-                            e.target.value
-                          )
+                          changeDevice(index, "serial", e.target.value)
                         }
                         placeholder="POS-001"
                       />
@@ -1218,10 +1450,7 @@ export default function AddStore() {
                         type="button"
                         onClick={() =>
                           setDevices((items) =>
-                            items.filter(
-                              (_, itemIndex) =>
-                                itemIndex !== index
-                            )
+                            items.filter((_, itemIndex) => itemIndex !== index),
                           )
                         }
                       >
@@ -1252,7 +1481,11 @@ export default function AddStore() {
     return (
       <>
         <Panel title="Effective feature resolution">
-          {!FEATURES.length && <p className="pch-note">No active features returned for this store type.</p>}
+          {!FEATURES.length && (
+            <p className="pch-note">
+              No active features returned for this store type.
+            </p>
+          )}
           <div className="pch-tablewrap">
             <table>
               <thead>
@@ -1269,29 +1502,22 @@ export default function AddStore() {
                 {FEATURES.map((feature) => {
                   const available = featureAvailable(feature);
                   const enabled =
-                    enabledFeatures.includes(feature) &&
-                    available;
+                    enabledFeatures.includes(feature) && available;
 
                   return (
                     <tr key={feature}>
                       <td>{feature}</td>
 
-                      <td>
-                        Relevant
-                      </td>
+                      <td>Relevant</td>
 
-                      <td>
-                        {available ? "Included" : "Not entitled"}
-                      </td>
+                      <td>{available ? "Included" : "Not entitled"}</td>
 
                       <td>
                         <input
                           type="checkbox"
                           checked={enabled}
                           disabled={!available}
-                          onChange={() =>
-                            toggleFeature(feature)
-                          }
+                          onChange={() => toggleFeature(feature)}
                         />
                       </td>
 
@@ -1299,8 +1525,8 @@ export default function AddStore() {
                         {enabled
                           ? "Enabled"
                           : available
-                          ? "Disabled"
-                          : "Not entitled"}
+                            ? "Disabled"
+                            : "Not entitled"}
                       </td>
                     </tr>
                   );
@@ -1311,8 +1537,8 @@ export default function AddStore() {
         </Panel>
 
         <div className="pch-note">
-          Store relevance, subscription entitlement, and store
-          settings are separate access gates.
+          Store relevance, subscription entitlement, and store settings are
+          separate access gates.
         </div>
       </>
     );
@@ -1324,29 +1550,58 @@ export default function AddStore() {
     return (
       <>
         <Panel title="Roles inherited from merchant">
-          <p className="pch-note">These roles and their permissions are managed on the merchant profile.</p>
+          <p className="pch-note">
+            These roles and their permissions are managed on the merchant
+            profile.
+          </p>
           {merchantRoles.length ? (
             <div className="pch-tablewrap">
               <table>
-                <thead><tr><th>ROLE</th><th>SCOPE</th></tr></thead>
-                <tbody>{merchantRoles.map((role, index) => (
-                  <tr key={typeof role === "object" ? role.id ?? role.roleId ?? index : role}>
-                    <td>{typeof role === "string" ? role : role.name || role.roleName || role.templateName || "Unnamed role"}</td>
-                    <td>{typeof role === "object" ? role.scope || role.roleScope || "—" : "—"}</td>
+                <thead>
+                  <tr>
+                    <th>ROLE</th>
+                    <th>SCOPE</th>
                   </tr>
-                ))}</tbody>
+                </thead>
+                <tbody>
+                  {merchantRoles.map((role, index) => (
+                    <tr
+                      key={
+                        typeof role === "object"
+                          ? (role.id ?? role.roleId ?? index)
+                          : role
+                      }
+                    >
+                      <td>
+                        {typeof role === "string"
+                          ? role
+                          : role.name ||
+                            role.roleName ||
+                            role.templateName ||
+                            "Unnamed role"}
+                      </td>
+                      <td>
+                        {typeof role === "object"
+                          ? role.scope || role.roleScope || "—"
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
-          ) : <p className="pch-note">No merchant roles were returned. Configure roles on the merchant profile.</p>}
+          ) : (
+            <p className="pch-note">
+              No merchant roles were returned. Configure roles on the merchant
+              profile.
+            </p>
+          )}
         </Panel>
 
         <Panel title="Create store-level roles from templates">
           <div className="pch-grid">
             {ROLE_TEMPLATES.map((role) => (
-              <label
-                className="pch-check pch-role-option"
-                key={role}
-              >
+              <label className="pch-check pch-role-option" key={role}>
                 <input
                   type="checkbox"
                   checked={storeRoles.includes(role)}
@@ -1358,9 +1613,7 @@ export default function AddStore() {
           </div>
 
           <div className="pch-row pch-between">
-            <span className="pch-pill">
-              {storeRoles.length} store roles
-            </span>
+            <span className="pch-pill">{storeRoles.length} store roles</span>
 
             <button
               type="button"
@@ -1422,7 +1675,7 @@ export default function AddStore() {
                     const roleExists = storeRoles.some(
                       (role) =>
                         String(role).trim().toLowerCase() ===
-                        trimmedName.toLowerCase()
+                        trimmedName.toLowerCase(),
                     );
 
                     if (roleExists) {
@@ -1469,21 +1722,21 @@ export default function AddStore() {
 
               <Field
                 label="Store context"
-                value={`${store.id || "New"} · ${
-                  store.name || "New store"
-                }`}
+                value={`${store.id || "New"} · ${store.name || "New store"}`}
                 onChange={() => {}}
                 readOnly
               />
             </div>
 
             <div className="pch-note">
-              Owner: {currentMerchant?.name || "Merchant"} ·
-              Source: {selectedStoreRole} · Scope: Store
+              Owner: {currentMerchant?.name || "Merchant"} · Source:{" "}
+              {selectedStoreRole} · Scope: Store
             </div>
 
             {!FEATURES.length ? (
-              <p className="pch-note">No active features are available for this store type yet.</p>
+              <p className="pch-note">
+                No active features are available for this store type yet.
+              </p>
             ) : (
               <div className="pch-tablewrap">
                 <table>
@@ -1504,9 +1757,8 @@ export default function AddStore() {
                       const actions = actionsForFeature(feature);
 
                       const selected =
-                        storeRolePermissions[selectedStoreRole]?.[
-                          feature
-                        ] || [];
+                        storeRolePermissions[selectedStoreRole]?.[feature] ||
+                        [];
 
                       return (
                         <tr key={feature}>
@@ -1516,21 +1768,13 @@ export default function AddStore() {
                             <div className="pch-row">
                               {actions.length ? (
                                 actions.map((action) => (
-                                  <label
-                                    className="pch-check"
-                                    key={action}
-                                  >
+                                  <label className="pch-check" key={action}>
                                     <input
                                       type="checkbox"
-                                      checked={selected.includes(
-                                        action
-                                      )}
+                                      checked={selected.includes(action)}
                                       disabled={!available}
                                       onChange={() =>
-                                        toggleStorePermission(
-                                          feature,
-                                          action
-                                        )
+                                        toggleStorePermission(feature, action)
                                       }
                                     />
                                     {action}
@@ -1544,11 +1788,7 @@ export default function AddStore() {
                             </div>
                           </td>
 
-                          <td>
-                            {available
-                              ? "Available"
-                              : "Not entitled"}
-                          </td>
+                          <td>{available ? "Available" : "Not entitled"}</td>
                         </tr>
                       );
                     })}
@@ -1568,15 +1808,9 @@ export default function AddStore() {
         <Panel title="Merchant subscription & licensing">
           <div className="pch-grid">
             <div>
-              <Detail
-                label="Merchant"
-                value={currentMerchant?.name}
-              />
+              <Detail label="Merchant" value={currentMerchant?.name} />
 
-              <Detail
-                label="Plan"
-                value={planName}
-              />
+              <Detail label="Plan" value={planName} />
 
               <Detail
                 label="Store licenses after provision"
@@ -1590,20 +1824,11 @@ export default function AddStore() {
                 value={`${usedDevices} / ${displayLimit(deviceLimit)}`}
               />
 
-              <Detail
-                label="Enabled features"
-                value={enabledFeatures.length}
-              />
+              <Detail label="Enabled features" value={enabledFeatures.length} />
 
-              <Detail
-                label="Merchant roles"
-                value={roles.length}
-              />
+              <Detail label="Merchant roles" value={roles.length} />
 
-              <Detail
-                label="Store-level roles"
-                value={storeRoles.length}
-              />
+              <Detail label="Store-level roles" value={storeRoles.length} />
             </div>
           </div>
         </Panel>
@@ -1611,20 +1836,11 @@ export default function AddStore() {
         <Panel title="Store location">
           <div className="pch-grid">
             <div>
-              <Detail
-                label="Store"
-                value={store.name}
-              />
+              <Detail label="Store" value={store.name} />
 
-              <Detail
-                label="Store ID"
-                value={store.id}
-              />
+              <Detail label="Store ID" value={store.id} />
 
-              <Detail
-                label="Type"
-                value={inheritedTypeName}
-              />
+              <Detail label="Type" value={inheritedTypeName} />
             </div>
 
             <div>
@@ -1642,17 +1858,11 @@ export default function AddStore() {
                   .join(", ")}
               />
 
-              <Detail
-                label="Time zone"
-                value={store.timezone}
-              />
+              <Detail label="Time zone" value={store.timezone} />
 
               <Detail label="Currency" value={currencyDisplay} />
 
-              <Detail
-                label="Status"
-                value={store.status}
-              />
+              <Detail label="Status" value={store.status} />
             </div>
           </div>
         </Panel>
@@ -1672,9 +1882,7 @@ export default function AddStore() {
                 {devices.length ? (
                   devices.map((device, index) => (
                     <tr key={index}>
-                      <td>
-                        {device.name || "Unnamed device"}
-                      </td>
+                      <td>{device.name || "Unnamed device"}</td>
 
                       <td>{device.type}</td>
 
@@ -1683,9 +1891,7 @@ export default function AddStore() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="3">
-                      No devices assigned to this store.
-                    </td>
+                    <td colSpan="3">No devices assigned to this store.</td>
                   </tr>
                 )}
               </tbody>
@@ -1694,8 +1900,8 @@ export default function AddStore() {
         </Panel>
 
         <div className="pch-note">
-          Provisioning creates the store and saves the selected
-          setup in this workflow.
+          Provisioning creates the store and saves the selected setup in this
+          workflow.
         </div>
       </>
     );
@@ -1711,21 +1917,13 @@ export default function AddStore() {
   ];
 
   if (loading) {
-    return (
-      <div className="page-content">
-        Loading store setup…
-      </div>
-    );
+    return <div className="page-content">Loading store setup…</div>;
   }
 
   return (
     <div id="pch-new">
       <header className="pch-store-header">
-        <button
-          type="button"
-          className="pch-store-back"
-          onClick={backToStores}
-        >
+        <button type="button" className="pch-store-back" onClick={backToStores}>
           <i className="bi bi-arrow-left" />
           <span>Stores</span>
         </button>
@@ -1743,19 +1941,14 @@ export default function AddStore() {
             {editing ? "Edit a store" : "Provision a store"}
           </div>
 
-          <nav
-            className="pch-rail"
-            aria-label="Store provisioning journey"
-          >
+          <nav className="pch-rail" aria-label="Store provisioning journey">
             {STEPS.map(([name, description], index) => (
               <button
                 type="button"
                 key={name}
                 disabled={saving || index > furthest}
                 onClick={() => goTo(index)}
-                className={
-                  index === step ? "pch-current" : ""
-                }
+                className={index === step ? "pch-current" : ""}
               >
                 <span className="pch-number">
                   {index < step ? "✓" : index + 1}
@@ -1780,25 +1973,32 @@ export default function AddStore() {
 
           <h1>{STEPS[step][0]}</h1>
 
-          <p className="pch-muted">
-            {STEPS[step][1]}
-          </p>
+          <p className="pch-muted">{STEPS[step][1]}</p>
 
           <form onSubmit={submit}>
-            <fieldset
-              className="pch-form-content"
-              disabled={saving}
-            >
+            <fieldset className="pch-form-content" disabled={saving}>
               {screens[step]()}
 
-              {(mastersLoading || typeData.loading) && <div className="pch-note" role="status">Loading store master data…</div>}
-              {(mastersError || typeData.error) && <div className="pch-error" role="alert">{mastersError || typeData.error}</div>}
+              {(mastersLoading || typeData.loading) && (
+                <div className="pch-note" role="status">
+                  Loading store master data…
+                </div>
+              )}
+              {(mastersError || typeData.error) && (
+                <div className="pch-error" role="alert">
+                  {mastersError || typeData.error}
+                </div>
+              )}
               {merchantLoading && (
-                <div className="pch-note" role="status">Loading merchant details…</div>
+                <div className="pch-note" role="status">
+                  Loading merchant details…
+                </div>
               )}
 
               {merchantError && (
-                <div className="pch-error" role="alert">{merchantError}</div>
+                <div className="pch-error" role="alert">
+                  {merchantError}
+                </div>
               )}
 
               {error && (
@@ -1810,11 +2010,7 @@ export default function AddStore() {
               <div className="pch-footerbar">
                 <button
                   type="button"
-                  onClick={() =>
-                    step === 0
-                      ? backToStores()
-                      : goTo(step - 1)
-                  }
+                  onClick={() => (step === 0 ? backToStores() : goTo(step - 1))}
                 >
                   {step === 0 ? "Cancel" : "← Back"}
                 </button>
@@ -1832,15 +2028,12 @@ export default function AddStore() {
                     Continue →
                   </button>
                 ) : (
-                  <button
-                    className="pch-primary"
-                    type="submit"
-                  >
+                  <button className="pch-primary" type="submit">
                     {saving
                       ? "Saving…"
                       : editing
-                      ? "Save changes"
-                      : "Provision store"}
+                        ? "Save changes"
+                        : "Provision store"}
                   </button>
                 )}
               </div>
@@ -1848,7 +2041,6 @@ export default function AddStore() {
           </form>
         </main>
       </div>
-
 
       {deleteTarget && (
         <div
@@ -1863,7 +2055,9 @@ export default function AddStore() {
           }}
         >
           <div className="pch-delete-modal">
-            <div className="pch-delete-icon" aria-hidden="true">🗑</div>
+            <div className="pch-delete-icon" aria-hidden="true">
+              🗑
+            </div>
             <h2 id="pch-delete-title">Delete Store?</h2>
             <p>
               Are you sure you want to delete{" "}
@@ -1872,9 +2066,7 @@ export default function AddStore() {
               </strong>
               ?
             </p>
-            <p className="pch-delete-warning">
-              This action cannot be undone.
-            </p>
+            <p className="pch-delete-warning">This action cannot be undone.</p>
             <div className="pch-delete-actions">
               <button type="button" onClick={() => setDeleteTarget(null)}>
                 Cancel
@@ -1894,8 +2086,8 @@ export default function AddStore() {
       )}
 
       <footer>
-        Merchant store provisioning · Existing subscription
-        licenses are retained
+        Merchant store provisioning · Existing subscription licenses are
+        retained
       </footer>
     </div>
   );

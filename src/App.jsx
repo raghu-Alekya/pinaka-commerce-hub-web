@@ -48,6 +48,7 @@ import ViewPlanPricing from "./pages/ViewPlanPricing";
 import ViewPlanFeaturesLimits from "./pages/ViewPlanFeaturesLimits";
 import CashManagement from "./pages/CashManagement";
 import AddMerchantEmployee from "./pages/AddMerchantEmployee";
+import { deleteMerchant } from "./api/merchants";
 
 const placeholders = [
   "Cash Management",
