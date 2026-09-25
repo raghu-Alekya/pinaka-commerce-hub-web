@@ -26,6 +26,27 @@ export function listStores() {
   return api.get(endpoints.stores);
 }
 
+export async function listMerchantStores(merchantId) {
+  if (!merchantId) return [];
+  const response = await api.get(endpoints.merchantStores(encodeURIComponent(merchantId)));
+  const findList = (value) => {
+    if (Array.isArray(value)) return value;
+    for (const key of ["stores", "items", "results", "data"]) {
+      const nested = value?.[key];
+      if (Array.isArray(nested)) return nested;
+      if (nested && typeof nested === "object") {
+        const found = findList(nested);
+        if (found.length) return found;
+      }
+    }
+    return [];
+  };
+  return findList(response).map((store) => ({
+    value: String(store.storeId || store.id || store._id || ""),
+    label: store.name || store.storeName || store.storeId || store.id || "",
+  })).filter((store) => store.value && store.label);
+}
+
 export function createStore(store, merchantId) {
   const path = merchantId
     ? endpoints.merchantStores(merchantId)

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Settings, ChevronDown } from "lucide-react";
 
 import "../styles/add-device.css";
 import { devicesApi } from "../api/devices";
+import { listMerchants } from "../api/merchants";
 
 export default function AddDevice() {
   const navigate = useNavigate();
@@ -14,14 +15,34 @@ export default function AddDevice() {
     deviceType: "",
     serialNumber: "",
     merchantId: "",
-    storeId: "",
     status: "Active",
     notes: "",
-    enableImmediately: true,
   });
 
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [merchants, setMerchants] = useState([]);
+  const [deviceTypes, setDeviceTypes] = useState([]);
+  const [loadingOptions, setLoadingOptions] = useState(true);
+  const knownDeviceTypes = ["POS Terminal", "Kitchen Display", "Barcode Scanner", "Receipt Printer", "Customer Display"];
+
+  useEffect(() => {
+    let active = true;
+    Promise.allSettled([listMerchants(), devicesApi.listTypes()])
+      .then(([merchantResult, typeResult]) => {
+        if (!active) return;
+        if (merchantResult.status === "fulfilled") {
+          setMerchants(merchantResult.value.map((merchant) => ({ value: String(merchant.merchantId || merchant.id || ""), label: merchant.name })).filter((item) => item.value && item.label));
+        } else {
+          setApiError(merchantResult.reason?.message || "Failed to load merchants.");
+        }
+        // The supplied Postman collection has no device-type listing route. Keep
+        // the dropdown usable with types shown by the existing device UI/API examples.
+        setDeviceTypes(typeResult.status === "fulfilled" && typeResult.value.length ? typeResult.value : knownDeviceTypes.map((label) => ({ value: label, label })));
+      })
+      .finally(() => { if (active) setLoadingOptions(false); });
+    return () => { active = false; };
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -30,6 +51,11 @@ export default function AddDevice() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+  };
+
+  const handleMerchantChange = async (e) => {
+    const merchantId = e.target.value;
+    setFormData((prev) => ({ ...prev, merchantId }));
   };
 
   const handleSave = async (e) => {
@@ -60,21 +86,12 @@ export default function AddDevice() {
       return;
     }
 
-    if (!formData.storeId) {
-      setApiError("Store is required.");
-      return;
-    }
 
     setSaving(true);
 
     try {
-      console.log("Creating device with form data:", formData);
-
       const response = await devicesApi.create(formData);
-
-      console.log("Create device response:", response);
-
-      alert("Device saved successfully!");
+      if (response?.success === false) throw new Error(response.message || "Failed to create device.");
 
       navigate("/devices");
     } catch (error) {
@@ -173,13 +190,8 @@ export default function AddDevice() {
                 value={formData.deviceType}
                 onChange={handleChange}
                 placeholder="Select device type"
-                options={[
-                  "POS Terminal",
-                  "Kitchen Display",
-                  "Barcode Scanner",
-                  "Receipt Printer",
-                  "Customer Display",
-                ]}
+                options={deviceTypes}
+                disabled={loadingOptions || !deviceTypes.length}
                 required
               />
             </FormField>
@@ -189,32 +201,10 @@ export default function AddDevice() {
               <SelectField
                 name="merchantId"
                 value={formData.merchantId}
-                onChange={handleChange}
+                onChange={handleMerchantChange}
                 placeholder="Select merchant"
-                options={[
-                  "FreshMart",
-                  "TechWorld",
-                  "FashionHub",
-                  "ElectroPlus",
-                ]}
-                required
-              />
-            </FormField>
-
-            {/* STORE */}
-            <FormField label="Store" required>
-              <SelectField
-                name="storeId"
-                value={formData.storeId}
-                onChange={handleChange}
-                placeholder="Select store"
-                options={[
-                  "Banjara Hills",
-                  "Jubilee Hills",
-                  "Madhapur",
-                  "Hitech City",
-                  "Gachibowli",
-                ]}
+                options={merchants}
+                disabled={loadingOptions || !merchants.length}
                 required
               />
             </FormField>
@@ -231,19 +221,6 @@ export default function AddDevice() {
             </FormField>
           </div>
 
-          {/* ENABLE */}
-          <label className="device-checkbox">
-            <input
-              type="checkbox"
-              name="enableImmediately"
-              checked={formData.enableImmediately}
-              onChange={handleChange}
-            />
-
-            <span>Enable device for usage immediately</span>
-          </label>
-
-          {/* NOTES */}
           <div className="device-additional-information">
             <FormField label="Notes">
               <textarea
@@ -254,10 +231,10 @@ export default function AddDevice() {
                 maxLength={500}
                 rows={4}
               />
-
               <div className="notes-counter">{formData.notes.length}/500</div>
             </FormField>
           </div>
+
         </section>
       </form>
 
@@ -331,17 +308,19 @@ function SelectField({
   placeholder,
   options,
   required,
+  disabled,
 }) {
   return (
     <div className="device-select-wrapper">
-      <select name={name} value={value} onChange={onChange} required={required}>
+      <select name={name} value={value} onChange={onChange} required={required} disabled={disabled}>
         {placeholder && <option value="">{placeholder}</option>}
 
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
+        {options.map((option) => {
+          const item = typeof option === "string" ? { value: option, label: option } : option;
+          return <option key={item.value} value={item.value}>
+            {item.label}
           </option>
-        ))}
+        })}
       </select>
 
       <ChevronDown size={16} className="device-select-arrow" />
