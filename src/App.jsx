@@ -8,6 +8,12 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Merchants from "./pages/Merchants";
 import MerchantStores from "./pages/MerchantStores";
+import { useParams } from "react-router-dom";
+
+function MerchantStoresRedirect() {
+  const { merchantId } = useParams();
+  return <Navigate to={`/merchants?view=${encodeURIComponent(merchantId || "")}&tab=stores`} replace />;
+}
 import Subscriptions from "./pages/Subscriptions";
 import Stores from "./pages/Stores";
 import Users from "./pages/Users";
