@@ -1,5 +1,6 @@
 import { api } from "./http";
 import { endpoints } from "./endpoints";
+import { deleteMerchant } from "./api/merchants";
 
 function isUuid(val) {
   return typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val.trim());
