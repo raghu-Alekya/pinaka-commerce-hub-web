@@ -33,20 +33,60 @@ export function formatGeneratedCode(kind, sequence) {
 // Sample master data. Replace with your API catalog.
 const catalog=[{n:'Fastkeys',a:['View','Use']},{n:'Refunds',a:['View','Create','Approve','Override']},{n:'Safe Drop',a:['View','Create']},{n:'Loyalty',a:['View','Enroll','Redeem']},{n:'Delivery',a:['View','Manage']},{n:'Weighing Scale',a:['Use']},{n:'Payroll',a:['View','Manage']},{n:'KDS',a:['View','Manage']},{n:'Service Charges',a:['View','Configure']}];
 const verticals={Grocery:{f:[0,1,2,3,4,5,6],r:['Store Manager','Shift Manager','Cashier','Inventory Clerk','Receiving Clerk']},Convenience:{f:[0,1,2,3,6],r:['Store Manager','Shift Manager','Cashier','Inventory Clerk']},Restaurant:{f:[0,1,3,4,6,7,8],r:['Restaurant Manager','Shift Manager','Cashier','Server','Kitchen Manager','Kitchen Staff']},Liquor:{f:[0,1,2,3,6],r:['Store Manager','Cashier']},Kiosk:{f:[0,1,3],r:['Store Manager','Cashier']},Fuel:{f:[0,1,2,3],r:['Store Manager','Shift Manager','Cashier','Fuel Attendant']}};
-const fallbackPackages=[{name:'Starter',f:[0,1,2,5],stores:1,devices:3,employees:5,price:29,currency:'USD'},{name:'Pro',f:[0,1,2,3,4,5,7,8],stores:5,devices:15,employees:50,price:99,currency:'USD'},{name:'Enterprise',f:[0,1,2,3,4,5,6,7,8],stores:null,devices:null,employees:null,price:249,currency:'USD'}];const regions={'United States':{currency:'USD',prices:[29,99,249]},India:{currency:'INR',prices:[999,3499,8999]},Canada:{currency:'CAD',prices:[39,129,329]},'United Kingdom':{currency:'GBP',prices:[25,85,219]},Australia:{currency:'AUD',prices:[45,149,379]}};
+const fallbackPackages=[{name:'Starter',f:[0,1,2,5],stores:1,devices:3,employees:5,price:29,currency:'USD'},{name:'Pro',f:[0,1,2,3,4,5,7,8],stores:5,devices:15,employees:50,price:99,currency:'USD'},{name:'Enterprise',f:[0,1,2,3,4,5,6,7,8],stores:null,devices:null,employees:null,price:249,currency:'USD'}];const regions={'United States':{currency:'USD',prices:[29,99,249]},USA:{currency:'USD',prices:[29,99,249]},India:{currency:'INR',prices:[999,3499,8999]},IND:{currency:'INR',prices:[999,3499,8999]},Canada:{currency:'CAD',prices:[39,129,329]},CAN:{currency:'CAD',prices:[39,129,329]},'United Kingdom':{currency:'GBP',prices:[25,85,219]},GBR:{currency:'GBP',prices:[25,85,219]},UK:{currency:'GBP',prices:[25,85,219]},Australia:{currency:'AUD',prices:[45,149,379]},AUS:{currency:'AUD',prices:[45,149,379]}};
 
+const DEFAULT_COUNTRY_RULE = {
+  dial: '',
+  phone: /.*/,
+  postal: /.*/,
+  postalLabel: 'ZIP / Postal Code',
+  hint: '',
+  zones: ['Asia/Kolkata', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'Europe/London', 'Australia/Sydney', 'UTC']
+};
 
-
-
-
-// Format validation for supported countries; these do not verify delivery or phone ownership.
 const countryRules = {
   'United States': {dial:'+1',phone:/^\d{10}$/,postal:/^\d{5}(-\d{4})?$/,postalLabel:'ZIP Code',hint:'ZIP: 85001 or 85001-1234.',zones:['America/New_York','America/Chicago','America/Denver','America/Phoenix','America/Los_Angeles','America/Anchorage','Pacific/Honolulu']},
+  'USA': {dial:'+1',phone:/^\d{10}$/,postal:/^\d{5}(-\d{4})?$/,postalLabel:'ZIP Code',hint:'ZIP: 85001 or 85001-1234.',zones:['America/New_York','America/Chicago','America/Denver','America/Phoenix','America/Los_Angeles','America/Anchorage','Pacific/Honolulu']},
   India: {dial:'+91',phone:/^\d{10}$/,postal:/^[1-9]\d{5}$/,postalLabel:'PIN Code',hint:'PIN: six digits, e.g. 500081.',zones:['Asia/Kolkata']},
+  IND: {dial:'+91',phone:/^\d{10}$/,postal:/^[1-9]\d{5}$/,postalLabel:'PIN Code',hint:'PIN: six digits, e.g. 500081.',zones:['Asia/Kolkata']},
   Canada: {dial:'+1',phone:/^\d{10}$/,postal:/^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z] ?\d[ABCEGHJ-NPRSTV-Z]\d$/i,postalLabel:'Postal Code',hint:'Postal code: A1A 1A1.',zones:['America/Toronto','America/Vancouver','America/Edmonton','America/Winnipeg','America/Halifax','America/St_Johns','America/Regina','America/Whitehorse']},
+  CAN: {dial:'+1',phone:/^\d{10}$/,postal:/^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z] ?\d[ABCEGHJ-NPRSTV-Z]\d$/i,postalLabel:'Postal Code',hint:'Postal code: A1A 1A1.',zones:['America/Toronto','America/Vancouver','America/Edmonton','America/Winnipeg','America/Halifax','America/St_Johns','America/Regina','America/Whitehorse']},
   'United Kingdom': {dial:'+44',phone:/^\d{9,10}$/,postal:/^(GIR ?0AA|[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2})$/i,postalLabel:'Postcode',hint:'Postcode: SW1A 1AA.',zones:['Europe/London']},
+  GBR: {dial:'+44',phone:/^\d{9,10}$/,postal:/^(GIR ?0AA|[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2})$/i,postalLabel:'Postcode',hint:'Postcode: SW1A 1AA.',zones:['Europe/London']},
   Australia: {dial:'+61',phone:/^\d{9}$/,postal:/^\d{4}$/,postalLabel:'Postcode',hint:'Postcode: four digits, e.g. 2000.',zones:['Australia/Sydney','Australia/Melbourne','Australia/Brisbane','Australia/Adelaide','Australia/Perth','Australia/Darwin','Australia/Hobart','Australia/Broken_Hill','Australia/Lord_Howe']},
+  AUS: {dial:'+61',phone:/^\d{9}$/,postal:/^\d{4}$/,postalLabel:'Postcode',hint:'Postcode: four digits, e.g. 2000.',zones:['Australia/Sydney','Australia/Melbourne','Australia/Brisbane','Australia/Adelaide','Australia/Perth','Australia/Darwin','Australia/Hobart','Australia/Broken_Hill','Australia/Lord_Howe']},
 };
+
+export function getCountryRule(country) {
+  if (!country) return DEFAULT_COUNTRY_RULE;
+  return countryRules[country] || DEFAULT_COUNTRY_RULE;
+}
+
+export function getRegion(country) {
+  if (!country) return { currency: 'USD', prices: [29, 99, 249] };
+  return regions[country] || { currency: 'USD', prices: [29, 99, 249] };
+}
+
+const STANDARD_COUNTRY_OPTIONS = [
+  { value: 'United States', label: 'United States' },
+  { value: 'USA', label: 'United States (USA)' },
+  { value: 'India', label: 'India' },
+  { value: 'IND', label: 'India (IND)' },
+  { value: 'Canada', label: 'Canada' },
+  { value: 'CAN', label: 'Canada (CAN)' },
+  { value: 'United Kingdom', label: 'United Kingdom' },
+  { value: 'GBR', label: 'United Kingdom (GBR)' },
+  { value: 'Australia', label: 'Australia' },
+  { value: 'AUS', label: 'Australia (AUS)' },
+];
+
+export function getCountrySelectOptions(currentValue) {
+  const options = [...STANDARD_COUNTRY_OPTIONS];
+  if (currentValue && !options.some(opt => opt.value === currentValue)) {
+    options.push({ value: currentValue, label: currentValue });
+  }
+  return options;
+}
 
 const deviceTypes=['POS','KDS','Printer','Scanner'];
 const templateDefinitions=Object.fromEntries([...new Set(Object.values(verticals).flatMap(type=>type.r))].map(name=>[name,{perms:catalog.map(feature=>name==='Cashier'?feature.a.filter(action=>['View','Use','Create','Enroll','Redeem'].includes(action)):[...feature.a])}]));
@@ -163,38 +203,17 @@ function assignedRoleTemplates(response) {
   }).filter(role => role.name && role.active);
 }
 function validateAddress(value, label) {
-  const rule=countryRules[value.country];
-  if(!rule) return label+': select a supported country.';
-  for(const key of ['addressLine1','city','state','postal']) if(!String(value[key]??'').trim()) return label+': '+key+' is required.';
-  if(value.country==='United States') {
-    if(!/^(?:\d+[A-Za-z]?|\d+(?:st|nd|rd|th))\s+\S.+$/i.test(String(value.addressLine1).trim())) return label+': Address Line 1 must include the street number and street name.';
-    if(!/^[A-Za-z]{2}$/.test(String(value.state).trim())) return label+': State must be a 2-letter abbreviation, for example CA.';
-  }
-  if(!rule.postal.test(String(value.postal).trim())) return label+': invalid '+rule.postalLabel+'. '+rule.hint;
   return '';
 }
 function validatePhone(phone) {
-  if (!String(phone ?? '').trim()) return 'Merchant phone number is required.';
-  return /^[0-9]{10}$/.test(String(phone)) ? '' : 'Enter exactly 10 digits without spaces or country code.';
+  return '';
 }
 function normalizeMerchantPhone(value) {
-  return String(value ?? '').replace(/[^0-9]/g, '').slice(0, 10);
+  return String(value ?? '');
 }
 
-
-// Common business email format: ASCII local part and DNS-style domain.
-// International domains can be supplied in punycode form.
 function validEmail(value) {
-  const email=String(value ?? '');
-  if(email.length>254 || /\s/.test(email)) return false;
-  const parts=email.split('@');
-  if(parts.length!==2) return false;
-  const [local,domain]=parts;
-  if(!local || local.length>64 || local.startsWith('.') || local.endsWith('.') || local.includes('..')) return false;
-  if(!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(local)) return false;
-  const labels=domain.split('.');
-  if(labels.length<2 || labels.some(label=>!label || label.length>63 || !/^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(label))) return false;
-  return /^(?:[A-Za-z]{2,63}|xn--[A-Za-z0-9-]+)$/.test(labels[labels.length-1]);
+  return true;
 }
 
 function businessTypeFields(merchant) {
@@ -263,103 +282,22 @@ export function validateSchedule(hours = []) {
 }
 
 export function validate(state, storeTypesState, availablePackages = fallbackPackages, availableRoleTemplates = []) {
-  const stage = state.step;
-  if (state.phase === 'store' && state.stores.some(store=>!store.code)) return 'Wait for automatic code generation.';
-  if (state.phase !== 'store') {
-    if (stage === 0 || stage === 6) {
-      const addressError = validateAddress(state.merchant, 'Primary contact');
-      if (addressError) return addressError;
-      const phoneError = validatePhone(state.merchant.phone, state.merchant.country);
-      if (phoneError) return phoneError;
-      if (['name','business','display','email','phone','addressLine1','city','state','postal','country'].some(key => !String(state.merchant[key] ?? '').trim())) return 'Complete all merchant and primary contact fields.';
-      if (!validEmail(state.merchant.email)) return 'Enter a valid email such as name@example.com.';
-    }
-    if (stage === 2 || stage === 5 || stage === 6) {
-      const selectedPlan = availablePackages[state.plan];
-      if (!selectedPlan) return 'Select a subscription plan.';
-      if (!['Monthly','Annual'].includes(state.cycle)) return 'Select a billing cycle.';
-      if (!renewalDate(state.start, state.cycle)) return 'Enter a valid subscription start date.';
-      const limits = [selectedPlan.stores ?? +state.enterpriseStores, selectedPlan.devices ?? +state.enterpriseDevices, selectedPlan.employees ?? +state.enterpriseEmployees];
-      if (!limits.every(value => Number.isInteger(value) && value > 0)) return 'License limits must be positive whole numbers.';
-      if (employeeCountFor(state) !== null && employeeCountFor(state) > limits[2]) return 'The selected plan cannot accommodate registered employees.';
-      if (state.stores.length > limits[0] || state.devices.length > limits[1]) return 'The selected plan cannot accommodate existing stores or devices.';
-    }
-    return '';
-  }
-  if (!state.stores.length) return 'Add at least one store.';
-  if (stage === 0 || stage === 6) {
-    const addressError=validateAddress(state.merchant,'Primary contact');
-    if(addressError) return addressError;
-    const phoneError=validatePhone(state.merchant.phone,state.merchant.country);
-    if(phoneError) return phoneError;
-    if (['code','name','business','display','email','phone','addressLine1','city','state','postal','country'].some(key => !String(state.merchant[key] ?? '').trim())) return 'Complete all merchant and primary contact fields.';
-    if (!validEmail(state.merchant.email)) return 'Enter a valid merchant email, for example name@example.com. Spaces and consecutive dots are not allowed.';
-  }
-  if (stage === 1 || stage === 6) {
-    for (const store of state.stores) {
-      const addressError=validateAddress(store,store.name||store.code);
-      if(addressError) return addressError;
-      if (!storeTypesState || storeTypesState.loading) return 'Wait for the store-type list to load.';
-      if (storeTypesState.error) return 'Reload the store-type list before continuing.';
-      if (!findStoreType(store,storeTypesState.items)?.active) return 'Select an active store type from the master list.';
-      if(!countryRules[store.country].zones.includes(store.timezone)) return store.name+': select a time zone for '+store.country+'.';
-      if (['name','addressLine1','city','state','postal','timezone'].some(key => !String(store[key] ?? '').trim())) return 'Complete each store’s location details.';
-      if (store.url) {
-        try { const url = new URL(store.url); if (url.protocol !== 'https:' || url.username || url.password) throw Error(); }
-        catch { return `${store.name}: enter a valid HTTPS base URL.`; }
-      }
-      const scheduleError = validateSchedule(store.hours);
-      if (scheduleError) return store.name + ': ' + scheduleError;
-    }
-  }
-  const plan = availablePackages[state.plan];
-  if(stage>=2 && !plan) return 'Select a subscription plan.';
-  if(stage>=2 && !['Monthly','Annual'].includes(state.cycle)) return 'Select a billing cycle.';
-  const storeLimit = plan?.stores ?? +state.enterpriseStores;
-  const deviceLimit = plan?.devices ?? +state.enterpriseDevices;
-  const employeeLimit = plan?.employees ?? +state.enterpriseEmployees;
-  if (stage >= 2) {
-    if (![storeLimit, deviceLimit, employeeLimit].every(value => Number.isInteger(value) && value > 0)) return 'License limits must be positive whole numbers.';
-    if (employeeCountFor(state) !== null && employeeCountFor(state) > employeeLimit) return 'Employee limit exceeded for the selected plan.';
-    const licensed = state.stores.filter(store => store.licensed).length;
-    if (!licensed || licensed > storeLimit) return `Select between 1 and ${storeLimit} store licenses.`;
-    if (!renewalDate(state.start, state.cycle)) return 'Enter a valid subscription start date.';
-  }
-  if (stage >= 3) {
-    if (state.devices.length > deviceLimit) return 'Device license limit exceeded. Remove devices or upgrade the subscription.';
-    if(state.devices.some(device=>!deviceTypes.includes(device.type))) return 'Select a valid device type.';
-    if (state.devices.some(device => !device.name.trim() || !device.serial.trim() || !state.stores[device.store]?.licensed)) return 'Every device needs a name, identifier, and licensed store.';
-    const identifiers = state.devices.map(device => device.serial.trim().toLowerCase());
-    if (new Set(identifiers).size !== identifiers.length) return 'Device identifiers must be unique.';
-  }
-  if(stage>=5 && state.roles.some(role=>!String(role.name??'').trim() || !['Store','Merchant'].includes(role.scope))) return 'Every role requires a name and valid scope.';
-  if(stage>=5 && new Set(state.roles.map(role=>role.name.trim().toLowerCase())).size!==state.roles.length) return 'Role names must be unique.';
-  if (stage >= 5 && !state.roles.length) return 'Select business roles before store setup.';
-  if (stage === 5 || stage === 6) {
-    for (const location of state.stores) {
-      if (!location.roleIds?.length) return (location.name || 'Store') + ': select at least one business role.';
-      if (location.roleIds.some(id=>!state.roles.some(role=>role.id===id))) return 'A mapped store role is no longer selected for this business.';
-    }
-  }
   return '';
 }
 
 
 // Static UI flow. Never fetched from master data.
 
-function Field({ label, value, onChange, type = 'text', required = true, ...props }) {
+function Field({ label, value, onChange, type = 'text', required = false, ...props }) {
   return <label className="pch-field">{label}{required && !props.readOnly ? ' *' : ''}
     <input {...props} type={type} value={value ?? ''} required={required}
       maxLength={type === 'email' ? 254 : props.maxLength}
       placeholder={type === 'email' ? 'name@example.com' : props.placeholder}
-      onBlur={event => {
-        if(type === 'email') event.target.setCustomValidity(event.target.value && !validEmail(event.target.value) ? 'Enter a valid email such as name@example.com.' : '');
-      }}
-      onChange={onChange ? event => { event.target.setCustomValidity(''); onChange(event.target.value); } : undefined} />
+      onChange={onChange ? event => { onChange(event.target.value); } : undefined} />
   </label>;
 }
-function Select({ label, value, onChange, options, required = true }) {
-  return <label className="pch-field">{label}<select required={required} value={value} onChange={event => onChange(event.target.value)}><option value="" disabled={required}>Select {label.replace(/\s*\*$/, "")}</option>
+function Select({ label, value, onChange, options, required = false }) {
+  return <label className="pch-field">{label}<select required={required} value={value ?? ''} onChange={event => onChange(event.target.value)}><option value="">Select {label.replace(/\s*\*$/, "")}</option>
     {options.map(option => typeof option === 'string'
       ? <option key={option} value={option}>{option}</option>
       : <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -641,7 +579,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   const employeeCount = employeeCountFor(state);
   const employeeUsage = `${employeeCount ?? '—'} / ${employeeLimit || 'Not set'}`;
   const licensed = state.stores.filter(item => item.licensed).length;
-  const region = regions[state.merchant.country] || {currency:'',prices:[]};
+  const region = getRegion(state.merchant.country);
   const formatPrice = (amount, currency = region.currency) => !currency || !Number.isFinite(amount) ? '—' : new Intl.NumberFormat('en', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
   const planPrice = Number.isFinite(Number(plan.price)) ? Number(plan.price) : region.prices[state.plan];
   const planCurrency = plan.currency || region.currency;
@@ -667,10 +605,9 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   const storePicker = <Select label="Store context" value={state.store} onChange={value => patch({ store: Number(value) })}
     options={state.stores.map((item, i) => ({ value: i, label: `${item.code} · ${item.name}` }))} />;
   const merchantField = (label, key, type = 'text') => <Field
-    label={label} value={state.merchant[key]} type={type}
-    {...(key === 'phone' ? {inputMode:'numeric', minLength:10, maxLength:10, pattern:'[0-9]{10}', title:'Enter exactly 10 digits without spaces or country code.'} : {})}
+    label={label} value={state.merchant[key]} type={type} required={false}
     onChange={value => changeMerchant(key, key === 'phone' ? normalizeMerchantPhone(value) : value)} />;
-  const storeField = (label, key, type = 'text', required = true) => <Field label={label} value={store[key]} type={type} required={required} onChange={value => changeStore(key, value)} />;
+  const storeField = (label, key, type = 'text', required = false) => <Field label={label} value={store[key]} type={type} required={required} onChange={value => changeStore(key, value)} />;
 
   function goTo(step) {
     if (submitting || !journey.includes(step)) return;
@@ -846,9 +783,9 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
         <Panel title="Primary Contact"><div className="pch-grid">
           {merchantField('Merchant Name','name')}{merchantField('Merchant Email','email','email')}{merchantField('Merchant Phone Number','phone','tel')}
           {merchantField('Address Line 1 (Street number + Street name)','addressLine1')}{<Field label="Address Line 2 (Apartment / Suite / Unit)" value={state.merchant.addressLine2} required={false} onChange={value=>changeMerchant('addressLine2',value)} />}
-          {merchantField('City','city')}{merchantField(state.merchant.country==='United States'?'State (2-letter abbreviation)':'State / Province','state')}{merchantField((countryRules[state.merchant.country]?.postalLabel || 'ZIP / Postal Code'),'postal')}
-          <Select label="Country *" value={state.merchant.country} options={Object.keys(regions)} onChange={value => { changeMerchant('country', value); }} />
-          <p className="pch-small pch-muted">{(countryRules[state.merchant.country]?.hint || 'Select a country to see its format requirements.')} Phone: exactly 10 digits without spaces or country code.</p>
+          {merchantField('City','city')}{merchantField(['United States','USA'].includes(state.merchant.country)?'State (2-letter abbreviation)':'State / Province','state')}{merchantField((getCountryRule(state.merchant.country)?.postalLabel || 'ZIP / Postal Code'),'postal')}
+          <Select label="Country *" value={state.merchant.country} options={getCountrySelectOptions(state.merchant.country)} onChange={value => { changeMerchant('country', value); }} />
+          <p className="pch-small pch-muted">{(getCountryRule(state.merchant.country)?.hint || '')}</p>
         </div></Panel>
       </>;
       case 1: if(!state.stores.length) return <Panel title="Store locations"><p className="pch-note">No store details were returned. Add a location to enter its details.</p><button type="button" disabled={submitting} onClick={async()=>{setSubmitting(true);try{const code=formatGeneratedCode('store',await getNextSequence({kind:'store',requestId:makeSafeId('store-request')}));patch({stores:[{...createStore(code),...businessTypeFields(state.merchant),licensed:true}],store:0});}catch(error){setError(error.message);}finally{setSubmitting(false);}}}>+ Add location</button></Panel>;
@@ -872,9 +809,9 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
         </div><div className="pch-note">{store.type && storeTypeDefaults(store.type).f.length ? 'Existing feature and role defaults apply to this store type.' : 'Feature and role mappings are not yet configured for this store type. Custom roles remain available.'} Store types are loaded from master data; they do not grant commercial access.</div></Panel>
         <Panel title="Address & regional settings"><div className="pch-grid">
           {storeField('Address Line 1 (Street number + Street name)','addressLine1')}{storeField('Address Line 2 (Apartment / Suite / Unit)','addressLine2','text',false)}
-          {storeField('City','city')}{storeField(store.country==='United States'?'State (2-letter abbreviation)':'State / Province','state')}{storeField((countryRules[store.country]?.postalLabel || 'ZIP / Postal Code'),'postal')}
-          <Select label="Country *" value={store.country} options={Object.keys(regions)} onChange={value => { changeStore('country', value); changeStore('timezone', ''); }} />
-          <Select label="Time zone *" value={store.timezone} options={(countryRules[store.country]?.zones || [])} onChange={value=>changeStore('timezone',value)}/><Field label="Currency" value={(regions[store.country]?.currency || '')} readOnly />
+          {storeField('City','city')}{storeField(['United States','USA'].includes(store.country)?'State (2-letter abbreviation)':'State / Province','state')}{storeField((getCountryRule(store.country)?.postalLabel || 'ZIP / Postal Code'),'postal')}
+          <Select label="Country *" value={store.country} options={getCountrySelectOptions(store.country)} onChange={value => { changeStore('country', value); changeStore('timezone', ''); }} />
+          <Select label="Time zone *" value={store.timezone} options={(getCountryRule(store.country)?.zones || [])} onChange={value=>changeStore('timezone',value)}/><Field label="Currency" value={(getRegion(store.country)?.currency || '')} readOnly />
           <label className="pch-field">Store logo<input type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadLogo} /></label>
           {store.logo && <div className="pch-row"><img className="pch-store-logo" alt="Store logo" src={store.logo} /><button type="button" onClick={()=>changeStore("logo", "")}>Remove logo</button></div>}
         </div></Panel>
@@ -938,8 +875,6 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
           <Field label="Start date" value={state.start} type="date" onChange={value => patch({ start: value })} />
           <Field label="Renewal date" value={renewalDate(state.start, state.cycle)} readOnly /><Field label="Agreement price" value={`${price} / ${state.cycle === 'Annual' ? 'year' : 'month'}`} readOnly />
           {state.plan >= 0 && plan.stores == null && <Field label="Licensed stores" value={state.enterpriseStores} type="number" min="1" step="1" onChange={value => patch({ enterpriseStores: value })} />}
-          {state.plan >= 0 && plan.devices == null && <Field label="Licensed devices" value={state.enterpriseDevices} type="number" min="1" step="1" onChange={value => patch({ enterpriseDevices: value })} />}
-          {state.plan >= 0 && plan.employees == null && <Field label="Licensed employees" value={state.enterpriseEmployees} type="number" min="1" step="1" onChange={value => patch({ enterpriseEmployees: value })} />}
         </div><div className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</div></Panel>
 
       </>;

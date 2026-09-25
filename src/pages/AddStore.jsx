@@ -10,10 +10,16 @@ import "../styles/merchant-form.css";
 // Supported countries and time zones match the merchant onboarding form.
 const COUNTRY_SETTINGS = {
   "United States": {currency: "USD", symbol: "$", zones: ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"]},
+  USA: {currency: "USD", symbol: "$", zones: ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"]},
   India: {currency: "INR", symbol: "₹", zones: ["Asia/Kolkata"]},
+  IND: {currency: "INR", symbol: "₹", zones: ["Asia/Kolkata"]},
   Canada: {currency: "CAD", symbol: "C$", zones: ["America/Toronto", "America/Vancouver", "America/Edmonton", "America/Winnipeg", "America/Halifax", "America/St_Johns", "America/Regina", "America/Whitehorse"]},
+  CAN: {currency: "CAD", symbol: "C$", zones: ["America/Toronto", "America/Vancouver", "America/Edmonton", "America/Winnipeg", "America/Halifax", "America/St_Johns", "America/Regina", "America/Whitehorse"]},
   "United Kingdom": {currency: "GBP", symbol: "£", zones: ["Europe/London"]},
+  GBR: {currency: "GBP", symbol: "£", zones: ["Europe/London"]},
+  UK: {currency: "GBP", symbol: "£", zones: ["Europe/London"]},
   Australia: {currency: "AUD", symbol: "A$", zones: ["Australia/Sydney", "Australia/Melbourne", "Australia/Brisbane", "Australia/Adelaide", "Australia/Perth", "Australia/Darwin", "Australia/Hobart", "Australia/Broken_Hill", "Australia/Lord_Howe"]},
+  AUS: {currency: "AUD", symbol: "A$", zones: ["Australia/Sydney", "Australia/Melbourne", "Australia/Brisbane", "Australia/Adelaide", "Australia/Perth", "Australia/Darwin", "Australia/Hobart", "Australia/Broken_Hill", "Australia/Lord_Howe"]},
 };
 
 function applyCountry(store, country) {
@@ -22,9 +28,9 @@ function applyCountry(store, country) {
     ...store,
     country,
     currency: settings?.currency || "",
-    timezone: settings?.zones.includes(store.timezone)
+    timezone: settings?.zones?.includes(store.timezone)
       ? store.timezone
-      : settings?.zones.length === 1 ? settings.zones[0] : "",
+      : settings?.zones?.length === 1 ? settings.zones[0] : "",
   };
 }
 
