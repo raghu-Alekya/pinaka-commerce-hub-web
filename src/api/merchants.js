@@ -7,11 +7,47 @@ function isUuid(val) {
 }
 
 const DEFAULT_STORE_TYPE_ID = "a1b2c3d4-e5f6-4a1b-8c2d-000000000001";
-const DEFAULT_PLAN_ID = "b1111111-0000-0000-0000-000000000003";
+const DEFAULT_PLAN_ID = "2a8ac621-fd00-4b7f-aa88-6e03124b22ee";
 const DEFAULT_ROLE_IDS = [
   "17c14d03-b860-48be-bb11-0511cae5e387",
   "87b6c52d-0b73-490a-b7d2-ec658a88084d"
 ];
+
+const COUNTRY_CODE_MAP = {
+  "united states": "USA",
+  "usa": "USA",
+  "us": "USA",
+  "india": "IND",
+  "ind": "IND",
+  "in": "IND",
+  "canada": "CAN",
+  "can": "CAN",
+  "united kingdom": "GBR",
+  "uk": "GBR",
+  "gbr": "GBR",
+  "australia": "AUS",
+  "aus": "AUS",
+};
+
+function normalizeCountryCode(value) {
+  if (!value) return "USA";
+  const str = String(value).trim().toLowerCase();
+  return COUNTRY_CODE_MAP[str] || (str.length === 3 ? str.toUpperCase() : "USA");
+}
+
+function normalizePhoneNumber(phone, country) {
+  let raw = String(phone || "").trim();
+  if (!raw) return "+15552345678";
+  if (raw.startsWith("+")) return raw;
+  const digits = raw.replace(/\D/g, "");
+  const countryCode = normalizeCountryCode(country);
+  let dialCode = "+1";
+  if (countryCode === "IND") dialCode = "+91";
+  else if (countryCode === "GBR") dialCode = "+44";
+  else if (countryCode === "AUS") dialCode = "+61";
+  else if (countryCode === "CAN") dialCode = "+1";
+  return `${dialCode}${digits}`;
+}
 
 function computeRenewalDate(startDateStr, billingCycleStr) {
   if (!startDateStr || !/^\d{4}-\d{2}-\d{2}$/.test(startDateStr)) {
@@ -114,45 +150,42 @@ export function toFlatMerchantPayload(data) {
   if (!data) return {};
   const m = data.merchant || data;
   const s = data.subscription || data;
+  const planDetails = data.planDetails || {};
   const primaryStore = (Array.isArray(data.stores) && data.stores[0]) || {};
 
-  const businessName = m.business || m.businessName || m.legalBusinessName || data.businessName || "Business";
+  const businessName = m.business || m.businessName || m.legalBusinessName || data.businessName || "";
   const businessDisplayName = m.display || m.businessDisplayName || m.businessName || businessName;
   const merchantName = m.name || m.merchantName || m.ownerName || [m.firstName, m.lastName].filter(Boolean).join(" ") || businessDisplayName;
   const merchantEmail = m.email || m.merchantEmail || data.email || "";
-  const merchantPhoneNumber = m.phone || m.merchantPhoneNumber || data.phone || "";
-  const addressLine1 = m.addressLine1 || data.addressLine1 || data.businessAddress || primaryStore.address || "100 Main St";
-  const addressLine2 = m.addressLine2 || data.addressLine2 || "";
-  const city = m.city || data.city || primaryStore.city || "City";
-  const state = m.state || data.state || primaryStore.state || "State";
-  const pinCode = m.postal || m.pinCode || m.postalCode || data.postalCode || primaryStore.zip || "85001";
-  const country = m.country || data.country || "USA";
-  const initialStatus = m.initialStatus || m.status || data.status || "ACTIVE";
+  
+  let rawPhone = m.phone || m.merchantPhoneNumber || data.phone || "";
+  let rawCountry = m.country || data.country || "USA";
+  
+  const country = normalizeCountryCode(rawCountry);
+  const merchantPhoneNumber = normalizePhoneNumber(rawPhone, rawCountry);
 
-  let storeTypeId = m.storeTypeId || data.storeTypeId || m.type;
-  if (!isUuid(storeTypeId)) storeTypeId = DEFAULT_STORE_TYPE_ID;
+  const addressLine1 = m.addressLine1 || data.addressLine1 || primaryStore.addressLine1 || primaryStore.address || "";
+  const addressLine2 = m.addressLine2 || data.addressLine2 || primaryStore.addressLine2 || "";
+  const city = m.city || data.city || primaryStore.city || "";
+  const state = m.state || data.state || primaryStore.state || "";
+  const pinCode = m.postal || m.pinCode || m.postalCode || data.postalCode || primaryStore.postal || primaryStore.zip || "";
 
-  let planId = s.planId || data.planId || data.planDetails?.id || data.planDetails?.planId || data.planDetails?._id;
+  let planId = s.planId || data.planId || planDetails.id || planDetails.planId || planDetails._id;
   if (!isUuid(planId)) planId = DEFAULT_PLAN_ID;
 
-  const billingCycle = String(s.billingCycle || data.cycle || data.billingCycle || "MONTHLY").toUpperCase();
+  const rawCycle = String(s.billingCycle || data.cycle || data.billingCycle || "MONTHLY").toUpperCase();
+  const billingCycle = rawCycle.includes("ANNUAL") || rawCycle.includes("YEAR") ? "ANNUAL" : "MONTHLY";
+
   const startDate = s.startDate || s.start || data.start || data.startDate || new Date().toISOString().slice(0, 10);
   const renewalDate = s.renewalDate || data.renewalDate || computeRenewalDate(startDate, billingCycle);
-  const agreementPrice = s.agreementPrice !== undefined ? Number(s.agreementPrice) : (data.agreementPrice !== undefined ? Number(data.agreementPrice) : (data.planDetails?.price || 99));
-  const tax = Number(data.tax || m.tax || 8.25);
-  const totalDueToday = Number(data.totalDueToday || (agreementPrice + tax));
-  const paymentMethod = data.paymentMethod || m.paymentMethod || "CARD";
 
-  const rawRoleIds = Array.isArray(data.roleIds) && data.roleIds.length > 0
-    ? data.roleIds
-    : (Array.isArray(m.roleIds) && m.roleIds.length > 0
-      ? m.roleIds
-      : (Array.isArray(data.roles)
-        ? data.roles.map(r => r.id || r.roleTemplateId || r._id || r.roleId).filter(Boolean)
-        : []));
+  const rawPrice = s.agreementPrice !== undefined ? Number(s.agreementPrice) : (data.agreementPrice !== undefined ? Number(data.agreementPrice) : (planDetails.price ?? 99));
+  const agreementPrice = Number(rawPrice) || 99;
 
-  let roleIds = rawRoleIds.filter(isUuid);
-  if (!roleIds.length) roleIds = DEFAULT_ROLE_IDS;
+  const tax = s.tax !== undefined ? Number(s.tax) : (data.tax !== undefined ? Number(data.tax) : Math.round(agreementPrice * 0.0825 * 100) / 100);
+  const totalDueToday = s.totalDueToday !== undefined ? Number(s.totalDueToday) : (data.totalDueToday !== undefined ? Number(data.totalDueToday) : Math.round((agreementPrice + tax) * 100) / 100);
+
+  const paymentMethod = String(data.paymentMethod || data.paymentPreview || m.paymentMethod || "CARD").toUpperCase().includes("ACH") ? "ACH" : "CARD";
 
   return {
     merchantName,
@@ -160,7 +193,6 @@ export function toFlatMerchantPayload(data) {
     merchantPhoneNumber,
     businessName,
     businessDisplayName,
-    initialStatus,
     addressLine1,
     addressLine2,
     city,
@@ -175,8 +207,6 @@ export function toFlatMerchantPayload(data) {
     tax,
     totalDueToday,
     paymentMethod,
-    storeTypeId,
-    roleIds,
   };
 }
 
@@ -373,14 +403,9 @@ function mapStoreToRow(store) {
 }
 
 export async function createMerchant(data) {
-  let result;
-  try {
-    const nestedPayload = toNestedMerchantPayload(data);
-    result = await api.post(endpoints.createMerchant, nestedPayload);
-  } catch (err) {
-    const flatPayload = toFlatMerchantPayload(data);
-    result = await api.post(endpoints.merchants, flatPayload);
-  }
+  const flatPayload = toFlatMerchantPayload(data);
+  console.log("[CREATE MERCHANT PAYLOAD]", flatPayload);
+  const result = await api.post(endpoints.merchants, flatPayload);
 
   if (result && result.success === false) {
     throw new Error(result.message || "Unable to create merchant.");
