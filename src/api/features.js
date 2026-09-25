@@ -2,44 +2,55 @@ import { api } from "./http";
 
 const path = (id) => `/features/${encodeURIComponent(id)}`;
 
-const normalize = (item) => ({
+const normalize = (item = {}) => ({
   ...item,
 
   // Backend featureKey -> UI code
-  code: item.featureKey || item.code || "",
+  code: item.featureKey || item.code || item.name?.toUpperCase().replace(/\s+/g, '_') || "",
 
+  name: item.name || item.title || "",
   description: item.description || "",
   category: item.category || "",
-  type: item.featureType || "TEXT",
+  type: item.featureType || item.type || "TEXT",
 
-  status: item.status === "ACTIVE" ? "Active" : "Inactive",
+  status: String(item.status || "ACTIVE").toUpperCase() === "ACTIVE" ? "Active" : "Inactive",
 
-  createdAt: item.createdAt || null,
-  updatedAt: item.updatedAt || null,
+  createdAt: item.createdAt || item.created_at || item.createdDate || null,
+  updatedAt: item.updatedAt || item.updated_at || item.updatedDate || null,
 
   icon: "bi-diamond",
   tone: "purple",
 });
 
 const payload = (form) => ({
-  name: form.name.trim(),
-  description: form.description.trim(),
-  category: form.category.trim(),
+  name: (form.name || "").trim(),
+  description: (form.description || "").trim(),
+  category: (form.category || "").trim(),
 
   // Existing Features form doesn't always provide type.
-  featureType: (form.type || "TEXT").trim(),
+  featureType: (form.type || form.featureType || "TEXT").trim(),
 
-  status: form.status.toUpperCase(),
+  status: String(form.status || "ACTIVE").toUpperCase(),
 });
 
 export const getFeature = async (id) => {
   const response = await api.get(path(id));
-  return normalize(response.feature);
+  const feat = response?.feature || response?.data || response;
+  return normalize(feat);
 };
 
 export const listFeatures = async () => {
   const response = await api.get("/features");
-  return response.features.map(normalize);
+  const rawList = Array.isArray(response)
+    ? response
+    : Array.isArray(response?.features)
+    ? response.features
+    : Array.isArray(response?.data)
+    ? response.data
+    : Array.isArray(response?.items)
+    ? response.items
+    : [];
+  return rawList.map(normalize);
 };
 
 export const createFeature = async (form) => {
@@ -47,10 +58,11 @@ export const createFeature = async (form) => {
     ...payload(form),
 
     // UI Feature Code -> Backend featureKey
-    featureKey: form.code.trim().toUpperCase(),
+    featureKey: (form.code || form.name || "").trim().toUpperCase().replace(/\s+/g, '_'),
   });
 
-  return normalize(response.feature);
+  const feat = response?.feature || response?.data || response;
+  return normalize(feat);
 };
 
 export const updateFeature = async (id, form) => {
@@ -58,15 +70,17 @@ export const updateFeature = async (id, form) => {
     ...payload(form),
 
     // Keep Feature Code mapped correctly during update too
-    featureKey: form.code.trim().toUpperCase(),
+    featureKey: (form.code || form.name || "").trim().toUpperCase().replace(/\s+/g, '_'),
   });
 
-  return normalize(response.feature);
+  const feat = response?.feature || response?.data || response;
+  return normalize(feat);
 };
 
 export const setFeatureStatus = async (id, status) => {
-  const response = await api.put(path(id), { status });
-  return normalize(response.feature);
+  const response = await api.put(path(id) + "/status", { status: String(status).toUpperCase() });
+  const feat = response?.feature || response?.data || response;
+  return normalize(feat);
 };
 
 export const deleteFeature = (id) => {
@@ -74,17 +88,13 @@ export const deleteFeature = (id) => {
 };
 
 export async function getAllCategories() {
-  const response = await api.get("/features/categories");
-
-  if (
-    !response?.success ||
-    !Array.isArray(response.categories) ||
-    response.categories.some(
-      (category) => typeof category !== "string"
-    )
-  ) {
-    throw new Error("Invalid categories response");
+  try {
+    const response = await api.get("/features/categories");
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response?.categories)) return response.categories;
+    if (Array.isArray(response?.data)) return response.data;
+    return [];
+  } catch {
+    return [];
   }
-
-  return response.categories;
 }
