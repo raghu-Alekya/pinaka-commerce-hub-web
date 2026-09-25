@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { listFeatures } from "../api/features";
 import {
   listFeaturePermissions,
+  getFeaturePermissionById,
   createFeaturePermission,
   updateFeaturePermission,
   deleteFeaturePermission,
@@ -74,6 +75,9 @@ export default function FeaturePermissions() {
   const [statusFilter, setStatusFilter] = useState("All Statuses");
 
   const [sortBy, setSortBy] = useState("newest");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
 
   const isEditing = editingId !== null;
 
@@ -156,6 +160,7 @@ export default function FeaturePermissions() {
       setPermissions(permissionGroups.flat());
     } catch (error) {
       console.error("Feature permissions load failed:", error);
+      window.alert(error?.message || "Unable to load feature permissions.");
     } finally {
       setLoading(false);
     }
@@ -252,80 +257,26 @@ export default function FeaturePermissions() {
       return;
     }
 
-    const payload = {
-      featureId: selectedFeature.id,
-      permissionKey: permissionKey.toUpperCase(),
-      key: permissionKey.toUpperCase(),
-      name: permissionName,
-      description: form.description.trim(),
-      status: form.status.toUpperCase(),
-    };
+    const payload = isEditing
+      ? {
+          name: permissionName,
+          description: form.description.trim(),
+          status: form.status.toUpperCase(),
+        }
+      : {
+          permissionKey: permissionKey.toUpperCase(),
+          name: permissionName,
+          description: form.description.trim(),
+          status: form.status.toUpperCase(),
+        };
 
     try {
       const response = isEditing
         ? await updateFeaturePermission(selectedFeature.id, editingId, payload)
         : await createFeaturePermission(selectedFeature.id, payload);
 
-      if (isEditing) {
-        const normalizedUpdated = normalizePermission(
-          response,
-          selectedFeature,
-        );
-
-        setPermissions((prev) =>
-          prev.map((item) =>
-            String(item.id) === String(editingId)
-              ? {
-                  ...item,
-                  ...normalizedUpdated,
-                  id: normalizedUpdated.id || item.id,
-                  key: permissionKey.toUpperCase(),
-                  permissionKey: permissionKey.toUpperCase(),
-                  name: permissionName,
-                  featureId: selectedFeature.id,
-                  featureName: selectedFeature.name || "",
-                  description: form.description.trim(),
-                  status: normalizeStatus(form.status),
-                  updatedAt: new Date().toISOString(),
-                }
-              : item,
-          ),
-        );
-      } else {
-        const normalizedCreated = normalizePermission(
-          response,
-          selectedFeature,
-        );
-
-        const createdPermission = {
-          ...normalizedCreated,
-          key: normalizedCreated.key || permissionKey.toUpperCase(),
-          name: normalizedCreated.name || permissionName,
-          featureId: normalizedCreated.featureId || selectedFeature.id,
-          featureName:
-            normalizedCreated.featureName || selectedFeature.name || "",
-          description: normalizedCreated.description ?? form.description.trim(),
-          status: normalizedCreated.status || form.status,
-          key: permissionKey.toUpperCase(),
-          permissionKey: permissionKey.toUpperCase(),
-          name: permissionName,
-          featureId: selectedFeature.id,
-          featureName: selectedFeature.name || "",
-          description: form.description.trim(),
-          status: normalizeStatus(form.status),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
-        setPermissions((prev) => [
-          createdPermission,
-          ...prev.filter(
-            (item) =>
-              !createdPermission.id ||
-              String(item.id) !== String(createdPermission.id),
-          ),
-        ]);
-      }
+      await loadData();
+      if (!isEditing) setCurrentPage(1);
 
       clearForm();
       loadData();
@@ -339,25 +290,31 @@ export default function FeaturePermissions() {
      EDIT PERMISSION
      ========================================================= */
 
-  const editPermission = (permission) => {
-    setEditingId(permission.id);
-
-    setForm({
-      key: permission.key,
-
-      name: permission.name,
-
-      featureId: permission.featureId ? String(permission.featureId) : "",
-
-      description: permission.description,
-
-      status: permission.status,
-    });
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+  const editPermission = async (permission) => {
+    try {
+      const record = await getFeaturePermissionById(
+        permission.featureId,
+        permission.id,
+      );
+      const loaded = normalizePermission(
+        record,
+        features.find(
+          (item) => String(item.id) === String(permission.featureId),
+        ),
+      );
+      setEditingId(loaded.id ?? permission.id);
+      setForm({
+        key: loaded.key || permission.key,
+        name: loaded.name || permission.name,
+        featureId: String(loaded.featureId || permission.featureId || ""),
+        description: loaded.description || "",
+        status: loaded.status || permission.status,
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      console.error("Get permission failed:", error);
+      window.alert(error?.message || "Unable to load permission.");
+    }
   };
 
   /* =========================================================
@@ -397,9 +354,7 @@ export default function FeaturePermissions() {
     try {
       await deleteFeaturePermission(featureId, permissionId);
 
-      setPermissions((prev) =>
-        prev.filter((item) => String(item.id) !== String(permissionId)),
-      );
+      await loadData();
 
       if (String(editingId) === String(permissionId)) {
         clearForm();
@@ -484,6 +439,31 @@ export default function FeaturePermissions() {
       return getCreatedTime(b) - getCreatedTime(a);
     });
   }, [permissions, search, statusFilter, sortBy]);
+
+  /* =========================================================
+   PAGINATION
+   ========================================================= */
+
+  const totalEntries = filteredPermissions.length;
+
+  useEffect(() => {
+    const pages = Math.max(
+      1,
+      Math.ceil(filteredPermissions.length / ITEMS_PER_PAGE),
+    );
+    if (currentPage > pages) setCurrentPage(pages);
+  }, [filteredPermissions.length, currentPage]);
+
+  const totalPages = Math.max(1, Math.ceil(totalEntries / ITEMS_PER_PAGE));
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalEntries);
+
+  const paginatedPermissions = filteredPermissions.slice(startIndex, endIndex);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, sortBy]);
 
   const formatPermissionDate = (value) => {
     if (!value) {
@@ -852,7 +832,7 @@ export default function FeaturePermissions() {
             </thead>
 
             <tbody>
-              {filteredPermissions.map((permission) => (
+              {paginatedPermissions.map((permission) => (
                 <tr key={permission.id}>
                   {/* Permission Key */}
 
@@ -963,23 +943,50 @@ export default function FeaturePermissions() {
         {/* ===================================================
             TABLE FOOTER
             =================================================== */}
-
         <div className="fp-list-footer">
           <span>
-            Showing 1 to {filteredPermissions.length} of{" "}
-            {filteredPermissions.length} entries
+            Showing {totalEntries === 0 ? 0 : startIndex + 1} to {endIndex} of{" "}
+            {totalEntries} entries
           </span>
 
           <div className="fp-pagination">
-            <button type="button" aria-label="Previous page">
+            {/* PREVIOUS BUTTON */}
+            <button
+              type="button"
+              aria-label="Previous page"
+              disabled={currentPage === 1}
+              onClick={() => {
+                setCurrentPage((prev) => Math.max(1, prev - 1));
+              }}
+            >
               <i className="bi bi-chevron-left" />
             </button>
 
-            <button type="button" className="current">
-              1
-            </button>
+            {/* PAGE NUMBERS */}
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (page) => (
+                <button
+                  key={page}
+                  type="button"
+                  className={currentPage === page ? "current" : ""}
+                  onClick={() => {
+                    setCurrentPage(page);
+                  }}
+                >
+                  {page}
+                </button>
+              ),
+            )}
 
-            <button type="button" aria-label="Next page">
+            {/* NEXT BUTTON */}
+            <button
+              type="button"
+              aria-label="Next page"
+              disabled={currentPage === totalPages}
+              onClick={() => {
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+              }}
+            >
               <i className="bi bi-chevron-right" />
             </button>
           </div>
