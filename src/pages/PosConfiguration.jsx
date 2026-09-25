@@ -1,5 +1,31 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import "../styles/pos-configuration.css";
+import { ApiError } from "../api/http";
+import {
+    createPosCurrencyTax,
+    getPosCurrencyTax,
+    updatePosCurrencyTax,
+} from "../api/posCurrencyTax";
+import {
+    createPosServiceCharges,
+    getPosServiceCharges,
+    updatePosServiceCharges,
+} from "../api/posServiceCharge";
+import {
+    createPosCashback,
+    getPosCashback,
+    updatePosCashback,
+} from "../api/posCashback";
+import {
+    createPosOpeningBalance,
+    getPosOpeningBalance,
+    updatePosOpeningBalance,
+} from "../api/posOpeningBalance";
+import {
+    createPosCashDenominations,
+    getPosCashDenominations,
+    updatePosCashDenominations,
+} from "../api/posCashDenominations";
 
 /* =========================================================
    POS CONFIGURATION CARDS
@@ -349,7 +375,7 @@ function DenominationRow({
 
 function OpeningBalanceSettings() {
     const settings = usePosSettings();
-    
+    const savedId = useRef(null);
     const currencySymbol = settings.currencySymbol;
     const [requireOpeningBalance, setRequireOpeningBalance] =
         useConfigState("requireOpeningBalance", true);
@@ -372,31 +398,49 @@ function OpeningBalanceSettings() {
     const toggleClass = (value) =>
         `opening-balance-switch ${value ? "active" : ""}`;
 
-    const saveOpeningBalanceSettings = useSaveAction(() => {
+    const applyOpeningBalance = (record) => {
+        savedId.current = record.id;
+        setRequireOpeningBalance(Boolean(record.requireOpeningBalance));
+        setDefaultOpeningAmount(String(record.defaultOpeningAmount));
+        setManagerApprovalRequired(Boolean(record.managerApprovalRequired));
+        setVarianceTolerance(String(record.varianceTolerance));
+        setAllowCashierOverride(Boolean(record.allowCashierOverride));
+        setCountByDenomination(Boolean(record.countByDenomination));
+        settings.session.baseline = { ...settings.session.draft };
+    };
+
+    useEffect(() => {
+        if (!settings.storeId) return undefined;
+        let active = true;
+        getPosOpeningBalance(settings.storeId)
+            .then((record) => {
+                if (active && record?.id) applyOpeningBalance(record);
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+                if (active) alert(error?.message || "Unable to load opening balance settings.");
+            });
+        return () => { active = false; };
+    }, [settings.storeId]);
+
+    const saveOpeningBalanceSettings = useSaveAction(async () => {
+        if (!settings.storeId) {
+            alert("Open Opening Balance from a store before saving.");
+            return;
+        }
+
         const payload = {
             requireOpeningBalance,
-            defaultOpeningAmount: Number(
-                defaultOpeningAmount || 0
-            ),
+            defaultOpeningAmount: Number(defaultOpeningAmount || 0),
             managerApprovalRequired,
-            varianceTolerance: Number(
-                varianceTolerance || 0
-            ),
+            varianceTolerance: Number(varianceTolerance || 0),
             allowCashierOverride,
             countByDenomination,
         };
-
-        console.log(
-            "Opening Balance Settings:",
-            payload
-        );
-
-        /*
-         * Connect the API here when the
-         * Opening Balance configuration endpoint
-         * is available.
-         */
-
+        const record = savedId.current
+            ? await updatePosOpeningBalance(settings.storeId, payload)
+            : await createPosOpeningBalance(settings.storeId, payload);
+        applyOpeningBalance(record);
         return true;
     });
 
@@ -645,8 +689,29 @@ function OpeningBalanceSettings() {
    TAX CONFIGURATION
 ========================================================= */
 
+const serverTaxClassId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function currencyTaxPayload(values) {
+    return {
+        currency: values.currency,
+        rounding: values.rounding,
+        decimalPlaces: Number(values.decimalPlaces),
+        taxEnabled: values.taxEnabled,
+        defaultTaxRate: values.defaultTaxRate === "" ? undefined : Number(values.defaultTaxRate),
+        taxCalculation: values.taxCalculation,
+        taxClasses: values.taxClasses
+            .filter((item) => item.name.trim())
+            .map((item) => ({
+                ...(typeof item.id === "string" && serverTaxClassId.test(item.id) ? { id: item.id } : {}),
+                name: item.name.trim(),
+                rate: Number(item.rate),
+            })),
+    };
+}
+
 function TaxConfiguration() {
     const settings = usePosSettings();
+    const savedId = useRef(null);
     const [currency, setCurrency] = useConfigState("currency", settings.currency);
 
     const [rounding, setRounding] = useConfigState("rounding", 
@@ -685,6 +750,36 @@ function TaxConfiguration() {
 
     const [saving, setSaving] = useState(false);
 
+    const applyCurrencyTax = (record) => {
+        savedId.current = record.id;
+        setCurrency(record.currency);
+        setRounding(record.rounding);
+        setDecimalPlaces(String(record.decimalPlaces));
+        setTaxEnabled(Boolean(record.taxEnabled));
+        setDefaultTaxRate(record.defaultTaxRate === null || record.defaultTaxRate === undefined ? "" : String(record.defaultTaxRate));
+        setTaxCalculation(record.taxCalculation);
+        setTaxClasses((record.taxClasses || []).map((item) => ({
+            id: item.id,
+            name: item.name,
+            rate: String(item.rate),
+        })));
+        settings.session.baseline = { ...settings.session.draft };
+    };
+
+    useEffect(() => {
+        if (!settings.storeId) return undefined;
+        let active = true;
+        getPosCurrencyTax(settings.storeId)
+            .then((record) => {
+                if (active && record?.id) applyCurrencyTax(record);
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+                if (active) alert(error?.message || "Unable to load currency and tax settings.");
+            });
+        return () => { active = false; };
+    }, [settings.storeId]);
+
     const updateTaxClass = (id, field, value) => {
         setTaxClasses((items) =>
             items.map((item) =>
@@ -716,6 +811,11 @@ function TaxConfiguration() {
     };
 
     const saveTaxConfiguration = useSaveAction(async () => {
+        if (!settings.storeId) {
+            alert("Open Currency & Taxes from a store before saving.");
+            return;
+        }
+
         if (!currency) {
             alert("Please select a currency.");
             return;
@@ -726,29 +826,27 @@ function TaxConfiguration() {
             return;
         }
 
+        if (taxEnabled && taxClasses.some((item) => !item.name.trim())) {
+            alert("Each tax class needs a name.");
+            return;
+        }
+
         setSaving(true);
 
         try {
-            /*
-             * API integration will be connected here.
-             *
-             * Example payload:
-             *
-             * {
-             *   currency: "USD",
-             *   rounding: "nearest-cent",
-             *   decimalPlaces: 2,
-             *   taxEnabled: true,
-             *   defaultTaxRate: 8.25,
-             *   taxCalculation: "item-price",
-             *   taxClasses: [...]
-             * }
-             */
-
-            await new Promise((resolve) =>
-                setTimeout(resolve, 500)
-            );
-
+            const payload = currencyTaxPayload({
+                currency,
+                rounding,
+                decimalPlaces,
+                taxEnabled,
+                defaultTaxRate,
+                taxCalculation,
+                taxClasses,
+            });
+            const record = savedId.current
+                ? await updatePosCurrencyTax(settings.storeId, payload)
+                : await createPosCurrencyTax(settings.storeId, payload);
+            applyCurrencyTax(record);
             return true;
         } finally {
             setSaving(false);
@@ -1175,8 +1273,24 @@ function TaxConfiguration() {
    CASHBACK
 ========================================================= */
 
+function cashbackPayload(values) {
+    return {
+        enabled: values.enabled,
+        ...(values.maxCashback === "" ? {} : { maxCashback: Number(values.maxCashback) }),
+        tiers: values.tiers
+            .filter((item) => item.from !== "" && item.to !== "" && item.fee !== "")
+            .map((item) => ({
+                ...(typeof item.id === "string" && serverTaxClassId.test(item.id) ? { id: item.id } : {}),
+                from: Number(item.from),
+                to: Number(item.to),
+                fee: Number(item.fee),
+            })),
+    };
+}
+
 function CashbackSettings() {
     const settings = usePosSettings();
+    const savedId = useRef(null);
     const currency = settings.currency;
     
     const [enabled, setEnabled] = useConfigState("enabled", false);
@@ -1230,25 +1344,54 @@ function CashbackSettings() {
         );
     };
 
-    const saveCashbackSettings = useSaveAction(() => {
-        /*
-         * API integration can be connected here.
-         *
-         * Example payload:
-         *
-         * {
-         *   enabled: true,
-         *   maxCashback: 100,
-         *   tiers: [
-         *     {
-         *       from: 1,
-         *       to: 9.9,
-         *       fee: 1
-         *     }
-         *   ]
-         * }
-         */
+    const applyCashback = (record) => {
+        savedId.current = record.id;
+        setEnabled(Boolean(record.enabled));
+        setMaxCashback(record.maxCashback === null || record.maxCashback === undefined ? "" : String(record.maxCashback));
+        setTiers((record.tiers || []).map((item) => ({
+            id: item.id,
+            from: String(item.from),
+            to: String(item.to),
+            fee: String(item.fee),
+        })));
+        settings.session.baseline = { ...settings.session.draft };
+    };
 
+    useEffect(() => {
+        if (!settings.storeId) return undefined;
+        let active = true;
+        getPosCashback(settings.storeId)
+            .then((record) => {
+                if (active && record?.id) applyCashback(record);
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+                if (active) alert(error?.message || "Unable to load cashback settings.");
+            });
+        return () => { active = false; };
+    }, [settings.storeId]);
+
+    const saveCashbackSettings = useSaveAction(async () => {
+        if (!settings.storeId) {
+            alert("Open Cashback Settings from a store before saving.");
+            return;
+        }
+
+        if (enabled && maxCashback === "") {
+            alert("Please enter the maximum cashback limit.");
+            return;
+        }
+
+        if (enabled && tiers.some((item) => item.from === "" || item.to === "" || item.fee === "")) {
+            alert("Each cashback tier needs a from, to, and fee.");
+            return;
+        }
+
+        const payload = cashbackPayload({ enabled, maxCashback, tiers });
+        const record = savedId.current
+            ? await updatePosCashback(settings.storeId, payload)
+            : await createPosCashback(settings.storeId, payload);
+        applyCashback(record);
         return true;
     });
 
@@ -1591,8 +1734,28 @@ function CashbackSettings() {
    SERVICE CHARGE
 ========================================================= */
 
+function serviceChargePayload(values) {
+    return {
+        enabled: values.enabled,
+        applyTo: values.applyTo,
+        defaultType: values.defaultType,
+        maxLimit: Number(values.maxLimit),
+        tiers: values.tiers
+            .filter((item) => item.from.trim() && item.to.trim() && item.fee.trim())
+            .map((item) => ({
+                ...(typeof item.id === "string" && serverTaxClassId.test(item.id) ? { id: item.id } : {}),
+                from: item.from.trim(),
+                to: item.to.trim(),
+                fee: item.fee.trim(),
+                feeType: item.feeType,
+                appliesTo: item.appliesTo,
+            })),
+    };
+}
+
 function ServiceChargeSettings() {
     const settings = usePosSettings();
+    const savedId = useRef(null);
     const currency = settings.currency;
     const currencySymbol = settings.currencySymbol;
     const [enabled, setEnabled] = useConfigState("enabled", true);
@@ -1664,7 +1827,43 @@ function ServiceChargeSettings() {
         );
     };
 
-    const saveServiceChargeSettings = useSaveAction(() => {
+    const applyServiceCharge = (record) => {
+        savedId.current = record.id;
+        setEnabled(Boolean(record.enabled));
+        setApplyTo(record.applyTo);
+        setDefaultType(record.defaultType);
+        setMaxLimit(record.maxLimit === null || record.maxLimit === undefined ? "" : String(record.maxLimit));
+        setTiers((record.tiers || []).map((item) => ({
+            id: item.id,
+            from: item.from,
+            to: item.to,
+            fee: item.fee,
+            feeType: item.feeType,
+            appliesTo: item.appliesTo,
+        })));
+        settings.session.baseline = { ...settings.session.draft };
+    };
+
+    useEffect(() => {
+        if (!settings.storeId) return undefined;
+        let active = true;
+        getPosServiceCharges(settings.storeId)
+            .then((record) => {
+                if (active && record?.id) applyServiceCharge(record);
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+                if (active) alert(error?.message || "Unable to load service charge settings.");
+            });
+        return () => { active = false; };
+    }, [settings.storeId]);
+
+    const saveServiceChargeSettings = useSaveAction(async () => {
+        if (!settings.storeId) {
+            alert("Open Service Charges from a store before saving.");
+            return;
+        }
+
         if (!applyTo) {
             alert("Please select Apply To.");
             return;
@@ -1682,20 +1881,22 @@ function ServiceChargeSettings() {
             return;
         }
 
-        /*
-         * API integration will be connected here.
-         *
-         * Example payload:
-         *
-         * {
-         *   enabled: true,
-         *   applyTo: "order-total",
-         *   defaultChargeType: "percentage",
-         *   maximumServiceChargeLimit: 10,
-         *   tiers: [...]
-         * }
-         */
+        if (enabled && tiers.some((item) => !item.from.trim() || !item.to.trim() || !item.fee.trim())) {
+            alert("Each service charge tier needs a from, to, and fee.");
+            return;
+        }
 
+        const payload = serviceChargePayload({
+            enabled,
+            applyTo,
+            defaultType,
+            maxLimit,
+            tiers,
+        });
+        const record = savedId.current
+            ? await updatePosServiceCharges(settings.storeId, payload)
+            : await createPosServiceCharges(settings.storeId, payload);
+        applyServiceCharge(record);
         return true;
     });
 
@@ -2175,8 +2376,28 @@ function ServiceChargeSettings() {
 }
 
 
+function readDenominationFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("The image could not be read. Please try again."));
+        reader.readAsDataURL(file);
+    });
+}
+
+function denominationRows(items) {
+    return (items || []).map((item) => ({
+        id: item.id,
+        amount: String(item.amount),
+        image: item.imageData,
+        imageName: item.imageName,
+        file: null,
+    }));
+}
+
 function DenominationSettings() {
     const settings = usePosSettings();
+    const savedId = useRef(null);
     
     
     
@@ -2202,6 +2423,27 @@ function DenominationSettings() {
 
     const [coinDenominations, setCoinDenominations] =
         useConfigState("coinDenominations", []);
+
+    const applyDenominations = (record) => {
+        savedId.current = record.id;
+        setCashDenominations(denominationRows(record.cashDenominations));
+        setCoinDenominations(denominationRows(record.coinDenominations));
+        settings.session.baseline = { ...settings.session.draft };
+    };
+
+    useEffect(() => {
+        if (!settings.storeId) return undefined;
+        let active = true;
+        getPosCashDenominations(settings.storeId)
+            .then((record) => {
+                if (active && record?.id) applyDenominations(record);
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+                if (active) alert(error?.message || "Unable to load cash denominations.");
+            });
+        return () => { active = false; };
+    }, [settings.storeId]);
 
     
 
@@ -2297,7 +2539,12 @@ function DenominationSettings() {
        SAVE
     --------------------------------------------------------- */
 
-    const saveDenominations = useSaveAction(() => {
+    const saveDenominations = useSaveAction(async () => {
+        if (!settings.storeId) {
+            alert("Open Cash Denominations from a store before saving.");
+            return;
+        }
+
         const allDenominations = [...cashDenominations, ...coinDenominations];
 
         const invalidAmount =
@@ -2307,7 +2554,7 @@ function DenominationSettings() {
 
         const invalidImage =
             allDenominations.some(
-                (item) => !item.image
+                (item) => !item.image && !item.file
             );
 
         if (invalidAmount) {
@@ -2324,12 +2571,33 @@ function DenominationSettings() {
             return;
         }
 
-        
+        const oversized = allDenominations.some((item) => item.file && item.file.size > 1024 * 1024);
+        if (oversized) {
+            alert("Each denomination image must be 1 MB or smaller.");
+            return;
+        }
 
-        /*
-         * API integration will be added here.
-         */
+        const toItem = async (item) => {
+            const imageData = item.file ? await readDenominationFile(item.file) : item.image;
+            if (typeof imageData !== "string" || !imageData.startsWith("data:image/")) {
+                throw new Error("Please select a PNG, JPG, or WEBP image for every denomination.");
+            }
+            return {
+                ...(typeof item.id === "string" && serverTaxClassId.test(item.id) ? { id: item.id } : {}),
+                amount: Number(item.amount),
+                imageName: item.imageName || "denomination",
+                imageData,
+            };
+        };
 
+        const payload = {
+            cashDenominations: await Promise.all(cashDenominations.map(toItem)),
+            coinDenominations: await Promise.all(coinDenominations.map(toItem)),
+        };
+        const record = savedId.current
+            ? await updatePosCashDenominations(settings.storeId, payload)
+            : await createPosCashDenominations(settings.storeId, payload);
+        applyDenominations(record);
         return true;
     });
 
@@ -3076,7 +3344,7 @@ function SafeConfiguration({ value, onSave, onBack }) {
 }
 
 
-export default function PosConfiguration() {
+export default function PosConfiguration({ merchantId, storeId, store } = {}) {
     const [registers, setRegisters] = useState(initialRegisters);
     const [mappings, setMappings] = useState(initialMappings);
     const [safeSettings, setSafeSettings] = useState(initialSafeSettings);
@@ -3084,7 +3352,7 @@ export default function PosConfiguration() {
     const [searchQuery, setSearchQuery] = useState("");
 
 
-    const [storeCurrency, setStoreCurrency] = useState("USD");
+    const [storeCurrency, setStoreCurrency] = useState(store?.currency || "USD");
     const savedScreens = useRef({});
     const [pendingLeave, setPendingLeave] = useState(null);
     const [busy, setBusy] = useState(false);
@@ -3127,7 +3395,7 @@ export default function PosConfiguration() {
         return () => window.removeEventListener("beforeunload", preventLoss);
     }, [session]);
     const currencySymbol = new Intl.NumberFormat("en", { style: "currency", currency: storeCurrency, currencyDisplay: "narrowSymbol" }).formatToParts(0).find((part) => part.type === "currency").value;
-    const settings = { session, currency: storeCurrency, currencySymbol, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) };
+    const settings = { session, currency: storeCurrency, currencySymbol, merchantId, storeId, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) };
 
     const filteredCards = configurationCards.filter((card) => {
         const search = searchQuery.trim().toLowerCase();
