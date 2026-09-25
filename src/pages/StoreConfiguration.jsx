@@ -1,67 +1,169 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate, useParams } from "react-router-dom";
+
 import { getMerchant } from "../api/merchants";
 import Users from "./Users";
 import PosConfiguration from "./PosConfiguration";
 import Products from "./Products";
 import Coupons from "./Coupons";
 import Orders from "./Orders";
-import StoreDevices from "./StoreDevices";
 import StoreCustomers from "./StoreCustomers";
 import FastKeys from "./FastKeys";
 import StoreCategories from "./StoreCategories";
 import StoreShifts from "./StoreShifts";
 import StorePaymentRecords from "./StorePaymentRecords";
-import VendorPayments from "./VendorPayments"
+import VendorPayments from "./VendorPayments";
+
 import { ApiError } from "../api/http";
+
 import {
   getWordpressConnector,
   saveWordpressConnector,
   testWordpressConnection,
 } from "../api/storeConnector";
+
 import { stores as mockStores } from "../data/data";
 
-const navItems = [
-  ["website", "bi-globe2", "Website Connection"],
-  ["overview", "bi-shop", "Store Overview"],
-  // ["details", "bi-pencil-square", "Store Details"],
-  ["users", "bi-people", "Employees"],
-  ["pos", "bi-phone", "POS Configurations"],
-  ["products", "bi-box-seam", "Products"],
-  ["categories", "bi-tags", "Categories"],
-  ["coupons", "bi-ticket-perforated", "Coupons"],
-  ["orders", "bi-receipt", "Orders"],
-  ["devices", "bi-pc-display", "Devices"],
-  ["customers", "bi-person-lines-fill", "Customers"],
-  ["fastkeys", "bi-key-fill", "Fast Keys"],
-  ["shifts", "bi-clock-history", "Shift Management"],
-  ["paymentrecords", "bi-credit-card", "Payment Records"],
-  ["vendors", "bi-truck", "Vendors"],
+/* =========================================================
+   SIDEBAR GROUPS
+   ========================================================= */
 
+const navGroups = [
+  {
+    id: "store-setup",
+    label: "Store Overview & Setup",
+    items: [
+      ["overview", "bi-shop", "Store Overview & Setup"],
+    ],
+  },
 
+  {
+    id: "configurations",
+    label: "Configurations",
+    items: [
+      ["pos", "bi-phone", "POS Configurations"],
+    ],
+  },
 
+  {
+    id: "people",
+    label: "Employees & Customers",
+    items: [
+      ["users", "bi-people", "Employees"],
+      ["customers", "bi-person-lines-fill", "Customers"],
+    ],
+  },
 
+  {
+    id: "catalog",
+    label: "Catalog, Inventory & Vendors",
+    items: [
+      ["categories", "bi-tags", "Categories"],
+      ["products", "bi-box-seam", "Products"],
+      ["fastkeys", "bi-key-fill", "Fast Keys"],
+      ["vendors", "bi-truck", "Vendors Directory"],
+    ],
+  },
 
+  {
+    id: "sales",
+    label: "Sales & Payments",
+    items: [
+      ["orders", "bi-receipt", "Orders"],
+      ["paymentrecords", "bi-credit-card", "Payment Records"],
+    ],
+  },
+
+  {
+    id: "promotions",
+    label: "Promotions & Loyalty",
+    items: [
+      ["coupons", "bi-ticket-perforated", "Coupons"],
+    ],
+  },
+
+  {
+    id: "operations",
+    label: "Store Operations",
+    items: [
+      ["shifts", "bi-clock-history", "Shift Management"],
+    ],
+  },
 ];
 
+/* =========================================================
+   STORE CONFIGURATION
+   ========================================================= */
+
 export default function StoreConfiguration() {
-  const { merchantId, storeId, section = "website" } = useParams();
+  const {
+    merchantId,
+    storeId,
+    section = "overview",
+  } = useParams();
+
   const nav = useNavigate();
+
+  /* =======================================================
+     STORE STATE
+     ======================================================= */
+
   const [merchant, setMerchant] = useState(null);
   const [store, setStore] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  /* =======================================================
+     WORDPRESS CONNECTION STATE
+     ======================================================= */
+
   const [siteUrl, setSiteUrl] = useState("");
   const [jwtToken, setJwtToken] = useState("");
   const [showToken, setShowToken] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+
   const [message, setMessage] = useState("");
   const [connected, setConnected] = useState(false);
+
+  /* =======================================================
+     SIDEBAR GROUP STATE
+     ======================================================= */
+
+  const [openGroup, setOpenGroup] = useState("store-setup");
+
+  /*
+   * Find the group that contains the current section.
+   */
+  const activeGroupId = useMemo(() => {
+    return (
+      navGroups.find((group) =>
+        group.items.some(([id]) => id === section)
+      )?.id || "store-setup"
+    );
+  }, [section]);
+
+  /*
+   * Automatically open the group containing
+   * the currently selected screen.
+   */
+  useEffect(() => {
+    setOpenGroup(activeGroupId);
+  }, [activeGroupId]);
+
+  /* =======================================================
+     BASE PATH
+     ======================================================= */
 
   const basePath = merchantId
     ? `/merchants/${merchantId}/stores/${storeId}/configuration`
     : `/stores/${storeId}/configuration`;
+
+  /* =======================================================
+     LOAD STORE
+     ======================================================= */
 
   useEffect(() => {
     let cancelled = false;
@@ -69,31 +171,44 @@ export default function StoreConfiguration() {
     async function loadStore() {
       setLoading(true);
       setError("");
+
       try {
         if (merchantId) {
           const result = await getMerchant(merchantId);
+
           const found =
-            result.stores.find((item) => item.id === storeId) || null;
+            result?.stores?.find(
+              (item) => item.id === storeId
+            ) || null;
+
           if (!cancelled) {
-            setMerchant(result.merchant);
+            setMerchant(result?.merchant || null);
             setStore(found);
           }
         } else {
-          const found = mockStores.find((item) => item.id === storeId) || {
-            id: storeId,
-            name: storeId,
-            location: "",
-            status: "Active",
-          };
+          const found =
+            mockStores.find(
+              (item) => item.id === storeId
+            ) || {
+              id: storeId,
+              name: storeId,
+              location: "",
+              status: "Active",
+            };
+
           if (!cancelled) {
-            setMerchant({ name: found.merchant || "Merchant", id: "" });
+            setMerchant({
+              name: found.merchant || "Merchant",
+              id: "",
+            });
+
             setStore({
               id: found.id,
               name: found.name,
               location: found.location,
               status: found.status,
               type: found.type,
-              url: "",
+              url: found.url || "",
             });
           }
         }
@@ -106,40 +221,53 @@ export default function StoreConfiguration() {
           );
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadStore();
+
     return () => {
       cancelled = true;
     };
   }, [merchantId, storeId]);
 
+  /* =======================================================
+     LOAD WORDPRESS CONNECTOR
+     ======================================================= */
+
   useEffect(() => {
     let cancelled = false;
 
     async function loadConnector() {
-      // 1. Initial quick load from local storage
-      const saved = getWordpressConnector(storeId);
-      if (saved && !cancelled) {
-        if (saved.siteUrl) setSiteUrl(saved.siteUrl);
-        if (saved.jwtToken) setJwtToken(saved.jwtToken);
-        setConnected(Boolean(saved.connected));
-        if (saved.lastTestMessage) setMessage(saved.lastTestMessage);
-      }
-
-      // 2. Fetch live connector config from backend API for this store
+      /*
+       * Load saved connector information.
+       */
       try {
-        const liveData = await fetchWordpressConnector(storeId, merchantId);
-        if (!cancelled && liveData) {
-          if (liveData.siteUrl) setSiteUrl(liveData.siteUrl);
-          if (liveData.jwtToken) setJwtToken(liveData.jwtToken);
-          setConnected(Boolean(liveData.connected));
-          if (liveData.lastTestMessage) setMessage(liveData.lastTestMessage);
+        const saved = getWordpressConnector(storeId);
+
+        if (saved && !cancelled) {
+          if (saved.siteUrl) {
+            setSiteUrl(saved.siteUrl);
+          }
+
+          if (saved.jwtToken) {
+            setJwtToken(saved.jwtToken);
+          }
+
+          setConnected(Boolean(saved.connected));
+
+          if (saved.lastTestMessage) {
+            setMessage(saved.lastTestMessage);
+          }
         }
       } catch (err) {
-        console.warn("Could not fetch remote WordPress connector:", err);
+        console.warn(
+          "Could not load saved WordPress connector:",
+          err
+        );
       }
     }
 
@@ -150,344 +278,750 @@ export default function StoreConfiguration() {
     return () => {
       cancelled = true;
     };
-  }, [storeId, merchantId]);
+  }, [storeId]);
+
+  /* =======================================================
+     SET WEBSITE URL FROM STORE
+     ======================================================= */
 
   useEffect(() => {
-    if (!siteUrl && store?.url) setSiteUrl(store.url);
+    if (!siteUrl && store?.url) {
+      setSiteUrl(store.url);
+    }
   }, [store, siteUrl]);
 
+  /* =======================================================
+     STORE STATUS
+     ======================================================= */
+
   const statusClass = useMemo(
-    () => (store?.status || "active").toLowerCase().replace(/\s+/g, "-"),
+    () =>
+      (store?.status || "active")
+        .toLowerCase()
+        .replace(/\s+/g, "-"),
     [store]
   );
 
+  /* =======================================================
+     SAVE WORDPRESS CONNECTION
+     ======================================================= */
+
   const handleSave = async (event) => {
     event.preventDefault();
+
     if (!siteUrl.trim() || !jwtToken.trim()) {
-      setMessage("Enter the WordPress site URL and JWT token.");
+      setMessage(
+        "Enter the WordPress site URL and JWT token."
+      );
       return;
     }
 
     setSaving(true);
     setMessage("");
+
     try {
-      const saved = await saveWordpressConnector(storeId, merchantId, {
-        siteUrl,
-        jwtToken,
-        connected,
-      });
+      const saved = await saveWordpressConnector(
+        storeId,
+        merchantId,
+        {
+          siteUrl,
+          jwtToken,
+          connected,
+        }
+      );
+
       setMessage(
-        saved.syncedToApi
+        saved?.syncedToApi
           ? "WordPress JWT saved for this store."
           : "WordPress JWT saved for this store on this browser."
       );
     } catch (err) {
-      setMessage(err.message || "Unable to save the WordPress token.");
+      setMessage(
+        err?.message ||
+          "Unable to save the WordPress token."
+      );
     } finally {
       setSaving(false);
     }
   };
 
+  /* =======================================================
+     TEST WORDPRESS CONNECTION
+     ======================================================= */
+
   const handleTest = async () => {
     if (!siteUrl.trim() || !jwtToken.trim()) {
-      setMessage("Enter the WordPress site URL and JWT token first.");
+      setMessage(
+        "Enter the WordPress site URL and JWT token first."
+      );
       return;
     }
 
     setTesting(true);
     setMessage("");
+
     try {
-      const result = await testWordpressConnection(siteUrl, jwtToken, storeId, merchantId);
-      setConnected(result.ok);
-      setMessage(result.message);
-      await saveWordpressConnector(storeId, merchantId, {
-        siteUrl,
-        jwtToken,
-        connected: result.ok,
-        lastTestedAt: new Date().toISOString(),
-        lastTestMessage: result.message,
-      });
+      const result =
+        await testWordpressConnection(
+          siteUrl,
+          jwtToken,
+          storeId,
+          merchantId
+        );
+
+      setConnected(Boolean(result?.ok));
+      setMessage(
+        result?.message ||
+          "Connection test completed."
+      );
+
+      await saveWordpressConnector(
+        storeId,
+        merchantId,
+        {
+          siteUrl,
+          jwtToken,
+          connected: Boolean(result?.ok),
+          lastTestedAt:
+            new Date().toISOString(),
+          lastTestMessage:
+            result?.message || "",
+        }
+      );
     } catch (err) {
       setConnected(false);
-      setMessage(err.message || "Connection test failed.");
+
+      setMessage(
+        err?.message ||
+          "Connection test failed."
+      );
     } finally {
       setTesting(false);
     }
   };
 
+  /* =======================================================
+     BACK TO STORES
+     ======================================================= */
+
   const backToStores = () => {
-    if (merchantId) nav(`/merchants/${merchantId}/stores`);
-    else nav("/stores");
+    if (merchantId) {
+      nav(`/merchants/${merchantId}/stores`);
+    } else {
+      nav("/stores");
+    }
   };
+
+  /* =======================================================
+     RENDER
+     ======================================================= */
 
   return (
     <div className="page-content store-workspace-page">
+
+      {/* ===================================================
+          BREADCRUMB
+          =================================================== */}
+
       <div className="breadcrumb-area">
-        <button className="link-button" onClick={backToStores}>
-          <i className="bi bi-arrow-left" /> Stores
+
+        <button
+          className="link-button"
+          onClick={backToStores}
+        >
+          <i className="bi bi-arrow-left" />
+          Stores
         </button>
+
         <span>/</span>
+
         <span>Store Configuration</span>
+
       </div>
 
+      {/* ===================================================
+          LOADING
+          =================================================== */}
+
       {loading ? (
-        <section className="store-workspace-card">Loading store...</section>
+        <section className="store-workspace-card">
+          Loading store...
+        </section>
       ) : error ? (
-        <section className="store-workspace-card">{error}</section>
+        <section className="store-workspace-card">
+          {error}
+        </section>
       ) : (
         <>
+          {/* ===============================================
+              STORE HEADER
+              =============================================== */}
+
           <div className="store-workspace-header">
+
             <div>
-              <h1>{store?.name || "Store Configuration"}</h1>
+
+              <h1>
+                {store?.name ||
+                  "Store Configuration"}
+              </h1>
+
               <p>
-                {store?.id} {merchant?.name ? `• ${merchant.name}` : ""}
+                {store?.id}
+
+                {merchant?.name
+                  ? ` • ${merchant.name}`
+                  : ""}
               </p>
+
             </div>
-            <span className={`store-status ${statusClass}`}>
-              {connected ? "Website Connected" : store?.status || "Active"}
+
+            <span
+              className={`store-status ${statusClass}`}
+            >
+              {connected
+                ? "Website Connected"
+                : store?.status || "Active"}
             </span>
+
           </div>
 
+          {/* ===============================================
+              WORKSPACE
+              =============================================== */}
+
           <div className="store-workspace">
+
+            {/* =============================================
+                SIDEBAR
+                ============================================= */}
+
             <aside className="store-subnav">
-              {navItems.map(([id, icon, label]) => (
-                <NavLink
-                  key={id}
-                  to={`${basePath}/${id}`}
-                  end
-                  className={`store-subnav-item ${section === id ? "active" : ""
+
+              {navGroups.map((group) => {
+
+                const isOpen =
+                  openGroup === group.id;
+
+                return (
+                  <div
+                    className={`store-subnav-group ${
+                      isOpen ? "open" : ""
                     }`}
-                >
-                  <i className={`bi ${icon}`} />
-                  {label}
-                </NavLink>
-              ))}
+                    key={group.id}
+                  >
+
+                    {/* GROUP HEADER */}
+
+                    <button
+                      type="button"
+                      className={`store-subnav-group-header ${
+                        isOpen ? "open" : ""
+                      }`}
+                      onClick={() =>
+                        setOpenGroup(
+                          (current) =>
+                            current === group.id
+                              ? null
+                              : group.id
+                        )
+                      }
+                      aria-expanded={isOpen}
+                    >
+
+                      <span>
+                        {group.label}
+                      </span>
+
+                      <i
+                        className={`bi ${
+                          isOpen
+                            ? "bi-chevron-up"
+                            : "bi-chevron-down"
+                        }`}
+                      />
+
+                    </button>
+
+                    {/* GROUP ITEMS */}
+
+                    {isOpen && (
+                      <div className="store-subnav-group-items">
+
+                        {group.items.map(
+                          ([id, icon, label]) => (
+                            <NavLink
+                              key={id}
+                              to={`${basePath}/${id}`}
+                              end
+                              className={`store-subnav-item ${
+                                section === id
+                                  ? "active"
+                                  : ""
+                              }`}
+                            >
+
+                              <i
+                                className={`bi ${icon}`}
+                              />
+
+                              <span>
+                                {label}
+                              </span>
+
+                            </NavLink>
+                          )
+                        )}
+
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })}
+
             </aside>
 
+            {/* =============================================
+                MAIN CONTENT
+                ============================================= */}
+
             <section className="store-workspace-main">
+
+              {/* ===========================================
+                  STORE OVERVIEW & SETUP
+                  =========================================== */}
+
               {section === "overview" ? (
+
                 <div className="store-panel">
-                  <h2>Store Overview</h2>
-                  <p>Full store profile used by Pinaka Commerce Hub.</p>
-                  <div className="store-overview-grid">
+
+                  {/* PAGE HEADER */}
+
+                  <div className="store-panel-heading">
+
                     <div>
-                      <span>Store Name</span>
-                      <strong>{store.name}</strong>
+
+                      <h2>
+                        Store Overview & Setup
+                      </h2>
+
+                      <p>
+                        Manage your store information
+                        and website connection settings.
+                      </p>
+
                     </div>
-                    <div>
-                      <span>Store ID</span>
-                      <strong>{store.id}</strong>
-                    </div>
-                    <div>
-                      <span>Type</span>
-                      <strong>{store.type || "—"}</strong>
-                    </div>
-                    <div>
-                      <span>Location</span>
-                      <strong>{store.location || "—"}</strong>
-                    </div>
-                    <div>
-                      <span>Website</span>
-                      <strong>{siteUrl || store.url || "Not connected"}</strong>
-                    </div>
-                    <div>
-                      <span>JWT Status</span>
-                      <strong>{connected ? "Connected" : "Not connected"}</strong>
-                    </div>
+
+                    <span
+                      className={`connection-pill ${
+                        connected
+                          ? "connected"
+                          : "disconnected"
+                      }`}
+                    >
+                      {connected
+                        ? "Website Connected"
+                        : "Website Not Connected"}
+                    </span>
+
                   </div>
+
+                  {/* =====================================
+                      STORE OVERVIEW
+                      ===================================== */}
+
+                  <div className="store-section-block">
+
+                    <div className="store-section-title">
+
+                      <h3>
+                        Store Overview
+                      </h3>
+
+                      <p>
+                        Store information used by
+                        Pinaka Commerce Hub.
+                      </p>
+
+                    </div>
+
+                    <div className="store-overview-grid">
+
+                      <div>
+                        <span>
+                          Store Name
+                        </span>
+
+                        <strong>
+                          {store?.name || "—"}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Store ID
+                        </span>
+
+                        <strong>
+                          {store?.id || "—"}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Type
+                        </span>
+
+                        <strong>
+                          {store?.type || "—"}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Location
+                        </span>
+
+                        <strong>
+                          {store?.location || "—"}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Website
+                        </span>
+
+                        <strong>
+                          {siteUrl ||
+                            store?.url ||
+                            "Not connected"}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          JWT Status
+                        </span>
+
+                        <strong>
+                          {connected
+                            ? "Connected"
+                            : "Not connected"}
+                        </strong>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  {/* =====================================
+                      WEBSITE CONNECTION
+                      ===================================== */}
+
+                  <div className="store-section-block store-connection-section">
+
+                    <div className="store-section-title">
+
+                      <h3>
+                        Website Connection
+                      </h3>
+
+                      <p>
+                        Connect this store with
+                        its WordPress website.
+                      </p>
+
+                    </div>
+
+                    {/* WORDPRESS SITE URL */}
+
+                    <label className="store-field">
+
+                      WordPress Site URL
+
+                      <input
+                        type="url"
+                        placeholder="https://your-store.com"
+                        value={siteUrl}
+                        onChange={(event) =>
+                          setSiteUrl(
+                            event.target.value
+                          )
+                        }
+                        required
+                      />
+
+                    </label>
+
+                    {/* JWT TOKEN */}
+
+                    <label className="store-field">
+
+                      WordPress JWT Token
+
+                      <div className="token-input">
+
+                        <textarea
+                          rows={5}
+                          placeholder="Paste the JWT generated by WordPress"
+                          value={jwtToken}
+                          onChange={(event) =>
+                            setJwtToken(
+                              event.target.value
+                            )
+                          }
+                          required
+                          spellCheck={false}
+                          style={{
+                            WebkitTextSecurity:
+                              showToken
+                                ? "none"
+                                : "disc",
+                          }}
+                        />
+
+                        <button
+                          type="button"
+                          className="token-toggle-btn"
+                          onClick={() =>
+                            setShowToken(
+                              (current) =>
+                                !current
+                            )
+                          }
+                        >
+
+                          <i
+                            className={`bi ${
+                              showToken
+                                ? "bi-eye-slash"
+                                : "bi-eye"
+                            }`}
+                          />
+
+                          {showToken
+                            ? "Hide Token"
+                            : "Show Token"}
+
+                        </button>
+
+                      </div>
+
+                    </label>
+
+                    {/* MESSAGE */}
+
+                    {message ? (
+                      <div
+                        role="status"
+                        className={`store-message ${
+                          connected
+                            ? "success"
+                            : "info"
+                        }`}
+                      >
+                        {message}
+                      </div>
+                    ) : null}
+
+                    {/* ACTIONS */}
+
+                    <div className="store-form-actions">
+
+                      <button
+                        type="button"
+                        className="store-edit-btn"
+                        onClick={handleTest}
+                        disabled={
+                          testing || saving
+                        }
+                      >
+                        {testing
+                          ? "Syncing Categories & Products..."
+                          : "Sync Categories & Products"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="store-config-btn"
+                        onClick={handleSave}
+                        disabled={
+                          saving || testing
+                        }
+                      >
+                        {saving
+                          ? "Saving..."
+                          : "Save JWT Token"}
+                      </button>
+
+                    </div>
+
+                  </div>
+
                 </div>
-              ) : section === "details" ? (
+
+              /* ===========================================
+                 POS CONFIGURATION
+                 =========================================== */
+
+              ) : section === "pos" ? (
+
+                <PosConfiguration
+                  merchantId={merchantId}
+                  storeId={storeId}
+                  store={store}
+                  embedded
+                />
+
+              /* ===========================================
+                 EMPLOYEES
+                 =========================================== */
+
+              ) : section === "users" ? (
+
+                <Users
+                  merchantId={merchantId}
+                  storeId={storeId}
+                  store={store}
+                />
+
+              /* ===========================================
+                 PRODUCTS
+                 =========================================== */
+
+              ) : section === "products" ? (
+
+                <Products
+                  merchantId={merchantId}
+                  storeId={storeId}
+                  store={store}
+                  embedded
+                />
+
+              /* ===========================================
+                 CATEGORIES
+                 =========================================== */
+
+              ) : section === "categories" ? (
+
+                <StoreCategories
+                  merchantId={merchantId}
+                  storeId={storeId}
+                  store={store}
+                  embedded
+                />
+
+              /* ===========================================
+                 VENDORS
+                 =========================================== */
+
+              ) : section === "vendors" ? (
+
+                <VendorPayments
+                  merchantId={merchantId}
+                  storeId={storeId}
+                  store={store}
+                  embedded
+                />
+
+              /* ===========================================
+                 COUPONS
+                 =========================================== */
+
+              ) : section === "coupons" ? (
+
+                <Coupons
+                  merchantId={merchantId}
+                  storeId={storeId}
+                  store={store}
+                  embedded
+                />
+
+              /* ===========================================
+                 ORDERS
+                 =========================================== */
+
+              ) : section === "orders" ? (
+
+                <Orders
+                  merchantId={merchantId}
+                  storeId={storeId}
+                  store={store}
+                  embedded
+                />
+
+              /* ===========================================
+                 FAST KEYS
+                 =========================================== */
+
+              ) : section === "fastkeys" ? (
+
+                <FastKeys />
+
+              /* ===========================================
+                 SHIFT MANAGEMENT
+                 =========================================== */
+
+              ) : section === "shifts" ? (
+
+                <StoreShifts
+                  merchantId={merchantId}
+                  storeId={storeId}
+                  store={store}
+                  embedded
+                />
+
+              /* ===========================================
+                 PAYMENT RECORDS
+                 =========================================== */
+
+              ) : section === "paymentrecords" ? (
+
+                <StorePaymentRecords
+                  merchantId={merchantId}
+                  storeId={storeId}
+                  store={store}
+                  embedded
+                />
+
+              /* ===========================================
+                 CUSTOMERS
+                 =========================================== */
+
+              ) : section === "customers" ? (
+
+                <StoreCustomers
+                  merchantId={merchantId}
+                  storeId={storeId}
+                  store={store}
+                  embedded
+                />
+
+              /* ===========================================
+                 FALLBACK
+                 =========================================== */
+
+              ) : (
+
                 <div className="store-panel">
-                  <h2>Store Details</h2>
-                  <p>Edit the store record for this merchant.</p>
-                  <button
-                    className="store-config-btn"
-                    onClick={() =>
-                      nav(
-                        merchantId
-                          ? `/merchants/${merchantId}/stores/edit/${storeId}`
-                          : `/stores/${storeId}/edit`
-                      )
-                    }
-                  >
-                    Open store editor
-                  </button>
+
+                  <h2>
+                    Store Configuration
+                  </h2>
+
+                  <p>
+                    Select a configuration
+                    section from the sidebar.
+                  </p>
+
                 </div>
-              )
-                : section === "pos" ? (
-                  <PosConfiguration
-                    merchantId={merchantId}
-                    storeId={storeId}
-                    store={store}
-                    embedded
-                  />) : section === "users" ? (
-                    <Users
-                      merchantId={merchantId}
-                      storeId={storeId}
-                      store={store}
-                    />
 
-                  ) : section === "products" ? (
-                    <Products
-                      merchantId={merchantId}
-                      storeId={storeId}
-                      store={store}
-                      embedded
-                    />
-                  ) : section === "categories" ? (
-                    <StoreCategories
-                      merchantId={merchantId}
-                      storeId={storeId}
-                      store={store}
-                      embedded
-                    />
+              )}
 
-                  ) 
-                  : section === "vendors" ? (
-                    <VendorPayments
-                      merchantId={merchantId}
-                      storeId={storeId}
-                      store={store}
-                      embedded
-                    />
-
-                  ) 
-                  : section === "coupons" ? (
-                    <Coupons
-                      merchantId={merchantId}
-                      storeId={storeId}
-                      store={store}
-                      embedded
-                    />
-
-                  ) : section === "orders" ? (
-                    <Orders
-                      merchantId={merchantId}
-                      storeId={storeId}
-                      store={store}
-                      embedded
-                    />
-
-                  ) : section === "devices" ? (
-                    <StoreDevices
-                      merchantId={merchantId}
-                      storeId={storeId}
-                      store={store}
-                      embedded
-                    />
-
-                  ) : section === "fastkeys" ? (
-                    <FastKeys />
-
-                  )
-                  : section === "shifts" ? (
-                    <StoreShifts
-                      merchantId={merchantId}
-                      storeId={storeId}
-                      store={store}
-                      embedded
-                    />
-                  )
-                    : section === "paymentrecords" ? (
-                      <StorePaymentRecords
-                        merchantId={merchantId}
-                        storeId={storeId}
-                        store={store}
-                        embedded
-                      />
-                    ) : section === "customers" ? (
-                      <StoreCustomers
-                        merchantId={merchantId}
-                        storeId={storeId}
-                        store={store}
-                        embedded
-                      />
-
-                    ) :
-                      (
-                        <form className="store-panel" onSubmit={handleSave}>
-                          <div className="store-panel-heading">
-                            <div>
-                              <h2>Website Connection</h2>
-                              <p>
-                                Paste the JWT token generated by the WordPress site to
-                                connect this store.
-                              </p>
-                            </div>
-                            <span
-                              className={`connection-pill ${connected ? "connected" : "disconnected"
-                                }`}
-                            >
-                              {connected ? "Connected" : "Not connected"}
-                            </span>
-                          </div>
-
-                          <label className="store-field">
-                            WordPress Site URL
-                            <input
-                              type="url"
-                              placeholder="https://your-store.com"
-                              value={siteUrl}
-                              onChange={(event) => setSiteUrl(event.target.value)}
-                              required
-                            />
-                          </label>
-
-                          <label className="store-field">
-                            WordPress JWT Token
-                            <div className="token-input">
-                              <textarea
-                                rows={5}
-                                placeholder="Paste the JWT generated by WordPress"
-                                value={jwtToken}
-                                onChange={(event) => setJwtToken(event.target.value)}
-                                required
-                                spellCheck={false}
-                                style={{
-                                  WebkitTextSecurity: showToken ? "none" : "disc",
-                                }}
-                              />
-                              <button
-                                type="button"
-                                className="token-toggle-btn"
-                                onClick={() => setShowToken((current) => !current)}
-                              >
-                                <i className={`bi ${showToken ? "bi-eye-slash" : "bi-eye"}`} />
-                                {showToken ? "Hide Token" : "Show Token"}
-                              </button>
-                            </div>
-                          </label>
-
-                          {message ? (
-                            <div
-                              role="status"
-                              className={`store-message ${connected ? "success" : "info"
-                                }`}
-                            >
-                              {message}
-                            </div>
-                          ) : null}
-
-                          <div className="store-form-actions">
-                            <button
-                              type="button"
-                              className="store-edit-btn"
-                              onClick={handleTest}
-                              disabled={testing || saving}
-                            >
-                              {testing ? "Syncing Categories & Products..." : "Sync Categories & Products"}
-                            </button>
-                            <button
-                              type="submit"
-                              className="store-config-btn"
-                              disabled={saving || testing}
-                            >
-                              {saving ? "Saving..." : "Save JWT Token"}
-                            </button>
-                          </div>
-                        </form>
-                      )}
             </section>
+
           </div>
         </>
       )}
