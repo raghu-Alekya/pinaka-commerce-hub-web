@@ -29,6 +29,14 @@ export const endpoints = {
     `/stores/${encodeURIComponent(storeId)}/pos/opening-balance`,
   storeCashDenominations: (storeId) =>
     `/stores/${encodeURIComponent(storeId)}/pos/cash-denominations`,
+  storeCashRegisters: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/cash-registers`,
+  storeSafeDrop: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/safe-drop`,
+  storeCardPayments: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/card-payments`,
+  storeTerminalMappings: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/terminal-mappings`,
   storeTypes: "/store-types",
   storeType: (id) => `/store-types/${encodeURIComponent(id)}`,
   storeTypeFeatures: (id) => `/store-types/${encodeURIComponent(id)}/features`,

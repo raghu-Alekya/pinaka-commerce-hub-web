@@ -26,6 +26,26 @@ import {
     getPosCashDenominations,
     updatePosCashDenominations,
 } from "../api/posCashDenominations";
+import {
+    createPosCashRegisters,
+    getPosCashRegisters,
+    updatePosCashRegisters,
+} from "../api/posCashRegisters";
+import {
+    createPosSafeDrop,
+    getPosSafeDrop,
+    updatePosSafeDrop,
+} from "../api/posSafeDrop";
+import {
+    createPosCardPayments,
+    getPosCardPayments,
+    updatePosCardPayments,
+} from "../api/posCardPayments";
+import {
+    createPosTerminalMappings,
+    getPosTerminalMappings,
+    updatePosTerminalMappings,
+} from "../api/posTerminalMappings";
 
 /* =========================================================
    POS CONFIGURATION CARDS
@@ -2815,8 +2835,21 @@ function DenominationSettings() {
    PAYMENTS
 ========================================================= */
 
+const emptyCardCredentials = () => ({
+    id: null,
+    deviceId: "",
+    merchantId: "",
+    terminalId: "",
+    secretKey: "",
+    webhookUrl: "",
+});
+
 function PaymentSettings() {
     const settings = usePosSettings();
+    const providerCredentials = useRef({
+        Kickback: emptyCardCredentials(),
+        Payroc: emptyCardCredentials(),
+    });
     
     
     const [provider, setProvider] = useConfigState("provider", "Kickback");
@@ -2827,16 +2860,68 @@ function PaymentSettings() {
     const [secretKey, setSecretKey] = useConfigState("secretKey", "");
     const [webhookUrl, setWebhookUrl] = useConfigState("webhookUrl", "");
 
-    const handleProviderChange = (value) => {
-        setProvider(value);
-
-        if (value !== "Payroc") {
-            setTerminalId("");
-        }
+    const showProviderCredentials = (name, source = providerCredentials.current[name]) => {
+        setProvider(name);
+        setDeviceId(source?.deviceId || "");
+        setMerchantId(source?.merchantId || "");
+        setTerminalId(name === "Payroc" ? source?.terminalId || "" : "");
+        setSecretKey(source?.secretKey || "");
+        setWebhookUrl(source?.webhookUrl || "");
     };
 
-    const savePaymentSettings = useSaveAction(() => {
-        /* API integration will be added here. */
+    const handleProviderChange = (value) => {
+        if (value === provider) return;
+        providerCredentials.current[provider] = {
+            ...providerCredentials.current[provider],
+            deviceId,
+            merchantId,
+            terminalId,
+            secretKey,
+            webhookUrl,
+        };
+        showProviderCredentials(value);
+    };
+
+    const applyCardPayments = (records, selected = provider) => {
+        const next = {
+            Kickback: emptyCardCredentials(),
+            Payroc: emptyCardCredentials(),
+        };
+        (records || []).forEach((record) => {
+            if (!next[record.provider]) return;
+            next[record.provider] = {
+                id: record.id,
+                deviceId: record.deviceId || "",
+                merchantId: record.processorMerchantId || "",
+                terminalId: record.terminalId || "",
+                secretKey: record.secretKey || "",
+                webhookUrl: record.webhookUrl || "",
+            };
+        });
+        providerCredentials.current = next;
+        showProviderCredentials(selected, next[selected]);
+        settings.session.baseline = { ...settings.session.draft };
+    };
+
+    useEffect(() => {
+        if (!settings.storeId) return undefined;
+        let active = true;
+        getPosCardPayments(settings.storeId)
+            .then((records) => {
+                if (active) applyCardPayments(Array.isArray(records) ? records : [], "Kickback");
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+                if (active) alert(error?.message || "Unable to load card payment settings.");
+            });
+        return () => { active = false; };
+    }, [settings.storeId]);
+
+    const savePaymentSettings = useSaveAction(async () => {
+        if (!settings.storeId) {
+            alert("Open Card Payment Settings from a store before saving.");
+            return;
+        }
 
         if (!provider) {
             alert("Please select a payment gateway provider.");
@@ -2868,6 +2953,28 @@ function PaymentSettings() {
             return;
         }
 
+        const payload = {
+            provider,
+            deviceId: deviceId.trim(),
+            processorMerchantId: merchantId.trim(),
+            terminalId: provider === "Payroc" ? terminalId.trim() : "",
+            secretKey: secretKey.trim(),
+            webhookUrl: webhookUrl.trim(),
+        };
+        const saved = providerCredentials.current[provider];
+        const record = saved?.id
+            ? await updatePosCardPayments(settings.storeId, payload)
+            : await createPosCardPayments(settings.storeId, payload);
+        providerCredentials.current[provider] = {
+            id: record.id,
+            deviceId: record.deviceId || "",
+            merchantId: record.processorMerchantId || "",
+            terminalId: record.terminalId || "",
+            secretKey: record.secretKey || "",
+            webhookUrl: record.webhookUrl || "",
+        };
+        showProviderCredentials(provider);
+        settings.session.baseline = { ...settings.session.draft };
         return true;
     });
 
@@ -3071,8 +3178,57 @@ function ConfigBadge({ children }) {
     return <span className={`pc-badge pc-${children.toLowerCase()}`}>{children}</span>;
 }
 
+function registerRows(items) {
+    return (items || []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        pos: item.pos,
+        maxCash: String(item.maxCash),
+        safeDrop: Boolean(item.safeDrop),
+        status: item.status,
+    }));
+}
+
+function registerPayload(rows) {
+    return {
+        registers: rows.map((row) => ({
+            ...(typeof row.id === "string" && serverTaxClassId.test(row.id) ? { id: row.id } : {}),
+            name: row.name.trim(),
+            pos: row.pos.trim(),
+            maxCash: Number(row.maxCash),
+            safeDrop: Boolean(row.safeDrop),
+            status: row.status,
+        })),
+    };
+}
+
+function mappingRows(items) {
+    return (items || []).map((item) => ({
+        id: item.id,
+        registerId: item.registerId,
+        terminal: item.terminal || "",
+        printer: item.printer || "",
+        drawer: item.drawer || "",
+        status: item.status,
+    }));
+}
+
+function mappingPayload(rows) {
+    return {
+        mappings: rows.map((row) => ({
+            ...(typeof row.id === "string" && serverTaxClassId.test(row.id) ? { id: row.id } : {}),
+            registerId: row.registerId,
+            terminal: (row.terminal || "").trim(),
+            printer: (row.printer || "").trim(),
+            drawer: (row.drawer || "").trim(),
+            status: row.status,
+        })),
+    };
+}
+
 function RegisterConfiguration({ value, mappings, onSave, onBack }) {
     const settings = usePosSettings();
+    const savedId = useRef(null);
     const currency = settings.currency;
     
     const [rows, setRows] = useConfigState("rows", () => value.map((row) => ({ ...row })));
@@ -3108,10 +3264,41 @@ function RegisterConfiguration({ value, mappings, onSave, onBack }) {
         setError(""); setMessage("Register removed from the draft. Save Changes to keep this change.");
     };
 
-    const saveChanges = useSaveAction(() => {
+    const applyRegisters = (record) => {
+        const savedRows = registerRows(record.registers);
+        savedId.current = record.id;
+        setRows(savedRows);
+        onSave(savedRows);
+        settings.session.baseline = { ...settings.session.draft };
+    };
+
+    useEffect(() => {
+        if (!settings.storeId) return undefined;
+        let active = true;
+        getPosCashRegisters(settings.storeId)
+            .then((record) => {
+                if (active && record?.id) applyRegisters(record);
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+                if (active) setError(error?.message || "Unable to load cash register settings.");
+            });
+        return () => { active = false; };
+    }, [settings.storeId]);
+
+    const saveChanges = useSaveAction(async () => {
+        if (!settings.storeId) {
+            setError("Open Cash Register Settings from a store before saving.");
+            return false;
+        }
         const nextRows = editor ? apply() : rows;
         if (!nextRows) return false;
-        onSave(nextRows);
+        const record = savedId.current
+            ? await updatePosCashRegisters(settings.storeId, registerPayload(nextRows))
+            : await createPosCashRegisters(settings.storeId, registerPayload(nextRows));
+        applyRegisters(record);
+        setError("");
+        setMessage("Changes are saved.");
         return true;
     });
     return <section className="pc-screen">
@@ -3142,6 +3329,7 @@ function RegisterConfiguration({ value, mappings, onSave, onBack }) {
 
 function MappingConfiguration({ value, registers, onSave, onBack, onManageRegisters }) {
     const settings = usePosSettings();
+    const savedId = useRef(null);
     
     
     const [rows, setRows] = useConfigState("rows", () => value.map((row) => ({ ...row })));
@@ -3169,10 +3357,41 @@ function MappingConfiguration({ value, registers, onSave, onBack, onManageRegist
         return nextRows;
     };
 
-    const saveChanges = useSaveAction(() => {
+    const applyMappings = (record) => {
+        const savedRows = mappingRows(record.mappings);
+        savedId.current = record.id;
+        setRows(savedRows);
+        onSave(savedRows);
+        settings.session.baseline = { ...settings.session.draft };
+    };
+
+    useEffect(() => {
+        if (!settings.storeId) return undefined;
+        let active = true;
+        getPosTerminalMappings(settings.storeId)
+            .then((record) => {
+                if (active && record?.id) applyMappings(record);
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+                if (active) setError(error?.message || "Unable to load terminal mappings.");
+            });
+        return () => { active = false; };
+    }, [settings.storeId]);
+
+    const saveChanges = useSaveAction(async () => {
+        if (!settings.storeId) {
+            setError("Open Terminals & Registers from a store before saving.");
+            return false;
+        }
         const nextRows = editor ? apply() : rows;
         if (!nextRows) return false;
-        onSave(nextRows);
+        const record = savedId.current
+            ? await updatePosTerminalMappings(settings.storeId, mappingPayload(nextRows))
+            : await createPosTerminalMappings(settings.storeId, mappingPayload(nextRows));
+        applyMappings(record);
+        setError("");
+        setMessage("Changes are saved.");
         return true;
     });
     return <section className="pc-screen">
@@ -3187,84 +3406,25 @@ function MappingConfiguration({ value, registers, onSave, onBack, onManageRegist
                 <button type="button" className="pc-button" onClick={onManageRegisters}>Open Cash Register Settings</button>
             </div>}
            <div className="pc-form-grid">
-  {/* Device Name */}
-  <ConfigField label="Device Name">
-    <input
-      value={editor.deviceName}
-      onChange={(e) => update("deviceName", e.target.value)}
-      placeholder="POS Terminal 01"
-      required
-    />
-  </ConfigField>
-
-  {/* Device Type */}
-  <ConfigField label="Device Type">
-    <select
-      value={editor.deviceType}
-      onChange={(e) => update("deviceType", e.target.value)}
-      required
-    >
-      <option value="">Select Device Type</option>
-      <option value="POS Terminal">POS Terminal</option>
-      <option value="Barcode Scanner">Barcode Scanner</option>
-      <option value="Kitchen Display">Kitchen Display</option>
-      <option value="Customer Display">Customer Display</option>
-      <option value="Receipt Printer">Receipt Printer</option>
-    </select>
-  </ConfigField>
-
-  {/* Device ID */}
-  <ConfigField label="Device ID">
-    <input
-      value={editor.deviceId}
-      onChange={(e) => update("deviceId", e.target.value)}
-      placeholder="POS-001"
-    />
-  </ConfigField>
-
-  {/* Serial Number */}
-  <ConfigField label="Device Serial Number">
-    <input
-      value={editor.serialNumber}
-      onChange={(e) => update("serialNumber", e.target.value)}
-      placeholder="SN-POS-001"
-    />
-  </ConfigField>
-
-  {/* Finger Print */}
-  <ConfigField label="Device Finger Print">
-    <input
-      value={editor.fingerPrint}
-      onChange={(e) => update("fingerPrint", e.target.value)}
-      placeholder="FP-POS-001"
-    />
-  </ConfigField>
-
-  {/* Quantity */}
-  <ConfigField label="Quantity">
-    <input
-      type="number"
-      min="1"
-      value={editor.quantity}
-      onChange={(e) => update("quantity", e.target.value)}
-      placeholder="1"
-      required
-    />
-  </ConfigField>
-
-  {/* Status */}
-  <ConfigField label="Status">
-    <select
-      value={editor.status}
-      onChange={(e) => update("status", e.target.value)}
-      required
-    >
-      <option>Active</option>
-      <option>Inactive</option>
-      <option>Setup</option>
-    </select>
-  </ConfigField>
-</div>
+                <ConfigField label="Register">
+                    <select required value={editor.registerId || ""} onChange={(event) => update("registerId", event.target.value)}>
+                        <option value="">Select a register</option>
+                        {registers.map((register) => (
+                            <option key={register.id} value={register.id}>{register.name} · {register.pos}</option>
+                        ))}
+                    </select>
+                </ConfigField>
+                <ConfigField label="Card Terminal"><input value={editor.terminal || ""} onChange={(event) => update("terminal", event.target.value)} placeholder="LANE3000-001" /></ConfigField>
+                <ConfigField label="Printer"><input value={editor.printer || ""} onChange={(event) => update("printer", event.target.value)} placeholder="STAR-01" /></ConfigField>
+                <ConfigField label="Cash Drawer"><input value={editor.drawer || ""} onChange={(event) => update("drawer", event.target.value)} placeholder="DRAWER-01" /></ConfigField>
+                <ConfigField label="Status">
+                    <select value={editor.status} onChange={(event) => update("status", event.target.value)}>
+                        <option>Active</option>
+                        <option>Inactive</option>
+                        <option>Setup</option>
+                    </select>
+                </ConfigField>
+            </div>
         <div className="pc-editor-actions pos-form-actions"><button type="button" className="pc-button" onClick={() => settings.requestLeave(null)}>Cancel</button><button type="submit" className="pc-button pc-primary" disabled={!editor.registerId}>Apply Mapping</button></div></form>}
         {error && <p className="pc-error" role="alert">{error}</p>}
         <div className="pc-table-wrap"><table className="pc-table"><caption className="pc-sr-only">Terminal and register mappings</caption><thead><tr>{["Register", "POS Device", "Card Terminal", "Printer", "Cash Drawer", "Status", "Actions"].map((heading) => <th key={heading} scope="col">{heading}</th>)}</tr></thead><tbody>
@@ -3277,6 +3437,7 @@ function MappingConfiguration({ value, registers, onSave, onBack, onManageRegist
 
 function SafeConfiguration({ value, onSave, onBack }) {
     const settings = usePosSettings();
+    const savedId = useRef(null);
     const currency = settings.currency;
     
     const [draft, setDraft] = useConfigState("draft", () => ({ ...value, tubes: value.tubes.map((row) => ({ ...row })), drops: value.drops.map((row) => ({ ...row })) }));
@@ -3299,17 +3460,94 @@ function SafeConfiguration({ value, onSave, onBack }) {
         reader.onloadend = () => setUploads((count) => count - 1);
         reader.readAsDataURL(file);
     };
-    const save = useSaveAction(() => {
+    const moneyOrNull = (amount) => validMoney(amount) ? Number(amount) : null;
+    const safeDropPayload = (source) => ({
+        enabled: source.enabled,
+        primarySafe: source.primarySafe.trim(),
+        dropEnabled: source.enabled && source.dropEnabled,
+        threshold: moneyOrNull(source.threshold),
+        minimum: moneyOrNull(source.minimum),
+        maximum: moneyOrNull(source.maximum),
+        managerApproval: source.managerApproval,
+        cashierInitiated: source.cashierInitiated,
+        reasonRequired: source.reasonRequired,
+        tubeSize: source.tubeSize === "" ? null : Number(source.tubeSize),
+        tubes: source.tubes.map((row) => ({
+            ...(typeof row.id === "string" && serverTaxClassId.test(row.id) ? { id: row.id } : {}),
+            amount: Number(row.amount),
+            quantity: Number(row.quantity),
+        })),
+        drops: source.drops.map((row) => ({
+            ...(typeof row.id === "string" && serverTaxClassId.test(row.id) ? { id: row.id } : {}),
+            amount: Number(row.amount),
+            imageName: row.imageName || "denomination",
+            imageData: row.image,
+        })),
+    });
+    const applySafeDrop = (record) => {
+        const next = {
+            enabled: Boolean(record.enabled),
+            primarySafe: record.primarySafe || "",
+            dropEnabled: Boolean(record.dropEnabled),
+            threshold: record.threshold === null || record.threshold === undefined ? "" : String(record.threshold),
+            minimum: record.minimum === null || record.minimum === undefined ? "" : String(record.minimum),
+            maximum: record.maximum === null || record.maximum === undefined ? "" : String(record.maximum),
+            managerApproval: Boolean(record.managerApproval),
+            cashierInitiated: Boolean(record.cashierInitiated),
+            reasonRequired: Boolean(record.reasonRequired),
+            tubeSize: record.tubeSize === null || record.tubeSize === undefined ? "" : String(record.tubeSize),
+            tubes: (record.tubes || []).map((row) => ({
+                id: row.id,
+                amount: String(row.amount),
+                quantity: String(row.quantity),
+            })),
+            drops: (record.drops || []).map((row) => ({
+                id: row.id,
+                amount: String(row.amount),
+                image: row.imageData,
+                imageName: row.imageName,
+            })),
+        };
+        savedId.current = record.id;
+        setDraft(next);
+        onSave(next);
+        settings.session.baseline = { ...settings.session.draft };
+    };
+    useEffect(() => {
+        if (!settings.storeId) return undefined;
+        let active = true;
+        getPosSafeDrop(settings.storeId)
+            .then((record) => {
+                if (active && record?.id) applySafeDrop(record);
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+                if (active) setError(error?.message || "Unable to load safe and safe drop settings.");
+            });
+        return () => { active = false; };
+    }, [settings.storeId]);
+    const save = useSaveAction(async () => {
+        if (!settings.storeId) {
+            setError("Open Safe & Safe Drop from a store before saving.");
+            return false;
+        }
         if (draft.enabled && !draft.primarySafe.trim()) { setError("Enter a primary safe."); return; }
         if (draft.enabled && draft.dropEnabled && (![draft.threshold, draft.minimum, draft.maximum].every((amount) => validMoney(amount)) || Number(draft.minimum) > Number(draft.maximum))) {
             setError("Enter positive drop amounts with up to two decimal places. Minimum drop must not exceed maximum drop."); return;
         }
         if (draft.tubeSize && (!Number.isSafeInteger(Number(draft.tubeSize)) || Number(draft.tubeSize) <= 0)) { setError("Tube size must be a positive whole number."); return; }
         if (draft.tubes.some((row) => !validMoney(row.amount) || !Number.isSafeInteger(Number(row.quantity)) || Number(row.quantity) <= 0)) { setError("Every tube needs a positive amount and a positive whole-number quantity."); return; }
-        if (draft.drops.some((row) => !validMoney(row.amount) || !row.image)) { setError("Every safe-drop denomination needs a positive amount and an image."); return; }
+        if (draft.drops.some((row) => !validMoney(row.amount) || !row.image?.startsWith("data:image/"))) { setError("Every safe-drop denomination needs a positive amount and a PNG, JPG, or WEBP image."); return; }
         if ([draft.tubes, draft.drops].some((list) => new Set(list.map((row) => Number(row.amount))).size !== list.length)) { setError("Denomination amounts must be unique within each list."); return; }
         if (uploads > 0) { setError("Please wait for the image upload to finish."); return false; }
-        onSave({ ...draft, primarySafe: draft.primarySafe.trim(), dropEnabled: draft.enabled && draft.dropEnabled }); setError(""); return true;
+        const next = { ...draft, primarySafe: draft.primarySafe.trim(), dropEnabled: draft.enabled && draft.dropEnabled };
+        const record = savedId.current
+            ? await updatePosSafeDrop(settings.storeId, safeDropPayload(next))
+            : await createPosSafeDrop(settings.storeId, safeDropPayload(next));
+        applySafeDrop(record);
+        setError("");
+        setMessage("Changes are saved.");
+        return true;
     });
     const moneyField = (label, field) => <ConfigField label={`${label} (${currency})`}><input type="number" min="0.01" step="0.01" value={draft[field]} onChange={(e) => update(field, e.target.value)} /></ConfigField>;
     return <section className="pc-screen">
@@ -3345,11 +3583,31 @@ function SafeConfiguration({ value, onSave, onBack }) {
 
 
 export default function PosConfiguration({ merchantId, storeId, store } = {}) {
-    const [registers, setRegisters] = useState(initialRegisters);
-    const [mappings, setMappings] = useState(initialMappings);
+    const [registers, setRegisters] = useState(() => (storeId ? [] : initialRegisters));
+    const [mappings, setMappings] = useState(() => (storeId ? [] : initialMappings));
     const [safeSettings, setSafeSettings] = useState(initialSafeSettings);
     const [selectedConfig, setSelectedConfig] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
+
+    useEffect(() => {
+        if (!storeId) return undefined;
+        let active = true;
+        getPosCashRegisters(storeId)
+            .then((record) => {
+                if (active && record?.registers) setRegisters(registerRows(record.registers));
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+            });
+        getPosTerminalMappings(storeId)
+            .then((record) => {
+                if (active && record?.mappings) setMappings(mappingRows(record.mappings));
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) return;
+            });
+        return () => { active = false; };
+    }, [storeId]);
 
 
     const [storeCurrency, setStoreCurrency] = useState(store?.currency || "USD");
