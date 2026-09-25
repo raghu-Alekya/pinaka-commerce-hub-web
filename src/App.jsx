@@ -49,6 +49,7 @@ import ViewPlanFeaturesLimits from "./pages/ViewPlanFeaturesLimits";
 import CashManagement from "./pages/CashManagement";
 import AddMerchantEmployee from "./pages/AddMerchantEmployee";
 
+
 const placeholders = [
   "Cash Management",
   "Shifts",
