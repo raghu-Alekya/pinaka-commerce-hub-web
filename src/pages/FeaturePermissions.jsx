@@ -279,6 +279,7 @@ export default function FeaturePermissions() {
       if (!isEditing) setCurrentPage(1);
 
       clearForm();
+      loadData();
     } catch (error) {
       console.error("Save permission failed:", error);
       window.alert(error?.message || "Unable to save permission.");

@@ -59,7 +59,24 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const openMerchantCreation = path => navigate(path + '?merchantId=' + encodeURIComponent(merchantId), {
     state: { merchantId, merchant },
   });
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const paramTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(paramTab || 'overview');
+
+  useEffect(() => {
+    if (paramTab && paramTab !== activeTab) {
+      setActiveTab(paramTab);
+    }
+  }, [paramTab]);
+
+  function changeTab(id) {
+    setActiveTab(id);
+    setSearchParams(previous => {
+      const next = new URLSearchParams(previous);
+      next.set('tab', id);
+      return next;
+    }, { replace: true });
+  }
   const tabs = [['overview', 'Overview'], ['subscription', 'Subscription & Usage'], ['stores', 'Stores'], ['employees', 'Employees'], ['devices', 'Devices'], ['vendors', 'Vendors'], ['tenders', 'Tenders'], ['roles', 'Roles & Permissions'], ['payments', 'Payment History']];
   function tabKeyDown(event, index) {
     let next;
@@ -68,7 +85,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
     else if (event.key === 'Home') next = 0;
     else if (event.key === 'End') next = tabs.length - 1;
     else return;
-    event.preventDefault(); setActiveTab(tabs[next][0]);
+    event.preventDefault(); changeTab(tabs[next][0]);
     event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[next]?.focus();
   }
   const draft = merchant?._onboarding;
@@ -159,7 +176,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       <div className="merchant-view-tabs" role="tablist" aria-orientation="vertical" aria-label="Merchant details">
         {tabs.map(([id, label], index) => <button key={id} type="button" role="tab" id={'merchant-tab-' + id}
           aria-selected={activeTab === id} aria-controls={'merchant-panel-' + id} tabIndex={activeTab === id ? 0 : -1}
-          onClick={() => setActiveTab(id)} onKeyDown={event => tabKeyDown(event, index)}>{label}</button>)}
+          onClick={() => changeTab(id)} onKeyDown={event => tabKeyDown(event, index)}>{label}</button>)}
       </div>
       <div role="tabpanel" id="merchant-panel-overview" aria-labelledby="merchant-tab-overview" hidden={activeTab !== 'overview'} tabIndex={0}>
         <ViewSection title="Business Details"><ViewFields items={[
@@ -343,7 +360,7 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
     setSearchParams(previous => { const next = new URLSearchParams(previous); next.set('view', String(merchant.id)); return next; });
   }
   function closeView() {
-    setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete('view'); return next; });
+    setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete('view'); next.delete('tab'); return next; });
   }
   function openEdit(merchant) {
     try { nav('/merchants/' + encodeURIComponent(merchant.id) + '/edit', { state: { merchant } }); }
@@ -526,7 +543,7 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
   const locations = [...new Set(merchants.map(m => `${m.country || ''} ${m.state || ''}`.trim()).filter(Boolean))];
 
   if (viewedId) return <MerchantReadOnly masterTenders={masterTenders} tenderAssignments={tenderAssignments} onSaveTenderAssignments={onSaveTenderAssignments} tendersLoading={tendersLoading} tendersError={tendersError} masterVendors={masterVendors} vendorAssignments={vendorAssignments} onSaveVendorAssignments={onSaveVendorAssignments} vendorsLoading={vendorsLoading} vendorsError={vendorsError} key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
-    merchant={merchants.find(item => String(item.id) === viewedId)} onBack={closeView}
+    merchant={merchants.find(item => String(item.id) === viewedId || String(item.merchantId) === viewedId || String(item.merchantCode) === viewedId)} onBack={closeView}
     />;
 
   return (

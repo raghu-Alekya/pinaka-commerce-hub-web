@@ -1,6 +1,15 @@
+/* =========================================================
+   STORE CONFIGURATION PAGE
+   ========================================================= */
+
 .store-workspace-page {
   padding: 24px 26px 32px;
 }
+
+
+/* =========================================================
+   STORE HEADER
+   ========================================================= */
 
 .store-workspace-header {
   display: flex;
@@ -22,48 +31,174 @@
   font-size: 13px;
 }
 
+
+/* =========================================================
+   STORE WORKSPACE
+   ========================================================= */
+
 .store-workspace {
   display: grid;
-  grid-template-columns: 230px minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 16px;
   min-height: 520px;
 }
+
+
+/* =========================================================
+   GROUPED STORE SIDEBAR
+   ========================================================= */
 
 .store-subnav {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px;
+  gap: 4px;
+
+  padding: 10px;
+
   border: 1px solid #e4e8f0;
-  border-radius: 12px;
+  border-radius: 10px;
+
   background: #fff;
+
+  min-width: 0;
 }
 
-.store-subnav-item {
+
+/* =========================================================
+   SIDEBAR GROUP
+   ========================================================= */
+
+.store-subnav-group {
+  width: 100%;
+  margin: 0;
+}
+
+
+/* =========================================================
+   GROUP HEADER
+   ========================================================= */
+
+.store-subnav-group-header {
+  width: 100%;
+  min-height: 36px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 11px 12px;
-  border-radius: 8px;
-  color: #4b5670;
-  font-size: 13px;
-  font-weight: 600;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #30384a;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
-.store-subnav-item i {
-  color: #6d7690;
+.store-subnav-group-header:hover {
+  background: #f7f7fb;
+  color: #5143bc;
 }
 
-.store-subnav-item.active,
-.store-subnav-item:hover {
+.store-subnav-group-header.open {
   background: #f4f3ff;
   color: #5143bc;
 }
 
-.store-subnav-item.active i,
-.store-subnav-item:hover i {
+.store-subnav-group-header i {
+  flex: 0 0 auto;
+
+  color: #7c8799;
+
+  font-size: 13px;
+  line-height: 2;
+}
+
+.store-subnav-group-header.open i {
   color: #5143bc;
 }
+
+
+/* =========================================================
+   GROUP ITEMS
+   ========================================================= */
+
+.store-subnav-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px 0 5px;
+}
+
+
+/* =========================================================
+   INDIVIDUAL SIDEBAR ITEM
+   ========================================================= */
+
+.store-subnav-group-items .store-subnav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  margin: 0;
+  padding: 7px 8px 7px 18px;
+  border-radius: 6px;
+  color: #5d6880;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.store-subnav-group-items .store-subnav-item i {
+  width: 15px;
+  min-width: 15px;
+  color: #7c8799;
+  font-size: 13px;
+  text-align: center;
+}
+
+
+/* =========================================================
+   SIDEBAR ITEM HOVER
+   ========================================================= */
+
+.store-subnav-group-items .store-subnav-item:hover {
+  background: #f7f7fb;
+  color: #5143bc;
+}
+
+.store-subnav-group-items .store-subnav-item:hover i {
+  color: #5143bc;
+}
+
+
+/* =========================================================
+   ACTIVE SIDEBAR ITEM
+   ========================================================= */
+
+.store-subnav-group-items .store-subnav-item.active {
+  background: #5143bc;
+  color: #f4f3ff;
+  font-weight: 500;
+}
+
+.store-subnav-group-items .store-subnav-item.active i {
+  color: #f4f3ff;
+}
+
+
+/* =========================================================
+   MAIN WORKSPACE
+   ========================================================= */
 
 .store-workspace-main,
 .store-workspace-card {
@@ -71,6 +206,11 @@
   border-radius: 12px;
   background: #fff;
 }
+
+
+/* =========================================================
+   STORE PANEL
+   ========================================================= */
 
 .store-panel {
   padding: 24px;
@@ -88,6 +228,11 @@
   font-size: 13px;
 }
 
+
+/* =========================================================
+   STORE PANEL HEADING
+   ========================================================= */
+
 .store-panel-heading {
   display: flex;
   justify-content: space-between;
@@ -95,13 +240,21 @@
   margin-bottom: 22px;
 }
 
+
+/* =========================================================
+   CONNECTION STATUS
+   ========================================================= */
+
 .connection-pill {
   height: 28px;
   padding: 0 10px;
+
   display: inline-flex;
   align-items: center;
+
   border-radius: 999px;
-  font-size: 11px;
+
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -114,6 +267,11 @@
   background: #f1f2f5;
   color: #737d8d;
 }
+
+
+/* =========================================================
+   STORE FORM FIELDS
+   ========================================================= */
 
 .store-field {
   display: flex;
@@ -128,9 +286,12 @@
 .store-field input,
 .store-field textarea {
   width: 100%;
+
   border: 1px solid #d9e1f0;
   border-radius: 8px;
+
   padding: 12px 14px;
+
   font: inherit;
   color: #17233e;
 }
@@ -140,10 +301,20 @@
   min-height: 120px;
 }
 
+
+/* =========================================================
+   TOKEN INPUT
+   ========================================================= */
+
 .token-input {
   display: grid;
   gap: 10px;
 }
+
+
+/* =========================================================
+   TOKEN TOGGLE
+   ========================================================= */
 
 .token-toggle-btn {
   width: 100%;
@@ -152,6 +323,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
   gap: 9px;
 
   border: 1px solid #5143bc;
@@ -164,6 +336,7 @@
   font-weight: 700;
 
   cursor: pointer;
+
   transition: all 0.2s ease;
 }
 
@@ -183,26 +356,45 @@
   outline-offset: 2px;
 }
 
+
+/* =========================================================
+   FORM ACTIONS
+   ========================================================= */
+
 .store-form-actions {
   display: flex;
   justify-content: flex-end;
+
   gap: 10px;
+
   margin-top: 8px;
 }
 
+
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
+
 .store-config-btn {
   min-height: 35px;
+
   padding: 0 14px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   gap: 6px;
+
   border: 1px solid #5143bc;
   border-radius: 6px;
+
   background: #5143bc;
   color: #fff;
+
   font-size: 11px;
   font-weight: 600;
+
   cursor: pointer;
 }
 
@@ -216,16 +408,29 @@
   cursor: not-allowed;
 }
 
+
+/* =========================================================
+   STORE ITEM ACTIONS
+   ========================================================= */
+
 .store-item-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+
+/* =========================================================
+   STORE MESSAGE
+   ========================================================= */
+
 .store-message {
   margin-bottom: 16px;
+
   padding: 12px 14px;
+
   border-radius: 8px;
+
   font-size: 13px;
   font-weight: 600;
 }
@@ -240,16 +445,26 @@
   color: #5143bc;
 }
 
+
+/* =========================================================
+   STORE OVERVIEW
+   ========================================================= */
+
 .store-overview-grid {
   display: grid;
+
   grid-template-columns: repeat(2, minmax(0, 1fr));
+
   gap: 16px;
 }
 
 .store-overview-grid span {
   display: block;
+
   margin-bottom: 4px;
+
   color: #7c8799;
+
   font-size: 12px;
 }
 
@@ -258,9 +473,19 @@
   font-size: 14px;
 }
 
+
+/* =========================================================
+   STORE TABLE
+   ========================================================= */
+
 .stores-table .store-config-btn {
   white-space: nowrap;
 }
+
+
+/* =========================================================
+   RESPONSIVE STORE WORKSPACE
+   ========================================================= */
 
 @media (max-width: 900px) {
   .store-workspace {
@@ -276,19 +501,31 @@
     justify-content: flex-start;
   }
 }
-/* Store configuration back navigation */
+
+
+/* =========================================================
+   STORE CONFIGURATION BACK NAVIGATION
+   ========================================================= */
+
 .store-workspace-page .breadcrumb-area {
   display: flex;
   align-items: center;
+
   gap: 10px;
+
   margin-bottom: 18px;
 }
 
-/* Clean back navigation */
+
+/* =========================================================
+   CLEAN BACK NAVIGATION
+   ========================================================= */
+
 .store-workspace-page .breadcrumb-area .link-button,
 .store-workspace-page .store-workspace-main .link-button {
   display: inline-flex;
   align-items: center;
+
   gap: 7px;
 
   padding: 0;
@@ -302,6 +539,7 @@
   font-weight: 600;
 
   cursor: pointer;
+
   text-decoration: none;
 
   transition: color 0.2s ease;
@@ -319,10 +557,17 @@
   line-height: 1;
 }
 
+
+/* =========================================================
+   BREADCRUMB
+   ========================================================= */
+
 .store-workspace-page .breadcrumb-area {
   display: flex;
   align-items: center;
+
   gap: 12px;
+
   margin-bottom: 18px;
 }
 
@@ -336,62 +581,530 @@
   border-color: #5143bc;
   color: #4638ad;
 }
-.fast-keys-panel { padding: 24px; min-width: 0; }
-.fast-keys-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:22px; }
-.fast-keys-heading h2 { margin:0 0 6px; font-size:26px; color:#17233e; }
-.fast-keys-heading p { margin:0; color:#7c8799; font-size:13px; }
-.fast-key-tabs { display:flex; gap:28px; border-bottom:1px solid #e5e8f0; margin-bottom:20px; }
-.fast-key-tabs button { border:0; background:transparent; padding:12px 2px; color:#7c8799; font-weight:700; cursor:pointer; border-bottom:2px solid transparent; }
-.fast-key-tabs button.active { color:#5143bc; border-bottom-color:#5143bc; }
-.fast-key-toolbar { display:flex; gap:12px; margin-bottom:18px; }
-.fast-key-toolbar input { flex:1; min-width:0; border:1px solid #d9e1f0; border-radius:8px; padding:12px 14px; font:inherit; }
-.fast-key-table-wrap { overflow-x:auto; border:1px solid #e4e8f0; border-radius:10px; }
-.fast-key-table { width:100%; min-width:920px; border-collapse:collapse; font-size:12px; color:#4b5670; }
-.fast-key-table th { background:#f5f7fb; color:#53617b; text-align:left; padding:13px 12px; font-weight:700; border-bottom:1px solid #e4e8f0; }
-.fast-key-table td { padding:14px 12px; border-bottom:1px solid #edf0f5; vertical-align:top; }
-.fast-key-table tr:last-child td { border-bottom:0; }
-.fast-key-table strong { color:#1475cf; font-size:14px; }
-.fast-key-image { width:48px; height:48px; display:grid; place-items:center; background:#f5f6f8; border-radius:7px; font-size:27px; }
-.fast-key-products { display:flex; flex-direction:column; gap:4px; max-width:320px; }
-.fast-key-products b { color:#5143bc; }
-.fast-key-status { display:inline-flex; padding:8px 12px; border-radius:8px; background:#e1f5e8; color:#269553; font-weight:700; }
-.fast-key-actions { display:flex; gap:8px; }
-.fast-key-actions button { width:38px; height:36px; border:1px solid #5143bc; border-radius:7px; background:#fff; color:#5143bc; cursor:pointer; }
-.fast-key-actions button.danger { border-color:#ef4444; color:#ef4444; }
-.fast-key-empty { padding:30px; text-align:center; color:#7c8799; }
-.fast-key-footer { display:flex; justify-content:space-between; padding-top:18px; color:#7c8799; font-size:12px; }
-.fast-key-modal-backdrop { position:fixed; inset:0; background:rgba(17,24,39,.38); display:grid; place-items:center; padding:20px; z-index:20; }
-.fast-key-modal { width:min(560px,100%); max-height:90vh; overflow:auto; background:#fff; border-radius:14px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.2); }
-.fast-key-modal label { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; color:#24314a; font-size:13px; font-weight:700; }
-.fast-key-modal label span { color:#7c8799; font-weight:400; }
-.fast-key-modal input,.fast-key-modal textarea { width:100%; box-sizing:border-box; border:1px solid #d9e1f0; border-radius:8px; padding:12px 14px; font:inherit; resize:vertical; }
-.modal-close { border:0; background:transparent; font-size:28px; color:#7c8799; cursor:pointer; }
-@media (max-width:700px) { .fast-keys-panel { padding:16px; } .fast-keys-heading { flex-direction:column; } .fast-key-toolbar { flex-direction:column; } }
 
-/* Fast Keys modal - matches the Add Device popup pattern */
-.fast-key-modal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,.43); display:grid; place-items:center; padding:20px; z-index:1000; }
-.fast-key-modal { width:min(810px,100%); max-height:calc(100vh - 40px); overflow:auto; background:#fff; border-radius:16px; padding:0; box-shadow:0 24px 70px rgba(15,23,42,.22); }
-.fast-key-modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding:28px 34px 26px; border-bottom:1px solid #e7ebf2; }
-.fast-key-modal-header h2 { margin:0 0 8px; color:#27344f; font-size:28px; font-weight:700; }
-.fast-key-modal-header p { margin:0; color:#8a96aa; font-size:16px; }
-.modal-close { width:48px; height:48px; border:0; border-radius:11px; background:#f4f6fa; color:#7d899d; font-size:31px; line-height:1; cursor:pointer; }
-.fast-key-modal-body { padding:36px 34px 22px; }
-.fast-key-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:26px 26px; }
-.fast-key-form-grid label { display:flex; flex-direction:column; gap:11px; color:#52617b; font-size:16px; font-weight:700; }
-.fast-key-form-grid label em { color:#ef4444; font-style:normal; display:inline; }
-.fast-key-form-grid label span { color:#8a96aa; font-weight:400; }
-.fast-key-form-grid input,.fast-key-form-grid textarea { width:100%; box-sizing:border-box; border:1px solid #d9e1ee; border-radius:11px; padding:15px 16px; color:#52617b; font:inherit; font-weight:400; outline:none; background:#fff; }
-.fast-key-form-grid textarea { resize:vertical; min-height:112px; }
-.fast-key-form-grid input:focus,.fast-key-form-grid textarea:focus { border-color:#6955df; box-shadow:0 0 0 3px rgba(105,85,223,.10); }
-.fast-key-modal-footer { display:flex; justify-content:flex-end; gap:13px; padding:22px 34px; border-top:1px solid #e7ebf2; background:#fbfcfe; }
-.fast-key-modal-footer button { min-height:54px; padding:0 24px; border-radius:11px; font-size:16px; font-weight:700; }
-@media (max-width:700px) { .fast-key-form-grid { grid-template-columns:1fr; gap:20px; } .fast-key-modal-header,.fast-key-modal-body,.fast-key-modal-footer { padding-left:20px; padding-right:20px; } .fast-key-modal-header h2 { font-size:24px; } }
 
-/* Fast Keys create/edit popup - compact size matching Add Device */
+/* =========================================================
+   FAST KEYS
+   ========================================================= */
+
+.fast-keys-panel {
+  padding: 24px;
+  min-width: 0;
+}
+
+.fast-keys-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 22px;
+}
+
+.fast-keys-heading h2 {
+  margin: 0 0 6px;
+
+  font-size: 26px;
+
+  color: #17233e;
+}
+
+.fast-keys-heading p {
+  margin: 0;
+
+  color: #7c8799;
+
+  font-size: 13px;
+}
+
+.fast-key-tabs {
+  display: flex;
+
+  gap: 28px;
+
+  border-bottom: 1px solid #e5e8f0;
+
+  margin-bottom: 20px;
+}
+
+.fast-key-tabs button {
+  border: 0;
+  background: transparent;
+
+  padding: 12px 2px;
+
+  color: #7c8799;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  border-bottom: 2px solid transparent;
+}
+
+.fast-key-tabs button.active {
+  color: #5143bc;
+  border-bottom-color: #5143bc;
+}
+
+.fast-key-toolbar {
+  display: flex;
+
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+.fast-key-toolbar input {
+  flex: 1;
+
+  min-width: 0;
+
+  border: 1px solid #d9e1f0;
+  border-radius: 8px;
+
+  padding: 12px 14px;
+
+  font: inherit;
+}
+
+.fast-key-table-wrap {
+  overflow-x: auto;
+
+  border: 1px solid #e4e8f0;
+  border-radius: 10px;
+}
+
+.fast-key-table {
+  width: 100%;
+
+  min-width: 920px;
+
+  border-collapse: collapse;
+
+  font-size: 12px;
+
+  color: #4b5670;
+}
+
+.fast-key-table th {
+  background: #f5f7fb;
+
+  color: #53617b;
+
+  text-align: left;
+
+  padding: 13px 12px;
+
+  font-weight: 700;
+
+  border-bottom: 1px solid #e4e8f0;
+}
+
+.fast-key-table td {
+  padding: 14px 12px;
+
+  border-bottom: 1px solid #edf0f5;
+
+  vertical-align: top;
+}
+
+.fast-key-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.fast-key-table strong {
+  color: #1475cf;
+  font-size: 14px;
+}
+
+.fast-key-image {
+  width: 48px;
+  height: 48px;
+
+  display: grid;
+  place-items: center;
+
+  background: #f5f6f8;
+
+  border-radius: 7px;
+
+  font-size: 27px;
+}
+
+.fast-key-products {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  max-width: 320px;
+}
+
+.fast-key-products b {
+  color: #5143bc;
+}
+
+.fast-key-status {
+  display: inline-flex;
+
+  padding: 8px 12px;
+
+  border-radius: 8px;
+
+  background: #e1f5e8;
+
+  color: #269553;
+
+  font-weight: 700;
+}
+
+.fast-key-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fast-key-actions button {
+  width: 38px;
+  height: 36px;
+
+  border: 1px solid #5143bc;
+  border-radius: 7px;
+
+  background: #fff;
+
+  color: #5143bc;
+
+  cursor: pointer;
+}
+
+.fast-key-actions button.danger {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.fast-key-empty {
+  padding: 30px;
+
+  text-align: center;
+
+  color: #7c8799;
+}
+
+.fast-key-footer {
+  display: flex;
+  justify-content: space-between;
+
+  padding-top: 18px;
+
+  color: #7c8799;
+
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   FAST KEYS MODAL
+   ========================================================= */
+
+.fast-key-modal-backdrop {
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(17, 24, 39, 0.38);
+
+  display: grid;
+  place-items: center;
+
+  padding: 20px;
+
+  z-index: 20;
+}
+
+.fast-key-modal {
+  width: min(560px, 100%);
+
+  max-height: 90vh;
+
+  overflow: auto;
+
+  background: #fff;
+
+  border-radius: 14px;
+
+  padding: 24px;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.fast-key-modal label {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  margin-bottom: 16px;
+
+  color: #24314a;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fast-key-modal label span {
+  color: #7c8799;
+  font-weight: 400;
+}
+
+.fast-key-modal input,
+.fast-key-modal textarea {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d9e1f0;
+  border-radius: 8px;
+
+  padding: 12px 14px;
+
+  font: inherit;
+
+  resize: vertical;
+}
+
+.modal-close {
+  border: 0;
+
+  background: transparent;
+
+  font-size: 28px;
+
+  color: #7c8799;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   FAST KEYS MODAL - ADD DEVICE STYLE
+   ========================================================= */
+
+.fast-key-modal-backdrop {
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(15, 23, 42, 0.43);
+
+  display: grid;
+  place-items: center;
+
+  padding: 20px;
+
+  z-index: 1000;
+}
+
+.fast-key-modal {
+  width: min(810px, 100%);
+
+  max-height: calc(100vh - 40px);
+
+  overflow: auto;
+
+  background: #fff;
+
+  border-radius: 16px;
+
+  padding: 0;
+
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.fast-key-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 28px 34px 26px;
+
+  border-bottom: 1px solid #e7ebf2;
+}
+
+.fast-key-modal-header h2 {
+  margin: 0 0 8px;
+
+  color: #27344f;
+
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.fast-key-modal-header p {
+  margin: 0;
+
+  color: #8a96aa;
+
+  font-size: 16px;
+}
+
+.modal-close {
+  width: 48px;
+  height: 48px;
+
+  border: 0;
+
+  border-radius: 11px;
+
+  background: #f4f6fa;
+
+  color: #7d899d;
+
+  font-size: 31px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.fast-key-modal-body {
+  padding: 36px 34px 22px;
+}
+
+.fast-key-form-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 26px 26px;
+}
+
+.fast-key-form-grid label {
+  display: flex;
+  flex-direction: column;
+
+  gap: 11px;
+
+  color: #52617b;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.fast-key-form-grid label em {
+  color: #ef4444;
+
+  font-style: normal;
+
+  display: inline;
+}
+
+.fast-key-form-grid label span {
+  color: #8a96aa;
+
+  font-weight: 400;
+}
+
+.fast-key-form-grid input,
+.fast-key-form-grid textarea {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d9e1ee;
+
+  border-radius: 11px;
+
+  padding: 15px 16px;
+
+  color: #52617b;
+
+  font: inherit;
+
+  font-weight: 400;
+
+  outline: none;
+
+  background: #fff;
+}
+
+.fast-key-form-grid textarea {
+  resize: vertical;
+
+  min-height: 112px;
+}
+
+.fast-key-form-grid input:focus,
+.fast-key-form-grid textarea:focus {
+  border-color: #6955df;
+
+  box-shadow: 0 0 0 3px rgba(105, 85, 223, 0.1);
+}
+
+.fast-key-modal-footer {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 13px;
+
+  padding: 22px 34px;
+
+  border-top: 1px solid #e7ebf2;
+
+  background: #fbfcfe;
+}
+
+.fast-key-modal-footer button {
+  min-height: 54px;
+
+  padding: 0 24px;
+
+  border-radius: 11px;
+
+  font-size: 16px;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   FAST KEYS MODAL - COMPACT
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .fast-key-form-grid {
+    grid-template-columns: 1fr;
+
+    gap: 20px;
+  }
+
+  .fast-key-modal-header,
+  .fast-key-modal-body,
+  .fast-key-modal-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .fast-key-modal-header h2 {
+    font-size: 24px;
+  }
+}
+
+
+/* =========================================================
+   FAST KEYS CREATE / EDIT POPUP
+   ========================================================= */
+
 .fast-key-modal {
   width: min(750px, calc(100vw - 40px));
+
   max-height: 505px;
+
   overflow: hidden;
+
   border-radius: 16px;
 }
 
@@ -410,6 +1123,7 @@
 
 .fast-key-modal-body {
   padding: 26px 30px 20px;
+
   overflow-y: auto;
 }
 
@@ -419,13 +1133,16 @@
 
 .fast-key-form-grid label {
   gap: 8px;
+
   font-size: 14px;
 }
 
 .fast-key-form-grid input,
 .fast-key-form-grid textarea {
   padding: 12px 14px;
+
   border-radius: 9px;
+
   font-size: 14px;
 }
 
@@ -435,25 +1152,32 @@
 
 .fast-key-form-grid textarea {
   height: 92px;
+
   min-height: 92px;
+
   resize: none;
 }
 
 .fast-key-modal-footer {
   padding: 16px 30px;
+
   gap: 12px;
 }
 
 .fast-key-modal-footer button {
   min-height: 48px;
+
   padding: 0 20px;
+
   border-radius: 10px;
+
   font-size: 15px;
 }
 
 @media (max-width: 700px) {
   .fast-key-modal {
     width: calc(100vw - 28px);
+
     max-height: calc(100vh - 28px);
   }
 
@@ -465,62 +1189,767 @@
   }
 }
 
-/* Final smaller Fast Keys popup and delete confirmation */
-.fast-key-modal { width: min(650px, calc(100vw - 32px)); max-height: 470px; }
-.fast-key-modal-header { padding: 18px 24px 16px; }
-.fast-key-modal-header h2 { font-size: 24px; margin-bottom: 4px; }
-.fast-key-modal-header p { font-size: 14px; }
-.modal-close { width: 42px; height: 42px; font-size: 28px; }
-.fast-key-modal-body { padding: 20px 24px 16px; }
-.fast-key-form-grid { gap: 16px 20px; }
-.fast-key-form-grid label { gap: 6px; font-size: 13px; }
-.fast-key-form-grid input, .fast-key-form-grid textarea { padding: 10px 12px; font-size: 13px; border-radius: 8px; }
-.fast-key-form-grid input { height: 40px; }
-.fast-key-form-grid textarea { height: 78px; min-height: 78px; resize: none; }
-.fast-key-modal-footer { padding: 12px 24px; gap: 10px; }
-.fast-key-modal-footer button { min-height: 42px; padding: 0 18px; font-size: 14px; }
-.fast-key-delete-modal { width: min(380px, calc(100vw - 32px)); background: #fff; border-radius: 14px; padding: 26px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
-.delete-icon { width: 48px; height: 48px; margin: 0 auto 12px; display: grid; place-items: center; border-radius: 50%; background: #fff1f2; color: #dc2626; font-size: 22px; }
-.fast-key-delete-modal h2 { margin: 0 0 8px; color: #27344f; font-size: 22px; }
-.fast-key-delete-modal p { margin: 0; color: #7c8799; font-size: 14px; line-height: 1.5; }
-.delete-actions { display: flex; justify-content: center; gap: 10px; margin-top: 22px; }
-.delete-actions button { min-height: 42px; padding: 0 20px; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; }
-.delete-confirm-btn { border: 1px solid #dc2626; background: #dc2626; color: #fff; }
-/* Image upload field */
+
+/* =========================================================
+   FINAL SMALLER FAST KEYS POPUP
+   ========================================================= */
+
+.fast-key-modal {
+  width: min(650px, calc(100vw - 32px));
+
+  max-height: 470px;
+}
+
+.fast-key-modal-header {
+  padding: 18px 24px 16px;
+}
+
+.fast-key-modal-header h2 {
+  font-size: 24px;
+
+  margin-bottom: 4px;
+}
+
+.fast-key-modal-header p {
+  font-size: 14px;
+}
+
+.modal-close {
+  width: 42px;
+  height: 42px;
+
+  font-size: 28px;
+}
+
+.fast-key-modal-body {
+  padding: 20px 24px 16px;
+}
+
+.fast-key-form-grid {
+  gap: 16px 20px;
+}
+
+.fast-key-form-grid label {
+  gap: 6px;
+
+  font-size: 13px;
+}
+
+.fast-key-form-grid input,
+.fast-key-form-grid textarea {
+  padding: 10px 12px;
+
+  font-size: 13px;
+
+  border-radius: 8px;
+}
+
+.fast-key-form-grid input {
+  height: 40px;
+}
+
+.fast-key-form-grid textarea {
+  height: 78px;
+
+  min-height: 78px;
+
+  resize: none;
+}
+
+.fast-key-modal-footer {
+  padding: 12px 24px;
+
+  gap: 10px;
+}
+
+.fast-key-modal-footer button {
+  min-height: 42px;
+
+  padding: 0 18px;
+
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   FAST KEYS DELETE MODAL
+   ========================================================= */
+
+.fast-key-delete-modal {
+  width: min(380px, calc(100vw - 32px));
+
+  background: #fff;
+
+  border-radius: 14px;
+
+  padding: 26px;
+
+  text-align: center;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.delete-icon {
+  width: 48px;
+  height: 48px;
+
+  margin: 0 auto 12px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #fff1f2;
+
+  color: #dc2626;
+
+  font-size: 22px;
+}
+
+.fast-key-delete-modal h2 {
+  margin: 0 0 8px;
+
+  color: #27344f;
+
+  font-size: 22px;
+}
+
+.fast-key-delete-modal p {
+  margin: 0;
+
+  color: #7c8799;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+.delete-actions {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  margin-top: 22px;
+}
+
+.delete-actions button {
+  min-height: 42px;
+
+  padding: 0 20px;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.delete-confirm-btn {
+  border: 1px solid #dc2626;
+
+  background: #dc2626;
+
+  color: #fff;
+}
+
+
+/* =========================================================
+   FAST KEYS IMAGE UPLOAD
+   ========================================================= */
 
 .fast-key-image-upload {
   display: flex;
+
   flex-direction: column;
+
   gap: 12px;
 }
 
 .fast-key-image-upload input[type="file"] {
   width: 100%;
+
   padding: 12px;
+
   border: 1px solid #d9dff0;
+
   border-radius: 10px;
+
   background: #fff;
+
   color: #52617d;
+
   font-size: 14px;
+
   cursor: pointer;
 }
 
-/* Image preview */
+
+/* =========================================================
+   FAST KEYS IMAGE PREVIEW
+   ========================================================= */
 
 .fast-key-image-preview {
   width: 80px;
   height: 80px;
+
   border: 1px solid #d9dff0;
+
   border-radius: 10px;
+
   overflow: hidden;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   background: #f8f9fc;
 }
 
 .fast-key-image-preview img {
   width: 100%;
   height: 100%;
+
   object-fit: cover;
+}
+
+
+/* =========================================================
+   RESPONSIVE - GROUPED SIDEBAR
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .store-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .store-subnav {
+    width: 100%;
+  }
+
+  .store-subnav-group-header {
+    min-height: 38px;
+  }
+
+  .store-subnav-group-items .store-subnav-item {
+    min-height: 36px;
+
+    padding-left: 18px;
+  }
+
+  .store-overview-grid,
+  .store-item {
+    grid-template-columns: 1fr;
+  }
+
+  .store-item-actions {
+    justify-content: flex-start;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .store-workspace-page {
+    padding: 16px;
+  }
+
+  .store-workspace-header {
+    flex-direction: column;
+  }
+
+  .store-workspace-header h1 {
+    font-size: 20px;
+  }
+
+  .store-panel {
+    padding: 18px;
+  }
+
+  .store-panel-heading {
+    flex-direction: column;
+  }
+
+  .store-form-actions {
+    flex-direction: column;
+  }
+
+  .store-form-actions button {
+    width: 100%;
+  }
+
+  .store-subnav {
+    padding: 8px;
+  }
+
+  .store-subnav-group-header {
+    font-size: 12px;
+  }
+
+  .store-subnav-group-items .store-subnav-item {
+    font-size: 12px;
+  }
+}
+/* =========================================================
+   STORE OVERVIEW & SETUP
+   ========================================================= */
+
+.store-section-block {
+  padding: 0 0 26px;
+}
+
+.store-section-block + .store-section-block {
+  padding-top: 26px;
+  border-top: 1px solid #e4e8f0;
+}
+
+
+/* =========================================================
+   SECTION TITLE
+   ========================================================= */
+
+.store-section-title {
+  margin-bottom: 18px;
+}
+
+.store-section-title h3 {
+  margin: 0 0 5px;
+
+  color: #17233e;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  line-height: 1.4;
+}
+
+.store-section-title p {
+  margin: 0;
+
+  color: #7c8799;
+
+  font-size: 12px;
+  font-weight: 400;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   STORE OVERVIEW GRID
+   ========================================================= */
+
+.store-overview-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+
+/* =========================================================
+   STORE OVERVIEW ITEM
+   ========================================================= */
+
+.store-overview-grid > div {
+  min-height: 70px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 13px 15px;
+  border: 1px solid #e4e8f0;
+  border-radius: 8px;
+  background: #fff;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.store-overview-grid > div:hover {
+  border-color: #d7d1f7;
+
+  background: #faf9ff;
+}
+
+
+/* =========================================================
+   OVERVIEW LABEL
+   ========================================================= */
+
+.store-overview-grid span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #7c8799;
+
+  font-size: 11px;
+  font-weight: 500;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   OVERVIEW VALUE
+   ========================================================= */
+
+.store-overview-grid strong {
+  display: block;
+
+  color: #17233e;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   WEBSITE VALUE
+   ========================================================= */
+
+.store-overview-grid > div:nth-child(5) strong {
+  color: #5143bc;
+}
+
+
+/* =========================================================
+   JWT STATUS
+   ========================================================= */
+
+.store-overview-grid > div:nth-child(6) strong {
+  display: inline-flex;
+  align-items: center;
+
+  width: fit-content;
+
+  padding: 4px 9px;
+
+  border-radius: 999px;
+
+  background: #f1f2f5;
+
+  color: #737d8d;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.store-overview-grid > div:nth-child(6) strong::before {
+  content: "";
+
+  width: 6px;
+  height: 6px;
+
+  margin-right: 6px;
+
+  border-radius: 50%;
+
+  background: #9aa3b5;
+}
+
+
+/* =========================================================
+   WEBSITE CONNECTION SECTION
+   ========================================================= */
+
+.store-connection-section {
+  padding-top: 26px;
+}
+
+
+/* =========================================================
+   CONNECTION FORM
+   ========================================================= */
+
+.store-connection-section .store-field {
+  margin-bottom: 16px;
+
+  color: #24314a;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.store-connection-section .store-field input,
+.store-connection-section .store-field textarea {
+  box-sizing: border-box;
+
+  width: 100%;
+
+  border: 1px solid #d9e1f0;
+  border-radius: 7px;
+
+  background: #fff;
+
+  color: #17233e;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.store-connection-section .store-field input {
+  height: 42px;
+
+  padding: 0 12px;
+}
+
+.store-connection-section .store-field textarea {
+  min-height: 105px;
+
+  padding: 11px 12px;
+
+  resize: vertical;
+}
+
+.store-connection-section .store-field input::placeholder,
+.store-connection-section .store-field textarea::placeholder {
+  color: #a1a9b8;
+}
+
+.store-connection-section .store-field input:focus,
+.store-connection-section .store-field textarea:focus {
+  border-color: #5143bc;
+
+  box-shadow: 0 0 0 3px rgba(81, 67, 188, 0.08);
+}
+
+
+/* =========================================================
+   TOKEN INPUT
+   ========================================================= */
+
+.store-connection-section .token-input {
+  display: grid;
+
+  gap: 8px;
+}
+
+
+/* =========================================================
+   SHOW / HIDE TOKEN
+   ========================================================= */
+
+.store-connection-section .token-toggle-btn {
+  width: 100%;
+  min-height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  border: 1px solid #d7d1f7;
+  border-radius: 7px;
+
+  background: #f7f5ff;
+
+  color: #5143bc;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.store-connection-section .token-toggle-btn:hover {
+  background: #f0edff;
+
+  border-color: #5143bc;
+
+  color: #4638ad;
+}
+
+.store-connection-section .token-toggle-btn i {
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   CONNECTION MESSAGE
+   ========================================================= */
+
+.store-connection-section .store-message {
+  margin: 4px 0 16px;
+
+  padding: 10px 12px;
+
+  border-radius: 7px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.store-connection-section .store-message.success {
+  background: #eefbf3;
+
+  color: #269553;
+
+  border: 1px solid #d7f1df;
+}
+
+.store-connection-section .store-message.info {
+  background: #f4f3ff;
+
+  color: #5143bc;
+
+  border: 1px solid #e3defb;
+}
+
+
+/* =========================================================
+   CONNECTION ACTIONS
+   ========================================================= */
+
+.store-connection-section .store-form-actions {
+  display: flex;
+
+  justify-content: flex-end;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-top: 20px;
+}
+
+.store-connection-section .store-form-actions button {
+  min-height: 36px;
+
+  padding: 0 14px;
+
+  border-radius: 6px;
+
+  font-family: inherit;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.store-connection-section .store-edit-btn {
+  border: 1px solid #d7d1f7;
+
+  background: #f7f5ff;
+
+  color: #5143bc;
+
+  cursor: pointer;
+}
+
+.store-connection-section .store-edit-btn:hover:not(:disabled) {
+  background: #efedff;
+
+  border-color: #5143bc;
+}
+
+.store-connection-section .store-config-btn {
+  border: 1px solid #5143bc;
+
+  background: #5143bc;
+
+  color: #fff;
+
+  cursor: pointer;
+}
+
+.store-connection-section .store-config-btn:hover:not(:disabled) {
+  background: #4638ad;
+
+  border-color: #4638ad;
+}
+
+
+/* =========================================================
+   TOP CONNECTION STATUS
+   ========================================================= */
+
+.store-panel-heading .connection-pill {
+  flex-shrink: 0;
+
+  height: 26px;
+
+  padding: 0 10px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.store-panel-heading .connection-pill.connected {
+  background: #e1f5e8;
+
+  color: #269553;
+}
+
+.store-panel-heading .connection-pill.disconnected {
+  background: #f1f2f5;
+
+  color: #737d8d;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .store-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .store-connection-section .store-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .store-connection-section .store-form-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .store-section-block {
+    padding-bottom: 20px;
+  }
+
+  .store-section-block + .store-section-block {
+    padding-top: 20px;
+  }
+
+  .store-overview-grid {
+    gap: 10px;
+  }
+
+  .store-overview-grid > div {
+    min-height: 64px;
+
+    padding: 11px 12px;
+  }
+
+  .store-section-title h3 {
+    font-size: 15px;
+  }
 }

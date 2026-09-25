@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-
+import { deleteMerchant } from "./api/merchants";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import GuestRoute from "./auth/GuestRoute";
 import AppLayout from "./layouts/AppLayout";
@@ -8,6 +8,12 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Merchants from "./pages/Merchants";
 import MerchantStores from "./pages/MerchantStores";
+import { useParams } from "react-router-dom";
+
+function MerchantStoresRedirect() {
+  const { merchantId } = useParams();
+  return <Navigate to={`/merchants?view=${encodeURIComponent(merchantId || "")}&tab=stores`} replace />;
+}
 import Subscriptions from "./pages/Subscriptions";
 import Stores from "./pages/Stores";
 import Users from "./pages/Users";
@@ -48,7 +54,7 @@ import ViewPlanPricing from "./pages/ViewPlanPricing";
 import ViewPlanFeaturesLimits from "./pages/ViewPlanFeaturesLimits";
 import CashManagement from "./pages/CashManagement";
 import AddMerchantEmployee from "./pages/AddMerchantEmployee";
-import { deleteMerchant } from "./api/merchants";
+import { createEmployee } from "./api/employees";
 
 const placeholders = [
   "Cash Management",
@@ -123,6 +129,7 @@ export default function App() {
           element={
             <Merchants
               deleteMerchant={deleteMerchant}
+              onSaveEmployee={createEmployee}
               localMerchants={localMerchants}
               onLocalDelete={removeLocalMerchant}
             />

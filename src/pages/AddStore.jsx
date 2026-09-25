@@ -3,56 +3,23 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getMerchant, listMerchants } from "../api/merchants";
 import { createStore, getStore, updateStore } from "../api/stores";
 import { storeTypesApi } from "../api/storeTypes";
-import { allocateId } from "../api/ids";
+//import { allocateId } from "../api/ids";
 import { ApiError } from "../api/http";
 import "../styles/merchant-form.css";
 
 // Supported countries and time zones match the merchant onboarding form.
 const COUNTRY_SETTINGS = {
-  "United States": {
-    currency: "USD",
-    symbol: "$",
-    zones: [
-      "America/New_York",
-      "America/Chicago",
-      "America/Denver",
-      "America/Phoenix",
-      "America/Los_Angeles",
-      "America/Anchorage",
-      "Pacific/Honolulu",
-    ],
-  },
-  India: { currency: "INR", symbol: "₹", zones: ["Asia/Kolkata"] },
-  Canada: {
-    currency: "CAD",
-    symbol: "C$",
-    zones: [
-      "America/Toronto",
-      "America/Vancouver",
-      "America/Edmonton",
-      "America/Winnipeg",
-      "America/Halifax",
-      "America/St_Johns",
-      "America/Regina",
-      "America/Whitehorse",
-    ],
-  },
-  "United Kingdom": { currency: "GBP", symbol: "£", zones: ["Europe/London"] },
-  Australia: {
-    currency: "AUD",
-    symbol: "A$",
-    zones: [
-      "Australia/Sydney",
-      "Australia/Melbourne",
-      "Australia/Brisbane",
-      "Australia/Adelaide",
-      "Australia/Perth",
-      "Australia/Darwin",
-      "Australia/Hobart",
-      "Australia/Broken_Hill",
-      "Australia/Lord_Howe",
-    ],
-  },
+  "United States": {currency: "USD", symbol: "$", zones: ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"]},
+  USA: {currency: "USD", symbol: "$", zones: ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"]},
+  India: {currency: "INR", symbol: "₹", zones: ["Asia/Kolkata"]},
+  IND: {currency: "INR", symbol: "₹", zones: ["Asia/Kolkata"]},
+  Canada: {currency: "CAD", symbol: "C$", zones: ["America/Toronto", "America/Vancouver", "America/Edmonton", "America/Winnipeg", "America/Halifax", "America/St_Johns", "America/Regina", "America/Whitehorse"]},
+  CAN: {currency: "CAD", symbol: "C$", zones: ["America/Toronto", "America/Vancouver", "America/Edmonton", "America/Winnipeg", "America/Halifax", "America/St_Johns", "America/Regina", "America/Whitehorse"]},
+  "United Kingdom": {currency: "GBP", symbol: "£", zones: ["Europe/London"]},
+  GBR: {currency: "GBP", symbol: "£", zones: ["Europe/London"]},
+  UK: {currency: "GBP", symbol: "£", zones: ["Europe/London"]},
+  Australia: {currency: "AUD", symbol: "A$", zones: ["Australia/Sydney", "Australia/Melbourne", "Australia/Brisbane", "Australia/Adelaide", "Australia/Perth", "Australia/Darwin", "Australia/Hobart", "Australia/Broken_Hill", "Australia/Lord_Howe"]},
+  AUS: {currency: "AUD", symbol: "A$", zones: ["Australia/Sydney", "Australia/Melbourne", "Australia/Brisbane", "Australia/Adelaide", "Australia/Perth", "Australia/Darwin", "Australia/Hobart", "Australia/Broken_Hill", "Australia/Lord_Howe"]},
 };
 
 function applyCountry(store, country) {
@@ -61,11 +28,9 @@ function applyCountry(store, country) {
     ...store,
     country,
     currency: settings?.currency || "",
-    timezone: settings?.zones.includes(store.timezone)
+    timezone: settings?.zones?.includes(store.timezone)
       ? store.timezone
-      : settings?.zones.length === 1
-        ? settings.zones[0]
-        : "",
+      : settings?.zones?.length === 1 ? settings.zones[0] : "",
   };
 }
 
@@ -118,12 +83,12 @@ const featureName = (item) =>
 const actionsFrom = (items) =>
   Array.isArray(items)
     ? items
-        .map((item) =>
-          typeof item === "string"
-            ? item
-            : (item?.name ?? item?.action ?? item?.code),
-        )
-        .filter(Boolean)
+      .map((item) =>
+        typeof item === "string"
+          ? item
+          : (item?.name ?? item?.action ?? item?.code),
+      )
+      .filter(Boolean)
     : [];
 const limitFrom = (...values) => {
   const value = values.find(
@@ -333,7 +298,7 @@ export default function AddStore() {
             setStore({
               ...initialStore(
                 routeMerchantId ||
-                  merchantIdOf(saved.merchantId ?? saved.merchant),
+                merchantIdOf(saved.merchantId ?? saved.merchant),
               ),
               ...saved,
               name: saved.storeName || saved.name || "",
@@ -370,11 +335,11 @@ export default function AddStore() {
             setDevices(
               Array.isArray(saved.devices)
                 ? saved.devices.map((d) => ({
-                    ...d,
-                    name: d.name || d.deviceName || "",
-                    type: d.type || d.deviceType || "",
-                    serial: d.serial || d.identifier || "",
-                  }))
+                  ...d,
+                  name: d.name || d.deviceName || "",
+                  type: d.type || d.deviceType || "",
+                  serial: d.serial || d.identifier || "",
+                }))
                 : [],
             );
             if (Array.isArray(saved.features) && saved.features.length) {
@@ -527,7 +492,7 @@ export default function AddStore() {
       (merchantType.id
         ? String(item.id) === merchantType.id
         : String(item.name).toLowerCase() ===
-          String(merchantType.name).toLowerCase()),
+        String(merchantType.name).toLowerCase()),
   );
   const inheritedTypeName = merchantReady
     ? selectedStoreType?.name || merchantType.name
@@ -540,12 +505,12 @@ export default function AddStore() {
     : "";
   const roles = merchantReady
     ? merchantRoles
-        .map((role) =>
-          typeof role === "string"
-            ? role
-            : role.name || role.roleName || role.templateName || "",
-        )
-        .filter(Boolean)
+      .map((role) =>
+        typeof role === "string"
+          ? role
+          : role.name || role.roleName || role.templateName || "",
+      )
+      .filter(Boolean)
     : [];
 
   useEffect(() => {
@@ -656,10 +621,10 @@ export default function AddStore() {
 
   const enrolledDeviceCount = Number(
     subscription?.usedDevices ||
-      subscription?.deviceCount ||
-      subscription?.devicesUsed ||
-      existingDevices.length ||
-      0,
+    subscription?.deviceCount ||
+    subscription?.devicesUsed ||
+    existingDevices.length ||
+    0,
   );
 
   const persistedDeviceCount = useMemo(() => {
@@ -709,8 +674,14 @@ export default function AddStore() {
     }));
   };
 
-  const backToStores = () =>
-    nav(routeMerchantId ? `/merchants/${routeMerchantId}/stores` : "/stores");
+  const backToStores = () => {
+    const targetId = routeMerchantId || store?.merchantId;
+    if (targetId) {
+      nav(`/merchants?view=${encodeURIComponent(targetId)}&tab=stores`);
+    } else {
+      nav("/stores");
+    }
+  };
 
   const updateHours = (index, key, value) =>
     change(
@@ -718,9 +689,9 @@ export default function AddStore() {
       store.hours.map((item, itemIndex) =>
         itemIndex === index
           ? {
-              ...item,
-              [key]: value,
-            }
+            ...item,
+            [key]: value,
+          }
           : item,
       ),
     );
@@ -897,9 +868,9 @@ export default function AddStore() {
       items.map((item, itemIndex) =>
         itemIndex === index
           ? {
-              ...item,
-              [key]: value,
-            }
+            ...item,
+            [key]: value,
+          }
           : item,
       ),
     );
@@ -974,10 +945,9 @@ export default function AddStore() {
             {editing || routeMerchantId ? (
               <Field
                 label="Merchant"
-                value={`${currentMerchant?.name || currentMerchant?.merchantName || (merchantLoading ? "Loading merchant…" : selectedMerchantId)}${
-                  currentMerchant?.id ? ` · ${currentMerchant.id}` : ""
-                }`}
-                onChange={() => {}}
+                value={`${currentMerchant?.name || currentMerchant?.merchantName || (merchantLoading ? "Loading merchant…" : selectedMerchantId)}${currentMerchant?.id ? ` · ${currentMerchant.id}` : ""
+                  }`}
+                onChange={() => { }}
                 readOnly
               />
             ) : (
@@ -1009,7 +979,7 @@ export default function AddStore() {
               <Field
                 label="Store name"
                 value={store.name}
-                onChange={() => {}}
+                onChange={() => { }}
                 readOnly
               />
             ) : (
@@ -1027,14 +997,14 @@ export default function AddStore() {
                 inheritedTypeName ||
                 (merchantLoading ? "Loading…" : "Not configured on merchant")
               }
-              onChange={() => {}}
+              onChange={() => { }}
               readOnly
             />
 
             <Field
               label="Store ID"
               value={store.id}
-              onChange={() => {}}
+              onChange={() => { }}
               readOnly
             />
 
@@ -1042,7 +1012,7 @@ export default function AddStore() {
               <Field
                 label="Store Base URL"
                 value={store.url}
-                onChange={() => {}}
+                onChange={() => { }}
                 readOnly
               />
             ) : (
@@ -1147,7 +1117,7 @@ export default function AddStore() {
             <Field
               label="Currency (from country)"
               value={currencyDisplay}
-              onChange={() => {}}
+              onChange={() => { }}
               placeholder="Select country first"
               readOnly
             />
@@ -1576,9 +1546,9 @@ export default function AddStore() {
                         {typeof role === "string"
                           ? role
                           : role.name ||
-                            role.roleName ||
-                            role.templateName ||
-                            "Unnamed role"}
+                          role.roleName ||
+                          role.templateName ||
+                          "Unnamed role"}
                       </td>
                       <td>
                         {typeof role === "object"
@@ -1723,7 +1693,7 @@ export default function AddStore() {
               <Field
                 label="Store context"
                 value={`${store.id || "New"} · ${store.name || "New store"}`}
-                onChange={() => {}}
+                onChange={() => { }}
                 readOnly
               />
             </div>
@@ -1925,7 +1895,7 @@ export default function AddStore() {
       <header className="pch-store-header">
         <button type="button" className="pch-store-back" onClick={backToStores}>
           <i className="bi bi-arrow-left" />
-          <span>Stores</span>
+          <span>{routeMerchantId || store?.merchantId ? "Merchant Stores" : "Stores"}</span>
         </button>
 
         <span className="pch-store-breadcrumb-separator">/</span>
