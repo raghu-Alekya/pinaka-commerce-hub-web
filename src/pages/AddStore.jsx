@@ -674,8 +674,14 @@ export default function AddStore() {
     }));
   };
 
-  const backToStores = () =>
-    nav(routeMerchantId ? `/merchants/${routeMerchantId}/stores` : "/stores");
+  const backToStores = () => {
+    const targetId = routeMerchantId || store?.merchantId;
+    if (targetId) {
+      nav(`/merchants?view=${encodeURIComponent(targetId)}&tab=stores`);
+    } else {
+      nav("/stores");
+    }
+  };
 
   const updateHours = (index, key, value) =>
     change(
@@ -1889,7 +1895,7 @@ export default function AddStore() {
       <header className="pch-store-header">
         <button type="button" className="pch-store-back" onClick={backToStores}>
           <i className="bi bi-arrow-left" />
-          <span>Stores</span>
+          <span>{routeMerchantId || store?.merchantId ? "Merchant Stores" : "Stores"}</span>
         </button>
 
         <span className="pch-store-breadcrumb-separator">/</span>

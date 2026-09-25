@@ -360,7 +360,7 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
     setSearchParams(previous => { const next = new URLSearchParams(previous); next.set('view', String(merchant.id)); return next; });
   }
   function closeView() {
-    setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete('view'); return next; });
+    setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete('view'); next.delete('tab'); return next; });
   }
   function openEdit(merchant) {
     try { nav('/merchants/' + encodeURIComponent(merchant.id) + '/edit', { state: { merchant } }); }
@@ -543,7 +543,7 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
   const locations = [...new Set(merchants.map(m => `${m.country || ''} ${m.state || ''}`.trim()).filter(Boolean))];
 
   if (viewedId) return <MerchantReadOnly masterTenders={masterTenders} tenderAssignments={tenderAssignments} onSaveTenderAssignments={onSaveTenderAssignments} tendersLoading={tendersLoading} tendersError={tendersError} masterVendors={masterVendors} vendorAssignments={vendorAssignments} onSaveVendorAssignments={onSaveVendorAssignments} vendorsLoading={vendorsLoading} vendorsError={vendorsError} key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
-    merchant={merchants.find(item => String(item.id) === viewedId)} onBack={closeView}
+    merchant={merchants.find(item => String(item.id) === viewedId || String(item.merchantId) === viewedId || String(item.merchantCode) === viewedId)} onBack={closeView}
     />;
 
   return (

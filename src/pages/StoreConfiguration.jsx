@@ -406,7 +406,7 @@ export default function StoreConfiguration() {
 
   const backToStores = () => {
     if (merchantId) {
-      nav(`/merchants/${merchantId}/stores`);
+      nav(`/merchants?view=${encodeURIComponent(merchantId)}&tab=stores`);
     } else {
       nav("/stores");
     }
