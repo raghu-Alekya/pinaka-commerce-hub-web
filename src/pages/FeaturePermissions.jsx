@@ -253,7 +253,9 @@ export default function FeaturePermissions() {
     }
 
     const payload = {
+      featureId: selectedFeature.id,
       permissionKey: permissionKey.toUpperCase(),
+      key: permissionKey.toUpperCase(),
       name: permissionName,
       description: form.description.trim(),
       status: form.status.toUpperCase(),
@@ -277,14 +279,14 @@ export default function FeaturePermissions() {
                   ...item,
                   ...normalizedUpdated,
                   id: normalizedUpdated.id || item.id,
-                  key: normalizedUpdated.key || permissionKey.toUpperCase(),
-                  name: normalizedUpdated.name || permissionName,
-                  featureId: normalizedUpdated.featureId || selectedFeature.id,
-                  featureName:
-                    normalizedUpdated.featureName || selectedFeature.name || "",
-                  description:
-                    normalizedUpdated.description ?? form.description.trim(),
-                  status: normalizedUpdated.status || form.status,
+                  key: permissionKey.toUpperCase(),
+                  permissionKey: permissionKey.toUpperCase(),
+                  name: permissionName,
+                  featureId: selectedFeature.id,
+                  featureName: selectedFeature.name || "",
+                  description: form.description.trim(),
+                  status: normalizeStatus(form.status),
+                  updatedAt: new Date().toISOString(),
                 }
               : item,
           ),
@@ -304,6 +306,15 @@ export default function FeaturePermissions() {
             normalizedCreated.featureName || selectedFeature.name || "",
           description: normalizedCreated.description ?? form.description.trim(),
           status: normalizedCreated.status || form.status,
+          key: permissionKey.toUpperCase(),
+          permissionKey: permissionKey.toUpperCase(),
+          name: permissionName,
+          featureId: selectedFeature.id,
+          featureName: selectedFeature.name || "",
+          description: form.description.trim(),
+          status: normalizeStatus(form.status),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
 
         setPermissions((prev) => [
@@ -317,6 +328,7 @@ export default function FeaturePermissions() {
       }
 
       clearForm();
+      loadData();
     } catch (error) {
       console.error("Save permission failed:", error);
       window.alert(error?.message || "Unable to save permission.");
