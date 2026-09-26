@@ -877,67 +877,87 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
           {plansLoading && <p className="pch-note">Loading plans…</p>}
           {plansError && <div className="pch-error" role="alert">{plansError}</div>}
           {!plansLoading && !plansError && !packages.length && <p className="pch-note">No active plans are available.</p>}
-          {!plansLoading && !plansError && groupedPackages.map(group => (
-            <div key={group.storeType} className="pch-plan-group" style={{ marginBottom: '24px' }}>
-              <div style={{
-                padding: '8px 16px 6px 16px',
-                fontSize: '12px',
-                fontWeight: '700',
-                color: 'var(--pch-primary, #5143bc)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                borderBottom: '2px solid #e1e4eb',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '12px'
-              }}>
-                <span>{group.storeType}</span>
-                <span className="pch-pill" style={{ fontSize: '10px' }}>{group.items.length} {group.items.length === 1 ? 'plan' : 'plans'}</span>
-              </div>
-              <div className="pch-plans">
-                {group.items.map(item => (
-                  <div key={item.id || item.code || item.name} className={`pch-plan ${state.plan === item.originalIndex ? 'pch-selected' : ''}`}>
-                    {(() => {
-                      const includedFeatures = getPlanFeatureItems(item, [
-                        ...masterFeaturesState.items,
-                        ...storeTypeFeaturesState.items,
-                      ]);
-                      const configuredFeatureCount = (item.includedFeatures || item.included_features || []).length;
-                      return <>
-                    <h2>{item.name}</h2>
-                    <div className="pch-price">{formatPrice(item.price, item.currency || region.currency)}</div>
-                    <span className="pch-small pch-muted">per merchant / {item.billingCycle || 'month'}</span>
-                    <div>
-                      {item.stores ?? 'Custom'} stores<br />
-                      {item.devices ?? 'Custom'} devices<br />
-                      {item.employees ?? 'Custom'} employees
-                    </div>
-                    <details>
-                      <summary>Included features ({configuredFeatureCount})</summary>
-                      <ul>
-                        {includedFeatures.length > 0
-                          ? includedFeatures.map(feature => <li key={feature.id}>{feature.name}</li>)
-                          : <li>{masterFeaturesState.loading ? 'Loading feature names…' : 'No included features configured for this plan.'}</li>}
-                      </ul>
-                    </details>
-                    <button type="button" onClick={() => handleSelectPlan(item.originalIndex)}>
-                      {state.plan === item.originalIndex ? '✓ Selected' : `Select ${item.name}`}
-                    </button>
-                      </>;
-                    })()}
+          {!plansLoading && !plansError && packages.length > 0 && <div className="pch-plan-browser">
+            <section className="pch-plan-list" aria-label="Available plans">
+              <h4>Available plans</h4>
+              <div className="pch-plan-list-scroll">
+                {groupedPackages.map(group => <div key={group.storeType} className="pch-plan-group">
+                  <div className="pch-plan-group-heading">
+                    <span>{group.storeType}</span>
+                    <span>{group.items.length} {group.items.length === 1 ? 'plan' : 'plans'}</span>
                   </div>
-                ))}
+                  {group.items.map(item => (
+                    <button
+                      key={item.id || item.code || item.name}
+                      type="button"
+                      className={`pch-plan-option ${state.plan === item.originalIndex ? 'pch-selected' : ''}`}
+                      aria-pressed={state.plan === item.originalIndex}
+                      onClick={() => handleSelectPlan(item.originalIndex)}
+                    >
+                      <span className="pch-plan-option-mark" aria-hidden="true">{state.plan === item.originalIndex ? '●' : '○'}</span>
+                      <span className="pch-plan-option-copy">
+                        <strong>{item.name}</strong>
+                        <span className="pch-plan-option-price">{formatPrice(item.price, item.currency || region.currency)}</span>
+                        <small>per merchant / {item.billingCycle || 'month'}</small>
+                        <span className="pch-plan-option-limits">{item.stores ?? 'Custom'} stores · {item.devices ?? 'Custom'} devices · {item.employees ?? 'Custom'} employees</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>)}
               </div>
+            </section>
+
+            <div className="pch-plan-detail-column">
+            <section className="pch-plan-detail" aria-live="polite">
+              {state.plan < 0 || !packages[state.plan] ? (
+                <div className="pch-plan-empty">
+                  <span className="pch-plan-empty-icon" aria-hidden="true">◇<i>+</i></span>
+                  <strong>Select a plan to view details</strong>
+                  <span>Plan price, limits and included features will appear here.</span>
+                </div>
+              ) : packages.filter((_, index) => index === state.plan).map(item => {
+                const includedFeatures = getPlanFeatureItems(item, [
+                  ...masterFeaturesState.items,
+                  ...storeTypeFeaturesState.items,
+                ]);
+                const configuredFeatureCount = (item.includedFeatures || item.included_features || []).length;
+                return <div className="pch-plan-detail-content" key={item.id || item.code || item.name}>
+                  <div className="pch-plan-detail-heading">
+                    <div>
+                      <span className="pch-small pch-muted">Plan details</span>
+                      <h3>{item.name}</h3>
+                      <div className="pch-price">{formatPrice(item.price, item.currency || region.currency)} <small>per merchant / {item.billingCycle || 'month'}</small></div>
+                    </div>
+                    <span className="pch-plan-selected-label">Selected</span>
+                  </div>
+                  <div className="pch-plan-detail-limits">
+                    <div><strong>{item.stores ?? 'Custom'}</strong><span>stores</span></div>
+                    <div><strong>{item.devices ?? 'Custom'}</strong><span>devices</span></div>
+                    <div><strong>{item.employees ?? 'Custom'}</strong><span>employees</span></div>
+                  </div>
+                  <details className="pch-plan-features" open>
+                    <summary>Key features <span>{configuredFeatureCount}</span></summary>
+                    {includedFeatures.length > 0
+                      ? <ul>{includedFeatures.map(feature => <li key={feature.id}>{feature.name}</li>)}</ul>
+                      : <p>{masterFeaturesState.loading ? 'Loading feature names…' : 'No included features configured for this plan.'}</p>}
+                  </details>
+                </div>;
+              })}
+            </section>
+            <section className="pch-plan-agreement" aria-label="Subscription agreement">
+              <h3>Subscription agreement</h3>
+              <div className="pch-grid">
+                <Select label="Billing cycle" value={state.cycle} options={['Monthly','Annual']} onChange={value => patch({ cycle: value })} />
+                <Field label="Start date" value={state.start} type="date" onChange={value => patch({ start: value })} />
+                <Field label="Renewal date" value={renewalDate(state.start, state.cycle)} readOnly />
+                <Field label="Agreement price" value={`${price} / ${state.cycle === 'Annual' ? 'year' : 'month'}`} readOnly />
+                {state.plan >= 0 && plan.stores == null && <Field label="Licensed stores" value={state.enterpriseStores} type="number" min="1" step="1" onChange={value => patch({ enterpriseStores: value })} />}
+              </div>
+              <div className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</div>
+            </section>
             </div>
-          ))}
+          </div>}
         </Panel>
-        <Panel title="Subscription agreement"><div className="pch-grid">
-          <Select label="Billing cycle" value={state.cycle} options={['Monthly','Annual']} onChange={value => patch({ cycle: value })} />
-          <Field label="Start date" value={state.start} type="date" onChange={value => patch({ start: value })} />
-          <Field label="Renewal date" value={renewalDate(state.start, state.cycle)} readOnly /><Field label="Agreement price" value={`${price} / ${state.cycle === 'Annual' ? 'year' : 'month'}`} readOnly />
-          {state.plan >= 0 && plan.stores == null && <Field label="Licensed stores" value={state.enterpriseStores} type="number" min="1" step="1" onChange={value => patch({ enterpriseStores: value })} />}
-        </div><div className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</div></Panel>
 
       </>;
       case 3: return <>
