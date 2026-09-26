@@ -4,1257 +4,968 @@ import { storeDevicesSeed } from "../data/data";
 import "../styles/store-devices.css";
 
 export default function StoreDevices({
-    embedded = false,
-    merchantId,
-    storeId,
-    store,
+  embedded = false,
+  merchantId,
+  storeId,
+  store,
 }) {
-    // =========================================================
-    // FILTERS
-    // =========================================================
+  // =========================================================
+  // FILTERS
+  // =========================================================
 
-    const [search, setSearch] = useState("");
-    const [typeFilter, setTypeFilter] = useState("");
-    const [statusFilter, setStatusFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
-    // =========================================================
-    // PAGINATION
-    // =========================================================
+  // =========================================================
+  // PAGINATION
+  // =========================================================
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-    // =========================================================
-    // FORM
-    // =========================================================
+  // =========================================================
+  // FORM
+  // =========================================================
 
-    const [showForm, setShowForm] = useState(false);
-    const [editingDevice, setEditingDevice] = useState(null);
-    const [viewingDevice, setViewingDevice] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingDevice, setEditingDevice] = useState(null);
+  const [viewingDevice, setViewingDevice] = useState(null);
 
-    const [formData, setFormData] = useState({
-        name: "",
-        deviceId: "",
-        type: "",
-        status: "Active",
-    });
+  const [formData, setFormData] = useState({
+    name: "",
+    deviceId: "",
+    serialNumber: "",
+    type: "",
+    quantity: 1,
+    status: "Active",
+  });
 
-    const [formErrors, setFormErrors] = useState({});
+  const [formErrors, setFormErrors] = useState({});
 
-    // =========================================================
-    // DEVICES
-    // =========================================================
+  // =========================================================
+  // DEVICES
+  // =========================================================
 
-    const [devices, setDevices] = useState(
-        storeDevicesSeed || []
-    );
+  const [devices, setDevices] = useState(storeDevicesSeed || []);
 
-    // =========================================================
-    // DEVICE TYPES
-    // =========================================================
+  // =========================================================
+  // DEVICE TYPES
+  // =========================================================
 
-    const deviceTypes = useMemo(() => {
-        return [
-            ...new Set(
-                devices
-                    .map((device) => device.type)
-                    .filter(Boolean)
-            ),
-        ];
-    }, [devices]);
+  const deviceTypes = useMemo(() => {
+    return [...new Set(devices.map((device) => device.type).filter(Boolean))];
+  }, [devices]);
 
-    // =========================================================
-    // FILTER DEVICES
-    // =========================================================
+  // =========================================================
+  // FILTER DEVICES
+  // =========================================================
 
-    const filteredDevices = useMemo(() => {
-        return devices.filter((device) => {
-            const searchText = `
+  const filteredDevices = useMemo(() => {
+    return devices.filter((device) => {
+      const searchText = `
                 ${device.name || ""}
                 ${device.deviceId || ""}
                 ${device.type || ""}
                 ${device.status || ""}
             `.toLowerCase();
 
-            const matchesSearch =
-                !search ||
-                searchText.includes(
-                    search.toLowerCase()
-                );
+      const matchesSearch =
+        !search || searchText.includes(search.toLowerCase());
 
-            const matchesType =
-                !typeFilter ||
-                device.type === typeFilter;
+      const matchesType = !typeFilter || device.type === typeFilter;
 
-            const matchesStatus =
-                !statusFilter ||
-                device.status === statusFilter;
+      const matchesStatus = !statusFilter || device.status === statusFilter;
 
-            return (
-                matchesSearch &&
-                matchesType &&
-                matchesStatus
-            );
-        });
-    }, [
-        devices,
-        search,
-        typeFilter,
-        statusFilter,
-    ]);
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [devices, search, typeFilter, statusFilter]);
 
-    // =========================================================
-    // PAGINATION
-    // =========================================================
+  // =========================================================
+  // PAGINATION
+  // =========================================================
 
-    const totalItems = filteredDevices.length;
+  const totalItems = filteredDevices.length;
 
-    const totalPages = Math.ceil(
-        totalItems / pageSize
-    );
+  const totalPages = Math.ceil(totalItems / pageSize);
 
-    const paginatedDevices = useMemo(() => {
-        const startIndex =
-            (currentPage - 1) * pageSize;
+  const paginatedDevices = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
 
-        const endIndex =
-            startIndex + pageSize;
+    const endIndex = startIndex + pageSize;
 
-        return filteredDevices.slice(
-            startIndex,
-            endIndex
-        );
-    }, [
-        filteredDevices,
-        currentPage,
-        pageSize,
-    ]);
+    return filteredDevices.slice(startIndex, endIndex);
+  }, [filteredDevices, currentPage, pageSize]);
 
-    // =========================================================
-    // RESET PAGE WHEN FILTERS CHANGE
-    // =========================================================
+  // =========================================================
+  // RESET PAGE WHEN FILTERS CHANGE
+  // =========================================================
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [
-        search,
-        typeFilter,
-        statusFilter,
-    ]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, typeFilter, statusFilter]);
 
-    // =========================================================
-    // KEEP PAGE VALID
-    // =========================================================
+  // =========================================================
+  // KEEP PAGE VALID
+  // =========================================================
 
-    useEffect(() => {
-        if (
-            totalPages > 0 &&
-            currentPage > totalPages
-        ) {
-            setCurrentPage(totalPages);
-        }
-    }, [
-        currentPage,
-        totalPages,
-    ]);
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
-    // =========================================================
-    // SUMMARY
-    // =========================================================
+  // =========================================================
+  // SUMMARY
+  // =========================================================
 
-    const activeCount = devices.filter(
-        (device) =>
-            device.status === "Active"
-    ).length;
+  const activeCount = devices.filter(
+    (device) => device.status === "Active",
+  ).length;
 
-    const inactiveCount = devices.filter(
-        (device) =>
-            device.status === "Inactive"
-    ).length;
+  const inactiveCount = devices.filter(
+    (device) => device.status === "Inactive",
+  ).length;
 
-    // =========================================================
-    // CLEAR FILTERS
-    // =========================================================
+  // =========================================================
+  // CLEAR FILTERS
+  // =========================================================
 
-    const clearFilters = () => {
-        setSearch("");
-        setTypeFilter("");
-        setStatusFilter("");
-        setCurrentPage(1);
+  const clearFilters = () => {
+    setSearch("");
+    setTypeFilter("");
+    setStatusFilter("");
+    setCurrentPage(1);
+  };
+
+  // =========================================================
+  // OPEN ADD FORM
+  // =========================================================
+
+  const handleAddDevice = () => {
+    setEditingDevice(null);
+
+    setFormData({
+      name: "",
+      deviceId: "",
+      serialNumber: "",
+      type: "",
+      quantity: 1,
+      status: "Active",
+    });
+
+    setFormErrors({});
+    setShowForm(true);
+  };
+
+  // =========================================================
+  // OPEN EDIT FORM
+  // =========================================================
+
+  const handleEditDevice = (device) => {
+    setEditingDevice(device);
+
+    setFormData({
+      name: device.name || "",
+      deviceId: device.deviceId || "",
+      serialNumber: device.serialNumber || "",
+      type: device.type || "",
+      quantity: Math.max(1, Number(device.quantity) || 1),
+      status: device.status || "Active",
+    });
+
+    setFormErrors({});
+    setShowForm(true);
+  };
+
+  // =========================================================
+  // CLOSE FORM
+  // =========================================================
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingDevice(null);
+    setFormErrors({});
+  };
+
+  // =========================================================
+  // FORM CHANGE
+  // =========================================================
+
+  const handleFormChange = (field, value) => {
+    setFormData((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+
+    setFormErrors((previous) => ({
+      ...previous,
+      [field]: "",
+    }));
+  };
+
+  // =========================================================
+  // VALIDATION
+  // =========================================================
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.name.trim()) {
+      errors.name = "Device name is required.";
+    }
+
+    if (!formData.type) {
+      errors.type = "Device type is required.";
+    }
+
+    if (!formData.status) {
+      errors.status = "Device status is required.";
+    }
+
+    setFormErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+
+  // =========================================================
+  // SAVE DEVICE
+  // =========================================================
+
+  const handleSaveDevice = (event) => {
+    event.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    const now = new Date();
+
+    const formattedDate = now.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    // =====================================================
+    // EDIT
+    // =====================================================
+
+    if (editingDevice) {
+      setDevices((previous) =>
+        previous.map((device) =>
+          device.id === editingDevice.id
+            ? {
+                ...device,
+                name: formData.name.trim(),
+                deviceId: formData.deviceId.trim(),
+                serialNumber: formData.serialNumber.trim(),
+                type: formData.type,
+                quantity: Math.max(1, Number(formData.quantity) || 1),
+                status: formData.status,
+                updatedAt: formattedDate,
+              }
+            : device,
+        ),
+      );
+
+      /*
+       * API WILL BE CONNECTED HERE
+       *
+       * Example:
+       *
+       * await updateStoreDevice({
+       *     merchantId,
+       *     storeId,
+       *     deviceId: editingDevice.id,
+       *     ...formData,
+       * });
+       */
+
+      handleCloseForm();
+      return;
+    }
+
+    // =====================================================
+    // ADD
+    // =====================================================
+
+    const newDevice = {
+      id: `DEV-${Date.now()}`,
+      name: formData.name.trim(),
+      deviceId: formData.deviceId.trim(),
+      serialNumber: formData.serialNumber.trim(),
+      type: formData.type,
+      quantity: Math.max(1, Number(formData.quantity) || 1),
+      status: formData.status,
+      updatedAt: formattedDate,
     };
 
-    // =========================================================
-    // OPEN ADD FORM
-    // =========================================================
+    setDevices((previous) => [newDevice, ...previous]);
 
-    const handleAddDevice = () => {
-        setEditingDevice(null);
+    /*
+     * API WILL BE CONNECTED HERE
+     *
+     * Example:
+     *
+     * await createStoreDevice({
+     *     merchantId,
+     *     storeId,
+     *     ...formData,
+     * });
+     */
 
-        setFormData({
-            name: "",
-            deviceId: "",
-            type: "",
-            status: "Active",
-        });
+    handleCloseForm();
+  };
 
-        setFormErrors({});
-        setShowForm(true);
-    };
+  // =========================================================
+  // RENDER
+  // =========================================================
 
-    // =========================================================
-    // OPEN EDIT FORM
-    // =========================================================
-
-    const handleEditDevice = (device) => {
-        setEditingDevice(device);
-
-        setFormData({
-            name: device.name || "",
-            deviceId: device.deviceId || "",
-            type: device.type || "",
-            status: device.status || "Active",
-        });
-
-        setFormErrors({});
-        setShowForm(true);
-    };
-
-    // =========================================================
-    // CLOSE FORM
-    // =========================================================
-
-    const handleCloseForm = () => {
-        setShowForm(false);
-        setEditingDevice(null);
-        setFormErrors({});
-    };
-
-    // =========================================================
-    // FORM CHANGE
-    // =========================================================
-
-    const handleFormChange = (field, value) => {
-        setFormData((previous) => ({
-            ...previous,
-            [field]: value,
-        }));
-
-        setFormErrors((previous) => ({
-            ...previous,
-            [field]: "",
-        }));
-    };
-
-    // =========================================================
-    // VALIDATION
-    // =========================================================
-
-    const validateForm = () => {
-        const errors = {};
-
-        if (!formData.name.trim()) {
-            errors.name = "Device name is required.";
-        }
-
-        if (!formData.deviceId.trim()) {
-            errors.deviceId =
-                "Device ID is required.";
-        }
-
-        if (!formData.type) {
-            errors.type =
-                "Device type is required.";
-        }
-
-        if (!formData.status) {
-            errors.status =
-                "Device status is required.";
-        }
-
-        // Prevent duplicate Device ID while adding
-        if (!editingDevice) {
-            const duplicate = devices.some(
-                (device) =>
-                    device.deviceId
-                        ?.toLowerCase() ===
-                    formData.deviceId
-                        .trim()
-                        .toLowerCase()
-            );
-
-            if (duplicate) {
-                errors.deviceId =
-                    "Device ID already exists.";
-            }
-        }
-
-        // Prevent duplicate Device ID while editing
-        if (editingDevice) {
-            const duplicate = devices.some(
-                (device) =>
-                    device.id !== editingDevice.id &&
-                    device.deviceId
-                        ?.toLowerCase() ===
-                    formData.deviceId
-                        .trim()
-                        .toLowerCase()
-            );
-
-            if (duplicate) {
-                errors.deviceId =
-                    "Device ID already exists.";
-            }
-        }
-
-        setFormErrors(errors);
-
-        return Object.keys(errors).length === 0;
-    };
-
-    // =========================================================
-    // SAVE DEVICE
-    // =========================================================
-
-    const handleSaveDevice = (event) => {
-        event.preventDefault();
-
-        if (!validateForm()) {
-            return;
-        }
-
-        const now = new Date();
-
-        const formattedDate =
-            now.toLocaleDateString(
-                "en-US",
-                {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                }
-            );
-
-        // =====================================================
-        // EDIT
-        // =====================================================
-
-        if (editingDevice) {
-            setDevices((previous) =>
-                previous.map((device) =>
-                    device.id ===
-                    editingDevice.id
-                        ? {
-                            ...device,
-                            name:
-                                formData.name.trim(),
-                            deviceId:
-                                formData.deviceId.trim(),
-                            type:
-                                formData.type,
-                            status:
-                                formData.status,
-                            updatedAt:
-                                formattedDate,
-                        }
-                        : device
-                )
-            );
-
-            /*
-             * API WILL BE CONNECTED HERE
-             *
-             * Example:
-             *
-             * await updateStoreDevice({
-             *     merchantId,
-             *     storeId,
-             *     deviceId: editingDevice.id,
-             *     ...formData,
-             * });
-             */
-
-            handleCloseForm();
-            return;
-        }
-
-        // =====================================================
-        // ADD
-        // =====================================================
-
-        const newDevice = {
-            id: `DEV-${Date.now()}`,
-            name: formData.name.trim(),
-            deviceId: formData.deviceId.trim(),
-            type: formData.type,
-            status: formData.status,
-            updatedAt: formattedDate,
-        };
-
-        setDevices((previous) => [
-            newDevice,
-            ...previous,
-        ]);
-
-        /*
-         * API WILL BE CONNECTED HERE
-         *
-         * Example:
-         *
-         * await createStoreDevice({
-         *     merchantId,
-         *     storeId,
-         *     ...formData,
-         * });
-         */
-
-        handleCloseForm();
-    };
-
-    // =========================================================
-    // RENDER
-    // =========================================================
-
-    return (
-        <div className="store-devices-page">
-
-            {/* =================================================
+  return (
+    <div className="store-devices-page">
+      {/* =================================================
                 HEADER
             ================================================= */}
 
-            <div className="store-devices-header">
+      <div className="store-devices-header">
+        <div className="store-devices-title-area">
+          <div className="store-devices-title-icon">
+            <i className="bi bi-pc-display" />
+          </div>
 
-                <div className="store-devices-title-area">
+          <div>
+            <h1>Devices</h1>
 
-                    <div className="store-devices-title-icon">
-                        <i className="bi bi-pc-display" />
-                    </div>
+            <p>Manage devices connected to this store.</p>
+          </div>
+        </div>
 
-                    <div>
+        <div className="store-devices-header-actions">
+          {store && (
+            <div className="store-devices-context">
+              <i className="bi bi-shop" />
 
-                        <h1>Devices</h1>
+              <div>
+                <span>STORE</span>
 
-                        <p>
-                            Manage devices connected to
-                            this store.
-                        </p>
+                <strong>{store.name}</strong>
 
-                    </div>
-
-                </div>
-
-                <div className="store-devices-header-actions">
-
-                    {store && (
-                        <div className="store-devices-context">
-
-                            <i className="bi bi-shop" />
-
-                            <div>
-
-                                <span>STORE</span>
-
-                                <strong>
-                                    {store.name}
-                                </strong>
-
-                                <small>
-                                    {store.id}
-                                </small>
-
-                            </div>
-
-                        </div>
-                    )}
-
-                    <button
-                        type="button"
-                        className="store-device-add-btn"
-                        onClick={handleAddDevice}
-                    >
-                        <i className="bi bi-plus-lg" />
-                        Add Device
-                    </button>
-
-                </div>
-
+                <small>{store.id}</small>
+              </div>
             </div>
+          )}
 
-            {/* =================================================
+          <button
+            type="button"
+            className="store-device-add-btn"
+            onClick={handleAddDevice}
+          >
+            <i className="bi bi-plus-lg" />
+            Add Device
+          </button>
+        </div>
+      </div>
+
+      {/* =================================================
                 SUMMARY
             ================================================= */}
 
-            <div className="store-devices-summary">
+      <div className="store-devices-summary">
+        {/* TOTAL */}
 
-                {/* TOTAL */}
+        <div className="store-device-summary-card">
+          <div className="store-device-summary-icon purple">
+            <i className="bi bi-pc-display" />
+          </div>
 
-                <div className="store-device-summary-card">
+          <div>
+            <span>Total Devices</span>
 
-                    <div className="store-device-summary-icon purple">
-                        <i className="bi bi-pc-display" />
-                    </div>
+            <strong>{devices.length}</strong>
+          </div>
+        </div>
 
-                    <div>
+        {/* ACTIVE */}
 
-                        <span>Total Devices</span>
+        <div className="store-device-summary-card">
+          <div className="store-device-summary-icon green">
+            <i className="bi bi-check-circle" />
+          </div>
 
-                        <strong>
-                            {devices.length}
-                        </strong>
+          <div>
+            <span>Active</span>
 
-                    </div>
+            <strong>{activeCount}</strong>
+          </div>
+        </div>
 
-                </div>
+        {/* INACTIVE */}
 
-                {/* ACTIVE */}
+        <div className="store-device-summary-card">
+          <div className="store-device-summary-icon orange">
+            <i className="bi bi-pause-circle" />
+          </div>
 
-                <div className="store-device-summary-card">
+          <div>
+            <span>Inactive</span>
 
-                    <div className="store-device-summary-icon green">
-                        <i className="bi bi-check-circle" />
-                    </div>
+            <strong>{inactiveCount}</strong>
+          </div>
+        </div>
+      </div>
 
-                    <div>
-
-                        <span>Active</span>
-
-                        <strong>
-                            {activeCount}
-                        </strong>
-
-                    </div>
-
-                </div>
-
-                {/* INACTIVE */}
-
-                <div className="store-device-summary-card">
-
-                    <div className="store-device-summary-icon orange">
-                        <i className="bi bi-pause-circle" />
-                    </div>
-
-                    <div>
-
-                        <span>Inactive</span>
-
-                        <strong>
-                            {inactiveCount}
-                        </strong>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            {/* =================================================
+      {/* =================================================
                 MAIN CARD
             ================================================= */}
 
-            <div className="store-devices-card">
-
-                {/* =================================================
+      <div className="store-devices-card">
+        {/* =================================================
                     TOOLBAR
                 ================================================= */}
 
-                <div className="store-devices-toolbar">
+        <div className="store-devices-toolbar">
+          {/* SEARCH */}
 
-                    {/* SEARCH */}
+          <div className="store-devices-search">
+            <i className="bi bi-search" />
 
-                    <div className="store-devices-search">
+            <input
+              type="text"
+              placeholder="Search device name or device ID..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
 
-                        <i className="bi bi-search" />
+          {/* DEVICE TYPE */}
 
-                        <input
-                            type="text"
-                            placeholder="Search device name or device ID..."
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(
-                                    e.target.value
-                                )
-                            }
-                        />
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
+            <option value="">All Device Types</option>
 
-                    </div>
+            {deviceTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
 
-                    {/* DEVICE TYPE */}
+          {/* STATUS */}
 
-                    <select
-                        value={typeFilter}
-                        onChange={(e) =>
-                            setTypeFilter(
-                                e.target.value
-                            )
-                        }
-                    >
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Status</option>
 
-                        <option value="">
-                            All Device Types
-                        </option>
+            <option value="Active">Active</option>
 
-                        {deviceTypes.map((type) => (
-                            <option
-                                key={type}
-                                value={type}
-                            >
-                                {type}
-                            </option>
-                        ))}
+            <option value="Inactive">Inactive</option>
+          </select>
 
-                    </select>
+          {/* CLEAR */}
 
-                    {/* STATUS */}
+          <button
+            type="button"
+            className="store-devices-clear-btn"
+            onClick={clearFilters}
+          >
+            <i className="bi bi-arrow-counterclockwise" />
+            Clear
+          </button>
+        </div>
 
-                    <select
-                        value={statusFilter}
-                        onChange={(e) =>
-                            setStatusFilter(
-                                e.target.value
-                            )
-                        }
-                    >
-
-                        <option value="">
-                            All Status
-                        </option>
-
-                        <option value="Active">
-                            Active
-                        </option>
-
-                        <option value="Inactive">
-                            Inactive
-                        </option>
-
-                    </select>
-
-                    {/* CLEAR */}
-
-                    <button
-                        type="button"
-                        className="store-devices-clear-btn"
-                        onClick={clearFilters}
-                    >
-                        <i className="bi bi-arrow-counterclockwise" />
-                        Clear
-                    </button>
-
-                </div>
-
-                {/* =================================================
+        {/* =================================================
                     TABLE HEADING
                 ================================================= */}
 
-                <div className="store-devices-table-heading">
+        <div className="store-devices-table-heading">
+          <div>
+            Devices
+            <span>{filteredDevices.length}</span>
+          </div>
+        </div>
 
-                    <div>
-
-                        Devices
-
-                        <span>
-                            {filteredDevices.length}
-                        </span>
-
-                    </div>
-
-                </div>
-
-                {/* =================================================
+        {/* =================================================
                     TABLE
                 ================================================= */}
 
-                <div className="store-devices-table-wrapper">
+        <div className="store-devices-table-wrapper">
+          <table className="store-devices-table">
+            <thead>
+              <tr>
+                <th>DEVICE</th>
+                <th>DEVICE ID</th>
+                <th>DEVICE TYPE</th>
+                <th>STATUS</th>
+                <th>LAST UPDATED</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
 
-                    <table className="store-devices-table">
+            <tbody>
+              {paginatedDevices.map((device) => (
+                <DeviceRow
+                  key={device.id}
+                  device={device}
+                  onView={setViewingDevice}
+                  onEdit={handleEditDevice}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-                        <thead>
-
-                            <tr>
-
-                                <th>DEVICE</th>
-                                <th>DEVICE ID</th>
-                                <th>DEVICE TYPE</th>
-                                <th>STATUS</th>
-                                <th>LAST UPDATED</th>
-                                <th>ACTIONS</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            {paginatedDevices.map(
-                                (device) => (
-                                    <DeviceRow
-                                        key={device.id}
-                                        device={device}
-                                        onView={setViewingDevice}
-                                        onEdit={
-                                            handleEditDevice
-                                        }
-                                    />
-                                )
-                            )}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-                {/* =================================================
+        {/* =================================================
                     EMPTY STATE
                 ================================================= */}
 
-                {filteredDevices.length === 0 && (
-                    <div className="store-devices-empty">
+        {filteredDevices.length === 0 && (
+          <div className="store-devices-empty">
+            <div className="store-devices-empty-icon">
+              <i className="bi bi-pc-display" />
+            </div>
 
-                        <div className="store-devices-empty-icon">
+            <h3>No devices found</h3>
 
-                            <i className="bi bi-pc-display" />
+            <p>Try changing your search or filters.</p>
 
-                        </div>
+            <button type="button" onClick={clearFilters}>
+              Clear Filters
+            </button>
+          </div>
+        )}
 
-                        <h3>
-                            No devices found
-                        </h3>
-
-                        <p>
-                            Try changing your search
-                            or filters.
-                        </p>
-
-                        <button
-                            type="button"
-                            onClick={clearFilters}
-                        >
-                            Clear Filters
-                        </button>
-
-                    </div>
-                )}
-
-                {/* =================================================
+        {/* =================================================
                     PAGINATION
                 ================================================= */}
 
-                {filteredDevices.length > 0 && (
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        totalItems={totalItems}
-                        pageSize={pageSize}
-                        onPageChange={setCurrentPage}
-                        onPageSizeChange={(size) => {
-                            setPageSize(size);
-                            setCurrentPage(1);
-                        }}
-                    />
-                )}
+        {filteredDevices.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+          />
+        )}
+      </div>
 
-            </div>
-
-            {/* =====================================================
+      {/* =====================================================
                 ADD / EDIT DEVICE MODAL
             ===================================================== */}
 
-            {showForm && (
-                <div
-                    className="store-device-modal-overlay"
-                    onMouseDown={(event) => {
-                        if (
-                            event.target ===
-                            event.currentTarget
-                        ) {
-                            handleCloseForm();
-                        }
-                    }}
-                >
+      {showForm && (
+        <div
+          className="store-device-modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              handleCloseForm();
+            }
+          }}
+        >
+          <div className="store-device-modal">
+            {/* MODAL HEADER */}
 
-                    <div className="store-device-modal">
+            <div className="store-device-modal-header">
+              <div>
+                <h2>{editingDevice ? "Edit Device" : "Add Device"}</h2>
 
-                        {/* MODAL HEADER */}
+                <p>
+                  {editingDevice
+                    ? "Update device information."
+                    : "Add a device to this store."}
+                </p>
+              </div>
 
-                        <div className="store-device-modal-header">
+              <button
+                type="button"
+                className="store-device-modal-close"
+                onClick={handleCloseForm}
+                aria-label="Close"
+              >
+                <i className="bi bi-x-lg" />
+              </button>
+            </div>
 
-                            <div>
+            {/* FORM */}
 
-                                <h2>
-                                    {editingDevice
-                                        ? "Edit Device"
-                                        : "Add Device"}
-                                </h2>
+            <form onSubmit={handleSaveDevice}>
+              <div className="store-device-form-body">
+                {/* DEVICE NAME */}
 
-                                <p>
-                                    {editingDevice
-                                        ? "Update device information."
-                                        : "Add a device to this store."}
-                                </p>
+                <div className="store-device-form-group">
+                  <label>
+                    Device Name
+                    <span>*</span>
+                  </label>
 
-                            </div>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    placeholder="Enter device name"
+                    onChange={(e) => handleFormChange("name", e.target.value)}
+                  />
 
-                            <button
-                                type="button"
-                                className="store-device-modal-close"
-                                onClick={
-                                    handleCloseForm
-                                }
-                                aria-label="Close"
-                            >
-                                <i className="bi bi-x-lg" />
-                            </button>
+                  {formErrors.name && (
+                    <small className="store-device-form-error">
+                      {formErrors.name}
+                    </small>
+                  )}
+                </div>
 
-                        </div>
+                {/* DEVICE TYPE */}
 
-                        {/* FORM */}
+                <div className="store-device-form-group">
+                  <label>
+                    Device Type
+                    <span>*</span>
+                  </label>
 
-                        <form
-                            onSubmit={
-                                handleSaveDevice
-                            }
-                        >
+                  <select
+                    value={formData.type}
+                    onChange={(e) => handleFormChange("type", e.target.value)}
+                  >
+                    <option value="">Select device type</option>
 
-                            <div className="store-device-form-body">
+                    <option value="POS Terminal">POS Terminal</option>
 
-                                {/* DEVICE NAME */}
+                    <option value="Kiosk">Kiosk</option>
 
-                                <div className="store-device-form-group">
+                    <option value="Printer">Printer</option>
 
-                                    <label>
-                                        Device Name
-                                        <span>*</span>
-                                    </label>
+                    <option value="Scanner">Scanner</option>
 
-                                    <input
-                                        type="text"
-                                        value={
-                                            formData.name
-                                        }
-                                        placeholder="Enter device name"
-                                        onChange={(e) =>
-                                            handleFormChange(
-                                                "name",
-                                                e.target.value
-                                            )
-                                        }
-                                    />
+                    <option value="Display">Display</option>
 
-                                    {formErrors.name && (
-                                        <small className="store-device-form-error">
-                                            {
-                                                formErrors.name
-                                            }
-                                        </small>
-                                    )}
+                    <option value="Other">Other</option>
+                  </select>
 
-                                </div>
+                  {formErrors.type && (
+                    <small className="store-device-form-error">
+                      {formErrors.type}
+                    </small>
+                  )}
+                </div>
 
-                                {/* DEVICE ID */}
+                {/* DEVICE IDENTIFIERS - MAPPED AFTER DEVICE TYPE IS SELECTED */}
 
-                                <div className="store-device-form-group">
-
-                                    <label>
-                                        Device ID
-                                        <span>*</span>
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        value={
-                                            formData.deviceId
-                                        }
-                                        placeholder="Enter device ID"
-                                        onChange={(e) =>
-                                            handleFormChange(
-                                                "deviceId",
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-
-                                    {formErrors.deviceId && (
-                                        <small className="store-device-form-error">
-                                            {
-                                                formErrors.deviceId
-                                            }
-                                        </small>
-                                    )}
-
-                                </div>
-
-                                {/* DEVICE TYPE */}
-
-                                <div className="store-device-form-group">
-
-                                    <label>
-                                        Device Type
-                                        <span>*</span>
-                                    </label>
-
-                                    <select
-                                        value={
-                                            formData.type
-                                        }
-                                        onChange={(e) =>
-                                            handleFormChange(
-                                                "type",
-                                                e.target.value
-                                            )
-                                        }
-                                    >
-
-                                        <option value="">
-                                            Select device type
-                                        </option>
-
-                                        <option value="POS Terminal">
-                                            POS Terminal
-                                        </option>
-
-                                        <option value="Kiosk">
-                                            Kiosk
-                                        </option>
-
-                                        <option value="Printer">
-                                            Printer
-                                        </option>
-
-                                        <option value="Scanner">
-                                            Scanner
-                                        </option>
-
-                                        <option value="Display">
-                                            Display
-                                        </option>
-
-                                        <option value="Other">
-                                            Other
-                                        </option>
-
-                                    </select>
-
-                                    {formErrors.type && (
-                                        <small className="store-device-form-error">
-                                            {
-                                                formErrors.type
-                                            }
-                                        </small>
-                                    )}
-
-                                </div>
-
-                                {/* STATUS */}
-
-                                <div className="store-device-form-group">
-
-                                    <label>
-                                        Status
-                                        <span>*</span>
-                                    </label>
-
-                                    <select
-                                        value={
-                                            formData.status
-                                        }
-                                        onChange={(e) =>
-                                            handleFormChange(
-                                                "status",
-                                                e.target.value
-                                            )
-                                        }
-                                    >
-
-                                        <option value="Active">
-                                            Active
-                                        </option>
-
-                                        <option value="Inactive">
-                                            Inactive
-                                        </option>
-
-                                    </select>
-
-                                    {formErrors.status && (
-                                        <small className="store-device-form-error">
-                                            {
-                                                formErrors.status
-                                            }
-                                        </small>
-                                    )}
-
-                                </div>
-
-                            </div>
-
-                            {/* FORM FOOTER */}
-
-                            <div className="store-device-modal-footer">
-
-                                <button
-                                    type="button"
-                                    className="store-device-cancel-btn"
-                                    onClick={
-                                        handleCloseForm
-                                    }
-                                >
-                                    Cancel
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className="store-device-save-btn"
-                                >
-                                    <i
-                                        className={
-                                            editingDevice
-                                                ? "bi bi-check-lg"
-                                                : "bi bi-plus-lg"
-                                        }
-                                    />
-
-                                    {editingDevice
-                                        ? "Update Device"
-                                        : "Save Device"}
-                                </button>
-
-                            </div>
-
-                        </form>
-
+                {formData.type && (
+                  <>
+                    <div className="store-device-form-group">
+                      <label>Device ID</label>
+                      <input
+                        className="store-device-mapped-field"
+                        type="text"
+                        value={formData.deviceId}
+                        placeholder="Mapped"
+                        readOnly
+                        aria-label="Mapped"
+                      />
+                      <small className="store-device-mapped-hint">
+                        Mapped from the selected device type.
+                      </small>
                     </div>
 
-                </div>
-            )}
+                    <div className="store-device-form-group">
+                      <label>Device Serial Number</label>
+                      <input
+                        className="store-device-mapped-field"
+                        type="text"
+                        value={formData.serialNumber}
+                        placeholder="Mapped"
+                        readOnly
+                        aria-label="Mapped "
+                      />
+                      <small className="store-device-mapped-hint">
+                        Mapped from the selected device type.
+                      </small>
+                    </div>
+                  </>
+                )}
 
-            {viewingDevice && (
-                <div
-                    className="store-device-modal-overlay"
-                    onMouseDown={(event) => {
-                        if (event.target === event.currentTarget) {
-                            setViewingDevice(null);
-                        }
-                    }}
-                >
-                    <div
-                        className="store-device-modal store-device-view-modal"
-                        role="dialog"
-                        aria-modal="true"
-                        onMouseDown={(event) => event.stopPropagation()}
+                {/* QUANTITY */}
+                <div className="store-device-form-group">
+                  <label>
+                    Quantity
+                    <span>*</span>
+                  </label>
+
+                  <div className="store-device-quantity-control">
+                    <button
+                      type="button"
+                      aria-label="Decrease quantity"
+                      onClick={() =>
+                        handleFormChange(
+                          "quantity",
+                          Math.max(1, Number(formData.quantity || 1) - 1),
+                        )
+                      }
                     >
-                        <div className="store-device-modal-header">
-                            <div>
-                                <h2>Device Details</h2>
-                                <p>
-                                    View device information for{" "}
-                                    <strong>{viewingDevice.name}</strong>.
-                                </p>
-                            </div>
+                      <i className="bi bi-dash-lg" />
+                    </button>
 
-                            <button
-                                type="button"
-                                className="store-device-modal-close"
-                                onClick={() => setViewingDevice(null)}
-                                aria-label="Close"
-                            >
-                                <i className="bi bi-x-lg" />
-                            </button>
-                        </div>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.quantity}
+                      onChange={(e) =>
+                        handleFormChange(
+                          "quantity",
+                          Math.max(1, Number(e.target.value) || 1),
+                        )
+                      }
+                    />
 
-                        <div className="store-device-view-body">
-                            <div className="store-device-view-identity">
-                                <div className="store-device-view-icon">
-                                    <i className="bi bi-pc-display" />
-                                </div>
-
-                                <div>
-                                    <strong>{viewingDevice.name}</strong>
-                                    <span>
-                                        {viewingDevice.deviceId || viewingDevice.id}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="store-device-view-grid">
-                                <div className="store-device-view-field">
-                                    <span>Device Name</span>
-                                    <strong>{viewingDevice.name || "—"}</strong>
-                                </div>
-
-                                <div className="store-device-view-field">
-                                    <span>Device ID</span>
-                                    <strong>{viewingDevice.deviceId || "—"}</strong>
-                                </div>
-
-                                <div className="store-device-view-field">
-                                    <span>Device Type</span>
-                                    <strong>{viewingDevice.type || "—"}</strong>
-                                </div>
-
-                                <div className="store-device-view-field">
-                                    <span>Status</span>
-                                    <strong
-                                        className={`store-device-view-status ${
-                                            viewingDevice.status === "Active"
-                                                ? "active"
-                                                : "inactive"
-                                        }`}
-                                    >
-                                        {viewingDevice.status || "—"}
-                                    </strong>
-                                </div>
-
-                                <div className="store-device-view-field full">
-                                    <span>Last Updated</span>
-                                    <strong>
-                                        {viewingDevice.updatedAt || "Recently"}
-                                    </strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="store-device-modal-footer">
-                            <button
-                                type="button"
-                                className="store-device-cancel-btn"
-                                onClick={() => setViewingDevice(null)}
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
+                    <button
+                      type="button"
+                      aria-label="Increase quantity"
+                      onClick={() =>
+                        handleFormChange(
+                          "quantity",
+                          Number(formData.quantity || 1) + 1,
+                        )
+                      }
+                    >
+                      <i className="bi bi-plus-lg" />
+                    </button>
+                  </div>
                 </div>
-            )}
 
+                {/* STATUS */}
+
+                <div className="store-device-form-group">
+                  <label>
+                    Status
+                    <span>*</span>
+                  </label>
+
+                  <select
+                    value={formData.status}
+                    onChange={(e) => handleFormChange("status", e.target.value)}
+                  >
+                    <option value="Active">Active</option>
+
+                    <option value="Inactive">Inactive</option>
+                  </select>
+
+                  {formErrors.status && (
+                    <small className="store-device-form-error">
+                      {formErrors.status}
+                    </small>
+                  )}
+                </div>
+              </div>
+
+              {/* FORM FOOTER */}
+
+              <div className="store-device-modal-footer">
+                <button
+                  type="button"
+                  className="store-device-cancel-btn"
+                  onClick={handleCloseForm}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit" className="store-device-save-btn">
+                  <i
+                    className={
+                      editingDevice ? "bi bi-check-lg" : "bi bi-plus-lg"
+                    }
+                  />
+
+                  {editingDevice ? "Update Device" : "Save Device"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-    );
+      )}
+
+      {viewingDevice && (
+        <div
+          className="store-device-modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setViewingDevice(null);
+            }
+          }}
+        >
+          <div
+            className="store-device-modal store-device-view-modal"
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="store-device-modal-header">
+              <div>
+                <h2>Device Details</h2>
+                <p>
+                  View device information for{" "}
+                  <strong>{viewingDevice.name}</strong>.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="store-device-modal-close"
+                onClick={() => setViewingDevice(null)}
+                aria-label="Close"
+              >
+                <i className="bi bi-x-lg" />
+              </button>
+            </div>
+
+            <div className="store-device-view-body">
+              <div className="store-device-view-identity">
+                <div className="store-device-view-icon">
+                  <i className="bi bi-pc-display" />
+                </div>
+
+                <div>
+                  <strong>{viewingDevice.name}</strong>
+                  <span>{viewingDevice.deviceId || viewingDevice.id}</span>
+                </div>
+              </div>
+
+              <div className="store-device-view-grid">
+                <div className="store-device-view-field">
+                  <span>Device Name</span>
+                  <strong>{viewingDevice.name || "—"}</strong>
+                </div>
+
+                <div className="store-device-view-field">
+                  <span>Device ID</span>
+                  <strong>{viewingDevice.deviceId || "—"}</strong>
+                </div>
+
+                <div className="store-device-view-field">
+                  <span>Device Type</span>
+                  <strong>{viewingDevice.type || "—"}</strong>
+                </div>
+
+                <div className="store-device-view-field">
+                  <span>Status</span>
+                  <strong
+                    className={`store-device-view-status ${
+                      viewingDevice.status === "Active" ? "active" : "inactive"
+                    }`}
+                  >
+                    {viewingDevice.status || "—"}
+                  </strong>
+                </div>
+
+                <div className="store-device-view-field full">
+                  <span>Last Updated</span>
+                  <strong>{viewingDevice.updatedAt || "Recently"}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="store-device-modal-footer">
+              <button
+                type="button"
+                className="store-device-cancel-btn"
+                onClick={() => setViewingDevice(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // =========================================================
 // DEVICE ROW
 // =========================================================
 
-function DeviceRow({
-    device,
-    onView,
-    onEdit,
-}) {
-    const statusClass =
-        device.status === "Active"
-            ? "active"
-            : "inactive";
+function DeviceRow({ device, onView, onEdit }) {
+  const statusClass = device.status === "Active" ? "active" : "inactive";
 
-    return (
-        <tr>
+  return (
+    <tr>
+      {/* DEVICE */}
 
-            {/* DEVICE */}
+      <td>
+        <div className="store-device-info">
+          <div className="store-device-icon">
+            <i className="bi bi-pc-display" />
+          </div>
 
-            <td>
+          <div>
+            <strong>{device.name}</strong>
 
-                <div className="store-device-info">
+            {device.model && <small>{device.model}</small>}
+          </div>
+        </div>
+      </td>
 
-                    <div className="store-device-icon">
+      {/* DEVICE ID */}
 
-                        <i className="bi bi-pc-display" />
+      <td>
+        <span className="store-device-id">{device.deviceId || "—"}</span>
+      </td>
 
-                    </div>
+      {/* DEVICE TYPE */}
 
-                    <div>
+      <td>
+        <span className="store-device-type">{device.type || "—"}</span>
+      </td>
 
-                        <strong>
-                            {device.name}
-                        </strong>
+      {/* STATUS */}
 
-                        {device.model && (
-                            <small>
-                                {device.model}
-                            </small>
-                        )}
+      <td>
+        <span className={`store-device-status ${statusClass}`}>
+          <i className="bi bi-circle-fill" />
 
-                    </div>
+          {device.status}
+        </span>
+      </td>
 
-                </div>
+      {/* UPDATED */}
 
-            </td>
+      <td>
+        <span className="store-device-date">
+          {device.updatedAt || "Recently"}
+        </span>
+      </td>
 
-            {/* DEVICE ID */}
+      {/* ACTIONS */}
 
-            <td>
+      <td>
+        <div className="store-device-actions">
+          <button
+            type="button"
+            className="store-device-action-btn"
+            title="View"
+            aria-label={`View ${device.name}`}
+            onClick={() => onView(device)}
+          >
+            <i className="bi bi-eye" />
+          </button>
 
-                <span className="store-device-id">
-                    {device.deviceId || "—"}
-                </span>
-
-            </td>
-
-            {/* DEVICE TYPE */}
-
-            <td>
-
-                <span className="store-device-type">
-                    {device.type || "—"}
-                </span>
-
-            </td>
-
-            {/* STATUS */}
-
-            <td>
-
-                <span
-                    className={`store-device-status ${statusClass}`}
-                >
-
-                    <i className="bi bi-circle-fill" />
-
-                    {device.status}
-
-                </span>
-
-            </td>
-
-            {/* UPDATED */}
-
-            <td>
-
-                <span className="store-device-date">
-
-                    {device.updatedAt ||
-                        "Recently"}
-
-                </span>
-
-            </td>
-
-            {/* ACTIONS */}
-
-            <td>
-
-                <div className="store-device-actions">
-                    <button
-                        type="button"
-                        className="store-device-action-btn"
-                        title="View"
-                        aria-label={`View ${device.name}`}
-                        onClick={() => onView(device)}
-                    >
-                        <i className="bi bi-eye" />
-                    </button>
-
-                    <button
-                        type="button"
-                        className="store-device-action-btn edit"
-                        title="Edit"
-                        aria-label={`Edit ${device.name}`}
-                        onClick={() => onEdit(device)}
-                    >
-                        <i className="bi bi-pencil" />
-                    </button>
-                </div>
-
-            </td>
-
-        </tr>
-    );
+          <button
+            type="button"
+            className="store-device-action-btn edit"
+            title="Edit"
+            aria-label={`Edit ${device.name}`}
+            onClick={() => onEdit(device)}
+          >
+            <i className="bi bi-pencil" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
 }

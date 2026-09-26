@@ -28,26 +28,24 @@ const FeaturePermissions = () => {
   const [error, setError] = useState("");
 
   React.useEffect(() => {
-    Promise.all([
-      getFeature(featureId),
-      listFeaturePermissions(featureId),
-    ])
+    Promise.all([getFeature(featureId), listFeaturePermissions(featureId)])
       .then(([f, list]) => {
         setFeature(f);
 
         setPermissions(
-          list.map((p) => ({
+          (Array.isArray(list) ? list : []).map((p) => ({
             ...p,
             key: p.permissionKey || p.key || "",
+            name: p.permissionName || p.name || "",
             feature: f?.name || p.feature?.name || "",
+            description:
+              p.permissionDescription || p.description || "",
             active:
-              String(p.status || "").toUpperCase() === "ACTIVE",
+              String(p.status || "ACTIVE").toUpperCase() === "ACTIVE",
           }))
         );
       })
-      .catch((e) =>
-        setError(e.message || "Unable to load permissions.")
-      );
+      .catch((e) => setError(e.message || "Unable to load permissions."));
   }, [featureId]);
 
   const [search, setSearch] = useState("");
@@ -101,23 +99,15 @@ const FeaturePermissions = () => {
       setDeleting(true);
       setError("");
 
-      await deleteFeaturePermission(
-        featureId,
-        deleteTarget.id
-      );
+      await deleteFeaturePermission(featureId, deleteTarget.id);
 
       setPermissions((current) =>
-        current.filter(
-          (permission) =>
-            permission.id !== deleteTarget.id
-        )
+        current.filter((permission) => permission.id !== deleteTarget.id),
       );
 
       setDeleteTarget(null);
     } catch (e) {
-      setError(
-        e.message || "Unable to delete permission."
-      );
+      setError(e.message || "Unable to delete permission.");
     } finally {
       setDeleting(false);
     }
@@ -146,9 +136,7 @@ const FeaturePermissions = () => {
     const name = form.name.trim();
 
     if (!key || !name) {
-      setFormError(
-        "Permission Key and Permission Name are required."
-      );
+      setFormError("Permission Key and Permission Name are required.");
       return;
     }
 
@@ -156,54 +144,30 @@ const FeaturePermissions = () => {
     setFormError("");
 
     try {
-      const created = await createFeaturePermission(
-        featureId,
-        {
-          permissionKey: key,
-          name,
-          featureId,
-          description: form.description.trim(),
-          status: form.status.toUpperCase(),
-        }
-      );
+      const created = await createFeaturePermission(featureId, {
+        permissionKey: key.toUpperCase(),
+        name,
+        description: form.description.trim(),
+        status: form.status.toUpperCase(),
+      });
 
-      const item =
-        created?.data ||
-        created?.permission ||
-        created ||
-        {};
+      const item = created?.data || created?.permission || created || {};
 
       setPermissions((current) => [
         {
           ...item,
 
-          id:
-            item.id ||
-            `${featureId}-${Date.now()}`,
+          id: item.id || `${featureId}-${Date.now()}`,
 
-          key:
-            item.permissionKey ||
-            item.key ||
-            key,
+          key: item.permissionKey || item.key || key,
 
-          name:
-            item.permissionName ||
-            item.name ||
-            name,
+          name: item.permissionName || item.name || name,
 
-          feature:
-            feature?.name ||
-            item.feature?.name ||
-            "",
+          feature: feature?.name || item.feature?.name || "",
 
-          description:
-            item.description ||
-            form.description.trim(),
+          description: item.description || form.description.trim(),
 
-          active:
-            String(
-              item.status || form.status
-            ).toUpperCase() === "ACTIVE",
+          active: String(item.status || form.status).toUpperCase() === "ACTIVE",
         },
 
         ...current,
@@ -211,10 +175,7 @@ const FeaturePermissions = () => {
 
       setIsCreateOpen(false);
     } catch (e) {
-      setFormError(
-        e.message ||
-          "Unable to create permission."
-      );
+      setFormError(e.message || "Unable to create permission.");
     } finally {
       setSaving(false);
     }
@@ -222,15 +183,12 @@ const FeaturePermissions = () => {
 
   return (
     <div className="fp-page feature-detail-page">
-
       {/* =====================================================
           FEATURE HEADER
       ====================================================== */}
 
       <section className="feature-detail-header">
-
         <div className="feature-detail-top">
-
           <button
             type="button"
             className="feature-detail-back"
@@ -245,28 +203,18 @@ const FeaturePermissions = () => {
             <h1>{feature?.name || "Feature"}</h1>
 
             <p>
-              {feature?.description ||
-                "Manage permissions for this feature."}
+              {feature?.description || "Manage permissions for this feature."}
             </p>
           </div>
-
         </div>
 
         {/* TABS */}
 
-        <nav
-          className="feature-detail-tabs"
-          aria-label="Feature sections"
-        >
-
+        <nav className="feature-detail-tabs" aria-label="Feature sections">
           <button
             type="button"
             className="feature-detail-tab"
-            onClick={() =>
-              navigate(
-                `/features/${featureId}/overview`
-              )
-            }
+            onClick={() => navigate(`/features/${featureId}/overview`)}
           >
             Overview
           </button>
@@ -274,24 +222,15 @@ const FeaturePermissions = () => {
           <button
             type="button"
             className="feature-detail-tab"
-            onClick={() =>
-              navigate(
-                `/features/${featureId}/store-types`
-              )
-            }
+            onClick={() => navigate(`/features/${featureId}/store-types`)}
           >
             Applicable Store Types
           </button>
 
-          <button
-            type="button"
-            className="feature-detail-tab active"
-          >
+          <button type="button" className="feature-detail-tab active">
             Feature &amp; Permission Access
           </button>
-
         </nav>
-
       </section>
 
       {/* =====================================================
@@ -299,90 +238,59 @@ const FeaturePermissions = () => {
       ====================================================== */}
 
       <section className="fp-permissions-card">
-
         <div className="fp-card-header">
-
           {/* TITLE */}
 
           <div className="fp-title-section">
-
             <div className="fp-shield-icon">
-              <ShieldCheck
-                size={20}
-                strokeWidth={2.1}
-              />
+              <ShieldCheck size={20} strokeWidth={2.1} />
             </div>
 
             <div className="fp-title-copy">
+              <h2>Permissions List ({permissions.length})</h2>
 
-              <h2>
-                Permissions List ({permissions.length})
-              </h2>
-
-              <p>
-                Manage and configure permissions for
-                this feature.
-              </p>
-
+              <p>Manage and configure permissions for this feature.</p>
             </div>
-
           </div>
 
           {/* TOOLBAR */}
 
           <div className="fp-toolbar">
-
-            <button
+            {/* <button
               type="button"
               className="fp-create-permission-btn"
               onClick={openCreateModal}
-            >
-              <span aria-hidden="true">+</span>
+            > */}
+            {/* <span aria-hidden="true">+</span>
               Create Feature Permission
-            </button>
+            </button> */}
 
             {/* SEARCH */}
 
             <div className="fp-search-box">
-
-              <Search
-                size={17}
-                strokeWidth={2}
-              />
+              <Search size={17} strokeWidth={2} />
 
               <input
                 type="text"
                 placeholder="Search permissions..."
                 value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
+                onChange={(event) => setSearch(event.target.value)}
               />
-
             </div>
 
             {/* FILTER */}
 
             <div className="fp-filter-wrapper">
-
               <select
                 value={filter}
-                onChange={(event) =>
-                  setFilter(event.target.value)
-                }
+                onChange={(event) => setFilter(event.target.value)}
                 className="fp-filter"
               >
-                <option value="all">
-                  All Permissions
-                </option>
+                <option value="all">All Permissions</option>
 
-                <option value="active">
-                  Active Permissions
-                </option>
+                <option value="active">Active Permissions</option>
 
-                <option value="inactive">
-                  Inactive Permissions
-                </option>
+                <option value="inactive">Inactive Permissions</option>
               </select>
 
               <ChevronDown
@@ -390,11 +298,8 @@ const FeaturePermissions = () => {
                 strokeWidth={2}
                 className="fp-filter-chevron"
               />
-
             </div>
-
           </div>
-
         </div>
 
         {/* =====================================================
@@ -402,45 +307,30 @@ const FeaturePermissions = () => {
         ====================================================== */}
 
         <div className="fp-table-wrapper">
-
           <table className="fp-table">
-
             <thead>
               <tr>
-
                 <th>
-                  <div className="fp-table-heading">
-                    Permission Key
-                  </div>
+                  <div className="fp-table-heading">Permission Key</div>
                 </th>
 
                 <th>
-                  <div className="fp-table-heading">
-                    Permission Name
-                  </div>
+                  <div className="fp-table-heading">Permission Name</div>
                 </th>
 
                 <th>
-                  <div className="fp-table-heading">
-                    Feature
-                  </div>
+                  <div className="fp-table-heading">Feature</div>
                 </th>
 
                 <th>
-                  <div className="fp-table-heading">
-                    Description
-                  </div>
+                  <div className="fp-table-heading">Description</div>
                 </th>
 
-                <th className="fp-actions-heading">
-                  Actions
-                </th>
-
+                <th className="fp-actions-heading">Actions</th>
               </tr>
             </thead>
 
             <tbody>
-
               {error && (
                 <tr>
                   <td colSpan="5">
@@ -449,70 +339,40 @@ const FeaturePermissions = () => {
                 </tr>
               )}
 
-              {filteredPermissions.map(
-                (permission) => (
+              {filteredPermissions.map((permission) => (
+                <tr key={permission.key}>
+                  <td className="fp-permission-key">{permission.key}</td>
 
-                  <tr key={permission.key}>
+                  <td className="fp-permission-name">{permission.name}</td>
 
-                    <td className="fp-permission-key">
-                      {permission.key}
-                    </td>
+                  <td className="fp-feature-name">{permission.feature}</td>
 
-                    <td className="fp-permission-name">
-                      {permission.name}
-                    </td>
+                  <td className="fp-description">{permission.description}</td>
 
-                    <td className="fp-feature-name">
-                      {permission.feature}
-                    </td>
-
-                    <td className="fp-description">
-                      {permission.description}
-                    </td>
-
-                    <td className="fp-action-cell">
-
-                      <button
-                        type="button"
-                        className="fp-delete"
-                        onClick={() =>
-                          setDeleteTarget(permission)
-                        }
-                        aria-label={`Delete ${permission.name}`}
-                      >
-
-                        <Trash2
-                          size={15}
-                          strokeWidth={2}
-                        />
-
-                      </button>
-
-                    </td>
-
-                  </tr>
-                )
-              )}
+                  <td className="fp-action-cell">
+                    <button
+                      type="button"
+                      className="fp-delete"
+                      onClick={() => setDeleteTarget(permission)}
+                      aria-label={`Delete ${permission.name}`}
+                    >
+                      <Trash2 size={15} strokeWidth={2} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
 
               {/* EMPTY STATE */}
 
               {filteredPermissions.length === 0 && (
                 <tr>
-
-                  <td
-                    colSpan="5"
-                    className="fp-empty-state"
-                  >
+                  <td colSpan="5" className="fp-empty-state">
                     No permissions found.
                   </td>
-
                 </tr>
               )}
-
             </tbody>
-
           </table>
-
         </div>
 
         {/* =====================================================
@@ -520,54 +380,25 @@ const FeaturePermissions = () => {
         ====================================================== */}
 
         <div className="fp-table-footer">
-
           <p className="fp-results-text">
-
-            Showing{" "}
-            {filteredPermissions.length > 0
-              ? 1
-              : 0}{" "}
-            to{" "}
-            {filteredPermissions.length} of{" "}
-            {filteredPermissions.length} entries
-
+            Showing {filteredPermissions.length > 0 ? 1 : 0} to{" "}
+            {filteredPermissions.length} of {filteredPermissions.length} entries
           </p>
 
           <div className="fp-pagination">
-
-            <button
-              type="button"
-              className="fp-page-button fp-arrow"
-              disabled
-            >
-              <ChevronLeft
-                size={16}
-                strokeWidth={2}
-              />
+            <button type="button" className="fp-page-button fp-arrow" disabled>
+              <ChevronLeft size={16} strokeWidth={2} />
             </button>
 
-            <button
-              type="button"
-              className="fp-page-button active"
-            >
+            <button type="button" className="fp-page-button active">
               1
             </button>
 
-            <button
-              type="button"
-              className="fp-page-button fp-arrow"
-              disabled
-            >
-              <ChevronRight
-                size={16}
-                strokeWidth={2}
-              />
+            <button type="button" className="fp-page-button fp-arrow" disabled>
+              <ChevronRight size={16} strokeWidth={2} />
             </button>
-
           </div>
-
         </div>
-
       </section>
 
       {/* =====================================================
@@ -575,66 +406,41 @@ const FeaturePermissions = () => {
       ====================================================== */}
 
       {isCreateOpen && (
-
         <div
           className="fp-modal-backdrop"
           role="presentation"
-          onMouseDown={() =>
-            !saving &&
-            setIsCreateOpen(false)
-          }
+          onMouseDown={() => !saving && setIsCreateOpen(false)}
         >
-
           <div
             className="fp-create-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="fp-create-title"
-            onMouseDown={(event) =>
-              event.stopPropagation()
-            }
+            onMouseDown={(event) => event.stopPropagation()}
           >
-
             <div className="fp-modal-header">
-
               <div>
-
-                <h2 id="fp-create-title">
-                  Add New Feature Permission
-                </h2>
+                <h2 id="fp-create-title">Add New Feature Permission</h2>
 
                 <p>
-                  Create a permission for{" "}
-                  {feature?.name ||
-                    "this feature"}.
+                  Create a permission for {feature?.name || "this feature"}.
                 </p>
-
               </div>
 
               <button
                 type="button"
                 className="fp-modal-close"
-                onClick={() =>
-                  !saving &&
-                  setIsCreateOpen(false)
-                }
+                onClick={() => !saving && setIsCreateOpen(false)}
                 aria-label="Close"
               >
                 ×
               </button>
-
             </div>
 
-            <form
-              className="fp-create-form"
-              onSubmit={saveNewPermission}
-            >
-
+            <form className="fp-create-form" onSubmit={saveNewPermission}>
               <div className="fp-create-grid">
-
                 <label>
                   Permission Key <span>*</span>
-
                   <input
                     value={form.key}
                     onChange={(e) =>
@@ -646,12 +452,10 @@ const FeaturePermissions = () => {
                     placeholder="e.g. refunds.view"
                     autoFocus
                   />
-
                 </label>
 
                 <label>
                   Permission Name <span>*</span>
-
                   <input
                     value={form.name}
                     onChange={(e) =>
@@ -662,32 +466,25 @@ const FeaturePermissions = () => {
                     }
                     placeholder="e.g. View Refunds"
                   />
-
                 </label>
 
                 <label className="fp-create-description">
-
                   Description
-
                   <textarea
                     value={form.description}
                     onChange={(e) =>
                       setForm({
                         ...form,
-                        description:
-                          e.target.value,
+                        description: e.target.value,
                       })
                     }
                     placeholder="Describe what this permission allows users to do"
                     rows={3}
                   />
-
                 </label>
 
                 <label>
-
                   Status
-
                   <select
                     value={form.status}
                     onChange={(e) =>
@@ -697,41 +494,24 @@ const FeaturePermissions = () => {
                       })
                     }
                   >
+                    <option value="Active">Active</option>
 
-                    <option value="Active">
-                      Active
-                    </option>
-
-                    <option value="Inactive">
-                      Inactive
-                    </option>
-
+                    <option value="Inactive">Inactive</option>
                   </select>
-
                 </label>
-
               </div>
 
               {formError && (
-
-                <p
-                  className="fp-modal-error"
-                  role="alert"
-                >
+                <p className="fp-modal-error" role="alert">
                   {formError}
                 </p>
-
               )}
 
               <div className="fp-modal-actions">
-
                 <button
                   type="button"
                   className="fp-modal-cancel"
-                  onClick={() =>
-                    !saving &&
-                    setIsCreateOpen(false)
-                  }
+                  onClick={() => !saving && setIsCreateOpen(false)}
                   disabled={saving}
                 >
                   Cancel
@@ -742,19 +522,12 @@ const FeaturePermissions = () => {
                   className="fp-modal-save"
                   disabled={saving}
                 >
-                  {saving
-                    ? "Saving..."
-                    : "Save Permission"}
+                  {saving ? "Saving..." : "Save Permission"}
                 </button>
-
               </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
 
       {/* =====================================================
@@ -762,57 +535,35 @@ const FeaturePermissions = () => {
       ====================================================== */}
 
       {deleteTarget && (
-
         <div
           className="fp-delete-overlay"
           role="dialog"
           aria-modal="true"
           aria-labelledby="fp-delete-title"
-          onMouseDown={() =>
-            !deleting &&
-            setDeleteTarget(null)
-          }
+          onMouseDown={() => !deleting && setDeleteTarget(null)}
         >
-
           <div
             className="fp-delete-modal"
-            onMouseDown={(event) =>
-              event.stopPropagation()
-            }
+            onMouseDown={(event) => event.stopPropagation()}
           >
-
             <div className="fp-delete-modal-icon">
-              <Trash2
-                size={23}
-                strokeWidth={2}
-              />
+              <Trash2 size={23} strokeWidth={2} />
             </div>
 
-            <h2 id="fp-delete-title">
-              Delete Permission?
-            </h2>
+            <h2 id="fp-delete-title">Delete Permission?</h2>
 
             <p>
               Are you sure you want to delete{" "}
-              <strong>
-                {deleteTarget.name ||
-                  deleteTarget.key}
-              </strong>
-              ?
+              <strong>{deleteTarget.name || deleteTarget.key}</strong>?
             </p>
 
-            <p className="fp-delete-warning">
-              This action cannot be undone.
-            </p>
+            <p className="fp-delete-warning">This action cannot be undone.</p>
 
             <div className="fp-delete-modal-actions">
-
               <button
                 type="button"
                 className="fp-delete-cancel-button"
-                onClick={() =>
-                  setDeleteTarget(null)
-                }
+                onClick={() => setDeleteTarget(null)}
                 disabled={deleting}
               >
                 Cancel
@@ -821,24 +572,15 @@ const FeaturePermissions = () => {
               <button
                 type="button"
                 className="fp-delete-confirm-button"
-                onClick={
-                  confirmDeletePermission
-                }
+                onClick={confirmDeletePermission}
                 disabled={deleting}
               >
-                {deleting
-                  ? "Deleting..."
-                  : "Delete"}
+                {deleting ? "Deleting..." : "Delete"}
               </button>
-
             </div>
-
           </div>
-
         </div>
-
       )}
-
     </div>
   );
 };

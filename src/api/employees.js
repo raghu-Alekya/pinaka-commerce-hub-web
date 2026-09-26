@@ -209,10 +209,18 @@ export function mapEmployeeToRow(employee) {
 }
 
 function mapEmployeeList(data) {
-  const listKeys = ['employees', 'items', 'results', 'records', 'content', 'docs', 'data'];
+  const listKeys = [
+    "employees",
+    "items",
+    "results",
+    "records",
+    "content",
+    "docs",
+    "data",
+  ];
   function findItems(value, depth = 0) {
     if (Array.isArray(value)) return value;
-    if (!value || typeof value !== 'object' || depth > 4) return [];
+    if (!value || typeof value !== "object" || depth > 4) return [];
     for (const key of listKeys) {
       const items = findItems(value[key], depth + 1);
       if (items.length) return items;
@@ -221,7 +229,9 @@ function mapEmployeeList(data) {
   }
   const items = findItems(data);
 
-  return items.filter(item => item && typeof item === 'object').map(mapEmployeeToRow);
+  return items
+    .filter((item) => item && typeof item === "object")
+    .map(mapEmployeeToRow);
 }
 
 export async function listEmployees() {
@@ -229,5 +239,87 @@ export async function listEmployees() {
 }
 
 export async function listMerchantEmployees(merchantId) {
-  return mapEmployeeList(await api.get(endpoints.merchantEmployees(merchantId)));
+  return mapEmployeeList(
+    await api.get(endpoints.merchantEmployees(merchantId)),
+  );
+}
+// Helper to safely get backend origin in Vite/React without "process is not defined" error
+function getBackendOrigin() {
+  if (typeof import.meta !== "undefined" && import.meta?.env) {
+    return (
+      import.meta.env.VITE_API_ORIGIN ||
+      import.meta.env.VITE_API_BASE_URL ||
+      "http://localhost:3003"
+    );
+  }
+  return "http://localhost:3003";
+}
+/* =========================================================
+   EMPLOYEE PROFILE IMAGE
+========================================================= */
+
+export async function uploadEmployeeProfileImage(employeeId, file) {
+  const formData = new FormData();
+
+  // Append under all standard field keys to guarantee Multer compatibility
+  formData.append("file", file);
+  formData.append("image", file);
+  formData.append("profileImage", file);
+
+  const url = endpoints.employeeProfileImage
+    ? endpoints.employeeProfileImage(employeeId)
+    : `/merchants/employees/${encodeURIComponent(employeeId)}/profile-image`;
+
+  try {
+    const response = await api.post(url, formData, {
+      headers: {
+        "Content-Type": undefined, // Unsets default JSON header so browser inserts multipart boundary
+      },
+    });
+
+    return response?.data || response;
+  } catch (err) {
+    // Direct fetch fallback if custom api instance transforms FormData
+    const token =
+      localStorage.getItem("token") ||
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("authToken") ||
+      "";
+
+    const backendOrigin = getBackendOrigin();
+
+    const res = await fetch(`${backendOrigin}${url}`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(
+        Array.isArray(data?.message)
+          ? data.message.join(", ")
+          : data?.message || data?.error || "Failed to upload profile image.",
+      );
+    }
+    return data;
+  }
+}
+
+export async function getEmployeeProfileImage(employeeId) {
+  const url = endpoints.employeeProfileImage
+    ? endpoints.employeeProfileImage(employeeId)
+    : `/merchants/employees/${encodeURIComponent(employeeId)}/profile-image`;
+
+  const response = await api.get(url);
+  return response?.data || response;
+}
+
+export async function deleteEmployeeProfileImage(employeeId) {
+  const url = endpoints.employeeProfileImage
+    ? endpoints.employeeProfileImage(employeeId)
+    : `/merchants/employees/${encodeURIComponent(employeeId)}/profile-image`;
+
+  const response = await api.delete(url);
+  return response?.data || response;
 }

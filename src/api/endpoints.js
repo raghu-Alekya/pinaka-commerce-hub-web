@@ -19,6 +19,24 @@ export const endpoints = {
   employeeProfileImage: (employeeId) =>
     `/merchants/employees/${encodeURIComponent(employeeId)}/profile-image`,
   store: (id) => `/stores/${id}`,
+  storeCurrencyTax: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/currency-tax`,
+  storeServiceCharges: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/service-charges`,
+  storeCashback: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/cashback`,
+  storeOpeningBalance: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/opening-balance`,
+  storeCashDenominations: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/cash-denominations`,
+  storeCashRegisters: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/cash-registers`,
+  storeSafeDrop: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/safe-drop`,
+  storeCardPayments: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/card-payments`,
+  storeTerminalMappings: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/terminal-mappings`,
   storeTypes: "/store-types",
   storeType: (id) => `/store-types/${encodeURIComponent(id)}`,
   storeTypeFeatures: (id) => `/store-types/${encodeURIComponent(id)}/features`,
@@ -48,5 +66,7 @@ export const endpoints = {
 
   employees: "/employees",
   employeeList: "/merchants/employees",
+  // Devices
+  devices: "/devices",
+  device: (id) => `/devices/${encodeURIComponent(id)}`,
 };
-

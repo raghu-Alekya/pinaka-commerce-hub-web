@@ -180,23 +180,18 @@ export default function MerchantStores({
   ========================== */
 
   const handleNewStore = () => {
-    nav(`/merchants/${merchant.id}/stores/new`);
+    const targetId = merchantId || merchant?.merchantId || merchant?.merchantCode || merchant?.id;
+    nav(`/merchants/${encodeURIComponent(targetId)}/stores/new`);
   };
 
   const handleStoreConfiguration = (store) => {
-    nav(
-      `/merchants/${merchant.id}/stores/${getStoreId(
-        store
-      )}/configuration/website`
-    );
+    const targetId = merchantId || merchant?.merchantId || merchant?.merchantCode || merchant?.id;
+    nav(`/merchants/${encodeURIComponent(targetId)}/stores/${getStoreId(store)}/configuration/website`);
   };
 
   const handleEdit = (store) => {
-    nav(
-      `/merchants/${merchant.id}/stores/edit/${getStoreId(
-        store
-      )}`
-    );
+    const targetId = merchantId || merchant?.merchantId || merchant?.merchantCode || merchant?.id;
+    nav(`/merchants/${encodeURIComponent(targetId)}/stores/edit/${getStoreId(store)}`);
   };
 
   return (
@@ -215,7 +210,7 @@ export default function MerchantStores({
         <div className="breadcrumb-area">
           <button
             className="link-button"
-            onClick={() => nav("/merchants")}
+            onClick={() => nav(`/merchants?view=${encodeURIComponent(merchantId || '')}&tab=stores`)}
           >
             <i className="bi bi-arrow-left" /> Merchants
           </button>

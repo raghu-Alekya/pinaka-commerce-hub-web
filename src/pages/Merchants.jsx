@@ -7,7 +7,7 @@ import { useReferenceData } from "../api/referenceData";
 import { listSubscriptionPlans } from "../api/subscriptions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { listMerchants, getMerchant } from "../api/merchants";
+import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant } from "../api/merchants";
 import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
 import "../styles/merchants.css";
@@ -59,7 +59,24 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const openMerchantCreation = path => navigate(path + '?merchantId=' + encodeURIComponent(merchantId), {
     state: { merchantId, merchant },
   });
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const paramTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(paramTab || 'overview');
+
+  useEffect(() => {
+    if (paramTab && paramTab !== activeTab) {
+      setActiveTab(paramTab);
+    }
+  }, [paramTab]);
+
+  function changeTab(id) {
+    setActiveTab(id);
+    setSearchParams(previous => {
+      const next = new URLSearchParams(previous);
+      next.set('tab', id);
+      return next;
+    }, { replace: true });
+  }
   const tabs = [['overview', 'Overview'], ['subscription', 'Subscription & Usage'], ['stores', 'Stores'], ['employees', 'Employees'], ['devices', 'Devices'], ['vendors', 'Vendors'], ['tenders', 'Tenders'], ['roles', 'Roles & Permissions'], ['payments', 'Payment History']];
   function tabKeyDown(event, index) {
     let next;
@@ -68,7 +85,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
     else if (event.key === 'Home') next = 0;
     else if (event.key === 'End') next = tabs.length - 1;
     else return;
-    event.preventDefault(); setActiveTab(tabs[next][0]);
+    event.preventDefault(); changeTab(tabs[next][0]);
     event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[next]?.focus();
   }
   const draft = merchant?._onboarding;
@@ -159,7 +176,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       <div className="merchant-view-tabs" role="tablist" aria-orientation="vertical" aria-label="Merchant details">
         {tabs.map(([id, label], index) => <button key={id} type="button" role="tab" id={'merchant-tab-' + id}
           aria-selected={activeTab === id} aria-controls={'merchant-panel-' + id} tabIndex={activeTab === id ? 0 : -1}
-          onClick={() => setActiveTab(id)} onKeyDown={event => tabKeyDown(event, index)}>{label}</button>)}
+          onClick={() => changeTab(id)} onKeyDown={event => tabKeyDown(event, index)}>{label}</button>)}
       </div>
       <div role="tabpanel" id="merchant-panel-overview" aria-labelledby="merchant-tab-overview" hidden={activeTab !== 'overview'} tabIndex={0}>
         <ViewSection title="Business Details"><ViewFields items={[
@@ -335,7 +352,7 @@ function storeLimitFor(merchant, masterPlans) {
   return null;
 }
 // Pass your existing delete API function as deleteMerchant until its module contract is connected.
-export default function Merchants({ deleteMerchant, localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
+export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewedId = searchParams.get('view');
@@ -343,7 +360,7 @@ export default function Merchants({ deleteMerchant, localMerchants = [], onLocal
     setSearchParams(previous => { const next = new URLSearchParams(previous); next.set('view', String(merchant.id)); return next; });
   }
   function closeView() {
-    setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete('view'); return next; });
+    setSearchParams(previous => { const next = new URLSearchParams(previous); next.delete('view'); next.delete('tab'); return next; });
   }
   function openEdit(merchant) {
     try { nav('/merchants/' + encodeURIComponent(merchant.id) + '/edit', { state: { merchant } }); }
@@ -364,7 +381,9 @@ export default function Merchants({ deleteMerchant, localMerchants = [], onLocal
     deleteInFlight.current = true; setDeleting(true); setDeleteError('');
     const target = deleteTarget;
     try {
-      await deleteMerchant(target.id);
+      const targetId = target.merchantId || target.id;
+      const res = await deleteMerchant(targetId);
+      console.log("[DELETE MERCHANT API RESPONSE]", res);
       onLocalDelete?.(target.id);
       if (!mounted.current) return;
       setMerchants(previous => previous.filter(item => item.id !== target.id));
@@ -524,7 +543,7 @@ export default function Merchants({ deleteMerchant, localMerchants = [], onLocal
   const locations = [...new Set(merchants.map(m => `${m.country || ''} ${m.state || ''}`.trim()).filter(Boolean))];
 
   if (viewedId) return <MerchantReadOnly masterTenders={masterTenders} tenderAssignments={tenderAssignments} onSaveTenderAssignments={onSaveTenderAssignments} tendersLoading={tendersLoading} tendersError={tendersError} masterVendors={masterVendors} vendorAssignments={vendorAssignments} onSaveVendorAssignments={onSaveVendorAssignments} vendorsLoading={vendorsLoading} vendorsError={vendorsError} key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
-    merchant={merchants.find(item => String(item.id) === viewedId)} onBack={closeView}
+    merchant={merchants.find(item => String(item.id) === viewedId || String(item.merchantId) === viewedId || String(item.merchantCode) === viewedId)} onBack={closeView}
     />;
 
   return (

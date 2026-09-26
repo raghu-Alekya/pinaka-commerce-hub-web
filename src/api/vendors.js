@@ -14,9 +14,7 @@ import { getAccessToken } from "../auth/tokenStore";
 |--------------------------------------------------------------------------
 */
 
-const API_ROOT =
-  import.meta.env.VITE_API_BASE_URL ||
-  "/connector/api/v1";
+const API_ROOT = import.meta.env.VITE_API_BASE_URL || "/connector/api/v1";
 
 /*
 |--------------------------------------------------------------------------
@@ -27,10 +25,7 @@ const API_ROOT =
 function buildUrl(path = "") {
   const root = API_ROOT.replace(/\/+$/, "");
 
-  const cleanPath = String(path).replace(
-    /^\/+/,
-    ""
-  );
+  const cleanPath = String(path).replace(/^\/+/, "");
 
   return `${root}/${cleanPath}`;
 }
@@ -38,13 +33,6 @@ function buildUrl(path = "") {
 /*
 |--------------------------------------------------------------------------
 | FORMAT DATE / TIME
-|--------------------------------------------------------------------------
-|
-| Example:
-|
-| Sep 17, 2026, 12:27 PM
-| Sep 18, 2026, 05:22 PM
-|
 |--------------------------------------------------------------------------
 */
 
@@ -75,52 +63,40 @@ function formatDateTime(value) {
 |--------------------------------------------------------------------------
 */
 
-async function request(
-  path,
-  {
-    token,
+async function request(path, { token, signal, ...options } = {}) {
+  const accessToken = token ?? getAccessToken();
+
+  const response = await fetch(buildUrl(path), {
+    ...options,
+
     signal,
-    ...options
-  } = {}
-) {
-  const accessToken =
-    token ?? getAccessToken();
 
-  const response = await fetch(
-    buildUrl(path),
-    {
-      ...options,
-
-      signal,
-
-      /*
+    /*
       |--------------------------------------------------------------------------
-      | Authentication is handled through Bearer token.
+      | Authentication
       |--------------------------------------------------------------------------
       */
 
-      credentials: "omit",
+    credentials: "omit",
 
-      headers: {
-        Accept: "application/json",
+    headers: {
+      Accept: "application/json",
 
-        ...(options.body
-          ? {
-              "Content-Type":
-                "application/json",
-            }
-          : {}),
+      ...(options.body
+        ? {
+            "Content-Type": "application/json",
+          }
+        : {}),
 
-        ...(accessToken
-          ? {
-              Authorization: `Bearer ${accessToken}`,
-            }
-          : {}),
+      ...(accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : {}),
 
-        ...(options.headers || {}),
-      },
-    }
-  );
+      ...(options.headers || {}),
+    },
+  });
 
   /*
   |--------------------------------------------------------------------------
@@ -128,8 +104,7 @@ async function request(
   |--------------------------------------------------------------------------
   */
 
-  const raw =
-    await response.text();
+  const raw = await response.text();
 
   let data = null;
 
@@ -137,9 +112,7 @@ async function request(
     try {
       data = JSON.parse(raw);
     } catch {
-      throw new Error(
-        `API returned a non-JSON response (${response.status}).`
-      );
+      throw new Error(`API returned a non-JSON response (${response.status}).`);
     }
   }
 
@@ -151,9 +124,7 @@ async function request(
 
   if (!response.ok) {
     throw new Error(
-      data?.message ||
-        data?.error ||
-        `Request failed (${response.status}).`
+      data?.message || data?.error || `Request failed (${response.status}).`,
     );
   }
 
@@ -163,15 +134,8 @@ async function request(
   |--------------------------------------------------------------------------
   */
 
-  if (
-    data &&
-    data.success === false
-  ) {
-    throw new Error(
-      data.message ||
-        data.error ||
-        "API request failed."
-    );
+  if (data && data.success === false) {
+    throw new Error(data.message || data.error || "API request failed.");
   }
 
   return data;
@@ -181,45 +145,22 @@ async function request(
 |--------------------------------------------------------------------------
 | UI VENDOR TYPE -> API VENDOR TYPE
 |--------------------------------------------------------------------------
-|
-| UI:
-|   Individual
-|   Organization
-|
-| API:
-|   SUPPLIER
-|   ORGANIZER
-|
-|--------------------------------------------------------------------------
 */
 
-function toApiVendorType(
-  vendorType
-) {
-  const value =
-    String(
-      vendorType || ""
-    ).trim();
+function toApiVendorType(vendorType) {
+  const value = String(vendorType || "").trim();
 
-  if (
-    value.toLowerCase() ===
-    "organization"
-  ) {
+  if (value.toLowerCase() === "organization") {
     return "ORGANIZER";
   }
 
-  if (
-    value.toLowerCase() ===
-    "individual"
-  ) {
+  if (value.toLowerCase() === "individual") {
     return "SUPPLIER";
   }
 
   if (
-    value.toUpperCase() ===
-      "ORGANIZER" ||
-    value.toUpperCase() ===
-      "SUPPLIER"
+    value.toUpperCase() === "ORGANIZER" ||
+    value.toUpperCase() === "SUPPLIER"
   ) {
     return value.toUpperCase();
   }
@@ -233,25 +174,14 @@ function toApiVendorType(
 |--------------------------------------------------------------------------
 */
 
-function toUiVendorType(
-  vendorType
-) {
-  const value =
-    String(
-      vendorType || ""
-    ).trim();
+function toUiVendorType(vendorType) {
+  const value = String(vendorType || "").trim();
 
-  if (
-    value.toUpperCase() ===
-    "ORGANIZER"
-  ) {
+  if (value.toUpperCase() === "ORGANIZER") {
     return "Organization";
   }
 
-  if (
-    value.toUpperCase() ===
-    "SUPPLIER"
-  ) {
+  if (value.toUpperCase() === "SUPPLIER") {
     return "Individual";
   }
 
@@ -264,34 +194,18 @@ function toUiVendorType(
 |--------------------------------------------------------------------------
 */
 
-function toApiStatus(
-  status
-) {
-  const value =
-    String(
-      status || ""
-    ).trim();
+function toApiStatus(status) {
+  const value = String(status || "").trim();
 
-  if (
-    value.toLowerCase() ===
-    "active"
-  ) {
+  if (value.toLowerCase() === "active") {
     return "ACTIVE";
   }
 
-  if (
-    value.toLowerCase() ===
-    "inactive"
-  ) {
+  if (value.toLowerCase() === "inactive") {
     return "INACTIVE";
   }
 
-  if (
-    value.toUpperCase() ===
-      "ACTIVE" ||
-    value.toUpperCase() ===
-      "INACTIVE"
-  ) {
+  if (value.toUpperCase() === "ACTIVE" || value.toUpperCase() === "INACTIVE") {
     return value.toUpperCase();
   }
 
@@ -304,25 +218,14 @@ function toApiStatus(
 |--------------------------------------------------------------------------
 */
 
-function toUiStatus(
-  status
-) {
-  const value =
-    String(
-      status || ""
-    ).trim();
+function toUiStatus(status) {
+  const value = String(status || "").trim();
 
-  if (
-    value.toUpperCase() ===
-    "ACTIVE"
-  ) {
+  if (value.toUpperCase() === "ACTIVE") {
     return "Active";
   }
 
-  if (
-    value.toUpperCase() ===
-    "INACTIVE"
-  ) {
+  if (value.toUpperCase() === "INACTIVE") {
     return "Inactive";
   }
 
@@ -333,21 +236,9 @@ function toUiStatus(
 |--------------------------------------------------------------------------
 | NORMALIZE VENDOR
 |--------------------------------------------------------------------------
-|
-| Backend -> UI
-|
-| vendorName      -> name
-| vendorCode      -> code
-| productCategory -> category
-| createdAt       -> createdTime
-| updatedAt       -> updatedTime
-|
-|--------------------------------------------------------------------------
 */
 
-function normalizeVendor(
-  vendor = {}
-) {
+function normalizeVendor(vendor = {}) {
   return {
     ...vendor,
 
@@ -357,10 +248,7 @@ function normalizeVendor(
     |--------------------------------------------------------------------------
     */
 
-    id:
-      vendor.id ??
-      vendor.vendorId ??
-      "",
+    id: vendor.id ?? vendor.vendorId ?? vendor._id ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -368,32 +256,23 @@ function normalizeVendor(
     |--------------------------------------------------------------------------
     */
 
-    name:
-      vendor.name ??
-      vendor.vendorName ??
-      "",
+    name: vendor.name ?? vendor.vendorName ?? "",
 
-    code:
-      vendor.code ??
-      vendor.vendorCode ??
-      "",
+    code: vendor.code ?? vendor.vendorCode ?? "",
 
-    vendorType:
-      toUiVendorType(
-        vendor.vendorType
-      ),
+    vendorType: toUiVendorType(vendor.vendorType),
 
-    contactPerson:
-      vendor.contactPerson ??
-      "",
+    contactPerson: vendor.contactPerson ?? "",
 
     phone:
       vendor.phone ??
+      vendor.mobile ??
+      vendor.mobileNumber ??
+      vendor.phoneNumber ??
+      vendor.contactPhone ??
       "",
 
-    email:
-      vendor.email ??
-      "",
+    email: vendor.email ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -401,10 +280,7 @@ function normalizeVendor(
     |--------------------------------------------------------------------------
     */
 
-    category:
-      vendor.category ??
-      vendor.productCategory ??
-      "",
+    category: vendor.category ?? vendor.productCategory ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -412,29 +288,17 @@ function normalizeVendor(
     |--------------------------------------------------------------------------
     */
 
-    addressLine1:
-      vendor.addressLine1 ??
-      "",
+    addressLine1: vendor.addressLine1 ?? "",
 
-    addressLine2:
-      vendor.addressLine2 ??
-      "",
+    addressLine2: vendor.addressLine2 ?? "",
 
-    city:
-      vendor.city ??
-      "",
+    city: vendor.city ?? "",
 
-    state:
-      vendor.state ??
-      "",
+    state: vendor.state ?? "",
 
-    zipCode:
-      vendor.zipCode ??
-      "",
+    zipCode: vendor.zipCode ?? "",
 
-    country:
-      vendor.country ??
-      "",
+    country: vendor.country ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -442,10 +306,7 @@ function normalizeVendor(
     |--------------------------------------------------------------------------
     */
 
-    status:
-      toUiStatus(
-        vendor.status
-      ),
+    status: toUiStatus(vendor.status),
 
     /*
     |--------------------------------------------------------------------------
@@ -453,11 +314,7 @@ function normalizeVendor(
     |--------------------------------------------------------------------------
     */
 
-    createdTime:
-      formatDateTime(
-        vendor.createdTime ??
-          vendor.createdAt
-      ),
+    createdTime: formatDateTime(vendor.createdTime ?? vendor.createdAt),
 
     /*
     |--------------------------------------------------------------------------
@@ -465,11 +322,7 @@ function normalizeVendor(
     |--------------------------------------------------------------------------
     */
 
-    updatedTime:
-      formatDateTime(
-        vendor.updatedTime ??
-          vendor.updatedAt
-      ),
+    updatedTime: formatDateTime(vendor.updatedTime ?? vendor.updatedAt),
 
     /*
     |--------------------------------------------------------------------------
@@ -477,9 +330,22 @@ function normalizeVendor(
     |--------------------------------------------------------------------------
     */
 
-    deletedAt:
-      vendor.deletedAt ??
-      null,
+    deletedAt: vendor.deletedAt ?? null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | ASSIGNED STORE COUNT
+    |--------------------------------------------------------------------------
+    */
+
+    assignedStoreCount: Array.isArray(vendor.stores)
+      ? vendor.stores.length
+      : Number(
+          vendor.assignedStoreCount ??
+            vendor.assignedStoresCount ??
+            vendor.storeCount ??
+            0,
+        ),
   };
 }
 
@@ -487,58 +353,22 @@ function normalizeVendor(
 |--------------------------------------------------------------------------
 | EXTRACT VENDOR LIST
 |--------------------------------------------------------------------------
-|
-| Supports:
-|
-| {
-|   success: true,
-|   vendors: []
-| }
-|
-| {
-|   success: true,
-|   data: {
-|     vendors: []
-|   }
-| }
-|
-| {
-|   data: []
-| }
-|
-|--------------------------------------------------------------------------
 */
 
-function extractVendorList(
-  data
-) {
-  if (
-    Array.isArray(data)
-  ) {
+function extractVendorList(data) {
+  if (Array.isArray(data)) {
     return data;
   }
 
-  if (
-    Array.isArray(
-      data?.vendors
-    )
-  ) {
+  if (Array.isArray(data?.vendors)) {
     return data.vendors;
   }
 
-  if (
-    Array.isArray(
-      data?.data?.vendors
-    )
-  ) {
+  if (Array.isArray(data?.data?.vendors)) {
     return data.data.vendors;
   }
 
-  if (
-    Array.isArray(
-      data?.data
-    )
-  ) {
+  if (Array.isArray(data?.data)) {
     return data.data;
   }
 
@@ -549,16 +379,9 @@ function extractVendorList(
 |--------------------------------------------------------------------------
 | PREPARE VENDOR PAYLOAD
 |--------------------------------------------------------------------------
-|
-| Converts the React form data into
-| the backend API field names.
-|
-|--------------------------------------------------------------------------
 */
 
-function prepareVendorPayload(
-  values = {}
-) {
+function prepareVendorPayload(values = {}) {
   return {
     /*
     |--------------------------------------------------------------------------
@@ -566,20 +389,11 @@ function prepareVendorPayload(
     |--------------------------------------------------------------------------
     */
 
-    vendorName:
-      values.vendorName ??
-      values.name ??
-      "",
+    vendorName: values.vendorName ?? values.name ?? "",
 
-    vendorType:
-      toApiVendorType(
-        values.vendorType
-      ),
+    vendorType: toApiVendorType(values.vendorType),
 
-    vendorCode:
-      values.vendorCode ??
-      values.code ??
-      "",
+    vendorCode: values.vendorCode ?? values.code ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -587,17 +401,11 @@ function prepareVendorPayload(
     |--------------------------------------------------------------------------
     */
 
-    contactPerson:
-      values.contactPerson ??
-      "",
+    contactPerson: values.contactPerson ?? "",
 
-    phone:
-      values.phone ??
-      "",
+    phone: values.phone ?? "",
 
-    email:
-      values.email ??
-      "",
+    email: values.email ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -605,10 +413,7 @@ function prepareVendorPayload(
     |--------------------------------------------------------------------------
     */
 
-    productCategory:
-      values.productCategory ??
-      values.category ??
-      "",
+    productCategory: values.productCategory ?? values.category ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -616,35 +421,17 @@ function prepareVendorPayload(
     |--------------------------------------------------------------------------
     */
 
-    addressLine1:
-      values.addressLine1 ??
-      "",
+    addressLine1: values.addressLine1 ?? "",
 
-    addressLine2:
-      values.addressLine2 ??
-      "",
+    addressLine2: values.addressLine2 ?? "",
 
-    city:
-      values.city ??
-      "",
+    city: values.city ?? "",
 
-    /*
-    |--------------------------------------------------------------------------
-    | State is NOT restricted to 2 characters.
-    |--------------------------------------------------------------------------
-    */
+    state: values.state ?? "",
 
-    state:
-      values.state ??
-      "",
+    zipCode: values.zipCode ?? "",
 
-    zipCode:
-      values.zipCode ??
-      "",
-
-    country:
-      values.country ??
-      "",
+    country: values.country ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -652,10 +439,7 @@ function prepareVendorPayload(
     |--------------------------------------------------------------------------
     */
 
-    status:
-      toApiStatus(
-        values.status
-      ),
+    status: toApiStatus(values.status),
   };
 }
 
@@ -669,30 +453,16 @@ function prepareVendorPayload(
 |--------------------------------------------------------------------------
 */
 
-export async function getVendors(
-  {
+export async function getVendors({ token, signal } = {}) {
+  const data = await request("/vendors", {
+    method: "GET",
     token,
     signal,
-  } = {}
-) {
-  const data =
-    await request(
-      "/vendors",
-      {
-        method: "GET",
-        token,
-        signal,
-      }
-    );
+  });
 
-  const vendors =
-    extractVendorList(
-      data
-    );
+  const vendors = extractVendorList(data);
 
-  return vendors.map(
-    normalizeVendor
-  );
+  return vendors.map(normalizeVendor);
 }
 
 /*
@@ -705,40 +475,20 @@ export async function getVendors(
 |--------------------------------------------------------------------------
 */
 
-export async function getVendor(
-  vendorId,
-  {
-    token,
-    signal,
-  } = {}
-) {
+export async function getVendor(vendorId, { token, signal } = {}) {
   if (!vendorId) {
-    throw new Error(
-      "Vendor ID is required."
-    );
+    throw new Error("Vendor ID is required.");
   }
 
-  const data =
-    await request(
-      `/vendors/${encodeURIComponent(
-        vendorId
-      )}`,
-      {
-        method: "GET",
-        token,
-        signal,
-      }
-    );
+  const data = await request(`/vendors/${encodeURIComponent(vendorId)}`, {
+    method: "GET",
+    token,
+    signal,
+  });
 
-  const vendor =
-    data?.vendor ??
-    data?.data?.vendor ??
-    data?.data ??
-    data;
+  const vendor = data?.vendor ?? data?.data?.vendor ?? data?.data ?? data;
 
-  return normalizeVendor(
-    vendor
-  );
+  return normalizeVendor(vendor);
 }
 
 /*
@@ -751,55 +501,19 @@ export async function getVendor(
 |--------------------------------------------------------------------------
 */
 
-export async function createVendor(
-  values,
-  {
+export async function createVendor(values, { token, signal } = {}) {
+  const payload = prepareVendorPayload(values);
+
+  const data = await request("/vendors", {
+    method: "POST",
     token,
     signal,
-  } = {}
-) {
-  const payload =
-    prepareVendorPayload(
-      values
-    );
+    body: JSON.stringify(payload),
+  });
 
-  const data =
-    await request(
-      "/vendors",
-      {
-        method: "POST",
+  const vendor = data?.vendor ?? data?.data?.vendor ?? data?.data ?? data;
 
-        token,
-
-        signal,
-
-        body: JSON.stringify(
-          payload
-        ),
-      }
-    );
-
-  /*
-  |--------------------------------------------------------------------------
-  | Actual API response:
-  |
-  | {
-  |   success: true,
-  |   message: "Vendor created",
-  |   vendor: {...}
-  | }
-  |--------------------------------------------------------------------------
-  */
-
-  const vendor =
-    data?.vendor ??
-    data?.data?.vendor ??
-    data?.data ??
-    data;
-
-  return normalizeVendor(
-    vendor
-  );
+  return normalizeVendor(vendor);
 }
 
 /*
@@ -812,52 +526,23 @@ export async function createVendor(
 |--------------------------------------------------------------------------
 */
 
-export async function updateVendor(
-  vendorId,
-  values,
-  {
-    token,
-    signal,
-  } = {}
-) {
+export async function updateVendor(vendorId, values, { token, signal } = {}) {
   if (!vendorId) {
-    throw new Error(
-      "Vendor ID is required."
-    );
+    throw new Error("Vendor ID is required.");
   }
 
-  const payload =
-    prepareVendorPayload(
-      values
-    );
+  const payload = prepareVendorPayload(values);
 
-  const data =
-    await request(
-      `/vendors/${encodeURIComponent(
-        vendorId
-      )}`,
-      {
-        method: "PUT",
+  const data = await request(`/vendors/${encodeURIComponent(vendorId)}`, {
+    method: "PUT",
+    token,
+    signal,
+    body: JSON.stringify(payload),
+  });
 
-        token,
+  const vendor = data?.vendor ?? data?.data?.vendor ?? data?.data ?? data;
 
-        signal,
-
-        body: JSON.stringify(
-          payload
-        ),
-      }
-    );
-
-  const vendor =
-    data?.vendor ??
-    data?.data?.vendor ??
-    data?.data ??
-    data;
-
-  return normalizeVendor(
-    vendor
-  );
+  return normalizeVendor(vendor);
 }
 
 /*
@@ -873,47 +558,24 @@ export async function updateVendor(
 export async function updateVendorStatus(
   vendorId,
   status,
-  {
-    token,
-    signal,
-  } = {}
+  { token, signal } = {},
 ) {
   if (!vendorId) {
-    throw new Error(
-      "Vendor ID is required."
-    );
+    throw new Error("Vendor ID is required.");
   }
 
-  const data =
-    await request(
-      `/vendors/${encodeURIComponent(
-        vendorId
-      )}`,
-      {
-        method: "PATCH",
+  const data = await request(`/vendors/${encodeURIComponent(vendorId)}`, {
+    method: "PATCH",
+    token,
+    signal,
+    body: JSON.stringify({
+      status: toApiStatus(status),
+    }),
+  });
 
-        token,
+  const vendor = data?.vendor ?? data?.data?.vendor ?? data?.data ?? data;
 
-        signal,
-
-        body: JSON.stringify({
-          status:
-            toApiStatus(
-              status
-            ),
-        }),
-      }
-    );
-
-  const vendor =
-    data?.vendor ??
-    data?.data?.vendor ??
-    data?.data ??
-    data;
-
-  return normalizeVendor(
-    vendor
-  );
+  return normalizeVendor(vendor);
 }
 
 /*
@@ -926,30 +588,288 @@ export async function updateVendorStatus(
 |--------------------------------------------------------------------------
 */
 
-export async function deleteVendor(
-  vendorId,
-  {
+export async function deleteVendor(vendorId, { token, signal } = {}) {
+  if (!vendorId) {
+    throw new Error("Vendor ID is required.");
+  }
+
+  return request(`/vendors/${encodeURIComponent(vendorId)}`, {
+    method: "DELETE",
     token,
     signal,
-  } = {}
+  });
+}
+
+/*
+|--------------------------------------------------------------------------
+| MERCHANT VENDOR MAPPING
+|--------------------------------------------------------------------------
+|
+| These APIs are merchant-level vendor mappings.
+|
+| GET
+| /merchants/{merchantId}/vendors
+|
+| GET
+| /merchants/{merchantId}/vendors/all
+|
+| GET
+| /merchants/{merchantId}/vendors/available
+|
+| POST
+| /merchants/{merchantId}/vendors
+|
+| DELETE
+| /merchants/{merchantId}/vendors/{vendorId}
+|
+|--------------------------------------------------------------------------
+*/
+
+/*
+|--------------------------------------------------------------------------
+| EXTRACT MERCHANT VENDOR LIST
+|--------------------------------------------------------------------------
+*/
+
+function extractMerchantVendorList(data) {
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data?.vendors)) {
+    return data.vendors;
+  }
+
+  if (Array.isArray(data?.data?.vendors)) {
+    return data.data.vendors;
+  }
+
+  if (Array.isArray(data?.data)) {
+    return data.data;
+  }
+
+  if (Array.isArray(data?.items)) {
+    return data.items;
+  }
+
+  return [];
+}
+
+/*
+|--------------------------------------------------------------------------
+| GET MAPPED VENDORS FOR MERCHANT
+|--------------------------------------------------------------------------
+|
+| GET
+| /merchants/{merchantId}/vendors
+|
+| Optional:
+| ?search=...
+|
+|--------------------------------------------------------------------------
+*/
+
+export async function getMappedMerchantVendors(
+  merchantId,
+  { search = "", token, signal } = {},
 ) {
+  if (!merchantId) {
+    throw new Error("Merchant ID is required.");
+  }
+
+  const params = new URLSearchParams();
+
+  if (search.trim()) {
+    params.set("search", search.trim());
+  }
+
+  const query = params.toString();
+
+  const path =
+    `/merchants/${encodeURIComponent(merchantId)}/vendors` +
+    (query ? `?${query}` : "");
+
+  const data = await request(path, {
+    method: "GET",
+    token,
+    signal,
+  });
+
+  const vendors = extractMerchantVendorList(data);
+
+  return vendors.map(normalizeVendor);
+}
+
+/*
+|--------------------------------------------------------------------------
+| GET ALL VENDORS WITH ASSIGNMENT
+|--------------------------------------------------------------------------
+|
+| GET
+| /merchants/{merchantId}/vendors/all
+|
+| Optional:
+| ?search=...
+|
+|--------------------------------------------------------------------------
+*/
+
+export async function getAllMerchantVendorsWithAssignment(
+  merchantId,
+  { search = "", token, signal } = {},
+) {
+  if (!merchantId) {
+    throw new Error("Merchant ID is required.");
+  }
+
+  const params = new URLSearchParams();
+
+  if (search.trim()) {
+    params.set("search", search.trim());
+  }
+
+  const query = params.toString();
+
+  const path =
+    `/merchants/${encodeURIComponent(merchantId)}/vendors/all` +
+    (query ? `?${query}` : "");
+
+  const data = await request(path, {
+    method: "GET",
+    token,
+    signal,
+  });
+
+  const vendors = extractMerchantVendorList(data);
+
+  return vendors.map(normalizeVendor);
+}
+
+/*
+|--------------------------------------------------------------------------
+| GET AVAILABLE VENDORS FOR MERCHANT
+|--------------------------------------------------------------------------
+|
+| GET
+| /merchants/{merchantId}/vendors/available
+|
+| Optional:
+| ?search=...
+|
+|--------------------------------------------------------------------------
+*/
+
+export async function getAvailableMerchantVendors(
+  merchantId,
+  { search = "", token, signal } = {},
+) {
+  if (!merchantId) {
+    throw new Error("Merchant ID is required.");
+  }
+
+  const params = new URLSearchParams();
+
+  if (search.trim()) {
+    params.set("search", search.trim());
+  }
+
+  const query = params.toString();
+
+  const path =
+    `/merchants/${encodeURIComponent(merchantId)}/vendors/available` +
+    (query ? `?${query}` : "");
+
+  const data = await request(path, {
+    method: "GET",
+    token,
+    signal,
+  });
+
+  const vendors = extractMerchantVendorList(data);
+
+  return vendors.map(normalizeVendor);
+}
+
+/*
+|--------------------------------------------------------------------------
+| ADD SELECTED VENDORS TO MERCHANT
+|--------------------------------------------------------------------------
+|
+| POST
+| /merchants/{merchantId}/vendors
+|
+| Body:
+|
+| {
+|   "vendorIds": [
+|     "vendor-id-1",
+|     "vendor-id-2"
+|   ]
+| }
+|
+|--------------------------------------------------------------------------
+*/
+
+export async function addMerchantVendors(
+  merchantId,
+  vendorIds,
+  { token, signal } = {},
+) {
+  if (!merchantId) {
+    throw new Error("Merchant ID is required.");
+  }
+
+  if (!Array.isArray(vendorIds)) {
+    throw new Error("vendorIds must be an array.");
+  }
+
+  if (!vendorIds.length) {
+    throw new Error("Select at least one vendor.");
+  }
+
+  return request(`/merchants/${encodeURIComponent(merchantId)}/vendors`, {
+    method: "POST",
+    token,
+    signal,
+    body: JSON.stringify({
+      vendorIds,
+    }),
+  });
+}
+
+/*
+|--------------------------------------------------------------------------
+| UNMAP VENDOR FROM MERCHANT
+|--------------------------------------------------------------------------
+|
+| DELETE
+| /merchants/{merchantId}/vendors/{vendorId}
+|
+|--------------------------------------------------------------------------
+*/
+
+export async function unmapMerchantVendor(
+  merchantId,
+  vendorId,
+  { token, signal } = {},
+) {
+  if (!merchantId) {
+    throw new Error("Merchant ID is required.");
+  }
+
   if (!vendorId) {
-    throw new Error(
-      "Vendor ID is required."
-    );
+    throw new Error("Vendor ID is required.");
   }
 
   return request(
-    `/vendors/${encodeURIComponent(
-      vendorId
+    `/merchants/${encodeURIComponent(merchantId)}/vendors/${encodeURIComponent(
+      vendorId,
     )}`,
     {
       method: "DELETE",
-
       token,
-
       signal,
-    }
+    },
   );
 }
 
@@ -960,10 +880,18 @@ export async function deleteVendor(
 */
 
 export const vendorsApi = {
+  // Master vendor APIs
   getVendors,
   getVendor,
   createVendor,
   updateVendor,
   updateVendorStatus,
   deleteVendor,
+
+  // Merchant-level mapping APIs
+  getMappedMerchantVendors,
+  getAllMerchantVendorsWithAssignment,
+  getAvailableMerchantVendors,
+  addMerchantVendors,
+  unmapMerchantVendor,
 };

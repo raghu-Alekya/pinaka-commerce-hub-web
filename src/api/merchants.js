@@ -1,7 +1,72 @@
 import { api } from "./http";
 import { endpoints } from "./endpoints";
+function isUuid(val) {
+  return typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val.trim());
+}
 
-export function toMerchantPayload(data) {
+const DEFAULT_STORE_TYPE_ID = "a1b2c3d4-e5f6-4a1b-8c2d-000000000001";
+const DEFAULT_PLAN_ID = "2a8ac621-fd00-4b7f-aa88-6e03124b22ee";
+const DEFAULT_ROLE_IDS = [
+  "17c14d03-b860-48be-bb11-0511cae5e387",
+  "87b6c52d-0b73-490a-b7d2-ec658a88084d"
+];
+
+const COUNTRY_CODE_MAP = {
+  "united states": "USA",
+  "usa": "USA",
+  "us": "USA",
+  "india": "IND",
+  "ind": "IND",
+  "in": "IND",
+  "canada": "CAN",
+  "can": "CAN",
+  "united kingdom": "GBR",
+  "uk": "GBR",
+  "gbr": "GBR",
+  "australia": "AUS",
+  "aus": "AUS",
+};
+
+function normalizeCountryCode(value) {
+  if (!value) return "USA";
+  const str = String(value).trim().toLowerCase();
+  return COUNTRY_CODE_MAP[str] || (str.length === 3 ? str.toUpperCase() : "USA");
+}
+
+function normalizePhoneNumber(phone, country) {
+  let raw = String(phone || "").trim();
+  if (!raw) return "+15552345678";
+  if (raw.startsWith("+")) return raw;
+  const digits = raw.replace(/\D/g, "");
+  const countryCode = normalizeCountryCode(country);
+  let dialCode = "+1";
+  if (countryCode === "IND") dialCode = "+91";
+  else if (countryCode === "GBR") dialCode = "+44";
+  else if (countryCode === "AUS") dialCode = "+61";
+  else if (countryCode === "CAN") dialCode = "+1";
+  return `${dialCode}${digits}`;
+}
+
+function computeRenewalDate(startDateStr, billingCycleStr) {
+  if (!startDateStr || !/^\d{4}-\d{2}-\d{2}$/.test(startDateStr)) {
+    startDateStr = new Date().toISOString().slice(0, 10);
+  }
+  const date = new Date(`${startDateStr}T12:00:00Z`);
+  if (Number.isNaN(date.getTime())) {
+    const fallback = new Date();
+    fallback.setMonth(fallback.getMonth() + 1);
+    return fallback.toISOString().slice(0, 10);
+  }
+  const day = date.getUTCDate();
+  date.setUTCDate(1);
+  const isAnnual = String(billingCycleStr || "").toUpperCase().includes("ANNUAL") || String(billingCycleStr || "").toUpperCase().includes("YEAR");
+  date.setUTCMonth(date.getUTCMonth() + (isAnnual ? 12 : 1));
+  const last = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+  date.setUTCDate(Math.min(day, last));
+  return date.toISOString().slice(0, 10);
+}
+
+export function toNestedMerchantPayload(data) {
   if (!data) return {};
   const m = data.merchant || data;
   const s = data.subscription || data;
@@ -16,19 +81,29 @@ export function toMerchantPayload(data) {
   const addressLine2 = m.addressLine2 || data.addressLine2 || "";
   const city = m.city || data.city || primaryStore.city || "City";
   const state = m.state || data.state || primaryStore.state || "State";
-  const pinCode = m.postal || m.pinCode || m.postalCode || data.postalCode || primaryStore.zip || "10001";
-  const country = m.country || data.country || "USA";
-  const initialStatus = m.initialStatus || m.status || data.status || "ACTIVE";
-  const storeTypeId = m.storeTypeId || data.storeTypeId || "a1b2c3d4-e5f6-4a1b-8c2d-000000000001";
-  const planId = s.planId || data.planId || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-  const billingCycle = String(s.billingCycle || data.billingCycle || "MONTHLY").toUpperCase();
-  const startDate = s.startDate || s.start || data.startDate || new Date().toISOString().slice(0, 10);
-  const renewalDate = s.renewalDate || data.renewalDate || "";
-  const agreementPrice = s.agreementPrice !== undefined ? Number(s.agreementPrice) : (data.agreementPrice !== undefined ? Number(data.agreementPrice) : 99);
-  const tax = Number(data.tax || m.tax || 8.25);
-  const totalDueToday = Number(data.totalDueToday || (agreementPrice + tax));
-  const paymentMethod = data.paymentMethod || m.paymentMethod || "CARD";
-  const roleIds = Array.isArray(data.roleIds) ? data.roleIds : (Array.isArray(m.roleIds) ? m.roleIds : []);
+  const pinCode = m.postal || m.pinCode || m.postalCode || data.postalCode || primaryStore.zip || "85001";
+  const country = m.country || data.country || "United States";
+
+  let storeTypeId = m.storeTypeId || data.storeTypeId || m.type;
+  if (!isUuid(storeTypeId)) storeTypeId = DEFAULT_STORE_TYPE_ID;
+
+  let planId = s.planId || data.planId || data.planDetails?.id || data.planDetails?.planId || data.planDetails?._id;
+  if (!isUuid(planId)) planId = DEFAULT_PLAN_ID;
+
+  const billingCycle = String(s.billingCycle || data.cycle || data.billingCycle || "MONTHLY").toUpperCase();
+  const startDate = s.startDate || s.start || data.start || data.startDate || new Date().toISOString().slice(0, 10);
+  const renewalDate = s.renewalDate || data.renewalDate || computeRenewalDate(startDate, billingCycle);
+
+  const rawRoleIds = Array.isArray(data.roleIds) && data.roleIds.length > 0
+    ? data.roleIds
+    : (Array.isArray(m.roleIds) && m.roleIds.length > 0
+      ? m.roleIds
+      : (Array.isArray(data.roles)
+        ? data.roles.map(r => r.id || r.roleTemplateId || r._id || r.roleId).filter(Boolean)
+        : []));
+
+  let roleIds = rawRoleIds.filter(isUuid);
+  if (!roleIds.length) roleIds = DEFAULT_ROLE_IDS;
 
   return {
     merchant: {
@@ -49,8 +124,7 @@ export function toMerchantPayload(data) {
       planId,
       billingCycle,
       startDate,
-      renewalDate: renewalDate || undefined,
-      agreementPrice,
+      renewalDate,
     },
     stores: (data.stores || []).map((store) => ({
       name: store.name,
@@ -67,29 +141,75 @@ export function toMerchantPayload(data) {
       zip: store.zip,
     })),
     roleIds,
+  };
+}
+
+export function toFlatMerchantPayload(data) {
+  if (!data) return {};
+  const m = data.merchant || data;
+  const s = data.subscription || data;
+  const planDetails = data.planDetails || {};
+  const primaryStore = (Array.isArray(data.stores) && data.stores[0]) || {};
+
+  const businessName = m.business || m.businessName || m.legalBusinessName || data.businessName || "";
+  const businessDisplayName = m.display || m.businessDisplayName || m.businessName || businessName;
+  const merchantName = m.name || m.merchantName || m.ownerName || [m.firstName, m.lastName].filter(Boolean).join(" ") || businessDisplayName;
+  const merchantEmail = m.email || m.merchantEmail || data.email || "";
+  
+  let rawPhone = m.phone || m.merchantPhoneNumber || data.phone || "";
+  let rawCountry = m.country || data.country || "USA";
+  
+  const country = normalizeCountryCode(rawCountry);
+  const merchantPhoneNumber = normalizePhoneNumber(rawPhone, rawCountry);
+
+  const addressLine1 = m.addressLine1 || data.addressLine1 || primaryStore.addressLine1 || primaryStore.address || "";
+  const addressLine2 = m.addressLine2 || data.addressLine2 || primaryStore.addressLine2 || "";
+  const city = m.city || data.city || primaryStore.city || "";
+  const state = m.state || data.state || primaryStore.state || "";
+  const pinCode = m.postal || m.pinCode || m.postalCode || data.postalCode || primaryStore.postal || primaryStore.zip || "";
+
+  let planId = s.planId || data.planId || planDetails.id || planDetails.planId || planDetails._id;
+  if (!isUuid(planId)) planId = DEFAULT_PLAN_ID;
+
+  const rawCycle = String(s.billingCycle || data.cycle || data.billingCycle || "MONTHLY").toUpperCase();
+  const billingCycle = rawCycle.includes("ANNUAL") || rawCycle.includes("YEAR") ? "ANNUAL" : "MONTHLY";
+
+  const startDate = s.startDate || s.start || data.start || data.startDate || new Date().toISOString().slice(0, 10);
+  const renewalDate = s.renewalDate || data.renewalDate || computeRenewalDate(startDate, billingCycle);
+
+  const rawPrice = s.agreementPrice !== undefined ? Number(s.agreementPrice) : (data.agreementPrice !== undefined ? Number(data.agreementPrice) : (planDetails.price ?? 99));
+  const agreementPrice = Number(rawPrice) || 99;
+
+  const tax = s.tax !== undefined ? Number(s.tax) : (data.tax !== undefined ? Number(data.tax) : Math.round(agreementPrice * 0.0825 * 100) / 100);
+  const totalDueToday = s.totalDueToday !== undefined ? Number(s.totalDueToday) : (data.totalDueToday !== undefined ? Number(data.totalDueToday) : Math.round((agreementPrice + tax) * 100) / 100);
+
+  const paymentMethod = String(data.paymentMethod || data.paymentPreview || m.paymentMethod || "CARD").toUpperCase().includes("ACH") ? "ACH" : "CARD";
+
+  return {
     merchantName,
     merchantEmail,
     merchantPhoneNumber,
     businessName,
     businessDisplayName,
-    initialStatus,
     addressLine1,
     addressLine2,
     city,
     state,
     pinCode,
     country,
-    storeTypeId,
     planId,
     billingCycle,
     startDate,
-    renewalDate: renewalDate || undefined,
+    renewalDate,
     agreementPrice,
     tax,
     totalDueToday,
     paymentMethod,
-    onboardingStatus: initialStatus,
   };
+}
+
+export function toMerchantPayload(data) {
+  return toFlatMerchantPayload(data);
 }
 
 export async function listMerchants() {
@@ -281,24 +401,38 @@ function mapStoreToRow(store) {
 }
 
 export async function createMerchant(data) {
-  const payload = toMerchantPayload(data);
-  const result = await api.post(endpoints.createMerchant, payload);
+  const flatPayload = toFlatMerchantPayload(data);
+  console.log("[CREATE MERCHANT PAYLOAD]", flatPayload);
+  const result = await api.post(endpoints.merchants, flatPayload);
 
   if (result && result.success === false) {
     throw new Error(result.message || "Unable to create merchant.");
   }
 
+  console.log("[CREATE MERCHANT API RESPONSE]", result);
   return result;
 }
 
 export async function updateMerchant(id, data) {
-  const payload = toMerchantPayload(data);
-  const result = await api.put(endpoints.merchant(id), payload);
+  const flatPayload = toFlatMerchantPayload(data);
+  const result = await api.put(endpoints.merchant(id), flatPayload);
 
   if (result && result.success === false) {
     throw new Error(result.message || "Unable to update merchant.");
   }
 
+  console.log("[UPDATE MERCHANT API RESPONSE]", result);
+  return result;
+}
+
+export async function deleteMerchant(id) {
+  const result = await api.delete(endpoints.merchant(id));
+
+  if (result && result.success === false) {
+    throw new Error(result.message || "Unable to delete merchant.");
+  }
+
+  console.log("[DELETE MERCHANT API RESPONSE]", result);
   return result;
 }
 

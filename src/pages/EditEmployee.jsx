@@ -24,7 +24,13 @@ import {
 import "../styles/add-employee.css";
 import "../styles/editemployee.css";
 
-import { updateEmployee } from "../api/employees";
+// import { updateEmployee } from "../api/employees";
+import {
+  updateEmployee,
+  uploadEmployeeProfileImage,
+  getEmployeeProfileImage,
+  deleteEmployeeProfileImage,
+} from "../api/employees";
 
 /* =========================================================
    STORE ROLE ASSIGNMENT STYLES
@@ -202,8 +208,12 @@ export default function EditEmployee() {
   }, []);
 
   const [profileImage, setProfileImage] = useState(
-    employee.profileImage || null,
+    employee.profileImageUrl || employee.profileImage || null,
   );
+
+  const [profileImageFile, setProfileImageFile] = useState(null);
+  const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
+  const [deletingProfileImage, setDeletingProfileImage] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: employee.firstName || employee.name?.split(" ")[0] || "",
@@ -221,11 +231,14 @@ export default function EditEmployee() {
     country: employee.country || "India",
 
     // Set initial merchant to Business Name or merchant string
-    merchant:
-      getMerchantName(employee.merchant) ||
-      employee.merchantName ||
+    merchantId:
       employee.merchantId ||
+      employee.merchant_id ||
+      employee.merchant?.id ||
+      employee.merchant?.uuid ||
       "",
+
+    merchant: getMerchantName(employee.merchant) || employee.merchantName || "",
 
     employeeLoginPin: employee.loginPin || employee.employeeLoginPin || "",
     manager: employee.manager || "",
@@ -452,9 +465,16 @@ export default function EditEmployee() {
      PROFILE IMAGE
   ========================================================= */
 
-  const handleProfileUpload = (e) => {
+  const handleProfileUpload = async (e) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
+
+    if (!employeeId) {
+      alert("Employee ID is missing.");
+      e.target.value = "";
+      return;
+    }
 
     if (!file.type.startsWith("image/")) {
       alert("Please select a JPG or PNG image.");
@@ -468,8 +488,51 @@ export default function EditEmployee() {
       return;
     }
 
-    const imageUrl = URL.createObjectURL(file);
-    setProfileImage(imageUrl);
+    try {
+      setUploadingProfileImage(true);
+
+      // Show selected image immediately
+      const previewUrl = URL.createObjectURL(file);
+      setProfileImage(previewUrl);
+      setProfileImageFile(file);
+
+      const response = await uploadEmployeeProfileImage(employeeId, file);
+
+      console.log("Profile image upload response:", response);
+
+      const uploadedImageUrl =
+        response?.profileImageUrl ||
+        response?.employee?.profileImageUrl ||
+        null;
+
+      if (uploadedImageUrl) {
+        setProfileImage(uploadedImageUrl);
+      }
+
+      setProfileImageFile(null);
+
+      alert("Profile photo updated successfully.");
+    } catch (error) {
+      console.error("Profile image upload failed:", error);
+
+      // Restore the previous image if upload failed
+      setProfileImage(
+        employee.profileImageUrl || employee.profileImage || null,
+      );
+
+      setProfileImageFile(null);
+
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to upload profile photo.";
+
+      alert(Array.isArray(message) ? message.join(", ") : String(message));
+    } finally {
+      setUploadingProfileImage(false);
+      e.target.value = "";
+    }
   };
 
   useEffect(() => {
@@ -479,7 +542,38 @@ export default function EditEmployee() {
       }
     };
   }, [profileImage]);
+  const handleDeleteProfileImage = async () => {
+    if (!employeeId || !profileImage) return;
 
+    const confirmed = window.confirm(
+      "Are you sure you want to delete the employee profile photo?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeletingProfileImage(true);
+
+      await deleteEmployeeProfileImage(employeeId);
+
+      setProfileImage(null);
+      setProfileImageFile(null);
+
+      alert("Profile photo deleted successfully.");
+    } catch (error) {
+      console.error("Delete profile image failed:", error);
+
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to delete profile photo.";
+
+      alert(Array.isArray(message) ? message.join(", ") : String(message));
+    } finally {
+      setDeletingProfileImage(false);
+    }
+  };
   /* =========================================================
      UPDATE EMPLOYEE API CALL
   ========================================================= */
@@ -612,8 +706,9 @@ export default function EditEmployee() {
 
                 {/* PHONE */}
                 <div
-                  className={`employee-field ${errors.phone ? "employee-phone-invalid" : ""
-                    }`}
+                  className={`employee-field ${
+                    errors.phone ? "employee-phone-invalid" : ""
+                  }`}
                 >
                   <label>
                     Phone Number <span>*</span>
@@ -819,46 +914,19 @@ export default function EditEmployee() {
               />
 
               {/* DYNAMIC MERCHANT DROPDOWN */}
+              {/* MERCHANT - DISPLAY ONLY */}
               <div className="employee-field work-merchant-field">
                 <label>
                   Merchant <span>*</span>
                 </label>
 
-                <div className="employee-select">
-                  <select
-                    name="merchant"
-                    value={formData.merchant}
-                    onChange={handleChange}
-                    className={errors.merchant ? "field-invalid" : ""}
-                    disabled={loadingMerchants}
-                  >
-                    <option value="">
-                      {loadingMerchants
-                        ? "Loading merchants..."
-                        : "Select merchant"}
-                    </option>
-
-                    {merchants.map((m, index) => {
-                      const merchantName = getMerchantName(m);
-                      const optionKey =
-                        typeof m === "object"
-                          ? m.uuid || m.id || index
-                          : `${m}-${index}`;
-
-                      return (
-                        <option key={optionKey} value={merchantName}>
-                          {merchantName}
-                        </option>
-                      );
-                    })}
-                  </select>
-
-                  <ChevronDown size={17} className="employee-select-arrow" />
-                </div>
-
-                {errors.merchant && (
-                  <span className="field-error">{errors.merchant}</span>
-                )}
+                <input
+                  type="text"
+                  name="merchant"
+                  value={formData.merchant}
+                  readOnly
+                  className="merchant-readonly-field"
+                />
               </div>
             </section>
 
