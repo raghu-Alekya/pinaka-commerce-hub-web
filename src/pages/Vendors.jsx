@@ -163,6 +163,9 @@ export default function Vendors({
   storeId,
   store,
   embedded = false,
+  formOnly = false,
+  onCreate,
+  onCancel,
 }) {
   const [vendors, setVendors] =
     useState([]);
@@ -676,9 +679,7 @@ export default function Vendors({
 
       else {
         const newVendor =
-          await createVendor(
-            payload
-          );
+          await (onCreate || createVendor)(payload);
 
         setVendors(
           (current) => [
@@ -948,55 +949,7 @@ export default function Vendors({
   |--------------------------------------------------------------------------
   */
 
-  return (
-    <section className="vendors-page">
-
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
-
-      <div className="vendors-header">
-        <div>
-          <h1>
-            Vendors
-          </h1>
-
-          <p>
-            Manage supplier contacts,
-            categories, and vendor
-            information.
-          </p>
-        </div>
-      </div>
-
-      {/* =====================================================
-          ERROR
-      ===================================================== */}
-
-      {error && (
-        <div className="vendors-error">
-          <i className="bi bi-exclamation-circle" />
-
-          <span>
-            {error}
-          </span>
-
-          <button
-            type="button"
-            onClick={() =>
-              setError("")
-            }
-            aria-label="Close error"
-          >
-            <i className="bi bi-x" />
-          </button>
-        </div>
-      )}
-
-      {/* =====================================================
-          VENDOR FORM
-      ===================================================== */}
-
+  const vendorForm = (
       <form
         className={`vendors-form ${
           viewingId !== null
@@ -1076,10 +1029,7 @@ export default function Vendors({
               <small className="vendors-field-error">
                 Use 3–30 characters. Letters, numbers, and underscores only. No spaces.
               </small>
-            ) : (
-              <small className="vendors-field-hint">
-              </small>
-            )}
+            ) : null}
           </label>
 
           {/* =================================================
@@ -1102,8 +1052,6 @@ export default function Vendors({
               disabled={saving || viewingId !== null}
             />
 
-            <small className="vendors-field-hint">
-            </small>
           </label>
 
           {/* =================================================
@@ -1133,9 +1081,6 @@ export default function Vendors({
               </option>
             </select>
 
-            <small className="vendors-field-hint">
-              Select the vendor business type.
-            </small>
           </label>
 
           {/* =================================================
@@ -1165,9 +1110,6 @@ export default function Vendors({
                 disabled={saving || viewingId !== null}
               />
 
-              <small className="vendors-field-hint">
-                Primary contact person for the organizer.
-              </small>
             </label>
           )}
 
@@ -1200,10 +1142,7 @@ export default function Vendors({
             {form.phone && !/^\d{10}$/.test(form.phone) ? (
               <small className="vendors-field-error">
               </small>
-            ) : (
-              <small className="vendors-field-hint">
-              </small>
-            )}
+            ) : null}
           </label>
 
           {/* =================================================
@@ -1234,10 +1173,7 @@ export default function Vendors({
             {form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? (
               <small className="vendors-field-error">
               </small>
-            ) : (
-              <small className="vendors-field-hint">
-              </small>
-            )}
+            ) : null}
           </label>
 
           {/* =================================================
@@ -1262,9 +1198,6 @@ export default function Vendors({
               disabled={saving || viewingId !== null}
             />
 
-            <small className="vendors-field-hint">
-              Enter the main product or category supplied.
-            </small>
           </label>
 
           {/* =================================================
@@ -1289,9 +1222,6 @@ export default function Vendors({
               disabled={saving || viewingId !== null}
             />
 
-            <small className="vendors-field-hint">
-              Enter the primary street address.
-            </small>
           </label>
 
           {/* =================================================
@@ -1315,9 +1245,6 @@ export default function Vendors({
               disabled={saving || viewingId !== null}
             />
 
-            <small className="vendors-field-hint">
-              Optional apartment, suite, or unit details.
-            </small>
           </label>
 
           {/* =================================================
@@ -1340,9 +1267,6 @@ export default function Vendors({
               disabled={saving || viewingId !== null}
             />
 
-            <small className="vendors-field-hint">
-              Enter the vendor city.
-            </small>
           </label>
 
           {/* =================================================
@@ -1365,9 +1289,6 @@ export default function Vendors({
               disabled={saving || viewingId !== null}
             />
 
-            <small className="vendors-field-hint">
-              Enter the vendor state or province.
-            </small>
           </label>
 
           {/* =================================================
@@ -1392,9 +1313,6 @@ export default function Vendors({
               disabled={saving || viewingId !== null}
             />
 
-            <small className="vendors-field-hint">
-              Enter the postal or ZIP code.
-            </small>
           </label>
 
           {/* =================================================
@@ -1419,9 +1337,6 @@ export default function Vendors({
               disabled={saving || viewingId !== null}
             />
 
-            <small className="vendors-field-hint">
-              Enter the vendor country.
-            </small>
           </label>
 
           {/* =================================================
@@ -1456,9 +1371,6 @@ export default function Vendors({
                 </option>
               </select>
 
-              <small className="vendors-field-hint">
-                Select whether the vendor is active or inactive.
-              </small>
             </label>
           )}
 
@@ -1473,7 +1385,7 @@ export default function Vendors({
           <button
             type="button"
             className="vendors-clear-button"
-            onClick={resetForm}
+            onClick={onCancel || resetForm}
             disabled={saving}
           >
             Cancel
@@ -1509,6 +1421,60 @@ export default function Vendors({
         </div>
 
       </form>
+  );
+
+  if (formOnly) return <section className="vendors-page">{error && <div className="vendors-error" role="alert">{error}</div>}{vendorForm}</section>;
+
+  return (
+    <section className="vendors-page">
+
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
+
+      <div className="vendors-header">
+        <div>
+          <h1>
+            Vendors
+          </h1>
+
+          <p>
+            Manage supplier contacts,
+            categories, and vendor
+            information.
+          </p>
+        </div>
+      </div>
+
+      {/* =====================================================
+          ERROR
+      ===================================================== */}
+
+      {error && (
+        <div className="vendors-error">
+          <i className="bi bi-exclamation-circle" />
+
+          <span>
+            {error}
+          </span>
+
+          <button
+            type="button"
+            onClick={() =>
+              setError("")
+            }
+            aria-label="Close error"
+          >
+            <i className="bi bi-x" />
+          </button>
+        </div>
+      )}
+
+      {/* =====================================================
+          VENDOR FORM
+      ===================================================== */}
+
+      {vendorForm}
 
       {/* =====================================================
           VENDORS LIST
