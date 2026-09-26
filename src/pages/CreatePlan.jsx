@@ -407,11 +407,21 @@ export default function CreatePlan() {
       [name]: name === "code" ? value.toUpperCase() : value,
     }));
   }
+  function getFeatureDisplayName(id) {
+    const match = storeTypeFeatures.find(
+      (f) =>
+        String(f.featureId) === String(id) ||
+        String(f.id) === String(id) ||
+        String(f.name).toLowerCase() === String(id).toLowerCase()
+    );
+    return match?.name || id;
+  }
+
   function toggleIncludedFeature(featureId) {
     setIncludedFeatures((current) =>
       current.includes(featureId)
         ? current.filter((id) => id !== featureId)
-        : [...current, featured],
+        : [...current, featureId],
     );
   }
 
