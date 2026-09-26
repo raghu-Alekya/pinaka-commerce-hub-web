@@ -1,26 +1,49 @@
 import { useEffect, useMemo, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import { storeTypesApi } from "../api/storeTypes";
 
 function toRow(item) {
   const created = item.createdAt ? new Date(item.createdAt) : null;
+
   const updated = item.updatedAt ? new Date(item.updatedAt) : null;
+
+  // Safely normalize status regardless of casing, booleans, or whitespace
+
+  const rawStatus = String(item.status ?? "")
+    .trim()
+    .toUpperCase();
+
+  const isInactive =
+    rawStatus === "INACTIVE" ||
+    item.status === false ||
+    item.isActive === false ||
+    item.is_active === false ||
+    rawStatus === "FALSE" ||
+    rawStatus === "0";
 
   return {
     id: item.id,
-    code: item.storeTypeCode ?? "",
-    name: item.name ?? "",
-    description: item.description?.trim() || "-",
-    status: item.status === "INACTIVE" ? "Inactive" : "Active",
 
-    // Add these two lines
+    code: item.storeTypeCode ?? item.code ?? "",
+
+    name: item.name ?? "",
+
+    description: item.description?.trim() || "-",
+
+    status: isInactive ? "Inactive" : "Active",
+
     createdAt: item.createdAt,
+
     updatedAt: item.updatedAt,
 
     createdDate: created
       ? created.toLocaleDateString("en-US", {
           month: "short",
+
           day: "2-digit",
+
           year: "numeric",
         })
       : "—",
@@ -28,7 +51,9 @@ function toRow(item) {
     createdTime: created
       ? created.toLocaleTimeString("en-US", {
           hour: "2-digit",
+
           minute: "2-digit",
+
           hour12: true,
         })
       : "",
@@ -36,7 +61,9 @@ function toRow(item) {
     updatedDate: updated
       ? updated.toLocaleDateString("en-US", {
           month: "short",
+
           day: "2-digit",
+
           year: "numeric",
         })
       : "—",
@@ -44,7 +71,9 @@ function toRow(item) {
     updatedTime: updated
       ? updated.toLocaleTimeString("en-US", {
           hour: "2-digit",
+
           minute: "2-digit",
+
           hour12: true,
         })
       : "",
@@ -53,70 +82,102 @@ function toRow(item) {
 
 const emptyForm = {
   code: "",
+
   name: "",
+
   description: "",
+
   category: "",
+
   status: "Active",
 };
 
 export default function CreateStoreType() {
   const navigate = useNavigate();
+
   const [storeTypes, setStoreTypes] = useState([]);
+
   const [form, setForm] = useState(emptyForm);
+
   const [originalForm, setOriginalForm] = useState(emptyForm);
+
   const [search, setSearch] = useState("");
+
   const [statusFilter, setStatusFilter] = useState("");
+
   const [sortBy, setSortBy] = useState("newest");
+
   const [editingId, setEditingId] = useState(null);
+
   const [deleteTarget, setDeleteTarget] = useState(null);
+
   const [message, setMessage] = useState("");
+
   const [error, setError] = useState("");
+
   const [loading, setLoading] = useState(true);
+
   const [saving, setSaving] = useState(false);
+
   const [errors, setErrors] = useState({});
+
   const ITEMS_PER_PAGE = 5;
+
   const [currentPage, setCurrentPage] = useState(1);
 
   async function loadStoreTypes() {
     const response = await storeTypesApi.getAll();
 
-    if (!Array.isArray(response?.storeTypes)) {
-      throw new Error("GET /store-types did not return a storeTypes array.");
-    }
+    const data = response?.data ?? response;
 
-    const sorted = response.storeTypes.sort(
+    const list = Array.isArray(data?.storeTypes)
+      ? data.storeTypes
+      : Array.isArray(data)
+        ? data
+        : [];
+
+    const sorted = [...list].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
     );
 
     setStoreTypes(sorted.map(toRow));
-    setCurrentPage(1);
   }
 
   useEffect(() => {
     let cancelled = false;
+
+    setLoading(true);
+
     storeTypesApi
+
       .getAll()
+
       .then((response) => {
-        if (!Array.isArray(response?.storeTypes)) {
-          throw new Error(
-            "GET /store-types did not return a storeTypes array.",
-          );
-        }
+        if (cancelled) return;
 
-        if (!cancelled) {
-          const sorted = response.storeTypes.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-          );
+        const data = response?.data ?? response;
 
-          setStoreTypes(sorted.map(toRow));
-        }
+        const list = Array.isArray(data?.storeTypes)
+          ? data.storeTypes
+          : Array.isArray(data)
+            ? data
+            : [];
+
+        const sorted = [...list].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+
+        setStoreTypes(sorted.map(toRow));
       })
+
       .catch((err) => {
         if (!cancelled) setError(err.message);
       })
+
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
@@ -127,16 +188,28 @@ export default function CreateStoreType() {
 
     const filtered = storeTypes.filter((item) => {
       const matchesSearch = `${item.code} ${item.name} ${item.description}`
+
         .toLowerCase()
+
         .includes(searchValue);
 
-      return matchesSearch && (!statusFilter || item.status === statusFilter);
+      const matchesStatus =
+        !statusFilter ||
+        item.status.toLowerCase() === statusFilter.toLowerCase();
+
+      return matchesSearch && matchesStatus;
     });
 
     return filtered.sort((a, b) => {
       switch (sortBy) {
         case "oldest":
           return new Date(a.createdAt) - new Date(b.createdAt);
+
+        case "updated":
+          return (
+            new Date(b.updatedAt || b.createdAt) -
+            new Date(a.updatedAt || a.createdAt)
+          );
 
         case "name-asc":
           return a.name.localeCompare(b.name);
@@ -145,6 +218,7 @@ export default function CreateStoreType() {
           return b.name.localeCompare(a.name);
 
         case "newest":
+
         default:
           return new Date(b.createdAt) - new Date(a.createdAt);
       }
@@ -155,8 +229,10 @@ export default function CreateStoreType() {
 
   const paginatedStoreTypes = filteredStoreTypes.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
+
     currentPage * ITEMS_PER_PAGE,
   );
+
   useEffect(() => {
     setCurrentPage(1);
   }, [search, statusFilter]);
@@ -180,31 +256,40 @@ export default function CreateStoreType() {
 
     setForm((current) => ({
       ...current,
+
       [name]: name === "code" ? value.toUpperCase() : value,
     }));
 
     setErrors((current) => ({
       ...current,
+
       [name]: "",
     }));
   }
 
   function resetForm() {
     setForm(emptyForm);
+
     setOriginalForm(emptyForm);
+
     setEditingId(null);
+
     setErrors({});
   }
 
   function resetFilters() {
     setSearch("");
+
     setStatusFilter("");
+
     setSortBy("newest");
   }
 
   function validateForm() {
     const nextErrors = {};
+
     const code = form.code.trim().toUpperCase();
+
     const name = form.name.trim();
 
     if (!code) {
@@ -235,6 +320,7 @@ export default function CreateStoreType() {
     }
 
     setErrors(nextErrors);
+
     return Object.keys(nextErrors).length === 0;
   }
 
@@ -247,26 +333,35 @@ export default function CreateStoreType() {
 
     const values = {
       storeTypeCode: form.code.trim().toUpperCase(),
+
       name: form.name.trim(),
+
       description: form.description.trim(),
-      status: form.status === "Inactive" ? "INACTIVE" : "ACTIVE",
+
+      status: form.status.toLowerCase() === "inactive" ? "INACTIVE" : "ACTIVE",
     };
 
     setSaving(true);
+
     setError("");
+
     setMessage("");
+
     try {
       if (editingId !== null) {
         await storeTypesApi.update(editingId, values);
       } else {
         await storeTypesApi.create(values);
       }
+
       setMessage(
         editingId !== null
           ? "Store type updated successfully."
           : "Store type created successfully.",
       );
+
       resetForm();
+
       try {
         await loadStoreTypes();
       } catch (refreshError) {
@@ -283,16 +378,21 @@ export default function CreateStoreType() {
 
   function editStoreType(item) {
     setEditingId(item.id);
+
     setErrors({});
 
     const nextForm = {
       code: item.code,
+
       name: item.name,
+
       description: item.description === "-" ? "" : item.description,
+
       status: item.status,
     };
 
     setForm(nextForm);
+
     setOriginalForm(nextForm);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -302,25 +402,32 @@ export default function CreateStoreType() {
     if (!deleteTarget) return;
 
     setSaving(true);
+
     setError("");
 
     try {
-      await storeTypesApi.delete(deleteTarget.id);
+      const rawResponse = await storeTypesApi.delete(deleteTarget.id);
 
-      setStoreTypes((current) =>
-        current.map((item) =>
-          item.id === deleteTarget.id ? { ...item, status: "Inactive" } : item,
-        ),
-      );
+      const data = rawResponse?.data ?? rawResponse;
 
-      if (editingId === deleteTarget.id) {
+      if (data?.success === false) {
+        throw new Error(data.message || "Failed to deactivate store type.");
+      }
+
+      setMessage(data?.message || "Store type deactivated successfully.");
+
+      if (String(editingId) === String(deleteTarget.id)) {
         resetForm();
       }
 
-      setMessage("Store type deleted successfully.");
       setDeleteTarget(null);
+
+      // Re-fetch the updated list from the API
+
+      await loadStoreTypes();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "An error occurred while deactivating.");
+
       setDeleteTarget(null);
     } finally {
       setSaving(false);
@@ -361,8 +468,7 @@ export default function CreateStoreType() {
         <div className="store-type-form-grid">
           <div className="store-type-field">
             <label>
-              {" "}
-              Store Type Code <span className="required">*</span>{" "}
+              Store Type Code <span className="required">*</span>
             </label>
             <input
               name="code"
@@ -372,6 +478,7 @@ export default function CreateStoreType() {
               maxLength={30}
               className={errors.code ? "store-type-input-error" : ""}
             />
+
             {errors.code ? (
               <small className="field-error">{errors.code}</small>
             ) : (
@@ -381,8 +488,7 @@ export default function CreateStoreType() {
 
           <div className="store-type-field">
             <label>
-              {" "}
-              Display Name <span className="required">*</span>{" "}
+              Display Name <span className="required">*</span>
             </label>
             <input
               name="name"
@@ -392,6 +498,7 @@ export default function CreateStoreType() {
               maxLength={80}
               className={errors.name ? "store-type-input-error" : ""}
             />
+
             {errors.name ? (
               <small className="field-error">{errors.name}</small>
             ) : (
@@ -401,8 +508,7 @@ export default function CreateStoreType() {
 
           <div className="store-type-field">
             <label>
-              {" "}
-              Status <span className="required">*</span>{" "}
+              Status <span className="required">*</span>
             </label>
             <div className="select-shell">
               <select
@@ -430,8 +536,10 @@ export default function CreateStoreType() {
               onChange={updateField}
               onInput={(e) => {
                 e.currentTarget.style.height = "44px";
+
                 e.currentTarget.style.height = `${Math.max(
                   44,
+
                   e.currentTarget.scrollHeight,
                 )}px`;
               }}
@@ -560,6 +668,7 @@ export default function CreateStoreType() {
                   className="store-type-name-cell store-type-name-clickable"
                   onClick={(e) => {
                     e.stopPropagation();
+
                     navigate(`/store-types/${item.id}`, {
                       state: { storeType: item },
                     });
@@ -578,10 +687,11 @@ export default function CreateStoreType() {
                 <div>
                   <span
                     className={`store-type-status ${
-                      item.status === "Inactive" ? "inactive" : ""
+                      item.status === "Inactive" ? "inactive" : "active"
                     }`}
                   >
                     <i className="bi bi-circle-fill" />
+
                     {item.status}
                   </span>
                 </div>
@@ -607,6 +717,7 @@ export default function CreateStoreType() {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+
                       editStoreType(item);
                     }}
                   >
@@ -618,6 +729,7 @@ export default function CreateStoreType() {
                     className="store-type-delete-icon"
                     onClick={(e) => {
                       e.stopPropagation();
+
                       setDeleteTarget(item);
                     }}
                   >
@@ -626,9 +738,11 @@ export default function CreateStoreType() {
                 </div>
               </div>
             ))}
+
             {loading && (
               <div className="store-types-row">Loading store types...</div>
             )}
+
             {!loading && filteredStoreTypes.length === 0 && (
               <div className="store-types-row">No store types found.</div>
             )}
