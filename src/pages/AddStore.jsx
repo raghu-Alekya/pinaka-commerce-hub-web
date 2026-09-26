@@ -678,32 +678,62 @@ export default function AddStore() {
     };
   }, [routeMerchantId, storeId, reload]);
 
-  // Load Store Types for Merchant
+  // Load Store Types (Master Setup with Merchant Fallback)
   useEffect(() => {
     let cancelled = false;
-    setStoreTypes([]);
-    if (!merchantId) {
-      setStoreTypesLoading(false);
-      return undefined;
-    }
-
     setStoreTypesLoading(true);
-    storeTypesApi
-      .getForMerchant(merchantId)
-      .then((response) => {
-        if (!cancelled) setStoreTypes(response?.storeTypes || response || []);
-      })
-      .catch((err) => {
+
+    async function loadStoreTypes() {
+      try {
+        const masterRes = await storeTypesApi.getAll().catch(() => ({ storeTypes: [] }));
+        const masterTypes = (
+          masterRes?.storeTypes ||
+          masterRes?.data?.storeTypes ||
+          masterRes?.data ||
+          (Array.isArray(masterRes) ? masterRes : [])
+        ).filter(
+          (item) => String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE"
+        );
+
+        if (merchantId) {
+          try {
+            const merchantRes = await storeTypesApi.getForMerchant(merchantId);
+            const merchantTypes = (
+              merchantRes?.storeTypes ||
+              merchantRes?.data?.storeTypes ||
+              merchantRes?.data ||
+              (Array.isArray(merchantRes) ? merchantRes : [])
+            ).filter(
+              (item) => String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE"
+            );
+
+            if (!cancelled) {
+              if (merchantTypes.length > 0) {
+                setStoreTypes(merchantTypes);
+              } else {
+                setStoreTypes(masterTypes);
+              }
+            }
+            return;
+          } catch {
+            // fallback to masterTypes
+          }
+        }
+
+        if (!cancelled) {
+          setStoreTypes(masterTypes);
+        }
+      } catch (err) {
         if (!cancelled) {
           setStoreTypes([]);
-          setLoadError(
-            err?.message || "Unable to load store types for this merchant.",
-          );
+          setLoadError(err?.message || "Unable to load store types.");
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setStoreTypesLoading(false);
-      });
+      }
+    }
+
+    loadStoreTypes();
 
     return () => {
       cancelled = true;
@@ -1109,7 +1139,11 @@ export default function AddStore() {
       if (
         store.storeTypeId &&
         !storeTypes.some(
-          (type) => String(type.id) === String(store.storeTypeId),
+          (type) =>
+            String(type.id) === String(store.storeTypeId) ||
+            String(type.storeTypeId) === String(store.storeTypeId) ||
+            String(type.code) === String(store.storeTypeId) ||
+            String(type.name).toLowerCase() === String(store.storeTypeId).toLowerCase()
         )
       )
         return "Select an available store type.";
@@ -1670,16 +1704,20 @@ export default function AddStore() {
               <SelectField
                 label="Store Type *"
                 value={store.storeTypeId}
-                disabled={!merchantId || storeTypesLoading}
+                disabled={storeTypesLoading}
                 onChange={(value) => {
                   const type = storeTypes.find(
-                    (item) => String(item.id) === value,
+                    (item) =>
+                      String(item.id) === value ||
+                      String(item.storeTypeId) === value ||
+                      String(item.code) === value ||
+                      String(item.name).toLowerCase() === value.toLowerCase()
                   );
                   featureDefaultsScope.current = "";
                   setStore((current) => ({
                     ...current,
                     storeTypeId: value,
-                    type: type?.name || "",
+                    type: type?.name || type?.storeTypeName || value,
                   }));
                   setEnabledFeatures([]);
                   setPermissions({});
@@ -1688,15 +1726,15 @@ export default function AddStore() {
                 options={[
                   {
                     value: "",
-                    label: !merchantId
-                      ? "Select merchant first"
-                      : storeTypesLoading
-                        ? "Loading store types..."
+                    label: storeTypesLoading
+                      ? "Loading store types..."
+                      : storeTypes.length === 0
+                        ? "No store types available"
                         : "Select store type",
                   },
                   ...storeTypes.map((item) => ({
-                    value: String(item.id),
-                    label: item.name,
+                    value: String(item.id ?? item.storeTypeId ?? item._id ?? item.code ?? item.name),
+                    label: item.name || item.storeTypeName || item.code || String(item.id),
                   })),
                 ]}
               />
