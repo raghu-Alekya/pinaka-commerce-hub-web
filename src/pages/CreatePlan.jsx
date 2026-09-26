@@ -1320,7 +1320,7 @@ export default function CreatePlan() {
 
                   <div>
                     <span className="plan-type-badge">
-                      {plan.storeType || "—"}
+                      {storeTypeDisplayName(plan.storeType, storeTypes) || "—"}
                     </span>
                   </div>
 
