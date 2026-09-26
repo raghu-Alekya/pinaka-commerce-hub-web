@@ -407,7 +407,6 @@ export default function CreatePlan() {
       [name]: name === "code" ? value.toUpperCase() : value,
     }));
   }
-
   function toggleIncludedFeature(featureId) {
     setIncludedFeatures((current) =>
       current.includes(featureId)
