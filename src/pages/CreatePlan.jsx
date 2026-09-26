@@ -44,38 +44,38 @@ function normalizeStoreTypeFeatures(response) {
         // sent in the plan payload.
         id: String(
           feature?.featureId ??
-            assignment?.featureId ??
-            feature?.id ??
-            assignment?.id ??
-            `feature-${index}`,
+          assignment?.featureId ??
+          feature?.id ??
+          assignment?.id ??
+          `feature-${index}`,
         ),
 
         featureId: String(
           feature?.featureId ??
-            assignment?.featureId ??
-            feature?.feature_id ??
-            assignment?.feature_id ??
-            feature?.id ??
-            feature?._id ??
-            assignment?.id ??
-            assignment?._id ??
-            `feature-${index}`,
+          assignment?.featureId ??
+          feature?.feature_id ??
+          assignment?.feature_id ??
+          feature?.id ??
+          feature?._id ??
+          assignment?.id ??
+          assignment?._id ??
+          `feature-${index}`,
         ),
 
         name: String(
           feature?.name ??
-            feature?.featureName ??
-            feature?.feature_name ??
-            feature?.featureKey ??
-            feature?.code ??
-            `Feature ${index + 1}`,
+          feature?.featureName ??
+          feature?.feature_name ??
+          feature?.featureKey ??
+          feature?.code ??
+          `Feature ${index + 1}`,
         ).trim(),
 
         category: String(
           feature?.category ??
-            feature?.categoryName ??
-            feature?.category_name ??
-            "—",
+          feature?.categoryName ??
+          feature?.category_name ??
+          "—",
         ).trim(),
 
         description: String(
@@ -101,14 +101,14 @@ function storeTypeDisplayName(value, storeTypes) {
   const candidates =
     value && typeof value === "object"
       ? [
-          value.id,
-          value._id,
-          value.storeTypeId,
-          value.storeTypeCode,
-          value.code,
-          value.name,
-          value.storeTypeName,
-        ]
+        value.id,
+        value._id,
+        value.storeTypeId,
+        value.storeTypeCode,
+        value.code,
+        value.name,
+        value.storeTypeName,
+      ]
       : [value];
 
   const match = storeTypes.find((storeType) => {
@@ -275,9 +275,9 @@ export default function CreatePlan() {
       (storeType) =>
         String(
           storeType.id ??
-            storeType._id ??
-            storeType.storeTypeId ??
-            storeType.code,
+          storeType._id ??
+          storeType.storeTypeId ??
+          storeType.code,
         ) === String(form.applicableStoreType) ||
         String(
           storeType.name ?? storeType.storeTypeName ?? storeType.code,
@@ -310,7 +310,8 @@ export default function CreatePlan() {
         setIncludedFeatures((current) =>
           current.filter((featureId) =>
             features.some(
-              (feature) => String(feature.featureId) === String(featureId),
+              (feature) =>
+                String(feature.featureId) === String(featureId),
             ),
           ),
         );
@@ -406,21 +407,12 @@ export default function CreatePlan() {
       [name]: name === "code" ? value.toUpperCase() : value,
     }));
   }
-  function getFeatureDisplayName(id) {
-    const match = storeTypeFeatures.find(
-      (f) =>
-        String(f.featureId) === String(id) ||
-        String(f.id) === String(id) ||
-        String(f.name) === String(id)
-    );
-    return match?.name || id;
-  }
 
   function toggleIncludedFeature(featureId) {
     setIncludedFeatures((current) =>
       current.includes(featureId)
         ? current.filter((id) => id !== featureId)
-        : [...current, featureId],
+        : [...current, featured],
     );
   }
 
@@ -496,37 +488,37 @@ export default function CreatePlan() {
         : "",
       status: plan.status || "Active",
     });
+
     setIncludedFeatures(
       Array.isArray(plan.includedFeatures)
         ? plan.includedFeatures
-            .map((feature) => {
-              if (typeof feature === "string") {
-                return String(feature);
-              }
+          .map((feature) => {
+            if (typeof feature === "string") {
+              return String(feature);
+            }
 
-              const nestedFeature =
-                feature?.feature ??
-                feature?.featureDetails ??
-                feature?.featureDefinition;
+            const nestedFeature =
+              feature?.feature ??
+              feature?.featureDetails ??
+              feature?.featureDefinition;
 
-              return String(
-                feature?.featureId ??
-                  feature?.feature_id ??
-                  feature?.featureID ??
-                  nestedFeature?.featureId ??
-                  nestedFeature?.feature_id ??
-                  nestedFeature?.id ??
-                  nestedFeature?._id ??
-                  feature?.id ??
-                  feature?._id ??
-                  feature?.code ??
-                  "",
-              );
-            })
-            .filter(Boolean)
+            return String(
+              feature?.featureId ??
+              feature?.feature_id ??
+              feature?.featureID ??
+              nestedFeature?.featureId ??
+              nestedFeature?.feature_id ??
+              nestedFeature?.id ??
+              nestedFeature?._id ??
+              feature?.id ??
+              feature?._id ??
+              feature?.code ??
+              "",
+            );
+          })
+          .filter(Boolean)
         : [],
     );
-
     setPlanStep(1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -571,9 +563,8 @@ export default function CreatePlan() {
           <div className="plan-stepper-item" key={step}>
             <button
               type="button"
-              className={`plan-step ${planStep === step ? "active" : ""} ${
-                planStep > step ? "complete" : ""
-              }`}
+              className={`plan-step ${planStep === step ? "active" : ""} ${planStep > step ? "complete" : ""
+                }`}
               onClick={() => handleStepClick(step)}
             >
               <span>{step}</span>
@@ -599,9 +590,7 @@ export default function CreatePlan() {
 
           <div className="plan-create-grid three-columns plan-information-grid">
             <label className="plan-field">
-              <span>
-                Plan Code <b>*</b>
-              </span>
+              <span>Plan Code <b>*</b></span>
               <input
                 {...textInputProps}
                 name="code"
@@ -611,18 +600,12 @@ export default function CreatePlan() {
                 className={codeError ? "input-error" : ""}
               />
               <div className="plan-field-slot">
-                {codeError ? (
-                  <small className="plan-field-error">{codeError}</small>
-                ) : (
-                  <small />
-                )}
+                {codeError ? <small className="plan-field-error">{codeError}</small> : <small />}
               </div>
             </label>
 
             <label className="plan-field">
-              <span>
-                Plan Name <b>*</b>
-              </span>
+              <span>Plan Name <b>*</b></span>
               <input
                 {...textInputProps}
                 name="name"
@@ -632,41 +615,25 @@ export default function CreatePlan() {
                 className={nameError ? "input-error" : ""}
               />
               <div className="plan-field-slot">
-                {nameError ? (
-                  <small className="plan-field-error">{nameError}</small>
-                ) : (
-                  <small />
-                )}
+                {nameError ? <small className="plan-field-error">{nameError}</small> : <small />}
               </div>
             </label>
 
             <label className="plan-field">
-              <span>
-                Applicable Business/Store Type <b>*</b>
-              </span>
+              <span>Applicable Business/Store Type <b>*</b></span>
               <select
                 name="applicableStoreType"
                 value={form.applicableStoreType}
                 onChange={updateField}
                 disabled={storeTypesLoading}
               >
-                <option value="">
-                  {storeTypesLoading
-                    ? "Loading store types..."
-                    : "Select store type"}
-                </option>
+                <option value="">{storeTypesLoading ? "Loading store types..." : "Select store type"}</option>
                 {storeTypes.map((storeType) => (
                   <option
                     key={storeType.id ?? storeType._id ?? storeType.code}
-                    value={
-                      storeType.name ??
-                      storeType.storeTypeName ??
-                      storeType.code
-                    }
+                    value={storeType.name ?? storeType.storeTypeName ?? storeType.code}
                   >
-                    {storeType.name ??
-                      storeType.storeTypeName ??
-                      storeType.code}
+                    {storeType.name ?? storeType.storeTypeName ?? storeType.code}
                   </option>
                 ))}
               </select>
@@ -695,9 +662,7 @@ export default function CreatePlan() {
             </label>
 
             <label className="plan-field plan-information-status-field">
-              <span>
-                Status <b>*</b>
-              </span>
+              <span>Status <b>*</b></span>
               <select
                 autoComplete="off"
                 name="status"
@@ -708,18 +673,12 @@ export default function CreatePlan() {
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
-              <div className="plan-field-slot">
-                <small />
-              </div>
+              <div className="plan-field-slot"><small /></div>
             </label>
           </div>
 
           <div className="plan-actions plan-information-actions">
-            <button
-              type="button"
-              className="plan-cancel-button"
-              onClick={resetCreationForm}
-            >
+            <button type="button" className="plan-cancel-button" onClick={resetCreationForm}>
               Cancel
             </button>
             <button
@@ -991,10 +950,14 @@ export default function CreatePlan() {
                     No active features are assigned to this store type.
                   </p>
                 )}
+
               {!storeTypeFeaturesLoading &&
                 storeTypeFeatures.map(
                   ({ featureId, name, category, description, icon }) => (
-                    <label className="plan-feature-check" key={featureId}>
+                    <label
+                      className="plan-feature-check"
+                      key={featureId}
+                    >
                       <input
                         type="checkbox"
                         checked={includedFeatures.includes(featureId)}
@@ -1330,7 +1293,7 @@ export default function CreatePlan() {
 
                   <div>
                     <span className="plan-type-badge">
-                      {plan.storeType || "—"}
+                      {storeTypeDisplayName(plan.storeType, storeTypes) || "—"}
                     </span>
                   </div>
 
@@ -1343,9 +1306,8 @@ export default function CreatePlan() {
 
                   <div>
                     <span
-                      className={`plan-status ${
-                        plan.status === "Inactive" ? "inactive" : ""
-                      }`}
+                      className={`plan-status ${plan.status === "Inactive" ? "inactive" : ""
+                        }`}
                     >
                       <i className="bi bi-circle-fill" />
                       {plan.status || "Active"}
