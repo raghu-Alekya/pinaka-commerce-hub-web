@@ -9,6 +9,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 
 import { devicesApi } from "../api/devices";
+import { listMerchants } from "../api/merchants";
 import "../styles/device-view.css";
 
 export default function EditDevice() {
@@ -21,12 +22,11 @@ export default function EditDevice() {
     deviceType: "",
     serialNumber: "",
     merchantId: "",
-    storeId: "",
     status: "Active",
     notes: "",
-    enableImmediately: true,
   });
 
+  const [merchantName, setMerchantName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -50,22 +50,27 @@ export default function EditDevice() {
     setApiError("");
 
     try {
-      const data = await devicesApi.get(deviceId);
+      const [data, merchants] = await Promise.all([
+        devicesApi.get(deviceId),
+        listMerchants().catch(() => []),
+      ]);
 
       if (!data) {
         throw new Error("Device not found.");
       }
 
+      const assignedMerchant = merchants.find(
+        (merchant) => String(merchant.merchantId || merchant.id) === String(data.merchantId),
+      );
+      setMerchantName(assignedMerchant?.name || data.merchant || data.merchantName || data.merchantId || "—");
       setForm({
         deviceName: data.name || "",
         deviceCode: data.deviceCode || data.id || "",
         deviceType: data.type || "",
         serialNumber: data.serial || "",
         merchantId: data.merchantId || "",
-        storeId: data.storeId || "",
         status: data.status || "Active",
         notes: data.notes || "",
-        enableImmediately: Boolean(data.enableImmediately),
       });
     } catch (error) {
       console.error("Failed to load device:", error);
@@ -105,9 +110,10 @@ export default function EditDevice() {
     setApiError("");
 
     try {
-      await devicesApi.update(deviceId, form);
-
-      alert("Device updated successfully!");
+      const response = await devicesApi.update(deviceId, form);
+      if (response?.success === false) {
+        throw new Error(response.message || "Failed to update device.");
+      }
 
       navigate(`/devices/${deviceId}`);
     } catch (error) {
@@ -270,7 +276,7 @@ export default function EditDevice() {
             <input
               name="deviceCode"
               value={form.deviceCode}
-              onChange={update}
+              readOnly
               placeholder="Enter device code"
               required
             />
@@ -299,7 +305,7 @@ export default function EditDevice() {
             <input
               name="serialNumber"
               value={form.serialNumber}
-              onChange={update}
+              readOnly
               placeholder="Enter serial number"
               required
             />
@@ -308,29 +314,7 @@ export default function EditDevice() {
           {/* MERCHANT */}
 
           <EditField label="Merchant" required>
-            {select(
-              "merchantId",
-              form.merchantId,
-              ["FreshMart", "TechWorld", "FashionHub", "ElectroPlus"],
-              "Select merchant",
-            )}
-          </EditField>
-
-          {/* STORE */}
-
-          <EditField label="Store" required>
-            {select(
-              "storeId",
-              form.storeId,
-              [
-                "Banjara Hills",
-                "Jubilee Hills",
-                "Madhapur",
-                "Hitech City",
-                "Gachibowli",
-              ],
-              "Select store",
-            )}
+            <input value={merchantName} readOnly aria-readonly="true" />
           </EditField>
 
           {/* STATUS */}
@@ -344,21 +328,6 @@ export default function EditDevice() {
             )}
           </EditField>
         </div>
-
-        {/* =================================================
-            ENABLE DEVICE
-        ================================================= */}
-
-        <label className="device-checkbox">
-          <input
-            type="checkbox"
-            name="enableImmediately"
-            checked={form.enableImmediately}
-            onChange={update}
-          />
-
-          <span>Enable device for usage immediately</span>
-        </label>
 
         {/* =================================================
             NOTES

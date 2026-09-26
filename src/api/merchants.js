@@ -214,15 +214,22 @@ export function toMerchantPayload(data) {
 
 export async function listMerchants() {
   const data = await api.get(endpoints.merchants);
-  const items = Array.isArray(data)
-    ? data
-    : Array.isArray(data?.merchants)
-      ? data.merchants
-      : Array.isArray(data?.data)
-        ? data.data
-        : [];
+  const items = findMerchantList(data);
 
   return items.map(mapMerchantToRow).filter(Boolean);
+}
+
+function findMerchantList(data) {
+  if (Array.isArray(data)) return data;
+  for (const key of ["merchants", "items", "results", "data"]) {
+    const value = data?.[key];
+    if (Array.isArray(value)) return value;
+    if (value && typeof value === "object") {
+      const nested = findMerchantList(value);
+      if (nested.length) return nested;
+    }
+  }
+  return [];
 }
 
 function titleCase(value) {
@@ -275,7 +282,7 @@ function merchantApiId(merchant) {
 
 export function mapMerchantToRow(item) {
   if (!item) return null;
-  const merchant = item.merchant || item.data?.merchant || item;
+  const merchant = item.merchant || item.data?.merchant || item.data || item;
   const plan = item.plan || merchant.plan || item.subscription?.plan || {};
   const subscription = item.subscription || merchant.subscription || {};
 
@@ -288,7 +295,7 @@ export function mapMerchantToRow(item) {
     merchant.name ||
     "Merchant";
 
-  const id = merchant.merchantId || merchant.id || merchant.code || "";
+  const id = merchant.merchantId || merchant.id || merchant._id || merchant.code || "";
   const email = merchant.merchantEmail || merchant.email || "";
   const phone = merchant.merchantPhoneNumber || merchant.phone || "";
   const stores = Array.isArray(merchant.stores || item.stores)

@@ -52,7 +52,7 @@ async function refreshAccessToken() {
  
 export async function apiRequest(
   path,
-  { method = "GET", body, headers, skipAuthRefresh = false } = {}
+  { method = "GET", body, headers, signal, skipAuthRefresh = false } = {}
 ) {
   const token = getAccessToken();
   const requestUrl = buildUrl(path);
@@ -69,6 +69,7 @@ export async function apiRequest(
   const response = await fetch(requestUrl, {
     method,
     credentials: "include",
+    signal,
     headers: {
       Accept: "application/json",
       ...(payload !== undefined ? { "Content-Type": "application/json" } : {}),
@@ -100,6 +101,7 @@ export async function apiRequest(
         method,
         body,
         headers,
+        signal,
         skipAuthRefresh: true,
       });
     } catch {
