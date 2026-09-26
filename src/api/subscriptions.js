@@ -4,6 +4,8 @@ const path = (id) => `/subscriptions/${encodeURIComponent(id)}`;
 
 export const listSubscriptions = (params) => api.get("/subscriptions", { params });
 export const listSubscriptionPlans = () => api.get("/subscription-plans");
+export const changeSubscriptionPlan = (data) =>
+  api.post("/subscriptions/subscription-plan-changes", data);
 export const getSubscription = (id) => api.get(path(id));
 export const createSubscription = (data) => api.post("/subscriptions", data);
 export const updateSubscription = (id, data) => api.put(path(id), data);
@@ -35,6 +37,7 @@ export function mapSubscriptionToRow(item, index = 0) {
   if (!item) return null;
   const m = item.merchant || {};
   const plan = item.plan || {};
+  const storeType = item.storeType || item.store_type || m.storeType || {};
 
   const merchantName =
     m.businessDisplayName ||
@@ -57,6 +60,13 @@ export function mapSubscriptionToRow(item, index = 0) {
     item.merchant_id ||
     `MID${String(index + 1).padStart(3, "0")}`;
 
+  const merchantApiId =
+    item.merchantId ||
+    item.merchant_id ||
+    m.id ||
+    m._id ||
+    "";
+
   const planName =
     item.planName ||
     item.plan_name ||
@@ -64,6 +74,29 @@ export function mapSubscriptionToRow(item, index = 0) {
     item.planCode ||
     item.plan_code ||
     "Pro Plan";
+
+  const planId =
+    item.planId ||
+    item.plan_id ||
+    plan.id ||
+    plan._id ||
+    "";
+
+  const storeTypeId =
+    (typeof storeType === "object" && storeType
+      ? storeType.id || storeType._id || storeType.storeTypeId
+      : storeType) ||
+    item.storeTypeId ||
+    item.store_type_id ||
+    m.storeTypeId ||
+    "";
+  const storeTypeCode =
+    (typeof storeType === "object" && storeType
+      ? storeType.storeTypeCode || storeType.store_type_code || storeType.code
+      : "") ||
+    item.storeTypeCode ||
+    item.store_type_code ||
+    "";
 
   const storesCount =
     item.maxStoresAllowed ??
@@ -104,7 +137,16 @@ export function mapSubscriptionToRow(item, index = 0) {
       `SUB-${index + 1}`,
     merchant: merchantName,
     merchantId: merchantId,
+    merchantApiId,
     plan: planName,
+    planId,
+    planDetails: plan,
+    storeTypeId: String(storeTypeId),
+    storeTypeCode: String(storeTypeCode),
+    storeTypeName:
+      (typeof storeType === "object" && storeType
+        ? storeType.name || storeType.storeTypeName
+        : "") || item.storeTypeName || "",
     stores: Number(storesCount) || 1,
     devices: Number(devicesCount) || 1,
     start: formatDate(rawStart),
