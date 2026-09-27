@@ -1257,6 +1257,10 @@ export default function AddStore() {
 
   async function submit(event, saveDraft = false) {
     event.preventDefault();
+    if (!saveDraft && step < STEPS.length - 1) {
+      goTo(step + 1);
+      return;
+    }
     if (saveLock.current) return;
     const steps = saveDraft ? [0, 2, 4] : [0, 1, 2, 3, 4];
     for (const index of steps) {
@@ -2129,7 +2133,10 @@ export default function AddStore() {
                     type="button"
                     className="sf-primary"
                     disabled={saving || subscriptionLoading}
-                    onClick={() => goTo(step + 1)}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      goTo(step + 1);
+                    }}
                   >
                     {step === 0 && subscriptionLoading ? (
                       "Checking Subscription…"
