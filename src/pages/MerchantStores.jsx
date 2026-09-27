@@ -2,7 +2,36 @@ import "../styles/merchant-stores-embedded.css";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getMerchant } from "../api/merchants";
-import { ApiError } from "../api/http";
+import { api, ApiError } from "../api/http";
+import { endpoints } from "../api/endpoints";
+
+function toStoreRow(store) {
+  const address = store.address && typeof store.address === "object" ? store.address : null;
+  const typeValue = store.storeType ?? store.type;
+  const type = typeof typeValue === "string"
+    ? typeValue
+    : typeValue?.name || typeValue?.storeTypeName || "Retail";
+  const location = [
+    address?.street || (typeof store.address === "string" ? store.address : store.location),
+    address?.city || store.city,
+    address?.state || store.state,
+  ].filter(Boolean).join(", ");
+  const storeCode = store.storeCode || store.code || store.storeId || store.id || "";
+  return {
+    ...store,
+    id: storeCode,
+    storeId: storeCode,
+    storeCode,
+    name: store.storeName || store.name || "Unnamed Store",
+    type,
+    storeType: type,
+    location: location || "—",
+    city: address?.city || store.city || "",
+    state: address?.state || store.state || "",
+    address: typeof store.address === "string" ? store.address : address?.street || "",
+    status: store.status || "Active",
+  };
+}
 
 export default function MerchantStores({
   merchantId: selectedMerchantId,
@@ -35,15 +64,20 @@ export default function MerchantStores({
           throw new Error("A merchant must be selected.");
         }
 
-        const result = await getMerchant(merchantId);
+        const [result, storesResult] = await Promise.all([
+          getMerchant(merchantId),
+          api.get(endpoints.merchantStores(merchantId)).catch(() => null),
+        ]);
 
         if (!cancelled) {
           if (!result?.merchant) {
             throw new Error("Merchant details were not returned.");
           }
 
+          const listed = storesResult?.stores ?? storesResult?.data?.stores ?? [];
+          const rows = Array.isArray(listed) && listed.length ? listed : result.stores;
           setMerchant(result.merchant);
-          setStores(Array.isArray(result.stores) ? result.stores : []);
+          setStores((Array.isArray(rows) ? rows : []).map(toStoreRow));
         }
       } catch (err) {
         if (!cancelled) {
