@@ -615,7 +615,6 @@ export default function AddStore() {
     };
   }, [routeMerchantId, storeId, reload]);
 
-  // Load Store Types (Master Setup with Merchant Fallback)
   useEffect(() => {
     let cancelled = false;
     setStoreTypesLoading(true);
@@ -628,9 +627,7 @@ export default function AddStore() {
           masterRes?.data?.storeTypes ||
           masterRes?.data ||
           (Array.isArray(masterRes) ? masterRes : [])
-        ).filter(
-          (item) => String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE",
-        );
+        ).filter((item) => String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE");
 
         if (merchantId) {
           try {
@@ -640,16 +637,13 @@ export default function AddStore() {
               merchantRes?.data?.storeTypes ||
               merchantRes?.data ||
               (Array.isArray(merchantRes) ? merchantRes : [])
-            ).filter(
-              (item) => String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE",
-            );
+            ).filter((item) => String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE");
             if (!cancelled) setStoreTypes(merchantTypes.length ? merchantTypes : masterTypes);
             return;
           } catch {
             // Fall back to the master store-type list.
           }
         }
-
         if (!cancelled) setStoreTypes(masterTypes);
       } catch (err) {
         if (!cancelled) {
