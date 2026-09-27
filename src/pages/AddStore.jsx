@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { listMerchantEmployees } from "../api/employees";
+import { listMerchantEmployees, listStoreEmployees, saveStoreEmployees } from "../api/employees";
 import { getMerchant, listMerchants } from "../api/merchants";
 import { listFeatures } from "../api/features";
 import { storeTypesApi } from "../api/storeTypes";
+import { merchantRoleTemplatesApi, readAvailableRoleTemplates } from "../api/merchantRoleTemplatesApi";
+import { roleTemplatesApi } from "../api/roleTemplatesApi";
+import { storeRoleTemplatesApi, readStoreRoleTemplates } from "../api/storeRoleTemplatesApi";
 import { api, ApiError } from "../api/http";
 import { endpoints } from "../api/endpoints";
 import "../styles/add-store.css";
@@ -18,6 +21,7 @@ const COUNTRIES = {
 };
 const STEPS = ["Store Details", "Subscription", "Features", "Roles & Permissions", "Employees", "Review & Provision"];
 const STEP_HINTS = ["Enter basic information", "Review merchant subscription", "Enable or disable features", "Configure store level access", "Assign employees to this store", "Review and create store"];
+const STANDARD_ACTIONS = ["View", "Create", "Edit", "Delete"];
 const listFrom = value => {
   const rows = value?.features ?? value?.storeTypeFeatures ?? value?.items ?? value?.data ?? value;
   return Array.isArray(rows) ? rows : [];
@@ -47,6 +51,90 @@ const unwrapMerchant = result => {
     roles: result?.roles || raw.roles || owner.roles || draft?.roles || [],
     plan,
   };
+};
+const normalizePermissionAction = value => {
+  const key = String(value || "").toLowerCase();
+  if (!key) return "";
+  if (/(view|read|list|get)/.test(key)) return "View";
+  if (/(create|add|insert)/.test(key)) return "Create";
+  if (/(edit|update|write|modify)/.test(key)) return "Edit";
+  if (/(delete|remove|destroy)/.test(key)) return "Delete";
+  return "";
+};
+const levelForRole = role => {
+  const scope = String(role?.scopeType || role?.level || "").toUpperCase();
+  if (scope.includes("MERCHANT") || scope.includes("FULL")) return "Full Access";
+  if (scope.includes("OPS") || scope.includes("OPERATION")) return "Operations";
+  if (scope.includes("SALE") || scope.includes("CASH")) return "Sales";
+  if (scope.includes("STORE")) return "Store";
+  return role?.level || scope || "Custom";
+};
+const readMerchantSelectedTemplates = response => {
+  const available = readAvailableRoleTemplates(response);
+  if (available.roleTemplates.length) {
+    const selected = available.roleTemplates.filter(row => row.selected);
+    if (selected.length) {
+      return selected.map(row => ({
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        roleCode: row.roleCode,
+        scopeType: row.scopeType,
+        level: levelForRole(row),
+        required: row.required,
+        defaultEnabled: row.defaultEnabled,
+      }));
+    }
+  }
+  const listed = Array.isArray(response?.roleTemplates)
+    ? response.roleTemplates.filter(row => row.sourceRoleTemplateId || row.roleTemplateId)
+    : [];
+  return listed.map((row, index) => {
+    const id = String(row.sourceRoleTemplateId || row.roleTemplateId || row.id || `merchant-role-${index}`);
+    return {
+      id,
+      name: String(row.name || row.roleName || "Unnamed role").trim(),
+      description: String(row.description || "").trim(),
+      roleCode: String(row.roleCode || "").trim(),
+      scopeType: String(row.scopeType || "STORE"),
+      level: levelForRole(row),
+      required: false,
+      defaultEnabled: true,
+    };
+  }).filter(row => row.id && row.name);
+};
+const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
+  const features = Array.isArray(featuresPayload?.features)
+    ? featuresPayload.features
+    : Array.isArray(featuresPayload)
+      ? featuresPayload
+      : [];
+  const enabled = new Set((enabledNames || []).map(name => String(name).toLowerCase()));
+  const matrix = {};
+  const availability = {};
+  const rows = [];
+  for (const feature of features) {
+    const name = featureName(feature);
+    if (!name) continue;
+    if (enabled.size && !enabled.has(name.toLowerCase())) continue;
+    const actions = Object.fromEntries(STANDARD_ACTIONS.map(action => [action, false]));
+    const available = Object.fromEntries(STANDARD_ACTIONS.map(action => [action, false]));
+    for (const permission of feature.permissions || []) {
+      const action = normalizePermissionAction(permission.permissionKey || permission.name);
+      if (!action) continue;
+      available[action] = true;
+      if (permission.checked || permission.defaultAllowed) actions[action] = true;
+    }
+    matrix[name] = actions;
+    availability[name] = available;
+    rows.push({
+      id: feature.id || name,
+      name,
+      description: feature.description || "",
+      category: feature.category || "More",
+    });
+  }
+  return { matrix, availability, rows };
 };
 const Field = ({ label, value, onChange, type = "text", optional = false, ...props }) => (
   <label className="sf-field">
@@ -94,10 +182,17 @@ export default function AddStore() {
   const imageReads = useRef(0);
   const imageGeneration = useRef(0);
   const [enabledFeatures, setEnabledFeatures] = useState([]);
+  const [roleDefinitions, setRoleDefinitions] = useState([]);
+  const [rolesLoading, setRolesLoading] = useState(false);
+  const [rolesError, setRolesError] = useState("");
   const [roles, setRoles] = useState([]);
   const [activeRole, setActiveRole] = useState("");
   const [copyFromRole, setCopyFromRole] = useState("");
   const [permissions, setPermissions] = useState({});
+  const [permissionAvailability, setPermissionAvailability] = useState({});
+  const [roleFeatureRows, setRoleFeatureRows] = useState({});
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const loadedRolePermissions = useRef(new Set());
   const [employeeAssignments, setEmployeeAssignments] = useState([]);
   const [pinEditorId, setPinEditorId] = useState("");
   const [pinDraft, setPinDraft] = useState("");
@@ -123,7 +218,7 @@ export default function AddStore() {
   const planName = subscription?.planName || subscription?.planCode || plan?.name || plan?.planName || merchant?.plan || "No active plan";
   const billing = subscription?.billingCycle || subscription?.billingType || plan?.billingCycle || "—";
   const planPrice = subscription?.price ?? subscription?.agreementPrice ?? plan?.price ?? plan?.amount;
-  const storeLimit = Number(subscription?.storeLimit ?? subscription?.maxStores ?? subscription?.locationLimit ?? plan?.includedStores ?? NaN);
+  const storeLimit = Number(subscription?.maxStoresAllowed ?? subscription?.licensedStoreCount ?? subscription?.storeLimit ?? subscription?.maxStores ?? subscription?.locationLimit ?? plan?.includedStores ?? plan?.included_stores ?? NaN);
   const planFeatureList = subscription?.includedFeatures ?? plan?.includedFeatures ?? plan?.features;
   const includedFeatures = useMemo(() => {
     const raw = listFrom(subscription?.includedFeatures ?? plan?.includedFeatures ?? plan?.features ?? []);
@@ -139,7 +234,8 @@ export default function AddStore() {
     });
     return [...unique.values()];
   }, [typeFeatures, catalog, store.storeTypeId]);
-  const roleDefinitions = (Array.isArray(merchantInfo?.roles) ? merchantInfo.roles : []).map(role => typeof role === "string" ? {name: role} : {...role, name: role.name || role.roleName}).filter(role => role.name);
+  const roleById = useMemo(() => Object.fromEntries(roleDefinitions.map(role => [role.id, role])), [roleDefinitions]);
+  const roleName = id => roleById[id]?.name || id;
   const categories = ["All Features", ...new Set(featureRows.map(row => row.category))];
   const entitled = name => planFeatureList == null
     ? Boolean(store.storeTypeId) && featureRows.some(row => row.name === name)
@@ -210,12 +306,6 @@ export default function AddStore() {
             };
             setStore(savedStore);
             setEnabledFeatures((saved.features || saved.enabledFeatures || []).map(featureName).filter(Boolean));
-            const savedRoles = (saved.storeRoles || []).map(role => typeof role === "string" ? role : role.name || role.roleName).filter(Boolean);
-            setRoles(savedRoles);
-            setActiveRole(savedRoles[0] || "");
-            setPermissions(saved.storeRolePermissions || {});
-            const assignments = saved.employeeAssignments || saved.storeEmployees || [];
-            setEmployeeAssignments(assignments.map(item => ({ employeeId: String(item.employeeId ?? item.id ?? item.employee?.id ?? ""), role: item.role || item.storeRole || "" })).filter(item => item.employeeId));
           }
         }
       } catch (err) {
@@ -231,32 +321,52 @@ export default function AddStore() {
   useEffect(() => {
     let cancelled = false;
     setMerchantInfo(null); setSubscription(null); setMerchantStores([]); setEmployees([]); setMerchantError("");
+    setRoleDefinitions([]); setRolesError("");
     setMerchantLoading(Boolean(merchantId));
     if (!merchantId) return;
     async function loadMerchantContext() {
       try {
-        const [result, employeeResult] = await Promise.all([getMerchant(merchantId), listMerchantEmployees(merchantId)]);
+        const [result, employeeResult, storesResult] = await Promise.all([
+          getMerchant(merchantId),
+          listMerchantEmployees(merchantId),
+          api.get(endpoints.merchantStores(merchantId)).catch(() => null),
+        ]);
         if (cancelled) return;
         const info = unwrapMerchant(result);
         if (!idOf(info.owner)) throw new Error("Merchant details were not returned.");
         setMerchantInfo(info); setSubscription(info.subscription);
+        const listed = storesResult?.stores ?? storesResult?.data?.stores ?? [];
         const response = result?.raw || result || {};
-        const rows = result?.stores ?? response.stores ?? response.data?.stores ?? info.owner.stores ?? [];
+        const fallback = result?.stores ?? response.stores ?? response.data?.stores ?? info.owner.stores ?? [];
+        const rows = Array.isArray(listed) && listed.length ? listed : fallback;
         setMerchantStores(Array.isArray(rows) ? rows : []);
         const employeeRows = Array.isArray(employeeResult) ? employeeResult : employeeResult?.employees ?? employeeResult?.data?.employees;
         if (!Array.isArray(employeeRows)) throw new Error("The merchant employee list could not be read.");
-        setEmployees(employeeRows.filter(employee => !employee.merchantId || String(employee.merchantId) === merchantId).map(employee => ({
+        setEmployees(employeeRows.map(employee => ({
           ...employee, id: employee.id || employee.employeeId, name: employee.name || employee.employeeName || [employee.firstName, employee.lastName].filter(Boolean).join(" "),
           phone: employee.phone || employee.phoneNumber || "", role: typeof employee.role === "string" ? employee.role : employee.roleName || employee.role?.name || "",
         })).filter(employee => employee.id));
+        let roleResult = await merchantRoleTemplatesApi.getAvailable(merchantId).catch(() => null);
+        let templates = roleResult ? readMerchantSelectedTemplates(roleResult) : [];
+        if (!templates.length) {
+          roleResult = await merchantRoleTemplatesApi.list(merchantId, "ACTIVE");
+          templates = readMerchantSelectedTemplates(roleResult);
+        }
+        setRoleDefinitions(templates);
         // Inherit operational defaults only. Each new location gets its own name/code/address.
         if (!editing) {
           const country = info.owner.country || info.owner.address?.country || "";
           setStore(current => ({...current, merchantId, type: info.typeName, storeTypeId: info.typeId,
             country, currency: info.owner.currency || info.subscription?.currency || COUNTRIES[country]?.currency || "",
             timezone: info.owner.timezone || "", defaultLanguage: info.owner.defaultLanguage || ""}));
-          const inherited = (Array.isArray(info.roles) ? info.roles : []).map(role => typeof role === "string" ? role : role.name || role.roleName).filter(Boolean);
-          setRoles([...new Set(inherited)]); setActiveRole(inherited[0] || "");
+          const inherited = templates.filter(role => role.defaultEnabled || role.required).map(role => role.id);
+          const nextRoles = inherited.length ? inherited : templates.map(role => role.id);
+          setRoles(nextRoles);
+          setActiveRole(nextRoles[0] || "");
+          loadedRolePermissions.current = new Set();
+          setPermissions({});
+          setPermissionAvailability({});
+          setRoleFeatureRows({});
         }
       } catch (err) { if (!cancelled) setMerchantError(err?.message || "Unable to load the selected merchant."); }
       finally { if (!cancelled) setMerchantLoading(false); }
@@ -264,6 +374,65 @@ export default function AddStore() {
     loadMerchantContext();
     return () => { cancelled = true; };
   }, [merchantId, editing, reload]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!editing || !merchantId || !storeId) return;
+    listStoreEmployees(merchantId, storeId).then(response => {
+      if (cancelled) return;
+      const rows = response?.employees ?? response?.data?.employees ?? [];
+      setEmployeeAssignments(rows.map(item => ({
+        employeeId: String(item.employeeId || item.id || ""),
+        role: item.roleTemplateId || item.role || "",
+        pin: "",
+        pinSet: Boolean(item.pinSet),
+      })).filter(item => item.employeeId));
+    }).catch(() => {
+      if (!cancelled) setEmployeeAssignments([]);
+    });
+    return () => { cancelled = true; };
+  }, [editing, merchantId, storeId, reload]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!editing || !merchantId || !storeId) return;
+    setRolesLoading(true);
+    setRolesError("");
+    storeRoleTemplatesApi.list(merchantId, storeId).then(response => {
+      if (cancelled) return;
+      const assigned = readStoreRoleTemplates(response).map(row => row.roleTemplateId || row.id).filter(Boolean);
+      setRoles(assigned);
+      setActiveRole(assigned[0] || "");
+      loadedRolePermissions.current = new Set();
+      setPermissions({});
+      setPermissionAvailability({});
+      setRoleFeatureRows({});
+    }).catch(err => {
+      if (!cancelled) setRolesError(err?.message || "Unable to load store role templates.");
+    }).finally(() => {
+      if (!cancelled) setRolesLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [editing, merchantId, storeId, reload]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!activeRole || !roles.includes(activeRole)) return;
+    setPermissionsLoading(true);
+    roleTemplatesApi.getFeatures(activeRole, store.storeTypeId ? [store.storeTypeId] : []).then(response => {
+      if (cancelled) return;
+      const built = buildRolePermissionState(response, enabledFeatures);
+      loadedRolePermissions.current.add(activeRole);
+      setPermissions(current => ({ ...current, [activeRole]: built.matrix }));
+      setPermissionAvailability(current => ({ ...current, [activeRole]: built.availability }));
+      setRoleFeatureRows(current => ({ ...current, [activeRole]: built.rows }));
+    }).catch(err => {
+      if (!cancelled) setRolesError(err?.message || "Unable to load role template permissions.");
+    }).finally(() => {
+      if (!cancelled) setPermissionsLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [activeRole, roles, store.storeTypeId, enabledFeatures]);
 
   useEffect(() => {
     let cancelled = false;
@@ -290,8 +459,11 @@ export default function AddStore() {
     if (saveLock.current) return;
     featureDefaultsScope.current = "";
     imageGeneration.current += 1;
+    loadedRolePermissions.current = new Set();
     setStore(blankStore(id)); setMerchantInfo(null); setSubscription(null); setEmployees([]); setTypeFeatures([]);
-    setEnabledFeatures([]); setRoles([]); setActiveRole(""); setPermissions({}); setEmployeeAssignments([]);
+    setEnabledFeatures([]); setRoleDefinitions([]); setRoles([]); setActiveRole(""); setPermissions({});
+    setPermissionAvailability({}); setRoleFeatureRows({}); setRolesError("");
+    setEmployeeAssignments([]);
     setPinEditorId(""); setPinDraft(""); setPinError(""); setEmployeeSearch(""); setEmployeeFilter("All"); setEmployeePage(1);
     setFeatureSearch(""); setFeatureCategory("All Features"); setCopyFromRole(""); setError(""); setStep(0);
   };
@@ -319,15 +491,26 @@ export default function AddStore() {
     reader.readAsDataURL(file);
   };
   const toggleFeature = name => entitled(name) && setEnabledFeatures(current => current.includes(name) ? current.filter(item => item !== name) : [...current, name]);
-  const toggleRole = role => {
+  const toggleRole = roleId => {
     setRoles(current => {
-      const next = current.includes(role) ? current.filter(item => item !== role) : [...current, role];
+      const next = current.includes(roleId) ? current.filter(item => item !== roleId) : [...current, roleId];
       setActiveRole(active => next.includes(active) ? active : next[0] || "");
       return next;
     });
-    if (!roles.includes(role)) setPermissions(current => ({ ...current, [role]: Object.fromEntries(featureRows.map(feature => [feature.name, Object.fromEntries(feature.actions.map(action => [action, false]))])) }));
   };
-  const togglePermission = (role, feature, action) => setPermissions(current => ({ ...current, [role]: { ...current[role], [feature]: { ...current[role]?.[feature], [action]: !current[role]?.[feature]?.[action] } } }));
+  const togglePermission = (roleId, feature, action) => {
+    if (!permissionAvailability[roleId]?.[feature]?.[action]) return;
+    setPermissions(current => ({
+      ...current,
+      [roleId]: {
+        ...current[roleId],
+        [feature]: {
+          ...current[roleId]?.[feature],
+          [action]: !current[roleId]?.[feature]?.[action],
+        },
+      },
+    }));
+  };
   const setEmployeeSelected = (employee, checked) => {
     const employeeId = String(employee.id ?? employee.employeeId ?? "");
     setEmployeeAssignments(current => checked ? current.some(item => item.employeeId === employeeId) ? current : [...current, { employeeId, role: roles[0] || "", pin: "" }] : current.filter(item => item.employeeId !== employeeId));
@@ -373,7 +556,7 @@ export default function AddStore() {
       if (store.timezone) { try { new Intl.DateTimeFormat("en", {timeZone:store.timezone}); } catch { return "Select a valid time zone."; } }
       if (store.currency && !/^[A-Z]{3}$/.test(store.currency)) return "Select a valid three-letter currency code.";
       if (store.zip && !/^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(store.zip.trim())) return "Enter a valid postal code.";
-      if (!["Active","Inactive","Draft"].includes(store.status)) return "Select a valid store status.";
+      // if (!["Active","Inactive","Draft"].includes(store.status)) return "Select a valid store status.";
       for (const row of store.hours) {
         if (!["Open","Closed"].includes(row.status)) return "Select Open or Closed for " + row.day + ".";
         if (row.status === "Open" && (!/^([01]\d|2[0-3]):[0-5]\d$/.test(row.open) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(row.close) || row.open === row.close)) return "Enter different opening and closing times for " + row.day + ". Overnight hours are supported.";
@@ -443,37 +626,55 @@ export default function AddStore() {
     }
     saveLock.current = true; setSaving(true); setError("");
     try {
+      const generatedStoreId = `STR-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`.slice(0, 50);
+      const storeCode = (editing ? String(storeId || store.storeCode || store.id || "") : String(store.storeCode || "")).trim().slice(0, 50) || generatedStoreId;
+      const addressText = [store.addressLine1, store.addressLine2].map(part => String(part || "").trim()).filter(Boolean).join(", ").slice(0, 1000);
+      const hours = store.hours.map(row => {
+        const open = row.status === "Open";
+        const day = { day: row.day, status: open ? "Open" : "Closed", open: open ? row.open : "", close: open ? row.close : "" };
+        if (open) day.shifts = Math.max(1, Math.min(100, Number(row.shifts) || 1));
+        return day;
+      });
       const storePayload = {
-        merchantId: merchantId || undefined,
+        merchantId,
+        storeId: storeCode,
         name: store.name.trim(),
-        storeName: store.name.trim(),
-        type: typeName,
-        storeType: typeName,
-        storeTypeId: store.storeTypeId,
+        type: String(typeName || "Retail").slice(0, 50),
         phone: store.phone.trim(),
-        email: store.email.trim(),
         url: store.url.trim(),
         currency: currencyCode,
-        status: saveDraft ? "Draft" : store.status,
-        address: { street: store.addressLine1, addressLine1: store.addressLine1, addressLine2: store.addressLine2, city: store.city, state: store.state, zipCode: store.zip, country: store.country },
-        addressLine1: store.addressLine1,
-        addressLine2: store.addressLine2,
-        city: store.city,
-        state: store.state,
-        zip: store.zip,
+        status: saveDraft ? "PENDING" : String(store.status || "Active").toUpperCase(),
+        address: addressText,
+        city: store.city.trim(),
+        state: store.state.trim(),
+        zip: store.zip.trim(),
         country: store.country,
         timezone: store.timezone,
-        defaultLanguage: store.defaultLanguage,
-        hours: store.hours,
+        hours,
         logo: await readDataUrl(store.logo),
         features: enabledFeatures,
-        storeRoles: roles,
-        storeRolePermissions: Object.fromEntries(roles.map(role => [role, Object.fromEntries(featureRows.filter(feature => enabledFeatures.includes(feature.name)).map(feature => [feature.name, Object.fromEntries(feature.actions.map(action => [action, Boolean(permissions[role]?.[feature.name]?.[action])]))]))])),
-        employeeAssignments,
+        rolePermissions: roles.map(roleId => ({
+          roleTemplateId: roleId,
+          name: roleName(roleId),
+          permissions: permissions[roleId] || {},
+        })),
       };
       const path = editing ? endpoints.store(encodeURIComponent(storeId)) : merchantId ? endpoints.merchantStores(merchantId) : endpoints.stores;
-      if (editing) await api.put(path, storePayload);
-      else await api.post(path, storePayload);
+      const saved = editing ? await api.put(path, storePayload) : await api.post(path, storePayload);
+      const createdStore = saved?.store || saved?.data?.store || saved?.data || saved;
+      const persistedStoreId = editing
+        ? storeId
+        : createdStore?.id || createdStore?.storeId || createdStore?.storeID || store.storeCode;
+      if (merchantId && persistedStoreId && !saveDraft) {
+        await storeRoleTemplatesApi.save(merchantId, persistedStoreId, roles);
+      }
+      if (merchantId && persistedStoreId) {
+        await saveStoreEmployees(merchantId, persistedStoreId, employeeAssignments.map(item => ({
+          employeeId: item.employeeId,
+          ...(item.role ? { roleTemplateId: item.role } : {}),
+          ...(item.pin ? { loginPin: item.pin } : {}),
+        })));
+      }
       saveLock.current = false;
       backToStores();
     } catch (err) {
@@ -503,14 +704,14 @@ export default function AddStore() {
       </Panel>
       <Panel title="Plan Details">
         <div className="sf-plan-details"><div className="sf-plan-title"><span className="sf-icon-square bi bi-file-earmark-text" /><div><strong>{planName}</strong><small>{billing} billing</small></div></div>
-          <div className="sf-plan-metrics"><div><strong>{planPrice == null ? "—" : `${subscription?.currency || currencyCode} ${planPrice}`}</strong><small>Price</small></div><div><strong>{billing}</strong><small>Billing Type</small></div><div><strong>{used} / {limit}</strong><small>Stores Used</small></div><div><strong>{subscription?.status || "Not provided"}</strong><small>Status</small></div></div>
+          <div className="sf-plan-metrics"><div><strong>{planPrice == null ? "—" : `${subscription?.currency || currencyCode} ${planPrice}`}</strong><small>Price</small></div><div><strong>{billing}</strong><small>Billing Type</small></div><div><strong>{used} / {limit}</strong><small>Stores Used</small></div><div><strong>{Number.isFinite(storeLimit) ? Math.max(0, storeLimit - used) : "—"}</strong><small>Remaining to map</small></div><div><strong>{subscription?.status || "Not provided"}</strong><small>Status</small></div></div>
           <div className="sf-key-features"><strong>Key Features</strong><div>{includedFeatures.slice(0, 8).map(item => <span key={item}><i className="bi bi-check-circle-fill" />{item}</span>)}{!includedFeatures.length && <small>Included features are not available in the merchant subscription record.</small>}</div></div>
         </div>
       </Panel>
-      <Panel title="Store Details" subtitle="Existing stores mapped to this merchant.">
-        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>#</th><th>STORE NAME</th><th>STORE CODE</th><th>LOCATION</th><th>STATUS</th></tr></thead><tbody>
-          {merchantStores.map((item, index) => <tr key={item.id || item.storeId || item.storeID || index}><td>{index + 1}</td><td>{item.storeName || item.name || "Unnamed store"}</td><td>{item.storeCode || item.code || "—"}</td><td>{[item.city || item.address?.city, item.state || item.address?.state].filter(Boolean).join(", ") || (typeof item.address === "string" ? item.address : "—")}</td><td>{item.status || "—"}</td></tr>)}
-          {!used && <tr><td colSpan="5" className="sf-empty">No existing stores are mapped to this merchant.</td></tr>}
+      <Panel title="Existing stores mapped to this merchant" subtitle={Number.isFinite(storeLimit) ? `${Math.max(0, storeLimit - used)} remaining store${Math.max(0, storeLimit - used) === 1 ? "" : "s"} allowed to map (${used} of ${limit} used).` : "Store allowance was not returned with this subscription."}>
+        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>#</th><th>STORE NAME</th><th>STORE CODE</th><th>STORE TYPE</th><th>LOCATION</th><th>STATUS</th></tr></thead><tbody>
+          {merchantStores.map((item, index) => <tr key={item.storeCode || item.id || item.storeId || index}><td>{index + 1}</td><td>{item.storeName || item.name || "Unnamed store"}</td><td>{item.storeCode || item.code || "—"}</td><td>{(typeof item.storeType === "string" ? item.storeType : item.storeType?.name) || item.type || "—"}</td><td>{[item.city || item.address?.city, item.state || item.address?.state].filter(Boolean).join(", ") || item.address?.street || (typeof item.address === "string" ? item.address : "—")}</td><td>{item.status || "—"}</td></tr>)}
+          {!used && <tr><td colSpan="6" className="sf-empty">No existing stores are mapped to this merchant.</td></tr>}
         </tbody></table></div>
       </Panel>
     </>;
@@ -581,21 +782,111 @@ export default function AddStore() {
   };
 
   const rolesScreen = () => {
-
     const active = roles.includes(activeRole) ? activeRole : roles[0] || "";
-    const actions = [...new Set(featureRows.filter(feature => enabledFeatures.includes(feature.name)).flatMap(feature => feature.actions))];
+    const activeName = roleName(active) || "Selected Role";
+    const matrixRows = roleFeatureRows[active]?.length
+      ? roleFeatureRows[active]
+      : featureRows.filter(feature => enabledFeatures.includes(feature.name)).map(feature => ({ name: feature.name, id: feature.id || feature.name }));
+    const availability = permissionAvailability[active] || {};
     return <>
-      <Panel title="Role Templates" subtitle="Choose roles available for this merchant.">
-        {!roleDefinitions.length && <p className="sf-empty">No role templates are available. Configure roles on the merchant to make them available here.</p>}<div className="sf-template-grid">{roleDefinitions.map((role, index) => <label className={`sf-template ${roles.includes(role.name) ? "selected" : ""}`} key={role.name}><input type="checkbox" checked={roles.includes(role.name)} onChange={() => toggleRole(role.name)} /><span className={`sf-template-icon icon-${index}`}><i className="bi bi-person-badge" /></span><span><strong>{role.name}</strong><small>{role.description}</small></span></label>)}</div>
+      <Panel title="Role Templates" subtitle="Choose from merchant-selected role templates for this store.">
+        {rolesError && <p className="sf-empty" role="alert">{rolesError}</p>}
+        {(rolesLoading || merchantLoading) && <p className="sf-empty">Loading merchant role templates…</p>}
+        {!rolesLoading && !roleDefinitions.length && <p className="sf-empty">No role templates are selected on this merchant. Save roles on the merchant Roles tab first.</p>}
+        <div className="sf-template-grid">{roleDefinitions.map((role, index) => (
+          <label className={`sf-template ${roles.includes(role.id) ? "selected" : ""}`} key={role.id}>
+            <input type="checkbox" checked={roles.includes(role.id)} onChange={() => toggleRole(role.id)} />
+            <span className={`sf-template-icon icon-${index % 5}`}><i className="bi bi-person-badge" /></span>
+            <span><strong>{role.name}</strong><small>{role.description || role.roleCode || "Merchant role template"}</small></span>
+          </label>
+        ))}</div>
       </Panel>
       <div className="sf-permissions-layout">
         <Panel title="Roles for This Store" subtitle="Configure permissions for each selected role.">
-          <div className="sf-role-list">{roles.map(role => <button type="button" key={role} className={active === role ? "active" : ""} onClick={() => setActiveRole(role)}><i className="bi bi-grip-vertical" /><span>{role}</span><small>{roleDefinitions.find(item => item.name === role)?.level || "Custom"}</small><i className="bi bi-trash3" onClick={event => { event.stopPropagation(); setRoles(current => current.filter(item => item !== role)); setActiveRole(current => current === role ? roles.find(item => item !== role) || "" : current); }} /></button>)}{!roles.length && <p className="sf-empty">Select a merchant role above.</p>}</div>
+          <div className="sf-role-list">
+            {roles.map(roleId => (
+              <button type="button" key={roleId} className={active === roleId ? "active" : ""} onClick={() => setActiveRole(roleId)}>
+                <i className="bi bi-grip-vertical" />
+                <span>{roleName(roleId)}</span>
+                <small>{roleById[roleId]?.level || "Custom"}</small>
+                <i className="bi bi-trash3" onClick={event => {
+                  event.stopPropagation();
+                  setRoles(current => current.filter(item => item !== roleId));
+                  setActiveRole(current => current === roleId ? roles.find(item => item !== roleId) || "" : current);
+                }} />
+              </button>
+            ))}
+            {!roles.length && <p className="sf-empty">Select a merchant role above.</p>}
+          </div>
         </Panel>
-        <Panel title={`Permissions for ${active || "Selected Role"}`} subtitle="Set what this role can view, create, edit or delete." action={<div className="sf-copy-permissions"><label>Copy from<select value={copyFromRole} onChange={event => setCopyFromRole(event.target.value)}><option value="">Select a role</option>{roles.filter(role => role !== active).map(role => <option key={role}>{role}</option>)}</select></label><button type="button" className="sf-outline" disabled={!active || !copyFromRole} onClick={() => { setPermissions(current => ({ ...current, [active]: { ...(current[copyFromRole] || {}) } })); }}>Apply</button></div>}>
-          {active && <div className="sf-table-wrap"><table className="sf-table sf-permission-table"><thead><tr><th>MODULE / FEATURE</th>{actions.map(action => <th key={action}>{action.toUpperCase()}</th>)}</tr></thead><tbody>
-            {featureRows.filter(feature => enabledFeatures.includes(feature.name)).map(item => { const name = featureName(item); const values = permissions[active]?.[name] || {}; return <tr key={name}><td><i className="bi bi-grid-3x3-gap" /> {name}</td>{actions.map(action => <td key={action}><input type="checkbox" checked={Boolean(values[action])} disabled={!item.actions.includes(action)} onChange={() => togglePermission(active, name, action)} /></td>)}</tr>; })}
-          </tbody></table></div>}
+        <Panel
+          title={`Permissions for ${activeName}`}
+          subtitle="Set what this role can view, create, edit or delete."
+          action={<div className="sf-copy-permissions">
+            <label>Copy from
+              <select value={copyFromRole} onChange={event => setCopyFromRole(event.target.value)}>
+                <option value="">Select a role</option>
+                {roles.filter(roleId => roleId !== active).map(roleId => (
+                  <option key={roleId} value={roleId}>{roleName(roleId)}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="sf-outline"
+              disabled={!active || !copyFromRole}
+              onClick={() => {
+                setPermissions(current => ({ ...current, [active]: { ...(current[copyFromRole] || {}) } }));
+                setPermissionAvailability(current => ({ ...current, [active]: { ...(current[copyFromRole] || {}) } }));
+                setRoleFeatureRows(current => ({ ...current, [active]: [...(current[copyFromRole] || [])] }));
+              }}
+            >
+              Apply
+            </button>
+          </div>}
+        >
+          {permissionsLoading && active && <p className="sf-empty">Loading permissions for {activeName}…</p>}
+          {active && !permissionsLoading && (
+            <div className="sf-table-wrap">
+              <table className="sf-table sf-permission-table">
+                <thead>
+                  <tr>
+                    <th>MODULE / FEATURE</th>
+                    {STANDARD_ACTIONS.map(action => <th key={action}>{action.toUpperCase()}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {matrixRows.map(item => {
+                    const name = item.name;
+                    const values = permissions[active]?.[name] || {};
+                    const available = availability[name] || {};
+                    return (
+                      <tr key={item.id || name}>
+                        <td><i className="bi bi-grid-3x3-gap" /> {name}</td>
+                        {STANDARD_ACTIONS.map(action => (
+                          <td key={action}>
+                            {available[action] === false || (availability[name] && !available[action]) ? (
+                              <span className="sf-perm-na" aria-hidden="true">—</span>
+                            ) : (
+                              <input
+                                type="checkbox"
+                                checked={Boolean(values[action])}
+                                disabled={!available[action] && Object.keys(availability).length > 0}
+                                onChange={() => togglePermission(active, name, action)}
+                              />
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                  {!matrixRows.length && (
+                    <tr><td colSpan={STANDARD_ACTIONS.length + 1} className="sf-empty">Enable store features first, or this role template has no feature permissions.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
           {!active && <p className="sf-empty">Select a role to configure permissions.</p>}
         </Panel>
       </div>
@@ -609,7 +900,7 @@ export default function AddStore() {
         <div><small>Selected Merchant</small><strong><span className="sf-avatar">{initials(merchantName)}</span>{merchantName}</strong><small>{merchantId} &nbsp;|&nbsp; {typeName || "Merchant"}</small></div>
         <div><small>Total Employees</small><strong>{employees.length}</strong></div><div><small>Already Assigned</small><strong>{assigned}</strong></div><div><small>Available to Assign</small><strong className="sf-green">{Math.max(0, activeEmployees.length - assigned)}</strong></div>
       </Panel>
-      <Panel title="Select Employees" subtitle="Choose employees from the merchant to assign to this store. You can assign a store role for each employee.">
+      <Panel title="Assign employees to this store" subtitle="Choose employees from the merchant to assign to this store. You can assign a store role for each employee.">
         <div className="sf-employee-tools"><label className="sf-search"><i className="bi bi-search" /><input placeholder="Search employees..." value={employeeSearch} onChange={event => { setEmployeeSearch(event.target.value); setEmployeePage(1); }} /></label><SelectField label="Filter" value={employeeFilter} onChange={value => { setEmployeeFilter(value); setEmployeePage(1); }} options={["All", "Assigned", "Available"]} /></div>
         <div className="sf-table-wrap"><table className="sf-table sf-employees-table"><thead><tr><th><span className="sr-only">Select</span></th><th>#</th><th>EMPLOYEE NAME</th><th>EMPLOYEE ID</th><th>PHONE</th><th>EMAIL</th><th>CURRENT ROLE (MERCHANT)</th><th>STORE ROLE</th><th>LOGIN PIN</th><th>STATUS</th></tr></thead><tbody>
           {pagedEmployees.map((employee, index) => {
@@ -622,8 +913,8 @@ export default function AddStore() {
               <td>{(employeePage - 1) * pageSize + index + 1}</td>
               <td>{employee.name || `${employee.firstName || ""} ${employee.lastName || ""}`.trim()}</td>
               <td>{employee.employeeCode || employeeId}</td><td>{employee.phone || "—"}</td><td>{employee.email || "—"}</td><td>{employee.role || "—"}</td>
-              <td><select value={assignment?.role || ""} disabled={!isAssigned} onChange={event => setEmployeeRole(employeeId, event.target.value)}><option value="">Select role</option>{roles.map(role => <option key={role}>{role}</option>)}</select></td>
-              <td className="sf-pin-cell">{editingPin ? <div className="sf-pin-editor"><input autoFocus type="password" inputMode="numeric" autoComplete="new-password" maxLength={6} aria-label={`Six-digit login PIN for ${employee.name}`} placeholder="6-digit PIN" value={pinDraft} onChange={event => { setPinDraft(event.target.value.replace(/\D/g, "").slice(0, 6)); setPinError(""); }} /><div><button type="button" className="sf-pin-save" onClick={() => saveEmployeePin(employeeId)}>Save PIN</button><button type="button" className="sf-pin-cancel" onClick={() => { setPinEditorId(""); setPinDraft(""); setPinError(""); }}>Cancel</button></div>{pinError && <small role="alert">{pinError}</small>}</div> : <div className="sf-pin-action">{assignment?.pin && <span className="sf-pin-set"><i className="bi bi-lock-fill" /> PIN set</span>}<button type="button" className="sf-link" onClick={() => openPinEditor(employee)}>{assignment?.pin ? "Change PIN" : "Assign PIN"}</button></div>}</td>
+              <td><select value={assignment?.role || ""} disabled={!isAssigned} onChange={event => setEmployeeRole(employeeId, event.target.value)}><option value="">Select role</option>{roles.map(roleId => <option key={roleId} value={roleId}>{roleName(roleId)}</option>)}</select></td>
+              <td className="sf-pin-cell">{editingPin ? <div className="sf-pin-editor"><input autoFocus type="password" inputMode="numeric" autoComplete="new-password" maxLength={6} aria-label={`Six-digit login PIN for ${employee.name}`} placeholder="6-digit PIN" value={pinDraft} onChange={event => { setPinDraft(event.target.value.replace(/\D/g, "").slice(0, 6)); setPinError(""); }} /><div><button type="button" className="sf-pin-save" onClick={() => saveEmployeePin(employeeId)}>Save PIN</button><button type="button" className="sf-pin-cancel" onClick={() => { setPinEditorId(""); setPinDraft(""); setPinError(""); }}>Cancel</button></div>{pinError && <small role="alert">{pinError}</small>}</div> : <div className="sf-pin-action">{(assignment?.pin || assignment?.pinSet) && <span className="sf-pin-set"><i className="bi bi-lock-fill" /> PIN set</span>}<button type="button" className="sf-link" onClick={() => openPinEditor(employee)}>{assignment?.pin || assignment?.pinSet ? "Change PIN" : "Assign PIN"}</button></div>}</td>
               <td><span className={isAssigned ? "sf-status-assigned" : "sf-status-available"}>{isAssigned ? "Will be assigned" : "Available"}</span></td>
             </tr>;
           })}
@@ -637,7 +928,7 @@ export default function AddStore() {
   const reviewScreen = () => <>
     <div className="sf-review-grid">
       <Panel title={<><i className="bi bi-person-vcard" /> Merchant & Subscription</>} action={<button className="sf-link" type="button" onClick={() => goTo(1)}>✎ Edit</button>}>
-        <Detail label="Merchant">{merchantName}</Detail><Detail label="Subscription Plan">{planName}</Detail><Detail label="Plan Billing">{billing}</Detail><Detail label="Store Entitlement">{merchantStores.length} / {Number.isFinite(storeLimit) ? storeLimit : "Unlimited"} stores used</Detail>
+        <Detail label="Merchant">{merchantName}</Detail><Detail label="Subscription Plan">{planName}</Detail><Detail label="Plan Billing">{billing}</Detail><Detail label="Store Entitlement">{merchantStores.length} / {Number.isFinite(storeLimit) ? storeLimit : "Unlimited"} stores used{Number.isFinite(storeLimit) ? `, ${Math.max(0, storeLimit - merchantStores.length)} remaining` : ""}</Detail>
       </Panel>
       <Panel title={<><i className="bi bi-shop" /> Store Details</>} action={<button className="sf-link" type="button" onClick={() => goTo(0)}>✎ Edit</button>}>
         <Detail label="Store Name">{store.name}</Detail><Detail label="Store Code">{store.storeCode || (editing ? "—" : "Generated after saving")}</Detail><Detail label="Address">{[store.addressLine1, store.addressLine2, store.city, store.state, store.zip].filter(Boolean).join(", ")}</Detail><Detail label="Country / State">{[store.country, store.state].filter(Boolean).join(" / ")}</Detail><Detail label="Time Zone">{store.timezone}</Detail><Detail label="Currency">{currencyCode}</Detail><Detail label="Status">{store.status}</Detail>
@@ -646,10 +937,10 @@ export default function AddStore() {
         <div className="sf-review-feature-list">{featureRows.map(feature => <span className={enabledFeatures.includes(feature.name) ? "enabled" : "disabled"} key={feature.name}><i className={`bi ${enabledFeatures.includes(feature.name) ? "bi-check-circle-fill" : "bi-dash-circle-fill"}`} />{feature.name}</span>)}</div>
       </Panel>
       <Panel title={<><i className="bi bi-shield-lock" /> Roles & Permissions ({roles.length} roles)</>} action={<button className="sf-link" type="button" onClick={() => goTo(3)}>✎ Edit</button>}>
-        <div className="sf-table-wrap"><table className="sf-table sf-review-table"><thead><tr><th>ROLE NAME</th><th>ACCESS LEVEL</th><th>NO. OF PERMISSIONS</th></tr></thead><tbody>{roles.map(role => <tr key={role}><td>{role}</td><td>{roleDefinitions.find(item => item.name === role)?.level || "Custom"}</td><td>{permissionCount(role)}</td></tr>)}{!roles.length && <tr><td colSpan="3">No roles selected</td></tr>}</tbody></table></div>
+        <div className="sf-table-wrap"><table className="sf-table sf-review-table"><thead><tr><th>ROLE NAME</th><th>ACCESS LEVEL</th><th>NO. OF PERMISSIONS</th></tr></thead><tbody>{roles.map(roleId => <tr key={roleId}><td>{roleName(roleId)}</td><td>{roleById[roleId]?.level || "Custom"}</td><td>{permissionCount(roleId)}</td></tr>)}{!roles.length && <tr><td colSpan="3">No roles selected</td></tr>}</tbody></table></div>
       </Panel>
       <Panel title={<><i className="bi bi-people" /> Employees ({employeeAssignments.length} assigned)</>} action={<button className="sf-link" type="button" onClick={() => goTo(4)}>✎ Edit</button>}>
-        <div className="sf-table-wrap"><table className="sf-table sf-review-table"><thead><tr><th>#</th><th>EMPLOYEE NAME</th><th>EMPLOYEE ID</th><th>ROLE</th></tr></thead><tbody>{employeeAssignments.map((item, index) => { const employee = employees.find(row => String(row.id ?? row.employeeId) === item.employeeId); return <tr key={item.employeeId}><td>{index + 1}</td><td>{employee?.name || "Employee"}</td><td>{employee?.employeeCode || item.employeeId}</td><td>{item.role}</td></tr>; })}{!employeeAssignments.length && <tr><td colSpan="4">No employees assigned</td></tr>}</tbody></table></div>
+        <div className="sf-table-wrap"><table className="sf-table sf-review-table"><thead><tr><th>#</th><th>EMPLOYEE NAME</th><th>EMPLOYEE ID</th><th>ROLE</th></tr></thead><tbody>{employeeAssignments.map((item, index) => { const employee = employees.find(row => String(row.id ?? row.employeeId) === item.employeeId); return <tr key={item.employeeId}><td>{index + 1}</td><td>{employee?.name || "Employee"}</td><td>{employee?.employeeCode || item.employeeId}</td><td>{roleName(item.role) || item.role}</td></tr>; })}{!employeeAssignments.length && <tr><td colSpan="4">No employees assigned</td></tr>}</tbody></table></div>
       </Panel>
       <Panel title={<><i className="bi bi-link-45deg" /> Store Base URL & Contact</>} action={<button className="sf-link" type="button" onClick={() => goTo(0)}>✎ Edit</button>}>
         <Detail label="Store Base URL">{store.url}</Detail><Detail label="Store Phone">{store.phone}</Detail><Detail label="Store Email">{store.email}</Detail>

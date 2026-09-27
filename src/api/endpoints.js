@@ -44,6 +44,8 @@ export const endpoints = {
     `/store-types/${encodeURIComponent(storeTypeId)}/features/${encodeURIComponent(featureId)}`,
   storeConnector: (id) => `/stores/${id}/connector`,
   merchantStores: (merchantId) => `/merchants/${merchantId}/stores`,
+  storeEmployees: (merchantId, storeId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/stores/${encodeURIComponent(storeId)}/employees`,
 
   features: "/features",
   feature: (id) => `/features/${id}`,
