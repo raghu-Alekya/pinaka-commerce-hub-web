@@ -11,13 +11,46 @@ import { api, ApiError } from "../api/http";
 import { endpoints } from "../api/endpoints";
 import "../styles/add-store.css";
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 const COUNTRIES = {
   India: { currency: "INR", zones: ["Asia/Kolkata"] },
-  "United States": { currency: "USD", zones: ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles"] },
-  Canada: { currency: "CAD", zones: ["America/Toronto", "America/Vancouver", "America/Edmonton", "America/Winnipeg"] },
+  "United States": {
+    currency: "USD",
+    zones: [
+      "America/New_York",
+      "America/Chicago",
+      "America/Denver",
+      "America/Phoenix",
+      "America/Los_Angeles",
+    ],
+  },
+  Canada: {
+    currency: "CAD",
+    zones: [
+      "America/Toronto",
+      "America/Vancouver",
+      "America/Edmonton",
+      "America/Winnipeg",
+    ],
+  },
   "United Kingdom": { currency: "GBP", zones: ["Europe/London"] },
-  Australia: { currency: "AUD", zones: ["Australia/Sydney", "Australia/Melbourne", "Australia/Brisbane", "Australia/Perth"] },
+  Australia: {
+    currency: "AUD",
+    zones: [
+      "Australia/Sydney",
+      "Australia/Melbourne",
+      "Australia/Brisbane",
+      "Australia/Perth",
+    ],
+  },
 };
 const STEPS = ["Store Details", "Subscription", "Features", "Roles & Permissions", "Employees", "Review & Provision"];
 const STEP_HINTS = ["Enter basic information", "Review merchant subscription", "Enable or disable features", "Configure store level access", "Assign employees to this store", "Review and create store"];
@@ -26,28 +59,111 @@ const listFrom = value => {
   const rows = value?.features ?? value?.storeTypeFeatures ?? value?.items ?? value?.data ?? value;
   return Array.isArray(rows) ? rows : [];
 };
-const featureName = item => typeof item === "string" ? item : item?.name ?? item?.featureName ?? item?.featureKey ?? item?.code ?? "";
-const featureActions = item => Array.isArray(item?.actions) ? item.actions.map(action => typeof action === "string" ? action : action?.name ?? action?.action ?? action?.code).filter(Boolean) : [];
-const idOf = value => String(value?.id ?? value?._id ?? value?.merchantId ?? (typeof value === "string" || typeof value === "number" ? value : ""));
-const initials = value => String(value || "Store").split(/\s+/).slice(0, 2).map(part => part[0] || "").join("").toUpperCase();
-const blankHours = () => DAYS.map(day => ({ day, status: "Closed", open: "", close: "", shifts: 0 }));
+const featureName = (item) =>
+  typeof item === "string"
+    ? item
+    : (item?.name ??
+      item?.featureName ??
+      item?.feature_name ??
+      item?.featureKey ??
+      item?.feature_key ??
+      item?.code ??
+      "");
+const featureActions = (item) =>
+  Array.isArray(item?.actions)
+    ? item.actions
+        .map((action) =>
+          typeof action === "string"
+            ? action
+            : (action?.name ?? action?.action ?? action?.code),
+        )
+        .filter(Boolean)
+    : [];
+
+const idOf = (value) =>
+  String(
+    value?.merchantId ??
+      value?.id ??
+      value?._id ??
+      (typeof value === "string" || typeof value === "number" ? value : ""),
+  );
+const isUuid = (value) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(value || ""),
+  );
+const initials = (value) =>
+  String(value || "Store")
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0] || "")
+    .join("")
+    .toUpperCase();
+const blankHours = () =>
+  DAYS.map((day) => ({
+    day,
+    status: "Closed",
+    open: "",
+    close: "",
+    shifts: 0,
+  }));
 const blankStore = (merchantId = "") => ({
-  merchantId, name: "", type: "", storeTypeId: "", storeCode: "", id: "", phone: "", email: "", url: "",
-  logo: "", currency: "", status: "Active", addressLine1: "", addressLine2: "", city: "",
-  state: "", zip: "", country: "", timezone: "", defaultLanguage: "", hours: blankHours(),
+  merchantId,
+  name: "",
+  type: "",
+  storeTypeId: "",
+  storeCode: "",
+  id: "",
+  phone: "",
+  email: "",
+  url: "",
+  logo: "",
+  currency: "",
+  status: "Active",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  zip: "",
+  country: "",
+  timezone: "",
+  defaultLanguage: "",
+  hours: blankHours(),
 });
-const unwrapMerchant = result => {
+
+const unwrapMerchant = (result) => {
   const raw = result?.raw || result || {};
   const merchant = raw.merchant || raw.data?.merchant || raw.data || raw;
   const draft = merchant?._onboarding;
-  const owner = { ...(draft?.merchant || {}), ...merchant, ...(result?.merchant || {}) };
-  const sub = result?.subscription || raw.subscription || owner.subscription || {};
+  const owner = {
+    ...(draft?.merchant || {}),
+    ...merchant,
+    ...(result?.merchant || {}),
+  };
+  const sub =
+    result?.subscription || raw.subscription || owner.subscription || {};
   const plan = sub.plan && typeof sub.plan === "object" ? sub.plan : {};
+  const storeType =
+    owner.storeType ??
+    raw.storeType ??
+    raw.data?.storeType ??
+    result?.storeType;
   return {
     owner,
     subscription: sub,
-    typeId: String(owner.storeTypeId ?? owner.storeType?.id ?? draft?.merchant?.storeTypeId ?? ""),
-    typeName: owner.storeTypeName || (typeof owner.storeType === "string" ? owner.storeType : owner.storeType?.name) || owner.type || "",
+    typeId: String(
+      owner.storeTypeId ??
+        storeType?.id ??
+        storeType?.storeTypeId ??
+        draft?.merchant?.storeTypeId ??
+        "",
+    ),
+    typeName:
+      owner.storeTypeName ||
+      (typeof storeType === "string"
+        ? storeType
+        : (storeType?.name ?? storeType?.storeTypeName)) ||
+      owner.type ||
+      "",
     roles: result?.roles || raw.roles || owner.roles || draft?.roles || [],
     plan,
   };
@@ -138,25 +254,73 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
 };
 const Field = ({ label, value, onChange, type = "text", optional = false, ...props }) => (
   <label className="sf-field">
-    <span>{label}{optional && <small> (Optional)</small>}</span>
-    <input type={type} value={value ?? ""} onChange={event => onChange(event.target.value)} {...props} />
+    <span>
+      {label}
+      {optional && <small> (Optional)</small>}
+    </span>
+    <input
+      type={type}
+      value={value ?? ""}
+      onChange={(event) => onChange(event.target.value)}
+      {...props}
+    />
   </label>
 );
-const SelectField = ({ label, value, onChange, options, optional = false, ...props }) => (
+
+const SelectField = ({
+  label,
+  value,
+  onChange,
+  options,
+  optional = false,
+  ...props
+}) => (
   <label className="sf-field">
-    <span>{label}{optional && <small> (Optional)</small>}</span>
-    <select value={value ?? ""} onChange={event => onChange(event.target.value)} {...props}>
-      {options.map(option => typeof option === "string" ? <option key={option} value={option}>{option}</option> : <option key={option.value} value={option.value}>{option.label}</option>)}
+    <span>
+      {label}
+      {optional && <small> (Optional)</small>}
+    </span>
+    <select
+      value={value ?? ""}
+      onChange={(event) => onChange(event.target.value)}
+      {...props}
+    >
+      {options.map((option) =>
+        typeof option === "string" ? (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ) : (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ),
+      )}
     </select>
   </label>
 );
+
 const Panel = ({ title, subtitle, action, children, className = "" }) => (
   <section className={`sf-panel ${className}`}>
-    {(title || action) && <div className="sf-panel-head"><div>{title && <h2>{title}</h2>}{subtitle && <p>{subtitle}</p>}</div>{action}</div>}
+    {(title || action) && (
+      <div className="sf-panel-head">
+        <div>
+          {title && <h2>{title}</h2>}
+          {subtitle && <p>{subtitle}</p>}
+        </div>
+        {action}
+      </div>
+    )}
     {children}
   </section>
 );
-const Detail = ({ label, children }) => <div className="sf-detail"><span>{label}</span><strong>{children || "—"}</strong></div>;
+
+const Detail = ({ label, children }) => (
+  <div className="sf-detail">
+    <span>{label}</span>
+    <strong>{children || "—"}</strong>
+  </div>
+);
 
 export default function AddStore() {
   const navigate = useNavigate();
@@ -169,10 +333,12 @@ export default function AddStore() {
   const [subscription, setSubscription] = useState(null);
   const [merchantStores, setMerchantStores] = useState([]);
   const [storeTypes, setStoreTypes] = useState([]);
+  const [storeTypesLoading, setStoreTypesLoading] = useState(false);
   const [catalog, setCatalog] = useState([]);
   const [typeFeatures, setTypeFeatures] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [merchantLoading, setMerchantLoading] = useState(false);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [merchantError, setMerchantError] = useState("");
   const [loadError, setLoadError] = useState("");
   const [reload, setReload] = useState(0);
@@ -209,6 +375,13 @@ export default function AddStore() {
   const [featureSearch, setFeatureSearch] = useState("");
   const [featureCategory, setFeatureCategory] = useState("All Features");
 
+  const merchantLookupId = routeMerchantId || store.merchantId;
+  const merchantRecord = merchants.find(
+    (item) =>
+      String(item.id) === String(merchantLookupId) ||
+      String(item.merchantId) === String(merchantLookupId),
+  );
+
   const merchantId = idOf(routeMerchantId || store.merchantId);
   const merchant = merchantInfo?.owner || merchants.find(item => idOf(item) === merchantId) || null;
   const merchantName = merchant?.name || merchant?.merchantName || merchant?.businessDisplayName || "Selected merchant";
@@ -221,16 +394,55 @@ export default function AddStore() {
   const storeLimit = Number(subscription?.maxStoresAllowed ?? subscription?.licensedStoreCount ?? subscription?.storeLimit ?? subscription?.maxStores ?? subscription?.locationLimit ?? plan?.includedStores ?? plan?.included_stores ?? NaN);
   const planFeatureList = subscription?.includedFeatures ?? plan?.includedFeatures ?? plan?.features;
   const includedFeatures = useMemo(() => {
-    const raw = listFrom(subscription?.includedFeatures ?? plan?.includedFeatures ?? plan?.features ?? []);
-    return raw.map(featureName).filter(Boolean);
+    const raw = [
+      ...listFrom(subscription?.entitlements),
+      ...listFrom(
+        subscription?.includedFeatures ?? subscription?.included_features,
+      ),
+      ...listFrom(
+        plan?.included_features ?? plan?.includedFeatures ?? plan?.features,
+      ),
+    ];
+    const unique = [];
+    const seen = new Set();
+    raw
+      .map(featureName)
+      .filter(Boolean)
+      .forEach((name) => {
+        const lower = name.toLowerCase();
+        if (!seen.has(lower)) {
+          seen.add(lower);
+          unique.push(name);
+        }
+      });
+    return unique;
   }, [subscription, plan]);
+
   const featureRows = useMemo(() => {
-    const source = store.storeTypeId ? typeFeatures : catalog;
+    const source = activeStoreTypeId ? typeFeatures : catalog;
     const unique = new Map();
-    source.forEach(row => {
-      const nested = row.feature || row.featureDetails || row.featureDefinition || row;
+    source.forEach((row) => {
+      const nested =
+        row.feature ||
+        row.featureDetails ||
+        row.featureDefinition ||
+        row.storeTypeFeature?.feature ||
+        row.data?.feature ||
+        row;
       const name = featureName(nested);
-      if (name && !unique.has(name)) unique.set(name, { ...nested, name, actions: featureActions(nested), category: nested.category || row.category || "More", description: nested.description || "", defaultEnabled: row.defaultEnabled !== false });
+      if (name && !unique.has(name))
+        unique.set(name, {
+          ...nested,
+          name,
+          actions: featureActions(nested),
+          category:
+            nested.category || nested.categoryName || row.category || "More",
+          description: nested.description || nested.featureDescription || "",
+          included: nested.included ?? row.included,
+          planAccess: nested.planAccess ?? row.planAccess,
+          enabledForStore: nested.enabledForStore ?? row.enabledForStore,
+          defaultEnabled: row.defaultEnabled !== false,
+        });
     });
     return [...unique.values()];
   }, [typeFeatures, catalog, store.storeTypeId]);
@@ -247,52 +459,109 @@ export default function AddStore() {
   const activeEmployees = employees.filter(employee => String(employee.status || "").toUpperCase() === "ACTIVE" || employee.status === "Active");
   const employeeRows = activeEmployees.filter(employee => {
     const query = employeeSearch.toLowerCase();
-    const matchText = `${employee.name} ${employee.id} ${employee.phone} ${employee.email} ${employee.role}`.toLowerCase().includes(query);
-    const assigned = employeeAssignments.some(item => item.employeeId === String(employee.id ?? employee.employeeId));
-    return matchText && (employeeFilter === "All" || (employeeFilter === "Assigned" ? assigned : !assigned));
+    const matchText =
+      `${employee.name} ${employee.id} ${employee.phone} ${employee.email} ${employee.role}`
+        .toLowerCase()
+        .includes(query);
+    const assigned = employeeAssignments.some(
+      (item) => item.employeeId === String(employee.id ?? employee.employeeId),
+    );
+    return (
+      matchText &&
+      (employeeFilter === "All" ||
+        (employeeFilter === "Assigned" ? assigned : !assigned))
+    );
   });
+
   const pageSize = 10;
   const pageCount = Math.max(1, Math.ceil(employeeRows.length / pageSize));
   const currentEmployeePage = Math.min(employeePage, pageCount);
-  const pagedEmployees = employeeRows.slice((currentEmployeePage - 1) * pageSize, currentEmployeePage * pageSize);
-  const currencyCode = store.currency || COUNTRIES[store.country]?.currency || "";
+  const pagedEmployees = employeeRows.slice(
+    (currentEmployeePage - 1) * pageSize,
+    currentEmployeePage * pageSize,
+  );
+
+  const currencyCode =
+    store.currency ||
+    COUNTRIES[store.country]?.currency ||
+    subscription?.currency ||
+    "";
   const countrySettings = COUNTRIES[store.country];
   const enabledCount = enabledFeatures.length;
-  const permissionCount = role => Object.values(permissions[role] || {}).reduce((sum, actions) => sum + Object.values(actions || {}).filter(Boolean).length, 0);
+  const permissionCount = (role) =>
+    Object.values(permissions[role] || {}).reduce(
+      (sum, actions) =>
+        sum + Object.values(actions || {}).filter(Boolean).length,
+      0,
+    );
 
+  // Initial Load: Merchants, Global Feature Catalog, and Existing Store if editing
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      setLoading(true); setMastersLoading(true); setLoadError("");
+      setLoading(true);
+      setMastersLoading(true);
+      setLoadError("");
       try {
-        if (!routeMerchantId && !storeId) {
+        if (!isUuid(routeMerchantId) || storeId) {
           const result = await listMerchants();
-          if (!cancelled) setMerchants(Array.isArray(result) ? result : result?.merchants || result?.data?.merchants || []);
+          if (!cancelled)
+            setMerchants(
+              Array.isArray(result)
+                ? result
+                : result?.merchants || result?.data?.merchants || [],
+            );
         }
-        const [typesResult, featuresResult] = await Promise.all([storeTypesApi.getAll(), listFeatures()]);
+        const featuresResult = await listFeatures();
         if (!cancelled) {
-          setStoreTypes(Array.isArray(typesResult) ? typesResult : typesResult?.storeTypes || []);
-          setCatalog(Array.isArray(featuresResult) ? featuresResult.filter(item => String(item.status || "Active").toUpperCase() !== "INACTIVE") : []);
+          setCatalog(
+            Array.isArray(featuresResult)
+              ? featuresResult.filter(
+                  (item) =>
+                    String(item.status || "Active").toUpperCase() !==
+                    "INACTIVE",
+                )
+              : [],
+          );
         }
         if (storeId) {
-          const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
+          const response = await api.get(
+            endpoints.store(encodeURIComponent(storeId)),
+          );
           const saved = response?.store || response;
           if (!cancelled) {
-            const address = saved.address && typeof saved.address === "object" ? saved.address : {};
+            const address =
+              saved.address && typeof saved.address === "object"
+                ? saved.address
+                : {};
             const savedStore = {
-              ...blankStore(routeMerchantId || saved.merchantId || saved.merchant),
+              ...blankStore(
+                routeMerchantId || saved.merchantId || saved.merchant,
+              ),
               ...saved,
-              merchantId: routeMerchantId || idOf(saved.merchantId || saved.merchant),
+              merchantId:
+                routeMerchantId || idOf(saved.merchantId || saved.merchant),
               id: saved.storeID || saved.storeId || saved.id || "",
               name: saved.storeName || saved.name || "",
-              type: saved.storeType?.name || saved.storeTypeName || saved.storeType || saved.type || "",
-              storeTypeId: String(saved.storeTypeId || saved.storeType?.id || ""),
+              type:
+                saved.storeType?.name ||
+                saved.storeTypeName ||
+                saved.storeType ||
+                saved.type ||
+                "",
+              storeTypeId: String(
+                saved.storeTypeId || saved.storeType?.id || "",
+              ),
               storeCode: saved.storeCode || saved.code || "",
               phone: saved.phone || "",
               email: saved.email || saved.storeEmail || "",
               url: saved.baseUrl || saved.url || saved.websiteUrl || "",
               logo: saved.logoUrl || saved.logo || "",
-              addressLine1: saved.addressLine1 || address.addressLine1 || address.street || (typeof saved.address === "string" ? saved.address : ""),
+              addressLine1:
+                saved.addressLine1 ||
+                address.addressLine1 ||
+                address.street ||
+                (typeof saved.address === "string" ? saved.address : ""),
               addressLine2: saved.addressLine2 || address.addressLine2 || "",
               city: saved.city || address.city || "",
               state: saved.state || address.state || "",
@@ -309,21 +578,29 @@ export default function AddStore() {
           }
         }
       } catch (err) {
-        if (!cancelled) setLoadError(err?.message || "Unable to load the store setup.");
+        if (!cancelled)
+          setLoadError(err?.message || "Unable to load the store setup.");
       } finally {
-        if (!cancelled) { setLoading(false); setMastersLoading(false); }
+        if (!cancelled) {
+          setLoading(false);
+          setMastersLoading(false);
+        }
       }
     };
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [routeMerchantId, storeId, reload]);
 
+  // Load Store Types (Master Setup with Merchant Fallback)
   useEffect(() => {
     let cancelled = false;
     setMerchantInfo(null); setSubscription(null); setMerchantStores([]); setEmployees([]); setMerchantError("");
     setRoleDefinitions([]); setRolesError("");
     setMerchantLoading(Boolean(merchantId));
     if (!merchantId) return;
+
     async function loadMerchantContext() {
       try {
         const [result, employeeResult, storesResult] = await Promise.all([
@@ -332,6 +609,7 @@ export default function AddStore() {
           api.get(endpoints.merchantStores(merchantId)).catch(() => null),
         ]);
         if (cancelled) return;
+
         const info = unwrapMerchant(result);
         if (!idOf(info.owner)) throw new Error("Merchant details were not returned.");
         setMerchantInfo(info); setSubscription(info.subscription);
@@ -368,13 +646,22 @@ export default function AddStore() {
           setPermissionAvailability({});
           setRoleFeatureRows({});
         }
-      } catch (err) { if (!cancelled) setMerchantError(err?.message || "Unable to load the selected merchant."); }
-      finally { if (!cancelled) setMerchantLoading(false); }
+      } catch (err) {
+        if (!cancelled)
+          setMerchantError(
+            err?.message || "Unable to load the selected merchant.",
+          );
+      } finally {
+        if (!cancelled) setMerchantLoading(false);
+      }
     }
     loadMerchantContext();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [merchantId, editing, reload]);
 
+  // Load Store-Type Features
   useEffect(() => {
     let cancelled = false;
     if (!editing || !merchantId || !storeId) return;
@@ -438,24 +725,64 @@ export default function AddStore() {
     let cancelled = false;
     loadedFeatureType.current = "";
     setTypeFeatures([]);
-    if (!store.storeTypeId) { setFeaturesLoading(false); return; }
+    if (!merchantId || !activeStoreTypeId) {
+      setFeaturesLoading(false);
+      return;
+    }
     setFeaturesLoading(true);
-    storeTypesApi.getFeatures(store.storeTypeId).then(data => {
-      if (!cancelled) { loadedFeatureType.current = store.storeTypeId; setTypeFeatures(listFrom(data)); }
-    }).catch(err => { if (!cancelled) setLoadError(err?.message || "Unable to load store-type features."); })
-      .finally(() => { if (!cancelled) setFeaturesLoading(false); });
-    return () => { cancelled = true; };
-  }, [store.storeTypeId, reload]);
+    const featureScope = JSON.stringify([merchantId, activeStoreTypeId]);
+    storeTypesApi
+      .getMerchantFeatures(merchantId, activeStoreTypeId)
+      .then((data) => {
+        if (!cancelled) {
+          loadedFeatureType.current = featureScope;
+          setTypeFeatures(listFrom(data));
+        }
+      })
+      .catch((err) => {
+        if (!cancelled)
+          setLoadError(err?.message || "Unable to load store-type features.");
+      })
+      .finally(() => {
+        if (!cancelled) setFeaturesLoading(false);
+      });
 
+    return () => {
+      cancelled = true;
+    };
+  }, [merchantId, activeStoreTypeId, reload]);
+
+  // Default Enable Entitled Features
   useEffect(() => {
-    if (editing || loading || merchantLoading || featuresLoading || !merchantInfo || !store.storeTypeId || loadedFeatureType.current !== store.storeTypeId) return;
-    const scope = JSON.stringify([merchantId, store.storeTypeId]);
+    if (
+      editing ||
+      loading ||
+      merchantLoading ||
+      featuresLoading ||
+      !merchantInfo ||
+      !activeStoreTypeId ||
+      loadedFeatureType.current !==
+        JSON.stringify([merchantId, activeStoreTypeId])
+    )
+      return;
+    const scope = JSON.stringify([merchantId, activeStoreTypeId]);
     if (featureDefaultsScope.current === scope) return;
     featureDefaultsScope.current = scope;
-    setEnabledFeatures(featureRows.filter(row => entitled(row.name)).map(row => row.name));
-  }, [editing, loading, merchantLoading, featuresLoading, merchantInfo, merchantId, store.storeTypeId, featureRows, planFeatureList, includedFeatures]);
+    setEnabledFeatures(
+      featureRows.filter((row) => entitled(row.name)).map((row) => row.name),
+    );
+  }, [
+    editing,
+    loading,
+    merchantLoading,
+    featuresLoading,
+    merchantInfo,
+    merchantId,
+    activeStoreTypeId,
+    featureRows,
+  ]);
 
-  const changeMerchant = id => {
+  const changeMerchant = (id) => {
     if (saveLock.current) return;
     featureDefaultsScope.current = "";
     imageGeneration.current += 1;
@@ -472,22 +799,49 @@ export default function AddStore() {
     if (!editing) changeMerchant(routeMerchantId || "");
   }, [routeMerchantId, storeId]);
 
-  const updateStore = (key, value) => setStore(current => ({ ...current, [key]: value }));
-  const updateHours = (index, key, value) => setStore(current => ({ ...current, hours: current.hours.map((row, i) => i === index ? { ...row, [key]: value } : row) }));
-  const changeCountry = country => setStore(current => ({ ...current, country, currency: COUNTRIES[country]?.currency || "", timezone: COUNTRIES[country]?.zones[0] || "" }));
-  const copyScheduleToAll = () => setStore(current => {
-    const base = current.hours[0] || blankHours()[0];
-    return { ...current, hours: DAYS.map(day => ({ ...base, day })) };
-  });
+  const updateStore = (key, value) =>
+    setStore((current) => ({ ...current, [key]: value }));
+  const updateHours = (index, key, value) =>
+    setStore((current) => ({
+      ...current,
+      hours: current.hours.map((row, i) =>
+        i === index ? { ...row, [key]: value } : row,
+      ),
+    }));
+  const changeCountry = (country) =>
+    setStore((current) => ({
+      ...current,
+      country,
+      currency: COUNTRIES[country]?.currency || "",
+      timezone: COUNTRIES[country]?.zones[0] || "",
+    }));
+  const copyScheduleToAll = () =>
+    setStore((current) => {
+      const base = current.hours[0] || blankHours()[0];
+      return { ...current, hours: DAYS.map((day) => ({ ...base, day })) };
+    });
   const setLogoFile = (key, file) => {
     if (!file) return;
     const limit = key === "logo" ? 2 : 5;
-    if (!["image/png","image/jpeg"].includes(file.type) || file.size > limit * 1024 * 1024) { setError("Choose a PNG or JPG file no larger than " + limit + " MB."); return; }
+    if (
+      !["image/png", "image/jpeg"].includes(file.type) ||
+      file.size > limit * 1024 * 1024
+    ) {
+      setError("Choose a PNG or JPG file no larger than " + limit + " MB.");
+      return;
+    }
     const generation = imageGeneration.current;
-    const reader = new FileReader(); imageReads.current += 1;
-    reader.onload = () => { if (generation === imageGeneration.current) updateStore(key, String(reader.result || "")); };
-    reader.onerror = () => setError("The image could not be read. Please try again.");
-    reader.onloadend = () => { imageReads.current -= 1; };
+    const reader = new FileReader();
+    imageReads.current += 1;
+    reader.onload = () => {
+      if (generation === imageGeneration.current)
+        updateStore(key, String(reader.result || ""));
+    };
+    reader.onerror = () =>
+      setError("The image could not be read. Please try again.");
+    reader.onloadend = () => {
+      imageReads.current -= 1;
+    };
     reader.readAsDataURL(file);
   };
   const toggleFeature = name => entitled(name) && setEnabledFeatures(current => current.includes(name) ? current.filter(item => item !== name) : [...current, name]);
@@ -513,40 +867,149 @@ export default function AddStore() {
   };
   const setEmployeeSelected = (employee, checked) => {
     const employeeId = String(employee.id ?? employee.employeeId ?? "");
-    setEmployeeAssignments(current => checked ? current.some(item => item.employeeId === employeeId) ? current : [...current, { employeeId, role: roles[0] || "", pin: "" }] : current.filter(item => item.employeeId !== employeeId));
-    if (!checked && pinEditorId === employeeId) { setPinEditorId(""); setPinDraft(""); setPinError(""); }
+    setEmployeeAssignments((current) =>
+      checked
+        ? current.some((item) => item.employeeId === employeeId)
+          ? current
+          : [...current, { employeeId, role: roles[0] || "", pin: "" }]
+        : current.filter((item) => item.employeeId !== employeeId),
+    );
+    if (!checked && pinEditorId === employeeId) {
+      setPinEditorId("");
+      setPinDraft("");
+      setPinError("");
+    }
   };
-  const setEmployeeRole = (employeeId, role) => setEmployeeAssignments(current => current.map(item => item.employeeId === employeeId ? { ...item, role } : item));
-  const openPinEditor = employee => {
+  const setEmployeeRole = (employeeId, role) =>
+    setEmployeeAssignments((current) =>
+      current.map((item) =>
+        item.employeeId === employeeId ? { ...item, role } : item,
+      ),
+    );
+  const openPinEditor = (employee) => {
     const employeeId = String(employee.id ?? employee.employeeId ?? "");
-    setEmployeeAssignments(current => current.some(item => item.employeeId === employeeId) ? current : [...current, { employeeId, role: roles[0] || "", pin: "" }]);
+    setEmployeeAssignments((current) =>
+      current.some((item) => item.employeeId === employeeId)
+        ? current
+        : [...current, { employeeId, role: roles[0] || "", pin: "" }],
+    );
     setPinEditorId(employeeId);
     setPinDraft("");
     setPinError("");
   };
-  const saveEmployeePin = employeeId => {
+  const saveEmployeePin = (employeeId) => {
     if (!/^[1-9]\d{5}$/.test(pinDraft)) {
       setPinError("Enter a 6-digit PIN that does not start with 0.");
       return;
     }
-    setEmployeeAssignments(current => current.map(item => item.employeeId === employeeId ? { ...item, pin: pinDraft } : item));
+    setEmployeeAssignments((current) =>
+      current.map((item) =>
+        item.employeeId === employeeId ? { ...item, pin: pinDraft } : item,
+      ),
+    );
     setPinEditorId("");
     setPinDraft("");
     setPinError("");
   };
-  const validateStep = (index, draftOnly = false) => {
+
+  const fetchActiveSubscription = async (targetMerchantId = merchantId) => {
+    if (!targetMerchantId) return null;
+    setSubscriptionLoading(true);
+    setError("");
+    try {
+      const res = await getActiveSubscriptions(targetMerchantId);
+      const activeSub = extractActiveSubscription(res);
+      setSubscription(activeSub);
+      return activeSub;
+    } catch (err) {
+      const msg =
+        err?.message || "Failed to load active subscription for this merchant.";
+      setError(msg);
+      throw err;
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  const validateStep = (index, draftOnly = false, subOverride = null) => {
     if (!merchantId) return "Select a merchant first.";
-    if (loading || mastersLoading || merchantLoading || featuresLoading) return "Wait for the merchant setup to finish loading.";
-    if (loadError || merchantError || !merchantInfo) return loadError || merchantError || "Merchant details are unavailable. Reload and try again.";
+    if (
+      loading ||
+      mastersLoading ||
+      merchantLoading ||
+      featuresLoading ||
+      subscriptionLoading
+    )
+      return "Wait for the merchant setup to finish loading.";
+    if (loadError || merchantError || !merchantInfo)
+      return (
+        loadError ||
+        merchantError ||
+        "Merchant details are unavailable. Reload and try again."
+      );
     if (imageReads.current > 0) return "Wait for the images to finish loading.";
+    if (editing) return "";
     if (index === 0) {
       if (!store.name.trim()) return "Enter the store name.";
-      if (store.name.trim().length > 150) return "Store name must be 150 characters or fewer.";
+      if (store.name.trim().length > 150)
+        return "Store name must be 150 characters or fewer.";
       if (!draftOnly && !store.storeTypeId) return "Select a store type.";
-      if (store.storeTypeId && !storeTypes.some(type => String(type.id) === String(store.storeTypeId))) return "Select an available store type.";
+      if (
+        store.storeTypeId &&
+        !storeTypes.some(
+          (type) =>
+            String(type.id) === String(store.storeTypeId) ||
+            String(type.storeTypeId) === String(store.storeTypeId) ||
+            String(type.code) === String(store.storeTypeId) ||
+            String(type.name).toLowerCase() === String(store.storeTypeId).toLowerCase()
+        )
+      )
+        return "Select an available store type.";
       if (!draftOnly) {
-        for (const [key,label] of [["addressLine1","address"],["city","city"],["state","state or province"],["zip","postal code"],["country","country"],["timezone","time zone"],["currency","currency"],["phone","phone number"],["url","website URL"]]) {
-          if (!String(store[key] || "").trim()) return "Enter the store " + label + ".";
+        for (const [key, label] of [
+          ["addressLine1", "address"],
+          ["city", "city"],
+          ["state", "state or province"],
+          ["zip", "postal code"],
+          ["country", "country"],
+          ["timezone", "time zone"],
+          ["currency", "currency"],
+          ["phone", "phone number"],
+          ["url", "website URL"],
+        ]) {
+          if (!String(store[key] || "").trim())
+            return "Enter the store " + label + ".";
+        }
+      }
+      if (
+        store.phone &&
+        (!/^[+\d\s().-]+$/.test(store.phone) ||
+          !/^\d{7,15}$/.test(store.phone.replace(/\D/g, "")))
+      )
+        return "Enter a valid phone number containing 7–15 digits.";
+      if (store.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.email.trim()))
+        return "Enter a valid email address.";
+      if (store.url) {
+        try {
+          const url = new URL(store.url.trim());
+          if (
+            !["https:", "http:"].includes(url.protocol) ||
+            !url.hostname ||
+            url.username ||
+            url.password
+          )
+            return "Enter an HTTP or HTTPS website URL without embedded credentials.";
+        } catch {
+          return "Enter a valid website URL, including https://.";
+        }
+      }
+      if (store.country && !COUNTRIES[store.country])
+        return "Select a supported country.";
+      if (store.timezone) {
+        try {
+          new Intl.DateTimeFormat("en", { timeZone: store.timezone });
+        } catch {
+          return "Select a valid time zone.";
         }
       }
       if (store.phone && (!/^[+\d\s().-]+$/.test(store.phone) || !/^\d{7,15}$/.test(store.phone.replace(/\D/g,"")))) return "Enter a valid phone number containing 7–15 digits.";
@@ -558,73 +1021,195 @@ export default function AddStore() {
       if (store.zip && !/^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(store.zip.trim())) return "Enter a valid postal code.";
       // if (!["Active","Inactive","Draft"].includes(store.status)) return "Select a valid store status.";
       for (const row of store.hours) {
-        if (!["Open","Closed"].includes(row.status)) return "Select Open or Closed for " + row.day + ".";
-        if (row.status === "Open" && (!/^([01]\d|2[0-3]):[0-5]\d$/.test(row.open) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(row.close) || row.open === row.close)) return "Enter different opening and closing times for " + row.day + ". Overnight hours are supported.";
-        if (row.status === "Open" && (!Number.isSafeInteger(Number(row.shifts)) || Number(row.shifts) < 1)) return "Enter a positive whole-number shift count for " + row.day + ".";
+        if (!["Open", "Closed"].includes(row.status))
+          return "Select Open or Closed for " + row.day + ".";
+        if (
+          row.status === "Open" &&
+          (!/^([01]\d|2[0-3]):[0-5]\d$/.test(row.open) ||
+            !/^([01]\d|2[0-3]):[0-5]\d$/.test(row.close) ||
+            row.open === row.close)
+        )
+          return (
+            "Enter different opening and closing times for " +
+            row.day +
+            ". Overnight hours are supported."
+          );
+        if (
+          row.status === "Open" &&
+          (!Number.isSafeInteger(Number(row.shifts)) || Number(row.shifts) < 1)
+        )
+          return (
+            "Enter a positive whole-number shift count for " + row.day + "."
+          );
       }
     }
     if (index === 1 && !draftOnly) {
-      if (!subscription || !Object.keys(subscription).length) return "This merchant has no subscription details. Configure its subscription before creating a store.";
-      if (["inactive","expired","cancelled","canceled","suspended"].includes(String(subscription.status || "").toLowerCase())) return "The merchant subscription is not active.";
-      const expiry = Date.parse(subscription.endDate || subscription.validUntil || "");
-      if (Number.isFinite(expiry) && expiry < Date.now()) return "The merchant subscription has expired.";
-      if (!editing && Number.isFinite(storeLimit) && storeLimit >= 0 && merchantStores.length >= storeLimit) return "This merchant has reached its store limit.";
+      const activeSub = subOverride !== null ? subOverride : subscription;
+      if (!activeSub || !Object.keys(activeSub).length)
+        return "This merchant has no active subscription details. Configure its subscription before creating a store.";
+      if (
+        ["inactive", "expired", "cancelled", "canceled", "suspended"].includes(
+          String(activeSub.status || "").toLowerCase(),
+        )
+      )
+        return "The merchant subscription is not active.";
+      const expiry = Date.parse(
+        activeSub.endDate ||
+          activeSub.renewalDate ||
+          activeSub.current_period_end ||
+          activeSub.validUntil ||
+          "",
+      );
+      if (Number.isFinite(expiry) && expiry < Date.now())
+        return "The merchant subscription has expired.";
+
+      const subStoreLimit = Number(
+        activeSub?.maxStoresAllowed ??
+          activeSub?.max_stores_allowed ??
+          activeSub?.storeLimit ??
+          activeSub?.maxStores ??
+          activeSub?.locationLimit ??
+          activeSub?.licensedStoreCount ??
+          activeSub?.licensed_store_count ??
+          activeSub?.plan?.included_stores ??
+          activeSub?.plan?.includedStores ??
+          NaN,
+      );
+      if (
+        !editing &&
+        Number.isFinite(subStoreLimit) &&
+        subStoreLimit >= 0 &&
+        merchantStores.length >= subStoreLimit
+      )
+        return "This merchant has reached its store limit.";
     }
-    if (index === 2 && enabledFeatures.some(name => !featureRows.some(row => row.name === name) || !entitled(name))) return "Remove features that are unavailable or not included in the merchant plan.";
-    if (index === 3 && !draftOnly && !roles.length) return "Choose or create at least one store role.";
+    if (
+      index === 2 &&
+      enabledFeatures.some(
+        (name) =>
+          !featureRows.some((row) => row.name === name) || !entitled(name),
+      )
+    )
+      return "Remove features that are unavailable or not included in the merchant plan.";
+    if (index === 3 && !draftOnly && !roles.length)
+      return "Choose or create at least one store role.";
     if (index === 4) {
-      if (pinEditorId) return "Save or cancel the open PIN editor before continuing.";
+      if (pinEditorId)
+        return "Save or cancel the open PIN editor before continuing.";
       for (const assignment of employeeAssignments) {
-        if (!activeEmployees.some(employee => String(employee.id ?? employee.employeeId) === assignment.employeeId)) return "An assigned employee is unavailable or inactive for this merchant. Remove that assignment.";
-        if (!roles.includes(assignment.role)) return "Select a valid store role for every assigned employee.";
-        if (assignment.pin && !/^[1-9]\d{5}$/.test(assignment.pin)) return "Employee PINs must be six digits and cannot start with zero.";
+        if (
+          !activeEmployees.some(
+            (employee) =>
+              String(employee.id ?? employee.employeeId) ===
+              assignment.employeeId,
+          )
+        )
+          return "An assigned employee is unavailable or inactive for this merchant. Remove that assignment.";
+        if (!roles.includes(assignment.role))
+          return "Select a valid store role for every assigned employee.";
+        if (assignment.pin && !/^[1-9]\d{5}$/.test(assignment.pin))
+          return "Employee PINs must be six digits and cannot start with zero.";
       }
-      if (new Set(employeeAssignments.map(item => item.employeeId)).size !== employeeAssignments.length) return "An employee can be assigned only once.";
+      if (
+        new Set(employeeAssignments.map((item) => item.employeeId)).size !==
+        employeeAssignments.length
+      )
+        return "An employee can be assigned only once.";
     }
     return "";
   };
-  const goTo = index => {
-    if (saving) return;
+
+  const goTo = async (index) => {
+    if (saving || subscriptionLoading) return;
     const next = Math.max(0, Math.min(STEPS.length - 1, index));
     if (next > step) {
+      let currentSub = subscription;
+
+      if (step === 0 && next >= 1) {
+        const step0Problem = validateStep(0);
+        if (step0Problem) {
+          setError(step0Problem);
+          setStep(0);
+          return;
+        }
+
+        try {
+          currentSub = await fetchActiveSubscription(merchantId);
+          if (!currentSub) {
+            setError(
+              "No active subscription found for this merchant. Please configure a subscription before proceeding.",
+            );
+            return;
+          }
+        } catch {
+          return;
+        }
+      }
+
       for (let current = 0; current < next; current += 1) {
-        const problem = validateStep(current);
-        if (problem) { setError(problem); setStep(current); return; }
+        const problem = validateStep(current, false, currentSub);
+        if (problem) {
+          setError(problem);
+          setStep(current);
+          return;
+        }
       }
     }
-    setError(""); setStep(next);
+    setError("");
+    setStep(next);
   };
 
   const backToStores = () => {
     if (saveLock.current) return;
     const merchantReturn = routeMerchantId
-      ? "/merchants?" + new URLSearchParams({ view: String(routeMerchantId), tab: "stores" }).toString()
+      ? "/merchants?" +
+        new URLSearchParams({
+          view: String(routeMerchantId),
+          tab: "stores",
+        }).toString()
       : "/stores";
     const returnTo = location.state?.returnTo;
-    // Only accept the merchant list destinations used by MerchantStores.
     const expectedStandalone = routeMerchantId
       ? "/merchants/" + encodeURIComponent(routeMerchantId) + "/stores"
       : "/stores";
-    const query = typeof returnTo === "string" && returnTo.startsWith("/merchants?")
-      ? new URLSearchParams(returnTo.slice("/merchants?".length))
-      : null;
-    const validMerchantReturn = Boolean(routeMerchantId) && query?.get("view") === String(routeMerchantId) && query?.get("tab") === "stores";
-    navigate(returnTo === expectedStandalone || validMerchantReturn ? returnTo : merchantReturn, { replace: true });
+    const query =
+      typeof returnTo === "string" && returnTo.startsWith("/merchants?")
+        ? new URLSearchParams(returnTo.slice("/merchants?".length))
+        : null;
+    const validMerchantReturn =
+      Boolean(routeMerchantId) &&
+      query?.get("view") === String(routeMerchantId) &&
+      query?.get("tab") === "stores";
+    navigate(
+      returnTo === expectedStandalone || validMerchantReturn
+        ? returnTo
+        : merchantReturn,
+      { replace: true },
+    );
   };
-  const readDataUrl = file => new Promise(resolve => {
-    if (!file || file.startsWith?.("data:") || typeof file !== "string") return resolve(file || "");
-    resolve(file);
-  });
+
+  const readDataUrl = (file) =>
+    new Promise((resolve) => {
+      if (!file || file.startsWith?.("data:") || typeof file !== "string")
+        return resolve(file || "");
+      resolve(file);
+    });
 
   async function submit(event, saveDraft = false) {
     event.preventDefault();
     if (saveLock.current) return;
-    const steps = saveDraft ? [0,2,4] : [0,1,2,3,4];
+    const steps = saveDraft ? [0, 2, 4] : [0, 1, 2, 3, 4];
     for (const index of steps) {
       const problem = validateStep(index, saveDraft);
-      if (problem) { setError(problem); setStep(index); return; }
+      if (problem) {
+        setError(problem);
+        setStep(index);
+        return;
+      }
     }
-    saveLock.current = true; setSaving(true); setError("");
+    saveLock.current = true;
+    setSaving(true);
+    setError("");
     try {
       const generatedStoreId = `STR-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`.slice(0, 50);
       const storeCode = (editing ? String(storeId || store.storeCode || store.id || "") : String(store.storeCode || "")).trim().slice(0, 50) || generatedStoreId;
@@ -678,9 +1263,15 @@ export default function AddStore() {
       saveLock.current = false;
       backToStores();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : err?.message || `Unable to ${editing ? "update" : "create"} this store.`);
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err?.message ||
+              `Unable to ${editing ? "update" : "create"} this store.`,
+      );
     } finally {
-      saveLock.current = false; setSaving(false);
+      saveLock.current = false;
+      setSaving(false);
     }
   }
 
@@ -727,58 +1318,618 @@ export default function AddStore() {
             <SelectField label="Store Type *" value={store.storeTypeId} onChange={value => { const type = storeTypes.find(item => String(item.id) === value); featureDefaultsScope.current = ""; setStore(current => ({ ...current, storeTypeId: value, type: type?.name || "" })); setEnabledFeatures([]); setPermissions({}); setLoadError(""); }} options={[{ value: "", label: "Select store type" }, ...storeTypes.map(item => ({ value: String(item.id), label: item.name }))]} />
             <div className="sf-code-field"><Field label="Store Code" value={store.storeCode} disabled placeholder={editing ? "Not available" : "Generated after saving"} aria-describedby="sf-code-help" /><small id="sf-code-help">{editing ? "Automatically generated and cannot be changed." : "Automatically generated after saving the store."}</small></div>
           </div>
+          <button type="button" className="sf-outline" onClick={() => goTo(0)}>
+            Edit Store Details
+          </button>
         </Panel>
-        <Panel title="Address Information" subtitle="Enter the complete address of the store.">
-          <div className="sf-form-grid sf-address-grid">
-            <Field label="Address Line 1 *" value={store.addressLine1} onChange={value => updateStore("addressLine1", value)} placeholder="Street address" />
-            <Field label="Address Line 2" optional value={store.addressLine2} onChange={value => updateStore("addressLine2", value)} placeholder="Apartment, suite, etc." />
-            <Field label="City *" value={store.city} onChange={value => updateStore("city", value)} placeholder="City" />
-            <Field label="State / Province *" value={store.state} onChange={value => updateStore("state", value)} placeholder="State or province" />
-            <Field label="Zip / Postal Code *" value={store.zip} onChange={value => updateStore("zip", value)} placeholder="Postal code" />
-            <SelectField label="Country *" value={store.country} onChange={changeCountry} options={[{ value: "", label: "Select country" }, ...Object.keys(COUNTRIES).map(value => ({ value, label: value }))]} />
+        <Panel
+          title="1. Choose Subscription Option"
+          subtitle="Subscription and plan changes are managed at merchant level."
+        >
+          <div className="sf-sub-options">
+            <div className="sf-sub-option selected">
+              <span className="sf-option-icon bi bi-file-earmark-check" />
+              <span>
+                <strong>Use Existing Subscription</strong>
+                <small>Use the plan assigned to this merchant.</small>
+              </span>
+              <i className="bi bi-check-circle-fill" />
+            </div>
           </div>
         </Panel>
-        <Panel title="Operational Settings" subtitle="Configure time zone, currency and other settings.">
-          <div className="sf-form-grid sf-three-cols">
-            <SelectField label="Time Zone *" value={store.timezone} onChange={value => updateStore("timezone", value)} options={[{ value: "", label: "Select time zone" }, ...[...new Set([store.timezone, ...(countrySettings?.zones || [])].filter(Boolean))].map(value => ({ value, label: value.replaceAll("_", " ") }))]} />
-            <SelectField label="Currency *" value={currencyCode} onChange={value => updateStore("currency", value)} options={[{ value: "", label: "Select currency" }, ...Object.values(COUNTRIES).map(item => item.currency).filter((value, index, array) => array.indexOf(value) === index).map(value => ({ value, label: value }))]} />
-            <SelectField label="Status" value={store.status} onChange={value => updateStore("status", value)} options={["Active", "Inactive"]} />
+        <Panel
+          title="2. Select a Plan"
+          subtitle="Plan details from the selected merchant subscription."
+        >
+          <div className="sf-plan-table-wrap">
+            <table className="sf-plan-table">
+              <thead>
+                <tr>
+                  <th>SELECTED PLAN</th>
+                  <th>PLAN NAME</th>
+                  <th>BILLING TYPE</th>
+                  <th>PRICE</th>
+                  <th>VALIDITY</th>
+                  <th>STORES USED</th>
+                  <th>STORES LIMIT</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span className="sf-radio-dot" />
+                  </td>
+                  <td>
+                    <strong>{planName}</strong>
+                    <small>
+                      {plan?.description ||
+                        subscription?.planCode ||
+                        "Merchant subscription plan"}
+                    </small>
+                  </td>
+                  <td>{billing}</td>
+                  <td>{subPriceDisplay}</td>
+                  <td>{validity}</td>
+                  <td>{used}</td>
+                  <td>{limit}</td>
+                  <td>
+                    <span className="sf-status-pill">
+                      {subscription?.status || "Not provided"}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </Panel>
-        <Panel title="Operating Schedule" subtitle="Configure the opening and closing time for each day." action={<button type="button" className="sf-outline" onClick={copyScheduleToAll}><i className="bi bi-copy" /> Copy to All</button>}>
-          <div className="sf-table-wrap"><table className="sf-table sf-hours-table"><thead><tr><th>DAY</th><th>STATUS</th><th>OPENS</th><th>CLOSES</th><th>SHIFTS</th></tr></thead><tbody>
-            {store.hours.map((row, index) => <tr key={row.day}><td>{row.day}</td><td><select value={row.status} onChange={event => updateHours(index, "status", event.target.value)}><option>Open</option><option>Closed</option></select></td><td><input aria-label={`${row.day} opens`} type="time" value={row.open} disabled={row.status === "Closed"} onChange={event => updateHours(index, "open", event.target.value)} /></td><td><input aria-label={`${row.day} closes`} type="time" value={row.close} disabled={row.status === "Closed"} onChange={event => updateHours(index, "close", event.target.value)} /></td><td><input aria-label={`${row.day} shifts`} type="number" min="0" value={row.shifts} onChange={event => updateHours(index, "shifts", event.target.value)} /></td></tr>)}
-          </tbody></table></div>
+        <Panel title="Plan Details">
+          <div className="sf-plan-details">
+            <div className="sf-plan-title">
+              <span className="sf-icon-square bi bi-file-earmark-text" />
+              <div>
+                <strong>{planName}</strong>
+                <small>{billing} billing</small>
+              </div>
+            </div>
+            <div className="sf-plan-metrics">
+              <div>
+                <strong>{subPriceDisplay}</strong>
+                <small>Price</small>
+              </div>
+              <div>
+                <strong>{billing}</strong>
+                <small>Billing Type</small>
+              </div>
+              <div>
+                <strong>
+                  {used} / {limit}
+                </strong>
+                <small>Stores Used</small>
+              </div>
+              <div>
+                <strong>{subscription?.status || "Not provided"}</strong>
+                <small>Status</small>
+              </div>
+            </div>
+            <div className="sf-key-features">
+              <strong>Key Features</strong>
+              <div>
+                {includedFeatures.slice(0, 8).map((item) => (
+                  <span key={item}>
+                    <i className="bi bi-check-circle-fill" />
+                    {item}
+                  </span>
+                ))}
+                {!includedFeatures.length && (
+                  <small>
+                    Included features are not available in the merchant
+                    subscription record.
+                  </small>
+                )}
+              </div>
+            </div>
+          </div>
         </Panel>
+        <Panel
+          title="Store Details"
+          subtitle="Existing stores mapped to this merchant."
+        >
+          <div className="sf-table-wrap">
+            <table className="sf-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>STORE NAME</th>
+                  <th>STORE CODE</th>
+                  <th>LOCATION</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {merchantStores.map((item, index) => (
+                  <tr key={item.id || item.storeId || item.storeID || index}>
+                    <td>{index + 1}</td>
+                    <td>{item.storeName || item.name || "Unnamed store"}</td>
+                    <td>{item.storeCode || item.code || "—"}</td>
+                    <td>
+                      {[
+                        item.city || item.address?.city,
+                        item.state || item.address?.state,
+                      ]
+                        .filter(Boolean)
+                        .join(", ") ||
+                        (typeof item.address === "string" ? item.address : "—")}
+                    </td>
+                    <td>{item.status || "—"}</td>
+                  </tr>
+                ))}
+                {!used && (
+                  <tr>
+                    <td colSpan="5" className="sf-empty">
+                      No existing stores are mapped to this merchant.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      </>
+    );
+  };
+
+  const storeDetailsScreen = () => (
+    <>
+      <div className="sf-details-layout">
+        <div className="sf-details-main">
+          <Panel
+            title="Basic Information"
+            subtitle="Provide the general information for this store."
+          >
+            <div className="sf-form-grid sf-basic-grid">
+              <div className="sf-field sf-merchant-field">
+                <label htmlFor="sf-merchant">Merchant *</label>
+                <select
+                  id="sf-merchant"
+                  required
+                  value={merchantId}
+                  disabled={Boolean(routeMerchantId) || editing || saving}
+                  onChange={(event) => changeMerchant(event.target.value)}
+                >
+                  <option value="">Select merchant</option>
+                  {(merchant &&
+                  !merchants.some((item) => idOf(item) === merchantId)
+                    ? [{ ...merchant, id: merchantId }, ...merchants]
+                    : merchants
+                  ).map((item) => (
+                    <option key={idOf(item)} value={idOf(item)}>
+                      {item.name ||
+                        item.merchantName ||
+                        item.businessDisplayName ||
+                        idOf(item)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <Field
+                label="Store Name *"
+                value={store.name}
+                onChange={(value) => updateStore("name", value)}
+                placeholder="Enter store name"
+              />
+              <SelectField
+                label="Store Type *"
+                value={store.storeTypeId}
+                disabled={storeTypesLoading}
+                onChange={(value) => {
+                  const type = storeTypes.find(
+                    (item) =>
+                      String(item.id) === value ||
+                      String(item.storeTypeId) === value ||
+                      String(item.code) === value ||
+                      String(item.name).toLowerCase() === value.toLowerCase()
+                  );
+                  featureDefaultsScope.current = "";
+                  setStore((current) => ({
+                    ...current,
+                    storeTypeId: value,
+                    type: type?.name || type?.storeTypeName || value,
+                  }));
+                  setEnabledFeatures([]);
+                  setPermissions({});
+                  setLoadError("");
+                }}
+                options={[
+                  {
+                    value: "",
+                    label: storeTypesLoading
+                      ? "Loading store types..."
+                      : storeTypes.length === 0
+                        ? "No store types available"
+                        : "Select store type",
+                  },
+                  ...storeTypes.map((item) => ({
+                    value: String(item.id ?? item.storeTypeId ?? item._id ?? item.code ?? item.name),
+                    label: item.name || item.storeTypeName || item.code || String(item.id),
+                  })),
+                ]}
+              />
+              <div className="sf-code-field">
+                <Field
+                  label="Store Code"
+                  value={store.storeCode}
+                  disabled
+                  placeholder={
+                    editing ? "Not available" : "Generated after saving"
+                  }
+                  aria-describedby="sf-code-help"
+                />
+                <small id="sf-code-help">
+                  {editing
+                    ? "Automatically generated and cannot be changed."
+                    : "Automatically generated after saving the store."}
+                </small>
+              </div>
+            </div>
+          </Panel>
+          <Panel
+            title="Address Information"
+            subtitle="Enter the complete address of the store."
+          >
+            <div className="sf-form-grid sf-address-grid">
+              <Field
+                label="Address Line 1 *"
+                value={store.addressLine1}
+                onChange={(value) => updateStore("addressLine1", value)}
+                placeholder="Street address"
+              />
+              <Field
+                label="Address Line 2"
+                optional
+                value={store.addressLine2}
+                onChange={(value) => updateStore("addressLine2", value)}
+                placeholder="Apartment, suite, etc."
+              />
+              <Field
+                label="City *"
+                value={store.city}
+                onChange={(value) => updateStore("city", value)}
+                placeholder="City"
+              />
+              <Field
+                label="State / Province *"
+                value={store.state}
+                onChange={(value) => updateStore("state", value)}
+                placeholder="State or province"
+              />
+              <Field
+                label="Zip / Postal Code *"
+                value={store.zip}
+                onChange={(value) => updateStore("zip", value)}
+                placeholder="Postal code"
+              />
+              <SelectField
+                label="Country *"
+                value={store.country}
+                onChange={changeCountry}
+                options={[
+                  { value: "", label: "Select country" },
+                  ...Object.keys(COUNTRIES).map((value) => ({
+                    value,
+                    label: value,
+                  })),
+                ]}
+              />
+            </div>
+          </Panel>
+          <Panel
+            title="Operational Settings"
+            subtitle="Configure time zone, currency and other settings."
+          >
+            <div className="sf-form-grid sf-three-cols">
+              <SelectField
+                label="Time Zone *"
+                value={store.timezone}
+                onChange={(value) => updateStore("timezone", value)}
+                options={[
+                  { value: "", label: "Select time zone" },
+                  ...[
+                    ...new Set(
+                      [
+                        store.timezone,
+                        ...(countrySettings?.zones || []),
+                      ].filter(Boolean),
+                    ),
+                  ].map((value) => ({
+                    value,
+                    label: value.replaceAll("_", " "),
+                  })),
+                ]}
+              />
+              <SelectField
+                label="Currency *"
+                value={currencyCode}
+                onChange={(value) => updateStore("currency", value)}
+                options={[
+                  { value: "", label: "Select currency" },
+                  ...Object.values(COUNTRIES)
+                    .map((item) => item.currency)
+                    .filter(
+                      (value, index, array) => array.indexOf(value) === index,
+                    )
+                    .map((value) => ({ value, label: value })),
+                ]}
+              />
+              <SelectField
+                label="Status"
+                value={store.status}
+                onChange={(value) => updateStore("status", value)}
+                options={["Active", "Inactive"]}
+              />
+            </div>
+          </Panel>
+          <Panel
+            title="Operating Schedule"
+            subtitle="Configure the opening and closing time for each day."
+            action={
+              <button
+                type="button"
+                className="sf-outline"
+                onClick={copyScheduleToAll}
+              >
+                <i className="bi bi-copy" /> Copy to All
+              </button>
+            }
+          >
+            <div className="sf-table-wrap">
+              <table className="sf-table sf-hours-table">
+                <thead>
+                  <tr>
+                    <th>DAY</th>
+                    <th>STATUS</th>
+                    <th>OPENS</th>
+                    <th>CLOSES</th>
+                    <th>SHIFTS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {store.hours.map((row, index) => (
+                    <tr key={row.day}>
+                      <td>{row.day}</td>
+                      <td>
+                        <select
+                          value={row.status}
+                          onChange={(event) =>
+                            updateHours(index, "status", event.target.value)
+                          }
+                        >
+                          <option>Open</option>
+                          <option>Closed</option>
+                        </select>
+                      </td>
+                      <td>
+                        <input
+                          aria-label={`${row.day} opens`}
+                          type="time"
+                          value={row.open}
+                          disabled={row.status === "Closed"}
+                          onChange={(event) =>
+                            updateHours(index, "open", event.target.value)
+                          }
+                        />
+                      </td>
+                      <td>
+                        <input
+                          aria-label={`${row.day} closes`}
+                          type="time"
+                          value={row.close}
+                          disabled={row.status === "Closed"}
+                          onChange={(event) =>
+                            updateHours(index, "close", event.target.value)
+                          }
+                        />
+                      </td>
+                      <td>
+                        <input
+                          aria-label={`${row.day} shifts`}
+                          type="number"
+                          min="0"
+                          value={row.shifts}
+                          onChange={(event) =>
+                            updateHours(index, "shifts", event.target.value)
+                          }
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+        </div>
+        <div className="sf-details-side">
+          <Panel title="Store Logo" subtitle="Upload a logo for this store.">
+            <div className="sf-upload-card">
+              <div className="sf-image-preview">
+                {store.logo ? (
+                  <img src={store.logo} alt="Store logo preview" />
+                ) : (
+                  <i className="bi bi-shop-window" />
+                )}
+              </div>
+              <label className="sf-upload-control">
+                <span>Upload Logo</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={(event) =>
+                    setLogoFile("logo", event.target.files?.[0])
+                  }
+                />
+              </label>
+              <small>
+                PNG, JPG (Max 2MB)
+                <br />
+                Recommended size: 512 × 512
+              </small>
+            </div>
+          </Panel>
+          <Panel
+            title="Contact Information"
+            subtitle="Provide the primary contact details for this store."
+          >
+            <Field
+              label="Store Phone *"
+              value={store.phone}
+              onChange={(value) => updateStore("phone", value)}
+              type="tel"
+              placeholder="Enter phone number"
+            />
+            <Field
+              label="Store Email"
+              optional
+              value={store.email}
+              onChange={(value) => updateStore("email", value)}
+              type="email"
+              placeholder="store@example.com"
+            />
+            <Field
+              label="Website URL *"
+              value={store.url}
+              onChange={(value) => updateStore("url", value)}
+              type="url"
+              placeholder="https://example.com"
+            />
+          </Panel>
+        </div>
       </div>
-      <div className="sf-details-side">
-        <Panel title="Store Logo" subtitle="Upload a logo for this store.">
-          <div className="sf-upload-card"><div className="sf-image-preview">{store.logo ? <img src={store.logo} alt="Store logo preview" /> : <i className="bi bi-shop-window" />}</div><label className="sf-upload-control"><span>Upload Logo</span><input type="file" accept="image/png,image/jpeg" onChange={event => setLogoFile("logo", event.target.files?.[0])} /></label><small>PNG, JPG (Max 2MB)<br />Recommended size: 512 × 512</small></div>
-        </Panel>
-        <Panel title="Contact Information" subtitle="Provide the primary contact details for this store.">
-          <Field label="Store Phone *" value={store.phone} onChange={value => updateStore("phone", value)} type="tel" placeholder="Enter phone number" />
-          <Field label="Store Email" optional value={store.email} onChange={value => updateStore("email", value)} type="email" placeholder="store@example.com" />
-          <Field label="Website URL *" value={store.url} onChange={value => updateStore("url", value)} type="url" placeholder="https://example.com" />
-        </Panel>
-      </div>
-    </div>
-  </>;
+    </>
+  );
 
   const featuresScreen = () => {
-    const includedCount = featureRows.filter(row => entitled(row.name)).length;
-    return <>
-      <Panel className="sf-plan-summary">
-        <div><span className="sf-icon-square bi bi-shop-window" /><div><small>Selected Plan</small><strong>{planName}</strong><small>{billing} billing</small></div></div>
-        <div><small>Total Features</small><strong>{featureRows.length}</strong></div><div><small>Included</small><strong className="sf-green">{includedCount}</strong></div><div><small>Not Included</small><strong className="sf-amber">{Math.max(0, featureRows.length - includedCount)}</strong></div>
-      </Panel>
-      <Panel title="Features" subtitle="Available features are enabled by default for new stores. Disable any you do not need.">
-        <div className="sf-feature-tools"><div className="sf-tabs">{categories.map(category => { const count = category === "All Features" ? featureRows.length : featureRows.filter(row => row.category === category).length; return <button key={category} type="button" className={featureCategory === category ? "active" : ""} onClick={() => setFeatureCategory(category)}>{category} ({count})</button>; })}</div><label className="sf-search"><i className="bi bi-search" /><input placeholder="Search features..." value={featureSearch} onChange={event => setFeatureSearch(event.target.value)} /></label></div>
-        <div className="sf-table-wrap"><table className="sf-table sf-feature-table"><thead><tr><th>#</th><th>FEATURE</th><th>DESCRIPTION</th><th>PLAN ACCESS</th><th>ENABLE FOR THIS STORE</th></tr></thead><tbody>
-          {filteredFeatures.map((feature, index) => { const hasPlan = entitled(feature.name); const checked = enabledFeatures.includes(feature.name); return <tr key={feature.id || feature.name}><td>{index + 1}</td><td>{feature.name}</td><td>{feature.description || "—"}</td><td><span className={hasPlan ? "sf-access-included" : "sf-access-excluded"}>{hasPlan ? "Included" : "Not included"}</span></td><td><button type="button" role="switch" aria-label={`Enable ${feature.name} for this store`} aria-checked={checked} disabled={!hasPlan || mastersLoading} className={`sf-switch ${checked ? "on" : ""}`} onClick={() => toggleFeature(feature.name)}><span /></button></td></tr>; })}
-          {!filteredFeatures.length && <tr><td colSpan="5" className="sf-empty">No features match this search.</td></tr>}
-        </tbody></table></div>
-      </Panel>
-    </>;
+    const includedCount = featureRows.filter((row) =>
+      entitled(row.name),
+    ).length;
+    return (
+      <>
+        <Panel className="sf-plan-summary">
+          <div>
+            <span className="sf-icon-square bi bi-shop-window" />
+            <div>
+              <small>Selected Plan</small>
+              <strong>{planName}</strong>
+              <small>{billing} billing</small>
+            </div>
+          </div>
+          <div>
+            <small>Total Features</small>
+            <strong>{featureRows.length}</strong>
+          </div>
+          <div>
+            <small>Included</small>
+            <strong className="sf-green">{includedCount}</strong>
+          </div>
+          <div>
+            <small>Not Included</small>
+            <strong className="sf-amber">
+              {Math.max(0, featureRows.length - includedCount)}
+            </strong>
+          </div>
+        </Panel>
+        <Panel
+          title="Features"
+          subtitle="Available features are enabled by default for new stores. Disable any you do not need."
+        >
+          <div className="sf-feature-tools">
+            <div className="sf-tabs">
+              {categories.map((category) => {
+                const count =
+                  category === "All Features"
+                    ? featureRows.length
+                    : featureRows.filter((row) => row.category === category)
+                        .length;
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    className={featureCategory === category ? "active" : ""}
+                    onClick={() => setFeatureCategory(category)}
+                  >
+                    {category} ({count})
+                  </button>
+                );
+              })}
+            </div>
+            <label className="sf-search">
+              <i className="bi bi-search" />
+              <input
+                placeholder="Search features..."
+                value={featureSearch}
+                onChange={(event) => setFeatureSearch(event.target.value)}
+              />
+            </label>
+          </div>
+          <div className="sf-table-wrap">
+            <table className="sf-table sf-feature-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>FEATURE</th>
+                  <th>DESCRIPTION</th>
+                  <th>PLAN ACCESS</th>
+                  <th>ENABLE FOR THIS STORE</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredFeatures.map((feature, index) => {
+                  const hasPlan = entitled(feature.name);
+                  const checked = enabledFeatures.includes(feature.name);
+                  return (
+                    <tr key={feature.id || feature.name}>
+                      <td>{index + 1}</td>
+                      <td>{feature.name}</td>
+                      <td>{feature.description || "—"}</td>
+                      <td>
+                        <span
+                          className={
+                            hasPlan
+                              ? "sf-access-included"
+                              : "sf-access-excluded"
+                          }
+                        >
+                          {hasPlan ? "Included" : "Not included"}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-label={`Enable ${feature.name} for this store`}
+                          aria-checked={checked}
+                          disabled={!hasPlan || mastersLoading}
+                          className={`sf-switch ${checked ? "on" : ""}`}
+                          onClick={() => toggleFeature(feature.name)}
+                        >
+                          <span />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {!filteredFeatures.length && (
+                  <tr>
+                    <td colSpan="5" className="sf-empty">
+                      No features match this search.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      </>
+    );
   };
 
   const rolesScreen = () => {
@@ -889,8 +2040,133 @@ export default function AddStore() {
           )}
           {!active && <p className="sf-empty">Select a role to configure permissions.</p>}
         </Panel>
-      </div>
-    </>;
+        <div className="sf-permissions-layout">
+          <Panel
+            title="Roles for This Store"
+            subtitle="Configure permissions for each selected role."
+          >
+            <div className="sf-role-list">
+              {roles.map((role) => (
+                <button
+                  type="button"
+                  key={role}
+                  className={active === role ? "active" : ""}
+                  onClick={() => setActiveRole(role)}
+                >
+                  <i className="bi bi-grip-vertical" />
+                  <span>{role}</span>
+                  <small>
+                    {roleDefinitions.find((item) => item.name === role)
+                      ?.level || "Custom"}
+                  </small>
+                  <i
+                    className="bi bi-trash3"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setRoles((current) =>
+                        current.filter((item) => item !== role),
+                      );
+                      setActiveRole((current) =>
+                        current === role
+                          ? roles.find((item) => item !== role) || ""
+                          : current,
+                      );
+                    }}
+                  />
+                </button>
+              ))}
+              {!roles.length && (
+                <p className="sf-empty">Select a merchant role above.</p>
+              )}
+            </div>
+          </Panel>
+          <Panel
+            title={`Permissions for ${active || "Selected Role"}`}
+            subtitle="Set what this role can view, create, edit or delete."
+            action={
+              <div className="sf-copy-permissions">
+                <label>
+                  Copy from
+                  <select
+                    value={copyFromRole}
+                    onChange={(event) => setCopyFromRole(event.target.value)}
+                  >
+                    <option value="">Select a role</option>
+                    {roles
+                      .filter((role) => role !== active)
+                      .map((role) => (
+                        <option key={role}>{role}</option>
+                      ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="sf-outline"
+                  disabled={!active || !copyFromRole}
+                  onClick={() => {
+                    setPermissions((current) => ({
+                      ...current,
+                      [active]: { ...(current[copyFromRole] || {}) },
+                    }));
+                  }}
+                >
+                  Apply
+                </button>
+              </div>
+            }
+          >
+            {active && (
+              <div className="sf-table-wrap">
+                <table className="sf-table sf-permission-table">
+                  <thead>
+                    <tr>
+                      <th>MODULE / FEATURE</th>
+                      {actions.map((action) => (
+                        <th key={action}>{action.toUpperCase()}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {featureRows
+                      .filter((feature) =>
+                        enabledFeatures.includes(feature.name),
+                      )
+                      .map((item) => {
+                        const name = featureName(item);
+                        const values = permissions[active]?.[name] || {};
+                        return (
+                          <tr key={name}>
+                            <td>
+                              <i className="bi bi-grid-3x3-gap" /> {name}
+                            </td>
+                            {actions.map((action) => (
+                              <td key={action}>
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(values[action])}
+                                  disabled={!item.actions.includes(action)}
+                                  onChange={() =>
+                                    togglePermission(active, name, action)
+                                  }
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {!active && (
+              <p className="sf-empty">
+                Select a role to configure permissions.
+              </p>
+            )}
+          </Panel>
+        </div>
+      </>
+    );
   };
 
   const employeesScreen = () => {
@@ -949,21 +2225,184 @@ export default function AddStore() {
     <div className="sf-info-banner"><i className="bi bi-info-circle-fill" /> Once the store is created, you can manage these settings from the Store Details page.</div>
   </>;
 
-  const screens = [storeDetailsScreen, subscriptionScreen, featuresScreen, rolesScreen, employeesScreen, reviewScreen];
+  const screens = [
+    storeDetailsScreen,
+    subscriptionScreen,
+    featuresScreen,
+    rolesScreen,
+    employeesScreen,
+    reviewScreen,
+  ];
   if (loading) return <div className="sf-loading">Loading store setup…</div>;
 
-  return <div className="sf-root">
-    <header className="sf-topbar"><button type="button" className="sf-back-link" onClick={backToStores}><i className="bi bi-arrow-left" /> Stores</button><span>/</span><strong>{editing ? "Edit store" : "Add store"}</strong><span className="sf-topbar-spacer" /><button type="button" className="sf-outline" disabled={saving} onClick={backToStores}>Cancel</button></header>
-    <div className="sf-shell">
-      <aside className="sf-sidebar"><div className="sf-sidebar-caption">PROVISION A STORE</div><nav>{STEPS.map((name, index) => <button type="button" key={name} className={step === index ? "active" : step > index ? "complete" : ""} onClick={() => goTo(index)}><span className="sf-step-number">{step > index ? <i className="bi bi-check-lg" /> : index + 1}</span><span><strong>{name}</strong><small>{STEP_HINTS[index]}</small></span></button>)}</nav><div className="sf-sidebar-foot">Store setup · {step + 1} of {STEPS.length}</div></aside>
-      <main className="sf-main"><div className="sf-heading-row"><div><div className="sf-eyebrow">STEP {step + 1} OF {STEPS.length}</div><h1>{STEPS[step]}</h1><p>{step === 0 ? "Enter the basic information and settings for this store. You can save and continue later." : step === 5 ? "Review all the information below and create the store. You can go back to any step to make changes." : STEP_HINTS[step]}</p></div>{step === 3 && <div className="sf-role-context"><span className="sf-icon-square bi bi-shop" /><div><small>Selected Store</small><strong>{store.name || "New Store"}</strong><small>{typeName || "Store type"} | {planName}</small></div></div>}</div>
-        {error && <div className="sf-error" role="alert">{error}<button type="button" onClick={() => setError("")}>×</button></div>}
-        {(loadError || merchantError) && <div className="sf-error" role="alert">{loadError || merchantError}<button type="button" onClick={() => setReload(value => value + 1)}>Retry</button></div>}
-        {(mastersLoading || merchantLoading || featuresLoading) && <div className="sf-loading-note" role="status">Loading merchant setup…</div>}
-        <form onSubmit={submit} noValidate><fieldset disabled={saving || mastersLoading || merchantLoading || featuresLoading} style={{border:0,padding:0,margin:0,minWidth:0}}><div className="sf-screen">{screens[step]()}</div>
-          <div className="sf-footer"><button type="button" className="sf-outline" onClick={() => step === 0 ? backToStores() : goTo(step - 1)}><i className="bi bi-arrow-left" /> Back</button><span className="sf-footer-spacer" />{step === 0 && <button type="button" className="sf-outline sf-save-draft" disabled={saving} onClick={event => submit(event, true)}>Save as Draft</button>}{step < STEPS.length - 1 ? <button type="button" className="sf-primary" onClick={() => goTo(step + 1)}>Save &amp; Continue <i className="bi bi-arrow-right" /></button> : <button type="submit" className="sf-primary" disabled={saving}><i className="bi bi-shop" /> {saving ? "Creating…" : editing ? "Save Changes" : "Create Store"}</button>}</div>
-        </fieldset></form>
-      </main>
+  return (
+    <div className="sf-root">
+      <header className="sf-topbar">
+        <button type="button" className="sf-back-link" onClick={backToStores}>
+          <i className="bi bi-arrow-left" /> Stores
+        </button>
+        <span>/</span>
+        <strong>{editing ? "Edit store" : "Add store"}</strong>
+        <span className="sf-topbar-spacer" />
+        <button
+          type="button"
+          className="sf-outline"
+          disabled={saving || subscriptionLoading}
+          onClick={backToStores}
+        >
+          Cancel
+        </button>
+      </header>
+      <div className="sf-shell">
+        <aside className="sf-sidebar">
+          <div className="sf-sidebar-caption">PROVISION A STORE</div>
+          <nav>
+            {STEPS.map((name, index) => (
+              <button
+                type="button"
+                key={name}
+                className={
+                  step === index ? "active" : step > index ? "complete" : ""
+                }
+                onClick={() => goTo(index)}
+              >
+                <span className="sf-step-number">
+                  {step > index ? <i className="bi bi-check-lg" /> : index + 1}
+                </span>
+                <span>
+                  <strong>{name}</strong>
+                  <small>{STEP_HINTS[index]}</small>
+                </span>
+              </button>
+            ))}
+          </nav>
+          <div className="sf-sidebar-foot">
+            Store setup · {step + 1} of {STEPS.length}
+          </div>
+        </aside>
+        <main className="sf-main">
+          <div className="sf-heading-row">
+            <div>
+              <div className="sf-eyebrow">
+                STEP {step + 1} OF {STEPS.length}
+              </div>
+              <h1>{STEPS[step]}</h1>
+              <p>
+                {step === 0
+                  ? "Enter the basic information and settings for this store. You can save and continue later."
+                  : step === 5
+                    ? "Review all the information below and create the store. You can go back to any step to make changes."
+                    : STEP_HINTS[step]}
+              </p>
+            </div>
+            {step === 3 && (
+              <div className="sf-role-context">
+                <span className="sf-icon-square bi bi-shop" />
+                <div>
+                  <small>Selected Store</small>
+                  <strong>{store.name || "New Store"}</strong>
+                  <small>
+                    {typeName || "Store type"} | {planName}
+                  </small>
+                </div>
+              </div>
+            )}
+          </div>
+          {error && (
+            <div className="sf-error" role="alert">
+              {error}
+              <button type="button" onClick={() => setError("")}>
+                ×
+              </button>
+            </div>
+          )}
+          {(loadError || merchantError) && (
+            <div className="sf-error" role="alert">
+              {loadError || merchantError}
+              <button
+                type="button"
+                onClick={() => setReload((value) => value + 1)}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          {(mastersLoading ||
+            merchantLoading ||
+            featuresLoading ||
+            subscriptionLoading) && (
+            <div className="sf-loading-note" role="status">
+              {subscriptionLoading
+                ? "Fetching active subscription…"
+                : "Loading merchant setup…"}
+            </div>
+          )}
+          <form onSubmit={submit} noValidate>
+            <fieldset
+              disabled={
+                saving ||
+                mastersLoading ||
+                merchantLoading ||
+                featuresLoading ||
+                subscriptionLoading
+              }
+              style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
+            >
+              <div className="sf-screen">{screens[step]()}</div>
+              <div className="sf-footer">
+                <button
+                  type="button"
+                  className="sf-outline"
+                  disabled={saving || subscriptionLoading}
+                  onClick={() => (step === 0 ? backToStores() : goTo(step - 1))}
+                >
+                  <i className="bi bi-arrow-left" /> Back
+                </button>
+                <span className="sf-footer-spacer" />
+                {step === 0 && (
+                  <button
+                    type="button"
+                    className="sf-outline sf-save-draft"
+                    disabled={saving || subscriptionLoading}
+                    onClick={(event) => submit(event, true)}
+                  >
+                    Save as Draft
+                  </button>
+                )}
+                {step < STEPS.length - 1 ? (
+                  <button
+                    type="button"
+                    className="sf-primary"
+                    disabled={saving || subscriptionLoading}
+                    onClick={() => goTo(step + 1)}
+                  >
+                    {step === 0 && subscriptionLoading ? (
+                      "Checking Subscription…"
+                    ) : (
+                      <>
+                        Save &amp; Continue <i className="bi bi-arrow-right" />
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className="sf-primary"
+                    disabled={saving || subscriptionLoading}
+                  >
+                    <i className="bi bi-shop" />{" "}
+                    {saving
+                      ? "Creating…"
+                      : editing
+                        ? "Save Changes"
+                        : "Create Store"}
+                  </button>
+                )}
+              </div>
+            </fieldset>
+          </form>
+        </main>
+      </div>
     </div>
-  </div>;
+  );
 }
