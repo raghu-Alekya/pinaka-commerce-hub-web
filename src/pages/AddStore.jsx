@@ -9,6 +9,10 @@ import { roleTemplatesApi } from "../api/roleTemplatesApi";
 import { storeRoleTemplatesApi, readStoreRoleTemplates } from "../api/storeRoleTemplatesApi";
 import { api, ApiError } from "../api/http";
 import { endpoints } from "../api/endpoints";
+import {
+  getActiveSubscriptions,
+  extractActiveSubscription,
+} from "../api/subscriptions_stores";
 import "../styles/add-store.css";
 
 const DAYS = [
@@ -55,9 +59,22 @@ const COUNTRIES = {
 const STEPS = ["Store Details", "Subscription", "Features", "Roles & Permissions", "Employees", "Review & Provision"];
 const STEP_HINTS = ["Enter basic information", "Review merchant subscription", "Enable or disable features", "Configure store level access", "Assign employees to this store", "Review and create store"];
 const STANDARD_ACTIONS = ["View", "Create", "Edit", "Delete"];
-const listFrom = value => {
-  const rows = value?.features ?? value?.storeTypeFeatures ?? value?.items ?? value?.data ?? value;
-  return Array.isArray(rows) ? rows : [];
+const listFrom = (value) => {
+  if (Array.isArray(value)) return value;
+  const containers = [
+    value,
+    value?.all,
+    value?.data,
+    value?.data?.all,
+    value?.result,
+    value?.result?.all,
+  ];
+  for (const container of containers) {
+    if (Array.isArray(container)) return container;
+    const rows = container?.features ?? container?.storeTypeFeatures ?? container?.items ?? container?.results;
+    if (Array.isArray(rows)) return rows;
+  }
+  return [];
 };
 const featureName = (item) =>
   typeof item === "string"
@@ -86,10 +103,6 @@ const idOf = (value) =>
       value?.id ??
       value?._id ??
       (typeof value === "string" || typeof value === "number" ? value : ""),
-  );
-const isUuid = (value) =>
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    String(value || ""),
   );
 const initials = (value) =>
   String(value || "Store")
@@ -383,9 +396,15 @@ export default function AddStore() {
   );
 
   const merchantId = idOf(routeMerchantId || store.merchantId);
-  const merchant = merchantInfo?.owner || merchants.find(item => idOf(item) === merchantId) || null;
+  const merchantOptionValue = (item) => String(item?.id || item?.merchantId || "");
+  const merchantMatches = (item, value) =>
+    [item?.id, item?.merchantId, item?.merchantCode].some((candidate) => String(candidate || "") === String(value || ""));
+  const selectedMerchant = merchants.find((item) => merchantMatches(item, routeMerchantId || store.merchantId || merchantId));
+  const merchantSelectValue = selectedMerchant ? merchantOptionValue(selectedMerchant) : String(routeMerchantId || store.merchantId || merchantId || "");
+  const merchant = merchantInfo?.owner || selectedMerchant || merchants.find(item => merchantMatches(item, merchantId)) || null;
   const merchantName = merchant?.name || merchant?.merchantName || merchant?.businessDisplayName || "Selected merchant";
-  const selectedType = storeTypes.find(item => String(item.id) === String(store.storeTypeId)) || storeTypes.find(item => String(item.name).toLowerCase() === String(store.type).toLowerCase());
+  const activeStoreTypeId = store.storeTypeId || merchantInfo?.typeId || subscription?.storeTypeId || "";
+  const selectedType = storeTypes.find(item => String(item.id) === String(activeStoreTypeId)) || storeTypes.find(item => String(item.name).toLowerCase() === String(store.type).toLowerCase());
   const typeName = selectedType?.name || store.type || merchantInfo?.typeName || "";
   const plan = subscription?.plan && typeof subscription.plan === "object" ? subscription.plan : null;
   const planName = subscription?.planName || subscription?.planCode || plan?.name || plan?.planName || merchant?.plan || "No active plan";
@@ -445,13 +464,18 @@ export default function AddStore() {
         });
     });
     return [...unique.values()];
-  }, [typeFeatures, catalog, store.storeTypeId]);
+  }, [typeFeatures, catalog, activeStoreTypeId]);
   const roleById = useMemo(() => Object.fromEntries(roleDefinitions.map(role => [role.id, role])), [roleDefinitions]);
   const roleName = id => roleById[id]?.name || id;
   const categories = ["All Features", ...new Set(featureRows.map(row => row.category))];
-  const entitled = name => planFeatureList == null
-    ? Boolean(store.storeTypeId) && featureRows.some(row => row.name === name)
-    : includedFeatures.some(item => item.toLowerCase() === name.toLowerCase());
+  const entitled = (name) => {
+    const feature = featureRows.find((row) => row.name === name);
+    if (activeStoreTypeId && typeof feature?.included === "boolean") return feature.included;
+    if (activeStoreTypeId && feature?.planAccess) return String(feature.planAccess).toUpperCase() === "INCLUDED";
+    if (includedFeatures.length) return includedFeatures.some((item) => item.toLowerCase() === name.toLowerCase());
+    if (planFeatureList != null) return false;
+    return Boolean(activeStoreTypeId) && Boolean(feature);
+  };
   const filteredFeatures = featureRows.filter(row => {
     const matchesCategory = featureCategory === "All Features" || row.category === featureCategory;
     return matchesCategory && `${row.name} ${row.description}`.toLowerCase().includes(featureSearch.toLowerCase());
@@ -503,15 +527,13 @@ export default function AddStore() {
       setMastersLoading(true);
       setLoadError("");
       try {
-        if (!isUuid(routeMerchantId) || storeId) {
-          const result = await listMerchants();
-          if (!cancelled)
-            setMerchants(
-              Array.isArray(result)
-                ? result
-                : result?.merchants || result?.data?.merchants || [],
-            );
-        }
+        const result = await listMerchants();
+        if (!cancelled)
+          setMerchants(
+            Array.isArray(result)
+              ? result
+              : result?.merchants || result?.data?.merchants || [],
+          );
         const featuresResult = await listFeatures();
         if (!cancelled) {
           setCatalog(
@@ -593,7 +615,74 @@ export default function AddStore() {
     };
   }, [routeMerchantId, storeId, reload]);
 
-  // Load Store Types (Master Setup with Merchant Fallback)
+  useEffect(() => {
+    let cancelled = false;
+    setStoreTypesLoading(true);
+
+    async function loadStoreTypes() {
+      try {
+        const masterRes = await storeTypesApi.getAll().catch(() => ({ storeTypes: [] }));
+        const masterTypes = (
+          masterRes?.storeTypes ||
+          masterRes?.data?.storeTypes ||
+          masterRes?.data ||
+          (Array.isArray(masterRes) ? masterRes : [])
+        ).filter((item) => String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE");
+
+        if (merchantId) {
+          try {
+            const merchantRes = await storeTypesApi.getForMerchant(merchantId);
+            const merchantTypes = (
+              merchantRes?.storeTypes ||
+              merchantRes?.data?.storeTypes ||
+              merchantRes?.data ||
+              (Array.isArray(merchantRes) ? merchantRes : [])
+            ).filter((item) => String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE");
+            if (!cancelled) setStoreTypes(merchantTypes.length ? merchantTypes : masterTypes);
+            return;
+          } catch {
+            // Fall back to the master store-type list.
+          }
+        }
+        if (!cancelled) setStoreTypes(masterTypes);
+      } catch (err) {
+        if (!cancelled) {
+          setStoreTypes([]);
+          setLoadError(err?.message || "Unable to load store types.");
+        }
+      } finally {
+        if (!cancelled) setStoreTypesLoading(false);
+      }
+    }
+
+    loadStoreTypes();
+    return () => {
+      cancelled = true;
+    };
+  }, [merchantId, reload]);
+
+  useEffect(() => {
+    if (!storeTypes.length) return;
+    const wanted = [store.storeTypeId, store.type, merchantInfo?.typeId, merchantInfo?.typeName]
+      .filter(Boolean)
+      .map((value) => String(value).toLowerCase());
+    if (!wanted.length) return;
+    const match = storeTypes.find((item) =>
+      [item.id, item.storeTypeId, item.code, item.storeTypeCode, item.name, item.storeTypeName]
+        .filter(Boolean)
+        .some((value) => wanted.includes(String(value).toLowerCase())),
+    );
+    if (!match) return;
+    const value = String(match.id ?? match.storeTypeId ?? match.code ?? match.name);
+    if (store.storeTypeId === value) return;
+    setStore((current) => ({
+      ...current,
+      storeTypeId: value,
+      type: match.name || match.storeTypeName || current.type,
+    }));
+  }, [storeTypes, store.storeTypeId, store.type, merchantInfo]);
+
+  // Load merchant context
   useEffect(() => {
     let cancelled = false;
     setMerchantInfo(null); setSubscription(null); setMerchantStores([]); setEmployees([]); setMerchantError("");
@@ -733,10 +822,12 @@ export default function AddStore() {
     const featureScope = JSON.stringify([merchantId, activeStoreTypeId]);
     storeTypesApi
       .getMerchantFeatures(merchantId, activeStoreTypeId)
+      .catch(() => storeTypesApi.getFeatures(activeStoreTypeId))
       .then((data) => {
         if (!cancelled) {
           loadedFeatureType.current = featureScope;
-          setTypeFeatures(listFrom(data));
+          const rows = listFrom(data);
+          setTypeFeatures(rows.length ? rows : listFrom(data?.all));
         }
       })
       .catch((err) => {
@@ -979,37 +1070,6 @@ export default function AddStore() {
         ]) {
           if (!String(store[key] || "").trim())
             return "Enter the store " + label + ".";
-        }
-      }
-      if (
-        store.phone &&
-        (!/^[+\d\s().-]+$/.test(store.phone) ||
-          !/^\d{7,15}$/.test(store.phone.replace(/\D/g, "")))
-      )
-        return "Enter a valid phone number containing 7–15 digits.";
-      if (store.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.email.trim()))
-        return "Enter a valid email address.";
-      if (store.url) {
-        try {
-          const url = new URL(store.url.trim());
-          if (
-            !["https:", "http:"].includes(url.protocol) ||
-            !url.hostname ||
-            url.username ||
-            url.password
-          )
-            return "Enter an HTTP or HTTPS website URL without embedded credentials.";
-        } catch {
-          return "Enter a valid website URL, including https://.";
-        }
-      }
-      if (store.country && !COUNTRIES[store.country])
-        return "Select a supported country.";
-      if (store.timezone) {
-        try {
-          new Intl.DateTimeFormat("en", { timeZone: store.timezone });
-        } catch {
-          return "Select a valid time zone.";
         }
       }
       if (store.phone && (!/^[+\d\s().-]+$/.test(store.phone) || !/^\d{7,15}$/.test(store.phone.replace(/\D/g,"")))) return "Enter a valid phone number containing 7–15 digits.";
@@ -1263,12 +1323,7 @@ export default function AddStore() {
       saveLock.current = false;
       backToStores();
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : err?.message ||
-              `Unable to ${editing ? "update" : "create"} this store.`,
-      );
+      setError(err instanceof ApiError ? err.message : err?.message || `Unable to ${editing ? "update" : "create"} this store.`);
     } finally {
       saveLock.current = false;
       setSaving(false);
@@ -1308,177 +1363,6 @@ export default function AddStore() {
     </>;
   };
 
-  const storeDetailsScreen = () => <>
-    <div className="sf-details-layout">
-      <div className="sf-details-main">
-        <Panel title="Basic Information" subtitle="Provide the general information for this store.">
-          <div className="sf-form-grid sf-basic-grid">
-            <div className="sf-field sf-merchant-field"><label htmlFor="sf-merchant">Merchant *</label><select id="sf-merchant" required value={merchantId} disabled={Boolean(routeMerchantId) || editing || saving} onChange={event => changeMerchant(event.target.value)}><option value="">Select merchant</option>{(merchant && !merchants.some(item => idOf(item) === merchantId) ? [{...merchant, id: merchantId}, ...merchants] : merchants).map(item => <option key={idOf(item)} value={idOf(item)}>{item.name || item.merchantName || item.businessDisplayName || idOf(item)}</option>)}</select></div>
-            <Field label="Store Name *" value={store.name} onChange={value => updateStore("name", value)} placeholder="Enter store name" />
-            <SelectField label="Store Type *" value={store.storeTypeId} onChange={value => { const type = storeTypes.find(item => String(item.id) === value); featureDefaultsScope.current = ""; setStore(current => ({ ...current, storeTypeId: value, type: type?.name || "" })); setEnabledFeatures([]); setPermissions({}); setLoadError(""); }} options={[{ value: "", label: "Select store type" }, ...storeTypes.map(item => ({ value: String(item.id), label: item.name }))]} />
-            <div className="sf-code-field"><Field label="Store Code" value={store.storeCode} disabled placeholder={editing ? "Not available" : "Generated after saving"} aria-describedby="sf-code-help" /><small id="sf-code-help">{editing ? "Automatically generated and cannot be changed." : "Automatically generated after saving the store."}</small></div>
-          </div>
-          <button type="button" className="sf-outline" onClick={() => goTo(0)}>
-            Edit Store Details
-          </button>
-        </Panel>
-        <Panel
-          title="1. Choose Subscription Option"
-          subtitle="Subscription and plan changes are managed at merchant level."
-        >
-          <div className="sf-sub-options">
-            <div className="sf-sub-option selected">
-              <span className="sf-option-icon bi bi-file-earmark-check" />
-              <span>
-                <strong>Use Existing Subscription</strong>
-                <small>Use the plan assigned to this merchant.</small>
-              </span>
-              <i className="bi bi-check-circle-fill" />
-            </div>
-          </div>
-        </Panel>
-        <Panel
-          title="2. Select a Plan"
-          subtitle="Plan details from the selected merchant subscription."
-        >
-          <div className="sf-plan-table-wrap">
-            <table className="sf-plan-table">
-              <thead>
-                <tr>
-                  <th>SELECTED PLAN</th>
-                  <th>PLAN NAME</th>
-                  <th>BILLING TYPE</th>
-                  <th>PRICE</th>
-                  <th>VALIDITY</th>
-                  <th>STORES USED</th>
-                  <th>STORES LIMIT</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <span className="sf-radio-dot" />
-                  </td>
-                  <td>
-                    <strong>{planName}</strong>
-                    <small>
-                      {plan?.description ||
-                        subscription?.planCode ||
-                        "Merchant subscription plan"}
-                    </small>
-                  </td>
-                  <td>{billing}</td>
-                  <td>{subPriceDisplay}</td>
-                  <td>{validity}</td>
-                  <td>{used}</td>
-                  <td>{limit}</td>
-                  <td>
-                    <span className="sf-status-pill">
-                      {subscription?.status || "Not provided"}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-        <Panel title="Plan Details">
-          <div className="sf-plan-details">
-            <div className="sf-plan-title">
-              <span className="sf-icon-square bi bi-file-earmark-text" />
-              <div>
-                <strong>{planName}</strong>
-                <small>{billing} billing</small>
-              </div>
-            </div>
-            <div className="sf-plan-metrics">
-              <div>
-                <strong>{subPriceDisplay}</strong>
-                <small>Price</small>
-              </div>
-              <div>
-                <strong>{billing}</strong>
-                <small>Billing Type</small>
-              </div>
-              <div>
-                <strong>
-                  {used} / {limit}
-                </strong>
-                <small>Stores Used</small>
-              </div>
-              <div>
-                <strong>{subscription?.status || "Not provided"}</strong>
-                <small>Status</small>
-              </div>
-            </div>
-            <div className="sf-key-features">
-              <strong>Key Features</strong>
-              <div>
-                {includedFeatures.slice(0, 8).map((item) => (
-                  <span key={item}>
-                    <i className="bi bi-check-circle-fill" />
-                    {item}
-                  </span>
-                ))}
-                {!includedFeatures.length && (
-                  <small>
-                    Included features are not available in the merchant
-                    subscription record.
-                  </small>
-                )}
-              </div>
-            </div>
-          </div>
-        </Panel>
-        <Panel
-          title="Store Details"
-          subtitle="Existing stores mapped to this merchant."
-        >
-          <div className="sf-table-wrap">
-            <table className="sf-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>STORE NAME</th>
-                  <th>STORE CODE</th>
-                  <th>LOCATION</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {merchantStores.map((item, index) => (
-                  <tr key={item.id || item.storeId || item.storeID || index}>
-                    <td>{index + 1}</td>
-                    <td>{item.storeName || item.name || "Unnamed store"}</td>
-                    <td>{item.storeCode || item.code || "—"}</td>
-                    <td>
-                      {[
-                        item.city || item.address?.city,
-                        item.state || item.address?.state,
-                      ]
-                        .filter(Boolean)
-                        .join(", ") ||
-                        (typeof item.address === "string" ? item.address : "—")}
-                    </td>
-                    <td>{item.status || "—"}</td>
-                  </tr>
-                ))}
-                {!used && (
-                  <tr>
-                    <td colSpan="5" className="sf-empty">
-                      No existing stores are mapped to this merchant.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-      </>
-    );
-  };
-
   const storeDetailsScreen = () => (
     <>
       <div className="sf-details-layout">
@@ -1493,17 +1377,17 @@ export default function AddStore() {
                 <select
                   id="sf-merchant"
                   required
-                  value={merchantId}
+                  value={merchantSelectValue}
                   disabled={Boolean(routeMerchantId) || editing || saving}
                   onChange={(event) => changeMerchant(event.target.value)}
                 >
                   <option value="">Select merchant</option>
                   {(merchant &&
-                  !merchants.some((item) => idOf(item) === merchantId)
-                    ? [{ ...merchant, id: merchantId }, ...merchants]
+                  !merchants.some((item) => merchantMatches(item, merchantSelectValue))
+                    ? [{ ...merchant, id: merchantSelectValue }, ...merchants]
                     : merchants
                   ).map((item) => (
-                    <option key={idOf(item)} value={idOf(item)}>
+                    <option key={merchantOptionValue(item) || idOf(item)} value={merchantOptionValue(item)}>
                       {item.name ||
                         item.merchantName ||
                         item.businessDisplayName ||
@@ -1902,17 +1786,13 @@ export default function AddStore() {
                         </span>
                       </td>
                       <td>
-                        <button
-                          type="button"
-                          role="switch"
+                        <input
+                          type="checkbox"
                           aria-label={`Enable ${feature.name} for this store`}
-                          aria-checked={checked}
+                          checked={checked}
                           disabled={!hasPlan || mastersLoading}
-                          className={`sf-switch ${checked ? "on" : ""}`}
-                          onClick={() => toggleFeature(feature.name)}
-                        >
-                          <span />
-                        </button>
+                          onChange={() => toggleFeature(feature.name)}
+                        />
                       </td>
                     </tr>
                   );
@@ -2040,133 +1920,8 @@ export default function AddStore() {
           )}
           {!active && <p className="sf-empty">Select a role to configure permissions.</p>}
         </Panel>
-        <div className="sf-permissions-layout">
-          <Panel
-            title="Roles for This Store"
-            subtitle="Configure permissions for each selected role."
-          >
-            <div className="sf-role-list">
-              {roles.map((role) => (
-                <button
-                  type="button"
-                  key={role}
-                  className={active === role ? "active" : ""}
-                  onClick={() => setActiveRole(role)}
-                >
-                  <i className="bi bi-grip-vertical" />
-                  <span>{role}</span>
-                  <small>
-                    {roleDefinitions.find((item) => item.name === role)
-                      ?.level || "Custom"}
-                  </small>
-                  <i
-                    className="bi bi-trash3"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setRoles((current) =>
-                        current.filter((item) => item !== role),
-                      );
-                      setActiveRole((current) =>
-                        current === role
-                          ? roles.find((item) => item !== role) || ""
-                          : current,
-                      );
-                    }}
-                  />
-                </button>
-              ))}
-              {!roles.length && (
-                <p className="sf-empty">Select a merchant role above.</p>
-              )}
-            </div>
-          </Panel>
-          <Panel
-            title={`Permissions for ${active || "Selected Role"}`}
-            subtitle="Set what this role can view, create, edit or delete."
-            action={
-              <div className="sf-copy-permissions">
-                <label>
-                  Copy from
-                  <select
-                    value={copyFromRole}
-                    onChange={(event) => setCopyFromRole(event.target.value)}
-                  >
-                    <option value="">Select a role</option>
-                    {roles
-                      .filter((role) => role !== active)
-                      .map((role) => (
-                        <option key={role}>{role}</option>
-                      ))}
-                  </select>
-                </label>
-                <button
-                  type="button"
-                  className="sf-outline"
-                  disabled={!active || !copyFromRole}
-                  onClick={() => {
-                    setPermissions((current) => ({
-                      ...current,
-                      [active]: { ...(current[copyFromRole] || {}) },
-                    }));
-                  }}
-                >
-                  Apply
-                </button>
-              </div>
-            }
-          >
-            {active && (
-              <div className="sf-table-wrap">
-                <table className="sf-table sf-permission-table">
-                  <thead>
-                    <tr>
-                      <th>MODULE / FEATURE</th>
-                      {actions.map((action) => (
-                        <th key={action}>{action.toUpperCase()}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {featureRows
-                      .filter((feature) =>
-                        enabledFeatures.includes(feature.name),
-                      )
-                      .map((item) => {
-                        const name = featureName(item);
-                        const values = permissions[active]?.[name] || {};
-                        return (
-                          <tr key={name}>
-                            <td>
-                              <i className="bi bi-grid-3x3-gap" /> {name}
-                            </td>
-                            {actions.map((action) => (
-                              <td key={action}>
-                                <input
-                                  type="checkbox"
-                                  checked={Boolean(values[action])}
-                                  disabled={!item.actions.includes(action)}
-                                  onChange={() =>
-                                    togglePermission(active, name, action)
-                                  }
-                                />
-                              </td>
-                            ))}
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {!active && (
-              <p className="sf-empty">
-                Select a role to configure permissions.
-              </p>
-            )}
-          </Panel>
-        </div>
-      </>
-    );
+      </div>
+    </>;
   };
 
   const employeesScreen = () => {

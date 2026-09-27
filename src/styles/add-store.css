@@ -202,7 +202,7 @@
 .sf-permission-table th:not(:first-child), .sf-permission-table td:not(:first-child) { width: 70px; text-align: center; }
 .sf-permission-table td:first-child { min-width: 165px; font-weight: 600; }
 .sf-permission-table td:first-child i { margin-right: 7px; color: #7060d7; }
-.sf-permission-table input[type="checkbox"], .sf-employees-table input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--sf-purple); vertical-align: middle; }
+.sf-permission-table input[type="checkbox"], .sf-employees-table input[type="checkbox"], .sf-feature-table input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--sf-purple); vertical-align: middle; }
 .sf-employee-summary { display: grid; grid-template-columns: 1.6fr repeat(3, 1fr); align-items: center; padding: 14px 17px; }
 .sf-employee-summary > div { min-height: 52px; padding: 3px 13px; border-right: 1px solid #edf0f5; }
 .sf-employee-summary > div:first-child { padding-left: 0; }

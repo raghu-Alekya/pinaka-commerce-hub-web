@@ -10,7 +10,24 @@ export const endpoints = {
 
   stores: "/stores",
   store: (id) => `/stores/${id}`,
-  merchantStores: (merchantId) => `/merchants/${merchantId}/stores`,
+  storeCurrencyTax: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/currency-tax`,
+  storeServiceCharges: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/service-charges`,
+  storeCashback: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/cashback`,
+  storeOpeningBalance: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/opening-balance`,
+  storeCashDenominations: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/cash-denominations`,
+  storeCashRegisters: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/cash-registers`,
+  storeSafeDrop: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/safe-drop`,
+  storeCardPayments: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/card-payments`,
+  storeTerminalMappings: (storeId) =>
+    `/stores/${encodeURIComponent(storeId)}/pos/terminal-mappings`,
 
   // Merchant Employees (Connector API)
   employees: "/merchants/employees",
@@ -42,8 +59,12 @@ export const endpoints = {
   features: "/features",
   feature: (id) => `/features/${id}`,
   permissions: "/permissions",
+  permission: (id) => `/permissions/${id}`,
   plans: "/plans",
   plan: (id) => `/plans/${encodeURIComponent(id)}`,
+  planStatus: (id) => `/plans/${encodeURIComponent(id)}`,
+  tendors: "/tendors",
+  tendor: (id) => `/tendors/${id}`,
   devices: "/devices",
   device: (id) => `/devices/${encodeURIComponent(id)}`,
   deviceTypes: "/device-types",
