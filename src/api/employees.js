@@ -243,6 +243,14 @@ export async function listMerchantEmployees(merchantId) {
     await api.get(endpoints.merchantEmployees(merchantId)),
   );
 }
+
+export async function listStoreEmployees(merchantId, storeId) {
+  return api.get(endpoints.storeEmployees(merchantId, storeId));
+}
+
+export async function saveStoreEmployees(merchantId, storeId, employees) {
+  return api.put(endpoints.storeEmployees(merchantId, storeId), { employees });
+}
 // Helper to safely get backend origin in Vite/React without "process is not defined" error
 function getBackendOrigin() {
   if (typeof import.meta !== "undefined" && import.meta?.env) {

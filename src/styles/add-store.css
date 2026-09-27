@@ -299,3 +299,8 @@
 }
 .sf-heading-row > .sf-role-context { flex-shrink: 0; align-self: center; }
 @media (max-width: 620px) { .sf-heading-row > .sf-role-context { align-self: stretch; width: 100%; } }
+
+.sf-perm-na { color: #c0c6d2; font-size: 14px; }
+.sf-permission-table td { text-align: center; }
+.sf-permission-table td:first-child { text-align: left; }
+
