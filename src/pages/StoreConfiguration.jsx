@@ -32,14 +32,16 @@ const navGroups = [
   {
     id: "store-setup",
     label: "Store Overview",
+    collapsible: false,
     items: [
-      ["overview", "bi-shop", "Store Overview & Setup"],
+      ["overview", "bi-shop", "Store Overview"],
     ],
   },
 
   {
     id: "configurations",
     label: "Configurations",
+    collapsible: false,
     items: [
       ["pos", "bi-phone", "POS Configurations"],
     ],
@@ -500,20 +502,21 @@ export default function StoreConfiguration() {
 
               {navGroups.map((group) => {
 
+                const isCollapsible = group.collapsible !== false;
                 const isOpen =
-                  openGroup === group.id;
+                  !isCollapsible || openGroup === group.id;
 
                 return (
                   <div
                     className={`store-subnav-group ${
                       isOpen ? "open" : ""
-                    }`}
+                    } ${!isCollapsible ? "store-subnav-group-direct" : ""}`}
                     key={group.id}
                   >
 
                     {/* GROUP HEADER */}
 
-                    <button
+                    {isCollapsible && <button
                       type="button"
                       className={`store-subnav-group-header ${
                         isOpen ? "open" : ""
@@ -541,7 +544,7 @@ export default function StoreConfiguration() {
                         }`}
                       />
 
-                    </button>
+                    </button>}
 
                     {/* GROUP ITEMS */}
 
