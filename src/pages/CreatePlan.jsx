@@ -21,7 +21,6 @@ const emptyForm = {
   trialPeriod: "",
   effectiveFrom: "",
 };
-
 function normalizeStoreTypeFeatures(response) {
   const source =
     response?.features ??
@@ -38,20 +37,8 @@ function normalizeStoreTypeFeatures(response) {
         assignment?.featureDefinition ??
         assignment;
 
-      return {
-        // IMPORTANT:
-        // featureId is the actual feature ID that should be
-        // sent in the plan payload.
-        id: String(
-          feature?.featureId ??
-          assignment?.featureId ??
-          feature?.id ??
-          assignment?.id ??
-          `feature-${index}`,
-        ),
-
-        featureId: String(
-          feature?.featureId ??
+      const featureId = String(
+        feature?.featureId ??
           assignment?.featureId ??
           feature?.feature_id ??
           assignment?.feature_id ??
@@ -59,23 +46,26 @@ function normalizeStoreTypeFeatures(response) {
           feature?._id ??
           assignment?.id ??
           assignment?._id ??
-          `feature-${index}`,
-        ),
+          "",
+      ).trim();
 
+      return {
+        id: featureId,
+        featureId,
         name: String(
           feature?.name ??
-          feature?.featureName ??
-          feature?.feature_name ??
-          feature?.featureKey ??
-          feature?.code ??
-          `Feature ${index + 1}`,
+            feature?.featureName ??
+            feature?.feature_name ??
+            feature?.featureKey ??
+            feature?.code ??
+            `Feature ${index + 1}`,
         ).trim(),
 
         category: String(
           feature?.category ??
-          feature?.categoryName ??
-          feature?.category_name ??
-          "—",
+            feature?.categoryName ??
+            feature?.category_name ??
+            "—",
         ).trim(),
 
         description: String(
@@ -84,8 +74,6 @@ function normalizeStoreTypeFeatures(response) {
 
         icon: feature?.icon || "bi-grid",
 
-        // DO NOT check defaultEnabled here.
-        // defaultEnabled only tells us the default selection.
         active:
           String(
             feature?.featureStatus ?? feature?.status ?? "ACTIVE",
@@ -94,21 +82,21 @@ function normalizeStoreTypeFeatures(response) {
         defaultEnabled: assignment?.defaultEnabled === true,
       };
     })
-    .filter((feature) => feature.name && feature.active);
+    .filter((feature) => feature.featureId && feature.name && feature.active);
 }
 
 function storeTypeDisplayName(value, storeTypes) {
   const candidates =
     value && typeof value === "object"
       ? [
-        value.id,
-        value._id,
-        value.storeTypeId,
-        value.storeTypeCode,
-        value.code,
-        value.name,
-        value.storeTypeName,
-      ]
+          value.id,
+          value._id,
+          value.storeTypeId,
+          value.storeTypeCode,
+          value.code,
+          value.name,
+          value.storeTypeName,
+        ]
       : [value];
 
   const match = storeTypes.find((storeType) => {
@@ -173,6 +161,10 @@ export default function CreatePlan() {
   const [planStep, setPlanStep] = useState(1);
   const [editingId, setEditingId] = useState(null);
   const [includedFeatures, setIncludedFeatures] = useState([]);
+
+  const [pendingIncludedFeatureNames, setPendingIncludedFeatureNames] =
+    useState([]);
+
   const [storeTypeFeatures, setStoreTypeFeatures] = useState([]);
   const [storeTypeFeaturesLoading, setStoreTypeFeaturesLoading] =
     useState(false);
@@ -275,9 +267,9 @@ export default function CreatePlan() {
       (storeType) =>
         String(
           storeType.id ??
-          storeType._id ??
-          storeType.storeTypeId ??
-          storeType.code,
+            storeType._id ??
+            storeType.storeTypeId ??
+            storeType.code,
         ) === String(form.applicableStoreType) ||
         String(
           storeType.name ?? storeType.storeTypeName ?? storeType.code,
@@ -307,14 +299,30 @@ export default function CreatePlan() {
         if (!active) return;
         const features = normalizeStoreTypeFeatures(response);
         setStoreTypeFeatures(features);
-        setIncludedFeatures((current) =>
-          current.filter((featureId) =>
-            features.some(
-              (feature) =>
-                String(feature.featureId) === String(featureId),
-            ),
-          ),
-        );
+
+        // Keep any existing feature IDs that still belong to this store type.
+        setIncludedFeatures((current) => {
+          if (!Array.isArray(current) || current.length === 0) return [];
+
+          return current
+            .map((selectedFeature) => {
+              const byId = features.find(
+                (feature) =>
+                  String(feature.featureId) === String(selectedFeature),
+              );
+
+              if (byId) return byId.featureId;
+
+              const byName = features.find(
+                (feature) =>
+                  String(feature.name).trim().toLowerCase() ===
+                  String(selectedFeature).trim().toLowerCase(),
+              );
+
+              return byName?.featureId;
+            })
+            .filter(Boolean);
+        });
       })
       .catch((error) => {
         if (!active) return;
@@ -331,6 +339,50 @@ export default function CreatePlan() {
       active = false;
     };
   }, [form.applicableStoreType, storeTypes]);
+
+  // The plan API returns includedFeatures as names, while the checkbox UI
+  // uses feature IDs. Convert saved names to IDs after features are loaded.
+  useEffect(() => {
+    if (
+      pendingIncludedFeatureNames.length === 0 ||
+      storeTypeFeatures.length === 0
+    ) {
+      return;
+    }
+
+    const selectedFeatureIds = pendingIncludedFeatureNames
+      .map((savedFeature) => {
+        const savedValue =
+          typeof savedFeature === "string"
+            ? savedFeature
+            : (savedFeature?.name ??
+              savedFeature?.featureName ??
+              savedFeature?.featureId ??
+              "");
+
+        const byId = storeTypeFeatures.find(
+          (feature) =>
+            String(feature.featureId).trim() === String(savedValue).trim(),
+        );
+
+        if (byId) return byId.featureId;
+
+        const byName = storeTypeFeatures.find(
+          (feature) =>
+            String(feature.name).trim().toLowerCase() ===
+            String(savedValue).trim().toLowerCase(),
+        );
+
+        return byName?.featureId;
+      })
+      .filter(Boolean);
+
+    console.log("Saved feature names from API:", pendingIncludedFeatureNames);
+    console.log("Converted saved feature IDs:", selectedFeatureIds);
+
+    setIncludedFeatures(selectedFeatureIds);
+    setPendingIncludedFeatureNames([]);
+  }, [pendingIncludedFeatureNames, storeTypeFeatures]);
 
   const textInputProps = {
     autoComplete: "off",
@@ -412,7 +464,7 @@ export default function CreatePlan() {
       (f) =>
         String(f.featureId) === String(id) ||
         String(f.id) === String(id) ||
-        String(f.name).toLowerCase() === String(id).toLowerCase()
+        String(f.name).toLowerCase() === String(id).toLowerCase(),
     );
     return match?.name || id;
   }
@@ -430,6 +482,7 @@ export default function CreatePlan() {
     setPlanStep(1);
     setEditingId(null);
     setIncludedFeatures([]);
+    setPendingIncludedFeatureNames([]);
   }
 
   function resetFilters() {
@@ -452,11 +505,28 @@ export default function CreatePlan() {
       setMessage("");
 
       let savedPlan;
+
+      // Convert selected feature IDs to feature names
+      const featureNames = includedFeatures
+        .map((featureId) => {
+          const feature = storeTypeFeatures.find(
+            (item) => String(item.featureId) === String(featureId),
+          );
+
+          return feature?.name;
+        })
+        .filter(Boolean);
+
+      console.log("Selected Feature IDs:", includedFeatures);
+      console.log("Feature Names sent to API:", featureNames);
+
       if (editingId) {
-        savedPlan = await updatePlan(editingId, planData, includedFeatures);
+        savedPlan = await updatePlan(editingId, planData, featureNames);
+
         setMessage("Plan updated successfully.");
       } else {
-        savedPlan = await createPlan(planData, includedFeatures);
+        savedPlan = await createPlan(planData, featureNames);
+
         setMessage("Plan created successfully.");
       }
 
@@ -498,36 +568,14 @@ export default function CreatePlan() {
       status: plan.status || "Active",
     });
 
-    setIncludedFeatures(
-      Array.isArray(plan.includedFeatures)
-        ? plan.includedFeatures
-          .map((feature) => {
-            if (typeof feature === "string") {
-              return String(feature);
-            }
+    const savedFeatureNames = Array.isArray(plan.includedFeatures)
+      ? plan.includedFeatures
+      : [];
 
-            const nestedFeature =
-              feature?.feature ??
-              feature?.featureDetails ??
-              feature?.featureDefinition;
-
-            return String(
-              feature?.featureId ??
-              feature?.feature_id ??
-              feature?.featureID ??
-              nestedFeature?.featureId ??
-              nestedFeature?.feature_id ??
-              nestedFeature?.id ??
-              nestedFeature?._id ??
-              feature?.id ??
-              feature?._id ??
-              feature?.code ??
-              "",
-            );
-          })
-          .filter(Boolean)
-        : [],
-    );
+    // The store-type features may load after the plan data. Keep the saved
+    // names temporarily and convert them to checkbox IDs in the effect above.
+    setIncludedFeatures([]);
+    setPendingIncludedFeatureNames(savedFeatureNames);
     setPlanStep(1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -572,8 +620,9 @@ export default function CreatePlan() {
           <div className="plan-stepper-item" key={step}>
             <button
               type="button"
-              className={`plan-step ${planStep === step ? "active" : ""} ${planStep > step ? "complete" : ""
-                }`}
+              className={`plan-step ${planStep === step ? "active" : ""} ${
+                planStep > step ? "complete" : ""
+              }`}
               onClick={() => handleStepClick(step)}
             >
               <span>{step}</span>
@@ -599,7 +648,9 @@ export default function CreatePlan() {
 
           <div className="plan-create-grid three-columns plan-information-grid">
             <label className="plan-field">
-              <span>Plan Code <b>*</b></span>
+              <span>
+                Plan Code <b>*</b>
+              </span>
               <input
                 {...textInputProps}
                 name="code"
@@ -609,12 +660,18 @@ export default function CreatePlan() {
                 className={codeError ? "input-error" : ""}
               />
               <div className="plan-field-slot">
-                {codeError ? <small className="plan-field-error">{codeError}</small> : <small />}
+                {codeError ? (
+                  <small className="plan-field-error">{codeError}</small>
+                ) : (
+                  <small />
+                )}
               </div>
             </label>
 
             <label className="plan-field">
-              <span>Plan Name <b>*</b></span>
+              <span>
+                Plan Name <b>*</b>
+              </span>
               <input
                 {...textInputProps}
                 name="name"
@@ -624,25 +681,41 @@ export default function CreatePlan() {
                 className={nameError ? "input-error" : ""}
               />
               <div className="plan-field-slot">
-                {nameError ? <small className="plan-field-error">{nameError}</small> : <small />}
+                {nameError ? (
+                  <small className="plan-field-error">{nameError}</small>
+                ) : (
+                  <small />
+                )}
               </div>
             </label>
 
             <label className="plan-field">
-              <span>Applicable Business/Store Type <b>*</b></span>
+              <span>
+                Applicable Business/Store Type <b>*</b>
+              </span>
               <select
                 name="applicableStoreType"
                 value={form.applicableStoreType}
                 onChange={updateField}
                 disabled={storeTypesLoading}
               >
-                <option value="">{storeTypesLoading ? "Loading store types..." : "Select store type"}</option>
+                <option value="">
+                  {storeTypesLoading
+                    ? "Loading store types..."
+                    : "Select store type"}
+                </option>
                 {storeTypes.map((storeType) => (
                   <option
                     key={storeType.id ?? storeType._id ?? storeType.code}
-                    value={storeType.name ?? storeType.storeTypeName ?? storeType.code}
+                    value={
+                      storeType.name ??
+                      storeType.storeTypeName ??
+                      storeType.code
+                    }
                   >
-                    {storeType.name ?? storeType.storeTypeName ?? storeType.code}
+                    {storeType.name ??
+                      storeType.storeTypeName ??
+                      storeType.code}
                   </option>
                 ))}
               </select>
@@ -671,7 +744,9 @@ export default function CreatePlan() {
             </label>
 
             <label className="plan-field plan-information-status-field">
-              <span>Status <b>*</b></span>
+              <span>
+                Status <b>*</b>
+              </span>
               <select
                 autoComplete="off"
                 name="status"
@@ -682,12 +757,18 @@ export default function CreatePlan() {
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
-              <div className="plan-field-slot"><small /></div>
+              <div className="plan-field-slot">
+                <small />
+              </div>
             </label>
           </div>
 
           <div className="plan-actions plan-information-actions">
-            <button type="button" className="plan-cancel-button" onClick={resetCreationForm}>
+            <button
+              type="button"
+              className="plan-cancel-button"
+              onClick={resetCreationForm}
+            >
               Cancel
             </button>
             <button
@@ -963,10 +1044,7 @@ export default function CreatePlan() {
               {!storeTypeFeaturesLoading &&
                 storeTypeFeatures.map(
                   ({ featureId, name, category, description, icon }) => (
-                    <label
-                      className="plan-feature-check"
-                      key={featureId}
-                    >
+                    <label className="plan-feature-check" key={featureId}>
                       <input
                         type="checkbox"
                         checked={includedFeatures.includes(featureId)}
@@ -995,7 +1073,7 @@ export default function CreatePlan() {
                   {includedFeatures.length > 0 ? (
                     includedFeatures.map((feature) => (
                       <span className="plan-review-feature-pill" key={feature}>
-                        {feature}
+                        {getFeatureDisplayName(feature)}
                       </span>
                     ))
                   ) : (
@@ -1153,7 +1231,7 @@ export default function CreatePlan() {
                             className="plan-review-feature-pill"
                             key={feature}
                           >
-                            {feature}
+                            {getFeatureDisplayName(feature)}
                           </span>
                         ))
                       ) : (
@@ -1315,8 +1393,9 @@ export default function CreatePlan() {
 
                   <div>
                     <span
-                      className={`plan-status ${plan.status === "Inactive" ? "inactive" : ""
-                        }`}
+                      className={`plan-status ${
+                        plan.status === "Inactive" ? "inactive" : ""
+                      }`}
                     >
                       <i className="bi bi-circle-fill" />
                       {plan.status || "Active"}

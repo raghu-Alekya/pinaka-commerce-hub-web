@@ -68,4 +68,10 @@ export const endpoints = {
   devices: "/devices",
   device: (id) => `/devices/${encodeURIComponent(id)}`,
   deviceTypes: "/device-types",
+  // merchant tendors
+  merchantTendors: (merchantId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/tendors`,
+
+  merchantTendor: (merchantId, tendorId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/tendors/${encodeURIComponent(tendorId)}`,
 };
