@@ -506,26 +506,20 @@ export default function CreatePlan() {
 
       let savedPlan;
 
-      // Convert selected feature IDs to feature names
-      const featureNames = includedFeatures
-        .map((featureId) => {
-          const feature = storeTypeFeatures.find(
-            (item) => String(item.featureId) === String(featureId),
-          );
+      // Keep feature IDs for the API payload.
+      // The checkbox state already contains the selected feature IDs,
+      // so do not convert them to feature names before create/update.
+      const selectedFeatureIds = includedFeatures.filter(Boolean);
 
-          return feature?.name;
-        })
-        .filter(Boolean);
-
-      console.log("Selected Feature IDs:", includedFeatures);
-      console.log("Feature Names sent to API:", featureNames);
+      console.log("Selected Feature IDs:", selectedFeatureIds);
+      console.log("Feature IDs sent to API:", selectedFeatureIds);
 
       if (editingId) {
-        savedPlan = await updatePlan(editingId, planData, featureNames);
+        savedPlan = await updatePlan(editingId, planData, selectedFeatureIds);
 
         setMessage("Plan updated successfully.");
       } else {
-        savedPlan = await createPlan(planData, featureNames);
+        savedPlan = await createPlan(planData, selectedFeatureIds);
 
         setMessage("Plan created successfully.");
       }
