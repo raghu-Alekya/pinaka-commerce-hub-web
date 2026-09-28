@@ -5,14 +5,14 @@ import { tendorsApi } from "../api/tendors";
 const idOf = (value) =>
   String(
     value && typeof value === "object"
-      ? value.tendorId ??
-        value.tendor_id ??
-        value.tenderId ??
-        value.tender_id ??
-        value.id ??
-        value._id ??
-        ""
-      : value ?? ""
+      ? (value.tendorId ??
+          value.tendor_id ??
+          value.tenderId ??
+          value.tender_id ??
+          value.id ??
+          value._id ??
+          "")
+      : (value ?? ""),
   );
 
 function formatDate(value) {
@@ -20,9 +20,7 @@ function formatDate(value) {
 
   const date = new Date(value);
 
-  return Number.isNaN(date.getTime())
-    ? "—"
-    : date.toLocaleString();
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
 }
 
 const normalize = (value = {}) => ({
@@ -44,29 +42,18 @@ const normalize = (value = {}) => ({
     value.code ??
     "—",
 
-  createdAt: formatDate(
-    value.createdAt ?? value.created_at
-  ),
+  createdAt: formatDate(value.createdAt ?? value.created_at),
 
-  updatedAt: formatDate(
-    value.updatedAt ?? value.updated_at
-  ),
+  updatedAt: formatDate(value.updatedAt ?? value.updated_at),
 
-  status: String(
-    value.status ??
-    "ACTIVE"
-  ),
+  status: String(value.status ?? "ACTIVE"),
 });
 
 const active = (tender) =>
-  String(tender?.status || "").toLowerCase() ===
-  "active";
+  String(tender?.status || "").toLowerCase() === "active";
 
 const matches = (tender, query) =>
-  [
-    tender?.name,
-    tender?.code,
-  ]
+  [tender?.name, tender?.code]
     .join(" ")
     .toLowerCase()
     .includes(query.trim().toLowerCase());
@@ -77,22 +64,16 @@ export default function MerchantTenders({
   merchantId,
   masterTenders: initialMasterTenders = [],
   assignedTenderIds = [],
-  onSaveAssignments,
   loading = false,
   error = "",
 }) {
-  const [ids, setIds] = useState(() =>
-    assignedTenderIds.map(idOf)
-  );
+  const [ids, setIds] = useState(() => assignedTenderIds.map(idOf));
 
-  const [masterTenders, setMasterTenders] =
-    useState(initialMasterTenders);
+  const [masterTenders, setMasterTenders] = useState(initialMasterTenders);
 
-  const [masterLoading, setMasterLoading] =
-    useState(false);
+  const [masterLoading, setMasterLoading] = useState(false);
 
-  const [masterError, setMasterError] =
-    useState("");
+  const [masterError, setMasterError] = useState("");
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -113,9 +94,7 @@ export default function MerchantTenders({
   const dialog = useRef(null);
   const addButton = useRef(null);
 
-  const signature = JSON.stringify(
-    assignedTenderIds.map(idOf)
-  );
+  const signature = JSON.stringify(assignedTenderIds.map(idOf));
 
   useEffect(() => {
     setIds(JSON.parse(signature));
@@ -137,8 +116,8 @@ export default function MerchantTenders({
       masterTenders
         .map(normalize)
         .filter((value) => value.id)
-        .map((value) => [value.id, value])
-    ).values()
+        .map((value) => [value.id, value]),
+    ).values(),
   );
 
   const assigned = ids.map(
@@ -150,29 +129,22 @@ export default function MerchantTenders({
         createdAt: "—",
         updatedAt: "—",
         status: "Unavailable",
-      }
+      },
   );
 
   const rows = assigned
     .filter((value) => matches(value, query))
     .sort(
       (a, b) =>
-        String(a[sort.key]).localeCompare(
-          String(b[sort.key])
-        ) * sort.direction
+        String(a[sort.key]).localeCompare(String(b[sort.key])) * sort.direction,
     );
 
-  const pages = Math.max(
-    1,
-    Math.ceil(rows.length / 10)
-  );
+  const pages = Math.max(1, Math.ceil(rows.length / 10));
 
   const current = Math.min(page, pages);
 
   const available = tenders.filter(
-    (value) =>
-      !ids.includes(value.id) &&
-      matches(value, search)
+    (value) => !ids.includes(value.id) && matches(value, search),
   );
 
   const selectable = available.filter(active);
@@ -197,46 +169,31 @@ export default function MerchantTenders({
     try {
       const response = await tendorsApi.getAll();
 
-      console.log(
-        "TENDORS API RESPONSE:",
-        response
-      );
+      console.log("TENDORS API RESPONSE:", response);
 
-      const list =
-        Array.isArray(response)
-          ? response
-          : Array.isArray(response?.tendors)
+      const list = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.tendors)
           ? response.tendors
           : Array.isArray(response?.data?.tendors)
-          ? response.data.tendors
-          : Array.isArray(response?.data)
-          ? response.data
-          : Array.isArray(response?.items)
-          ? response.items
-          : [];
+            ? response.data.tendors
+            : Array.isArray(response?.data)
+              ? response.data
+              : Array.isArray(response?.items)
+                ? response.items
+                : [];
 
-      console.log(
-        "TENDORS LIST:",
-        list
-      );
+      console.log("TENDORS LIST:", list);
 
-      setMasterTenders(
-        Array.isArray(list) ? list : []
-      );
+      setMasterTenders(Array.isArray(list) ? list : []);
 
       setModal({
         type: "select",
       });
     } catch (e) {
-      console.error(
-        "Failed to load master tendors:",
-        e
-      );
+      console.error("Failed to load master tendors:", e);
 
-      setMasterError(
-        e?.message ||
-          "Unable to load master tendors."
-      );
+      setMasterError(e?.message || "Unable to load master tendors.");
 
       setMasterTenders([]);
 
@@ -247,34 +204,22 @@ export default function MerchantTenders({
       setMasterLoading(false);
     }
   }
-
   async function save(next) {
     if (lock.current) return;
-
-    if (typeof onSaveAssignments !== "function") {
-      setSaveError(
-        "Connect onSaveTenderAssignments to save merchant tender assignments."
-      );
-      return;
-    }
 
     lock.current = true;
     setBusy(true);
     setSaveError("");
 
     try {
-      await onSaveAssignments({
-        merchantId,
-        tenderIds: next,
-      });
+      await tendorsApi.assignToMerchant(merchantId, next);
 
       setIds(next);
       setModal(null);
     } catch (e) {
-      setSaveError(
-        e?.message ||
-          "Unable to save assignments."
-      );
+      console.error("Failed to save merchant tendors:", e);
+
+      setSaveError(e?.message || "Unable to save merchant tender assignments.");
     } finally {
       lock.current = false;
       setBusy(false);
@@ -283,11 +228,7 @@ export default function MerchantTenders({
 
   const badge = (tender) => (
     <span
-      className={`mt-badge ${
-        active(tender)
-          ? "mt-active"
-          : "mt-inactive"
-      }`}
+      className={`mt-badge ${active(tender) ? "mt-active" : "mt-inactive"}`}
     >
       ● {tender.status}
     </span>
@@ -309,42 +250,28 @@ export default function MerchantTenders({
               aria-label="Select all available active tenders in search"
               checked={
                 selectable.length > 0 &&
-                selectable.every((value) =>
-                  selection.includes(value.id)
-                )
+                selectable.every((value) => selection.includes(value.id))
               }
-              disabled={
-                !selectable.length || busy
-              }
+              disabled={!selectable.length || busy}
               onChange={(event) =>
                 setSelection((old) =>
                   event.target.checked
                     ? [
                         ...new Set([
                           ...old,
-                          ...selectable.map(
-                            (value) => value.id
-                          ),
+                          ...selectable.map((value) => value.id),
                         ]),
                       ]
                     : old.filter(
-                        (id) =>
-                          !selectable.some(
-                            (value) =>
-                              value.id === id
-                          )
-                      )
+                        (id) => !selectable.some((value) => value.id === id),
+                      ),
                 )
               }
             />
           </th>
         )}
 
-        {[
-          "name",
-          "code",
-          "status",
-        ].map((key) => (
+        {["name", "code", "status"].map((key) => (
           <th key={key}>
             {select ? (
               {
@@ -358,22 +285,14 @@ export default function MerchantTenders({
                 onClick={() =>
                   setSort((old) => ({
                     key,
-                    direction:
-                      old.key === key
-                        ? -old.direction
-                        : 1,
+                    direction: old.key === key ? -old.direction : 1,
                   }))
                 }
               >
                 {key === "name"
                   ? "Tender"
-                  : key[0].toUpperCase() +
-                    key.slice(1)}{" "}
-                {sort.key === key
-                  ? sort.direction === 1
-                    ? "↑"
-                    : "↓"
-                  : "↕"}
+                  : key[0].toUpperCase() + key.slice(1)}{" "}
+                {sort.key === key ? (sort.direction === 1 ? "↑" : "↓") : "↕"}
               </button>
             )}
           </th>
@@ -383,31 +302,43 @@ export default function MerchantTenders({
       </tr>
     );
   }
+  async function removeTender(tendorId) {
+    if (lock.current) return;
 
+    lock.current = true;
+    setBusy(true);
+    setSaveError("");
+
+    try {
+      await tendorsApi.removeFromMerchant(merchantId, tendorId);
+
+      setIds((current) => current.filter((id) => id !== tendorId));
+
+      setModal(null);
+    } catch (e) {
+      console.error("Failed to remove merchant tendor:", e);
+
+      setSaveError(e?.message || "Unable to remove tender assignment.");
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
   return (
     <div className="merchant-tenders">
       <header className="mt-card mt-header">
         <div>
           <h2>Tenders</h2>
-          <p>
-            These are the tenders connected to this
-            merchant.
-          </p>
+          <p>These are the tenders connected to this merchant.</p>
         </div>
 
         <button
           ref={addButton}
           className="mt-primary"
-          disabled={
-            loading ||
-            !!error ||
-            masterLoading
-          }
+          disabled={loading || !!error || masterLoading}
           onClick={openAddTenderModal}
         >
-          {masterLoading
-            ? "Loading Tenders…"
-            : "＋ Add Tender"}
+          {masterLoading ? "Loading Tenders…" : "＋ Add Tender"}
         </button>
       </header>
 
@@ -440,25 +371,18 @@ export default function MerchantTenders({
         </div>
 
         {loading ? (
-          <p role="status">
-            Loading tenders…
-          </p>
+          <p role="status">Loading tenders…</p>
         ) : error ? (
           <p role="alert">{error}</p>
         ) : (
           <>
             <div className="mt-scroll">
               <table>
-                <thead>
-                  {headings()}
-                </thead>
+                <thead>{headings()}</thead>
 
                 <tbody>
                   {rows
-                    .slice(
-                      (current - 1) * 10,
-                      current * 10
-                    )
+                    .slice((current - 1) * 10, current * 10)
                     .map((tender) => (
                       <tr key={tender.id}>
                         <td>{name(tender)}</td>
@@ -499,9 +423,8 @@ export default function MerchantTenders({
                   {!rows.length && (
                     <tr>
                       <td colSpan={4}>
-                        No assigned tenders match.
-                        Use Add Tender to select
-                        from master data.
+                        No assigned tenders match. Use Add Tender to select from
+                        master data.
                       </td>
                     </tr>
                   )}
@@ -511,24 +434,14 @@ export default function MerchantTenders({
 
             <footer className="mt-footer">
               <span>
-                Showing{" "}
-                {rows.length
-                  ? (current - 1) * 10 + 1
-                  : 0}{" "}
-                to{" "}
-                {Math.min(
-                  current * 10,
-                  rows.length
-                )}{" "}
-                of {rows.length} entries
+                Showing {rows.length ? (current - 1) * 10 + 1 : 0} to{" "}
+                {Math.min(current * 10, rows.length)} of {rows.length} entries
               </span>
 
               <div>
                 <button
                   disabled={current === 1}
-                  onClick={() =>
-                    setPage(current - 1)
-                  }
+                  onClick={() => setPage(current - 1)}
                   aria-label="Previous page"
                 >
                   ‹
@@ -540,9 +453,7 @@ export default function MerchantTenders({
 
                 <button
                   disabled={current === pages}
-                  onClick={() =>
-                    setPage(current + 1)
-                  }
+                  onClick={() => setPage(current + 1)}
                   aria-label="Next page"
                 >
                   ›
@@ -569,41 +480,30 @@ export default function MerchantTenders({
                 {modal?.type === "select"
                   ? "Select Tender"
                   : modal?.type === "remove"
-                  ? "Remove tender assignment"
-                  : "Tender Details"}
+                    ? "Remove tender assignment"
+                    : "Tender Details"}
               </h2>
 
               <p>
                 {modal?.type === "select"
                   ? "Choose one or more tenders to add to this merchant."
                   : modal?.type === "remove"
-                  ? "The tender remains available in Master Data."
-                  : "Read-only master tender details."}
+                    ? "The tender remains available in Master Data."
+                    : "Read-only master tender details."}
               </p>
             </div>
 
-            <button
-              aria-label="Close"
-              disabled={busy}
-              onClick={close}
-            >
+            <button aria-label="Close" disabled={busy} onClick={close}>
               ×
             </button>
           </header>
 
           {modal?.type === "select" ? (
             <>
-              {masterLoading && (
-                <p role="status">
-                  Loading master tenders…
-                </p>
-              )}
+              {masterLoading && <p role="status">Loading master tenders…</p>}
 
               {masterError && (
-                <p
-                  role="alert"
-                  className="mt-error"
-                >
+                <p role="alert" className="mt-error">
                   {masterError}
                 </p>
               )}
@@ -614,19 +514,13 @@ export default function MerchantTenders({
                 aria-label="Search master tenders"
                 placeholder="Search tenders by name or code…"
                 value={search}
-                disabled={
-                  busy || masterLoading
-                }
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
+                disabled={busy || masterLoading}
+                onChange={(event) => setSearch(event.target.value)}
               />
 
               <div className="mt-scroll mt-options">
                 <table>
-                  <thead>
-                    {headings(true)}
-                  </thead>
+                  <thead>{headings(true)}</thead>
 
                   <tbody>
                     {available.map((tender) => (
@@ -635,25 +529,13 @@ export default function MerchantTenders({
                           <input
                             type="checkbox"
                             aria-label={`Select ${tender.name}`}
-                            disabled={
-                              busy ||
-                              !active(tender)
-                            }
-                            checked={selection.includes(
-                              tender.id
-                            )}
+                            disabled={busy || !active(tender)}
+                            checked={selection.includes(tender.id)}
                             onChange={(event) =>
                               setSelection((old) =>
                                 event.target.checked
-                                  ? [
-                                      ...old,
-                                      tender.id,
-                                    ]
-                                  : old.filter(
-                                      (id) =>
-                                        id !==
-                                        tender.id
-                                    )
+                                  ? [...old, tender.id]
+                                  : old.filter((id) => id !== tender.id),
                               )
                             }
                           />
@@ -661,21 +543,17 @@ export default function MerchantTenders({
 
                         <td>{name(tender)}</td>
                         <td>{tender.code}</td>
-                        <td>
-                          {badge(tender)}
-                        </td>
+                        <td>{badge(tender)}</td>
                       </tr>
                     ))}
 
-                    {!available.length &&
-                      !masterLoading && (
-                        <tr>
-                          <td colSpan={4}>
-                            No unassigned tenders
-                            found in master data.
-                          </td>
-                        </tr>
-                      )}
+                    {!available.length && !masterLoading && (
+                      <tr>
+                        <td colSpan={4}>
+                          No unassigned tenders found in master data.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -687,27 +565,20 @@ export default function MerchantTenders({
                   Tender: modal.tender.name,
                   Code: modal.tender.code,
                   Status: modal.tender.status,
-                  Created:
-                    modal.tender.createdAt,
-                  Updated:
-                    modal.tender.updatedAt,
-                }).map(
-                  ([label, value]) => (
-                    <div key={label}>
-                      <dt>{label}</dt>
-                      <dd>{value}</dd>
-                    </div>
-                  )
-                )}
+                  Created: modal.tender.createdAt,
+                  Updated: modal.tender.updatedAt,
+                }).map(([label, value]) => (
+                  <div key={label}>
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                  </div>
+                ))}
               </dl>
             )
           )}
 
           {saveError && (
-            <p
-              role="alert"
-              className="mt-error"
-            >
+            <p role="alert" className="mt-error">
               {saveError}
             </p>
           )}
@@ -720,42 +591,28 @@ export default function MerchantTenders({
             </span>
 
             <div>
-              <button
-                disabled={busy}
-                onClick={close}
-              >
-                {modal?.type === "view"
-                  ? "Close"
-                  : "Cancel"}
+              <button disabled={busy} onClick={close}>
+                {modal?.type === "view" ? "Close" : "Cancel"}
               </button>
 
               {modal?.type === "select" && (
                 <button
                   className="mt-primary"
-                  disabled={
-                    busy ||
-                    !selection.length ||
-                    masterLoading
-                  }
+                  disabled={busy || !selection.length || masterLoading}
                   onClick={() =>
                     save([
                       ...new Set([
                         ...ids,
-                        ...selection.filter(
-                          (id) =>
-                            tenders.some(
-                              (value) =>
-                                value.id === id &&
-                                active(value)
-                            )
+                        ...selection.filter((id) =>
+                          tenders.some(
+                            (value) => value.id === id && active(value),
+                          ),
                         ),
                       ]),
                     ])
                   }
                 >
-                  {busy
-                    ? "Saving…"
-                    : "Add Selected"}
+                  {busy ? "Saving…" : "Add Selected"}
                 </button>
               )}
 
@@ -763,19 +620,9 @@ export default function MerchantTenders({
                 <button
                   className="mt-primary"
                   disabled={busy}
-                  onClick={() =>
-                    save(
-                      ids.filter(
-                        (id) =>
-                          id !==
-                          modal.tender.id
-                      )
-                    )
-                  }
+                  onClick={() => removeTender(modal.tender.id)}
                 >
-                  {busy
-                    ? "Saving…"
-                    : "Remove Assignment"}
+                  {busy ? "Saving…" : "Remove Assignment"}
                 </button>
               )}
             </div>
