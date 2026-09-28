@@ -55,6 +55,8 @@ export const endpoints = {
   merchantStores: (merchantId) => `/merchants/${merchantId}/stores`,
   storeEmployees: (merchantId, storeId) =>
     `/merchants/${encodeURIComponent(merchantId)}/stores/${encodeURIComponent(storeId)}/employees`,
+  storeRolePermissions: (merchantId, storeId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/stores/${encodeURIComponent(storeId)}/role-permissions`,
 
   features: "/features",
   feature: (id) => `/features/${id}`,
