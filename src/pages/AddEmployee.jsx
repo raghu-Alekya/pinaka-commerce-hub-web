@@ -10,7 +10,6 @@ import {
   MapPin,
   Settings,
   Upload,
-  CalendarDays,
   ChevronDown,
   Eye,
   EyeOff,
@@ -953,28 +952,6 @@ export default function AddEmployee() {
 
                 {/* PHONE */}
 
-                <div className="employee-field">
-                  <label>
-                    Phone Number <span>*</span>
-                  </label>
-
-                  <div className="phone-input">
-                    <div className="country-code">
-                      <span>+91</span>
-
-                      <ChevronDown size={15} />
-                    </div>
-
-                    <input
-                      type="tel"
-                      name="phone"
-                      placeholder="Enter phone number"
-                      value={formData.phone}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-
                 <div className="employee-field employee-phone-field">
                   <label>
                     Phone Number <span>*</span>
@@ -1021,7 +998,6 @@ export default function AddEmployee() {
                       className={errors.dob ? "field-invalid" : ""}
                     />
 
-                    <CalendarDays size={17} />
                   </div>
                   {errors.dob && (
                     <span className="field-error">{errors.dob}</span>
@@ -1081,7 +1057,10 @@ export default function AddEmployee() {
                 />
               </div>
 
-              <div className="employee-form-grid three-columns">
+              <div
+                className="employee-form-grid three-columns"
+                style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}
+              >
                 <FormField
                   label={
                     <>
@@ -1130,7 +1109,7 @@ export default function AddEmployee() {
                 />
               </div>
 
-              <div className="country-field">
+              <div className="country-field" style={{ marginTop: "18px", maxWidth: "calc((100% - 56px) / 3)" }}>
                 <SelectField
                   label="Country"
                   name="country"
@@ -1249,15 +1228,17 @@ export default function AddEmployee() {
                 )}
               </div>
 
-              <FormField
-                label="Employee Code"
-                required
-                name="employeeCode"
-                placeholder="e.g. EMP-1008"
-                value={formData.employeeCode}
-                onChange={handleChange}
-                error={errors.employeeCode}
-              />
+              <div style={{ marginTop: "24px" }}>
+                <FormField
+                  label="Employee Code"
+                  required
+                  name="employeeCode"
+                  placeholder="e.g. EMP-1008"
+                  value={formData.employeeCode}
+                  onChange={handleChange}
+                  error={errors.employeeCode}
+                />
+              </div>
 
               {/* EMPLOYEE LOGIN PIN */}
             </section>
