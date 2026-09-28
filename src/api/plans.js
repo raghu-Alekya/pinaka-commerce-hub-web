@@ -553,7 +553,17 @@ export async function createPlan(form, includedFeatures = []) {
 export async function updatePlan(id, form, includedFeatures = []) {
   const payload = planPayload(form, includedFeatures);
 
+  payload.includedFeatures = Array.isArray(includedFeatures)
+    ? includedFeatures
+    : [];
+
+  console.log("UPDATE PLAN ID:", id);
+  console.log("UPDATE PLAN PAYLOAD:", payload);
+  console.log("SELECTED FEATURES:", payload.includedFeatures);
+
   const response = await api.put(endpoints.plan(id), payload);
+
+  console.log("UPDATE PLAN RESPONSE:", response);
 
   return normalizePlan(unwrapPlan(response));
 }
