@@ -457,24 +457,34 @@ export default function AddStore() {
       : "";
   const merchantOptionValue = (item) =>
     String(item?.id ?? item?.merchantId ?? "");
+
   const merchantMatches = (item, value) => {
     if (!value) return false;
     const target = String(value).trim();
     if (!target) return false;
-    return [item?.id, item?.merchantId, item?.merchantCode].some(
-      (candidate) =>
-        candidate != null &&
-        candidate !== "" &&
-        String(candidate).trim() === target,
+    // Must match the SAME field that merchantOptionValue uses as the <option> value,
+    // otherwise the controlled <select> won't find a matching option on AWS (high latency).
+    const optionVal = merchantOptionValue(item);
+    if (optionVal && optionVal === target) return true;
+    // Fallback: also match by merchantCode for convenience
+    return (
+      item?.merchantCode != null &&
+      item.merchantCode !== "" &&
+      String(item.merchantCode).trim() === target
     );
   };
   const activeMerchantKey = routeMerchantId || store.merchantId || merchantId;
   const selectedMerchant = activeMerchantKey
     ? merchants.find((item) => merchantMatches(item, activeMerchantKey))
     : null;
+  // While the merchant list is still loading, don't emit a value that won't match any
+  // <option> yet — that causes the browser to fall back to the first option and the
+  // controlled select gets stuck on "Select merchant" even after merchants load.
   const merchantSelectValue = selectedMerchant
     ? merchantOptionValue(selectedMerchant)
-    : String(activeMerchantKey || "");
+    : mastersLoading
+      ? ""
+      : String(activeMerchantKey || "");
   const merchant =
     merchantInfo?.owner ||
     selectedMerchant ||
@@ -1920,6 +1930,7 @@ export default function AddStore() {
                 <label htmlFor="sf-merchant">Merchant *</label>
                 <select
                   id="sf-merchant"
+                  key={`merchant-select-${merchants.length}`}
                   required
                   value={merchantSelectValue}
                   disabled={Boolean(routeMerchantId) || editing || saving}

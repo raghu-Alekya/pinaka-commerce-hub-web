@@ -386,7 +386,7 @@ export default function Tenders() {
               value={form.code}
               onChange={handleChange}
               placeholder="e.g. TNDCREDIT"
-              maxLength={30}
+              // maxLength={30}
               required
               autoComplete="off"
             />
