@@ -39,25 +39,59 @@ function normalizeStoreTypeFeatures(response) {
         assignment;
 
       return {
+        // IMPORTANT:
+        // featureId is the actual feature ID that should be
+        // sent in the plan payload.
         id: String(
+          feature?.featureId ??
+          assignment?.featureId ??
           feature?.id ??
-            assignment?.featureId ??
-            assignment?.id ??
-            `feature-${index}`,
+          assignment?.id ??
+          `feature-${index}`,
         ),
+
+        featureId: String(
+          feature?.featureId ??
+          assignment?.featureId ??
+          feature?.feature_id ??
+          assignment?.feature_id ??
+          feature?.id ??
+          feature?._id ??
+          assignment?.id ??
+          assignment?._id ??
+          `feature-${index}`,
+        ),
+
         name: String(
           feature?.name ??
-            feature?.featureKey ??
-            feature?.code ??
-            `Feature ${index + 1}`,
+          feature?.featureName ??
+          feature?.feature_name ??
+          feature?.featureKey ??
+          feature?.code ??
+          `Feature ${index + 1}`,
         ).trim(),
+
+        category: String(
+          feature?.category ??
+          feature?.categoryName ??
+          feature?.category_name ??
+          "—",
+        ).trim(),
+
         description: String(
           feature?.description ?? feature?.category ?? "Store type feature",
         ).trim(),
+
         icon: feature?.icon || "bi-grid",
+
+        // DO NOT check defaultEnabled here.
+        // defaultEnabled only tells us the default selection.
         active:
-          assignment?.defaultEnabled !== false &&
-          String(feature?.status || "ACTIVE").toUpperCase() !== "INACTIVE",
+          String(
+            feature?.featureStatus ?? feature?.status ?? "ACTIVE",
+          ).toUpperCase() !== "INACTIVE",
+
+        defaultEnabled: assignment?.defaultEnabled === true,
       };
     })
     .filter((feature) => feature.name && feature.active);
@@ -67,14 +101,14 @@ function storeTypeDisplayName(value, storeTypes) {
   const candidates =
     value && typeof value === "object"
       ? [
-          value.id,
-          value._id,
-          value.storeTypeId,
-          value.storeTypeCode,
-          value.code,
-          value.name,
-          value.storeTypeName,
-        ]
+        value.id,
+        value._id,
+        value.storeTypeId,
+        value.storeTypeCode,
+        value.code,
+        value.name,
+        value.storeTypeName,
+      ]
       : [value];
 
   const match = storeTypes.find((storeType) => {
@@ -241,9 +275,9 @@ export default function CreatePlan() {
       (storeType) =>
         String(
           storeType.id ??
-            storeType._id ??
-            storeType.storeTypeId ??
-            storeType.code,
+          storeType._id ??
+          storeType.storeTypeId ??
+          storeType.code,
         ) === String(form.applicableStoreType) ||
         String(
           storeType.name ?? storeType.storeTypeName ?? storeType.code,
@@ -274,10 +308,10 @@ export default function CreatePlan() {
         const features = normalizeStoreTypeFeatures(response);
         setStoreTypeFeatures(features);
         setIncludedFeatures((current) =>
-          current.filter((name) =>
+          current.filter((featureId) =>
             features.some(
               (feature) =>
-                feature.name.toLowerCase() === String(name).toLowerCase(),
+                String(feature.featureId) === String(featureId),
             ),
           ),
         );
@@ -373,12 +407,21 @@ export default function CreatePlan() {
       [name]: name === "code" ? value.toUpperCase() : value,
     }));
   }
+  function getFeatureDisplayName(id) {
+    const match = storeTypeFeatures.find(
+      (f) =>
+        String(f.featureId) === String(id) ||
+        String(f.id) === String(id) ||
+        String(f.name).toLowerCase() === String(id).toLowerCase()
+    );
+    return match?.name || id;
+  }
 
-  function toggleIncludedFeature(featureName) {
+  function toggleIncludedFeature(featureId) {
     setIncludedFeatures((current) =>
-      current.includes(featureName)
-        ? current.filter((item) => item !== featureName)
-        : [...current, featureName],
+      current.includes(featureId)
+        ? current.filter((id) => id !== featureId)
+        : [...current, featureId],
     );
   }
 
@@ -457,12 +500,34 @@ export default function CreatePlan() {
 
     setIncludedFeatures(
       Array.isArray(plan.includedFeatures)
-        ? plan.includedFeatures.map((feature) =>
-            typeof feature === "string" ? feature : feature.name,
-          )
+        ? plan.includedFeatures
+          .map((feature) => {
+            if (typeof feature === "string") {
+              return String(feature);
+            }
+
+            const nestedFeature =
+              feature?.feature ??
+              feature?.featureDetails ??
+              feature?.featureDefinition;
+
+            return String(
+              feature?.featureId ??
+              feature?.feature_id ??
+              feature?.featureID ??
+              nestedFeature?.featureId ??
+              nestedFeature?.feature_id ??
+              nestedFeature?.id ??
+              nestedFeature?._id ??
+              feature?.id ??
+              feature?._id ??
+              feature?.code ??
+              "",
+            );
+          })
+          .filter(Boolean)
         : [],
     );
-
     setPlanStep(1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -507,9 +572,8 @@ export default function CreatePlan() {
           <div className="plan-stepper-item" key={step}>
             <button
               type="button"
-              className={`plan-step ${planStep === step ? "active" : ""} ${
-                planStep > step ? "complete" : ""
-              }`}
+              className={`plan-step ${planStep === step ? "active" : ""} ${planStep > step ? "complete" : ""
+                }`}
               onClick={() => handleStepClick(step)}
             >
               <span>{step}</span>
@@ -897,24 +961,31 @@ export default function CreatePlan() {
                 )}
 
               {!storeTypeFeaturesLoading &&
-                storeTypeFeatures.map(({ name, description, icon }) => (
-                  <label className="plan-feature-check" key={name}>
-                    <input
-                      type="checkbox"
-                      checked={includedFeatures.includes(name)}
-                      onChange={() => toggleIncludedFeature(name)}
-                    />
+                storeTypeFeatures.map(
+                  ({ featureId, name, category, description, icon }) => (
+                    <label
+                      className="plan-feature-check"
+                      key={featureId}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={includedFeatures.includes(featureId)}
+                        onChange={() => toggleIncludedFeature(featureId)}
+                      />
 
-                    <span className="plan-feature-icon">
-                      <i className={`bi ${icon}`} />
-                    </span>
+                      <span className="plan-feature-icon">
+                        <i className={`bi ${icon}`} />
+                      </span>
 
-                    <span>
-                      <strong>{name}</strong>
-                      <small>{description || "Store type feature"}</small>
-                    </span>
-                  </label>
-                ))}
+                      <span>
+                        <strong>{name}</strong>
+                        <small>
+                          {category || description || "Store type feature"}
+                        </small>
+                      </span>
+                    </label>
+                  ),
+                )}
 
               <div className="plan-feature-summary">
                 <span className="plan-feature-summary-label">
@@ -1231,7 +1302,7 @@ export default function CreatePlan() {
 
                   <div>
                     <span className="plan-type-badge">
-                      {plan.storeType || "—"}
+                      {storeTypeDisplayName(plan.storeType, storeTypes) || "—"}
                     </span>
                   </div>
 
@@ -1244,9 +1315,8 @@ export default function CreatePlan() {
 
                   <div>
                     <span
-                      className={`plan-status ${
-                        plan.status === "Inactive" ? "inactive" : ""
-                      }`}
+                      className={`plan-status ${plan.status === "Inactive" ? "inactive" : ""
+                        }`}
                     >
                       <i className="bi bi-circle-fill" />
                       {plan.status || "Active"}

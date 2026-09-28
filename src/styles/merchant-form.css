@@ -617,6 +617,319 @@
     color: #fff;
 }
 
+#pch-new .pch-plan-browser {
+    display: grid;
+    grid-template-columns: minmax(225px, 0.9fr) minmax(0, 1.4fr);
+    gap: 12px;
+    align-items: stretch;
+    min-width: 0;
+    margin-top: 12px;
+}
+
+#pch-new .pch-plan-detail-column {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    gap: 12px;
+}
+
+#pch-new .pch-plan-list,
+#pch-new .pch-plan-detail {
+    min-width: 0;
+    border: 1px solid #e1e4eb;
+    border-radius: 6px;
+    background: #fff;
+}
+
+#pch-new .pch-plan-list > h4 {
+    margin: 0;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e8ebf0;
+    color: #28344c;
+    font-size: 14px;
+}
+
+#pch-new .pch-plan-list-scroll {
+    max-height: 430px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px;
+}
+
+#pch-new .pch-plan-group {
+    margin: 0 0 8px;
+}
+
+#pch-new .pch-plan-group-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 7px 6px;
+    color: #65738a;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e8ebf0;
+}
+
+#pch-new .pch-plan-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    width: 100%;
+    min-height: 72px;
+    margin-top: 6px;
+    padding: 10px;
+    border: 1px solid #e1e4eb;
+    border-radius: 5px;
+    background: #fff;
+    color: #28344c;
+    text-align: left;
+    cursor: pointer;
+}
+
+#pch-new .pch-plan-option:hover,
+#pch-new .pch-plan-option:focus-visible {
+    border-color: var(--pch-primary);
+}
+
+#pch-new .pch-plan-option.pch-selected {
+    border-color: var(--pch-primary);
+    background: #f7f5ff;
+    box-shadow: inset 0 0 0 1px var(--pch-primary);
+}
+
+#pch-new .pch-plan-option-mark {
+    flex: 0 0 16px;
+    padding-top: 1px;
+    color: var(--pch-primary);
+    font-size: 15px;
+    line-height: 1;
+}
+
+#pch-new .pch-plan-option-copy {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+#pch-new .pch-plan-option-copy strong {
+    overflow-wrap: anywhere;
+    font-size: 13px;
+}
+
+#pch-new .pch-plan-option-price {
+    color: var(--pch-primary);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+#pch-new .pch-plan-option-copy small,
+#pch-new .pch-plan-option-limits {
+    color: #68758b;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+#pch-new .pch-plan-detail {
+    display: flex;
+    min-height: 245px;
+    padding: 16px;
+}
+
+#pch-new .pch-plan-agreement {
+    min-width: 0;
+    border: 1px solid #e1e4eb;
+    border-radius: 6px;
+    background: #fff;
+}
+
+#pch-new .pch-plan-agreement > h3 {
+    margin: 0;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e8ebf0;
+    color: #28344c;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#pch-new .pch-plan-agreement > .pch-grid {
+    padding: 14px;
+}
+
+#pch-new .pch-plan-agreement > .pch-note {
+    margin: 0 14px 14px;
+}
+
+#pch-new .pch-plan-empty {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    text-align: center;
+}
+
+#pch-new .pch-plan-empty-icon {
+    position: relative;
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    margin-bottom: 6px;
+    border: 1px solid #dce2ed;
+    border-radius: 5px;
+    color: #74829a;
+    font-size: 28px;
+}
+
+#pch-new .pch-plan-empty-icon i {
+    position: absolute;
+    right: -7px;
+    bottom: -5px;
+    display: grid;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    background: var(--pch-primary);
+    color: #fff;
+    font-size: 13px;
+    font-style: normal;
+}
+
+#pch-new .pch-plan-empty strong {
+    color: #28344c;
+    font-size: 14px;
+}
+
+#pch-new .pch-plan-empty > span:last-child {
+    max-width: 260px;
+    color: #748097;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+#pch-new .pch-plan-detail-content {
+    width: 100%;
+    min-width: 0;
+}
+
+#pch-new .pch-plan-detail-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e8ebf0;
+}
+
+#pch-new .pch-plan-detail-heading h3 {
+    margin: 4px 0;
+    color: #28344c;
+    font-size: 17px;
+}
+
+#pch-new .pch-plan-detail-heading .pch-price {
+    font-size: 21px;
+}
+
+#pch-new .pch-plan-detail-heading .pch-price small {
+    color: #748097;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+#pch-new .pch-plan-selected-label {
+    padding: 5px 9px;
+    border-radius: 4px;
+    background: #eef8f1;
+    color: #277344;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+#pch-new .pch-plan-detail-limits {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 14px 0;
+    border-bottom: 1px solid #e8ebf0;
+}
+
+#pch-new .pch-plan-detail-limits > div {
+    display: grid;
+    gap: 3px;
+}
+
+#pch-new .pch-plan-detail-limits strong {
+    color: #28344c;
+    font-size: 14px;
+}
+
+#pch-new .pch-plan-detail-limits span {
+    color: #748097;
+    font-size: 11px;
+}
+
+#pch-new .pch-plan-features {
+    margin-top: 12px;
+}
+
+#pch-new .pch-plan-features summary {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 10px;
+    border: 1px solid #e1e4eb;
+    border-radius: 4px;
+    background: #f7f8fb;
+    color: #28344c;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style-position: inside;
+}
+
+#pch-new .pch-plan-features summary span {
+    margin-left: auto;
+    color: #748097;
+}
+
+#pch-new .pch-plan-features ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+    margin: 0;
+    padding: 14px 12px 4px 28px;
+    color: #46546b;
+    font-size: 12px;
+}
+
+#pch-new .pch-plan-features p {
+    margin: 0;
+    padding: 12px;
+    color: #748097;
+    font-size: 12px;
+}
+
+@media (max-width: 760px) {
+    #pch-new .pch-plan-browser {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    #pch-new .pch-plan-list-scroll {
+        max-height: 300px;
+    }
+
+    #pch-new .pch-plan-detail {
+        min-height: 260px;
+    }
+}
+
 /* =========================================================
    PRICE / METRIC
 ========================================================= */

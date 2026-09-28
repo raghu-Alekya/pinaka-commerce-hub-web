@@ -23,65 +23,99 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-import { listSubscriptions, mapSubscriptionToRow } from "../api/subscriptions";
+import { listPlans } from "../api/plans";
+import {
+  changeSubscriptionPlan,
+  listSubscriptions,
+  mapSubscriptionToRow,
+} from "../api/subscriptions";
 import "../styles/Merchant-subscriptions.css";
 
-/* ========================================
-   SUBSCRIPTION PLANS CATALOG
-======================================== */
-
-const plans = [
-  {
-    name: "Basic Plan",
-    description: "Starter plan for small businesses",
-    price: 999,
-    yearly: 9990,
-    stores: 2,
-    devices: 5,
-    features: [
-      "Store Management",
-      "Device Management",
-      "Basic Reports",
-      "Email Support",
-    ],
-  },
-  {
-    name: "Pro Plan",
-    description: "Most popular for growing businesses",
-    price: 2499,
-    yearly: 24990,
-    stores: 5,
-    devices: 10,
-    features: [
-      "Store Management",
-      "Device Management",
-      "Advanced Reports",
-      "Priority Support",
-      "Email & Chat Support",
-    ],
-  },
-  {
-    name: "Enterprise Plan",
-    description: "For large businesses",
-    price: 4999,
-    yearly: 49990,
-    stores: 10,
-    devices: 25,
-    features: [
-      "All Pro Features",
-      "Multi-location Support",
-      "Custom Integrations",
-      "Dedicated Support",
-    ],
-  },
-];
-
-const planData = Object.fromEntries(
-  plans.map((plan) => [plan.name, plan])
-);
-
-const formatPrice = (amount) =>
-  `₹${Number(amount).toLocaleString("en-IN")}`;
+const planKey = (plan) => String(plan?.id || plan?.planCode || plan?.code || plan?.name || "");
+const planName = (plan) => plan?.name || plan?.planName || plan?.planCode || "Plan";
+const planFeatures = (plan) => {
+  const features = plan?.includedFeatures || plan?.included_features || plan?.features || [];
+  return features.map((feature) =>
+    typeof feature === "string" ? feature : feature?.name || feature?.featureKey || feature?.code
+  ).filter(Boolean);
+};
+const normalizeStoreTypeValue = (value) =>
+  String(value || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+const storeTypeValues = (value) => {
+  if (!value) return [];
+  if (typeof value !== "object") return [value];
+  return [
+    value.id,
+    value._id,
+    value.storeTypeId,
+    value.store_type_id,
+    value.storeTypeCode,
+    value.store_type_code,
+    value.code,
+    value.name,
+    value.storeTypeName,
+  ].filter(Boolean);
+};
+const planStoreTypeValues = (plan) => {
+  const storeType =
+    plan?.storeType || plan?.store_type || plan?.applicableStoreType || {};
+  return [
+    ...storeTypeValues(storeType),
+    plan?.storeTypeId,
+    plan?.store_type_id,
+    plan?.applicableStoreTypeId,
+    plan?.applicable_store_type_id,
+  ].filter(Boolean).map(normalizeStoreTypeValue);
+};
+const planMatchesStoreType = (plan, merchant) => {
+  const selectedValues = [
+    merchant?.storeTypeId,
+    merchant?.storeTypeCode,
+    merchant?.storeTypeName,
+  ].map(normalizeStoreTypeValue).filter(Boolean);
+  const planValues = planStoreTypeValues(plan);
+  return planValues.some((value) => selectedValues.includes(value));
+};
+const planPrice = (plan, cycle = "MONTHLY") => {
+  const basePrice = Number(plan?.basePrice ?? plan?.base_price ?? plan?.price ?? 0);
+  const normalizedCycle = String(plan?.billingCycle || plan?.billing_cycle || "").toUpperCase();
+  if (cycle === "ANNUAL") {
+    return Number(plan?.annualPrice ?? plan?.yearlyPrice ?? plan?.yearly ??
+      (normalizedCycle === "YEARLY" || normalizedCycle === "ANNUAL" ? basePrice : basePrice * 12));
+  }
+  return Number(plan?.monthlyPrice ??
+    (normalizedCycle === "YEARLY" || normalizedCycle === "ANNUAL" ? basePrice / 12 : basePrice));
+};
+const formatPrice = (amount, currency = "INR") => {
+  try {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: String(currency || "INR").toUpperCase(),
+      maximumFractionDigits: 2,
+    }).format(Number(amount) || 0);
+  } catch {
+    return `${currency || "INR"} ${Number(amount || 0).toLocaleString("en-IN")}`;
+  }
+};
+const findCurrentPlan = (merchant, plans) =>
+  plans.find((plan) =>
+    (merchant?.planId && String(plan.id) === String(merchant.planId)) ||
+    planName(plan).toLowerCase() === String(merchant?.plan || "").toLowerCase()
+  ) || {
+    id: merchant?.planId,
+    name: merchant?.plan || "Current plan",
+    basePrice: merchant?.price || 0,
+    currency: merchant?.currency || "INR",
+    includedStores: merchant?.stores || 0,
+    includedTerminals: merchant?.devices || 0,
+    includedFeatures: merchant?.entitlements || [],
+  };
+const addCycleToDate = (date, cycle) => {
+  const nextDate = new Date(`${date}T00:00:00Z`);
+  if (cycle === "ANNUAL") nextDate.setUTCFullYear(nextDate.getUTCFullYear() + 1);
+  else nextDate.setUTCMonth(nextDate.getUTCMonth() + 1);
+  return nextDate.toISOString().slice(0, 10);
+};
 
 /* ========================================
    COMMON COMPONENTS
@@ -591,16 +625,10 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
   if (!merchant) return null;
 
-  const currentPlan = planData[merchant.plan] || {};
   const entitlements =
     Array.isArray(merchant.entitlements) && merchant.entitlements.length > 0
       ? merchant.entitlements
-      : currentPlan.features || [
-          "Store Management",
-          "Device Management",
-          "Basic Reports",
-          "Email Support",
-        ];
+      : planFeatures(merchant.planDetails || {});
 
   return (
     <section className="subscription-flow-page">
@@ -676,43 +704,57 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
 function ChoosePlan({
   merchant,
+  plans,
+  plansLoading,
+  plansError,
   selectedPlan,
   setSelectedPlan,
   onBack,
   onNext,
 }) {
+  const currentPlan = findCurrentPlan(merchant, plans);
+  const currentKey = merchant?.planId || planKey(currentPlan);
+
   return (
     <section className="subscription-flow-page">
       <PageBack label="Back to Subscription Details" onClick={onBack} />
 
       <h1>Choose Subscription Plan</h1>
-      <p className="flow-subtitle">Select a new plan for {merchant?.merchant}.</p>
+      <p className="flow-subtitle">
+        Plans for {merchant?.storeTypeName || "this store type"} ({merchant?.merchant}).
+      </p>
+
+      {plansError && <div className="payment-error">{plansError}</div>}
 
       <div className="plans-grid">
-        {plans.map((plan) => {
-          const isSelected = selectedPlan === plan.name;
-          const isCurrent = merchant?.plan === plan.name;
+        {plansLoading ? (
+          <p>Loading plans…</p>
+        ) : plans.map((plan) => {
+          const key = planKey(plan);
+          const isSelected = selectedPlan === key;
+          const isCurrent =
+            (merchant?.planId && String(plan.id) === String(merchant.planId)) ||
+            planName(plan).toLowerCase() === String(merchant?.plan || "").toLowerCase();
+          const price = planPrice(plan);
+          const annualPrice = planPrice(plan, "ANNUAL");
+          const features = planFeatures(plan);
 
           return (
             <div
               className={`plan-card ${isSelected ? "selected" : ""}`}
-              key={plan.name}
+              key={key}
               onClick={() => {
                 if (!isCurrent) {
-                  setSelectedPlan(plan.name);
+                  setSelectedPlan(key);
                 }
               }}
             >
               {isCurrent && <span className="current-plan-badge">Current Plan</span>}
 
-              {plan.name === "Pro Plan" && (
-                <span className="popular-badge">Most Popular</span>
-              )}
-
               <div className="plan-card-header">
                 <div>
-                  <h3>{plan.name}</h3>
-                  <p>{plan.description}</p>
+                  <h3>{planName(plan)}</h3>
+                  <p>{plan.description || "Subscription plan"}</p>
                 </div>
 
                 <span className="plan-radio">
@@ -721,27 +763,26 @@ function ChoosePlan({
               </div>
 
               <div className="plan-price">
-                {formatPrice(plan.price)}
+                {formatPrice(price, plan.currency)}
                 <span> / month</span>
               </div>
 
               <div className="plan-yearly">
-                or {formatPrice(plan.yearly)} / year
-                <span>Save 17%</span>
+                {formatPrice(annualPrice, plan.currency)} / annual
               </div>
 
               <div className="plan-divider" />
 
               <p>
-                Up to <b>{plan.stores} Stores</b>
+                Up to <b>{plan.includedStores ?? plan.included_stores ?? 0} Stores</b>
               </p>
 
               <p>
-                Up to <b>{plan.devices} Devices</b>
+                Up to <b>{plan.includedTerminals ?? plan.included_terminals ?? 0} Devices</b>
               </p>
 
               <ul className="feature-list">
-                {plan.features.map((feature) => (
+                {features.map((feature) => (
                   <li key={feature}>
                     <Check size={15} />
                     {feature}
@@ -755,7 +796,7 @@ function ChoosePlan({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!isCurrent) {
-                    setSelectedPlan(plan.name);
+                    setSelectedPlan(key);
                   }
                 }}
               >
@@ -779,7 +820,7 @@ function ChoosePlan({
       <div className="flow-bottom-actions">
         <button
           className="primary-flow-button"
-          disabled={!selectedPlan || selectedPlan === merchant?.plan}
+          disabled={!selectedPlan || selectedPlan === currentKey || plansLoading || !plans.length}
           onClick={onNext}
         >
           Next
@@ -794,10 +835,14 @@ function ChoosePlan({
    CONFIRM PLAN CHANGE
 ======================================== */
 
-function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
-  const current = planData[merchant?.plan] || plans[0];
-  const next = planData[selectedPlan] || plans[1];
-  const difference = (next.price || 0) - (current.price || 0);
+function ConfirmPlanChange({ merchant, plans, selectedPlan, onBack, onNext }) {
+  const current = findCurrentPlan(merchant, plans);
+  const next = plans.find((plan) => planKey(plan) === selectedPlan) || current;
+  const difference = planPrice(next) - planPrice(current);
+  const currentFeatures = planFeatures(current);
+  const nextFeatures = planFeatures(next);
+  const comparedFeatures = [...new Set([...currentFeatures, ...nextFeatures])];
+  const currency = next.currency || current.currency || "INR";
 
   return (
     <section className="subscription-flow-page">
@@ -812,10 +857,10 @@ function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
         <div className="change-summary">
           <div className="change-plan">
             <span>Current Plan</span>
-            <h3>{current.name}</h3>
-            <strong>{formatPrice(current.price)} / month</strong>
-            <p>Up to {current.stores} Stores</p>
-            <p>Up to {current.devices} Devices</p>
+            <h3>{planName(current)}</h3>
+            <strong>{formatPrice(planPrice(current), currency)} / month</strong>
+            <p>Up to {current.includedStores ?? current.included_stores ?? merchant?.stores ?? 0} Stores</p>
+            <p>Up to {current.includedTerminals ?? current.included_terminals ?? merchant?.devices ?? 0} Devices</p>
           </div>
 
           <div className="change-arrow">
@@ -824,10 +869,10 @@ function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
 
           <div className="change-plan">
             <span>New Plan</span>
-            <h3>{next.name}</h3>
-            <strong>{formatPrice(next.price)} / month</strong>
-            <p>Up to {next.stores} Stores</p>
-            <p>Up to {next.devices} Devices</p>
+            <h3>{planName(next)}</h3>
+            <strong>{formatPrice(planPrice(next), currency)} / month</strong>
+            <p>Up to {next.includedStores ?? next.included_stores ?? 0} Stores</p>
+            <p>Up to {next.includedTerminals ?? next.included_terminals ?? 0} Devices</p>
           </div>
         </div>
 
@@ -846,29 +891,26 @@ function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
             <tbody>
               <tr>
                 <td>Plan Price</td>
-                <td>{formatPrice(current.price)} / month</td>
-                <td>{formatPrice(next.price)} / month</td>
+                <td>{formatPrice(planPrice(current), currency)} / month</td>
+                <td>{formatPrice(planPrice(next), currency)} / month</td>
               </tr>
               <tr>
                 <td>Stores Allowed</td>
-                <td>{current.stores}</td>
-                <td>{next.stores}</td>
+                <td>{current.includedStores ?? current.included_stores ?? merchant?.stores ?? 0}</td>
+                <td>{next.includedStores ?? next.included_stores ?? 0}</td>
               </tr>
               <tr>
                 <td>Devices Allowed</td>
-                <td>{current.devices}</td>
-                <td>{next.devices}</td>
+                <td>{current.includedTerminals ?? current.included_terminals ?? merchant?.devices ?? 0}</td>
+                <td>{next.includedTerminals ?? next.included_terminals ?? 0}</td>
               </tr>
-              <tr>
-                <td>Reports</td>
-                <td>Basic Reports</td>
-                <td>Advanced Reports</td>
-              </tr>
-              <tr>
-                <td>Support</td>
-                <td>Email Support</td>
-                <td>Priority Support</td>
-              </tr>
+              {comparedFeatures.map((feature) => (
+                <tr key={feature}>
+                  <td>{feature}</td>
+                  <td>{currentFeatures.includes(feature) ? "Included" : "Not included"}</td>
+                  <td>{nextFeatures.includes(feature) ? "Included" : "Not included"}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -877,10 +919,10 @@ function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
           <Info size={19} />
           <div>
             <strong>
-              This change will increase your monthly billing by {formatPrice(difference)}.
+              This change will {difference >= 0 ? "increase" : "decrease"} monthly billing by {formatPrice(Math.abs(difference), currency)}.
             </strong>
             <p>
-              The new plan supports {next.stores} stores and {next.devices} devices.
+              The new plan supports {next.includedStores ?? next.included_stores ?? 0} stores and {next.includedTerminals ?? next.included_terminals ?? 0} devices.
             </p>
           </div>
         </div>
@@ -905,6 +947,7 @@ function ConfirmPlanChange({ merchant, selectedPlan, onBack, onNext }) {
 
 function PaymentScreen({
   merchant,
+  plans,
   selectedPlan,
   billingCycle,
   setBillingCycle,
@@ -913,16 +956,17 @@ function PaymentScreen({
   paymentDetails,
   updatePaymentField,
   paymentError,
+  paymentSubmitting,
   onBack,
   onSubmit,
 }) {
-  const current = planData[merchant?.plan] || plans[0];
-  const next = planData[selectedPlan] || plans[1];
-
-  const amount =
-    billingCycle === "Monthly"
-      ? (next.price || 0) - (current.price || 0)
-      : (next.yearly || 0) - (current.yearly || 0);
+  const current = findCurrentPlan(merchant, plans);
+  const next = plans.find((plan) => planKey(plan) === selectedPlan) || current;
+  const amount = planPrice(next, billingCycle);
+  const taxRate = Number(next.taxRate ?? next.tax_rate ?? 0);
+  const tax = Number((amount * taxRate / 100).toFixed(2));
+  const totalDueToday = Number((amount + tax).toFixed(2));
+  const currency = next.currency || "INR";
 
   return (
     <section className="subscription-flow-page payment-page">
@@ -942,11 +986,11 @@ function PaymentScreen({
         />
         <DetailRow
           label="Current Plan"
-          value={`${current.name} (${formatPrice(current.price)} / month)`}
+          value={`${planName(current)} (${formatPrice(planPrice(current, billingCycle), currency)} / ${billingCycle === "ANNUAL" ? "annual" : "month"})`}
         />
         <DetailRow
           label="New Plan"
-          value={`${next.name} (${formatPrice(next.price)} / month)`}
+          value={`${planName(next)} (${formatPrice(amount, currency)} / ${billingCycle === "ANNUAL" ? "annual" : "month"})`}
         />
 
         <div className="detail-row">
@@ -955,17 +999,19 @@ function PaymentScreen({
             value={billingCycle}
             onChange={(e) => setBillingCycle(e.target.value)}
           >
-            <option>Monthly</option>
-            <option>Yearly</option>
+            <option value="MONTHLY">Monthly</option>
+            <option value="ANNUAL">Annual</option>
           </select>
         </div>
 
+        <DetailRow label="Tax" value={formatPrice(tax, currency)} />
+
         <div className="payment-total">
           <span>Amount to Pay</span>
-          <strong>{formatPrice(amount)}.00</strong>
+          <strong>{formatPrice(totalDueToday, currency)}</strong>
         </div>
 
-        <small className="payment-note">Prorated amount for plan upgrade</small>
+        <small className="payment-note">Plan price plus applicable tax</small>
       </div>
 
       <div className="payment-card">
@@ -1097,10 +1143,11 @@ function PaymentScreen({
           </button>
           <button
             className="primary-flow-button"
-            onClick={() => onSubmit(amount)}
+            disabled={paymentSubmitting}
+            onClick={() => onSubmit({ agreementPrice: amount, tax, totalDueToday })}
           >
             <Lock size={16} />
-            Pay {formatPrice(amount)}.00
+            {paymentSubmitting ? "Processing…" : `Pay ${formatPrice(totalDueToday, currency)}`}
           </button>
         </div>
       </div>
@@ -1114,12 +1161,13 @@ function PaymentScreen({
 
 function PaymentSuccess({
   merchant,
+  plans,
   selectedPlan,
   amountPaid,
   billingCycle,
   onBack,
 }) {
-  const next = planData[selectedPlan] || plans[0];
+  const next = plans.find((plan) => planKey(plan) === selectedPlan) || {};
 
   return (
     <section className="subscription-flow-page success-page">
@@ -1137,9 +1185,9 @@ function PaymentSuccess({
           label="Merchant"
           value={`${merchant?.merchant} (${merchant?.merchantId || merchant?.id})`}
         />
-        <DetailRow label="New Plan" value={next.name} />
-        <DetailRow label="Amount Paid" value={`${formatPrice(amountPaid)}.00`} />
-        <DetailRow label="Billing Cycle" value={billingCycle} />
+        <DetailRow label="New Plan" value={planName(next)} />
+        <DetailRow label="Amount Paid" value={formatPrice(amountPaid, next.currency)} />
+        <DetailRow label="Billing Cycle" value={billingCycle === "ANNUAL" ? "Annual" : "Monthly"} />
         <DetailRow label="Effective From" value={merchant?.start} />
         <DetailRow
           label="Status"
@@ -1154,7 +1202,7 @@ function PaymentSuccess({
 
       <div className="success-banner">
         <CircleCheck size={18} />
-        The merchant can now use the features of the {next.name}.
+        The merchant can now use the features of the {planName(next)}.
       </div>
 
       <button className="primary-flow-button" onClick={onBack}>
@@ -1170,6 +1218,9 @@ function PaymentSuccess({
 
 export default function MerchantSubscriptions() {
   const [subscriptions, setSubscriptions] = useState([]);
+  const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [plansError, setPlansError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadToken, setReloadToken] = useState(0);
@@ -1177,10 +1228,11 @@ export default function MerchantSubscriptions() {
   const [screen, setScreen] = useState("list");
   const [selectedMerchant, setSelectedMerchant] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState("");
-  const [billingCycle, setBillingCycle] = useState("Monthly");
+  const [billingCycle, setBillingCycle] = useState("MONTHLY");
   const [paymentMethod, setPaymentMethod] = useState("Card");
   const [amountPaid, setAmountPaid] = useState(0);
   const [paymentError, setPaymentError] = useState("");
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
 
   const [paymentDetails, setPaymentDetails] = useState({
     cardNumber: "",
@@ -1232,6 +1284,49 @@ export default function MerchantSubscriptions() {
     };
   }, [reloadToken]);
 
+  useEffect(() => {
+    if (screen !== "choose") return undefined;
+    let active = true;
+    setPlansLoading(true);
+    setPlansError("");
+    const storeTypeId = String(selectedMerchant?.storeTypeId || "").trim();
+
+    if (!storeTypeId) {
+      setPlans([]);
+      setSelectedPlan("");
+      setPlansError("This subscription has no store type ID, so plans cannot be filtered.");
+      setPlansLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    listPlans()
+      .then((allPlans) => {
+        if (!active) return;
+        const matchingPlans = allPlans.filter(
+          (plan) => planMatchesStoreType(plan, selectedMerchant)
+        );
+        setPlans(matchingPlans);
+        const current = findCurrentPlan(selectedMerchant, matchingPlans);
+        setSelectedPlan(planKey(current) || selectedMerchant?.planId || "");
+        if (matchingPlans.length === 0) {
+          setPlansError("No subscription plans are configured for this store type.");
+        }
+      })
+      .catch((err) => {
+        if (!active) return;
+        setPlans([]);
+        setPlansError(err.message || "Failed to load subscription plans.");
+      })
+      .finally(() => {
+        if (active) setPlansLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [screen, selectedMerchant]);
+
   const updatePaymentField = (field, value) => {
     setPaymentDetails((previous) => ({
       ...previous,
@@ -1246,7 +1341,8 @@ export default function MerchantSubscriptions() {
   };
 
   const openChoosePlan = () => {
-    setSelectedPlan("");
+    setPlans([]);
+    setSelectedPlan(selectedMerchant?.planId || "");
     setScreen("choose");
   };
 
@@ -1259,7 +1355,7 @@ export default function MerchantSubscriptions() {
     setScreen("payment");
   };
 
-  const submitPayment = (amount) => {
+  const submitPayment = async ({ agreementPrice, tax, totalDueToday }) => {
     if (paymentMethod === "Card") {
       if (
         !paymentDetails.cardNumber ||
@@ -1282,25 +1378,60 @@ export default function MerchantSubscriptions() {
       return;
     }
 
-    setAmountPaid(amount);
+    const plan = plans.find((item) => planKey(item) === selectedPlan);
+    const merchantId = selectedMerchant?.merchantApiId;
+    if (!merchantId || !plan?.id) {
+      setPaymentError("The merchant or selected plan ID is missing. Refresh the subscription list and try again.");
+      return;
+    }
 
-    setSubscriptions((previous) =>
-      previous.map((item) =>
-        item.id === selectedMerchant?.id
-          ? {
-              ...item,
-              plan: selectedPlan,
-            }
-          : item
-      )
-    );
+    const startDate = new Date().toISOString().slice(0, 10);
+    const apiBillingCycle = billingCycle === "ANNUAL" ? "YEARLY" : "MONTHLY";
+    const payload = {
+      merchantId,
+      planId: plan.id,
+      billingCycle: apiBillingCycle,
+      startDate,
+      renewalDate: addCycleToDate(startDate, billingCycle),
+      agreementPrice: Number(agreementPrice),
+      tax: Number(tax),
+      totalDueToday: Number(totalDueToday),
+      paymentMethod:
+        paymentMethod === "Card"
+          ? "CARD"
+          : paymentMethod === "Net Banking"
+            ? "NET_BANKING"
+            : "UPI",
+    };
 
-    setSelectedMerchant((previous) => ({
-      ...previous,
-      plan: selectedPlan,
-    }));
-
-    setScreen("success");
+    setPaymentSubmitting(true);
+    setPaymentError("");
+    try {
+      await changeSubscriptionPlan(payload);
+      const updatedPlan = {
+        plan: planName(plan),
+        planId: plan.id,
+        planDetails: plan,
+        price: Number(agreementPrice),
+        currency: plan.currency || "INR",
+        billingCycle: apiBillingCycle,
+        stores: Number(plan.includedStores ?? plan.included_stores ?? selectedMerchant.stores),
+        devices: Number(plan.includedTerminals ?? plan.included_terminals ?? selectedMerchant.devices),
+        entitlements: planFeatures(plan),
+      };
+      setAmountPaid(totalDueToday);
+      setSubscriptions((previous) =>
+        previous.map((item) =>
+          item.id === selectedMerchant?.id ? { ...item, ...updatedPlan } : item
+        )
+      );
+      setSelectedMerchant((previous) => ({ ...previous, ...updatedPlan }));
+      setScreen("success");
+    } catch (err) {
+      setPaymentError(err.message || "Unable to change the subscription plan.");
+    } finally {
+      setPaymentSubmitting(false);
+    }
   };
 
   if (screen === "details") {
@@ -1317,6 +1448,9 @@ export default function MerchantSubscriptions() {
     return (
       <ChoosePlan
         merchant={selectedMerchant}
+        plans={plans}
+        plansLoading={plansLoading}
+        plansError={plansError}
         selectedPlan={selectedPlan}
         setSelectedPlan={setSelectedPlan}
         onBack={() => setScreen("details")}
@@ -1329,6 +1463,7 @@ export default function MerchantSubscriptions() {
     return (
       <ConfirmPlanChange
         merchant={selectedMerchant}
+        plans={plans}
         selectedPlan={selectedPlan}
         onBack={() => setScreen("choose")}
         onNext={openPayment}
@@ -1340,6 +1475,7 @@ export default function MerchantSubscriptions() {
     return (
       <PaymentScreen
         merchant={selectedMerchant}
+        plans={plans}
         selectedPlan={selectedPlan}
         billingCycle={billingCycle}
         setBillingCycle={setBillingCycle}
@@ -1348,6 +1484,7 @@ export default function MerchantSubscriptions() {
         paymentDetails={paymentDetails}
         updatePaymentField={updatePaymentField}
         paymentError={paymentError}
+        paymentSubmitting={paymentSubmitting}
         onBack={() => setScreen("confirm")}
         onSubmit={submitPayment}
       />
@@ -1358,6 +1495,7 @@ export default function MerchantSubscriptions() {
     return (
       <PaymentSuccess
         merchant={selectedMerchant}
+        plans={plans}
         selectedPlan={selectedPlan}
         amountPaid={amountPaid}
         billingCycle={billingCycle}

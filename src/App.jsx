@@ -17,7 +17,7 @@ function MerchantStoresRedirect() {
 import Subscriptions from "./pages/Subscriptions";
 import Stores from "./pages/Stores";
 import Users from "./pages/Users";
-import PosConfiguration from "./pages/PosConfiguration";
+import PosConfiguration from "./pages/pos/PosConfiguration";
 import AddMerchant from "./pages/AddMerchant";
 import AddStore from "./pages/AddStore";
 import StoreConfiguration from "./pages/StoreConfiguration";

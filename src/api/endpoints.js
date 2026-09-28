@@ -3,21 +3,12 @@ export const endpoints = {
   refresh: "/auth/refresh",
   logout: "/auth/logout",
   me: "/auth/me",
-  //
+
   merchants: "/merchants",
   createMerchant: "/merchants/create-merchant",
   merchant: (id) => `/merchants/${id}`,
 
   stores: "/stores",
-  // Employee Endpoints (Matching Postman Collection)
-  employees: "/merchants/employees",
-  employee: (id) => `/merchants/employees/${encodeURIComponent(id)}`,
-  merchantEmployees: (merchantId) =>
-    `/merchants/${encodeURIComponent(merchantId)}/employees`,
-  merchantEmployee: (merchantId, employeeId) =>
-    `/merchants/${encodeURIComponent(merchantId)}/employees/${encodeURIComponent(employeeId)}`,
-  employeeProfileImage: (employeeId) =>
-    `/merchants/employees/${encodeURIComponent(employeeId)}/profile-image`,
   store: (id) => `/stores/${id}`,
   storeCurrencyTax: (storeId) =>
     `/stores/${encodeURIComponent(storeId)}/pos/currency-tax`,
@@ -37,6 +28,24 @@ export const endpoints = {
     `/stores/${encodeURIComponent(storeId)}/pos/card-payments`,
   storeTerminalMappings: (storeId) =>
     `/stores/${encodeURIComponent(storeId)}/pos/terminal-mappings`,
+
+  // Merchant Employees (Connector API)
+  employees: "/merchants/employees",
+  employee: (id) => `/merchants/employees/${encodeURIComponent(id)}`,
+  merchantEmployees: (merchantId, status = "ACTIVE") =>
+    `/connector/api/v1/merchants/${encodeURIComponent(merchantId)}/employees${
+      status ? `?status=${encodeURIComponent(status)}` : ""
+    }`,
+  merchantEmployee: (merchantId, employeeId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/employees/${encodeURIComponent(employeeId)}`,
+  employeeProfileImage: (employeeId) =>
+    `/merchants/employees/${encodeURIComponent(employeeId)}/profile-image`,
+
+  // Subscriptions (Connector API)
+  merchantActiveSubscriptions: (merchantId) =>
+    `/connector/api/v1/merchants/subscriptions/active?merchantId=${encodeURIComponent(merchantId)}`,
+
+  // Store Types & Features
   storeTypes: "/store-types",
   storeType: (id) => `/store-types/${encodeURIComponent(id)}`,
   storeTypeFeatures: (id) => `/store-types/${encodeURIComponent(id)}/features`,
@@ -44,29 +53,19 @@ export const endpoints = {
     `/store-types/${encodeURIComponent(storeTypeId)}/features/${encodeURIComponent(featureId)}`,
   storeConnector: (id) => `/stores/${id}/connector`,
   merchantStores: (merchantId) => `/merchants/${merchantId}/stores`,
+  storeEmployees: (merchantId, storeId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/stores/${encodeURIComponent(storeId)}/employees`,
 
   features: "/features",
   feature: (id) => `/features/${id}`,
-  featureStatus: (id) => `/features/${id}/status`,
-
   permissions: "/permissions",
   permission: (id) => `/permissions/${id}`,
-
   plans: "/plans",
-
   plan: (id) => `/plans/${encodeURIComponent(id)}`,
-
   planStatus: (id) => `/plans/${encodeURIComponent(id)}`,
-
   tendors: "/tendors",
   tendor: (id) => `/tendors/${id}`,
-
-  tendors: "/tendors",
-  tendor: (id) => `/tendors/${id}`,
-
-  employees: "/employees",
-  employeeList: "/merchants/employees",
-  // Devices
   devices: "/devices",
   device: (id) => `/devices/${encodeURIComponent(id)}`,
+  deviceTypes: "/device-types",
 };

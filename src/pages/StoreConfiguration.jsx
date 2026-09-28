@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useParams } from "react-router-dom";
 
 import { getMerchant } from "../api/merchants";
 import Users from "./Users";
-import PosConfiguration from "./PosConfiguration";
+import PosConfiguration from "./pos/PosConfiguration";
 import Products from "./Products";
 import Coupons from "./Coupons";
 import Orders from "./Orders";

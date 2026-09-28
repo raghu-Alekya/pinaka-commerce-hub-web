@@ -1,6 +1,7 @@
 import MerchantTenders from "./MerchantTenders";
 import MerchantVendors from "./MerchantVendors";
 import MerchantStores from "./MerchantStores";
+import MerchantRoles from "./MerchantRoles";
 import AddMerchantDevice from "./AddMerchantDevice";
 import { MerchantEmployeeForm } from "./AddMerchantEmployee";
 import { useReferenceData } from "../api/referenceData";
@@ -142,7 +143,6 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
     [store.id, store.storeId, store.code, store.storeCode].some(id => id != null && String(id) === String(employee.storeId))
   )?.name || employee.storeId;
   const devices = [...createdDevices,...list(saved?.devices ?? raw.devices ?? response.devices).filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))].filter(device=>device.merchantId==null || String(device.merchantId)===String(merchantId));
-  const roles = list(saved?.roles ?? raw.roles ?? response.roles);
   const payments = list(saved?.paymentHistory ?? raw.paymentHistory);
   const business = contact.business || raw.legalBusinessName || raw.businessName || summary.name;
   const storeName = device => device.storeName || stores.find(store=>device.storeId!=null && [store.id,store.code,store.storeId].some(id=>id!=null && String(id)===String(device.storeId)))?.name || (saved && typeof device.store==='number' ? stores[device.store]?.name : '') || device.storeId || '—';
@@ -196,7 +196,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       <div role="tabpanel" id="merchant-panel-subscription" aria-labelledby="merchant-tab-subscription" hidden={activeTab !== 'subscription'} tabIndex={0}>
         <ViewSection title="Subscription & Usage"><ViewFields items={[
           ['Plan', subscription.planName || subscription.plan?.name || summary.plan], ['Billing Cycle', saved?.cycle || subscription.billingCycle],
-          ['Subscription ID', saved?.subscriptionId || subscription.id || subscription.subscriptionId],
+          ['Store Type', subscription?.plan?.storeType || ''],
           ['Subscription Status', saved?.subscriptionStatus || subscription.status], ['Start Date', saved?.start || subscription.startDate],
           ['Renewal Date', subscription.renewalDate || subscription.nextBillingDate || summary.renewal],
           ['Registered Stores', saved ? stores.length : summary.stores ?? raw.storeCount ?? (Array.isArray(raw.stores) ? stores.length : undefined)],
@@ -231,9 +231,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
 
       </div>
       <div role="tabpanel" id="merchant-panel-roles" aria-labelledby="merchant-tab-roles" hidden={activeTab !== 'roles'} tabIndex={0}>
-        <ViewSection title="Roles & Permissions"><ViewTable headings={['Role', 'Source', 'Scope', 'Permissions']} rows={roles.map(role => [
-          role.name, role.source, role.scope, Array.isArray(role.perms) ? role.perms.flat().join(', ') : undefined,
-        ])} /></ViewSection>
+        {activeTab === 'roles' && <MerchantRoles merchantId={apiMerchantId || merchantId} />}
       </div>
       <div role="tabpanel" id="merchant-panel-payments" aria-labelledby="merchant-tab-payments" hidden={activeTab !== 'payments'} tabIndex={0}>
         <ViewSection title="Payment History"><ViewTable headings={['Date', 'Plan', 'Amount', 'Method', 'Status']} rows={payments.map(payment => [

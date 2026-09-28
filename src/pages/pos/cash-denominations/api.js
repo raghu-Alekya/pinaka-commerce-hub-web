@@ -1,5 +1,5 @@
-import { api } from "./http";
-import { endpoints } from "./endpoints";
+import { api } from "../../../api/http";
+import { endpoints } from "../../../api/endpoints";
 
 const path = (storeId) => endpoints.storeCashDenominations(storeId);
 

@@ -22,7 +22,6 @@ export default function Devices() {
     setSearch,
   ] = useState("");
   const [merchant, setMerchant] = useState("All Merchants");
-  const [store, setStore] = useState("All Stores");
   const [deviceType, setDeviceType] = useState("All Device Types");
   const [status, setStatus] = useState("All Statuses");
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,10 +56,7 @@ export default function Devices() {
       const values = devices.map((device) => device.merchant).filter(Boolean);
       return ["All Merchants", ...new Set(values)];
     }, [devices]);
-  const storeOptions = useMemo(() => {
-    const values = devices.map((device) => device.store).filter(Boolean);
-    return ["All Stores", ...new Set(values)];
-  }, [devices]);
+  
   const deviceTypeOptions = useMemo(() => {
     const values = devices.map((device) => device.type).filter(Boolean);
     return ["All Device Types", ...new Set(values)];
@@ -75,11 +71,10 @@ export default function Devices() {
           device.id?.toLowerCase().includes(query) ||
           device.type?.toLowerCase().includes(query) ||
           device.serial?.toLowerCase().includes(query) ||
-          device.merchant?.toLowerCase().includes(query) ||
-          device.store?.toLowerCase().includes(query);
+          device.merchant?.toLowerCase().includes(query) ;
         const matchesMerchant =
           merchant === "All Merchants" || device.merchant === merchant;
-        const matchesStore = store === "All Stores" || device.store === store;
+       
         const matchesType =
           deviceType === "All Device Types" || device.type === deviceType;
         const matchesStatus =
@@ -87,12 +82,11 @@ export default function Devices() {
         return (
           matchesSearch &&
           matchesMerchant &&
-          matchesStore &&
           matchesType &&
           matchesStatus
         );
       });
-    }, [devices, search, merchant, store, deviceType, status]);
+    }, [devices, search, merchant, deviceType, status]);
   /* ========================================================= PAGINATION ========================================================= */ const totalPages =
     Math.max(1, Math.ceil(filteredDevices.length / rowsPerPage));
   const safePage = Math.min(currentPage, totalPages);
@@ -238,7 +232,7 @@ export default function Devices() {
             <Search size={17} />{" "}
             <input
               type="text"
-              placeholder="Search by device name, serial number, store..."
+              placeholder="Search by device name, serial number,..."
               value={search}
               onChange={(e) => handleFilterChange(setSearch, e.target.value)}
             />{" "}
@@ -249,12 +243,7 @@ export default function Devices() {
             onChange={(value) => handleFilterChange(setMerchant, value)}
             options={merchantOptions}
           />{" "}
-          {/* STORE */}{" "}
-          <FilterSelect
-            value={store}
-            onChange={(value) => handleFilterChange(setStore, value)}
-            options={storeOptions}
-          />{" "}
+         
           {/* DEVICE TYPE */}{" "}
           <FilterSelect
             value={deviceType}
@@ -292,8 +281,8 @@ export default function Devices() {
                   <input type="checkbox" aria-label="Select all devices" />{" "}
                 </th>{" "}
                 <th>DEVICE NAME</th> <th>DEVICE TYPE</th> <th>SERIAL NUMBER</th>{" "}
-                <th>MERCHANT</th> <th>STORE</th> <th>STATUS</th>{" "}
-                <th>LAST SEEN</th> <th>ACTIONS</th>{" "}
+                <th>MERCHANT</th> <th>STATUS</th>{" "}
+                 <th>ACTIONS</th>{" "}
               </tr>{" "}
             </thead>{" "}
             <tbody>
@@ -572,48 +561,41 @@ export default function Devices() {
           </div>{" "}
         </div>{" "}
       </td>{" "}
-      <td> {device.type || "-"} </td> <td> {device.serial || "-"} </td>{" "}
-      <td> {device.merchant || "-"} </td> <td> {device.store || "-"} </td>{" "}
-      <td>
-        {" "}
-        <span className={`device-status ${normalizedStatus}`}>
-          {" "}
-          {device.status || "-"}{" "}
-        </span>{" "}
-      </td>{" "}
-      <td>
-        {" "}
-        <div className={`device-last-seen ${normalizedStatus}`}>
-          {" "}
-          <span /> {device.lastSeen || "-"}{" "}
-        </div>{" "}
-      </td>{" "}
-      <td>
-        {" "}
-        <div className="row-actions device-actions">
-          {" "}
-          <button
-            type="button"
-            className="action-btn edit-btn"
-            title="Edit"
-            aria-label={`Edit ${device.name || "device"}`}
-            onClick={onEdit}
-          >
-            {" "}
-            <i className="bi bi-pencil" aria-hidden="true" />{" "}
-          </button>{" "}
-          <button
-            type="button"
-            className="action-btn text-danger"
-            title="Delete"
-            aria-label={`Delete ${device.name || "device"}`}
-            onClick={onDelete}
-          >
-            {" "}
-            <i className="bi bi-trash" aria-hidden="true" />{" "}
-          </button>{" "}
-        </div>{" "}
-      </td>{" "}
+<td>{device.type || "-"}</td>
+
+<td>{device.serial || "-"}</td>
+
+<td>{device.merchant || "-"}</td>
+
+<td>
+  <span className={`device-status ${normalizedStatus}`}>
+    {device.status || "-"}
+  </span>
+</td>
+
+<td>
+  <div className="row-actions device-actions">
+    <button
+      type="button"
+      className="action-btn edit-btn"
+      title="Edit"
+      aria-label={`Edit ${device.name || "device"}`}
+      onClick={onEdit}
+    >
+      <i className="bi bi-pencil" aria-hidden="true" />
+    </button>
+
+    <button
+      type="button"
+      className="action-btn text-danger"
+      title="Delete"
+      aria-label={`Delete ${device.name || "device"}`}
+      onClick={onDelete}
+    >
+      <i className="bi bi-trash" aria-hidden="true" />
+    </button>
+  </div>
+</td>
     </tr>
   );
 }

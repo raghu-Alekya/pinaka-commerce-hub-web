@@ -9,22 +9,32 @@ import { endpoints } from "./endpoints";
  * deviceType
  * serialNumber
  * merchantId
- * storeId
  * status
- * enableImmediately
- * notes
  */
 export function toDevicePayload(data) {
   return {
     deviceName: data.deviceName?.trim() || "",
+    deviceCode: data.deviceCode?.trim() || "",
     deviceType: data.deviceType || "",
     serialNumber: data.serialNumber?.trim() || "",
     merchantId: data.merchantId || data.merchant || "",
-    storeId: data.storeId || data.store || "",
     status: data.status || "Active",
-    enableImmediately: Boolean(data.enableImmediately),
-    notes: data.notes?.trim() || "",
   };
+}
+
+/** GET /device-types */
+export async function listDeviceTypes() {
+  const response = await api.get(endpoints.deviceTypes);
+  const items = Array.isArray(response)
+    ? response
+    : response?.deviceTypes || response?.data || response?.items || [];
+
+  return items.map((item) => {
+    if (typeof item === "string") return { value: item, label: item };
+    const value = item?.id || item?.deviceTypeId || item?.code || item?.name || item?.deviceType || "";
+    const label = item?.name || item?.deviceTypeName || item?.deviceType || item?.label || item?.code || value;
+    return value ? { value: String(value), label: String(label) } : null;
+  }).filter(Boolean);
 }
 
 /**
@@ -92,8 +102,18 @@ export async function getDevice(deviceId) {
  */
 export async function createDevice(data) {
   const payload = toDevicePayload(data);
-
-  return api.post(endpoints.devices, payload);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  try {
+    return await api.post(endpoints.devices, payload, { signal: controller.signal });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Creating the device timed out after 30 seconds. Please try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 /**
@@ -105,27 +125,47 @@ export async function updateDevice(deviceId, data) {
   }
 
   const payload = toDevicePayload(data);
-
-  return api.put(endpoints.device(deviceId), payload);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  try {
+    return await api.put(endpoints.device(deviceId), payload, { signal: controller.signal });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Updating the device timed out after 30 seconds. Please try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
-/**
- * POST /devices/:deviceId
- *
- * NOTE:
- * The supplied Postman collection specifically defines delete
- * as POST, not DELETE.
- */
+/** DELETE /devices/:deviceId */
 export async function deleteDevice(deviceId) {
   if (!deviceId) {
     throw new Error("Device ID is required");
   }
 
-  return api.post(endpoints.device(deviceId));
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  try {
+    const response = await api.delete(endpoints.device(deviceId), { signal: controller.signal });
+    if (response?.success === false) {
+      throw new Error(response.message || "Failed to delete device.");
+    }
+    return response;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Deleting the device timed out after 30 seconds. Please try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export const devicesApi = {
   list: listDevices,
+  listTypes: listDeviceTypes,
   get: getDevice,
   create: createDevice,
   update: updateDevice,
