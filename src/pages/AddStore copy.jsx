@@ -451,104 +451,11 @@ export default function AddStore() {
   const [featureSearch, setFeatureSearch] = useState("");
   const [featureCategory, setFeatureCategory] = useState("All Features");
 
-  const merchantLookupId = routeMerchantId || store.merchantId || "";
-  const merchantRecord = merchantLookupId
-    ? merchants.find(
-        (item) =>
-          String(item.id || "") === String(merchantLookupId) ||
-          String(item.merchantId || "") === String(merchantLookupId),
-      )
-    : null;
-
-  const merchantId =
-    routeMerchantId || store.merchantId
-      ? idOf(routeMerchantId || store.merchantId)
-      : "";
-  const merchantOptionValue = (item) =>
-    String(item?.id ?? item?.merchantId ?? "");
-
-  const merchantMatches = (item, value) => {
-    if (!value) return false;
-    const target = String(value).trim();
-    if (!target) return false;
-    // Must match the SAME field that merchantOptionValue uses as the <option> value,
-    // otherwise the controlled <select> won't find a matching option on AWS (high latency).
-    const optionVal = merchantOptionValue(item);
-    if (optionVal && optionVal === target) return true;
-    // Fallback: also match by merchantCode for convenience
-    return (
-      item?.merchantCode != null &&
-      item.merchantCode !== "" &&
-      String(item.merchantCode).trim() === target
-    );
-  };
-  const activeMerchantKey = routeMerchantId || store.merchantId || merchantId;
-  const selectedMerchant = activeMerchantKey
-    ? merchants.find((item) => merchantMatches(item, activeMerchantKey))
-    : null;
-  // While the merchant list is still loading, don't emit a value that won't match any
-  // <option> yet — that causes the browser to fall back to the first option and the
-  // controlled select gets stuck on "Select merchant" even after merchants load.
-  const merchantSelectValue = selectedMerchant
-    ? merchantOptionValue(selectedMerchant)
-    : mastersLoading
-      ? ""
-      : String(activeMerchantKey || "");
-  const merchant =
-    merchantInfo?.owner ||
-    selectedMerchant ||
-    (merchantId
-      ? merchants.find((item) => merchantMatches(item, merchantId))
-      : null) ||
-    null;
-  const merchantName =
-    merchant?.name ||
-    merchant?.merchantName ||
-    merchant?.businessDisplayName ||
-    "Selected merchant";
-  const activeStoreTypeId =
-    store.storeTypeId ||
-    merchantInfo?.typeId ||
-    subscription?.storeTypeId ||
-    "";
-  const selectedType =
-    storeTypes.find((item) => String(item.id) === String(activeStoreTypeId)) ||
-    storeTypes.find(
-      (item) =>
-        String(item.name).toLowerCase() === String(store.type).toLowerCase(),
-    );
-  const typeName =
-    selectedType?.name || store.type || merchantInfo?.typeName || "";
-  const plan =
-    subscription?.plan && typeof subscription.plan === "object"
-      ? subscription.plan
-      : null;
-  const planName =
-    subscription?.planName ||
-    subscription?.planCode ||
-    plan?.name ||
-    plan?.planName ||
-    merchant?.plan ||
-    "No active plan";
-  const billing =
-    subscription?.billingCycle ||
-    subscription?.billingType ||
-    plan?.billingCycle ||
-    "—";
-  const planPrice =
-    subscription?.price ??
-    subscription?.agreementPrice ??
-    plan?.price ??
-    plan?.amount;
-  const storeLimit = Number(
-    subscription?.maxStoresAllowed ??
-      subscription?.licensedStoreCount ??
-      subscription?.storeLimit ??
-      subscription?.maxStores ??
-      subscription?.locationLimit ??
-      plan?.includedStores ??
-      plan?.included_stores ??
-      NaN,
+  const merchantLookupId = routeMerchantId || store.merchantId;
+  const merchantRecord = merchants.find(
+    (item) =>
+      String(item.id) === String(merchantLookupId) ||
+      String(item.merchantId) === String(merchantLookupId),
   );
 
   const merchantId = idOf(routeMerchantId || store.merchantId);
@@ -1559,7 +1466,6 @@ export default function AddStore() {
                 <label htmlFor="sf-merchant">Merchant *</label>
                 <select
                   id="sf-merchant"
-                  key={`merchant-select-${merchants.length}`}
                   required
                   value={merchantSelectValue}
                   disabled={Boolean(routeMerchantId) || editing || saving}

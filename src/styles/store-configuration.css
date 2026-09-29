@@ -136,6 +136,10 @@
   padding: 3px 0 5px;
 }
 
+.store-subnav-group-direct .store-subnav-group-items {
+  padding-block: 3px;
+}
+
 
 /* =========================================================
    INDIVIDUAL SIDEBAR ITEM
@@ -147,7 +151,7 @@
   gap: 8px;
   min-height: 32px;
   margin: 0;
-  padding: 7px 8px 7px 18px;
+  padding: 12px 16px;
   border-radius: 6px;
   color: #5d6880;
   font-size: 14px;
@@ -165,6 +169,7 @@
   font-size: 13px;
   text-align: center;
 }
+
 
 
 /* =========================================================
@@ -1438,7 +1443,7 @@
   .store-subnav-group-items .store-subnav-item {
     min-height: 36px;
 
-    padding-left: 18px;
+    padding-left: 16px;
   }
 
   .store-overview-grid,

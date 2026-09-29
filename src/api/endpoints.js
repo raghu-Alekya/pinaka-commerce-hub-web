@@ -30,7 +30,7 @@ export const endpoints = {
     `/stores/${encodeURIComponent(storeId)}/pos/terminal-mappings`,
 
   // Merchant Employees (Connector API)
-  employees: "/merchants/employees",
+  employees: "/employees",
   employee: (id) => `/merchants/employees/${encodeURIComponent(id)}`,
   merchantEmployees: (merchantId, status = "ACTIVE") =>
     `/connector/api/v1/merchants/${encodeURIComponent(merchantId)}/employees${
@@ -55,6 +55,8 @@ export const endpoints = {
   merchantStores: (merchantId) => `/merchants/${merchantId}/stores`,
   storeEmployees: (merchantId, storeId) =>
     `/merchants/${encodeURIComponent(merchantId)}/stores/${encodeURIComponent(storeId)}/employees`,
+  storeRolePermissions: (merchantId, storeId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/stores/${encodeURIComponent(storeId)}/role-permissions`,
 
   features: "/features",
   feature: (id) => `/features/${id}`,
@@ -68,4 +70,10 @@ export const endpoints = {
   devices: "/devices",
   device: (id) => `/devices/${encodeURIComponent(id)}`,
   deviceTypes: "/device-types",
+  // merchant tendors
+  merchantTendors: (merchantId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/tendors`,
+
+  merchantTendor: (merchantId, tendorId) =>
+    `/merchants/${encodeURIComponent(merchantId)}/tendors/${encodeURIComponent(tendorId)}`,
 };

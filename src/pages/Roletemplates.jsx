@@ -56,6 +56,8 @@ export default function RoleTemplates() {
 
   const [deletePopup, setDeletePopup] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState(""); // <-- ADD THIS
+
   async function loadTemplates() {
     setLoading(true);
     setError("");
@@ -67,11 +69,8 @@ export default function RoleTemplates() {
       const validItems = items.filter((item) => item?.id != null);
 
       setTemplates(validItems);
-
     } catch (err) {
-      setError(
-        err?.message || "Unable to load role templates."
-      );
+      setError(err?.message || "Unable to load role templates.");
     } finally {
       setLoading(false);
     }
@@ -95,8 +94,7 @@ export default function RoleTemplates() {
         .join(" ")
         .toLowerCase();
 
-      const matchesSearch =
-        !query || searchableText.includes(query);
+      const matchesSearch = !query || searchableText.includes(query);
 
       const matchesStatus =
         statusFilter === "ALL" ||
@@ -107,9 +105,7 @@ export default function RoleTemplates() {
 
     const getDateValue = (template) => {
       const value =
-        template.createdAt ||
-        template.created_at ||
-        template.createdDate;
+        template.createdAt || template.created_at || template.createdDate;
 
       const timestamp = value ? new Date(value).getTime() : 0;
       return Number.isNaN(timestamp) ? 0 : timestamp;
@@ -167,13 +163,14 @@ export default function RoleTemplates() {
   }, [currentPage, totalPages]);
 
   const roleNameSuggestions = useMemo(
-    () =>
-      [...new Set(
+    () => [
+      ...new Set(
         templates
           .map((template) => String(template.name || "").trim())
-          .filter(Boolean)
-      )],
-    [templates]
+          .filter(Boolean),
+      ),
+    ],
+    [templates],
   );
 
   function validateRoleCode(value) {
@@ -226,8 +223,6 @@ export default function RoleTemplates() {
       status: form.status,
     };
 
-   
-
     const codeError = validateRoleCode(values.roleCode);
 
     if (codeError) {
@@ -257,9 +252,7 @@ export default function RoleTemplates() {
       if (isCreating) setCurrentPage(1);
       resetForm();
     } catch (err) {
-      setError(
-        err?.message || "Unable to save role template."
-      );
+      setError(err?.message || "Unable to save role template.");
     } finally {
       setSaving(false);
     }
@@ -289,7 +282,7 @@ export default function RoleTemplates() {
   function openDeletePopup(template) {
     setTemplateToDelete(template);
     setDeletePopup(true);
-    setError("");
+    setDeleteError(""); // <-- Reset delete erro
   }
 
   function closeDeletePopup() {
@@ -300,34 +293,58 @@ export default function RoleTemplates() {
   }
 
   async function confirmDeleteTemplate() {
-    if (!templateToDelete?.id) return;
+    if (!templateToDelete) return;
+
+    const targetId =
+      templateToDelete.id ??
+      templateToDelete._id ??
+      templateToDelete.roleTemplateId;
+
+    if (!targetId) {
+      setDeleteError("Role Template ID is missing. Cannot deactivate.");
+      return;
+    }
 
     setSaving(true);
-    setError("");
+    setDeleteError("");
 
     try {
-      await roleTemplatesApi.remove(templateToDelete.id);
+      console.log("Deactivating Role Template:", targetId);
 
-      setTemplates((currentTemplates) =>
-        currentTemplates.filter(
-          (template) => template.id !== templateToDelete.id
-        )
-      );
+      // Soft delete: change status to INACTIVE
+      await roleTemplatesApi.update(targetId, {
+        roleCode: templateToDelete.roleCode || "",
+        name: templateToDelete.name || "",
+        description: templateToDelete.description || "",
+        status: "INACTIVE",
+      });
 
-      if (editingId === templateToDelete.id) {
+      // Reload from backend
+      await loadTemplates();
+
+      // If this template was being edited, clear the form
+      if (editingId !== null && String(editingId) === String(targetId)) {
         resetForm();
       }
 
-      closeDeletePopup();
+      setDeletePopup(false);
+      setTemplateToDelete(null);
+      setDeleteError("");
     } catch (err) {
-      setError(
-        err?.message || "Unable to delete role template."
-      );
+      console.error("Role Template deactivate failed:", err);
+
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.response?.data?.errors?.[0]?.message ||
+        err?.message ||
+        "Unable to deactivate role template.";
+
+      setDeleteError(errorMsg);
     } finally {
       setSaving(false);
     }
   }
-
   function resetFilters() {
     setSearch("");
     setStatusFilter("ALL");
@@ -348,9 +365,7 @@ export default function RoleTemplates() {
       form.description !== originalForm.description ||
       form.status !== originalForm.status);
 
-  const canSubmit =
-    isFormValid &&
-    (editingId === null || hasFormChanges);
+  const canSubmit = isFormValid && (editingId === null || hasFormChanges);
 
   return (
     <>
@@ -375,7 +390,8 @@ export default function RoleTemplates() {
                   : "Add Role Template"}
               </h2>
               <p>
-                Provide the basic details and configuration for this role template.
+                Provide the basic details and configuration for this role
+                template.
               </p>
             </div>
           </div>
@@ -428,9 +444,7 @@ export default function RoleTemplates() {
                 />
               </div>
 
-              <small>
-            
-              </small>
+              <small></small>
             </label>
 
             <label className="role-field role-status-field">
@@ -475,7 +489,7 @@ export default function RoleTemplates() {
                   event.currentTarget.style.height = "44px";
                   event.currentTarget.style.height = `${Math.max(
                     44,
-                    event.currentTarget.scrollHeight
+                    event.currentTarget.scrollHeight,
                   )}px`;
                 }}
                 autoComplete="off"
@@ -506,13 +520,11 @@ export default function RoleTemplates() {
               onClick={saveTemplate}
               disabled={saving || !canSubmit}
             >
-
-
               {saving
                 ? "Saving..."
                 : editingId !== null
-                ? "Update Role Template"
-                : "Create Role Template"}
+                  ? "Update Role Template"
+                  : "Create Role Template"}
             </button>
           </div>
         </div>
@@ -521,8 +533,6 @@ export default function RoleTemplates() {
           <div className="role-list-header">
             <div>
               <h2>Role Templates List</h2>
-
-      
             </div>
 
             <div className="role-filters">
@@ -532,18 +542,14 @@ export default function RoleTemplates() {
                 <input
                   type="text"
                   value={search}
-                  onChange={(event) =>
-                    setSearch(event.target.value)
-                  }
+                  onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search role templates..."
                 />
               </div>
 
               <select
                 value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(event.target.value)
-                }
+                onChange={(event) => setStatusFilter(event.target.value)}
                 aria-label="Filter by status"
               >
                 <option value="ALL">All Statuses</option>
@@ -562,15 +568,15 @@ export default function RoleTemplates() {
                 <option value="Z_A">Z to A</option>
               </select>
 
-             <button
-               type="button"
-               className="role-reset-icon-btn"
-               title="Reset filters"
-               aria-label="Reset filters"
-               onClick={resetFilters}
-                   >
+              <button
+                type="button"
+                className="role-reset-icon-btn"
+                title="Reset filters"
+                aria-label="Reset filters"
+                onClick={resetFilters}
+              >
                 <i className="bi bi-arrow-counterclockwise" />
-                </button>
+              </button>
             </div>
           </div>
 
@@ -589,11 +595,19 @@ export default function RoleTemplates() {
               <thead>
                 <tr>
                   <th className="role-code-col role-equal-col">Role Code</th>
-                  <th className="role-name-col role-equal-col">Role Template Name</th>
-                  <th className="role-description-col role-equal-col">Description</th>
+                  <th className="role-name-col role-equal-col">
+                    Role Template Name
+                  </th>
+                  <th className="role-description-col role-equal-col">
+                    Description
+                  </th>
                   <th className="role-status-col role-equal-col">Status</th>
-                  <th className="role-created-col role-equal-col">Created At</th>
-                  <th className="role-updated-col role-equal-col">Updated At</th>
+                  <th className="role-created-col role-equal-col">
+                    Created At
+                  </th>
+                  <th className="role-updated-col role-equal-col">
+                    Updated At
+                  </th>
                   <th className="role-actions-col role-equal-col">Actions</th>
                 </tr>
               </thead>
@@ -643,7 +657,7 @@ export default function RoleTemplates() {
                     <td className="role-status-cell role-equal-col">
                       <span
                         className={`role-status ${String(
-                          template.status || ""
+                          template.status || "",
                         ).toLowerCase()}`}
                       >
                         <i />
@@ -658,7 +672,7 @@ export default function RoleTemplates() {
                         const formatted = displayDate(
                           template.createdAt ||
                             template.created_at ||
-                            template.createdDate
+                            template.createdDate,
                         );
 
                         return formatted ? (
@@ -681,7 +695,7 @@ export default function RoleTemplates() {
                         const formatted = displayDate(
                           template.updatedAt ||
                             template.updated_at ||
-                            template.updatedDate
+                            template.updatedDate,
                         );
 
                         return formatted ? (
@@ -715,7 +729,6 @@ export default function RoleTemplates() {
                       >
                         <i className="bi bi-pencil" />
                       </button>
-
                       <button
                         type="button"
                         className="role-delete-action"
@@ -791,7 +804,6 @@ export default function RoleTemplates() {
           </div>
         </div>
       </section>
-
       {deletePopup && templateToDelete && (
         <div
           className="role-delete-overlay"
@@ -804,22 +816,33 @@ export default function RoleTemplates() {
               <i className="bi bi-trash" />
             </div>
 
-            <h3 id="delete-role-template-title">
-              Delete Role Template?
-            </h3>
+            {/* <h3 id="delete-role-template-title">Delete Role Template?</h3> */}
+            <h3 id="delete-role-template-title">Deactivate Role Template?</h3>
 
             <p>
-              Are you sure you want to delete{" "}
+              Are you sure you want to deactivate{" "}
               <strong>
-                {templateToDelete.name ||
-                  templateToDelete.roleCode}
+                {templateToDelete.name || templateToDelete.roleCode}
               </strong>
               ?
             </p>
 
             <p>
-              This action cannot be undone.
+              This role template will be set to <strong>Inactive</strong>.
             </p>
+
+            <p>This action cannot be undone.</p>
+
+            {/* RENDER DELETE ERROR HERE */}
+            {deleteError && (
+              <p
+                className="role-error-message"
+                style={{ margin: "12px 0", color: "#dc2626" }}
+                role="alert"
+              >
+                {deleteError}
+              </p>
+            )}
 
             <div className="role-delete-actions">
               <button
@@ -837,7 +860,8 @@ export default function RoleTemplates() {
                 onClick={confirmDeleteTemplate}
                 disabled={saving}
               >
-                {saving ? "Deleting..." : "Yes, Delete"}
+                {/* {saving ? "Deleting..." : "Yes, Delete"} */}
+                {saving ? "Deactivating..." : "Yes, Deactivate"}
               </button>
             </div>
           </div>

@@ -248,6 +248,10 @@ export async function listStoreEmployees(merchantId, storeId) {
   return api.get(endpoints.storeEmployees(merchantId, storeId));
 }
 
+export async function listStoreRolePermissions(merchantId, storeId) {
+  return api.get(endpoints.storeRolePermissions(merchantId, storeId));
+}
+
 export async function saveStoreEmployees(merchantId, storeId, employees) {
   return api.put(endpoints.storeEmployees(merchantId, storeId), { employees });
 }

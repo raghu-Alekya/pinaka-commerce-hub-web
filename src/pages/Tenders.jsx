@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { storeTypesApi } from "../api/storeTypes";
 import { tendorsApi } from "../api/tendors";
- 
+
 const emptyForm = {
   code: "",
   name: "",
   status: "Active",
 };
 
-const TENDER_CODE_PATTERN = /^[A-Za-z0-9]{3,30}$/;
 function parseDate(value) {
   if (!value) {
     return null;
@@ -60,165 +59,130 @@ function formatDate(value) {
 
   return `${formatDateDate(date)} ${formatDateTime(date)}`;
 }
- 
+
 function mapTendorToUI(tendor) {
   return {
     id: tendor.id,
-    code:
-      tendor.code ||
-      tendor.tendorCode ||
-       "",
-    name:
-      tendor.tendorName ||
-      tendor.name ||
-      "",
+    code: tendor.code || tendor.tendorCode || "",
+    name: tendor.tendorName || tendor.name || "",
     status:
       tendor.status === "ACTIVE"
         ? "Active"
         : tendor.status === "INACTIVE"
-        ? "Inactive"
-        : tendor.status || "Active",
-    createdAt:
-      tendor.createdAt ||
-      tendor.created_at ||
-      null,
-    updatedAt:
-      tendor.updatedAt ||
-      tendor.updated_at ||
-      null,
+          ? "Inactive"
+          : tendor.status || "Active",
+    createdAt: tendor.createdAt || tendor.created_at || null,
+    updatedAt: tendor.updatedAt || tendor.updated_at || null,
     changedBy:
-      tendor.changedBy ||
-      tendor.updatedBy ||
-      tendor.createdBy ||
-      "Admin",
-    changedAt:
-      tendor.changedAt ||
-      tendor.updatedAt ||
-      tendor.createdAt ||
-      null,
+      tendor.changedBy || tendor.updatedBy || tendor.createdBy || "Admin",
+    changedAt: tendor.changedAt || tendor.updatedAt || tendor.createdAt || null,
   };
 }
- 
+
 function getTendorList(response) {
   if (Array.isArray(response)) {
     return response;
   }
- 
+
   if (Array.isArray(response?.data)) {
     return response.data;
   }
- 
+
   if (Array.isArray(response?.data?.items)) {
     return response.data.items;
   }
- 
+
   if (Array.isArray(response?.data?.tendors)) {
     return response.data.tendors;
   }
- 
+
   if (Array.isArray(response?.tendors)) {
     return response.tendors;
   }
- 
+
   if (Array.isArray(response?.items)) {
     return response.items;
   }
- 
+
   return [];
 }
- 
+
 function getTendorData(response) {
   if (response?.data?.id) {
     return response.data;
   }
- 
+
   if (response?.tendor?.id) {
     return response.tendor;
   }
- 
+
   if (response?.id) {
     return response;
   }
- 
+
   return null;
 }
- 
+
 export default function Tenders() {
   const [tenders, setTenders] = useState([]);
- 
+
   const [form, setForm] = useState(emptyForm);
-  const [originalForm, setOriginalForm] =
-    useState(null);
+  const [originalForm, setOriginalForm] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
- 
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState("All Statuses");
 
-  const [sortBy, setSortBy] =
-    useState("newest");
- 
-  const [tendersLoading, setTendersLoading] =
-    useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All Statuses");
+
+  const [sortBy, setSortBy] = useState("newest");
+
+  const [tendersLoading, setTendersLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteConfirmTender, setDeleteConfirmTender] = useState(null);
- 
+
   useEffect(() => {
     fetchTendors();
   }, []);
- 
+
   async function fetchTendors() {
     try {
       setTendersLoading(true);
- 
+
       const response = await tendorsApi.getAll();
- 
+
       console.log("Tendors API response:", response);
- 
+
       const list = getTendorList(response);
 
       const mappedTenders = list.map(mapTendorToUI);
 
       mappedTenders.sort((a, b) => {
-        const aTime = a.createdAt
-          ? new Date(a.createdAt).getTime()
-          : 0;
-        const bTime = b.createdAt
-          ? new Date(b.createdAt).getTime()
-          : 0;
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
 
         return bTime - aTime;
       });
 
       setTenders(mappedTenders);
     } catch (error) {
-      console.error(
-        "Failed to fetch tendors:",
-        error
-      );
- 
+      console.error("Failed to fetch tendors:", error);
+
       setTenders([]);
     } finally {
       setTendersLoading(false);
     }
   }
- 
+
   const filteredTenders = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     const filtered = tenders.filter((tender) => {
       const matchesSearch =
-        !query ||
-        Object.values(tender)
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
+        !query || Object.values(tender).join(" ").toLowerCase().includes(query);
 
       const matchesStatus =
-        statusFilter === "All Statuses" ||
-        tender.status === statusFilter;
+        statusFilter === "All Statuses" || tender.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
@@ -228,7 +192,7 @@ export default function Tenders() {
         return String(a.name || "").localeCompare(
           String(b.name || ""),
           undefined,
-          { sensitivity: "base" }
+          { sensitivity: "base" },
         );
       }
 
@@ -236,114 +200,84 @@ export default function Tenders() {
         return String(b.name || "").localeCompare(
           String(a.name || ""),
           undefined,
-          { sensitivity: "base" }
+          { sensitivity: "base" },
         );
       }
 
-      const aTime = a.createdAt
-        ? new Date(a.createdAt).getTime()
-        : 0;
-      const bTime = b.createdAt
-        ? new Date(b.createdAt).getTime()
-        : 0;
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
 
-      return sortBy === "oldest"
-        ? aTime - bTime
-        : bTime - aTime;
+      return sortBy === "oldest" ? aTime - bTime : bTime - aTime;
     });
   }, [tenders, search, statusFilter, sortBy]);
- 
+
   function handleChange(event) {
     const { name, value } = event.target;
- 
+
     setForm((current) => ({
       ...current,
       [name]: value,
     }));
   }
- 
-  const tenderCodeValid =
-    TENDER_CODE_PATTERN.test(form.code.trim());
 
-  const tenderFormComplete =
-    Boolean(form.code.trim() && form.name.trim()) &&
-    tenderCodeValid;
+  const tenderFormComplete = Boolean(form.code.trim() && form.name.trim());
 
   const tenderFormChanged =
     editingId !== null &&
     originalForm !== null &&
-    (
-      form.code.trim() !== originalForm.code.trim() ||
+    (form.code.trim() !== originalForm.code.trim() ||
       form.name.trim() !== originalForm.name.trim() ||
-      form.status !== originalForm.status
-    );
+      form.status !== originalForm.status);
 
   const tenderCanSave =
-    tenderFormComplete &&
-    (editingId === null || tenderFormChanged);
-
-  const tenderCodeError = !form.code.trim()
-    ? ""
-    : tenderCodeValid
-    ? ""
-    : "Use 3–30 letters and numbers only. No spaces or special characters.";
+    tenderFormComplete && (editingId === null || tenderFormChanged);
 
   function resetForm() {
     setForm(emptyForm);
     setOriginalForm(null);
     setEditingId(null);
   }
- 
+
   async function saveTender(event) {
     event.preventDefault();
- 
+
     if (!tenderFormComplete) {
       return;
     }
- 
+
     try {
       setSaving(true);
- 
+
       const payload = {
         tendorCode: form.code.trim(),
         tendorName: form.name.trim(),
-        status:
-          form.status === "Active"
-            ? "ACTIVE"
-            : "INACTIVE",
+        status: form.status === "Active" ? "ACTIVE" : "INACTIVE",
       };
- 
+
       if (editingId) {
-        await tendorsApi.update(
-          editingId,
-          payload
-        );
+        await tendorsApi.update(editingId, payload);
       } else {
         await tendorsApi.create(payload);
       }
- 
+
       await fetchTendors();
       resetForm();
     } catch (error) {
       console.error(
-        editingId
-          ? "Failed to update tendor:"
-          : "Failed to create tendor:",
-        error
+        editingId ? "Failed to update tendor:" : "Failed to create tendor:",
+        error,
       );
- 
+
       alert(
         error?.response?.data?.message ||
           error?.message ||
-          (editingId
-            ? "Failed to update tender."
-            : "Failed to create tender.")
+          (editingId ? "Failed to update tender." : "Failed to create tender."),
       );
     } finally {
       setSaving(false);
     }
   }
- 
+
   function editTender(tender) {
     const editValues = {
       code: tender.code || "",
@@ -390,11 +324,7 @@ export default function Tenders() {
 
       await tendorsApi.delete(tender.id);
 
-      setTenders((current) =>
-        current.filter(
-          (item) => item.id !== tender.id
-        )
-      );
+      setTenders((current) => current.filter((item) => item.id !== tender.id));
 
       if (editingId === tender.id) {
         resetForm();
@@ -402,15 +332,12 @@ export default function Tenders() {
 
       setDeleteConfirmTender(null);
     } catch (error) {
-      console.error(
-        "Failed to delete tendor:",
-        error
-      );
+      console.error("Failed to delete tendor:", error);
 
       alert(
         error?.response?.data?.message ||
           error?.message ||
-          "Failed to delete tender."
+          "Failed to delete tender.",
       );
     } finally {
       setDeleting(false);
@@ -424,102 +351,82 @@ export default function Tenders() {
         <div>
           <h1>Create Tender</h1>
 
-          <p>
-            Create and manage tenders and their availability.
-          </p>
+          <p>Create and manage tenders and their availability.</p>
         </div>
       </div>
- 
-      <form
-        className="tenders-form"
-        onSubmit={saveTender}
-          autoComplete="off"
-      >
+
+      <form className="tenders-form" onSubmit={saveTender} autoComplete="off">
         <div className="tenders-form-heading">
           <div className="tenders-heading-content">
             <div className="tenders-heading-icon">
               <i className="bi bi-cash-coin" />
             </div>
- 
+
             <div>
               <h2>
-                {editingId
-                  ? "Edit Tender Details"
-                  : "Add Tender Details"}
+                {editingId ? "Edit Tender Details" : "Add Tender Details"}
               </h2>
- 
-              <p>Provide the basic details and configuration for this tender.</p>
+
+              <p>
+                Provide the basic details and configuration for this tender.
+              </p>
             </div>
           </div>
- 
         </div>
- 
+
         <div className="tenders-form-grid tender-create-fields-grid">
           <label>
             <span>
               Tender Code <b>*</b>
             </span>
- 
+
             <input
               type="text"
               name="code"
               value={form.code}
               onChange={handleChange}
               placeholder="e.g. TNDCREDIT"
-              maxLength={30}
+              // maxLength={30}
               required
               autoComplete="off"
-              aria-invalid={Boolean(tenderCodeError)}
             />
-            {tenderCodeError ? (
-              <small className="tenders-field-error">
-                {tenderCodeError}
-              </small>
-            ) : (
-              <small className="tenders-field-help">
-              </small>
-            )}
           </label>
- 
+
           <label>
             <span>
               Tender Name <b>*</b>
             </span>
- 
+
             <input
               name="name"
               value={form.name}
               onChange={handleChange}
               placeholder="e.g. Store Credit"
               required
-                autoComplete="off"
+              autoComplete="off"
             />
           </label>
- 
+
           <label>
-            <span>Status <b>*</b></span>
- 
+            <span>
+              Status <b>*</b>
+            </span>
+
             <select
               name="status"
               value={form.status}
               onChange={handleChange}
               className={`tender-status-select ${
-                form.status === "Inactive"
-                  ? "status-inactive"
-                  : "status-active"
+                form.status === "Inactive" ? "status-inactive" : "status-active"
               }`}
             >
-              <option value="Active">
-                Active
-              </option>
- 
-              <option value="Inactive">
-                Inactive
-              </option>
+              <option value="Active">Active</option>
+
+              <option value="Inactive">Inactive</option>
             </select>
           </label>
         </div>
- 
+
         <div className="tenders-form-actions">
           <button
             type="button"
@@ -527,114 +434,86 @@ export default function Tenders() {
             onClick={resetForm}
             disabled={saving}
           >
-           
-            {editingId ? "Cancel" : "Cancel"}
+            Cancel
           </button>
- 
+
           <button
             type="submit"
             className="tenders-save-button"
-            disabled={
-              saving ||
-              !tenderCanSave
-            }
+            disabled={saving || !tenderCanSave}
           >
             {saving
               ? "Saving..."
               : editingId
-              ? "Update Tender"
-              : "Create Tender"}
+                ? "Update Tender"
+                : "Create Tender"}
           </button>
         </div>
       </form>
- 
+
       <div className="tenders-list-card">
         <div className="tenders-list-toolbar">
           <div>
             <h2>Tenders List</h2>
- 
+
             <p>
               {filteredTenders.length} payment method
-              {filteredTenders.length === 1
-                ? ""
-                : "s"} found
+              {filteredTenders.length === 1 ? "" : "s"} found
             </p>
           </div>
- 
+
           <div className="tenders-filters">
             <div className="tenders-search">
               <i className="bi bi-search" />
- 
+
               <input
                 value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
+                onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search tenders..."
               />
             </div>
- 
+
             <select
               value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(
-                  event.target.value
-                )
-              }
+              onChange={(event) => setStatusFilter(event.target.value)}
             >
-              <option value="All Statuses">
-                All Statuses
-              </option>
- 
-              <option value="Active">
-                Active
-              </option>
- 
-              <option value="Inactive">
-                Inactive
-              </option>
+              <option value="All Statuses">All Statuses</option>
+
+              <option value="Active">Active</option>
+
+              <option value="Inactive">Inactive</option>
             </select>
             <select
               className="tenders-sort-select"
               value={sortBy}
-              onChange={(event) =>
-                setSortBy(event.target.value)
-              }
+              onChange={(event) => setSortBy(event.target.value)}
               aria-label="Sort tenders"
             >
-              <option value="newest">
-                Newest to Oldest
-              </option>
+              <option value="newest">Newest to Oldest</option>
 
-              <option value="oldest">
-                Oldest to Newest
-              </option>
+              <option value="oldest">Oldest to Newest</option>
 
-              <option value="name-asc">
-                Alphabetical A–Z
-              </option>
+              <option value="name-asc">Alphabetical A–Z</option>
 
-              <option value="name-desc">
-                Alphabetical Z–A
-              </option>
+              <option value="name-desc">Alphabetical Z–A</option>
             </select>
 
-
-           <button type="button"
-                   className="tenders-reset-button"
-                   onClick={() => {
-                 setSearch("");
-                 setStatusFilter("All Statuses");
-                 setSortBy("newest");
-                      }}
-                    title="Reset filters"
-                  aria-label="Reset filters"
-                    >
-                   <i className="bi bi-arrow-counterclockwise" />
-              </button>
+            <button
+              type="button"
+              className="tenders-reset-button"
+              onClick={() => {
+                setSearch("");
+                setStatusFilter("All Statuses");
+                setSortBy("newest");
+              }}
+              title="Reset filters"
+              aria-label="Reset filters"
+            >
+              <i className="bi bi-arrow-counterclockwise" />
+            </button>
           </div>
         </div>
- 
+
         <div className="tenders-table-wrap">
           <table className="tenders-table">
             <thead>
@@ -647,7 +526,7 @@ export default function Tenders() {
                 <th>Actions</th>
               </tr>
             </thead>
- 
+
             <tbody>
               {tendersLoading ? (
                 <tr>
@@ -664,27 +543,23 @@ export default function Tenders() {
               ) : (
                 filteredTenders.map((tender) => (
                   <tr key={tender.id}>
+                    <td>{tender.code}</td>
+
                     <td>
-                      {tender.code}
+                      <strong>{tender.name}</strong>
                     </td>
- 
-                    <td>
-                      <strong>
-                        {tender.name}
-                      </strong>
-                    </td>
- 
+
                     <td>
                       <span
-                         className={`tenders-status ${String(
-                         tender.status
-                         ).toLowerCase()}`}
-                           >
-                         <i className="bi bi-circle-fill" />
-                         {tender.status}
-                          </span>
-                            </td>
- 
+                        className={`tenders-status ${String(
+                          tender.status,
+                        ).toLowerCase()}`}
+                      >
+                        <i className="bi bi-circle-fill" />
+                        {tender.status}
+                      </span>
+                    </td>
+
                     <td className="tender-date-cell">
                       <span className="tender-date">
                         {formatDateDate(tender.createdAt)}
@@ -702,38 +577,29 @@ export default function Tenders() {
                         {formatDateTime(tender.updatedAt)}
                       </span>
                     </td>
- 
-                    <td className="tenders-actions"><button
+
+                    <td className="tenders-actions">
+                      <button
                         type="button"
-                        onClick={() =>
-                          editTender(tender)
-                        }
+                        onClick={() => editTender(tender)}
                         aria-label={`Edit ${tender.name}`}
                         title="Edit"
                         disabled={deleting}
                       >
                         <i className="bi bi-pencil" />
                       </button>
- 
+
                       <button
                         type="button"
                         className="tenders-delete-action"
-                        onClick={() =>
-                          requestDeleteTender(tender)
-                        }
+                        onClick={() => requestDeleteTender(tender)}
                         aria-label={`Delete ${tender.name}`}
                         title="Delete"
-                        disabled={
-                          deleting &&
-                          deletingId ===
-                            tender.id
-                        }
+                        disabled={deleting && deletingId === tender.id}
                       >
                         <i
                           className={
-                            deleting &&
-                            deletingId ===
-                              tender.id
+                            deleting && deletingId === tender.id
                               ? "bi bi-hourglass-split"
                               : "bi bi-trash"
                           }
@@ -745,19 +611,15 @@ export default function Tenders() {
               )}
             </tbody>
           </table>
- 
-          {!tendersLoading &&
-            filteredTenders.length === 0 && (
-              <div className="tenders-empty">
-                No tenders found.
-              </div>
-            )}
+
+          {!tendersLoading && filteredTenders.length === 0 && (
+            <div className="tenders-empty">No tenders found.</div>
+          )}
         </div>
-      </div>      {deleteConfirmTender && (
-        <div
-          className="tenders-confirm-backdrop"
-          onClick={cancelDeleteTender}
-        >
+      </div>
+
+      {deleteConfirmTender && (
+        <div className="tenders-confirm-backdrop" onClick={cancelDeleteTender}>
           <div
             className="tenders-confirm-modal"
             role="dialog"
@@ -804,8 +666,6 @@ export default function Tenders() {
           </div>
         </div>
       )}
-
     </section>
   );
 }
- 

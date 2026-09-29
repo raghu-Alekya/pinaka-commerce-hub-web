@@ -892,7 +892,27 @@
 .mv-dialog-create .vendors-form-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .mv-dialog-create .vendors-form input, .mv-dialog-create .vendors-form select { font-size: 14px; font-weight: 400; }
 .mv-dialog-create .vendors-form-actions { margin-top: 28px; gap: 12px; }
-.mv-dialog-select .mv-options { max-height: 48vh; overflow: auto; margin-top: 14px; }
+.mv-dialog-select {
+    overflow: hidden;
+}
+.mv-dialog-select > .merchant-vendors {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(90vh - 50px);
+    max-height: calc(90dvh - 50px);
+}
+.mv-dialog-select .mv-picker-body {
+    min-height: 0;
+    overflow-y: auto;
+}
+.mv-dialog-select .mv-header,
+.mv-dialog-select .mv-footer {
+    flex-shrink: 0;
+}
+.mv-dialog-select .mv-footer {
+    background: #fff;
+}
+.mv-dialog-select .mv-options { max-height: none; overflow: auto; margin-top: 14px; }
 .mv-dialog-select .mv-options thead { position: sticky; top: 0; z-index: 1; background: #f5f7fb; }
 .mv-picker-summary, .mv-picker-pagination { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 18px; color: #63708a; font-size: 13px; }
 .mv-picker-summary label { display: flex; align-items: center; gap: 8px; }
