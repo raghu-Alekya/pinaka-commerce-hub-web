@@ -145,6 +145,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const devices = [...createdDevices,...list(saved?.devices ?? raw.devices ?? response.devices).filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))].filter(device=>device.merchantId==null || String(device.merchantId)===String(merchantId));
   const payments = list(saved?.paymentHistory ?? raw.paymentHistory);
   const business = contact.business || raw.legalBusinessName || raw.businessName || summary.name;
+  const displayMerchantCode = raw.merchant_code || raw.merchantId || summary.merchantId || contact.code || raw.code || raw.merchantCode || summary.id || merchantId;
   const storeName = device => device.storeName || stores.find(store=>device.storeId!=null && [store.id,store.code,store.storeId].some(id=>id!=null && String(id)===String(device.storeId)))?.name || (saved && typeof device.store==='number' ? stores[device.store]?.name : '') || device.storeId || '—';
   return <div className="page-content merchant-readonly">
     <style>{`
@@ -170,7 +171,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       @media(max-width:650px){.merchant-readonly .merchant-view-fields{grid-template-columns:1fr;}.merchant-readonly .merchant-view-layout{grid-template-columns:1fr;}.merchant-readonly .merchant-view-layout > [role="tabpanel"]{grid-column:1;grid-row:2;}}
     `}</style>
     <button type="button" className="merchant-view-back" onClick={onBack}>← Merchants</button>
-    <div className="page-header"><div><h1>Merchant Details</h1><p>{readValue(business)} · {merchantId}</p></div>
+    <div className="page-header"><div><h1>Merchant Details</h1><p>{readValue(business)} · {displayMerchantCode}</p></div>
     </div>
     {loading ? <p role="status">Loading merchant details…</p> : error ? <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div> : <div className="merchant-view-layout">
       <div className="merchant-view-tabs" role="tablist" aria-orientation="vertical" aria-label="Merchant details">
@@ -180,7 +181,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       </div>
       <div role="tabpanel" id="merchant-panel-overview" aria-labelledby="merchant-tab-overview" hidden={activeTab !== 'overview'} tabIndex={0}>
         <ViewSection title="Business Details"><ViewFields items={[
-          ['Merchant Code', contact.code || raw.merchantCode || summary.id || merchantId], ['Legal / Business Name', business],
+          ['Merchant Code', displayMerchantCode], ['Legal / Business Name', business],
           ['Business Display Name', contact.display || raw.businessName || raw.name || summary.name], ['Status', summary.status || raw.status],
           ['Joined Date', summary.joined || raw.createdAt],
         ]} /></ViewSection>
