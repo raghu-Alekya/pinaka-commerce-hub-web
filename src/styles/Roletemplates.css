@@ -690,7 +690,8 @@
   color: #10264d;
   font-size: 20px;
   font-weight: 600;
-  letter-spacing: -0.7px;
+  line-height: 1.2;
+  letter-spacing:  -0.5px;
 }
 
 .role-templates-page-heading p {
@@ -795,8 +796,8 @@
 
 .role-template-cancel-button,
 .role-template-submit-button {
-  width: 180px;
-  min-width: 180px;
+  width: 187px;
+  min-width: 187px;
   height: 45px;
   font-size: 14px;
 }
@@ -2944,23 +2945,29 @@
 }
 
 .role-filters > select:first-of-type {
-  width: 140px !important;
-  min-width: 140px !important;
-  max-width: 140px !important;
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
   height: 38px !important;
   min-height: 38px !important;
-  flex: 0 0 140px !important;
+  flex: 0 0 150px !important;
   box-sizing: border-box;
+
+  /* right spacing */
+  padding-right: 28px !important;
 }
 
 .role-filters > select:last-of-type {
-  width: 190px !important;
-  min-width: 190px !important;
-  max-width: 190px !important;
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
   height: 38px !important;
   min-height: 38px !important;
-  flex: 0 0 190px !important;
+  flex: 0 0 150px !important;
   box-sizing: border-box;
+
+  /* right spacing */
+  padding-right: 28px !important;
 }
 
 .role-reset-icon-btn {
@@ -3040,4 +3047,198 @@
     max-width: none !important;
     flex: 1 1 100% !important;
   }
+}
+
+
+/* =========================================================
+   ROLE TEMPLATES — DYNAMIC PAGINATION
+   UI only. Existing API/create/update/delete flow is unchanged.
+   ========================================================= */
+
+.role-pagination {
+  width: 100%;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #6380ae;
+  font-size: 13px;
+}
+
+.role-pagination-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.role-page-arrow,
+.role-page-number {
+  display: inline-flex;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+  border: 1px solid #dce3ed;
+  border-radius: 6px;
+  color: #49678f;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+}
+
+.role-page-arrow:hover:not(:disabled),
+.role-page-number:hover:not(.active) {
+  border-color: #bfcaf8;
+  color: #684ee3;
+  background: #f7f6ff;
+}
+
+.role-page-number.active {
+  border-color: #684ee3;
+  color: #ffffff;
+  background: #684ee3;
+  cursor: default;
+}
+
+.role-page-arrow:disabled {
+  color: #b8c2d1;
+  background: #f8f9fb;
+  border-color: #e7ebf1;
+  cursor: not-allowed;
+}
+
+.role-page-arrow i {
+  font-size: 12px;
+}
+
+@media (max-width: 700px) {
+  .role-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+
+/* =========================================================
+   ROLE TEMPLATES — PAGINATION BUTTON FIX
+   Matches Roletemplates.jsx: .role-page-btn / .role-page-arrow
+   ========================================================= */
+.role-pagination {
+  width: 100%;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #6380ae;
+  font-size: 13px;
+}
+
+.role-pagination-info {
+  display: inline-block;
+  color: #6380ae;
+  font-size: 13px;
+  line-height: 38px;
+}
+
+.role-pagination-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.role-pagination-controls .role-page-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  border: 1px solid #dce3ed;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: #49678f;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: none;
+  text-decoration: none;
+  vertical-align: middle;
+  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+}
+
+.role-pagination-controls .role-page-btn:hover:not(:disabled):not(.active) {
+  border-color: #bfcaf8;
+  background: #f7f6ff;
+  color: #684ee3;
+}
+
+.role-pagination-controls .role-page-btn.active,
+.role-pagination-controls .role-page-btn[aria-current="page"] {
+  border-color: #684ee3;
+  background: #684ee3;
+  color: #ffffff;
+}
+
+.role-pagination-controls .role-page-btn:disabled {
+  border-color: #e1e6ee;
+  background: #f7f8fa;
+  color: #bdc7d6;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.role-pagination-controls .role-page-btn i {
+  display: block;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font-size: 13px;
+  line-height: 1;
+}
+
+@media (max-width: 700px) {
+  .role-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* Role Template List - custom dropdown arrow */
+.role-filters > select:first-of-type,
+.role-filters > select:last-of-type {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  padding-left: 12px !important;
+  padding-right: 30px !important;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23173861' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+
+  background-repeat: no-repeat !important;
+
+  /* THIS controls arrow right padding */
+  background-position: right 12px center !important;
+
+  background-size: 12px !important;
 }
