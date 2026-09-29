@@ -6,14 +6,10 @@
   flex: 1;
   width: 100%;
   min-height: calc(100vh - 72px);
-
-  padding: 18px 32px 30px;
-
+  padding: 18px 28px 30px;
   background: #f6f7fb;
   color: #10264d;
-
   font-family: Inter, Arial, sans-serif;
-
   box-sizing: border-box;
 }
 
@@ -43,21 +39,16 @@
 
 .feature-permissions-page .fp-title-wrap h1 {
   margin: 0 0 7px;
-
   color: #10264d;
-
   font-size: 20px;
   line-height: 1.2;
   font-weight: 600;
-
   letter-spacing: -0.5px;
 }
 
 .feature-permissions-page .fp-title-wrap p {
   margin: 0;
-
   color: #5575a8;
-
   font-size: 14px;
   line-height: 1.4;
   font-weight: 400;
@@ -71,12 +62,9 @@
 .feature-permissions-page .fp-info-card,
 .feature-permissions-page .fp-list-card {
   width: 100%;
-
   background: #ffffff;
-
   border: 1px solid #dfe9f5;
   border-radius: 12px;
-
   box-shadow:
     0 2px 6px rgba(16, 38, 77, 0.03),
     0 8px 22px rgba(16, 38, 77, 0.025);
@@ -672,23 +660,15 @@
 .feature-permissions-page .fp-status-filter select {
   width: 100%;
   height: 100%;
-
   padding: 0 37px 0 13px;
-
   border: none;
   outline: none;
-
   border-radius: 7px;
-
   background: transparent;
-
   color: #34435e;
-
   font-family: inherit;
   font-size: 13px;
-
   cursor: pointer;
-
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -1112,24 +1092,17 @@
 .feature-permissions-page .fp-pagination button {
   min-width: 32px;
   height: 32px;
-
   padding: 0 8px;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   border: 1px solid #dce4ef;
   border-radius: 6px;
-
   background: #ffffff;
-
   color: #536985;
-
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
-
   cursor: pointer;
 
   transition:
