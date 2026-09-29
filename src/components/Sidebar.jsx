@@ -12,7 +12,6 @@ const sections = [
       ["/merchants", "bi-person-badge", "Merchants"],
       ["/stores", "bi-shop", "Stores"],
       ["/subscriptions", "bi-cart3", "Subscriptions"],
-      ["/vendors", "bi-truck", "Vendors"],
     ],
   },
   {
@@ -29,7 +28,7 @@ const sections = [
           ["/permissions", "bi-shield-check", "Feature Permissions"],
           ["/role-templates", "bi-person-badge", "Role Templates"],
           ["/plans/new", "bi-credit-card", "Plans"],
-          // ["/vendors", "bi-truck", "Vendors"],
+          ["/vendors", "bi-truck", "Vendors"],
           ["/tenders", "bi-cash-coin", "Tenders"],
         ],
       ],
@@ -72,6 +71,7 @@ export default function Sidebar({
     location.pathname.startsWith("/permissions") ||
     location.pathname.startsWith("/role-templates") ||
     location.pathname.startsWith("/plans") ||
+    location.pathname.startsWith("/vendors") ||
     location.pathname.startsWith("/tenders");
 
   const [masterSetupOpen, setMasterSetupOpen] = useState(isMasterSetupRoute);
@@ -84,9 +84,8 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`sidebar ${
-        collapsed ? "sidebar-collapsed" : ""
-      } ${mobileOpen ? "mobile-open" : ""}`}
+      className={`sidebar ${collapsed ? "sidebar-collapsed" : ""
+        } ${mobileOpen ? "mobile-open" : ""}`}
     >
       <div className="sidebar-brand">
         <div className="brand-icon">
@@ -136,11 +135,10 @@ export default function Sidebar({
 
                         {!collapsed && (
                           <i
-                            className={`bi bi-chevron-down arrow ${
-                              masterSetupOpen
-                                ? "master-setup-arrow-open"
-                                : ""
-                            }`}
+                            className={`bi bi-chevron-down arrow ${masterSetupOpen
+                              ? "master-setup-arrow-open"
+                              : ""
+                              }`}
                           />
                         )}
                       </button>
@@ -157,9 +155,8 @@ export default function Sidebar({
                                   subTo === "/features" &&
                                   location.pathname.startsWith("/features/");
 
-                                return `master-setup-submenu-item ${
-                                  isActive || featureChildActive ? "active" : ""
-                                }`;
+                                return `master-setup-submenu-item ${isActive || featureChildActive ? "active" : ""
+                                  }`;
                               }}
                             >
                               <i className={`bi ${subIcon}`} />
@@ -202,9 +199,8 @@ export default function Sidebar({
         onClick={() => setCollapsed(!collapsed)}
       >
         <i
-          className={`bi ${
-            collapsed ? "bi-chevron-right" : "bi-chevron-left"
-          }`}
+          className={`bi ${collapsed ? "bi-chevron-right" : "bi-chevron-left"
+            }`}
         />
 
         {!collapsed && <span>Collapse</span>}

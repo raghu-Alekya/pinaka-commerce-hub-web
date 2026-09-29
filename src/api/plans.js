@@ -1,20 +1,30 @@
 import { api } from "./http";
 import { endpoints } from "./endpoints";
 
+
 const toApiBillingModel = (value) => {
   const normalized = String(value || "")
     .trim()
     .toUpperCase();
 
-  if (normalized === "PER STORE" || normalized === "PER_STORE") {
+  if (
+    normalized === "PER STORE" ||
+    normalized === "PER_STORE"
+  ) {
     return "PER_STORE";
   }
 
-  if (normalized === "PER TERMINAL" || normalized === "PER_TERMINAL") {
+  if (
+    normalized === "PER TERMINAL" ||
+    normalized === "PER_TERMINAL"
+  ) {
     return "PER_TERMINAL";
   }
 
-  if (normalized === "FLAT RATE" || normalized === "FLAT") {
+  if (
+    normalized === "FLAT RATE" ||
+    normalized === "FLAT"
+  ) {
     return "FLAT";
   }
 
@@ -38,7 +48,10 @@ const toApiBillingCycle = (value) => {
     return "QUARTERLY";
   }
 
-  if (normalized === "YEARLY" || normalized === "ANNUAL") {
+  if (
+    normalized === "YEARLY" ||
+    normalized === "ANNUAL"
+  ) {
     return "YEARLY";
   }
 
@@ -64,17 +77,27 @@ const toApiStatus = (value) => {
  * Convert value to number.
  */
 const toNumberOrZero = (value) => {
-  if (value === "" || value === null || value === undefined) {
+  if (
+    value === "" ||
+    value === null ||
+    value === undefined
+  ) {
     return 0;
   }
 
   const number = Number(value);
 
-  return Number.isFinite(number) ? number : 0;
+  return Number.isFinite(number)
+    ? number
+    : 0;
 };
 
+
 const toTrialDays = (value) => {
-  if (typeof value === "number" && Number.isFinite(value)) {
+  if (
+    typeof value === "number" &&
+    Number.isFinite(value)
+  ) {
     return value;
   }
 
@@ -86,6 +109,7 @@ const toTrialDays = (value) => {
 
   return Number(match[0]);
 };
+
 
 const toEffectiveFrom = (value) => {
   if (!value) {
@@ -105,20 +129,29 @@ const toEffectiveFrom = (value) => {
  * PLAN REQUEST PAYLOAD
  * ============================================================ */
 
-export function planPayload(form, includedFeatures = []) {
-  const selectedStoreType = form?.applicableStoreType ?? form?.storeType ?? "";
+
+export function planPayload(
+  form,
+  includedFeatures = []
+) {
+  const selectedStoreType =
+    form?.applicableStoreType ??
+    form?.storeType ??
+    "";
 
   const normalizedStoreType =
     typeof selectedStoreType === "string"
       ? selectedStoreType.trim()
       : selectedStoreType && typeof selectedStoreType === "object"
-        ? selectedStoreType.id ||
+        ? (
+          selectedStoreType.id ||
           selectedStoreType._id ||
           selectedStoreType.storeTypeId ||
           selectedStoreType.name ||
           selectedStoreType.storeTypeName ||
           selectedStoreType.code ||
           ""
+        )
         : "";
 
   const payload = {
@@ -129,9 +162,7 @@ export function planPayload(form, includedFeatures = []) {
     description: String(form.description || "").trim(),
     billingModel: toApiBillingModel(form.billingModel),
     basePrice: toNumberOrZero(form.basePrice),
-    currency: String(form.currency || "")
-      .trim()
-      .toUpperCase(),
+    currency: String(form.currency || "").trim().toUpperCase(),
     billingCycle: toApiBillingCycle(form.billingCycle),
     status: toApiStatus(form.status),
     storeType: normalizedStoreType,
@@ -201,7 +232,11 @@ const extractPlans = (response) => {
 
   // API returned:
   // { data: { plans: [...] } }
-  if (Array.isArray(response?.data?.plans)) {
+  if (
+    Array.isArray(
+      response?.data?.plans
+    )
+  ) {
     return response.data.plans;
   }
 
@@ -213,20 +248,31 @@ const extractPlans = (response) => {
   return [];
 };
 
-const displayBillingModel = (value) => {
-  const normalized = String(value || "")
-    .trim()
-    .toUpperCase();
 
-  if (normalized === "PER_STORE" || normalized === "PER STORE") {
+const displayBillingModel = (value) => {
+  const normalized =
+    String(value || "")
+      .trim()
+      .toUpperCase();
+
+  if (
+    normalized === "PER_STORE" ||
+    normalized === "PER STORE"
+  ) {
     return "Per store";
   }
 
-  if (normalized === "PER_TERMINAL" || normalized === "PER TERMINAL") {
+  if (
+    normalized === "PER_TERMINAL" ||
+    normalized === "PER TERMINAL"
+  ) {
     return "Per terminal";
   }
 
-  if (normalized === "FLAT" || normalized === "FLAT_RATE") {
+  if (
+    normalized === "FLAT" ||
+    normalized === "FLAT_RATE"
+  ) {
     return "Flat rate";
   }
 
@@ -238,9 +284,10 @@ const displayBillingModel = (value) => {
  * back to UI value.
  */
 const displayBillingCycle = (value) => {
-  const normalized = String(value || "")
-    .trim()
-    .toUpperCase();
+  const normalized =
+    String(value || "")
+      .trim()
+      .toUpperCase();
 
   if (normalized === "MONTHLY") {
     return "Monthly";
@@ -250,7 +297,10 @@ const displayBillingCycle = (value) => {
     return "Quarterly";
   }
 
-  if (normalized === "YEARLY" || normalized === "ANNUAL") {
+  if (
+    normalized === "YEARLY" ||
+    normalized === "ANNUAL"
+  ) {
     return "Yearly";
   }
 
@@ -261,9 +311,10 @@ const displayBillingCycle = (value) => {
  * Convert API status to UI status.
  */
 const displayStatus = (value) => {
-  const normalized = String(value || "")
-    .trim()
-    .toUpperCase();
+  const normalized =
+    String(value || "")
+      .trim()
+      .toUpperCase();
 
   if (normalized === "INACTIVE") {
     return "Inactive";
@@ -276,7 +327,11 @@ const displayStatus = (value) => {
  * Convert trial period to UI format.
  */
 const displayTrialPeriod = (value) => {
-  if (value === null || value === undefined || value === "") {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
     return "";
   }
 
@@ -308,12 +363,18 @@ export function normalizePlan(item) {
   /* ----------------------------------------------------------
    * Plan ID
    * ---------------------------------------------------------- */
-  const id = item.id || item._id || item.planId;
+  const id =
+    item.id ||
+    item._id ||
+    item.planId;
 
   /* ----------------------------------------------------------
    * Plan code
    * ---------------------------------------------------------- */
-  const code = item.planCode || item.code || "";
+  const code =
+    item.planCode ||
+    item.code ||
+    "";
 
   /* ----------------------------------------------------------
    * Included features
@@ -326,77 +387,86 @@ export function normalizePlan(item) {
     [];
 
   const includedFeatures = Array.isArray(rawFeatures)
-    ? rawFeatures
-        .map((entry, index) => {
-          // Feature returned as a string
-          if (typeof entry === "string") {
-            return {
-              id: `${entry}-${index}`,
-              featureId: entry,
-              name: entry,
-              category: "",
-            };
-          }
+    ? rawFeatures.map((entry, index) => {
+      // Feature returned as a string
+      if (typeof entry === "string") {
+        return {
+          id: `${entry}-${index}`,
+          featureId: entry,
+          name: entry,
+          category: "",
+        };
+      }
 
-          if (!entry || typeof entry !== "object") {
-            return null;
-          }
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
 
-          // API may return:
-          // { feature: { ... } }
-          // or directly { ... }
-          const feature =
-            entry.feature && typeof entry.feature === "object"
-              ? entry.feature
-              : entry;
-          return {
-            ...entry,
-            ...feature,
+      // API may return:
+      // { feature: { ... } }
+      // or directly { ... }
+      const feature =
+        entry.feature && typeof entry.feature === "object"
+          ? entry.feature
+          : entry;
+      return {
+        ...entry,
+        ...feature,
 
-            id: String(
-              feature.id ?? feature._id ?? entry.id ?? entry._id ?? index + 1,
-            ),
+        id: String(
+          feature.id ??
+          feature._id ??
+          entry.id ??
+          entry._id ??
+          index + 1,
+        ),
 
-            featureId: String(
-              feature.featureId ??
-                feature.feature_id ??
-                entry.featureId ??
-                entry.feature_id ??
-                feature.featureID ??
-                entry.featureID ??
-                feature.id ??
-                feature._id ??
-                entry.id ??
-                entry._id ??
-                "",
-            ),
+        featureId: String(
+          feature.featureId ??
+          feature.feature_id ??
+          entry.featureId ??
+          entry.feature_id ??
+          feature.featureID ??
+          entry.featureID ??
+          feature.id ??
+          feature._id ??
+          entry.id ??
+          entry._id ??
+          "",
+        ),
 
-            name:
-              feature.name ??
-              feature.featureName ??
-              feature.feature_name ??
-              feature.featureKey ??
-              feature.feature_key ??
-              feature.code ??
-              "",
+        name:
+          feature.name ??
+          feature.featureName ??
+          feature.feature_name ??
+          feature.featureKey ??
+          feature.feature_key ??
+          feature.code ??
+          "",
 
-            category:
-              feature.category ??
-              feature.categoryName ??
-              feature.category_name ??
-              feature.featureCategory ??
-              "",
-          };
-        })
-        .filter(Boolean)
+        category:
+          feature.category ??
+          feature.categoryName ??
+          feature.category_name ??
+          feature.featureCategory ??
+          "",
+      };
+    }).filter(Boolean)
     : [];
+
 
   /* ----------------------------------------------------------
    * Created date
    * ---------------------------------------------------------- */
-  const createdAt = item.createdAt || item.created_at || item.createdOn;
+  const createdAt =
+    item.createdAt ||
+    item.created_at ||
+    item.createdOn;
 
-  const updatedAt = item.updatedAt || item.updated_at || item.updatedOn;
+  const updatedAt =
+    item.updatedAt ||
+    item.updated_at ||
+    item.updatedOn;
 
   /* ----------------------------------------------------------
    * Return normalized plan
@@ -414,49 +484,87 @@ export function normalizePlan(item) {
 
     code,
 
-    name: item.name || "",
+    name:
+      item.name || "",
 
-    description: item.description || "",
+    description:
+      item.description || "",
 
     /* Store type */
     storeType:
-      item.store_type || item.storeType || item.applicableStoreType || "",
+      item.store_type ||
+      item.storeType ||
+      item.applicableStoreType ||
+      "",
 
     applicableStoreType:
-      item.store_type || item.storeType || item.applicableStoreType || "",
+      item.store_type ||
+      item.storeType ||
+      item.applicableStoreType ||
+      "",
 
     /* Billing model */
-    billingModel: displayBillingModel(item.billingModel || item.billing_model),
+    billingModel:
+      displayBillingModel(
+        item.billingModel ||
+        item.billing_model
+      ),
 
     /* Currency */
-    currency: item.currency || "",
+    currency:
+      item.currency || "",
 
     /* Price */
-    price: item.basePrice ?? item.base_price ?? item.price ?? 0,
+    price:
+      item.basePrice ??
+      item.base_price ??
+      item.price ??
+      0,
 
-    basePrice: item.basePrice ?? item.base_price ?? item.price ?? 0,
+    basePrice:
+      item.basePrice ??
+      item.base_price ??
+      item.price ??
+      0,
 
     /* Billing cycle */
-    cycle: displayBillingCycle(
-      item.billingCycle || item.billing_cycle || item.cycle,
-    ),
+    cycle:
+      displayBillingCycle(
+        item.billingCycle ||
+        item.billing_cycle ||
+        item.cycle
+      ),
 
-    billingCycle: displayBillingCycle(
-      item.billingCycle || item.billing_cycle || item.cycle,
-    ),
+    billingCycle:
+      displayBillingCycle(
+        item.billingCycle ||
+        item.billing_cycle ||
+        item.cycle
+      ),
 
     /* Status */
-    status: displayStatus(item.status),
+    status:
+      displayStatus(
+        item.status
+      ),
 
     /* Included stores */
-    includedStores: item.included_stores ?? item.includedStores ?? 0,
+    includedStores:
+      item.included_stores ??
+      item.includedStores ??
+      0,
 
     /* Included terminals */
-    includedTerminals: item.included_terminals ?? item.includedTerminals ?? 0,
+    includedTerminals:
+      item.included_terminals ??
+      item.includedTerminals ??
+      0,
 
     /* Additional terminal price */
     additionalTerminalPrice:
-      item.additional_terminal_price ?? item.additionalTerminalPrice ?? 0,
+      item.additional_terminal_price ??
+      item.additionalTerminalPrice ??
+      0,
 
     /* Included employees/users */
     includedUsers:
@@ -473,29 +581,46 @@ export function normalizePlan(item) {
       0,
 
     /* Trial period */
-    trialPeriod: displayTrialPeriod(item.trial_period ?? item.trialPeriod),
+    trialPeriod:
+      displayTrialPeriod(
+        item.trial_period ??
+        item.trialPeriod
+      ),
 
     /* Effective date */
-    effectiveFrom: item.effective_from || item.effectiveFrom || "",
+    effectiveFrom:
+      item.effective_from ||
+      item.effectiveFrom ||
+      "",
 
     /* Features */
     includedFeatures,
 
     /* Dates */
     createdOn: createdAt
-      ? new Date(createdAt).toLocaleDateString("en-US", {
+      ? new Date(
+        createdAt
+      ).toLocaleDateString(
+        "en-US",
+        {
           month: "short",
           day: "2-digit",
           year: "numeric",
-        })
+        }
+      )
       : "—",
 
     updatedOn: updatedAt
-      ? new Date(updatedAt).toLocaleDateString("en-US", {
+      ? new Date(
+        updatedAt
+      ).toLocaleDateString(
+        "en-US",
+        {
           month: "short",
           day: "2-digit",
           year: "numeric",
-        })
+        }
+      )
       : "—",
   };
 }
@@ -508,11 +633,17 @@ export function normalizePlan(item) {
  * GET /plans
  */
 export async function listPlans() {
-  const response = await api.get(endpoints.plans);
+  const response =
+    await api.get(
+      endpoints.plans
+    );
 
-  const plans = extractPlans(response);
+  const plans =
+    extractPlans(response);
 
-  return plans.map(normalizePlan).filter(Boolean);
+  return plans
+    .map(normalizePlan)
+    .filter(Boolean);
 }
 
 /* ============================================================
@@ -523,9 +654,14 @@ export async function listPlans() {
  * GET /plans/:id
  */
 export async function getPlan(id) {
-  const response = await api.get(endpoints.plan(id));
+  const response =
+    await api.get(
+      endpoints.plan(id)
+    );
 
-  return normalizePlan(unwrapPlan(response));
+  return normalizePlan(
+    unwrapPlan(response)
+  );
 }
 
 /* ============================================================
@@ -535,12 +671,25 @@ export async function getPlan(id) {
 /**
  * POST /plans
  */
-export async function createPlan(form, includedFeatures = []) {
-  const payload = planPayload(form, includedFeatures);
+export async function createPlan(
+  form,
+  includedFeatures = []
+) {
+  const payload =
+    planPayload(
+      form,
+      includedFeatures
+    );
 
-  const response = await api.post(endpoints.plans, payload);
+  const response =
+    await api.post(
+      endpoints.plans,
+      payload
+    );
 
-  return normalizePlan(unwrapPlan(response));
+  return normalizePlan(
+    unwrapPlan(response)
+  );
 }
 
 /* ============================================================
@@ -550,22 +699,26 @@ export async function createPlan(form, includedFeatures = []) {
 /**
  * PUT /plans/:id
  */
-export async function updatePlan(id, form, includedFeatures = []) {
-  const payload = planPayload(form, includedFeatures);
+export async function updatePlan(
+  id,
+  form,
+  includedFeatures = []
+) {
+  const payload =
+    planPayload(
+      form,
+      includedFeatures
+    );
 
-  payload.includedFeatures = Array.isArray(includedFeatures)
-    ? includedFeatures
-    : [];
+  const response =
+    await api.put(
+      endpoints.plan(id),
+      payload
+    );
 
-  console.log("UPDATE PLAN ID:", id);
-  console.log("UPDATE PLAN PAYLOAD:", payload);
-  console.log("SELECTED FEATURES:", payload.includedFeatures);
-
-  const response = await api.put(endpoints.plan(id), payload);
-
-  console.log("UPDATE PLAN RESPONSE:", response);
-
-  return normalizePlan(unwrapPlan(response));
+  return normalizePlan(
+    unwrapPlan(response)
+  );
 }
 
 /* ============================================================
@@ -575,10 +728,18 @@ export async function updatePlan(id, form, includedFeatures = []) {
 /**
  * PATCH /plans/:id/status
  */
-export async function updatePlanStatus(id, status) {
-  return api.patch(endpoints.planStatus(id), {
-    status: toApiStatus(status),
-  });
+export async function updatePlanStatus(
+  id,
+  status
+) {
+  return api.patch(
+    endpoints.planStatus(id),
+    {
+      status: toApiStatus(
+        status
+      ),
+    }
+  );
 }
 
 /* ============================================================
@@ -589,5 +750,7 @@ export async function updatePlanStatus(id, status) {
  * DELETE /plans/:id
  */
 export async function deletePlan(id) {
-  return api.delete(endpoints.plan(id));
+  return api.delete(
+    endpoints.plan(id)
+  );
 }
