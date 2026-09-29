@@ -555,7 +555,7 @@ a {
 .page-header h1 {
     font-size: 20px;
 
-    margin: 0 0 2px;
+    margin: 0 0 6px;
 
     font-weight: 700;
 
@@ -566,21 +566,21 @@ a {
     display: flex;
     align-items: center;
 
-    gap: 6px;
+    gap: 8px;
 
-    font-size: 9px;
+    font-size: 14px;
 
     color: #9aa2b1;
 }
 
 .breadcrumb i {
-    font-size: 7px;
+    font-size: 12px;
 }
 
 .breadcrumb strong {
     color: #697387;
 
-    font-weight: 500;
+    font-weight: 600;
 }
 
 
@@ -595,22 +595,22 @@ a {
 }
 
 .page-actions .btn {
-    height: 31px;
+    height: 36px;
 
-    border-radius: 5px;
+    border-radius: 8px;
 
-    font-size: 10px;
+    font-size: 14px;
 
-    padding: 0 10px;
+    padding: 0 12px;
 
     display: flex;
     align-items: center;
 
-    gap: 7px;
+    gap: 14px;
 }
 
 .page-actions .btn i {
-    font-size: 11px;
+    font-size: 14px;
 }
 
 .page-actions .btn-primary {
@@ -626,11 +626,11 @@ a {
 }
 
 .page-actions .btn-secondary {
-    background: #fff;
+    background: #f6f7fb;
 
-    border: 1px solid #e1e4eb;
+    border: 1.5px solid #4537ad;
 
-    color: #475168;
+    color: #4537ad;
 }
 
 .page-actions .btn-secondary:hover {
@@ -664,8 +664,8 @@ a {
 }
 
 .stat-icon {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
 
     border-radius: 50%;
 
@@ -673,9 +673,10 @@ a {
     justify-content: center;
     align-items: center;
 
-    font-size: 17px;
+    font-size: 16px;
 
-    margin-right: 10px;
+    margin-right: 18px;
+    margin-left: 6px;
 
     flex-shrink: 0;
 }
@@ -720,7 +721,7 @@ a {
 .stat-content>span {
     color: #596276;
 
-    font-size: 12px;
+    font-size: 14px;
 
     margin-bottom: 2px;
 
@@ -728,7 +729,7 @@ a {
 }
 
 .stat-content>strong {
-    font-size: 16px;
+    font-size: 20px;
 
     color: #1c2741;
 
@@ -736,7 +737,7 @@ a {
 }
 
 .stat-content>small {
-    font-size: 8px;
+    font-size: 12px;
 
     margin-top: 4px;
 
@@ -752,7 +753,7 @@ a {
 }
 
 .stat-content small i {
-    font-size: 8px;
+    font-size: 12px;
 }
 
 
@@ -848,9 +849,9 @@ a {
     border: 0;
     outline: 0;
 
-    padding: 0 7px;
+    padding: 0 8px;
 
-    font-size: 10px;
+    font-size: 12px;
 
     color: #3c465a;
 
@@ -862,23 +863,24 @@ a {
 }
 
 .filter-bar select {
-    height: 32px;
+    height: 35px;
 
     min-width: 125px;
 
     border: 1px solid #e1e4eb;
 
-    border-radius: 5px;
+    border-radius: 6px;
 
     background: #fff;
 
     color: #59647a;
 
-    font-size: 9px;
+    font-size: 12px;
 
-    padding: 0 9px;
+    padding: 0 10px;
 
     outline: none;
+   
 }
 
 .filter-bar select:focus {
@@ -887,17 +889,17 @@ a {
 
 .date-filter,
 .filter-button {
-    height: 32px;
+    height: 35px;
 
     border: 1px solid #e1e4eb;
 
-    border-radius: 5px;
+    border-radius: 6px;
 
     background: #fff;
 
     color: #59647a;
 
-    font-size: 9px;
+    font-size: 12px;
 
     padding: 0 10px;
 
@@ -918,7 +920,7 @@ a {
 
 .date-filter i,
 .filter-button i {
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .filter-button {
@@ -1792,7 +1794,7 @@ dialog.merchant-delete-dialog::backdrop {
   margin-bottom: 10px;
 }
 .page-content:has(> .merchant-table-card) .stat-card {
-  min-height: 88px;
+  min-height: 95px;
   padding: 10px;
 }
 .page-content > .merchant-table-card {
@@ -1801,7 +1803,7 @@ dialog.merchant-delete-dialog::backdrop {
 .merchant-table-card > .filter-bar {
   min-height: 48px;
   padding: 8px 10px;
-  gap: 6px;
+  gap: 10px;
 }
 .merchant-table-card > .merchant-pagination {
   padding: 10px 12px;
@@ -1898,3 +1900,75 @@ dialog.merchant-delete-dialog::backdrop {
 .mel .mel-scroll{border:1px solid #e7ebf2;border-radius:6px;}
 .mel th{background:#fafbfc;}
 .mel th,.mel td{padding:14px 12px;}
+
+
+/* =========================================================
+   MERCHANT FILTERS — CONSISTENT SELECT ARROWS
+========================================================= */
+
+.merchant-table-card .filter-bar select {
+    height: 35px;
+    min-width: 125px;
+
+    padding: 0 34px 0 12px;
+
+    border: 1px solid #e1e4eb;
+    border-radius: 6px;
+
+    background-color: #fff;
+
+    color: #59647a;
+    font-size: 12px;
+    font-weight: 500;
+
+    outline: none;
+
+    /* Remove browser-specific native arrow */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    /* Consistent custom arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2359647a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px 16px;
+}
+
+.merchant-table-card .filter-bar select:focus {
+    border-color: #c8c1f2;
+
+    background-position: right 10px center;
+}
+
+.merchant-table-card .filter-bar select:hover {
+    border-color: #d3d7e0;
+}
+
+
+/* =========================================================
+   RESET BUTTON — MATCH FILTER FONT SIZE
+========================================================= */
+
+.merchant-table-card .filter-button {
+    height: 35px;
+
+    padding: 0 12px;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    color: #59647a;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+}
+
+.merchant-table-card .filter-button i {
+    font-size: 13px;
+    line-height: 1;
+}

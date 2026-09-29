@@ -262,7 +262,7 @@ export default function Stores() {
               setCurrentPage(1);
             }}
           >
-            <i className="bi bi-funnel" /> Clear
+            <i className="bi bi-arrow-counterclockwise" /> Reset
           </button>
         </div>
         {referenceError && (
