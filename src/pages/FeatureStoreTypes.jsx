@@ -503,7 +503,7 @@ const FeatureStoreTypes = () => {
               <Plus size={17} />
 
               <span>
-                Add Store Type
+                Get Store Type
               </span>
             </button>
 
