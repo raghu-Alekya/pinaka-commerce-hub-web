@@ -15,6 +15,7 @@ import StorePaymentRecords from "./StorePaymentRecords";
 import VendorPayments from "./VendorPayments";
 
 import { ApiError } from "../api/http";
+import { listStores } from "../api/stores";
 
 import {
   getWordpressConnector,
@@ -22,7 +23,6 @@ import {
   testWordpressConnection,
 } from "../api/storeConnector";
 
-import { stores as mockStores } from "../data/data";
 
 /* =========================================================
    SIDEBAR GROUPS
@@ -92,6 +92,46 @@ const navGroups = [
     ],
   },
 ];
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+}
+
+function storeListFromResponse(response) {
+  if (Array.isArray(response)) return response;
+  for (const key of ["stores", "items", "results", "data"]) {
+    const value = response?.[key];
+    if (Array.isArray(value)) return value;
+    if (value && typeof value === "object") {
+      const nested = storeListFromResponse(value);
+      if (nested.length) return nested;
+    }
+  }
+  return [];
+}
+
+function normalizeStoreForConfiguration(store) {
+  const address = store.address && typeof store.address === "object" ? store.address : {};
+  const storeCode = [store.storeCode, store.store_code, store.code, store.storeId, store.storeID]
+    .find(value => value && !isUuid(value)) || "";
+  const type = store.storeType?.name || store.storeType || store.type?.name || store.type || "";
+  const location = [
+    address.street || (typeof store.address === "string" ? store.address : ""),
+    address.city || store.city,
+    address.state || store.state,
+  ].filter(Boolean).join(", ");
+
+  return {
+    ...store,
+    id: store.id || store._id || store.storeUUID || store.storeId || store.storeID,
+    storeCode,
+    name: store.storeName || store.name || storeCode || "Store",
+    type,
+    location: location || store.location || "—",
+    status: store.status || store.operationalStatus || "Active",
+    url: store.baseUrl || store.websiteUrl || store.url || "",
+  };
+}
 
 /* =========================================================
    STORE CONFIGURATION
@@ -177,10 +217,16 @@ export default function StoreConfiguration() {
       try {
         if (merchantId) {
           const result = await getMerchant(merchantId);
+          const apiStores = Array.isArray(result?.stores) ? result.stores : [];
+          const rawStores = result?.raw?.stores || result?.raw?.merchant?.stores || result?.raw?.data?.stores || [];
+
+          console.log("[STORE CONFIGURATION] Raw merchant API response:", result?.raw);
+          console.log("[STORE CONFIGURATION] Stores from API response:", rawStores);
+          console.log("[STORE CONFIGURATION] Normalized stores:", apiStores);
 
           const found =
-            result?.stores?.find(
-              (item) => item.id === storeId
+            apiStores.find((item) =>
+              [item.id, item.storeCode].some((value) => String(value || "") === String(storeId || ""))
             ) || null;
 
           if (!cancelled) {
@@ -188,30 +234,29 @@ export default function StoreConfiguration() {
             setStore(found);
           }
         } else {
-          const found =
-            mockStores.find(
-              (item) => item.id === storeId
-            ) || {
-              id: storeId,
-              name: storeId,
-              location: "",
-              status: "Active",
-            };
+          const response = await listStores();
+          const rawStores = storeListFromResponse(response);
+          console.log("[STORE CONFIGURATION] GET /stores response:", response);
+          console.log("[STORE CONFIGURATION] Stores from API response:", rawStores);
+
+          const rawStore = rawStores.find((item) =>
+            [item.id, item._id, item.storeUUID, item.storeId, item.storeID, item.storeCode, item.store_code, item.code]
+              .some((value) => String(value || "") === String(storeId || ""))
+          );
+          const found = rawStore ? normalizeStoreForConfiguration(rawStore) : null;
+          console.log("[STORE CONFIGURATION] Selected store:", found);
 
           if (!cancelled) {
+            if (!found) {
+              setStore(null);
+              setError(`Store ${storeId} was not found in the stores API response.`);
+              return;
+            }
             setMerchant({
-              name: found.merchant || "Merchant",
-              id: "",
+              name: found.merchantName || found.merchant?.name || "Merchant",
+              id: found.merchantId || found.merchant?.id || "",
             });
-
-            setStore({
-              id: found.id,
-              name: found.name,
-              location: found.location,
-              status: found.status,
-              type: found.type,
-              url: found.url || "",
-            });
+            setStore(found);
           }
         }
       } catch (err) {
@@ -414,6 +459,11 @@ export default function StoreConfiguration() {
     }
   };
 
+  const displayStoreCode = store?.storeCode || (String(store?.id || "").startsWith("STR-") ? store.id : "");
+  const displayStoreName = store?.name && !isUuid(store.name)
+    ? store.name
+    : displayStoreCode || "Store";
+
   /* =======================================================
      RENDER
      ======================================================= */
@@ -464,12 +514,11 @@ export default function StoreConfiguration() {
             <div>
 
               <h1>
-                {store?.name ||
-                  "Store Configuration"}
+                {displayStoreName}
               </h1>
 
               <p>
-                {store?.id}
+                {displayStoreCode || "Store ID unavailable"}
 
                 {merchant?.name
                   ? ` • ${merchant.name}`
@@ -657,7 +706,7 @@ export default function StoreConfiguration() {
                         </span>
 
                         <strong>
-                          {store?.name || "—"}
+                          {displayStoreName}
                         </strong>
                       </div>
 
@@ -667,7 +716,7 @@ export default function StoreConfiguration() {
                         </span>
 
                         <strong>
-                          {store?.id || "—"}
+                          {displayStoreCode || "—"}
                         </strong>
                       </div>
 

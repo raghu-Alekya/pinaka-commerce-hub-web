@@ -260,7 +260,7 @@ function exportMerchants(rows) {
   ];
   const data = rows.map((m) => [
     m.name,
-    m.id,
+    m.merchantId || m.id,
     m.email,
     m.phone,
     m.stores,
@@ -714,7 +714,7 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
                         </div>
                         <div>
                           <strong>{m.name}</strong>
-                          <small>{m.id}</small>
+                          <small>{m.merchantId || m.id}</small>
                         </div>
                       </div>
                     </td>

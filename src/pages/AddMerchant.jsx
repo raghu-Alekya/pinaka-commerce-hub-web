@@ -1,5 +1,5 @@
 import { storeTypesApi } from "../api/storeTypes";
-import { createMerchant, getMerchant, updateMerchant } from "../api/merchants";
+import { createMerchant, getMerchant, mapMerchantToRow, updateMerchant } from "../api/merchants";
 import { listPlans } from "../api/plans";
 import { listFeatures } from "../api/features";
 import { listFeaturePermissions } from "../api/featurePermissionsApi";
@@ -411,7 +411,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
     let active=true;
     setPlansLoading(true);
     setPlansError('');
-    listPlans().then(response=>{
+    listPlans({ status: 'ACTIVE' }).then(response=>{
       if(!active)return;
       setAllPlans(response);
     }).catch(error=>{
@@ -487,7 +487,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
     return()=>{active=false;};
   },[selectedStoreType?.id]);
   const packages = useMemo(() => {
-    const activePlans = (allPlans || []).filter(plan => String(plan.status || '').toUpperCase() !== 'INACTIVE');
+    const activePlans = (allPlans || []).filter(plan => String(plan.status || '').trim().toUpperCase() === 'ACTIVE');
     if (activePlans.length > 0) {
       return activePlans.map(toMerchantPlan);
     }
@@ -1319,7 +1319,7 @@ export function merchantDetailToDraft(result, fallback={}) {
   draft.paymentHistory=Array.isArray(raw.paymentHistory)?raw.paymentHistory:[];
   draft.subscriptionId=subscription.id || subscription.subscriptionId || '';
   draft.start=String(subscription.startDate||subscription.start||'').slice(0,10);
-  draft.merchant={code:String(raw.merchantCode||raw.code||fallback.merchantCode||raw.merchantId||raw.id||fallback.id||''),business:raw.legalBusinessName||raw.businessName||fallback.name||'',display:raw.businessName||raw.name||fallback.name||'',name:raw.ownerName||[raw.firstName,raw.lastName].filter(Boolean).join(' ')||'',email:raw.email||fallback.email||'',phone:raw.phone||fallback.phone||'',addressLine1:raw.addressLine1||(typeof address==='string'?address:address.addressLine1||address.street||''),addressLine2:raw.addressLine2||(typeof address==='object'?address.addressLine2||address.unit||'':''),city:raw.city||address.city||'',state:raw.state||address.state||'',postal:raw.postalCode||address.zipCode||'',country:raw.country||address.country||''};
+  draft.merchant={code:String(raw.merchant_code||raw.merchantId||fallback.merchantId||fallback.merchant_code||raw.code||raw.merchantCode||fallback.merchantCode||raw.id||fallback.id||''),business:raw.legalBusinessName||raw.businessName||fallback.name||'',display:raw.businessName||raw.name||fallback.name||'',name:raw.ownerName||[raw.firstName,raw.lastName].filter(Boolean).join(' ')||'',email:raw.email||fallback.email||'',phone:raw.phone||fallback.phone||'',addressLine1:raw.addressLine1||(typeof address==='string'?address:address.addressLine1||address.street||''),addressLine2:raw.addressLine2||(typeof address==='object'?address.addressLine2||address.unit||'':''),city:raw.city||address.city||'',state:raw.state||address.state||'',postal:raw.postalCode||address.zipCode||'',country:raw.country||address.country||''};
   draft.merchant={...draft.merchant,type:raw.storeTypeName || raw.storeType?.name || (typeof raw.storeType==='string'?raw.storeType:''),storeTypeId:raw.storeTypeId ?? raw.storeType?.id ?? '',storeTypeCode:raw.storeTypeCode || ''};
   const stores=response.stores||raw.stores||[];
   draft.stores=(Array.isArray(stores)?stores:[]).map(item=>{
@@ -1365,12 +1365,13 @@ function MerchantRouteEditor({merchantId,localMerchants,onSave}) {
       console.log("[CREATE MERCHANT API RESPONSE]", serverResult);
     }
 
-    const savedMerchant = serverResult?.merchant || serverResult?.data?.merchant;
+    const savedMerchant = serverResult?.merchant || serverResult?.data?.merchant || serverResult?.data || serverResult;
+    const responseRow = mapMerchantToRow(serverResult);
     const savedDataWithId = savedData;
     const summary=onboardingToRow(savedDataWithId);
     if(!merchantId && !savedRow.current && localMerchants.some(row=>String(row.id)===String(summary.id))) throw new Error('Merchant code already exists.');
     const existing=savedRow.current || loaded.row;
-    const row={...existing,...summary,id:existing?.id||savedMerchant?.id||serverResult?.merchantId||summary.id,merchantId:savedMerchant?.id||serverResult?.merchantId||existing?.id||summary.id,createdAt:existing?.createdAt||summary.createdAt,joined:existing?.joined||summary.joined,status:existing?.status||summary.status};
+    const row={...existing,...summary,id:existing?.id||responseRow?.id||savedMerchant?.id||serverResult?.merchantId||summary.id,merchantId:responseRow?.merchantId||savedMerchant?.id||serverResult?.merchantId||existing?.id||summary.id,name:responseRow?.name||summary.name,email:responseRow?.email||summary.email,phone:responseRow?.phone||summary.phone,createdAt:existing?.createdAt||responseRow?.createdAt||summary.createdAt,joined:existing?.joined||responseRow?.joined||summary.joined,status:responseRow?.status||existing?.status||summary.status,active:responseRow?.active||existing?.active||summary.active};
     await onSave(row);
     savedRow.current=row;
     const subscription = serverResult?.subscription || serverResult?.data?.subscription;
@@ -1398,5 +1399,6 @@ function MerchantRouteEditor({merchantId,localMerchants,onSave}) {
       </div>
     </div>
   );
-  return <MerchantOnboarding initialValue={merchantId?loaded.draft:undefined} onComplete={saveFull} onCancel={cancel} onDashboard={()=>nav('/dashboard')}/>;
+  const initialValue=merchantId&&loaded.draft?{...loaded.draft,merchant:{...loaded.draft.merchant,code:loaded.row?.merchantId||loaded.draft.merchant?.code||''}}:undefined;
+  return <MerchantOnboarding initialValue={initialValue} onComplete={saveFull} onCancel={cancel} onDashboard={()=>nav('/dashboard')}/>;
 }
