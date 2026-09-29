@@ -241,12 +241,12 @@ const FeatureStoreTypes = () => {
     setSelected((current) =>
       current.includes(storeTypeId)
         ? current.filter(
-            (item) => item !== storeTypeId
-          )
+          (item) => item !== storeTypeId
+        )
         : [
-            ...current,
-            storeTypeId,
-          ]
+          ...current,
+          storeTypeId,
+        ]
     );
   };
 
@@ -503,7 +503,7 @@ const FeatureStoreTypes = () => {
               <Plus size={17} />
 
               <span>
-                Get Store Type
+                Assign Store Type
               </span>
             </button>
 
