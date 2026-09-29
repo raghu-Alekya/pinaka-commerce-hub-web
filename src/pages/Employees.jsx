@@ -609,7 +609,9 @@ export default function Employees() {
             <tbody>
               {loadError ? (
                 <tr>
-                  <td colSpan="9" className="employees-no-results">{loadError}</td>
+                  <td colSpan="9" className="employees-no-results">
+                    {loadError}
+                  </td>
                 </tr>
               ) : visibleEmployees.length > 0 ? (
                 visibleEmployees.map((employee) => (

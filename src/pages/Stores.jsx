@@ -306,8 +306,10 @@ export default function Stores() {
                       <button
                         type="button"
                         className="store-cell stores-name-button"
+                        aria-label={`View ${s.storeName}`}
+                        title="View store"
                         onClick={() =>
-                          nav(`/stores/${encodeURIComponent(s.id)}/edit`)
+                          nav(`/stores/${encodeURIComponent(s.id)}/configuration`)
                         }
                       >
                         <div className="store-avatar purple-bg">
