@@ -12,6 +12,7 @@ const sections = [
       ["/merchants", "bi-person-badge", "Merchants"],
       ["/stores", "bi-shop", "Stores"],
       ["/subscriptions", "bi-cart3", "Subscriptions"],
+       ["/vendors", "bi-truck", "Vendors"],
     ],
   },
   {
@@ -28,7 +29,6 @@ const sections = [
           ["/permissions", "bi-shield-check", "Feature Permissions"],
           ["/role-templates", "bi-person-badge", "Role Templates"],
           ["/plans/new", "bi-credit-card", "Plans"],
-          ["/vendors", "bi-truck", "Vendors"],
           ["/tenders", "bi-cash-coin", "Tenders"],
         ],
       ],
