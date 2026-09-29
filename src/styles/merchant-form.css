@@ -393,18 +393,18 @@
 ========================================================= */
 
 #pch-new button {
-    min-height: 32px;
+    min-height: 40px;
 
     padding: 0 12px;
 
     border: 1px solid var(--pch-border);
-    border-radius: 5px;
+    border-radius: 7px;
 
     background: #fff;
     color: #475168;
 
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
 
     transition: 0.2s ease;
 }
@@ -1007,7 +1007,8 @@
 
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
+    gap: 14px;
 }
 
 #pch-new .pch-footerbar .pch-primary {
