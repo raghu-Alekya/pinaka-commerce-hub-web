@@ -551,22 +551,6 @@ export default function AddStore() {
       NaN,
   );
 
-  const merchantId = idOf(routeMerchantId || store.merchantId);
-  const merchantOptionValue = (item) => String(item?.id || item?.merchantId || "");
-  const merchantMatches = (item, value) =>
-    [item?.id, item?.merchantId, item?.merchantCode].some((candidate) => String(candidate || "") === String(value || ""));
-  const selectedMerchant = merchants.find((item) => merchantMatches(item, routeMerchantId || store.merchantId || merchantId));
-  const merchantSelectValue = selectedMerchant ? merchantOptionValue(selectedMerchant) : String(routeMerchantId || store.merchantId || merchantId || "");
-  const merchant = merchantInfo?.owner || selectedMerchant || merchants.find(item => merchantMatches(item, merchantId)) || null;
-  const merchantName = merchant?.name || merchant?.merchantName || merchant?.businessDisplayName || "Selected merchant";
-  const activeStoreTypeId = store.storeTypeId || merchantInfo?.typeId || subscription?.storeTypeId || "";
-  const selectedType = storeTypes.find(item => String(item.id) === String(activeStoreTypeId)) || storeTypes.find(item => String(item.name).toLowerCase() === String(store.type).toLowerCase());
-  const typeName = selectedType?.name || store.type || merchantInfo?.typeName || "";
-  const plan = subscription?.plan && typeof subscription.plan === "object" ? subscription.plan : null;
-  const planName = subscription?.planName || subscription?.planCode || plan?.name || plan?.planName || merchant?.plan || "No active plan";
-  const billing = subscription?.billingCycle || subscription?.billingType || plan?.billingCycle || "—";
-  const planPrice = subscription?.price ?? subscription?.agreementPrice ?? plan?.price ?? plan?.amount;
-  const storeLimit = Number(subscription?.maxStoresAllowed ?? subscription?.licensedStoreCount ?? subscription?.storeLimit ?? subscription?.maxStores ?? subscription?.locationLimit ?? plan?.includedStores ?? plan?.included_stores ?? NaN);
   const planFeatureList = subscription?.includedFeatures ?? plan?.includedFeatures ?? plan?.features;
   const includedFeatures = useMemo(() => {
     const raw = [
