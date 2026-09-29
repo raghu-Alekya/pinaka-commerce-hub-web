@@ -94,3 +94,7 @@ export function updateStore(id, store) {
     toStorePayload(store),
   );
 }
+
+export function deleteStore(id) {
+  return api.delete(endpoints.store(encodeURIComponent(id)));
+}
