@@ -922,7 +922,7 @@ export default function MerchantVendors({
                     {modal?.type === "create" ? (
                         <Vendors formOnly onCreate={createAndAssignVendor} onCancel={close} />
                     ) : modal?.type === "select" ? (
-                        <>
+                        <div className="mv-picker-body">
 
                             {masterLoading && (
                                 <p role="status">
@@ -1056,7 +1056,7 @@ export default function MerchantVendors({
                             </div>
                             <nav className="mv-picker-pagination" aria-label="Existing vendor pages"><span>Showing {available.length ? (currentPickerPage - 1) * pickerPageSize + 1 : 0}–{Math.min(currentPickerPage * pickerPageSize, available.length)} of {available.length}</span><div className="mv-popup-actions"><button type="button" disabled={currentPickerPage === 1} onClick={() => setPickerPage(currentPickerPage - 1)}>Previous</button><span>Page {currentPickerPage} of {pickerPages}</span><button type="button" disabled={currentPickerPage === pickerPages} onClick={() => setPickerPage(currentPickerPage + 1)}>Next</button></div></nav>
 
-                        </>
+                        </div>
                     ) : (
                         modal?.vendor && (
                             <dl className="mv-details">
