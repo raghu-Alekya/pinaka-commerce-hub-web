@@ -400,7 +400,7 @@ export default function StoreTypeFeatures() {
               onClick={openAddModal}
             >
               <i className="bi bi-plus-lg" />
-              Add Feature
+              Assign Feature
             </button>
           </div>
         </div>
