@@ -220,7 +220,7 @@ export default function MerchantStores({
 
   const handleStoreConfiguration = (store) => {
     const targetId = merchantId || merchant?.merchantId || merchant?.merchantCode || merchant?.id;
-    nav(`/merchants/${encodeURIComponent(targetId)}/stores/${getStoreId(store)}/configuration/website`);
+    nav(`/merchants/${encodeURIComponent(targetId)}/stores/${getStoreId(store)}/configuration`);
   };
 
   const handleEdit = (store) => {

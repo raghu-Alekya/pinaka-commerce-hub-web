@@ -18,6 +18,9 @@ const initials = (name) =>
     .map((s) => s[0])
     .join("")
     .toUpperCase();
+const displayStoreId = (store) =>
+  [store.storeCode, store.store_code, store.code, store.storeId, store.storeID]
+    .find((value) => value && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value))) || store.id;
 
 const merchantNameOf = (store, merchants) => {
   const merchant = merchants.find(
@@ -79,7 +82,7 @@ export default function Stores() {
   const rows = stores.filter(
     (s) =>
       (!query ||
-        `${s.storeName} ${s.id}`.toLowerCase().includes(query.toLowerCase())) &&
+        `${s.storeName} ${displayStoreId(s)}`.toLowerCase().includes(query.toLowerCase())) &&
       (!merchant || String(s.merchantId) === String(merchant)) &&
       (!status || s.status === status) &&
       (!location || locationOf(s) === location),
@@ -317,7 +320,7 @@ export default function Stores() {
                         </div>
                         <div>
                           <strong>{s.storeName}</strong>
-                          <small>Store ID: {s.id}</small>
+                          <small>Store ID: {displayStoreId(s)}</small>
                         </div>
                       </button>
                     </td>
