@@ -429,8 +429,7 @@ export function mapMerchantToRow(item) {
     merchant.name ||
     "Merchant";
 
-  const id =
-    merchant.merchantId || merchant.id || merchant._id || merchant.code || "";
+  const id = merchantApiId(merchant) || merchant.code || merchant.merchantCode || "";
   const email = merchant.merchantEmail || merchant.email || "";
   const phone = merchant.merchantPhoneNumber || merchant.phone || "";
   const stores = Array.isArray(merchant.stores || item.stores)
@@ -466,7 +465,7 @@ export function mapMerchantToRow(item) {
 
   return {
     id,
-    merchantId: merchantApiId(merchant) || id,
+    merchantId: merchant.merchantId || id,
     name,
     email,
     phone,
