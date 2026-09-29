@@ -11,6 +11,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 
 import "../styles/merchant-form.css";
 import ReviewSubscribe from "./ReviewSubscribe";
+import "../styles/merchant-form.css";
 
 // Master-data options stay unchanged. Entry fields start empty.
 const CODE_PREFIXES = Object.freeze({merchant:'MER-',store:'STR-'});
@@ -357,9 +358,6 @@ function MerchantPageHeader({ editing = false, code = '', onBack }) {
         <span aria-hidden="true">/</span>
         <span aria-current="page">{editing ? 'Edit Merchant' : 'Add Merchant'}</span>
       </nav>
-      <span className="pch-pill">
-        {editing ? (code ? `Editing ${code}` : 'Edit merchant') : 'New merchant'}
-      </span>
     </header>
   );
 }

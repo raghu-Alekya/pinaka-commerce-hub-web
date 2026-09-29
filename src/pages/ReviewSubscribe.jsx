@@ -176,52 +176,67 @@ export default function ReviewSubscribe({
   return (
     <div className="rs-page">
       <header className="rs-breadcrumb-bar">
-        <nav className="rs-breadcrumb" aria-label="Breadcrumb">
-          <button type="button" onClick={goBackToMerchants}>
-            <ArrowLeft size={17} /> Merchants
-          </button>
-          <span className="rs-breadcrumb-divider" aria-hidden="true">/</span>
-          <span>Review &amp; Subscribe</span>
-        </nav>
-        <span className="rs-new-badge">{isEditing ? "Subscription update" : "New subscription"}</span>
-      </header>
+  <nav className="rs-breadcrumb">
+    <button type="button" onClick={goBackToMerchants}>
+      <ArrowLeft size={18} />
+      Merchants
+    </button>
+    <span>/</span>
+    <span>Edit Merchant</span>
+  </nav>
+
+</header>
 
       <div className="rs-workspace">
-        <aside className="rs-step-panel" aria-label="Checkout progress">
-          <p className="rs-step-eyebrow">Merchant setup</p>
-          <div className="rs-step rs-step-complete">
-            <span className="rs-step-circle"><Check size={17} /></span>
-            <span><strong>Merchant details</strong><small>Business and primary contact</small></span>
-          </div>
-          <div className="rs-step rs-step-complete">
-            <span className="rs-step-circle"><Check size={17} /></span>
-            <span><strong>Choose plan</strong><small>Plan and billing cycle</small></span>
-          </div>
-          <div className="rs-step rs-step-current" aria-current="step">
-            <span className="rs-step-circle">3</span>
-            <span><strong>Review &amp; Subscribe</strong><small>Confirm subscription details</small></span>
-          </div>
-        </aside>
+  <aside className="rs-step-panel">
+  <p className="rs-step-eyebrow">ADD MERCHANT</p>
 
-        <main className="rs-content-column">
-          <div className="rs-content">
-            <div className="rs-intro">
-              <div className="rs-title-block">
-                <span className="rs-overline">Final review</span>
-                <h1>Review &amp; Subscribe</h1>
-                <p>Check the merchant and plan information before continuing.</p>
-              </div>
-              <div className="rs-info-banner">
-                <span className="rs-info-icon"><Info size={18} /></span>
-                <p>Payment details are not collected here. Subscription activation depends on the connected billing service.</p>
-              </div>
-            </div>
+  <button
+    type="button"
+    className="rs-step rs-step-complete"
+    onClick={editMerchant}
+  >
+    <span className="rs-step-circle">
+      <Check size={16} />
+    </span>
+    <span>
+      <strong>Merchant details</strong>
+      <small>Business & primary contact</small>
+    </span>
+  </button>
 
-            {(!merchant || !plan?.name) && (
-              <div className="rs-feedback" role="alert">Merchant or plan details are missing. Go back and choose an available plan.</div>
-            )}
+  <button
+    type="button"
+    className="rs-step rs-step-complete"
+    onClick={editPlan}
+  >
+    <span className="rs-step-circle">
+      <Check size={16} />
+    </span>
+    <span>
+      <strong>Choose plan</strong>
+      <small>Country pricing & subscription limits</small>
+    </span>
+  </button>
 
-            <div className="rs-card-grid">
+  <div className="rs-step rs-step-current" aria-current="step">
+    <span className="rs-step-circle">3</span>
+    <span>
+      <strong>Review & Subscribe</strong>
+      <small>Plan review & billing summary</small>
+    </span>
+  </div>
+</aside>
+
+  <main className="rs-content-column">
+    <div className="rs-content">
+      <div className="rs-page-header">
+        <p className="rs-step-label">STEP 3 OF 3</p>
+        <h1>Review & Subscribe</h1>
+        <p>Plan review & billing summary</p>
+      </div>
+
+      <div className="rs-card-grid">
               <Card title="Merchant Details" editLabel="Edit merchant details" onEdit={editMerchant} className="rs-details-card">
                 <dl className="rs-detail-list">
                   <DetailRow label="Business">{merchant?.businessName || merchant?.name}</DetailRow>
