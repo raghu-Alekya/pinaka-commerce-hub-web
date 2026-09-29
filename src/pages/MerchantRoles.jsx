@@ -31,19 +31,9 @@ export default function MerchantRoles({ merchantId }) {
       .then((response) => {
         if (!active) return;
         const { storeTypes: types, roleTemplates } = readAvailableRoleTemplates(response);
-        // Prefer already-saved selections; if none saved yet, pre-check required + defaultEnabled.
+        // Prefer already-saved selections; otherwise keep all roles unchecked by default.
         const saved = roleTemplates.filter((row) => row.selected).map((row) => row.id);
-        const initial = new Set(
-          saved.length
-            ? saved
-            : roleTemplates
-                .filter((row) => row.required || row.defaultEnabled)
-                .map((row) => row.id),
-        );
-        // Always keep required templates selected.
-        for (const row of roleTemplates) {
-          if (row.required) initial.add(row.id);
-        }
+        const initial = new Set(saved);
         setStoreTypes(types);
         setTemplates(roleTemplates);
         setSelected(initial);
@@ -70,8 +60,7 @@ export default function MerchantRoles({ merchantId }) {
     ? storeTypes.map((type) => type.name || type.storeTypeCode || type.id).join(", ")
     : "—";
 
-  function toggle(id, required) {
-    if (required) return;
+  function toggle(id) {
     setSelected((previous) => {
       const next = new Set(previous);
       if (next.has(id)) next.delete(id);
@@ -87,7 +76,7 @@ export default function MerchantRoles({ merchantId }) {
   }
 
   function clearOptional() {
-    setSelected(new Set(templates.filter((row) => row.required).map((row) => row.id)));
+    setSelected(new Set());
     setMessage("");
   }
 
@@ -183,8 +172,8 @@ export default function MerchantRoles({ merchantId }) {
                     <input
                       type="checkbox"
                       checked={checked}
-                      disabled={row.required || saving}
-                      onChange={() => toggle(row.id, row.required)}
+                      disabled={saving}
+                      onChange={() => toggle(row.id)}
                     />
                     <span className="mr-copy">
                       <span className="mr-name">
