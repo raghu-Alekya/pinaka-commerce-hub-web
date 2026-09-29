@@ -1134,7 +1134,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
         </div>
       </Panel>}
       {error && <div className="pch-error" role="alert">{error}</div>}
-      <div className="pch-footerbar"><button type="button" disabled={submitting} onClick={onCancel}>Back to Merchants</button>
+      <div className="pch-footerbar">
         <button type="button" disabled={submitting} onClick={()=>{setCancelRequested(false);setManageSubscription(false);setError('');}}>Back to Confirmation</button>
       </div>
     </main>
@@ -1275,9 +1275,9 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
       <h1>{!storePhase && state.step===6 ? 'Review & Subscribe' : stepLabels[position]?.[0]}</h1><p className="pch-muted">{!storePhase && state.step===6 ? 'Please review your plan details before subscribing.' : stepLabels[position]?.[1]}</p>
       <form ref={formRef} onSubmit={submit}><fieldset className="pch-form-content" disabled={submitting}>
         {content()}{error&&<div className="pch-error" role="alert">{error}</div>}
-        <div className={!storePhase && state.step===6 ? "pch-footerbar pch-review-navigation" : "pch-footerbar"}><button type="button" onClick={onCancel}>Back to Merchants</button>
-          <button type="button" disabled={position===0} onClick={()=>goTo(journey[position-1])}>← Back</button>
-          <button hidden={!storePhase && state.step===6} className="pch-primary" type="submit">{submitting?'Saving…':state.step===6?(storePhase?'Save store setup':(editing || state.merchantSaved)?'Save subscription changes':'Subscribe & Create Merchant'):returnToReview?'Save & return to review':'Continue →'}</button>
+        <div className={!storePhase && state.step===6 ? "pch-footerbar pch-review-navigation" : "pch-footerbar"}>
+          <button type="button" disabled={position===0} onClick={()=>goTo(journey[position-1])}> Back</button>
+          <button hidden={!storePhase && state.step===6} className="pch-primary" type="submit">{submitting?'Saving…':state.step===6?(storePhase?'Save store setup':(editing || state.merchantSaved)?'Save subscription changes':'Subscribe & Create Merchant'):returnToReview?'Save & return to review':'Continue'}</button>
         </div>
       </fieldset></form>
     </main></div><footer>{storePhase?'Store setup':'Merchant creation'}</footer>

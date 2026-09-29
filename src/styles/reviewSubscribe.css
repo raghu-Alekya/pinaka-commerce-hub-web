@@ -492,9 +492,10 @@
 
 .rs-footer{
   display:flex;
-  justify-content:space-between;
+  justify-content:flex-end;
   align-items:center;
   padding:16px 32px;
+  gap:10px;
   border-top:1px solid #DCE4F0;
   background:#fff;
 }
@@ -601,12 +602,13 @@
 
   .rs-footer{
     padding:14px;
-    flex-direction:column;
+     flex-direction:row;
+     justify-content:flex-end;
     gap:10px;
   }
 
   .rs-outline-button{
-    width:100%;
+    width:auto;
     justify-content:center;
   }
 }

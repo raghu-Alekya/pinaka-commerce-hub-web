@@ -287,7 +287,7 @@ export default function ReviewSubscribe({
           </div>
 
           <footer className="rs-footer">
-            <button className="rs-outline-button" type="button" onClick={back}><ArrowLeft size={16} /> Back to plan</button>
+            <button className="rs-outline-button" type="button" onClick={back}> Back to plan</button>
             <button className="rs-outline-button" type="button" onClick={goBackToMerchants}>Cancel</button>
           </footer>
         </main>
