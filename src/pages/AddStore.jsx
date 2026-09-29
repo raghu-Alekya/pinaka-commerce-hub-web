@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { listMerchantEmployees, listStoreEmployees, listStoreRolePermissions, saveStoreEmployees } from "../api/employees";
 import { getMerchant, listMerchants } from "../api/merchants";
 import { listFeatures } from "../api/features";
+import { listPlans } from "../api/plans";
 import { storeTypesApi } from "../api/storeTypes";
 import { merchantRoleTemplatesApi, readAvailableRoleTemplates } from "../api/merchantRoleTemplatesApi";
 import { roleTemplatesApi } from "../api/roleTemplatesApi";
@@ -405,6 +406,7 @@ export default function AddStore() {
   const [storeTypes, setStoreTypes] = useState([]);
   const [storeTypesLoading, setStoreTypesLoading] = useState(false);
   const [catalog, setCatalog] = useState([]);
+  const [masterPlans, setMasterPlans] = useState([]);
   const [typeFeatures, setTypeFeatures] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [merchantLoading, setMerchantLoading] = useState(false);
