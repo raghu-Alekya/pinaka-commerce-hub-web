@@ -28,7 +28,9 @@ export function listStores() {
 
 export async function listMerchantStores(merchantId) {
   if (!merchantId) return [];
-  const response = await api.get(endpoints.merchantStores(encodeURIComponent(merchantId)));
+  const response = await api.get(
+    endpoints.merchantStores(encodeURIComponent(merchantId)),
+  );
   const findList = (value) => {
     if (Array.isArray(value)) return value;
     for (const key of ["stores", "items", "results", "data"]) {
@@ -41,12 +43,13 @@ export async function listMerchantStores(merchantId) {
     }
     return [];
   };
-  return findList(response).map((store) => ({
-    value: String(store.storeId || store.id || store._id || ""),
-    label: store.name || store.storeName || store.storeId || store.id || "",
-  })).filter((store) => store.value && store.label);
+  return findList(response)
+    .map((store) => ({
+      value: String(store.storeId || store.id || store._id || ""),
+      label: store.name || store.storeName || store.storeId || store.id || "",
+    }))
+    .filter((store) => store.value && store.label);
 }
-
 export function createStore(store, merchantId) {
   const path = merchantId
     ? endpoints.merchantStores(merchantId)
@@ -93,4 +96,8 @@ export function updateStore(id, store) {
     endpoints.store(encodeURIComponent(id)),
     toStorePayload(store),
   );
+}
+
+export function deleteStore(id) {
+  return api.delete(endpoints.store(encodeURIComponent(id)));
 }

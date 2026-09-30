@@ -19,8 +19,19 @@ const initials = (name) =>
     .join("")
     .toUpperCase();
 const displayStoreId = (store) =>
-  [store.storeCode, store.store_code, store.code, store.storeId, store.storeID]
-    .find((value) => value && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value))) || store.id;
+  [
+    store.storeCode,
+    store.store_code,
+    store.code,
+    store.storeId,
+    store.storeID,
+  ].find(
+    (value) =>
+      value &&
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        String(value),
+      ),
+  ) || store.id;
 
 const merchantNameOf = (store, merchants) => {
   const merchant = merchants.find(
@@ -82,7 +93,9 @@ export default function Stores() {
   const rows = stores.filter(
     (s) =>
       (!query ||
-        `${s.storeName} ${displayStoreId(s)}`.toLowerCase().includes(query.toLowerCase())) &&
+        `${s.storeName} ${displayStoreId(s)}`
+          .toLowerCase()
+          .includes(query.toLowerCase())) &&
       (!merchant || String(s.merchantId) === String(merchant)) &&
       (!status || s.status === status) &&
       (!location || locationOf(s) === location),
@@ -312,7 +325,9 @@ export default function Stores() {
                         aria-label={`View ${s.storeName}`}
                         title="View store"
                         onClick={() =>
-                          nav(`/stores/${encodeURIComponent(s.id)}/configuration`)
+                          nav(
+                            `/stores/${encodeURIComponent(s.id)}/configuration`,
+                          )
                         }
                       >
                         <div className="store-avatar purple-bg">
@@ -337,9 +352,7 @@ export default function Stores() {
                         <span>{locationOf(s) || "—"}</span>
                       </div>
                     </td>
-                    <td>
-                      {staticPosDeviceCounts[s.id] ?? 0}
-                    </td>
+                    <td>{staticPosDeviceCounts[s.id] ?? 0}</td>
                     <td>
                       <span
                         className={`store-status ${String(s.status).toLowerCase()}`}
@@ -349,13 +362,15 @@ export default function Stores() {
                     </td>
                     <td>
                       <div className="store-item-actions">
-                       <button
+                        <button
                           type="button"
                           className="action-btn"
                           aria-label={`View ${s.storeName}`}
                           title="View store"
                           onClick={() =>
-                            nav(`/stores/${encodeURIComponent(s.id)}/configuration`)
+                            nav(
+                              `/stores/${encodeURIComponent(s.id)}/configuration`,
+                            )
                           }
                         >
                           <i className="bi bi-eye" />
@@ -418,8 +433,9 @@ export default function Stores() {
                 <button
                   type="button"
                   key={page}
-                  className={`pagination-page ${page === safeCurrentPage ? "active" : ""
-                    }`}
+                  className={`pagination-page ${
+                    page === safeCurrentPage ? "active" : ""
+                  }`}
                   onClick={() => goToPage(page)}
                 >
                   {page}
@@ -440,68 +456,65 @@ export default function Stores() {
         </div>
       </div>
 
-     {deleteTarget && (
-  <div
-    className="pch-delete-overlay"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="delete-store-title"
-    onClick={(event) => {
-      if (event.target === event.currentTarget) {
-        setDeleteTarget(null);
-      }
-    }}
-  >
-    <div className="pch-delete-modal">
-      <div className="pch-delete-icon" aria-hidden="true">
-        <i className="bi bi-trash3" />
-      </div>
-
-      <h2 id="delete-store-title">Delete Store?</h2>
-
-      <p className="pch-delete-message">
-        Are you sure you want to delete{" "}
-        <strong>
-          {deleteTarget.storeName || deleteTarget.name || "this store"}
-        </strong>
-        ?
-      </p>
-
-      <p className="pch-delete-warning">
-        This action cannot be undone.
-      </p>
-
-      <div className="pch-delete-actions">
-        <button
-          type="button"
-          className="pch-delete-cancel"
-          onClick={() => setDeleteTarget(null)}
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          className="pch-delete-confirm"
-          onClick={() => {
-            const deletedId = String(deleteTarget.id);
-
-            setStores((currentStores) =>
-              currentStores.filter(
-                (store) => String(store.id) !== deletedId
-              )
-            );
-
-            setDeleteTarget(null);
+      {deleteTarget && (
+        <div
+          className="pch-delete-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-store-title"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setDeleteTarget(null);
+            }
           }}
         >
-          Delete Store
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+          <div className="pch-delete-modal">
+            <div className="pch-delete-icon" aria-hidden="true">
+              <i className="bi bi-trash3" />
+            </div>
 
+            <h2 id="delete-store-title">Delete Store?</h2>
+
+            <p className="pch-delete-message">
+              Are you sure you want to delete{" "}
+              <strong>
+                {deleteTarget.storeName || deleteTarget.name || "this store"}
+              </strong>
+              ?
+            </p>
+
+            <p className="pch-delete-warning">This action cannot be undone.</p>
+
+            <div className="pch-delete-actions">
+              <button
+                type="button"
+                className="pch-delete-cancel"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="pch-delete-confirm"
+                onClick={() => {
+                  const deletedId = String(deleteTarget.id);
+
+                  setStores((currentStores) =>
+                    currentStores.filter(
+                      (store) => String(store.id) !== deletedId,
+                    ),
+                  );
+
+                  setDeleteTarget(null);
+                }}
+              >
+                Delete Store
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
