@@ -551,13 +551,8 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
       <div className="page-header">
         <div>
           <h1>Merchants</h1>
-          <div className="breadcrumb">
-            <span>Home</span>
-            <span>
-              <i className="bi bi-chevron-right" />
-            </span>
-            <strong>Merchants</strong>
-          </div>
+           <p className="page-subtitle">
+             Manage merchant accounts, subscriptions, stores, and business details. </p>
         </div>
         <div className="page-actions">
           <button
@@ -741,9 +736,10 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
                       </div>
                     </td>
                     <td>
-                      <span className={`status ${String(m.status || '').toLowerCase()}`}>
-                        {m.status}
-                      </span>
+                      <span className={`status ${String(m.status || '') .trim() .toLowerCase() .replace(/\s+/g, '-')}`} >
+                         <i></i>
+                         {m.status || 'Unknown'}
+                         </span>
                     </td>
                     <td>{m.joined}</td>
                     <td>
