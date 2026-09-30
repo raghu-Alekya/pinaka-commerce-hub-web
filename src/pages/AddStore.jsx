@@ -476,7 +476,36 @@ export default function AddStore() {
   const billing = subscription?.billingCycle || subscription?.billingType || plan?.billingCycle || "—";
   const planPrice = subscription?.price ?? subscription?.agreementPrice ?? plan?.price ?? plan?.amount;
   const storeLimit = Number(subscription?.maxStoresAllowed ?? subscription?.licensedStoreCount ?? subscription?.storeLimit ?? subscription?.maxStores ?? subscription?.locationLimit ?? plan?.includedStores ?? plan?.included_stores ?? NaN);
-  const planFeatureList = subscription?.includedFeatures ?? plan?.includedFeatures ?? plan?.features;
+
+  const matchedPlan = useMemo(() => {
+    const target = String(
+      subscription?.planId ||
+      subscription?.planCode ||
+      subscription?.planName ||
+      plan?.id ||
+      plan?.code ||
+      plan?.name ||
+      merchant?.planId ||
+      merchant?.plan ||
+      ""
+    ).trim().toLowerCase();
+    if (!target) return null;
+    return masterPlans.find(
+      (p) =>
+        String(p.id).toLowerCase() === target ||
+        String(p.code || "").toLowerCase() === target ||
+        String(p.name || "").toLowerCase() === target
+    ) || null;
+  }, [masterPlans, subscription, plan, merchant]);
+
+  const planFeatureList =
+    subscription?.includedFeatures ??
+    subscription?.included_features ??
+    plan?.includedFeatures ??
+    plan?.included_features ??
+    plan?.features ??
+    matchedPlan?.includedFeatures;
+
   const includedFeatures = useMemo(() => {
     const raw = [
       ...listFrom(subscription?.entitlements),
@@ -485,6 +514,9 @@ export default function AddStore() {
       ),
       ...listFrom(
         plan?.included_features ?? plan?.includedFeatures ?? plan?.features,
+      ),
+      ...listFrom(
+        matchedPlan?.included_features ?? matchedPlan?.includedFeatures ?? matchedPlan?.features,
       ),
     ];
     const unique = [];
@@ -500,7 +532,7 @@ export default function AddStore() {
         }
       });
     return unique;
-  }, [subscription, plan]);
+  }, [subscription, plan, matchedPlan]);
 
   const featureRows = useMemo(() => {
     const source = activeStoreTypeId ? typeFeatures : catalog;
@@ -534,11 +566,16 @@ export default function AddStore() {
   const roleName = id => roleById[id]?.name || id;
   const categories = ["All Features", ...new Set(featureRows.map(row => row.category))];
   const entitled = (name) => {
-    const feature = featureRows.find((row) => row.name === name);
-    if (activeStoreTypeId && typeof feature?.included === "boolean") return feature.included;
-    if (activeStoreTypeId && feature?.planAccess) return String(feature.planAccess).toUpperCase() === "INCLUDED";
-    if (includedFeatures.length) return includedFeatures.some((item) => item.toLowerCase() === name.toLowerCase());
-    if (planFeatureList != null) return false;
+    const target = String(name || "").trim().toLowerCase();
+    if (includedFeatures.some((item) => String(item || "").trim().toLowerCase() === target)) return true;
+    const feature = featureRows.find((row) => String(row.name || "").trim().toLowerCase() === target);
+    if (feature?.id && includedFeatures.some((item) => String(item || "").trim().toLowerCase() === String(feature.id).toLowerCase())) return true;
+    if (feature?.code && includedFeatures.some((item) => String(item || "").trim().toLowerCase() === String(feature.code).toLowerCase())) return true;
+    if (feature?.featureKey && includedFeatures.some((item) => String(item || "").trim().toLowerCase() === String(feature.featureKey).toLowerCase())) return true;
+    if (feature && typeof feature.included === "boolean" && feature.included) return true;
+    if (feature?.planAccess && String(feature.planAccess).toUpperCase() === "INCLUDED") return true;
+    if (includedFeatures.length > 0) return false;
+    if (planFeatureList != null && Array.isArray(planFeatureList) && planFeatureList.length > 0) return false;
     return Boolean(activeStoreTypeId) && Boolean(feature);
   };
   const filteredFeatures = featureRows.filter(row => {
@@ -592,15 +629,17 @@ export default function AddStore() {
       setMastersLoading(true);
       setLoadError("");
       try {
-        const result = await listMerchants();
-        if (!cancelled)
+        const [result, featuresResult, plansResult] = await Promise.all([
+          listMerchants().catch(() => []),
+          listFeatures().catch(() => []),
+          listPlans().catch(() => []),
+        ]);
+        if (!cancelled) {
           setMerchants(
             Array.isArray(result)
               ? result
               : result?.merchants || result?.data?.merchants || [],
           );
-        const featuresResult = await listFeatures();
-        if (!cancelled) {
           setCatalog(
             Array.isArray(featuresResult)
               ? featuresResult.filter(
@@ -610,6 +649,7 @@ export default function AddStore() {
                 )
               : [],
           );
+          setMasterPlans(Array.isArray(plansResult) ? plansResult : []);
         }
         if (storeId) {
           const response = await api.get(
