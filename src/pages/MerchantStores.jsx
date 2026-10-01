@@ -66,7 +66,7 @@ export default function MerchantStores({
 
         const [result, storesResult] = await Promise.all([
           getMerchant(merchantId),
-          api.get(endpoints.merchantStores(merchantId)).catch(() => null),
+          api.get(endpoints.merchantStores(merchantId)),
         ]);
 
         if (!cancelled) {
@@ -74,10 +74,9 @@ export default function MerchantStores({
             throw new Error("Merchant details were not returned.");
           }
 
-          const listed = storesResult?.stores ?? storesResult?.data?.stores ?? [];
-          const rows = Array.isArray(listed) && listed.length ? listed : result.stores;
+          const listed = storesResult?.stores ?? storesResult?.data?.stores ?? result.stores ?? [];
           setMerchant(result.merchant);
-          setStores((Array.isArray(rows) ? rows : []).map(toStoreRow));
+          setStores((Array.isArray(listed) ? listed : []).map(toStoreRow));
         }
       } catch (err) {
         if (!cancelled) {
