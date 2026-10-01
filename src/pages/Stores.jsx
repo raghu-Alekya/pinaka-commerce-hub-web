@@ -33,6 +33,34 @@ const displayStoreId = (store) =>
       ),
   ) || store.id;
 
+function exportStores(rows, merchants) {
+  if (!rows.length) {
+    alert("There are no stores to export.");
+    return;
+  }
+  const header = ["Store", "Store ID", "Merchant", "Location", "POS Devices", "Status"];
+  const data = rows.map((store) => [
+    store.storeName,
+    displayStoreId(store),
+    merchantNameOf(store, merchants),
+    locationOf(store),
+    staticPosDeviceCounts[store.id] ?? 0,
+    store.status,
+  ]);
+  const csv = [header, ...data]
+    .map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "pch-stores.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 const merchantNameOf = (store, merchants) => {
   const merchant = merchants.find(
     (m) => String(m.id) === String(store.merchantId),
@@ -66,8 +94,7 @@ export default function Stores() {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
   const [loading, setLoading] = useState(true),
-    [error, setError] = useState(""),
-    [version, setVersion] = useState(0);
+    [error, setError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -91,7 +118,7 @@ export default function Stores() {
     return () => {
       active = false;
     };
-  }, [version]);
+  }, []);
   const rows = stores.filter(
     (s) =>
       (!query ||
@@ -177,16 +204,15 @@ export default function Stores() {
           <p>Manage and monitor all stores connected to Pinaka Commerce Hub</p>
         </div>
         <div className="page-actions">
-          <button
-            className="refresh-btn"
-            disabled={loading}
-            onClick={() => setVersion((v) => v + 1)}
-          >
-            <i className={`bi bi-arrow-clockwise ${loading ? "spin" : ""}`} />{" "}
-            Refresh
-          </button>
           <button className="add-store-btn" onClick={() => nav("/stores/new")}>
             <i className="bi bi-plus-lg" /> Add Store
+          </button>
+          <button
+            className="btn btn-secondary export-store-btn"
+            type="button"
+            onClick={() => exportStores(rows, merchants)}
+          >
+            <i className="bi bi-download" /> Export
           </button>
         </div>
       </div>
@@ -366,7 +392,7 @@ export default function Stores() {
                       <div className="store-item-actions">
                         <button
                           type="button"
-                          className="action-btn"
+                          className="action-btn view-btn"
                           aria-label={`View ${s.storeName}`}
                           title="View store"
                           onClick={() =>
@@ -380,7 +406,7 @@ export default function Stores() {
 
                         <button
                           type="button"
-                          className="action-btn"
+                          className="action-btn edit-btn"
                           aria-label={`Edit ${s.storeName}`}
                           title="Edit store"
                           onClick={() =>
@@ -390,9 +416,7 @@ export default function Stores() {
                           <i className="bi bi-pencil" />
                         </button>
 
-                        <button
-                          type="button"
-                          className="action-btn delete-action-btn"
+                        <button type="button" className="action-btn text-danger"
                           aria-label={`Delete ${s.storeName}`}
                           title="Delete store"
                           onClick={() => {

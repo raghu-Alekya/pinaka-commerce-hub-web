@@ -651,7 +651,7 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
 
 
-        <div style={{ display: "flex", gap: "10px" }}>
+       <div className="subscription-page-actions">
 
           <button className="export-button" onClick={onReload} title="Refresh Subscriptions">
 
