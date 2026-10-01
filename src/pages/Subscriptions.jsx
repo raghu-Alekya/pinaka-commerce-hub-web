@@ -15,6 +15,9 @@ import {
   Download,
 
   Store,
+  Crown,
+  Zap,
+  Star,
 
   CheckCircle2,
 
@@ -46,8 +49,6 @@ import {
 
 } from "lucide-react";
 
-
-
 import { listPlans } from "../api/plans";
 
 import {
@@ -61,8 +62,6 @@ import {
 } from "../api/subscriptions";
 
 import "../styles/Merchant-subscriptions.css";
-
-
 
 const planKey = (plan) => String(plan?.id || plan?.planCode || plan?.code || plan?.name || "");
 
@@ -234,15 +233,11 @@ const addCycleToDate = (date, cycle) => {
 
 };
 
-
-
 /* ========================================
 
    COMMON COMPONENTS
 
 \======================================== */
-
-
 
 function StatusBadge({ status }) {
 
@@ -266,8 +261,6 @@ function StatusBadge({ status }) {
 
 }
 
-
-
 function PageBack({ label, onClick }) {
 
   return (
@@ -283,8 +276,6 @@ function PageBack({ label, onClick }) {
   );
 
 }
-
-
 
 function SelectField({ value, onChange, children }) {
 
@@ -306,8 +297,6 @@ function SelectField({ value, onChange, children }) {
 
 }
 
-
-
 function DetailRow({ label, value }) {
 
   return (
@@ -324,15 +313,11 @@ function DetailRow({ label, value }) {
 
 }
 
-
-
 /* ========================================
 
    LIST SCREEN
 
 \======================================== */
-
-
 
 function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
@@ -350,11 +335,7 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
   const [page, setPage] = useState(1);
 
-
-
   const PAGE_SIZE = 10;
-
-
 
   // Overview stats dynamically calculated from API data
 
@@ -388,19 +369,13 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
     ).length;
 
-
-
     const activePercentage = total > 0 ? ((active / total) * 100).toFixed(1) : "0.0";
 
     const inactivePercentage = total > 0 ? ((inactive / total) * 100).toFixed(1) : "0.0";
 
-
-
     return { total, active, inactive, expiring, activePercentage, inactivePercentage };
 
   }, [subscriptions]);
-
-
 
   // Dynamic Subscription Plan Distribution
 
@@ -434,19 +409,28 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
   }, [subscriptions]);
 
-
-
   // UI-only dynamic donut from existing planDistribution data.
+
   const distributionDonutStyle = useMemo(() => {
+
     if (!planDistribution.length) return { background: "#e9eef6" };
+
     const palette = ["#737bd1", "#4d8de8", "#ef8b17", "#28a873", "#e0a755"];
+
     let cursor = 0;
+
     const segments = planDistribution.map((item, index) => {
+
       const start = cursor;
+
       cursor += Number(item.percentage || 0);
+
       return `${palette[index % palette.length]} ${start}% ${cursor}%`;
+
     });
+
     return { background: `conic-gradient(${segments.join(", ")})` };
+
   }, [planDistribution]);
 
   // Dynamic filter dropdown options
@@ -457,15 +441,11 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
   }, [subscriptions]);
 
-
-
   const availableStatuses = useMemo(() => {
 
     return [...new Set(subscriptions.map((s) => s.status).filter(Boolean))];
 
   }, [subscriptions]);
-
-
 
   const availableStoreCounts = useMemo(() => {
 
@@ -477,15 +457,11 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
   }, [subscriptions]);
 
-
-
   const filtered = useMemo(() => {
 
     return subscriptions.filter((item) => {
 
       const searchValue = search.toLowerCase();
-
-
 
       const matchesSearch =
 
@@ -497,21 +473,15 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
         (item.merchantId && item.merchantId.toLowerCase().includes(searchValue));
 
-
-
       const matchesPlan = !plan || item.plan.toLowerCase() === plan.toLowerCase();
 
       const matchesStatus = !status || item.status.toLowerCase() === status.toLowerCase();
 
       const matchesStores = !stores || String(item.stores) === stores;
 
-
-
       const matchesStartDateFrom = !startDate || (item.rawStart && item.rawStart.slice(0, 10) >= startDate);
 
       const matchesStartDateTo = !endDate || (item.rawStart && item.rawStart.slice(0, 10) <= endDate);
-
-
 
       return (
 
@@ -533,8 +503,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
   }, [subscriptions, search, plan, status, stores, startDate, endDate]);
 
-
-
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
 
   const paginatedData = useMemo(() => {
@@ -544,8 +512,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
     return filtered.slice(startIdx, startIdx + PAGE_SIZE);
 
   }, [filtered, page]);
-
-
 
   const handleExport = () => {
 
@@ -603,8 +569,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
     ]);
 
-
-
     const csvContent =
 
       "data:text/csv;charset=utf-8," +
@@ -633,8 +597,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
   };
 
-
-
   return (
 
     <section className="merchant-subscriptions-page">
@@ -649,9 +611,7 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
         </div>
 
-
-
-       <div className="subscription-page-actions">
+        <div style={{ display: "flex", gap: "10px" }}>
 
           <button className="export-button" onClick={onReload} title="Refresh Subscriptions">
 
@@ -673,8 +633,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
       </div>
 
-
-
       {error && (
 
         <div style={{ padding: "12px 16px", marginBottom: "16px", backgroundColor: "#fee2e2", color: "#991b1b", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -691,104 +649,184 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
       )}
 
-
-
       {/* OVERVIEW CARDS */}
+
       <div className="subscription-overview subscription-overview-refined">
+
         <div className="overview-cards">
+
           <div className="overview-card total-card">
+
             <span className="overview-icon purple">
+
               <Store size={24} />
+
             </span>
+
             <div>
+
               <p>Total Subscriptions</p>
+
               <strong>{stats.total}</strong>
+
               <small className="positive overview-meta">
+
                 <i /> Live Records
+
               </small>
+
             </div>
+
           </div>
 
           <div className="overview-card active-card">
+
             <span className="overview-icon green">
+
               <CheckCircle2 size={25} />
+
             </span>
+
             <div>
+
               <p>Active Subscriptions</p>
+
               <strong>{stats.active}</strong>
+
               <small className="positive overview-meta">
+
                 <i /> {stats.activePercentage}% of total
+
               </small>
+
             </div>
+
           </div>
 
           <div className="overview-card inactive-card">
+
             <span className="overview-icon red">
+
               <XCircle size={25} />
+
             </span>
+
             <div>
+
               <p>Inactive Subscriptions</p>
+
               <strong>{stats.inactive}</strong>
+
               <small className="negative overview-meta">
+
                 <i /> {stats.inactivePercentage}% of total
+
               </small>
+
             </div>
+
           </div>
 
           <div className="overview-card expiring-card">
+
             <span className="overview-icon orange">
+
               <Clock3 size={25} />
+
             </span>
+
             <div>
+
               <p>Expiring Soon</p>
+
               <strong>{stats.expiring}</strong>
+
               <small className="warning overview-meta">
+
                 <i /> {stats.expiring > 0 ? "Within next 30 days" : "Review required"}
+
               </small>
+
             </div>
+
           </div>
+
         </div>
 
         {/* PLAN DISTRIBUTION */}
+
         <div className="distribution-card">
+
           <div className="distribution-header">
+
             <div>
+
               <h2>Subscription Plan Distribution</h2>
+
               <p>Number of merchants by subscription plan</p>
+
             </div>
 
             <div
+
               className="distribution-plan-count distribution-plan-count-badge"
+
               aria-label={`${availablePlans.length} Plans`}
+
             >
+
               <span>
+
                 {availablePlans.length} {availablePlans.length === 1 ? "Plan" : "Plans"}
+
               </span>
+
             </div>
+
           </div>
 
           <div className="distribution-content">
+
             <div className="donut" style={distributionDonutStyle}>
+
               <div>
+
                 <strong>{stats.total}</strong>
-                <span>Merchants</span>
+
+                <span>Records</span>
+
               </div>
+
             </div>
 
             <div className="plan-legend">
+
               {planDistribution.map((item, index) => (
+
                 <div key={item.name} className="legend-row">
+
                   <span className="legend-name">
+
                     <i className="legend-dot" style={{ backgroundColor: ["#737bd1", "#4d8de8", "#ef8b17", "#28a873", "#e0a755"][index % 5] }} />
+
                     {item.name}
+
                   </span>
+
                   <b>{item.count}</b>
+
                   <span>{item.percentage}%</span>
+
                 </div>
+
               ))}
+
             </div>
+
           </div>
+
         </div>
+
       </div>
 
       {/* FILTERS */}
@@ -816,8 +854,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
           />
 
         </div>
-
-
 
         <SelectField
 
@@ -847,8 +883,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
         </SelectField>
 
-
-
         <SelectField
 
           value={status}
@@ -876,8 +910,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
           ))}
 
         </SelectField>
-
-
 
         <SelectField
 
@@ -907,8 +939,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
         </SelectField>
 
-
-
         <label className="date-field">
 
           <span>Start Date From</span>
@@ -924,8 +954,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
           />
 
         </label>
-
-
 
         <label className="date-field">
 
@@ -944,8 +972,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
         </label>
 
       </div>
-
-
 
       {/* TABLE */}
 
@@ -981,8 +1007,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
             </thead>
 
-
-
             <tbody>
 
               {loading && (
@@ -999,15 +1023,11 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
               )}
 
-
-
               {!loading && paginatedData.map((item, index) => (
 
                 <tr key={item.id + index}>
 
                   <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
-
-
 
                   <td>
 
@@ -1031,8 +1051,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
                   </td>
 
-
-
                   <td>{item.plan}</td>
 
                   <td>{item.stores}</td>
@@ -1043,15 +1061,11 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
                   <td>{item.end}</td>
 
-
-
                   <td>
 
                     <StatusBadge status={item.status} />
 
                   </td>
-
-
 
                   <td>
 
@@ -1081,8 +1095,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
               ))}
 
-
-
               {!loading && filtered.length === 0 && (
 
                 <tr>
@@ -1103,8 +1115,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
         </div>
 
-
-
         <div className="table-footer">
 
           <span>
@@ -1114,8 +1124,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
             {Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} results
 
           </span>
-
-
 
           <div className="pagination">
 
@@ -1130,8 +1138,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
               <ChevronLeft size={17} />
 
             </button>
-
-
 
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
 
@@ -1150,8 +1156,6 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
               </button>
 
             ))}
-
-
 
             <button
 
@@ -1177,138 +1181,225 @@ function SubscriptionList({ subscriptions, loading, error, onReload, onView }) {
 
 }
 
-
-
 /* ========================================
 
    DETAILS SCREEN
 
 \======================================== */
 
-
-
 function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
+
   if (!merchant) return null;
 
   const entitlements =
+
     Array.isArray(merchant.entitlements) && merchant.entitlements.length > 0
+
       ? merchant.entitlements
+
       : planFeatures(merchant.planDetails || {});
 
   const planLabel = merchant.plan || "Current Plan";
+
   const billingLabel = merchant.billingCycle || "MONTHLY";
 
   return (
+
     <section className="subscription-flow-page subscription-details-redesign">
+
       <PageBack label="Back to Subscriptions" onClick={onBack} />
 
       <div className="subscription-details-heading">
+
         <h1>Subscription Details</h1>
+
         <p className="flow-subtitle">View subscription information for this merchant.</p>
+
       </div>
 
       <div className="subscription-details-summary">
+
         <div className="subscription-merchant-profile">
+
           <div className="subscription-merchant-logo"><Store size={32} /></div>
+
           <div className="subscription-merchant-copy">
+
             <h2>{merchant.merchant}</h2>
+
             <div className="subscription-reference-line">
+
               <span>{merchant.merchantId || merchant.id}</span>
+
             </div>
+
             <div className="subscription-profile-badges">
+
               <StatusBadge status={merchant.status} />
+
               <span className="subscription-plan-pill">{planLabel}</span>
+
             </div>
+
           </div>
+
         </div>
 
         <div className="subscription-summary-metric">
+
           <div className="subscription-metric-icon purple"><Store size={23} /></div>
-          <div><span>Stores</span><strong>{merchant.stores}</strong><small>Allowed</small></div>
+
+          <div><span>Stores Allowed</span><strong>{merchant.stores}</strong></div>
+
         </div>
 
         <div className="subscription-summary-metric">
+
           <div className="subscription-metric-icon blue"><Smartphone size={23} /></div>
-          <div><span>Devices</span><strong>{merchant.devices}</strong><small>Allowed</small></div>
+
+          <div><span>Devices Allowed</span><strong>{merchant.devices}</strong></div>
+
         </div>
 
         <div className="subscription-summary-metric validity">
+
           <div className="subscription-metric-icon orange"><Clock3 size={23} /></div>
+
           <div>
+
             <span>Plan Validity</span>
+
             <strong className="validity-dates">{merchant.start}<br />to {merchant.end}</strong>
+
             <small>{billingLabel === "YEARLY" || billingLabel === "ANNUAL" ? "(1 Year)" : billingLabel}</small>
+
           </div>
+
         </div>
+
       </div>
 
       <div className="subscription-details-content-grid">
+
         <div className="subscription-details-panel information-panel">
+
           <div className="subscription-panel-heading">
+
             <div className="subscription-panel-icon blue"><Info size={22} /></div>
+
             <div>
+
               <h3>Subscription Information</h3>
+
               <p>Key details about this merchant&apos;s subscription.</p>
+
             </div>
+
           </div>
 
           <div className="subscription-information-list">
+
             <div className="subscription-information-row"><span>Merchant Name</span><strong>{merchant.merchant}</strong></div>
+
             <div className="subscription-information-row"><span>Subscription Reference</span><strong>{merchant.id}</strong></div>
+
             <div className="subscription-information-row">
+
               <span>Current Plan</span>
+
               <strong><span className="subscription-plan-pill inline">{planLabel}</span></strong>
+
             </div>
+
             <div className="subscription-information-row"><span>Status</span><strong><StatusBadge status={merchant.status} /></strong></div>
+
             <div className="subscription-information-row"><span>Start Date</span><strong>{merchant.start}</strong></div>
+
             <div className="subscription-information-row"><span>End Date</span><strong>{merchant.end}</strong></div>
+
             <div className="subscription-information-row"><span>Stores</span><strong>{merchant.stores} allowed</strong></div>
+
             <div className="subscription-information-row"><span>Devices</span><strong>{merchant.devices} allowed</strong></div>
+
             <div className="subscription-information-row"><span>Pricing</span><strong>{merchant.currency || "USD"} {merchant.price} / {billingLabel}</strong></div>
+
           </div>
+
         </div>
 
         <div className="subscription-details-panel entitlements-panel">
+
           <div className="subscription-panel-heading">
+
             <div className="subscription-panel-icon green"><Store size={22} /></div>
+
             <div>
-              <h3>Plan Features &amp; Entitlements</h3>
+
+              <h3>Plan Features &amp; Entitlements <span className="subscription-entitlements-count">{entitlements.length}</span></h3>
+
               <p>Features included in the {planLabel} for this merchant.</p>
+
             </div>
+
           </div>
 
           <div className="subscription-entitlements-list">
+
             {entitlements.map((feature, idx) => (
+
               <div className="subscription-entitlement-item" key={feature + idx}>
+
                 <span className="subscription-feature-check"><Check size={17} /></span>
+
                 <div className="subscription-feature-copy"><strong>{feature}</strong></div>
+
                 <span className="subscription-included-pill">Included</span>
+
               </div>
+
             ))}
+
             {entitlements.length === 0 && (
+
               <div className="subscription-empty-entitlements">No plan features are available for this subscription.</div>
+
             )}
+
           </div>
+
         </div>
+
       </div>
 
       <div className="subscription-change-plan-bar">
+
         <div className="subscription-change-message">
+
           <span className="subscription-change-info"><Info size={18} /></span>
+
           <div>
+
             <strong>Need to change the plan?</strong>
+
             <p>Upgrade or downgrade the subscription plan for this merchant.</p>
+
           </div>
+
         </div>
+
         <button className="subscription-change-plan-button" onClick={onChangePlan}>
+
           <ArrowLeftRight size={18} />Change Subscription Plan
+
         </button>
+
       </div>
+
     </section>
+
   );
+
 }
-
-
 
 /* ========================================
 
@@ -1316,265 +1407,152 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
 \======================================== */
 
-
-
 function ChoosePlan({
-
   merchant,
-
   plans,
-
   plansLoading,
-
   plansError,
-
   selectedPlan,
-
   setSelectedPlan,
-
   onBack,
-
   onNext,
-
 }) {
-
   const currentPlan = findCurrentPlan(merchant, plans);
-
   const currentKey = merchant?.planId || planKey(currentPlan);
-
-
+  const planIcons = [Crown, Zap, Star];
 
   return (
+    <section className="subscription-flow-page choose-plan-redesign">
+      <div className="choose-plan-back-strip">
+        <PageBack label="Back to Subscription Details" onClick={onBack} />
+      </div>
 
-    <section className="subscription-flow-page">
+      <div className="choose-plan-layout">
+        <aside className="subscription-stepper choose-plan-stepper" aria-label="Subscription change progress">
+          <div className="subscription-step active">
+            <span className="step-number">1</span>
+            <div><strong>Choose Subscription Plan</strong><p>Select a plan for your merchant.</p></div>
+          </div>
+          <div className="subscription-step">
+            <span className="step-number">2</span>
+            <div><strong>Confirm Plan Change</strong><p>Review the plan details.</p></div>
+          </div>
+          <div className="subscription-step">
+            <span className="step-number">3</span>
+            <div><strong>Payment</strong><p>Complete the payment.</p></div>
+          </div>
+          <div className="subscription-step">
+            <span className="step-number">4</span>
+            <div><strong>Confirmation</strong><p>Plan updated successfully.</p></div>
+          </div>
+        </aside>
 
-      <PageBack label="Back to Subscription Details" onClick={onBack} />
+        <div className="choose-plan-main">
+          <div className="choose-plan-heading">
+            <h1>Choose Subscription Plan</h1>
+            <p className="flow-subtitle">
+              Plans for {merchant?.storeTypeName || "this store type"} ({merchant?.merchant}).
+            </p>
+          </div>
 
+          {plansError && <div className="payment-error">{plansError}</div>}
 
+          <div className="plans-grid choose-plan-grid">
+            {plansLoading ? (
+              <p className="choose-plan-loading">Loading plans…</p>
+            ) : plans.map((plan, index) => {
+              const key = planKey(plan);
+              const isSelected = selectedPlan === key;
+              const isCurrent =
+                (merchant?.planId && String(plan.id) === String(merchant.planId)) ||
+                planName(plan).toLowerCase() === String(merchant?.plan || "").toLowerCase();
+              const price = planPrice(plan);
+              const annualPrice = planPrice(plan, "ANNUAL");
+              const features = planFeatures(plan);
+              const PlanIcon = planIcons[index % planIcons.length];
 
-      <h1>Choose Subscription Plan</h1>
+              return (
+                <div
+                  className={`plan-card choose-plan-card plan-tone-${index % 3} ${isSelected ? "selected" : ""} ${isCurrent ? "current" : ""}`}
+                  key={key}
+                  onClick={() => {
+                    if (!isCurrent) setSelectedPlan(key);
+                  }}
+                >
+                  <div className="choose-plan-card-top">
+                    <span className="plan-visual-icon"><PlanIcon size={27} /></span>
+                    {isCurrent && <span className="current-plan-badge">Current Plan</span>}
+                  </div>
 
-      <p className="flow-subtitle">
+                  <div className="plan-card-header">
+                    <div>
+                      <h3>{planName(plan)}</h3>
+                      <p>{plan.description || "Subscription plan"}</p>
+                    </div>
+                  </div>
 
-        Plans for {merchant?.storeTypeName || "this store type"} ({merchant?.merchant}).
+                  <div className="plan-divider" />
 
-      </p>
+                  <div className="plan-price">
+                    {formatPrice(price, plan.currency)}
+                    <span> / month</span>
+                  </div>
+                  <div className="plan-yearly">{formatPrice(annualPrice, plan.currency)} / annual</div>
 
+                  <div className="plan-capacity-row">
+                    <div className="plan-capacity-item">
+                      <span className="capacity-icon"><Store size={21} /></span>
+                      <div><strong>Stores</strong><small>Up to {plan.includedStores ?? plan.included_stores ?? 0} Stores</small></div>
+                    </div>
+                    <div className="plan-capacity-item">
+                      <span className="capacity-icon"><Smartphone size={21} /></span>
+                      <div><strong>Devices</strong><small>Up to {plan.includedTerminals ?? plan.included_terminals ?? 0} Devices</small></div>
+                    </div>
+                  </div>
 
+                  <ul className="feature-list choose-plan-features">
+                    {features.map((feature) => (
+                      <li key={feature}><Check size={16} />{feature}</li>
+                    ))}
+                  </ul>
 
-      {plansError && <div className="payment-error">{plansError}</div>}
-
-
-
-      <div className="plans-grid">
-
-        {plansLoading ? (
-
-          <p>Loading plans…</p>
-
-        ) : plans.map((plan) => {
-
-          const key = planKey(plan);
-
-          const isSelected = selectedPlan === key;
-
-          const isCurrent =
-
-            (merchant?.planId && String(plan.id) === String(merchant.planId)) ||
-
-            planName(plan).toLowerCase() === String(merchant?.plan || "").toLowerCase();
-
-          const price = planPrice(plan);
-
-          const annualPrice = planPrice(plan, "ANNUAL");
-
-          const features = planFeatures(plan);
-
-
-
-          return (
-
-            <div
-
-              className={`plan-card ${isSelected ? "selected" : ""}`}
-
-              key={key}
-
-              onClick={() => {
-
-                if (!isCurrent) {
-
-                  setSelectedPlan(key);
-
-                }
-
-              }}
-
-            >
-
-              {isCurrent && <span className="current-plan-badge">Current Plan</span>}
-
-
-
-              <div className="plan-card-header">
-
-                <div>
-
-                  <h3>{planName(plan)}</h3>
-
-                  <p>{plan.description || "Subscription plan"}</p>
-
+                  <button
+                    className={`select-plan-btn ${isSelected ? "chosen" : ""}`}
+                    disabled={isCurrent}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isCurrent) setSelectedPlan(key);
+                    }}
+                  >
+                    {isCurrent ? "Current Plan" : isSelected ? "Selected" : "Select Plan"}
+                  </button>
                 </div>
+              );
+            })}
+          </div>
 
-
-
-                <span className="plan-radio">
-
-                  {isSelected ? <Check size={14} /> : ""}
-
-                </span>
-
-              </div>
-
-
-
-              <div className="plan-price">
-
-                {formatPrice(price, plan.currency)}
-
-                <span> / month</span>
-
-              </div>
-
-
-
-              <div className="plan-yearly">
-
-                {formatPrice(annualPrice, plan.currency)} / annual
-
-              </div>
-
-
-
-              <div className="plan-divider" />
-
-
-
-              <p>
-
-                Up to <b>{plan.includedStores ?? plan.included_stores ?? 0} Stores</b>
-
-              </p>
-
-
-
-              <p>
-
-                Up to <b>{plan.includedTerminals ?? plan.included_terminals ?? 0} Devices</b>
-
-              </p>
-
-
-
-              <ul className="feature-list">
-
-                {features.map((feature) => (
-
-                  <li key={feature}>
-
-                    <Check size={15} />
-
-                    {feature}
-
-                  </li>
-
-                ))}
-
-              </ul>
-
-
-
-              <button
-
-                className={`select-plan-btn ${isSelected ? "chosen" : ""}`}
-
-                disabled={isCurrent}
-
-                onClick={(e) => {
-
-                  e.stopPropagation();
-
-                  if (!isCurrent) {
-
-                    setSelectedPlan(key);
-
-                  }
-
-                }}
-
-              >
-
-                {isCurrent ? "Current Plan" : isSelected ? "Selected" : "Select Plan"}
-
-              </button>
-
+          <div className="info-banner choose-plan-info-banner">
+            <Info size={21} />
+            <div>
+              <strong>You are changing the subscription plan for {merchant?.merchant}.</strong>
+              <p>After selecting a plan, you will be able to review the changes before proceeding to payment.</p>
             </div>
+          </div>
 
-          );
-
-        })}
-
-      </div>
-
-
-
-      <div className="info-banner">
-
-        <Info size={21} />
-
-        <div>
-
-          <strong>You are changing the subscription plan for {merchant?.merchant}.</strong>
-
-          <p>
-
-            After selecting a plan, you will be able to review the changes before proceeding to payment.
-
-          </p>
-
+          <div className="flow-bottom-actions choose-plan-actions">
+            <button
+              className="primary-flow-button"
+              disabled={!selectedPlan || selectedPlan === currentKey || plansLoading || !plans.length}
+              onClick={onNext}
+            >
+              Next <ArrowRight size={17} />
+            </button>
+          </div>
         </div>
-
       </div>
-
-
-
-      <div className="flow-bottom-actions">
-
-        <button
-
-          className="primary-flow-button"
-
-          disabled={!selectedPlan || selectedPlan === currentKey || plansLoading || !plans.length}
-
-          onClick={onNext}
-
-        >
-
-          Next
-
-          <ArrowRight size={17} />
-
-        </button>
-
-      </div>
-
     </section>
-
   );
-
 }
-
-
 
 /* ========================================
 
@@ -1582,227 +1560,162 @@ function ChoosePlan({
 
 \======================================== */
 
-
-
 function ConfirmPlanChange({ merchant, plans, selectedPlan, onBack, onNext }) {
-
   const current = findCurrentPlan(merchant, plans);
-
   const next = plans.find((plan) => planKey(plan) === selectedPlan) || current;
-
   const difference = planPrice(next) - planPrice(current);
-
   const currentFeatures = planFeatures(current);
-
   const nextFeatures = planFeatures(next);
-
   const comparedFeatures = [...new Set([...currentFeatures, ...nextFeatures])];
-
   const currency = next.currency || current.currency || "INR";
 
-
+  const currentStores = current.includedStores ?? current.included_stores ?? merchant?.stores ?? 0;
+  const currentDevices = current.includedTerminals ?? current.included_terminals ?? merchant?.devices ?? 0;
+  const nextStores = next.includedStores ?? next.included_stores ?? 0;
+  const nextDevices = next.includedTerminals ?? next.included_terminals ?? 0;
 
   return (
+    <section className="subscription-flow-page confirm-plan-redesign">
+      <div className="confirm-plan-back-strip">
+        <PageBack label="Back to Choose Plan" onClick={onBack} />
+      </div>
 
-    <section className="subscription-flow-page">
+      <div className="confirm-plan-layout">
+        <aside className="subscription-stepper confirm-stepper" aria-label="Subscription plan change progress">
+          <div className="subscription-step">
+            <span className="step-number">1</span>
+            <div><strong>Choose Subscription Plan</strong><p>Select a plan for your merchant.</p></div>
+          </div>
+          <div className="subscription-step active">
+            <span className="step-number">2</span>
+            <div><strong>Confirm Plan Change</strong><p>Review the plan details.</p></div>
+          </div>
+          <div className="subscription-step">
+            <span className="step-number">3</span>
+            <div><strong>Payment</strong><p>Complete the payment.</p></div>
+          </div>
+          <div className="subscription-step">
+            <span className="step-number">4</span>
+            <div><strong>Confirmation</strong><p>Plan updated successfully.</p></div>
+          </div>
+        </aside>
 
-      <PageBack label="Back to Choose Plan" onClick={onBack} />
-
-
-
-      <h1>Confirm Plan Change</h1>
-
-      <p className="flow-subtitle">
-
-        Please review the changes before proceeding to payment.
-
-      </p>
-
-
-
-      <div className="flow-card">
-
-        <div className="change-summary">
-
-          <div className="change-plan">
-
-            <span>Current Plan</span>
-
-            <h3>{planName(current)}</h3>
-
-            <strong>{formatPrice(planPrice(current), currency)} / month</strong>
-
-            <p>Up to {current.includedStores ?? current.included_stores ?? merchant?.stores ?? 0} Stores</p>
-
-            <p>Up to {current.includedTerminals ?? current.included_terminals ?? merchant?.devices ?? 0} Devices</p>
-
+        <main className="confirm-plan-content">
+          <div className="confirm-plan-heading">
+            <h1>Confirm Plan Change</h1>
+            <p className="flow-subtitle">Please review the changes before proceeding to payment.</p>
           </div>
 
+          <div className="confirm-plan-cards">
+            <div className="confirm-plan-card current">
+              <div className="confirm-plan-card-icon"><Store size={21} /></div>
+              <div className="confirm-plan-card-body">
+                <span className="confirm-plan-label">Current Plan</span>
+                <h3>{planName(current)}</h3>
+                <strong className="confirm-plan-price">{formatPrice(planPrice(current), currency)} <small>/ month</small></strong>
+              </div>
+              <div className="confirm-plan-limits">
+                <div className="confirm-plan-limit-item">
+                  <span className="confirm-plan-limit-icon"><Store size={15} /></span>
+                  <div><strong>Stores</strong><small>Up to {currentStores} Stores</small></div>
+                </div>
+                <div className="confirm-plan-limit-divider" />
+                <div className="confirm-plan-limit-item">
+                  <span className="confirm-plan-limit-icon"><Smartphone size={15} /></span>
+                  <div><strong>Devices</strong><small>Up to {currentDevices} Devices</small></div>
+                </div>
+              </div>
+            </div>
 
+            <div className="confirm-plan-arrow" aria-hidden="true"><ArrowRight size={20} /></div>
 
-          <div className="change-arrow">
-
-            <ArrowRight size={24} />
-
+            <div className="confirm-plan-card next">
+              <div className="confirm-plan-card-icon"><ArrowLeftRight size={21} /></div>
+              <div className="confirm-plan-card-body">
+                <span className="confirm-plan-label">New Plan</span>
+                <h3>{planName(next)}</h3>
+                <strong className="confirm-plan-price">{formatPrice(planPrice(next), currency)} <small>/ month</small></strong>
+              </div>
+              <div className="confirm-plan-limits">
+                <div className="confirm-plan-limit-item">
+                  <span className="confirm-plan-limit-icon"><Store size={15} /></span>
+                  <div><strong>Stores</strong><small>Up to {nextStores} Stores</small></div>
+                </div>
+                <div className="confirm-plan-limit-divider" />
+                <div className="confirm-plan-limit-item">
+                  <span className="confirm-plan-limit-icon"><Smartphone size={15} /></span>
+                  <div><strong>Devices</strong><small>Up to {nextDevices} Devices</small></div>
+                </div>
+              </div>
+            </div>
           </div>
 
+          <h3 className="change-title">What will change?</h3>
 
-
-          <div className="change-plan">
-
-            <span>New Plan</span>
-
-            <h3>{planName(next)}</h3>
-
-            <strong>{formatPrice(planPrice(next), currency)} / month</strong>
-
-            <p>Up to {next.includedStores ?? next.included_stores ?? 0} Stores</p>
-
-            <p>Up to {next.includedTerminals ?? next.included_terminals ?? 0} Devices</p>
-
-          </div>
-
-        </div>
-
-
-
-        <h3 className="change-title">What will change?</h3>
-
-
-
-        <div className="comparison-table-wrapper">
-
-          <table className="comparison-table">
-
-            <thead>
-
-              <tr>
-
-                <th>Feature</th>
-
-                <th>Current Plan</th>
-
-                <th>New Plan</th>
-
-              </tr>
-
-            </thead>
-
-
-
-            <tbody>
-
-              <tr>
-
-                <td>Plan Price</td>
-
-                <td>{formatPrice(planPrice(current), currency)} / month</td>
-
-                <td>{formatPrice(planPrice(next), currency)} / month</td>
-
-              </tr>
-
-              <tr>
-
-                <td>Stores Allowed</td>
-
-                <td>{current.includedStores ?? current.included_stores ?? merchant?.stores ?? 0}</td>
-
-                <td>{next.includedStores ?? next.included_stores ?? 0}</td>
-
-              </tr>
-
-              <tr>
-
-                <td>Devices Allowed</td>
-
-                <td>{current.includedTerminals ?? current.included_terminals ?? merchant?.devices ?? 0}</td>
-
-                <td>{next.includedTerminals ?? next.included_terminals ?? 0}</td>
-
-              </tr>
-
-              {comparedFeatures.map((feature) => (
-
-                <tr key={feature}>
-
-                  <td>{feature}</td>
-
-                  <td>{currentFeatures.includes(feature) ? "Included" : "Not included"}</td>
-
-                  <td>{nextFeatures.includes(feature) ? "Included" : "Not included"}</td>
-
+          <div className="comparison-table-wrapper confirm-comparison-wrapper">
+            <table className="comparison-table confirm-comparison-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Current Plan</th>
+                  <th>New Plan</th>
                 </tr>
-
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-
-
-        <div className="warning-banner">
-
-          <Info size={19} />
-
-          <div>
-
-            <strong>
-
-              This change will {difference >= 0 ? "increase" : "decrease"} monthly billing by {formatPrice(Math.abs(difference), currency)}.
-
-            </strong>
-
-            <p>
-
-              The new plan supports {next.includedStores ?? next.included_stores ?? 0} stores and {next.includedTerminals ?? next.included_terminals ?? 0} devices.
-
-            </p>
-
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Plan Price</td>
+                  <td>{formatPrice(planPrice(current), currency)} / month</td>
+                  <td>{formatPrice(planPrice(next), currency)} / month</td>
+                </tr>
+                <tr>
+                  <td>Stores Allowed</td>
+                  <td>{currentStores}</td>
+                  <td>{nextStores}</td>
+                </tr>
+                <tr>
+                  <td>Devices Allowed</td>
+                  <td>{currentDevices}</td>
+                  <td>{nextDevices}</td>
+                </tr>
+                {comparedFeatures.map((feature) => (
+                  <tr key={feature}>
+                    <td>{feature}</td>
+                    <td>{currentFeatures.includes(feature) ? "Included" : "Not included"}</td>
+                    <td>{nextFeatures.includes(feature) ? "Included" : "Not included"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-        </div>
+          <div className="warning-banner confirm-warning-banner">
+            <Info size={18} />
+            <div>
+              <strong>
+                This change will {difference >= 0 ? "increase" : "decrease"} monthly billing by {formatPrice(Math.abs(difference), currency)}.
+              </strong>
+              <p>The new plan supports {nextStores} stores and {nextDevices} devices.</p>
+            </div>
+          </div>
 
+          <div className="flow-bottom-actions confirm-plan-actions">
+            <button className="secondary-flow-button" onClick={onBack}>Cancel</button>
+            <button className="primary-flow-button" onClick={onNext}>
+              Proceed to Payment
+              <ArrowRight size={17} />
+            </button>
+          </div>
+        </main>
       </div>
-
-
-
-      <div className="flow-bottom-actions">
-
-        <button className="secondary-flow-button" onClick={onBack}>
-
-          Cancel
-
-        </button>
-
-        <button className="primary-flow-button" onClick={onNext}>
-
-          Proceed to Payment
-
-          <ArrowRight size={17} />
-
-        </button>
-
-      </div>
-
     </section>
-
   );
-
 }
-
-
 
 /* ========================================
 
    PAYMENT SCREEN
 
 \======================================== */
-
-
 
 function PaymentScreen({
 
@@ -1848,15 +1761,19 @@ function PaymentScreen({
 
   const currency = next.currency || "INR";
 
-
-
   return (
 
-    <section className="subscription-flow-page payment-page">
-
-      <PageBack label="Back to Confirm Plan Change" onClick={onBack} />
-
-
+    <section className="subscription-flow-page payment-page payment-page-redesign">      <div className="payment-back-strip">
+        <PageBack label="Back to Confirm Plan Change" onClick={onBack} />
+      </div>
+      <div className="payment-layout">
+        <aside className="subscription-stepper payment-stepper" aria-label="Subscription plan change progress">
+          <div className="subscription-step"><span className="step-number">1</span><div><strong>Choose Subscription Plan</strong><p>Select a plan for your merchant.</p></div></div>
+          <div className="subscription-step"><span className="step-number">2</span><div><strong>Confirm Plan Change</strong><p>Review the plan details.</p></div></div>
+          <div className="subscription-step active"><span className="step-number">3</span><div><strong>Payment</strong><p>Complete the payment.</p></div></div>
+          <div className="subscription-step"><span className="step-number">4</span><div><strong>Confirmation</strong><p>Plan updated successfully.</p></div></div>
+        </aside>
+        <main className="payment-main">
 
       <h1>Payment</h1>
 
@@ -1866,13 +1783,9 @@ function PaymentScreen({
 
       </p>
 
-
-
       <div className="payment-summary">
 
         <h3>Subscription Summary</h3>
-
-
 
         <DetailRow
 
@@ -1898,8 +1811,6 @@ function PaymentScreen({
 
         />
 
-
-
         <div className="detail-row">
 
           <span>Billing Cycle</span>
@@ -1920,11 +1831,7 @@ function PaymentScreen({
 
         </div>
 
-
-
         <DetailRow label="Tax" value={formatPrice(tax, currency)} />
-
-
 
         <div className="payment-total">
 
@@ -1934,19 +1841,13 @@ function PaymentScreen({
 
         </div>
 
-
-
         <small className="payment-note">Plan price plus applicable tax</small>
 
       </div>
 
-
-
       <div className="payment-card">
 
         <h3>Select Payment Method</h3>
-
-
 
         <div className="payment-tabs">
 
@@ -1994,8 +1895,6 @@ function PaymentScreen({
 
         </div>
 
-
-
         {paymentMethod === "Card" && (
 
           <div className="payment-form">
@@ -2022,8 +1921,6 @@ function PaymentScreen({
 
             </label>
 
-
-
             <label>
 
               Cardholder Name
@@ -2043,8 +1940,6 @@ function PaymentScreen({
               />
 
             </label>
-
-
 
             <div className="form-grid">
 
@@ -2067,8 +1962,6 @@ function PaymentScreen({
                 />
 
               </label>
-
-
 
               <label>
 
@@ -2094,8 +1987,6 @@ function PaymentScreen({
 
             </div>
 
-
-
             <label className="save-card">
 
               <input
@@ -2120,8 +2011,6 @@ function PaymentScreen({
 
         )}
 
-
-
         {paymentMethod === "UPI" && (
 
           <div className="payment-form">
@@ -2145,8 +2034,6 @@ function PaymentScreen({
           </div>
 
         )}
-
-
 
         {paymentMethod === "Net Banking" && (
 
@@ -2182,11 +2069,7 @@ function PaymentScreen({
 
         )}
 
-
-
         {paymentError && <div className="payment-error">{paymentError}</div>}
-
-
 
         <div className="payment-actions">
 
@@ -2216,21 +2099,19 @@ function PaymentScreen({
 
       </div>
 
+            </main>
+      </div>
     </section>
 
   );
 
 }
 
-
-
 /* ========================================
 
    PAYMENT SUCCESS
 
 \======================================== */
-
-
 
 function PaymentSuccess({
 
@@ -2250,101 +2131,85 @@ function PaymentSuccess({
 
   const next = plans.find((plan) => planKey(plan) === selectedPlan) || {};
 
-
-
   return (
-
-    <section className="subscription-flow-page success-page">
-
-      <div className="success-icon">
-
-        <Check size={45} />
-
+    <section className="subscription-flow-page success-page success-page-redesign">
+      <div className="success-back-strip">
+        <PageBack label="Back to Payment" onClick={() => {}} />
       </div>
-
-
-
-      <h1>Subscription Plan Updated</h1>
-
-      <p className="flow-subtitle">
-
-        The subscription plan for {merchant?.merchant} has been successfully updated.
-
-      </p>
-
-
-
-      <div className="flow-card success-details">
-
-        <DetailRow
-
-          label="Merchant"
-
-          value={`${merchant?.merchant} (${merchant?.merchantId || merchant?.id})`}
-
-        />
-
-        <DetailRow label="New Plan" value={planName(next)} />
-
-        <DetailRow label="Amount Paid" value={formatPrice(amountPaid, next.currency)} />
-
-        <DetailRow label="Billing Cycle" value={billingCycle === "ANNUAL" ? "Annual" : "Monthly"} />
-
-        <DetailRow label="Effective From" value={merchant?.start} />
-
-        <DetailRow
-
-          label="Status"
-
-          value={
-
-            <span className="success-text">
-
-              <i />
-
-              Active
-
-            </span>
-
-          }
-
-        />
-
+      <div className="success-layout">
+        <aside className="subscription-stepper success-stepper" aria-label="Subscription plan change progress">
+          <div className="subscription-step">
+            <span className="step-number">1</span>
+            <div><strong>Choose Subscription Plan</strong><p>Select a plan for your merchant.</p></div>
+          </div>
+          <div className="subscription-step">
+            <span className="step-number">2</span>
+            <div><strong>Confirm Plan Change</strong><p>Review the plan details.</p></div>
+          </div>
+          <div className="subscription-step">
+            <span className="step-number">3</span>
+            <div><strong>Payment</strong><p>Complete the payment.</p></div>
+          </div>
+          <div className="subscription-step active">
+            <span className="step-number">4</span>
+            <div><strong>Confirmation</strong><p>Plan updated successfully.</p></div>
+          </div>
+        </aside>
+        <main className="success-main">
+          <div className="success-icon"><Check size={38} /></div>
+          <h1>Subscription Plan Updated</h1>
+          <p className="flow-subtitle">The subscription plan for {merchant?.merchant} has been successfully updated.</p>
+          <div className="flow-card success-details">
+            <h3>Subscription Details</h3>
+            <div className="success-detail-row">
+              <span className="success-row-icon"><Store size={17} /></span>
+              <span className="success-row-label">Merchant</span>
+              <strong>{`${merchant?.merchant} (${merchant?.merchantId || merchant?.id})`}</strong>
+            </div>
+            <div className="success-detail-row">
+              <span className="success-row-icon"><Star size={17} /></span>
+              <span className="success-row-label">New Plan</span>
+              <strong>{planName(next)}</strong>
+            </div>
+            <div className="success-detail-row">
+              <span className="success-row-icon"><CreditCard size={17} /></span>
+              <span className="success-row-label">Amount Paid</span>
+              <strong>{formatPrice(amountPaid, next.currency)}</strong>
+            </div>
+            <div className="success-detail-row">
+              <span className="success-row-icon"><CreditCard size={17} /></span>
+              <span className="success-row-label">Billing Cycle</span>
+              <strong>{billingCycle === "ANNUAL" ? "Annual" : "Monthly"}</strong>
+            </div>
+            <div className="success-detail-row">
+              <span className="success-row-icon"><CircleCheck size={17} /></span>
+              <span className="success-row-label">Effective From</span>
+              <strong>{merchant?.start}</strong>
+            </div>
+            <div className="success-detail-row">
+              <span className="success-status-dot" />
+              <span className="success-row-label">Status</span>
+              <span className="success-status-pill">Active</span>
+            </div>
+          </div>
+          <div className="success-banner">
+            <CircleCheck size={18} />
+            <span>The merchant can now use the features of the {planName(next)}.</span>
+          </div>
+          <button className="primary-flow-button success-back-button" onClick={onBack}>
+            <ArrowLeft size={17} />Back to Subscription Details
+          </button>
+        </main>
       </div>
-
-
-
-      <div className="success-banner">
-
-        <CircleCheck size={18} />
-
-        The merchant can now use the features of the {planName(next)}.
-
-      </div>
-
-
-
-      <button className="primary-flow-button" onClick={onBack}>
-
-        Back to Subscription Details
-
-      </button>
-
     </section>
-
   );
-
 }
-
-
 
 /* ========================================
 
    MAIN COMPONENT
 
 \======================================== */
-
-
 
 export default function MerchantSubscriptions() {
 
@@ -2362,8 +2227,6 @@ export default function MerchantSubscriptions() {
 
   const [reloadToken, setReloadToken] = useState(0);
 
-
-
   const [screen, setScreen] = useState("list");
 
   const [selectedMerchant, setSelectedMerchant] = useState(null);
@@ -2379,8 +2242,6 @@ export default function MerchantSubscriptions() {
   const [paymentError, setPaymentError] = useState("");
 
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
-
-
 
   const [paymentDetails, setPaymentDetails] = useState({
 
@@ -2400,11 +2261,7 @@ export default function MerchantSubscriptions() {
 
   });
 
-
-
   const loadData = () => setReloadToken((n) => n + 1);
-
-
 
   useEffect(() => {
 
@@ -2413,8 +2270,6 @@ export default function MerchantSubscriptions() {
     setLoading(true);
 
     setError("");
-
-
 
     listSubscriptions()
 
@@ -2440,15 +2295,11 @@ export default function MerchantSubscriptions() {
 
           : [];
 
-
-
         const mapped = rawList
 
           .map((item, idx) => mapSubscriptionToRow(item, idx))
 
           .filter(Boolean);
-
-
 
         setSubscriptions(mapped);
 
@@ -2470,8 +2321,6 @@ export default function MerchantSubscriptions() {
 
       });
 
-
-
     return () => {
 
       active = false;
@@ -2479,8 +2328,6 @@ export default function MerchantSubscriptions() {
     };
 
   }, [reloadToken]);
-
-
 
   useEffect(() => {
 
@@ -2493,8 +2340,6 @@ export default function MerchantSubscriptions() {
     setPlansError("");
 
     const storeTypeId = String(selectedMerchant?.storeTypeId || "").trim();
-
-
 
     if (!storeTypeId) {
 
@@ -2513,8 +2358,6 @@ export default function MerchantSubscriptions() {
       };
 
     }
-
-
 
     listPlans()
 
@@ -2566,8 +2409,6 @@ export default function MerchantSubscriptions() {
 
   }, [screen, selectedMerchant]);
 
-
-
   const updatePaymentField = (field, value) => {
 
     setPaymentDetails((previous) => ({
@@ -2582,8 +2423,6 @@ export default function MerchantSubscriptions() {
 
   };
 
-
-
   const openDetails = (merchant) => {
 
     setSelectedMerchant(merchant);
@@ -2591,8 +2430,6 @@ export default function MerchantSubscriptions() {
     setScreen("details");
 
   };
-
-
 
   const openChoosePlan = () => {
 
@@ -2604,15 +2441,11 @@ export default function MerchantSubscriptions() {
 
   };
 
-
-
   const openConfirm = () => {
 
     setScreen("confirm");
 
   };
-
-
 
   const openPayment = () => {
 
@@ -2621,8 +2454,6 @@ export default function MerchantSubscriptions() {
     setScreen("payment");
 
   };
-
-
 
   const submitPayment = async ({ agreementPrice, tax, totalDueToday }) => {
 
@@ -2648,8 +2479,6 @@ export default function MerchantSubscriptions() {
 
     }
 
-
-
     if (paymentMethod === "UPI" && !paymentDetails.upi) {
 
       setPaymentError("Please enter your UPI ID.");
@@ -2658,8 +2487,6 @@ export default function MerchantSubscriptions() {
 
     }
 
-
-
     if (paymentMethod === "Net Banking" && !paymentDetails.bank) {
 
       setPaymentError("Please select your bank.");
@@ -2667,8 +2494,6 @@ export default function MerchantSubscriptions() {
       return;
 
     }
-
-
 
     const plan = plans.find((item) => planKey(item) === selectedPlan);
 
@@ -2681,8 +2506,6 @@ export default function MerchantSubscriptions() {
       return;
 
     }
-
-
 
     const startDate = new Date().toISOString().slice(0, 10);
 
@@ -2719,8 +2542,6 @@ export default function MerchantSubscriptions() {
             : "UPI",
 
     };
-
-
 
     setPaymentSubmitting(true);
 
@@ -2780,8 +2601,6 @@ export default function MerchantSubscriptions() {
 
   };
 
-
-
   if (screen === "details") {
 
     return (
@@ -2799,8 +2618,6 @@ export default function MerchantSubscriptions() {
     );
 
   }
-
-
 
   if (screen === "choose") {
 
@@ -2830,8 +2647,6 @@ export default function MerchantSubscriptions() {
 
   }
 
-
-
   if (screen === "confirm") {
 
     return (
@@ -2853,8 +2668,6 @@ export default function MerchantSubscriptions() {
     );
 
   }
-
-
 
   if (screen === "payment") {
 
@@ -2894,8 +2707,6 @@ export default function MerchantSubscriptions() {
 
   }
 
-
-
   if (screen === "success") {
 
     return (
@@ -2919,8 +2730,6 @@ export default function MerchantSubscriptions() {
     );
 
   }
-
-
 
   return (
 
