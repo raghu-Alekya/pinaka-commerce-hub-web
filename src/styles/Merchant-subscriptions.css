@@ -1,13 +1,10 @@
 /* ========================================
-
    MERCHANT SUBSCRIPTIONS
-
    COMPLETE RESPONSIVE CSS
 
 \======================================== */
 
 .merchant-subscriptions-page,
-
 .subscription-flow-page {
 
   --primary: #155eef;
@@ -27,71 +24,44 @@
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
-
 }
 
 .merchant-subscriptions-page *,
-
 .subscription-flow-page * {
-
   box-sizing: border-box;
-
 }
 
 .merchant-subscriptions-page button,
-
 .subscription-flow-page button,
-
 .merchant-subscriptions-page input,
-
 .subscription-flow-page input,
-
 .subscription-flow-page select {
-
   font: inherit;
-
 }
 
 .merchant-subscriptions-page button,
-
 .subscription-flow-page button {
-
   cursor: pointer;
-
 }
 
 .merchant-subscriptions-page button:disabled,
-
 .subscription-flow-page button:disabled {
-
   cursor: not-allowed;
-
   opacity: 0.55;
-
 }
 
 .merchant-subscriptions-page h1,
-
 .subscription-flow-page h1,
-
 .merchant-subscriptions-page h2,
-
 .subscription-flow-page h2,
-
 .merchant-subscriptions-page h3,
-
 .subscription-flow-page h3,
-
 .merchant-subscriptions-page p,
-
 .subscription-flow-page p {
-
   margin-top: 0;
-
 }
 
 .merchant-subscriptions-page h1,
-
 .subscription-flow-page h1 {
 
   font-size: 26px;
@@ -102,31 +72,23 @@
 }
 
 .merchant-subscriptions-page h2,
-
 .subscription-flow-page h2 {
-
   font-size: 18px;
   font-weight: 500;
-
 }
 
 .merchant-subscriptions-page h3,
-
 .subscription-flow-page h3 {
-
   font-size: 16px;
   font-weight: 400;
-
 }
 
 /* ========================================
-
    HEADER
 
 \======================================== */
 
 .subscriptions-heading-row {
-
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -136,22 +98,22 @@
 }
 
 .subscriptions-heading-row p,
-
 .flow-subtitle {
-
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
   margin-bottom: 0;
+}
 
+.subscription-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .export-button,
-
 .primary-flow-button,
-
 .secondary-flow-button {
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -164,46 +126,39 @@
   background: white;
   color: var(--text);
   transition: 0.2s ease;
-
 }
 
 .export-button {
 
   min-width: 120px;
   white-space: nowrap;
-
+  background: #f6f7fb;
+  border-color: #4537ad;
+  color: #4537ad;
 }
 
 .export-button:hover,
-
 .secondary-flow-button:hover {
-
   background: #f1f5fb;
-
 }
 
 .primary-flow-button {
-
   background: var(--primary);
   color: white;
   border-color: var(--primary);
-
 }
 
 .primary-flow-button:hover:not(:disabled) {
-
   background: var(--primary-dark);
-
 }
 
 .secondary-flow-button {
-
-  background: white;
-
+  background: #f6f7fb;
+  border-color: #4537ad;
+  color: #4537ad;
 }
 
 /* ========================================
-
    OVERVIEW
 
    2 CARDS TOP
@@ -215,7 +170,6 @@
 \======================================== */
 
 .subscription-overview {
-
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(330px, 1fr);
   background: white;
@@ -227,17 +181,14 @@
 }
 
 .overview-cards {
-
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   padding: 10px;
   min-width: 0;
-
 }
 
 .overview-card {
-
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -247,7 +198,6 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background: white;
-
 }
 
 .overview-icon {
@@ -259,35 +209,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .overview-icon.purple {
-
   color: #6938ef;
   background: #efe7ff;
-
 }
 
 .overview-icon.green {
-
   color: #00ad78;
   background: #dff8ed;
-
 }
 
 .overview-icon.red {
-
   color: #ef4444;
   background: #ffe5e5;
-
 }
 
 .overview-icon.orange {
-
   color: #f59e0b;
   background: #fff0d6;
-
 }
 
 .overview-card p {
@@ -301,7 +242,6 @@
 }
 
 .overview-card strong {
-
   display: block;
   color: var(--text);
   font-size: 26px;
@@ -311,40 +251,30 @@
 }
 
 .overview-card small {
-
   display: block;
   font-size: 12px;
   font-weight: 400;
   line-height: 1.4;
-
 }
 
 .positive {
-
   color: var(--green);
-
 }
 
 .negative {
-
   color: var(--red);
-
 }
 
 .warning {
-
   color: var(--orange);
-
 }
 
 /* ========================================
-
    DISTRIBUTION
 
 \======================================== */
 
 .distribution-card {
-
   min-width: 0;
   border-left: 1px solid var(--border);
   padding: 14px;
@@ -367,7 +297,6 @@
 }
 
 .distribution-content {
-
   display: grid;
   grid-template-columns: 112px minmax(0, 1fr);
   align-items: center;
@@ -395,88 +324,78 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .donut::before {
-
   content: "";
   position: absolute;
   width: 68px;
   height: 68px;
   border-radius: 50%;
   background: white;
-
 }
 
 .donut > div {
-
   position: relative;
   z-index: 1;
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 5px;
-
 }
 
 .donut strong {
 
   font-size: 23px;
   line-height: 1;
-
 }
 
 .donut span {
-
   color: var(--muted);
   font-size: 12px;
 
 }
 
 .plan-legend {
-
   min-width: 0;
-
+  max-height: 190px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
 }
 
 .legend-row {
-
   display: grid;
   grid-template-columns: 12px minmax(0, 1fr) 25px 55px;
   align-items: center;
   gap: 10px;
   padding: 7px 0;
   border-bottom: 1px solid var(--border);
-
-  font-size: 13px;
-
+  font-size: 11.5px;
 }
 
 .legend-row:last-child {
-
   border-bottom: none;
-
 }
 
 .legend-name {
-
   color: var(--text);
   font-weight: 600;
   line-height: 1.4;
   display: flex;
   align-items: center;
   gap: 9px;
-
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .legend-dot {
-
   width: 12px;
   height: 12px;
   flex-shrink: 0;
   border-radius: 50%;
-
 }
 
 .legend-dot.purple {
@@ -486,32 +405,26 @@
 }
 
 .legend-dot.blue {
-
-  background: #1199e5;
-
+  background: #4fa7a0;
 }
 
 .legend-dot.orange {
-
-  background: #ff9f16;
-
+  background: #d6a45d;
 }
 
 .legend-row > b {
-
+  color: #0b1d3b;
+  font-size: 11.5px;
   text-align: right;
-
 }
 
 .legend-row > span:last-child {
 
   color: var(--muted);
   text-align: right;
-
 }
 
 /* ========================================
-
    FILTERS
 
    ALL IN ONE LINE
@@ -521,18 +434,12 @@
 \======================================== */
 
 .subscription-filter-card {
-
   display: grid;
   grid-template-columns:
-
     minmax(180px, 1.5fr)
-
     repeat(3, minmax(115px, 0.9fr))
-
     minmax(130px, 1fr)
-
     minmax(130px, 1fr);
-
   gap: 10px;
   align-items: end;
   padding: 14px;
@@ -540,11 +447,9 @@
   border-radius: 10px;
   background: white;
   margin-bottom: 16px;
-
 }
 
 .search-field {
-
   display: flex;
   align-items: center;
   gap: 8px;
@@ -554,35 +459,27 @@
   border-radius: 8px;
   padding: 0 12px;
   color: #6683ad;
-
 }
 
 .search-field input {
-
   width: 100%;
   min-width: 0;
   border: none;
   outline: none;
   background: transparent;
   color: var(--text);
-
 }
 
 .search-field input::placeholder {
-
   color: #8297b8;
-
 }
 
 .select-field {
-
   position: relative;
   min-width: 0;
-
 }
 
 .select-field select {
-
   width: 100%;
   height: 44px;
   appearance: none;
@@ -592,37 +489,29 @@
   color: var(--text);
   padding: 0 34px 0 12px;
   outline: none;
-
 }
 
 .select-field svg {
-
   position: absolute;
   right: 12px;
   top: 14px;
   pointer-events: none;
-
 }
 
 .date-field {
-
   display: flex;
   flex-direction: column;
   gap: 5px;
   min-width: 0;
-
 }
 
 .date-field span {
-
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
-
 }
 
 .date-field input {
-
   width: 100%;
   min-width: 0;
   height: 44px;
@@ -632,42 +521,36 @@
   color: var(--text);
   background: white;
   outline: none;
-
 }
 
 /* ========================================
-
    TABLE
 
 \======================================== */
 
 .subscription-table-card {
-
+  width: 100%;
+  max-width: 100%;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: white;
   overflow: hidden;
-
 }
 
 .table-scroll {
-
   width: 100%;
   overflow-x: auto;
-
+  overscroll-behavior-x: contain;
 }
 
 .subscription-table-card table {
-
   width: 100%;
   min-width: 980px;
   border-collapse: collapse;
   font-size: 13px;
-
 }
 
 .subscription-table-card th {
-
   color: #173c73;
   background: #f8faff;
   font-weight: 700;
@@ -675,40 +558,30 @@
   padding: 13px 12px;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
-
 }
 
 .subscription-table-card td {
-
   color: #234d88;
   padding: 12px;
   border-bottom: 1px solid #edf2f8;
   white-space: nowrap;
-
 }
 
 .subscription-table-card tbody tr:last-child td {
-
   border-bottom: none;
-
 }
 
 .subscription-table-card tbody tr:hover {
-
   background: #f8fbff;
-
 }
 
 .merchant-cell {
-
   display: flex;
   align-items: center;
   gap: 10px;
-
 }
 
 .merchant-icon {
-
   width: 38px;
   height: 38px;
   flex: 0 0 38px;
@@ -718,34 +591,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .merchant-cell strong {
-
   display: block;
   color: var(--text);
   font-size: 13px;
   margin-bottom: 3px;
-
 }
 
 .merchant-cell small {
-
   display: block;
   color: #8199bd;
   font-size: 12px;
-
 }
 
 /* ========================================
-
    STATUS
 
 \======================================== */
 
 .status-badge {
-
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -753,55 +619,42 @@
   border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
-
 }
 
 .status-badge i {
-
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: currentColor;
-
 }
 
 .status-badge.active {
-
   color: #00a875;
   background: #ddf7eb;
-
 }
 
 .status-badge.inactive {
-
   color: #ef4444;
   background: #ffe3e3;
-
 }
 
 .status-badge.expiring-soon {
-
   color: #e99500;
   background: #fff0d3;
-
 }
 
 /* ========================================
-
    VIEW ONLY ACTION
 
 \======================================== */
 
 .row-actions {
-
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .view-action-button {
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -814,32 +667,25 @@
   background: transparent;
   cursor: pointer;
   transition: 0.2s;
-
 }
 
 .view-action-button:hover {
-
   color: var(--primary);
   background: #eaf2ff;
-
 }
 
 .empty-row {
-
   text-align: center;
-  padding: 40px  !important;
-  color: var(--muted)  !important;
-
+  padding: 40px !important;
+  color: var(--muted) !important;
 }
 
 /* ========================================
-
    TABLE FOOTER
 
 \======================================== */
 
 .table-footer {
-
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -848,19 +694,15 @@
   border-top: 1px solid var(--border);
   color: #31598f;
   font-size: 13px;
-
 }
 
 .pagination {
-
   display: flex;
   gap: 5px;
   align-items: center;
-
 }
 
 .pagination button {
-
   min-width: 32px;
   height: 32px;
   padding: 0 8px;
@@ -869,58 +711,43 @@
   background: white;
   color: #234d88;
   font-weight: 600;
-
 }
 
 .pagination button:hover {
-
   background: #eaf2ff;
-
 }
 
 .pagination button.active {
-
   background: var(--primary);
   color: white;
-
 }
 
 .pagination button:disabled {
-
   color: #a3b5ce;
   background: #f4f7fc;
-
 }
 
 /* ========================================
-
    FLOW PAGES
 
 \======================================== */
 
 .subscription-flow-page {
-
   max-width: 1180px;
   margin: 0 auto;
   padding: 28px;
-
 }
 
 .subscription-flow-page h1 {
-
   font-size: 30px;
   margin-bottom: 8px;
-
 }
 
 .subscription-flow-page .flow-subtitle {
-
   margin-bottom: 26px;
-
 }
 
 .page-back {
-
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -931,17 +758,13 @@
   margin-bottom: 25px;
   font-size: 15px;
   font-weight: 600;
-
 }
 
 .page-back:hover {
-
   color: var(--primary);
-
 }
 
 .merchant-summary-card {
-
   display: flex;
   align-items: center;
   gap: 16px;
@@ -950,11 +773,9 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   margin-bottom: 18px;
-
 }
 
 .merchant-summary-icon {
-
   width: 64px;
   height: 64px;
   flex: 0 0 64px;
@@ -964,62 +785,44 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .merchant-summary-card h3 {
-
   font-size: 19px;
   margin-bottom: 5px;
-
 }
 
 .merchant-summary-card > div:nth-child(2) span {
-
   color: #6b8bbd;
-
 }
 
 .merchant-summary-card .status-badge {
-
   margin-left: auto;
-
 }
 
 .flow-card,
-
 .payment-summary,
-
 .payment-card {
-
   background: white;
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 22px;
   margin-bottom: 18px;
-
 }
 
 .flow-card h3,
-
 .payment-summary h3,
-
 .payment-card h3 {
-
   font-size: 18px;
   margin-bottom: 18px;
-
 }
 
 .details-grid {
-
   display: flex;
   flex-direction: column;
-
 }
 
 .detail-row {
-
   display: grid;
   grid-template-columns: 175px minmax(0, 1fr);
   gap: 18px;
@@ -1027,26 +830,19 @@
   padding: 14px 0;
   border-bottom: 1px solid #e5edf7;
   font-size: 14px;
-
 }
 
 .detail-row:last-child {
-
   border-bottom: none;
-
 }
 
 .detail-row > span:first-child {
-
   color: #6685b5;
-
 }
 
 .detail-row strong {
-
   color: #234d88;
   font-weight: 600;
-
 }
 
 .feature-list {
@@ -1054,56 +850,44 @@
   list-style: none;
   padding: 0;
   margin: 0;
-
 }
 
 .feature-list li {
-
   display: flex;
   align-items: center;
   gap: 10px;
   color: #245899;
   padding: 7px 0;
   font-size: 14px;
-
 }
 
 .feature-list li svg {
-
   color: var(--green);
   flex-shrink: 0;
-
 }
 
 .flow-bottom-actions,
-
 .payment-actions {
-
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;
-
 }
 
 /* ========================================
-
    PLAN CARDS
 
 \======================================== */
 
 .plans-grid {
-
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   margin-top: 22px;
-
 }
 
 .plan-card {
-
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1114,47 +898,36 @@
   background: white;
   cursor: pointer;
   transition: 0.2s;
-
 }
 
 .plan-card.selected {
-
   border: 2px solid var(--primary);
   padding: 23px;
   box-shadow: 0 2px 10px rgba(21, 94, 239, 0.08);
-
 }
 
 .plan-card-header {
-
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 10px;
   min-height: 78px;
-
 }
 
 .plan-card-header h3 {
-
   font-size: 19px;
   margin-bottom: 8px;
-
 }
 
 .plan-card-header p {
-
   color: #6685b5;
   font-size: 13px;
   line-height: 1.5;
   margin-bottom: 0;
-
 }
 
 .current-plan-badge,
-
 .popular-badge {
-
   position: absolute;
   top: 10px;
   right: 10px;
@@ -1165,20 +938,16 @@
   font-weight: 700;
   padding: 6px 8px;
   white-space: nowrap;
-
 }
 
 .popular-badge {
-
   left: 50%;
   right: auto;
   transform: translateX(-50%);
   background: #dceaff;
-
 }
 
 .plan-radio {
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1188,44 +957,34 @@
   border-radius: 50%;
   color: var(--primary);
   flex-shrink: 0;
-
 }
 
 .plan-card.selected .plan-radio {
-
   background: var(--primary);
   color: white;
   border-color: var(--primary);
-
 }
 
 .plan-price {
-
   color: var(--text);
   font-size: 25px;
   font-weight: 700;
   margin-top: 14px;
-
 }
 
 .plan-price span {
-
   color: #6685b5;
   font-size: 12px;
   font-weight: 400;
-
 }
 
 .plan-yearly {
-
   color: #6685b5;
   font-size: 12px;
   margin-top: 6px;
-
 }
 
 .plan-yearly span {
-
   color: #00a875;
   background: #ddf7eb;
   padding: 4px 6px;
@@ -1233,48 +992,36 @@
   font-size: 10px;
   font-weight: 700;
   margin-left: 6px;
-
 }
 
 .plan-divider {
-
   height: 1px;
   background: var(--border);
   margin: 16px 0;
-
 }
 
 .plan-card > p {
-
   color: #6685b5;
   font-size: 14px;
   margin-bottom: 12px;
-
 }
 
 .plan-card > p strong {
-
   color: var(--text);
-
 }
 
 .plan-card .feature-list {
-
   margin: 12px 0 20px;
   flex: 1;
-
 }
 
 .plan-card .feature-list li {
-
   font-size: 13px;
   line-height: 1.4;
   padding: 7px 0;
-
 }
 
 .select-plan-btn {
-
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -1283,14 +1030,11 @@
   font-weight: 700;
   padding: 12px;
   margin-top: auto;
-
 }
 
 .select-plan-btn:hover {
-
   border-color: var(--primary);
   background: #f3f7ff;
-
 }
 
 .select-plan-btn.chosen {
@@ -1302,17 +1046,13 @@
 }
 
 /* ========================================
-
    BANNERS
 
 \======================================== */
 
 .info-banner,
-
 .warning-banner,
-
 .success-banner {
-
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -1321,175 +1061,130 @@
   margin: 18px 0;
   font-size: 13px;
   line-height: 1.5;
-
 }
 
 .info-banner {
-
   background: #e9f4ff;
   color: #234d88;
-
 }
 
 .warning-banner {
-
   background: #fff3da;
   color: #986400;
   border: 1px solid #ffdda0;
-
 }
 
 .success-banner {
-
   background: #e5f8ef;
   color: #07845e;
-
 }
 
 .info-banner p,
-
 .warning-banner p {
-
   margin: 5px 0 0;
-
 }
 
 /* ========================================
-
    CONFIRM PLAN CHANGE
 
 \======================================== */
 
 .change-summary {
-
   display: grid;
   grid-template-columns: 1fr 60px 1fr;
   gap: 16px;
   align-items: center;
   margin: 22px 0;
-
 }
 
 .change-plan {
-
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 20px;
   background: white;
-
 }
 
 .change-plan > span {
-
   color: #6685b5;
   font-size: 13px;
-
 }
 
 .change-plan h3 {
-
   margin: 10px 0 12px;
   font-size: 18px;
-
 }
 
 .change-plan strong {
-
   color: var(--text);
   display: block;
   font-size: 17px;
   margin-bottom: 14px;
-
 }
 
 .change-plan p {
-
   color: #31598f;
   font-size: 13px;
   margin-bottom: 7px;
-
 }
 
 .change-arrow {
-
   display: flex;
   justify-content: center;
   color: var(--primary);
-
 }
 
 .change-title {
-
   margin-top: 24px;
   margin-bottom: 14px;
-
 }
 
 .comparison-table-wrapper {
-
   width: 100%;
   overflow-x: auto;
-
 }
 
 .comparison-table {
-
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-
 }
 
 .comparison-table th {
-
   background: #f8faff;
   color: #173c73;
   font-weight: 700;
   text-align: left;
   padding: 12px;
   border: 1px solid var(--border);
-
 }
 
 .comparison-table td {
-
   padding: 12px;
   border: 1px solid var(--border);
   color: #31598f;
-
 }
 
 .comparison-table td:first-child {
-
   font-weight: 600;
   color: var(--text);
-
 }
 
 /* ========================================
-
    PAYMENT
 
 \======================================== */
 
 .payment-summary {
-
   max-width: 900px;
-
 }
 
 .payment-summary .detail-row {
-
   grid-template-columns: 190px minmax(0, 1fr);
-
 }
 
 .payment-summary select,
-
 .payment-card input,
-
 .payment-card select {
-
   width: 100%;
   min-width: 0;
   height: 44px;
@@ -1499,17 +1194,13 @@
   color: var(--text);
   padding: 0 12px;
   outline: none;
-
 }
 
 .payment-summary select {
-
   max-width: 220px;
-
 }
 
 .payment-total {
-
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1517,49 +1208,37 @@
   padding-top: 18px;
   margin-top: 10px;
   border-top: 1px solid var(--border);
-
 }
 
 .payment-total span {
-
   color: var(--text);
   font-weight: 700;
-
 }
 
 .payment-total strong {
-
   color: var(--text);
   font-size: 25px;
-
 }
 
 .payment-note {
-
   display: block;
   color: var(--muted);
   text-align: right;
   margin-top: 6px;
-
 }
 
 .payment-card {
-
   max-width: 900px;
-
 }
 
 .payment-tabs {
-
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 22px;
-
 }
 
 .payment-tabs button {
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1570,87 +1249,68 @@
   background: white;
   color: #31598f;
   font-weight: 600;
-
 }
 
 .payment-tabs button.active {
-
   color: var(--primary);
   background: #eaf2ff;
   border-color: var(--primary);
-
 }
 
 .payment-form {
-
   display: flex;
   flex-direction: column;
   gap: 16px;
-
 }
 
 .payment-form label {
-
   display: flex;
   flex-direction: column;
   gap: 7px;
   color: #31598f;
   font-weight: 600;
-
 }
 
 .form-grid {
-
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-
 }
 
 .save-card {
-
-  display: flex  !important;
-  flex-direction: row  !important;
+  display: flex !important;
+  flex-direction: row !important;
   align-items: center;
   gap: 9px;
   color: #31598f;
   font-size: 13px;
-
 }
 
 .save-card input {
-
   width: 15px;
   height: 15px;
-
 }
 
 .payment-error {
-
   background: #ffe5e5;
   color: #d92d20;
   border: 1px solid #ffb8b8;
   border-radius: 8px;
   padding: 12px;
   margin-top: 16px;
-
 }
 
 /* ========================================
-
    SUCCESS
 
 \======================================== */
 
 .success-page {
-
   max-width: 760px;
   text-align: center;
-
 }
 
 .success-icon {
-
   width: 88px;
   height: 88px;
   margin: 20px auto 22px;
@@ -1660,62 +1320,66 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .success-page .flow-subtitle {
-
   margin-bottom: 25px;
-
 }
 
 .success-details {
-
   text-align: left;
-
 }
 
 .success-text {
-
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: #00a875  !important;
-
+  color: #00a875 !important;
 }
 
 .success-text i {
-
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: #00a875;
-
 }
 
 .success-page .success-banner {
-
   text-align: left;
-
 }
 
 .success-page > .primary-flow-button {
-
   margin-top: 10px;
-
 }
 
 /* ========================================
+   SUBSCRIPTION DETAILS
+======================================== */
 
-   RESPONSIVE
-
-\======================================== */
+.subscription-details-redesign {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0 24px 28px;
+  background: #f7f9fd;
+}
 
 @media (max-width: 1200px) {
 
-  .subscription-overview {
+.subscription-details-heading h1 {
+  margin: 0 0 6px;
+  color: #081b3a;
+  font-size: 29px;
+  font-weight: 700;
+  line-height: 1.2;
+}
 
-    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr);
+.subscription-details-redesign .subscription-details-heading .flow-subtitle {
+  margin: 0 0 18px;
+  color: #58709c;
+  font-size: 15px;
+  line-height: 1.5;
+}
 
 
   .overview-cards {
@@ -2034,7 +1698,7 @@
   padding: 12px;
   background: var(--bg);
   color: var(--text);
-  font-family: inherit  !important;
+  font-family: inherit !important;
   font-size: 14px;
 
 }
@@ -2121,7 +1785,7 @@
 
 .plan-card .radio-indicator {
 
-  display: none  !important;
+  display: none !important;
 
 }
 
@@ -2509,75 +2173,6 @@
    SUBSCRIPTION DETAILS — REFINED UI
 
    Scoped only to Subscription Details
-
-======================================== */
-
-.subscription-details-redesign {
-
-  max-width: none;
-  width: 100%;
-  margin: 0;
-  padding: 0 24px 28px;
-  background: #f7f9fd;
-
-}
-
-/* Full-width back navigation strip below the existing top navbar */
-
-.subscription-details-redesign .page-back {
-
-  display: flex;
-  align-items: center;
-  width: calc(100% + 48px);
-  min-height: 56px;
-  margin: 0 -24px 14px;
-  padding: 0 24px;
-  border: 0;
-  border-bottom: 1px solid #e7ebf3;
-  border-radius: 0;
-  background: #ffffff;
-  color: #5b35f5;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 2px 7px rgba(20, 42, 78, 0.025);
-
-}
-
-.subscription-details-redesign .page-back:hover {
-
-  color: #4725df;
-  background: #ffffff;
-
-}
-
-.subscription-details-heading {
-
-  padding: 0 2px;
-
-}
-
-.subscription-details-heading h1 {
-
-  margin: 0 0 6px;
-  color: #081b3a;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.2;
-
-}
-
-.subscription-details-redesign .subscription-details-heading .flow-subtitle {
-
-  margin: 0 0 18px;
-  color: #58709c;
-  font-size: 15px;
-  line-height: 1.5;
-
-}
-
-/* Merchant summary */
-
-.subscription-details-summary {
 
   display: grid;
   grid-template-columns: minmax(340px, 1.55fr) minmax(165px, .68fr) minmax(165px, .68fr) minmax(245px, 1fr);
@@ -3028,6 +2623,10 @@
 
 }
 
+/* ========================================
+   RESPONSIVE
+======================================== */
+
 @media (max-width: 1180px) {
 
   .subscription-details-summary {
@@ -3204,363 +2803,6 @@
 
    UI-only overrides for the first/list screen
 
-======================================== */
-
-.merchant-subscriptions-page .subscriptions-heading-row {
-
-  align-items: center;
-  margin-bottom: 12px;
-
-}
-
-.merchant-subscriptions-page .subscriptions-heading-row h1 {
-
-  margin: 0 0 3px;
-  color: #0b1d3b;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.2;
-
-}
-
-.merchant-subscriptions-page .subscriptions-heading-row p {
-
-  color: #58709c;
-  font-size: 13px;
-
-}
-
-.merchant-subscriptions-page .subscriptions-heading-row .export-button {
-
-  min-width: 106px;
-  min-height: 40px;
-  padding: 9px 16px;
-  border-radius: 7px;
-  background: #fff;
-  font-size: 13px;
-  font-weight: 600;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined {
-
-  display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(430px, .92fr);
-  align-items: stretch;
-  margin-bottom: 14px;
-  overflow: hidden;
-  border: 1px solid #e1e8f3;
-  border-radius: 9px;
-  background: #fff;
-  box-shadow: 0 3px 14px rgba(20, 42, 78, .035);
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .overview-cards {
-
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  padding: 10px;
-  background: #fff;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .overview-card {
-
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 112px;
-  padding: 15px 16px;
-  border: 1px solid #edf0f7;
-  border-radius: 8px;
-  box-shadow: none;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .overview-card.total-card {
-
-  background: linear-gradient(120deg, #ffffff 0%, #f3efff 100%);
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .overview-card.active-card {
-
-  background: linear-gradient(120deg, #ffffff 0%, #eafbf3 100%);
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .overview-card.inactive-card {
-
-  background: linear-gradient(120deg, #ffffff 0%, #fff0f1 100%);
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .overview-card.expiring-card {
-
-  background: linear-gradient(120deg, #ffffff 0%, #fff7e8 100%);
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .overview-icon {
-
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .overview-card p {
-
-  margin: 0 0 2px;
-  color: #183766;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.3;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .overview-card strong {
-
-  margin: 0 0 4px;
-  color: #071a39;
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.05;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .overview-card small {
-
-  font-size: 11.5px;
-  font-weight: 500;
-
-}
-
-.merchant-subscriptions-page .overview-meta {
-
-  display: flex  !important;
-  align-items: center;
-  gap: 6px;
-
-}
-
-.merchant-subscriptions-page .overview-meta i {
-
-  width: 8px;
-  height: 8px;
-  flex: 0 0 8px;
-  border-radius: 50%;
-  background: currentColor;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .distribution-card {
-
-  min-width: 0;
-  padding: 12px 14px 10px;
-  border-left: 1px solid #e1e8f3;
-  background: #fff;
-
-}
-
-.merchant-subscriptions-page .distribution-header {
-
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-
-}
-
-.merchant-subscriptions-page .distribution-header h2 {
-
-  margin: 0 0 4px;
-  color: #0b1d3b;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.25;
-
-}
-
-.merchant-subscriptions-page .distribution-header p {
-
-  margin: 0;
-  color: #58709c;
-  font-size: 11.5px;
-  line-height: 1.4;
-
-}
-
-.merchant-subscriptions-page .distribution-plan-count {
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 9px;
-  min-width: 126px;
-  min-height: 36px;
-  padding: 0 11px;
-  border: 1px solid #e0e7f2;
-  border-radius: 7px;
-  background: #fff;
-  color: #20375f;
-  font-size: 11.5px;
-  font-weight: 600;
-  white-space: nowrap;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .distribution-content {
-
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  align-items: center;
-  gap: 18px;
-  min-height: 188px;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .donut {
-
-  width: 132px;
-  height: 132px;
-  margin: 0 auto;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .donut::before {
-
-  width: 80px;
-  height: 80px;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .donut strong {
-
-  font-size: 25px;
-  font-weight: 700;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .donut span {
-
-  font-size: 11.5px;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .plan-legend {
-
-  min-width: 0;
-  max-height: 190px;
-  overflow-y: auto;
-  padding-right: 4px;
-  scrollbar-width: thin;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .legend-row {
-
-  grid-template-columns: minmax(0, 1fr) 30px 48px;
-  gap: 8px;
-  min-height: 30px;
-  padding: 5px 2px;
-  font-size: 11.5px;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .legend-name {
-
-  min-width: 0;
-  overflow: hidden;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .legend-name .legend-dot {
-
-  flex: 0 0 auto;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .legend-row b {
-
-  color: #0b1d3b;
-  font-size: 11.5px;
-  text-align: right;
-
-}
-
-.merchant-subscriptions-page .subscription-overview-refined .legend-row > span:last-child {
-
-  color: #54709f;
-  text-align: right;
-
-}
-
-@media (max-width: 1180px) {
-
-  .merchant-subscriptions-page .subscription-overview-refined {
-
-    grid-template-columns: minmax(0, 1fr) minmax(390px, .9fr);
-
-  }
-
-  .merchant-subscriptions-page .subscription-overview-refined .overview-card {
-
-    padding: 13px;
-
-  }
-
-  .merchant-subscriptions-page .subscription-overview-refined .distribution-content {
-
-    grid-template-columns: 128px minmax(0, 1fr);
-
-    gap: 12px;
-
-  }
-
-  .merchant-subscriptions-page .subscription-overview-refined .donut {
-
-    width: 116px;
-    height: 116px;
-
-  }
-
-  .merchant-subscriptions-page .subscription-overview-refined .donut::before {
-
-    width: 70px;
-    height: 70px;
-
-  }
-
-}
-
-@media (max-width: 980px) {
-
-  .merchant-subscriptions-page .subscription-overview-refined {
-
-    grid-template-columns: 1fr;
-
-  }
-
-  .merchant-subscriptions-page .subscription-overview-refined .distribution-card {
-
-    border-top: 1px solid #e1e8f3;
-    border-left: 0;
-
-  }
-
-}
-
-@media (max-width: 680px) {
-
-  .merchant-subscriptions-page .subscriptions-heading-row {
-
     align-items: flex-start;
     flex-direction: column;
 
@@ -3603,2766 +2845,5 @@
 
    Non-interactive; count comes from existing availablePlans data
 
-======================================== */
-
-.merchant-subscriptions-page .distribution-plan-count.distribution-plan-count-badge {
-
-  min-width: auto;
-
-  min-height: 32px;
-
-  padding: 0 12px;
-
-  justify-content: center;
-
-  border: 1px solid #e1e7f0;
-
-  border-radius: 999px;
-
-  background: #f8fafc;
-
-  color: #405985;
-
-  font-size: 11.5px;
-
-  font-weight: 700;
-
-  cursor: default;
-
-  user-select: none;
-
-}
-
-/* ========================================
-   CHOOSE SUBSCRIPTION PLAN — LATEST UI
-   UI-only overrides; API/flow logic unchanged
-======================================== */
-.choose-plan-redesign { max-width:none; width:100%; margin:0; padding:0 0 28px; background:#f7f9fd; }
-.choose-plan-back-strip { min-height:64px; display:flex; align-items:center; padding:0 28px; background:#fff; border-bottom:1px solid #e3e9f3; }
-.choose-plan-redesign .choose-plan-back-strip .page-back { margin:0; color:#5b35f5; font-size:14px; font-weight:600; }
-.choose-plan-layout { display:grid; grid-template-columns:280px minmax(0,1fr); min-height:calc(100vh - 140px); }
-.subscription-stepper { position:relative; padding:18px 14px 24px; background:#fff; border-right:1px solid #e1e8f2; }
-.subscription-stepper::before { content:""; position:absolute; left:43px; top:48px; bottom:calc(100% - 310px); width:1px; background:#d8e2f0; }
-.subscription-step { position:relative; z-index:1; display:grid; grid-template-columns:42px minmax(0,1fr); gap:12px; align-items:start; min-height:86px; padding:10px 10px; border-radius:8px; }
-.subscription-step.active { background:#eef6ff; }
-.step-number { display:flex; align-items:center; justify-content:center; width:38px; height:38px; border:2px solid #c9d6e8; border-radius:50%; background:#fff; color:#173d73; font-weight:700; }
-.subscription-step.active .step-number { border-color:#0868f7; background:#0868f7; color:#fff; }
-.subscription-step strong { display:block; margin:6px 0 5px; color:#0b1c39; font-size:14px; line-height:1.25; }
-.subscription-step.active strong { color:#075ee8; }
-.subscription-step p { margin:0; color:#5774a7; font-size:12px; line-height:1.4; }
-.choose-plan-main { min-width:0; padding:22px 20px 28px; }
-.choose-plan-heading h1 { margin:0 0 4px; color:#08182f; font-size:30px; font-weight:600; line-height:1.2; letter-spacing: -.035em; }
-.choose-plan-redesign .choose-plan-heading .flow-subtitle { margin:0 0 16px; color:#4f6796; font-size:15px; }
-.choose-plan-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:0; align-items:stretch; }
-.choose-plan-card { min-height:530px; padding:20px 18px 18px; border-color:#dbe4f0; border-radius:8px; box-shadow:0 2px 8px rgba(24,48,84,.025); }
-.choose-plan-card.selected,.choose-plan-card.current { padding:19px 17px 17px; border:2px solid #0871ff; box-shadow:0 2px 10px rgba(8,113,255,.08); }
-.choose-plan-card-top { display:flex; align-items:flex-start; justify-content:space-between; min-height:58px; }
-.plan-visual-icon { display:flex; align-items:center; justify-content:center; width:58px; height:58px; border-radius:10px; color:#0871ff; background:#eaf4ff; }
-.plan-tone-1 .plan-visual-icon { color:#7b2cf5; background:#f4ebff; }
-.plan-tone-2 .plan-visual-icon { color:#ff7900; background:#fff0e3; }
-.choose-plan-card .current-plan-badge { position:static; margin-top:2px; padding:7px 10px; border-radius:7px; background:#e6f3ff; color:#0871ef; font-size:11px; }
-.choose-plan-card .plan-card-header { min-height:auto; margin-top:14px; }
-.choose-plan-card .plan-card-header h3 { margin:0 0 5px; color:#07182f; font-size:20px; font-weight:700; }
-.choose-plan-card .plan-card-header p { min-height:38px; margin:0; color:#4e6da3; font-size:13px; line-height:1.45; }
-.choose-plan-card .plan-divider { margin:14px 0 16px; background:#dbe4f0; }
-.choose-plan-card .plan-price { margin:0; color:#06162f; font-size:30px; line-height:1.1; }
-.choose-plan-card .plan-price span { color:#506b9c; font-size:13px; }
-.choose-plan-card .plan-yearly { margin-top:7px; color:#506b9c; font-size:13px; }
-.plan-capacity-row { display:grid; grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:10px; align-items:center; margin:18px 0 14px; padding:10px 12px; border-radius:8px; background:#f5f9fe; }
-.plan-capacity-divider { width:1px; height:42px; background:#dce6f2; }
-.plan-capacity-item { display:flex; align-items:center; gap:9px; min-width:0; }
-.capacity-icon { display:flex; align-items:center; justify-content:center; flex:0 0 34px; width:34px; height:34px; border-radius:7px; color:#0871ff; background:#e7f3ff; }
-.plan-tone-1 .capacity-icon { color:#7b2cf5; background:#f1e8ff; }
-.plan-tone-2 .capacity-icon { color:#ff7900; background:#fff0e3; }
-.plan-capacity-item strong,.plan-capacity-item small { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.plan-capacity-item strong { margin-bottom:3px; color:#385582; font-size:12px; font-weight:500; }
-.plan-capacity-item small { color:#3f5d8d; font-size:10px; }
-.choose-plan-card .choose-plan-features { margin:2px 0 16px; }
-.choose-plan-card .choose-plan-features li { padding:6px 0; color:#122a4e; font-size:13px; }
-.choose-plan-card .choose-plan-features li svg { color:#00ad78; }
-.choose-plan-card .select-plan-btn { min-height:48px; margin-top:auto; padding:11px; border-color:#cfdbea; border-radius:7px; color:#07182f; background:#fff; font-size:13px; }
-.choose-plan-card .select-plan-btn:disabled { background:#edf6ff; color:#77aaff; border-color:#e2efff; }
-.choose-plan-card .select-plan-btn.chosen:not(:disabled) { background:#eef5ff; color:#0868ef; border-color:#9fc5ff; }
-.choose-plan-info-banner { margin:18px 0 0; padding:14px 18px; border-radius:8px; background:#eaf5ff; color:#173f79; }
-.choose-plan-info-banner strong { color:#123d79; }
-.choose-plan-info-banner p { margin-top:4px; }
-.choose-plan-actions { margin-top:14px; }
-.choose-plan-actions .primary-flow-button { min-width:172px; min-height:52px; border-radius:8px; font-weight:600; }
-.choose-plan-loading { grid-column:1/-1; padding:30px; text-align:center; }
-@media (max-width:1350px) {
- .choose-plan-layout { grid-template-columns:240px minmax(0,1fr); }
- .choose-plan-main { padding:20px 16px 26px; }
- .choose-plan-grid { gap:10px; }
- .choose-plan-card { padding:16px 14px; }
- .choose-plan-card.selected,.choose-plan-card.current { padding:15px 13px; }
- .plan-capacity-row { padding:9px 8px; gap:7px; }
-}
-@media (max-width:1100px) {
- .choose-plan-layout { grid-template-columns:210px minmax(0,1fr); }
- .subscription-step { grid-template-columns:36px minmax(0,1fr); gap:8px; padding:9px 7px; }
- .step-number { width:34px; height:34px; }
- .subscription-stepper::before { left:38px; }
- .choose-plan-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-}
-@media (max-width:820px) {
- .choose-plan-back-strip { padding:0 18px; }
- .choose-plan-layout { grid-template-columns:1fr; }
- .subscription-stepper { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; padding:12px; border-right:0; border-bottom:1px solid #e1e8f2; }
- .subscription-stepper::before { display:none; }
- .subscription-step { display:flex; min-height:auto; padding:8px; }
- .subscription-step div { display:none; }
- .subscription-step.active div { display:block; }
- .choose-plan-main { padding:18px; }
- .choose-plan-grid { grid-template-columns:1fr; }
- .choose-plan-card { min-height:auto; }
-}
-@media (max-width:520px) {
- .subscription-stepper { grid-template-columns:repeat(4,1fr); }
- .subscription-step { justify-content:center; }
- .subscription-step.active div { display:none; }
- .choose-plan-heading h1 { font-size:25px; }
- .choose-plan-main { padding:15px 12px 22px; }
- .plan-capacity-row { grid-template-columns:1fr; }
- .plan-capacity-divider { width:100%; height:1px; }
- .choose-plan-actions .primary-flow-button { width:100%; }
-}
-/* ========================================
-   CONFIRM PLAN CHANGE — LATEST UI
-   Scoped UI-only overrides
-======================================== */
-.confirm-plan-redesign {
-  max-width: none;
-  width: 100%;
-  margin: 0;
-  padding: 0 24px 28px;
-  background: #f7f9fd;
-}
-
-.confirm-plan-redesign .page-back {
-  display: flex;
-  align-items: center;
-  width: calc(100% + 48px);
-  min-height: 56px;
-  margin: 0 -24px 18px;
-  padding: 0 24px;
-  border: 0;
-  border-bottom: 1px solid #e7ebf3;
-  border-radius: 0;
-  background: #fff;
-  color: #5b35f5;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.confirm-plan-layout {
-  display: grid;
-  grid-template-columns: 270px minmax(0, 1fr);
-  gap: 34px;
-  align-items: start;
-  width: 100%;
-}
-
-.subscription-stepper {
-  position: sticky;
-  top: 18px;
-  padding: 8px 0;
-}
-
-.subscription-step {
-  position: relative;
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
-  gap: 12px;
-  min-height: 76px;
-  padding: 10px 12px;
-  border-radius: 8px;
-}
-
-.subscription-step:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  left: 30px;
-  top: 48px;
-  width: 1px;
-  height: 39px;
-  background: #d9e2f0;
-}
-
-.subscription-step.active {
-  background: #eef5ff;
-}
-
-.subscription-step-marker {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: center;
-}
-
-.subscription-step-marker > span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid #c9d5e6;
-  border-radius: 50%;
-  background: #fff;
-  color: #7890b5;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.subscription-step.completed .subscription-step-marker > span,
-.subscription-step.active .subscription-step-marker > span {
-  border-color: #1467f3;
-  background: #1467f3;
-  color: #fff;
-}
-
-.subscription-step-edit {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  border: 2px solid #f7f9fd;
-  border-radius: 50%;
-  background: #fff;
-  color: #1467f3;
-  font-size: 8px;
-  font-style: normal;
-  font-weight: 800;
-}
-
-.subscription-step-copy {
-  min-width: 0;
-  padding-top: 2px;
-}
-
-.subscription-step-copy strong {
-  display: block;
-  margin-bottom: 5px;
-  color: #10284d;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.subscription-step-copy small {
-  display: block;
-  color: #7186a8;
-  font-size: 11.5px;
-  line-height: 1.4;
-}
-
-.confirm-plan-content {
-  min-width: 0;
-  max-width: 1040px;
-}
-
-.confirm-plan-heading h1 {
-  margin: 0 0 5px;
-  color: #081b3a;
-  font-size: 29px;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -.035em;
-}
-
-.confirm-plan-redesign .confirm-plan-heading .flow-subtitle {
-  margin: 0 0 18px;
-  color: #60779f;
-  font-size: 14px;
-}
-
-.confirm-plan-cards {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.confirm-plan-card {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  column-gap: 14px;
-  row-gap: 10px;
-  min-width: 0;
-  min-height: 138px;
-  padding: 18px;
-  border: 1px solid #dde6f2;
-  border-radius: 9px;
-  background: #fff;
-  box-shadow: 0 3px 12px rgba(25, 52, 91, .035);
-}
-
-.confirm-plan-card-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
-  border-radius: 8px;
-  background: #e9f3ff;
-  color: #1267ed;
-}
-
-.confirm-plan-card.next .confirm-plan-card-icon {
-  background: #f1ecff;
-  color: #6d42e8;
-}
-
-.confirm-plan-card-body {
-  min-width: 0;
-  flex: 1;
-}
-
-.confirm-plan-label {
-  display: block;
-  margin-bottom: 3px;
-  color: #7186a8;
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.confirm-plan-card h3 {
-  margin: 0 0 7px;
-  overflow: hidden;
-  color: #0b1d3b;
-  font-size: 16px;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.confirm-plan-price {
-  display: block;
-  margin-bottom: 11px;
-  color: #0b1d3b;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.confirm-plan-price small {
-  color: #7186a8;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.confirm-plan-limits {
-  display: grid;
-  flex: 0 0 100%;
-  width: 100%;
-  box-sizing: border-box;
-  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
-  align-items: stretch;
-  gap: 10px;
-  padding: 9px 10px;
-  border-radius: 8px;
-  background: #f5f9ff;
-}
-
-.confirm-plan-limit-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.confirm-plan-limit-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
-  border-radius: 7px;
-  background: #e8f3ff;
-  color: #2775e8;
-}
-
-.confirm-plan-limit-icon svg {
-  color: #2775e8;
-}
-
-.confirm-plan-limit-item > div {
-  min-width: 0;
-}
-
-.confirm-plan-limit-item strong {
-  display: block;
-  margin: 0 0 2px;
-  color: #0b1d3b;
-  font-size: 11.5px;
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.confirm-plan-limit-item small {
-  display: block;
-  color: #7186a8;
-  font-size: 9px;
-  font-weight: 500;
-  line-height: 1.3;
-  white-space: nowrap;
-}
-
-.confirm-plan-limit-divider {
-  width: 1px;
-  min-height: 32px;
-  background: #dbe6f4;
-}
-
-.confirm-plan-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  margin: 0 auto;
-  border: 1px solid #dbe5f3;
-  border-radius: 50%;
-  background: #fff;
-  color: #5c74a0;
-}
-
-.confirm-plan-redesign .change-title {
-  margin: 0 0 10px;
-  color: #0b1d3b;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.confirm-comparison-wrapper {
-  overflow: auto;
-  border: 1px solid #dfe7f2;
-  border-radius: 8px;
-  background: #fff;
-}
-
-.confirm-comparison-table {
-  min-width: 620px;
-  border-collapse: collapse;
-}
-
-.confirm-comparison-table th {
-  padding: 9px 12px;
-  border: 0;
-  border-bottom: 1px solid #dfe7f2;
-  background: #f1f6fd;
-  color: #24466f;
-  font-size: 11.5px;
-  font-weight: 700;
-}
-
-.confirm-comparison-table td {
-  padding: 8px 12px;
-  border: 0;
-  border-bottom: 1px solid #edf1f6;
-  color: #526d96;
-  font-size: 11.5px;
-  line-height: 1.35;
-}
-
-.confirm-comparison-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.confirm-comparison-table td:first-child {
-  color: #17375f;
-  font-weight: 600;
-}
-
-.confirm-warning-banner {
-  margin: 12px 0 0;
-  padding: 10px 13px;
-  border-color: #f1d79c;
-  border-radius: 7px;
-  background: #fff8e8;
-  color: #7f5a12;
-  font-size: 11.5px;
-}
-
-.confirm-warning-banner > svg {
-  flex: 0 0 auto;
-  margin-top: 1px;
-}
-
-.confirm-warning-banner strong {
-  color: #72500f;
-  font-size: 11.5px;
-}
-
-.confirm-warning-banner p {
-  margin-top: 2px;
-  color: #876a32;
-  font-size: 11px;
-}
-
-.confirm-plan-actions {
-  margin-top: 16px;
-}
-
-.confirm-plan-actions .secondary-flow-button {
-  min-height: 52px;
-  width: 124px;
-  padding: 9px 18px;
-  border-radius: 7px;
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.confirm-plan-actions .primary-flow-button {
-  min-height: 52px;
-  padding: 9px 18px;
-  border-radius: 7px;
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.confirm-plan-actions .primary-flow-button {
-  min-width: 172px;
-  background: #155eef;
-  border-color: transparent;
-}
-
-@media (max-width: 1050px) {
-  .confirm-plan-layout {
-    grid-template-columns: 230px minmax(0, 1fr);
-    gap: 24px;
-  }
-
-  .confirm-plan-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .confirm-plan-arrow {
-    transform: rotate(90deg);
-  }
-}
-
-@media (max-width: 780px) {
-  .confirm-plan-redesign {
-    padding: 0 14px 22px;
-  }
-
-  .confirm-plan-redesign .page-back {
-    width: calc(100% + 28px);
-    margin: 0 -14px 14px;
-    padding: 0 14px;
-  }
-
-  .confirm-plan-layout {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-
-  .subscription-stepper {
-    position: static;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(120px, 1fr));
-    overflow-x: auto;
-    padding: 0 0 8px;
-  }
-
-  .subscription-step {
-    grid-template-columns: 32px minmax(90px, 1fr);
-    min-height: 64px;
-    padding: 8px;
-  }
-
-  .subscription-step:not(:last-child)::after {
-    display: none;
-  }
-
-  .subscription-step-copy small {
-    display: none;
-  }
-}
-
-@media (max-width: 560px) {
-  .confirm-plan-heading h1 {
-    font-size: 25px;
-  }
-
-  .confirm-plan-card {
-    padding: 14px;
-  }
-
-  .confirm-plan-limits {
-    grid-template-columns: 1fr;
-  }
-
-  .confirm-plan-limit-divider {
-    width: 100%;
-    min-height: 1px;
-    height: 1px;
-  }
-
-  .confirm-plan-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .confirm-plan-actions button {
-    width: 100%;
-  }
-}
-
-/* ========================================
-   CHOOSE SUBSCRIPTION PLAN — SIDEBAR + CAPACITY FIX
-   UI-only overrides; existing dynamic data and flow logic remain unchanged.
-======================================== */
-.choose-plan-redesign .choose-plan-stepper {
-  width: 100%;
-  padding: 14px 18px 20px;
-  background: #fff;
-  border-right: 1px solid #e2e8f2;
-}
-
-.choose-plan-redesign .choose-plan-stepper::before {
-  left: 46px;
-  top: 56px;
-  bottom: 56px;
-  background: #dce5f1;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step {
-  position: relative;
-  display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
-  align-items: start;
-  column-gap: 16px;
-  min-height: 98px;
-  padding: 14px 16px;
-  margin: 0;
-  border-radius: 12px;
-  background: transparent;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step.active {
-  background: #f1edff;
-  border: 1px solid #ded4ff;
-}
-
-.choose-plan-redesign .choose-plan-stepper .step-number {
-  position: relative;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  margin: 0;
-  border: 1px solid #d7e1ee;
-  border-radius: 50%;
-  background: #fff;
-  color: #6d83a8;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step.active .step-number {
-  border-color: #5b32f4;
-  background: #5b32f4;
-  color: #fff;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step > div {
-  min-width: 0;
-  padding-top: 1px;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step strong {
-  display: block;
-  margin: 0 0 5px;
-  color: #435b82;
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 1.28;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step.active strong {
-  color: #5b32f4;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step p {
-  margin: 0;
-  color: #7b8fb1;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.45;
-}
-
-/* Keep Stores / Devices readable inside every dynamic plan card. */
-.choose-plan-redesign .choose-plan-usage-grid,
-.choose-plan-redesign .plan-usage-grid,
-.choose-plan-redesign .plan-limits,
-.choose-plan-redesign .plan-capacity,
-.choose-plan-redesign .plan-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.choose-plan-redesign .choose-plan-usage-grid > *,
-.choose-plan-redesign .plan-usage-grid > *,
-.choose-plan-redesign .plan-limits > *,
-.choose-plan-redesign .plan-capacity > *,
-.choose-plan-redesign .plan-meta-grid > * {
-  min-width: 0;
-}
-
-.choose-plan-redesign .plan-card [class*="store"],
-.choose-plan-redesign .plan-card [class*="device"] {
-  min-width: 0;
-}
-
-.choose-plan-redesign .plan-card [class*="store"] p,
-.choose-plan-redesign .plan-card [class*="device"] p,
-.choose-plan-redesign .plan-card [class*="store"] span,
-.choose-plan-redesign .plan-card [class*="device"] span {
-  max-width: 100%;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-/* Protect the capacity row when card width gets tight. */
-@media (max-width: 1180px) {
-  .choose-plan-redesign .choose-plan-stepper {
-    padding-inline: 12px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step {
-    grid-template-columns: 42px minmax(0, 1fr);
-    column-gap: 12px;
-    padding: 12px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .step-number {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step strong {
-    font-size: 15px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step p {
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 980px) {
-  .choose-plan-redesign .choose-plan-usage-grid,
-  .choose-plan-redesign .plan-usage-grid,
-  .choose-plan-redesign .plan-limits,
-  .choose-plan-redesign .plan-capacity,
-  .choose-plan-redesign .plan-meta-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 820px) {
-  .choose-plan-redesign .choose-plan-stepper {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    padding: 10px 12px;
-    border-right: 0;
-    border-bottom: 1px solid #e2e8f2;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper::before {
-    display: none;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step {
-    display: flex;
-    align-items: center;
-    min-height: 58px;
-    padding: 8px;
-    gap: 8px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .step-number {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    font-size: 14px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step > div {
-    display: none;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step.active > div {
-    display: block;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step.active strong {
-    margin: 0;
-    font-size: 13px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step.active p {
-    display: none;
-  }
-}
-
-@media (max-width: 560px) {
-  .choose-plan-redesign .choose-plan-stepper {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .choose-plan-redesign .choose-plan-usage-grid,
-  .choose-plan-redesign .plan-usage-grid,
-  .choose-plan-redesign .plan-limits,
-  .choose-plan-redesign .plan-capacity,
-  .choose-plan-redesign .plan-meta-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ========================================
-   CHOOSE PLAN — FINAL UI FIX
-   UI only. Existing API/state/handlers/navigation are unchanged.
-======================================== */
-
-/* Stepper: compact typography, single-line titles, connector ends at step 4. */
-.choose-plan-redesign .choose-plan-stepper {
-  padding: 18px 16px 22px;
-}
-
-.choose-plan-redesign .choose-plan-stepper::before {
-  display: none;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step {
-  position: relative;
-  grid-template-columns: 40px minmax(0, 1fr);
-  column-gap: 12px;
-  min-height: 82px;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 10px;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  left: 31px;
-  top: 50px;
-  bottom: -10px;
-  width: 1px;
-  background: #d9e3ef;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step:last-child::after {
-  display: none;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step.active {
-  border: 1px solid #ded4ff;
-  background: #f1edff;
-}
-
-.choose-plan-redesign .choose-plan-stepper .step-number {
-  z-index: 1;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  border-width: 1px;
-  font-size: 14px;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step > div {
-  min-width: 0;
-  padding-top: 2px;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step strong {
-  display: block;
-  margin: 0 0 4px;
-  overflow: visible;
-  color: #42597f;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.3;
-  text-overflow: clip;
-  white-space: nowrap;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step.active strong {
-  color: #5b32f4;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step p {
-  margin: 0;
-  color: #7b8fb1;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.4;
-}
-
-/* Stores / Devices: equal columns, centered divider, no text collision. */
-.choose-plan-redesign .plan-capacity-row {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-  margin: 18px 0 14px;
-  padding: 8px;
-  gap: 6px;
-  overflow: visible;
-  border-radius: 8px;
-  background: #f5f9fe;
-}
-
-.choose-plan-redesign .plan-capacity-divider {
-  display: none;
-}
-
-.choose-plan-redesign .plan-capacity-item {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-width: 0;
-  padding: 7px 8px;
-}
-
-.choose-plan-redesign .plan-capacity-item > div {
-  min-width: 0;
-}
-
-.choose-plan-redesign .capacity-icon {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
-}
-
-.choose-plan-redesign .capacity-icon svg {
-  width: 19px;
-  height: 19px;
-}
-
-.choose-plan-redesign .plan-capacity-item strong {
-  display: block;
-  width: 100%;
-  margin: 0 0 3px;
-  overflow: visible;
-  color: #385582;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
-  text-overflow: clip;
-  white-space: normal;
-}
-
-.choose-plan-redesign .plan-capacity-item small {
-  display: block;
-  width: 100%;
-  margin: 0;
-  overflow: visible;
-  color: #3f5d8d;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.3;
-  text-overflow: clip;
-  white-space: normal;
-}
-
-/* Preserve three cards while enough desktop width is available. */
-@media (max-width: 1350px) and (min-width: 1101px) {
-  .choose-plan-redesign .choose-plan-layout {
-    grid-template-columns: 250px minmax(0, 1fr);
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step {
-    grid-template-columns: 38px minmax(0, 1fr);
-    column-gap: 10px;
-    padding-inline: 10px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step::after {
-    left: 29px;
-  }
-
-  .choose-plan-redesign .plan-capacity-row {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-  margin: 18px 0 14px;
-  padding: 8px;
-  gap: 6px;
-  overflow: visible;
-  border-radius: 8px;
-  background: #f5f9fe;
-}
-
-  .choose-plan-redesign .plan-capacity-item {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-width: 0;
-  padding: 7px 8px;
-}
-
-  .choose-plan-redesign .capacity-icon {
-    width: 30px;
-    height: 30px;
-  }
-
-  .choose-plan-redesign .plan-capacity-item strong {
-  display: block;
-  width: 100%;
-  margin: 0 0 3px;
-  overflow: visible;
-  color: #385582;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
-  text-overflow: clip;
-  white-space: normal;
-}
-
-  .choose-plan-redesign .plan-capacity-item small {
-  display: block;
-  width: 100%;
-  margin: 0;
-  overflow: visible;
-  color: #3f5d8d;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.3;
-  text-overflow: clip;
-  white-space: normal;
-}
-}
-
-@media (max-width: 1100px) and (min-width: 821px) {
-  .choose-plan-redesign .choose-plan-stepper .subscription-step strong {
-    font-size: 12px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step p {
-    font-size: 10px;
-  }
-
-  .choose-plan-redesign .plan-capacity-row {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-  margin: 18px 0 14px;
-  padding: 8px;
-  gap: 6px;
-  overflow: visible;
-  border-radius: 8px;
-  background: #f5f9fe;
-}
-
-  .choose-plan-redesign .plan-capacity-item small {
-  display: block;
-  width: 100%;
-  margin: 0;
-  overflow: visible;
-  color: #3f5d8d;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.3;
-  text-overflow: clip;
-  white-space: normal;
-}
-}
-
-@media (max-width: 820px) {
-  .choose-plan-redesign .choose-plan-stepper .subscription-step::after {
-    display: none;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step strong {
-    font-size: 12px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step p {
-    font-size: 10px;
-  }
-
-  .choose-plan-redesign .plan-capacity-row {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-  margin: 18px 0 14px;
-  padding: 8px;
-  gap: 6px;
-  overflow: visible;
-  border-radius: 8px;
-  background: #f5f9fe;
-}
-}
-
-@media (max-width: 520px) {
-  .choose-plan-redesign .plan-capacity-row {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-  margin: 18px 0 14px;
-  padding: 8px;
-  gap: 6px;
-  overflow: visible;
-  border-radius: 8px;
-  background: #f5f9fe;
-}
-
-  .choose-plan-redesign .plan-capacity-divider {
-  display: none;
-}
-
-  .choose-plan-redesign .plan-capacity-item small {
-  display: block;
-  width: 100%;
-  margin: 0;
-  overflow: visible;
-  color: #3f5d8d;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.3;
-  text-overflow: clip;
-  white-space: normal;
-}
-}
-
-/* ========================================
-   CHOOSE PLAN — FINAL DEFECT FIXES
-   CSS/UI only. No API, state, handler, navigation, validation, or data-flow changes.
-======================================== */
-
-/* 1) Sidebar: no connector lines, compact consistent blocks. */
-.choose-plan-redesign .choose-plan-stepper::before,
-.choose-plan-redesign .choose-plan-stepper .subscription-step::after {
-  display: none  !important;
-  content: none  !important;
-}
-
-.choose-plan-redesign .choose-plan-stepper {
-  padding: 16px 14px 20px;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  align-items: center;
-  column-gap: 12px;
-  min-height: 72px;
-  margin: 0 0 8px;
-  padding: 10px 12px;
-  border-radius: 10px;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step:last-child {
-  margin-bottom: 0;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step.active {
-  border: 1px solid #ded4ff;
-  background: #f1edff;
-}
-
-.choose-plan-redesign .choose-plan-stepper .step-number {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  margin: 0;
-  font-size: 14px;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step > div {
-  min-width: 0;
-  padding: 0;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step strong {
-  display: block;
-  margin: 0 0 4px;
-  overflow: visible;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.25;
-  text-overflow: clip;
-  white-space: nowrap;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step p {
-  margin: 0;
-  font-size: 10px;
-  line-height: 1.35;
-}
-
-/* 2) Selection visual: current plan is highlighted initially.
-      After another plan is selected, only that selected card keeps the blue selection border.
-      Current Plan badge remains on the real current plan. */
-.choose-plan-redesign .choose-plan-card {
-  border: 1px solid #dbe4f0;
-  box-shadow: 0 2px 8px rgba(24, 48, 84, 0.025);
-}
-
-.choose-plan-redesign .choose-plan-card.current,
-.choose-plan-redesign .choose-plan-card.selected {
-  border: 2px solid #0871ff;
-  box-shadow: 0 2px 10px rgba(8, 113, 255, 0.08);
-}
-
-.choose-plan-redesign .choose-plan-grid:has(.choose-plan-card.selected:not(.current))
-  .choose-plan-card.current:not(.selected) {
-  border: 1px solid #dbe4f0;
-  box-shadow: 0 2px 8px rgba(24, 48, 84, 0.025);
-}
-
-/* Keep card inner dimensions stable when the current card loses the selection border. */
-.choose-plan-redesign .choose-plan-grid:has(.choose-plan-card.selected:not(.current))
-  .choose-plan-card.current:not(.selected) {
-  padding: 20px 18px 18px;
-}
-
-/* 3) Stores / Devices: stacked rows for clear dynamic limits. */
-.choose-plan-redesign .plan-capacity-row {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-  margin: 18px 0 14px;
-  padding: 8px;
-  gap: 6px;
-  overflow: visible;
-  border-radius: 8px;
-  background: #f5f9fe;
-}
-
-.choose-plan-redesign .plan-capacity-item {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-width: 0;
-  padding: 7px 8px;
-}
-
-.choose-plan-redesign .plan-capacity-divider {
-  display: none;
-}
-
-.choose-plan-redesign .capacity-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  margin: 0;
-}
-
-.choose-plan-redesign .plan-capacity-item > div {
-  min-width: 0;
-  overflow: visible;
-}
-
-.choose-plan-redesign .plan-capacity-item strong {
-  display: block;
-  width: 100%;
-  margin: 0 0 3px;
-  overflow: visible;
-  color: #385582;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
-  text-overflow: clip;
-  white-space: normal;
-}
-
-.choose-plan-redesign .plan-capacity-item small {
-  display: block;
-  width: 100%;
-  margin: 0;
-  overflow: visible;
-  color: #3f5d8d;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.3;
-  text-overflow: clip;
-  white-space: normal;
-}
-
-@media (min-width: 1200px) {
-  .choose-plan-redesign .plan-capacity-item small {
-  display: block;
-  width: 100%;
-  margin: 0;
-  overflow: visible;
-  color: #3f5d8d;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.3;
-  text-overflow: clip;
-  white-space: normal;
-}
-}
-
-@media (max-width: 1100px) and (min-width: 821px) {
-  .choose-plan-redesign .plan-capacity-item {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-width: 0;
-  padding: 7px 8px;
-}
-
-  .choose-plan-redesign .capacity-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  flex: 0 0 30px;
-}
-
-  .choose-plan-redesign .capacity-icon svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .choose-plan-redesign .plan-capacity-item strong {
-  display: block;
-  width: 100%;
-  margin: 0 0 3px;
-  overflow: visible;
-  color: #385582;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
-  text-overflow: clip;
-  white-space: normal;
-}
-
-  .choose-plan-redesign .plan-capacity-item small {
-  display: block;
-  width: 100%;
-  margin: 0;
-  overflow: visible;
-  color: #3f5d8d;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.3;
-  text-overflow: clip;
-  white-space: normal;
-}
-}
-
-@media (max-width: 820px) {
-  .choose-plan-redesign .choose-plan-stepper .subscription-step {
-    margin: 0;
-  }
-
-  .choose-plan-redesign .plan-capacity-item small {
-  display: block;
-  width: 100%;
-  margin: 0;
-  overflow: visible;
-  color: #3f5d8d;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.3;
-  text-overflow: clip;
-  white-space: normal;
-}
-}
-
-@media (max-width: 520px) {
-  .choose-plan-redesign .plan-capacity-row {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-  margin: 18px 0 14px;
-  padding: 8px;
-  gap: 6px;
-  overflow: visible;
-  border-radius: 8px;
-  background: #f5f9fe;
-}
-
-  .choose-plan-redesign .plan-capacity-item {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-width: 0;
-  padding: 7px 8px;
-}
-
-  .choose-plan-redesign .plan-capacity-divider {
-  display: none;
-}
-}
-
-/* ========================================
-   SUBSCRIPTION FLOW — FINAL CLEAN CONFIRM UI
-   Choose Plan sidebar is the visual source of truth.
-======================================== */
-.confirm-plan-redesign {
-  max-width: none;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  background: #f7f9fd;
-}
-
-.confirm-plan-back-strip {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 64px;
-  padding: 0 28px;
-  border-bottom: 1px solid #e3e9f3;
-  background: #fff;
-}
-
-.confirm-plan-redesign .confirm-plan-back-strip .page-back {
-  width: auto;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #5b35f5;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.confirm-plan-layout {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-  min-height: calc(100vh - 140px);
-  margin: 0;
-  padding: 0;
-  gap: 0;
-}
-
-/* Exact Choose Subscription Plan sidebar geometry and colors */
-.confirm-plan-redesign .confirm-stepper {
-  position: relative;
-  top: auto;
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  min-height: 100%;
-  margin: 0;
-  padding: 14px 18px 20px;
-  overflow: visible;
-  border-right: 1px solid #e1e8f2;
-  background: #fff;
-}
-
-.confirm-plan-redesign .confirm-stepper::before,
-.confirm-plan-redesign .confirm-stepper .subscription-step::after {
-  display: none;
-  content: none;
-}
-
-.confirm-plan-redesign .confirm-stepper .subscription-step {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  align-items: center;
-  column-gap: 12px;
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 66px;
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
-}
-
-.confirm-plan-redesign .confirm-stepper .subscription-step:last-child {
-  margin-bottom: 0;
-}
-
-.confirm-plan-redesign .confirm-stepper .subscription-step.active {
-  border-color: #ded4ff;
-  background: #f1edff;
-}
-
-.confirm-plan-redesign .confirm-stepper .step-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  margin: 0;
-  border: 1px solid #d7e1ee;
-  border-radius: 50%;
-  background: #fff;
-  color: #6d83a8;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.confirm-plan-redesign .confirm-stepper .subscription-step.active .step-number {
-  border-color: #5b32f4;
-  background: #5b32f4;
-  color: #fff;
-}
-
-.confirm-plan-redesign .confirm-stepper .subscription-step > div {
-  min-width: 0;
-  padding: 0;
-}
-
-.confirm-plan-redesign .confirm-stepper .subscription-step strong {
-  display: block;
-  margin: 0 0 4px;
-  color: #38547d;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.3;
-  white-space: nowrap;
-}
-
-.confirm-plan-redesign .confirm-stepper .subscription-step.active strong {
-  color: #5b32f4;
-}
-
-.confirm-plan-redesign .confirm-stepper .subscription-step p {
-  margin: 0;
-  color: #7b8fb1;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.35;
-}
-
-/* Confirm content fits available width — no page-level horizontal scroll */
-.confirm-plan-redesign .confirm-plan-content {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: none;
-  min-width: 0;
-  padding: 22px 24px 28px;
-  overflow-x: hidden;
-}
-
-.confirm-plan-redesign .confirm-plan-cards {
-  grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr);
-  width: 100%;
-  min-width: 0;
-}
-
-.confirm-plan-redesign .confirm-plan-card {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-}
-
-/* Change table -> warning -> actions: compact continuous rhythm */
-.confirm-plan-redesign .confirm-comparison-wrapper {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  margin: 0;
-  overflow-x: hidden;
-}
-
-.confirm-plan-redesign .confirm-comparison-table {
-  width: 100%;
-  min-width: 0;
-  table-layout: fixed;
-}
-
-.confirm-plan-redesign .confirm-comparison-table th,
-.confirm-plan-redesign .confirm-comparison-table td {
-  min-width: 0;
-  overflow-wrap: break-word;
-}
-
-.confirm-plan-redesign .confirm-warning-banner {
-  margin: 12px 0 0;
-}
-
-.confirm-plan-redesign .confirm-plan-actions {
-  margin: 14px 0 0;
-  padding: 0 0 4px;
-}
-
-.confirm-plan-redesign .confirm-plan-content {
-  padding-bottom: 28px;
-}
-
-@media (max-width: 1180px) and (min-width: 821px) {
-  .confirm-plan-layout {
-    grid-template-columns: 250px minmax(0, 1fr);
-  }
-
-  .confirm-plan-redesign .confirm-stepper {
-    padding: 14px;
-  }
-
-  .confirm-plan-redesign .confirm-plan-content {
-    padding: 20px 18px 26px;
-  }
-
-  .confirm-plan-redesign .confirm-plan-cards {
-    grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
-    gap: 10px;
-  }
-}
-
-@media (max-width: 820px) {
-  .confirm-plan-back-strip {
-    padding: 0 18px;
-  }
-
-  .confirm-plan-layout {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-
-  .confirm-plan-redesign .confirm-stepper {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-    min-height: auto;
-    padding: 12px;
-    border-right: 0;
-    border-bottom: 1px solid #e1e8f2;
-  }
-
-  .confirm-plan-redesign .confirm-stepper .subscription-step {
-    display: flex;
-    justify-content: center;
-    min-height: auto;
-    margin: 0;
-    padding: 8px;
-  }
-
-  .confirm-plan-redesign .confirm-stepper .subscription-step > div {
-    display: none;
-  }
-
-  .confirm-plan-redesign .confirm-stepper .subscription-step.active > div {
-    display: block;
-  }
-
-  .confirm-plan-redesign .confirm-plan-content {
-    padding: 18px;
-  }
-
-  .confirm-plan-redesign .confirm-plan-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .confirm-plan-redesign .confirm-plan-arrow {
-    transform: rotate(90deg);
-  }
-}
-
-@media (max-width: 520px) {
-  .confirm-plan-redesign .confirm-stepper .subscription-step.active > div {
-    display: none;
-  }
-
-  .confirm-plan-redesign .confirm-plan-content {
-    padding: 15px 12px 22px;
-  }
-
-  .confirm-plan-redesign .confirm-plan-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .confirm-plan-redesign .confirm-plan-actions button {
-    width: 100%;
-  }
-}
-/* CHOOSE SUBSCRIPTION PLAN — FINAL UI ONLY */
-.choose-plan-redesign {
-  display: flex;
-  flex-direction: column;
-  max-width: none;
-  width: 100%;
-  min-height: calc(100vh - 72px);
-  margin: 0;
-  padding: 0;
-  background: #f7f9fd;
-}
-
-.choose-plan-redesign .choose-plan-back-strip {
-  flex: 0 0 auto;
-  min-height: 64px;
-  display: flex;
-  align-items: center;
-  padding: 0 28px;
-  background: #fff;
-  border-bottom: 1px solid #e3e9f3;
-}
-
-.choose-plan-redesign .choose-plan-back-strip .page-back {
-  width: auto;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #5b35f5;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.choose-plan-redesign .choose-plan-layout {
-  display: grid;
-  grid-template-columns: 280px minmax(0,1fr);
-  align-items: stretch;
-  flex: 1 0 auto;
-  width: 100%;
-  min-width: 0;
-  min-height: calc(100vh - 136px);
-  margin: 0;
-  padding: 0;
-  gap: 0;
-}
-
-.choose-plan-redesign .choose-plan-stepper {
-  position: relative;
-  top: auto;
-  align-self: stretch;
-  box-sizing: border-box;
-  width: 280px;
-  min-width: 280px;
-  max-width: 280px;
-  min-height: 100%;
-  height: auto;
-  margin: 0;
-  padding: 14px 18px 20px;
-  overflow: visible;
-  border-right: 1px solid #e1e8f2;
-  background: #fff;
-}
-
-.choose-plan-redesign .choose-plan-stepper::before,.choose-plan-redesign .choose-plan-stepper .subscription-step::after {
-  display: none !important;
-  content: none !important;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 40px minmax(0,1fr);
-  align-items: center;
-  column-gap: 12px;
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 66px;
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step:last-child {
-  margin-bottom: 0;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step.active {
-  border-color: #ded4ff;
-  background: #f1edff;
-}
-
-.choose-plan-redesign .choose-plan-stepper .step-number {
-  position: relative;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  margin: 0;
-  border: 1px solid #d7e1ee;
-  border-radius: 50%;
-  background: #fff;
-  color: #6d83a8;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step.active .step-number {
-  border-color: #5b32f4;
-  background: #5b32f4;
-  color: #fff;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step>div {
-  min-width: 0;
-  padding: 0;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step strong {
-  display: block;
-  margin: 0 0 4px;
-  color: #38547d;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.3;
-  white-space: nowrap;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step.active strong {
-  color: #5b32f4;
-}
-
-.choose-plan-redesign .choose-plan-stepper .subscription-step p {
-  margin: 0;
-  color: #7b8fb1;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.35;
-}
-
-.choose-plan-redesign .choose-plan-main {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: none;
-  min-width: 0;
-  min-height: 100%;
-  margin: 0;
-  padding: 22px 24px 28px;
-  overflow-x: hidden;
-}
-
-@media(max-width:1180px) and (min-width:821px) {
-  .choose-plan-redesign .choose-plan-layout {
-    grid-template-columns: 250px minmax(0,1fr);
-  }
-
-  .choose-plan-redesign .choose-plan-stepper {
-    width: 250px;
-    min-width: 250px;
-    max-width: 250px;
-    padding: 14px;
-  }
-
-  .choose-plan-redesign .choose-plan-main {
-    padding: 20px 18px 26px;
-  }
-}
-
-@media(max-width:820px) {
-  .choose-plan-redesign {
-    min-height: 0;
-  }
-
-  .choose-plan-redesign .choose-plan-back-strip {
-    padding: 0 18px;
-  }
-
-  .choose-plan-redesign .choose-plan-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper {
-    display: grid;
-    grid-template-columns: repeat(4,minmax(0,1fr));
-    gap: 6px;
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    min-height: auto;
-    height: auto;
-    padding: 12px;
-    border-right: 0;
-    border-bottom: 1px solid #e1e8f2;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step {
-    display: flex;
-    justify-content: center;
-    min-height: auto;
-    margin: 0;
-    padding: 8px;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step>div {
-    display: none;
-  }
-
-  .choose-plan-redesign .choose-plan-stepper .subscription-step.active>div {
-    display: block;
-  }
-
-  .choose-plan-redesign .choose-plan-main {
-    min-height: 0;
-    padding: 18px;
-  }
-}
-
-@media(max-width:520px) {
-  .choose-plan-redesign .choose-plan-stepper .subscription-step.active>div {
-    display: none;
-  }
-
-  .choose-plan-redesign .choose-plan-main {
-    padding: 15px 12px 22px;
-  }
-}
-
-/* PAYMENT — FINAL UI */
-.payment-page-redesign {
-  display: flex;
-  flex-direction: column;
-  max-width: none;
-  width: 100%;
-  min-height: calc(100vh - 72px);
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  background: #f7f9fd;
-}
-
-.payment-page-redesign .payment-back-strip {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 64px;
-  padding: 0 28px;
-  border-bottom: 1px solid #e3e9f3;
-  background: #fff;
-}
-
-.payment-page-redesign .payment-back-strip .page-back {
-  width: auto;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #5b35f5;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.payment-page-redesign .payment-layout {
-  display: grid;
-  grid-template-columns: 280px minmax(0,1fr);
-  align-items: stretch;
-  flex: 1;
-  width: 100%;
-  min-width: 0;
-  min-height: calc(100vh - 136px);
-  gap: 0;
-}
-
-.payment-page-redesign .payment-stepper {
-  align-self: stretch;
-  width: 280px;
-  min-width: 280px;
-  min-height: 100%;
-  margin: 0;
-  padding: 14px 18px 20px;
-  border-right: 1px solid #e1e8f2;
-  background: #fff;
-}
-
-.payment-page-redesign .payment-stepper::before,.payment-page-redesign .payment-stepper .subscription-step::after {
-  display: none !important;
-  content: none !important;
-}
-
-.payment-page-redesign .payment-stepper .subscription-step {
-  display: grid;
-  grid-template-columns: 40px minmax(0,1fr);
-  align-items: center;
-  column-gap: 12px;
-  width: 100%;
-  min-height: 66px;
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
-}
-
-.payment-page-redesign .payment-stepper .subscription-step.active {
-  border-color: #ded4ff;
-  background: #f1edff;
-}
-
-.payment-page-redesign .payment-stepper .step-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border: 1px solid #d7e1ee;
-  border-radius: 50%;
-  background: #fff;
-  color: #6d83a8;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.payment-page-redesign .payment-stepper .subscription-step.active .step-number {
-  border-color: #5b32f4;
-  background: #5b32f4;
-  color: #fff;
-}
-
-.payment-page-redesign .payment-stepper .subscription-step strong {
-  display: block;
-  margin: 0 0 4px;
-  color: #38547d;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.payment-page-redesign .payment-stepper .subscription-step.active strong {
-  color: #5b32f4;
-}
-
-.payment-page-redesign .payment-stepper .subscription-step p {
-  margin: 0;
-  color: #7b8fb1;
-  font-size: 10px;
-  line-height: 1.35;
-}
-
-.payment-page-redesign .payment-main {
-  width: 100%;
-  min-width: 0;
-  padding: 14px 16px 24px;
-  overflow-x: hidden;
-}
-
-.payment-page-redesign .payment-main>h1 {
-  margin: 0 0 4px;
-  color: #081b3a;
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -.035em;
-}
-
-.payment-page-redesign .payment-main>.flow-subtitle {
-  margin: 0 0 12px;
-  color: #58709c;
-  font-size: 13px;
-}
-
-.payment-page-redesign .payment-summary,.payment-page-redesign .payment-card {
-  width: 100%;
-  max-width: none;
-  margin: 0 0 12px;
-  padding: 14px 16px;
-  border: 1px solid #e1e8f3;
-  border-radius: 8px;
-  background: #fff;
-}
-
-.payment-page-redesign .payment-summary h3,.payment-page-redesign .payment-card h3 {
-  margin: 0 0 10px;
-  color: #081b3a;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.payment-page-redesign .payment-summary .detail-row {
-  grid-template-columns: 180px minmax(0,1fr);
-  gap: 12px;
-  min-height: 38px;
-  padding: 8px 0;
-  font-size: 12px;
-}
-
-.payment-page-redesign .payment-summary select {
-  width: 220px;
-  max-width: 100%;
-  height: 34px;
-  padding: 0 10px;
-  border-radius: 6px;
-}
-
-.payment-page-redesign .payment-total {
-  margin: 10px -4px -4px;
-  padding: 12px;
-  background: #f3f8ff;
-  border: 0;
-  border-radius: 7px;
-}
-
-.payment-page-redesign .payment-total strong {
-  font-size: 24px;
-}
-
-.payment-page-redesign .payment-note {
-  font-size: 10px;
-}
-
-.payment-page-redesign .payment-tabs {
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.payment-page-redesign .payment-tabs button {
-  min-height: 40px;
-  border-radius: 7px;
-  font-size: 12px;
-}
-
-.payment-page-redesign .payment-form {
-  gap: 10px;
-}
-
-.payment-page-redesign .payment-form label {
-  gap: 5px;
-  font-size: 12px;
-}
-
-.payment-page-redesign .payment-card input,.payment-page-redesign .payment-card select {
-  height: 36px;
-  padding: 0 10px;
-  border-radius: 7px;
-  font-size: 12px;
-}
-
-.payment-page-redesign .form-grid {
-  gap: 12px;
-}
-
-.payment-page-redesign .save-card {
-  gap: 7px !important;
-  font-size: 11px;
-}
-
-.payment-page-redesign .save-card input {
-  width: 14px;
-  height: 14px;
-}
-
-.payment-page-redesign .payment-actions {
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.payment-page-redesign .payment-actions button {
-  min-height: 52px;
-  min-width: 172px;
-  padding: 8px 16px;
-  border-radius: 7px;
-  font-size: 12px;
-}
-
-@media(max-width:1180px) and (min-width:821px) {
-  .payment-page-redesign .payment-layout {
-    grid-template-columns: 250px minmax(0,1fr);
-  }
-
-  .payment-page-redesign .payment-stepper {
-    width: 250px;
-    min-width: 250px;
-    padding: 14px;
-  }
-}
-
-@media(max-width:820px) {
-  .payment-page-redesign .payment-layout {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-
-  .payment-page-redesign .payment-stepper {
-    display: grid;
-    grid-template-columns: repeat(4,minmax(0,1fr));
-    gap: 6px;
-    width: 100%;
-    min-width: 0;
-    min-height: auto;
-    padding: 12px;
-    border-right: 0;
-    border-bottom: 1px solid #e1e8f2;
-  }
-
-  .payment-page-redesign .payment-stepper .subscription-step {
-    display: flex;
-    justify-content: center;
-    min-height: auto;
-    margin: 0;
-    padding: 8px;
-  }
-
-  .payment-page-redesign .payment-stepper .subscription-step>div {
-    display: none;
-  }
-
-  .payment-page-redesign .payment-stepper .subscription-step.active>div {
-    display: block;
-  }
-
-  .payment-page-redesign .payment-main {
-    padding: 16px;
-  }
-}
-
-@media(max-width:600px) {
-  .payment-page-redesign .payment-summary .detail-row {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-
-  .payment-page-redesign .payment-tabs,.payment-page-redesign .form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media(max-width:520px) {
-  .payment-page-redesign .payment-stepper .subscription-step.active>div {
-    display: none;
-  }
-
-  .payment-page-redesign .payment-main {
-    padding: 14px 12px 20px;
-  }
-}
-
-/* CONFIRMATION — FINAL UI */
-.success-page-redesign {
-  display: flex;
-  flex-direction: column;
-  max-width: none;
-  width: 100%;
-  min-height: calc(100vh - 72px);
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  background: #f7f9fd;
-  text-align: left;
-}
-
-.success-page-redesign .success-back-strip {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 64px;
-  padding: 0 28px;
-  border-bottom: 1px solid #e3e9f3;
-  background: #fff;
-}
-
-.success-page-redesign .success-back-strip .page-back {
-  visibility: hidden;
-  pointer-events: none;
-  width: auto;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #5b35f5;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.success-page-redesign .success-layout {
-  display: grid;
-  grid-template-columns: 280px minmax(0,1fr);
-  align-items: stretch;
-  flex: 1;
-  width: 100%;
-  min-width: 0;
-  min-height: calc(100vh - 136px);
-  gap: 0;
-}
-
-.success-page-redesign .success-stepper {
-  align-self: stretch;
-  width: 280px;
-  min-width: 280px;
-  min-height: 100%;
-  margin: 0;
-  padding: 14px 18px 20px;
-  border-right: 1px solid #e1e8f2;
-  background: #fff;
-}
-
-.success-page-redesign .success-stepper::before,.success-page-redesign .success-stepper .subscription-step::after {
-  display: none !important;
-  content: none !important;
-}
-
-.success-page-redesign .success-stepper .subscription-step {
-  display: grid;
-  grid-template-columns: 40px minmax(0,1fr);
-  align-items: center;
-  column-gap: 12px;
-  width: 100%;
-  min-height: 66px;
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
-}
-
-.success-page-redesign .success-stepper .subscription-step:last-child {
-  margin-bottom: 0;
-}
-
-.success-page-redesign .success-stepper .subscription-step.active {
-  border-color: #ded4ff;
-  background: #f1edff;
-}
-
-.success-page-redesign .success-stepper .step-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  border: 1px solid #d7e1ee;
-  border-radius: 50%;
-  background: #fff;
-  color: #6d83a8;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.success-page-redesign .success-stepper .subscription-step.active .step-number {
-  border-color: #5b32f4;
-  background: #5b32f4;
-  color: #fff;
-}
-
-.success-page-redesign .success-stepper .subscription-step strong {
-  display: block;
-  margin: 0 0 4px;
-  color: #38547d;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.success-page-redesign .success-stepper .subscription-step.active strong {
-  color: #5b32f4;
-}
-
-.success-page-redesign .success-stepper .subscription-step p {
-  margin: 0;
-  color: #7b8fb1;
-  font-size: 10px;
-  line-height: 1.35;
-}
-
-.success-page-redesign .success-main {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  padding: 24px 40px 30px;
-  text-align: center;
-  overflow-x: hidden;
-}
-
-.success-page-redesign .success-icon {
-  width: 76px;
-  height: 76px;
-  margin: 0 auto 12px;
-  border-radius: 50%;
-  background: #dff8ed;
-  color: #00a875;
-}
-
-.success-page-redesign .success-main>h1 {
-  margin: 0 0 5px;
-  color: #081b3a;
-  font-size: 27px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.success-page-redesign .success-main>.flow-subtitle {
-  margin: 0 0 18px;
-  color: #58709c;
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.success-page-redesign .success-details {
-  width: 100%;
-  max-width: none;
-  margin: 0 auto 14px;
-  padding: 14px 18px;
-  border: 1px solid #dce6f3;
-  border-radius: 9px;
-  background: #fff;
-  text-align: left;
-  box-shadow: none;
-}
-
-.success-page-redesign .success-details h3 {
-  margin: 0 0 8px;
-  color: #081b3a;
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.success-page-redesign .success-detail-row {
-  display: grid;
-  grid-template-columns: 32px 210px minmax(0,1fr);
-  align-items: center;
-  gap: 10px;
-  min-height: 43px;
-  padding: 7px 10px;
-  border-bottom: 1px solid #e4ebf5;
-  color: #0d3977;
-  font-size: 12px;
-}
-
-.success-page-redesign .success-detail-row:last-child {
-  border-bottom: 0;
-}
-
-.success-page-redesign .success-row-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #092653;
-}
-
-.success-page-redesign .success-row-label {
-  color: #5d7db1;
-  font-weight: 500;
-}
-
-.success-page-redesign .success-detail-row strong {
-  color: #0b3d84;
-  font-weight: 600;
-}
-
-.success-page-redesign .success-status-dot {
-  width: 12px;
-  height: 12px;
-  margin-left: 4px;
-  border-radius: 50%;
-  background: #00a875;
-}
-
-.success-page-redesign .success-status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: max-content;
-  min-width: 66px;
-  height: 26px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: #e1f8ed;
-  color: #00a875;
-  font-weight: 700;
-}
-
-.success-page-redesign .success-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  margin: 0 auto 16px;
-  padding: 12px 16px;
-  border: 0;
-  border-radius: 8px;
-  background: #e3f8ee;
-  color: #008f69;
-  font-size: 12px;
-  text-align: left;
-}
-
-.success-page-redesign .success-back-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 250px;
-  min-height: 42px;
-  margin: 0 auto;
-  padding: 9px 18px;
-  border-radius: 7px;
-}
-
-@media(max-width:1180px) and (min-width:821px) {
-  .success-page-redesign .success-layout {
-    grid-template-columns: 250px minmax(0,1fr);
-  }
-
-  .success-page-redesign .success-stepper {
-    width: 250px;
-    min-width: 250px;
-    padding: 14px;
-  }
-
-  .success-page-redesign .success-main {
-    padding: 22px 24px 28px;
-  }
-}
-
-@media(max-width:820px) {
-  .success-page-redesign .success-layout {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-
-  .success-page-redesign .success-stepper {
-    display: grid;
-    grid-template-columns: repeat(4,minmax(0,1fr));
-    gap: 6px;
-    width: 100%;
-    min-width: 0;
-    min-height: auto;
-    padding: 12px;
-    border-right: 0;
-    border-bottom: 1px solid #e1e8f2;
-  }
-
-  .success-page-redesign .success-stepper .subscription-step {
-    display: flex;
-    justify-content: center;
-    min-height: auto;
-    margin: 0;
-    padding: 8px;
-  }
-
-  .success-page-redesign .success-stepper .subscription-step>div {
-    display: none;
-  }
-
-  .success-page-redesign .success-stepper .subscription-step.active>div {
-    display: block;
-  }
-
-  .success-page-redesign .success-main {
-    padding: 20px 18px 26px;
-  }
-}
-
-@media(max-width:600px) {
-  .success-page-redesign .success-detail-row {
-    grid-template-columns: 28px minmax(100px,130px) minmax(0,1fr);
-    gap: 7px;
-    padding: 7px 4px;
-  }
-
-  .success-page-redesign .success-main>h1 {
-    font-size: 23px;
-  }
-
-  .success-page-redesign .success-back-button {
-    width: 100%;
-    min-width: 0;
-  }
-}
-
-@media(max-width:520px) {
-  .success-page-redesign .success-stepper .subscription-step.active>div {
-    display: none;
-  }
-
-  .success-page-redesign .success-main {
-    padding: 18px 12px 22px;
-  }
-
-  .success-page-redesign .success-detail-row {
-    grid-template-columns: 24px 1fr;
-  }
-
-  .success-page-redesign .success-detail-row>:last-child {
-    grid-column: 2;
-  }
-
-  .success-page-redesign .success-status-pill {
-    grid-column: 2;
-  }
-}
-
-/* ========================================
-   SUBSCRIPTION DETAILS — APPROVED UI REFINEMENTS
-   Scoped only to .subscription-details-redesign
-======================================== */
-.subscription-details-redesign .subscription-details-summary {
-  grid-template-columns: minmax(320px, 1.45fr) minmax(155px, .7fr) minmax(155px, .7fr) minmax(235px, 1fr);
-  min-height: 122px;
-}
-.subscription-details-redesign .subscription-merchant-profile {
-  gap: 18px;
-  padding: 14px 22px;
-}
-.subscription-details-redesign .subscription-merchant-logo {
-  width: 72px;
-  height: 72px;
-  flex-basis: 72px;
-}
-.subscription-details-redesign .subscription-summary-metric {
-  gap: 12px;
-  margin: 12px 0;
-  padding: 8px 16px;
-}
-.subscription-details-redesign .subscription-metric-icon {
-  width: 42px;
-  height: 42px;
-  flex-basis: 42px;
-}
-.subscription-details-redesign .subscription-summary-metric span {
-  margin-bottom: 5px;
-}
-.subscription-details-redesign .subscription-summary-metric strong {
-  margin-bottom: 0;
-}
-.subscription-details-redesign .subscription-details-content-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: stretch;
-}
-.subscription-details-redesign .subscription-details-panel {
-  height: 100%;
-}
-.subscription-details-redesign .subscription-information-row {
-  min-height: 51px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-.subscription-details-redesign .entitlements-panel {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-.subscription-details-redesign .subscription-panel-heading h3 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.subscription-details-redesign .subscription-entitlements-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 22px;
-  padding: 0 7px;
-  border-radius: 11px;
-  background: #e7f2ff;
-  color: #0868ef;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-}
-.subscription-details-redesign .subscription-entitlements-list {
-  flex: 1;
-  max-height: 480px;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 4px;
-  scrollbar-width: thin;
-}
-.subscription-details-redesign .subscription-entitlement-item {
-  grid-template-columns: 34px minmax(0, 1fr) auto;
-  gap: 11px;
-  min-height: 48px;
-  padding: 8px 11px;
-}
-.subscription-details-redesign .subscription-feature-check {
-  width: 23px;
-  height: 23px;
-}
-.subscription-details-redesign .subscription-included-pill {
-  padding: 5px 9px;
-}
-.subscription-details-redesign .subscription-change-plan-bar {
-  align-items: center;
-}
-.subscription-details-redesign .subscription-change-message,
-.subscription-details-redesign .subscription-change-plan-button {
-  height: 52px;
-  min-height: 52px;
-}
-.subscription-details-redesign .subscription-change-message {
-  padding: 4px 12px;
-  gap: 12px;
-}
-.subscription-details-redesign .subscription-change-info {
-  width: 28px;
-  height: 28px;
-  flex-basis: 28px;
-}
-.subscription-details-redesign .subscription-change-message strong {
-  margin-bottom: 1px;
-  font-size: 12.5px;
-}
-.subscription-details-redesign .subscription-change-message p {
-  font-size: 11.5px;
-  line-height: 1.25;
-}
-.subscription-details-redesign .subscription-change-plan-button {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-@media (max-width: 1100px) {
-  .subscription-details-redesign .subscription-details-content-grid {
-    grid-template-columns: 1fr;
-  }
-  .subscription-details-redesign .subscription-entitlements-list {
-    max-height: 360px;
   }
 }
