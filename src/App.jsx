@@ -186,6 +186,8 @@ export default function App() {
         {/* Stores */}
         <Route path="/stores" element={<Stores />} />
         <Route path="/stores/new" element={<AddStore />} />
+        <Route path="/stores/:storeId" element={<StoreConfiguration />} />
+        <Route path="/merchants/:merchantId/stores/:storeId" element={<StoreConfiguration />} />
         <Route path="/stores/:storeId/edit" element={<AddStore />} />
         <Route
           path="/stores/:storeId/configuration"
@@ -283,3 +285,4 @@ export default function App() {
     </Routes>
   );
 }
+
