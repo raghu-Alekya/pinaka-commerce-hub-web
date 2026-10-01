@@ -753,8 +753,10 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
                         >
                           <i className="bi bi-eye" />
                         </button>
+
+
                         <button
-                          type="button" className="action-btn edit-btn"
+                          type="button" className="action-btn edit-btn text primary"
                           onClick={() => openEdit(m)}
                           title="Edit"
                         >

@@ -406,7 +406,7 @@ export default function Stores() {
 
                         <button
                           type="button"
-                          className="action-btn edit-btn"
+                          className="action-btn edit-btn text-primary"
                           aria-label={`Edit ${s.storeName}`}
                           title="Edit store"
                           onClick={() =>
