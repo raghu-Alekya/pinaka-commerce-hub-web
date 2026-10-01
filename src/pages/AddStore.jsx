@@ -1,3 +1,4 @@
+import { buildStoreSetupPayload } from "../api/storeDetails";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
@@ -477,7 +478,7 @@ const Detail = ({ label, children }) => (
   </div>
 );
 
-export default function AddStore() {
+export default function AddStore({ embeddedStep = null, readOnly = false, onEdit, onDone } = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { merchantId: routeMerchantId, storeId } = useParams();
@@ -527,7 +528,7 @@ export default function AddStore() {
   const [pinEditorId, setPinEditorId] = useState("");
   const [pinDraft, setPinDraft] = useState("");
   const [pinError, setPinError] = useState("");
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(embeddedStep ?? 0);
   const [loading, setLoading] = useState(true);
   const [mastersLoading, setMastersLoading] = useState(true);
   const [featuresLoading, setFeaturesLoading] = useState(false);
@@ -1315,6 +1316,9 @@ export default function AddStore() {
               employeeId: String(item.employeeId || item.id || ""),
               role: item.roleTemplateId || item.role || "",
               pin: "",
+              savedPin: [item.loginPin, item.employeeLoginPin, item.pin]
+                .map(value => String(value ?? ""))
+                .find(value => /^\d{6}$/.test(value)) || "",
               pinSet: Boolean(item.pinSet),
             }))
             .filter((item) => item.employeeId),
@@ -1636,7 +1640,8 @@ export default function AddStore() {
         : [...current, { employeeId, role: roles[0] || "", pin: "" }],
     );
     setPinEditorId(employeeId);
-    setPinDraft("");
+    const assignment = employeeAssignments.find(item => item.employeeId === employeeId);
+    setPinDraft(assignment?.pin || assignment?.savedPin || "");
     setPinError("");
   };
   const saveEmployeePin = (employeeId) => {
@@ -1968,11 +1973,6 @@ export default function AddStore() {
         )
           .trim()
           .slice(0, 50) || generatedStoreId;
-      const addressText = [store.addressLine1, store.addressLine2]
-        .map((part) => String(part || "").trim())
-        .filter(Boolean)
-        .join(", ")
-        .slice(0, 1000);
       const hours = normalizeHours(hoursRef.current).map((row) => ({
         day: row.day,
         status: row.status,
@@ -1983,42 +1983,21 @@ export default function AddStore() {
       const permissionState = Object.keys(permissionsRef.current).length
         ? permissionsRef.current
         : permissions;
-      const storePayload = {
+      const storePayload = buildStoreSetupPayload(store, {
         merchantId,
         storeId: storeCode,
-        name: store.name.trim(),
-        type: String(
-          selectedType?.storeTypeCode ||
-            selectedType?.code ||
-            store.type ||
-            typeName ||
-            "Retail",
-        ).slice(0, 50),
-        phone: store.phone.trim(),
-        email: store.email.trim(),
-        url: store.url.trim(),
+        type: String(selectedType?.storeTypeCode || selectedType?.code || store.type || typeName || "Retail").slice(0, 50),
         currency: currencyCode,
-        status: saveDraft
-          ? "PENDING"
-          : String(store.status || "Active").toUpperCase(),
-        address: addressText,
-        addressLine2: String(store.addressLine2 || "").trim(),
-        city: store.city.trim(),
-        state: store.state.trim(),
-        zip: store.zip.trim(),
-        country: store.country,
-        timezone: store.timezone,
-        defaultLanguage: store.defaultLanguage || "",
-        taxRegion: store.taxRegion || store.state || "",
+        status: saveDraft ? "PENDING" : String(store.status || "Active").toUpperCase(),
         hours,
         logo: await readDataUrl(store.logo),
         features: enabledFeatures,
-        rolePermissions: roles.map((roleId) => ({
+        rolePermissions: roles.map(roleId => ({
           roleTemplateId: roleId,
           name: roleName(roleId),
           permissions: permissionState[roleId] || {},
         })),
-      };
+      });
       const path = editing
         ? endpoints.store(encodeURIComponent(storeCode))
         : merchantId
@@ -2753,7 +2732,7 @@ export default function AddStore() {
         </Panel>
         <Panel
           title="Features"
-          subtitle="Available features are enabled by default for new stores. Disable any you do not need."
+          subtitle={readOnly ? "Features available to this store and their saved selection status." : "Select the features you want to enable for this store."}
         >
           <div className="sf-feature-tools">
             <div className="sf-tabs">
@@ -2820,7 +2799,7 @@ export default function AddStore() {
                           type="checkbox"
                           aria-label={`Enable ${feature.name} for this store`}
                           checked={checked}
-                          disabled={!hasPlan || mastersLoading}
+                          disabled={readOnly || !hasPlan || mastersLoading}
                           onChange={() => toggleFeature(feature.name)}
                         />
                       </td>
@@ -2858,7 +2837,7 @@ export default function AddStore() {
       <>
         <Panel
           title="Role Templates"
-          subtitle="Choose from merchant-selected role templates for this store."
+          subtitle={readOnly ? "Role templates assigned to this store." : "Choose from merchant-selected role templates for this store."}
         >
           {rolesError && (
             <p className="sf-empty" role="alert">
@@ -2881,7 +2860,7 @@ export default function AddStore() {
                 key={role.id}
               >
                 <input
-                  type="checkbox"
+                  type="checkbox" disabled={readOnly}
                   checked={roles.includes(role.id)}
                   onChange={() => toggleRole(role.id)}
                 />
@@ -2903,7 +2882,7 @@ export default function AddStore() {
         <div className="sf-permissions-layout">
           <Panel
             title="Roles for This Store"
-            subtitle="Configure permissions for each selected role."
+            subtitle={readOnly ? "Select a role to view its saved permissions." : "Configure permissions for each selected role."}
           >
             <div className="sf-role-list">
               {roles.map((roleId) => (
@@ -2939,7 +2918,7 @@ export default function AddStore() {
           </Panel>
           <Panel
             title={`Permissions for ${activeName}`}
-            subtitle="Set what this role can view, create, edit or delete."
+            subtitle={readOnly ? "Saved access for the selected role." : "Set what this role can view, create, edit or delete."}
             action={
               <div className="sf-copy-permissions">
                 <label>
@@ -2961,7 +2940,7 @@ export default function AddStore() {
                 <button
                   type="button"
                   className="sf-outline"
-                  disabled={!active || !copyFromRole}
+                  disabled={readOnly || !active || !copyFromRole}
                   onClick={() => {
                     setPermissions((current) => ({
                       ...current,
@@ -3009,7 +2988,7 @@ export default function AddStore() {
                           {STANDARD_ACTIONS.map((action) => (
                             <td key={action}>
                               <input
-                                type="checkbox"
+                                type="checkbox" disabled={readOnly}
                                 checked={Boolean(values[action])}
                                 onChange={() =>
                                   togglePermission(active, name, action)
@@ -3134,7 +3113,7 @@ export default function AddStore() {
                     <tr key={employeeId}>
                       <td>
                         <input
-                          type="checkbox"
+                          type="checkbox" disabled={readOnly}
                           checked={isAssigned}
                           onChange={(event) =>
                             setEmployeeSelected(employee, event.target.checked)
@@ -3154,7 +3133,7 @@ export default function AddStore() {
                       <td>
                         <select
                           value={assignment?.role || ""}
-                          disabled={!isAssigned}
+                          disabled={readOnly || !isAssigned}
                           onChange={(event) =>
                             setEmployeeRole(employeeId, event.target.value)
                           }
@@ -3172,9 +3151,9 @@ export default function AddStore() {
                           <div className="sf-pin-editor">
                             <input
                               autoFocus
-                              type="password"
+                              type="text"
                               inputMode="numeric"
-                              autoComplete="new-password"
+                              autoComplete="off"
                               maxLength={6}
                               aria-label={`Six-digit login PIN for ${employee.name}`}
                               placeholder="6-digit PIN"
@@ -3212,17 +3191,18 @@ export default function AddStore() {
                           </div>
                         ) : (
                           <div className="sf-pin-action">
-                            {(assignment?.pin || assignment?.pinSet) && (
-                              <span className="sf-pin-set">
-                                <i className="bi bi-lock-fill" /> PIN set
+                            {(assignment?.pin || assignment?.savedPin || assignment?.pinSet) && (
+                              <span className="sf-pin-set" title={!assignment.pin && !assignment.savedPin ? "The employee API did not return the saved PIN." : undefined}>
+                                {assignment.pin || assignment.savedPin || "PIN unavailable"}
                               </span>
                             )}
                             <button
                               type="button"
                               className="sf-link"
+                              disabled={readOnly}
                               onClick={() => openPinEditor(employee)}
                             >
-                              {assignment?.pin || assignment?.pinSet
+                              {assignment?.pin || assignment?.savedPin || assignment?.pinSet
                                 ? "Change PIN"
                                 : "Assign PIN"}
                             </button>
@@ -3237,7 +3217,7 @@ export default function AddStore() {
                               : "sf-status-available"
                           }
                         >
-                          {isAssigned ? "Will be assigned" : "Available"}
+                          {isAssigned ? "Assigned" : "Available"}
                         </span>
                       </td>
                     </tr>
@@ -3506,7 +3486,39 @@ export default function AddStore() {
     employeesScreen,
     reviewScreen,
   ];
+  async function saveSection(event) {
+    event.preventDefault();
+    if (readOnly || saveLock.current) return;
+    const problem = validateStep(step);
+    if (problem) { setError(problem); return; }
+    saveLock.current = true; setSaving(true); setError("");
+    try {
+      if (step === 4) {
+        await saveStoreEmployees(merchantId, storeId, employeeAssignments.map(item => ({employeeId:item.employeeId,...(item.role ? {roleTemplateId:item.role} : {}),...(item.pin ? {loginPin:item.pin} : {})})));
+      } else {
+        const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
+        const saved = response?.store || response?.data?.store || response?.data || response;
+        const code = store.storeCode || store.id || storeId;
+        const changes = step === 2 ? {features:enabledFeatures} : {rolePermissions:roles.map(roleId => ({roleTemplateId:roleId,name:roleName(roleId),permissions:permissionsRef.current[roleId] || {}}))};
+        const payload = buildStoreSetupPayload(saved, {merchantId, storeId:code, ...changes});
+        await api.put(endpoints.store(encodeURIComponent(code)), payload);
+        if (step === 3) await storeRoleTemplatesApi.save(merchantId,storeId,roles);
+      }
+      onDone?.();
+    } catch (err) { setError(err.message || "Unable to save changes."); }
+    finally { saveLock.current = false; setSaving(false); }
+  }
   if (loading) return <div className="sf-loading">Loading store setup…</div>;
+  if (embeddedStep !== null) {
+    const pending = saving || mastersLoading || merchantLoading || featuresLoading || subscriptionLoading || rolesLoading || storeTypeRolesLoading || permissionsLoading;
+    const failure = loadError || merchantError || rolesError;
+    return <div className={"sf-root store-section-editor" + (readOnly ? " store-section-readonly" : "")}>
+      <div className="store-panel-heading"><div><h2>{STEPS[step]}</h2><p>{readOnly ? "View saved store information." : STEP_HINTS[step]}</p></div>{readOnly && onEdit && <button type="button" className="store-config-btn" onClick={onEdit}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}</div>
+      {(error || failure) && <div className="alert alert-danger" role="alert">{error || failure}<button type="button" onClick={() => setReload(v => v + 1)}>Retry</button></div>}
+      {pending && <p role="status">Loading store selections…</p>}
+      <form onSubmit={saveSection}><fieldset disabled={pending || Boolean(failure) || (readOnly && step < 2)} style={{border:0,padding:0,minWidth:0}}>{screens[step]()} {!readOnly && <div className="sf-footer"><button type="button" className="sf-outline" onClick={onDone}>Cancel</button><button type="submit" className="sf-primary">{saving ? "Saving…" : "Save Changes"}</button></div>}</fieldset></form>
+    </div>;
+  }
 
   return (
     <div className="sf-root">
