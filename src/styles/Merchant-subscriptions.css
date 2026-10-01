@@ -125,7 +125,7 @@
 
 \======================================== */
 
-.subscriptions-heading-row {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscriptions-heading-row {
 
   display: flex;
   align-items: flex-start;
@@ -135,9 +135,8 @@
 
 }
 
-.subscriptions-heading-row p,
-
-.flow-subtitle {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscriptions-heading-row p,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .flow-subtitle {
 
   color: var(--muted);
   font-size: 13px;
@@ -146,11 +145,9 @@
 
 }
 
-.export-button,
-
-.primary-flow-button,
-
-.secondary-flow-button {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .export-button,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .primary-flow-button,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .secondary-flow-button {
 
   display: inline-flex;
   align-items: center;
@@ -167,22 +164,21 @@
 
 }
 
-.export-button {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .export-button {
 
   min-width: 120px;
   white-space: nowrap;
 
 }
 
-.export-button:hover,
-
-.secondary-flow-button:hover {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .export-button:hover,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .secondary-flow-button:hover {
 
   background: #f1f5fb;
 
 }
 
-.primary-flow-button {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .primary-flow-button {
 
   background: var(--primary);
   color: white;
@@ -190,13 +186,13 @@
 
 }
 
-.primary-flow-button:hover:not(:disabled) {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .primary-flow-button:hover:not(:disabled) {
 
   background: var(--primary-dark);
 
 }
 
-.secondary-flow-button {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .secondary-flow-button {
 
   background: white;
 
@@ -214,7 +210,7 @@
 
 \======================================== */
 
-.subscription-overview {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-overview {
 
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(330px, 1fr);
@@ -226,7 +222,7 @@
 
 }
 
-.overview-cards {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-cards {
 
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -236,7 +232,7 @@
 
 }
 
-.overview-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card {
 
   display: flex;
   align-items: flex-start;
@@ -250,7 +246,7 @@
 
 }
 
-.overview-icon {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-icon {
 
   flex: 0 0 40px;
   width: 40px;
@@ -262,35 +258,35 @@
 
 }
 
-.overview-icon.purple {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-icon.purple {
 
   color: #6938ef;
   background: #efe7ff;
 
 }
 
-.overview-icon.green {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-icon.green {
 
   color: #00ad78;
   background: #dff8ed;
 
 }
 
-.overview-icon.red {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-icon.red {
 
   color: #ef4444;
   background: #ffe5e5;
 
 }
 
-.overview-icon.orange {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-icon.orange {
 
   color: #f59e0b;
   background: #fff0d6;
 
 }
 
-.overview-card p {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card p {
 
   color: #173c73;
   font-size: 14px;
@@ -300,7 +296,7 @@
 
 }
 
-.overview-card strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card strong {
 
   display: block;
   color: var(--text);
@@ -310,7 +306,7 @@
 
 }
 
-.overview-card small {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card small {
 
   display: block;
   font-size: 12px;
@@ -319,19 +315,19 @@
 
 }
 
-.positive {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .positive {
 
   color: var(--green);
 
 }
 
-.negative {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .negative {
 
   color: var(--red);
 
 }
 
-.warning {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .warning {
 
   color: var(--orange);
 
@@ -343,7 +339,7 @@
 
 \======================================== */
 
-.distribution-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .distribution-card {
 
   min-width: 0;
   border-left: 1px solid var(--border);
@@ -351,14 +347,14 @@
 
 }
 
-.distribution-card h2 {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .distribution-card h2 {
 
   margin-bottom: 6px;
   font-size: 18px;
 
 }
 
-.distribution-card > p {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .distribution-card > p {
 
   color: var(--muted);
   font-size: 13px;
@@ -366,7 +362,7 @@
 
 }
 
-.distribution-content {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .distribution-content {
 
   display: grid;
   grid-template-columns: 112px minmax(0, 1fr);
@@ -375,7 +371,7 @@
 
 }
 
-.donut {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut {
 
   width: 112px;
   height: 112px;
@@ -398,7 +394,7 @@
 
 }
 
-.donut::before {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut::before {
 
   content: "";
   position: absolute;
@@ -409,7 +405,7 @@
 
 }
 
-.donut > div {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut > div {
 
   position: relative;
   z-index: 1;
@@ -420,27 +416,27 @@
 
 }
 
-.donut strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut strong {
 
   font-size: 23px;
   line-height: 1;
 
 }
 
-.donut span {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut span {
 
   color: var(--muted);
   font-size: 12px;
 
 }
 
-.plan-legend {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-legend {
 
   min-width: 0;
 
 }
 
-.legend-row {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-row {
 
   display: grid;
   grid-template-columns: 12px minmax(0, 1fr) 25px 55px;
@@ -453,13 +449,13 @@
 
 }
 
-.legend-row:last-child {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-row:last-child {
 
   border-bottom: none;
 
 }
 
-.legend-name {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-name {
 
   color: var(--text);
   font-weight: 600;
@@ -470,7 +466,7 @@
 
 }
 
-.legend-dot {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-dot {
 
   width: 12px;
   height: 12px;
@@ -479,31 +475,31 @@
 
 }
 
-.legend-dot.purple {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-dot.purple {
 
   background: #6938ef;
 
 }
 
-.legend-dot.blue {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-dot.blue {
 
   background: #1199e5;
 
 }
 
-.legend-dot.orange {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-dot.orange {
 
   background: #ff9f16;
 
 }
 
-.legend-row > b {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-row > b {
 
   text-align: right;
 
 }
 
-.legend-row > span:last-child {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-row > span:last-child {
 
   color: var(--muted);
   text-align: right;
@@ -520,7 +516,7 @@
 
 \======================================== */
 
-.subscription-filter-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-filter-card {
 
   display: grid;
   grid-template-columns:
@@ -543,7 +539,7 @@
 
 }
 
-.search-field {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .search-field {
 
   display: flex;
   align-items: center;
@@ -557,7 +553,7 @@
 
 }
 
-.search-field input {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .search-field input {
 
   width: 100%;
   min-width: 0;
@@ -568,20 +564,20 @@
 
 }
 
-.search-field input::placeholder {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .search-field input::placeholder {
 
   color: #8297b8;
 
 }
 
-.select-field {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-field {
 
   position: relative;
   min-width: 0;
 
 }
 
-.select-field select {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-field select {
 
   width: 100%;
   height: 44px;
@@ -595,7 +591,7 @@
 
 }
 
-.select-field svg {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-field svg {
 
   position: absolute;
   right: 12px;
@@ -604,7 +600,7 @@
 
 }
 
-.date-field {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .date-field {
 
   display: flex;
   flex-direction: column;
@@ -613,7 +609,7 @@
 
 }
 
-.date-field span {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .date-field span {
 
   color: var(--muted);
   font-size: 12px;
@@ -621,7 +617,7 @@
 
 }
 
-.date-field input {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .date-field input {
 
   width: 100%;
   min-width: 0;
@@ -641,7 +637,7 @@
 
 \======================================== */
 
-.subscription-table-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card {
 
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -650,14 +646,14 @@
 
 }
 
-.table-scroll {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .table-scroll {
 
   width: 100%;
   overflow-x: auto;
 
 }
 
-.subscription-table-card table {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card table {
 
   width: 100%;
   min-width: 980px;
@@ -666,7 +662,7 @@
 
 }
 
-.subscription-table-card th {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card th {
 
   color: #173c73;
   background: #f8faff;
@@ -678,7 +674,7 @@
 
 }
 
-.subscription-table-card td {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card td {
 
   color: #234d88;
   padding: 12px;
@@ -687,19 +683,19 @@
 
 }
 
-.subscription-table-card tbody tr:last-child td {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card tbody tr:last-child td {
 
   border-bottom: none;
 
 }
 
-.subscription-table-card tbody tr:hover {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card tbody tr:hover {
 
   background: #f8fbff;
 
 }
 
-.merchant-cell {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-cell {
 
   display: flex;
   align-items: center;
@@ -707,7 +703,7 @@
 
 }
 
-.merchant-icon {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-icon {
 
   width: 38px;
   height: 38px;
@@ -721,7 +717,7 @@
 
 }
 
-.merchant-cell strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-cell strong {
 
   display: block;
   color: var(--text);
@@ -730,7 +726,7 @@
 
 }
 
-.merchant-cell small {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-cell small {
 
   display: block;
   color: #8199bd;
@@ -744,7 +740,7 @@
 
 \======================================== */
 
-.status-badge {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .status-badge {
 
   display: inline-flex;
   align-items: center;
@@ -756,7 +752,7 @@
 
 }
 
-.status-badge i {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .status-badge i {
 
   width: 7px;
   height: 7px;
@@ -765,21 +761,21 @@
 
 }
 
-.status-badge.active {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .status-badge.active {
 
   color: #00a875;
   background: #ddf7eb;
 
 }
 
-.status-badge.inactive {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .status-badge.inactive {
 
   color: #ef4444;
   background: #ffe3e3;
 
 }
 
-.status-badge.expiring-soon {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .status-badge.expiring-soon {
 
   color: #e99500;
   background: #fff0d3;
@@ -792,7 +788,7 @@
 
 \======================================== */
 
-.row-actions {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .row-actions {
 
   display: flex;
   align-items: center;
@@ -800,7 +796,7 @@
 
 }
 
-.view-action-button {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .view-action-button {
 
   display: inline-flex;
   align-items: center;
@@ -817,14 +813,14 @@
 
 }
 
-.view-action-button:hover {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .view-action-button:hover {
 
   color: var(--primary);
   background: #eaf2ff;
 
 }
 
-.empty-row {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .empty-row {
 
   text-align: center;
   padding: 40px  !important;
@@ -838,7 +834,7 @@
 
 \======================================== */
 
-.table-footer {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .table-footer {
 
   display: flex;
   align-items: center;
@@ -851,7 +847,7 @@
 
 }
 
-.pagination {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .pagination {
 
   display: flex;
   gap: 5px;
@@ -859,7 +855,7 @@
 
 }
 
-.pagination button {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .pagination button {
 
   min-width: 32px;
   height: 32px;
@@ -872,20 +868,20 @@
 
 }
 
-.pagination button:hover {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .pagination button:hover {
 
   background: #eaf2ff;
 
 }
 
-.pagination button.active {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .pagination button.active {
 
   background: var(--primary);
   color: white;
 
 }
 
-.pagination button:disabled {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .pagination button:disabled {
 
   color: #a3b5ce;
   background: #f4f7fc;
@@ -919,7 +915,7 @@
 
 }
 
-.page-back {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .page-back {
 
   display: inline-flex;
   align-items: center;
@@ -934,13 +930,13 @@
 
 }
 
-.page-back:hover {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .page-back:hover {
 
   color: var(--primary);
 
 }
 
-.merchant-summary-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-summary-card {
 
   display: flex;
   align-items: center;
@@ -953,7 +949,7 @@
 
 }
 
-.merchant-summary-icon {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-summary-icon {
 
   width: 64px;
   height: 64px;
@@ -967,30 +963,28 @@
 
 }
 
-.merchant-summary-card h3 {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-summary-card h3 {
 
   font-size: 19px;
   margin-bottom: 5px;
 
 }
 
-.merchant-summary-card > div:nth-child(2) span {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-summary-card > div:nth-child(2) span {
 
   color: #6b8bbd;
 
 }
 
-.merchant-summary-card .status-badge {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-summary-card .status-badge {
 
   margin-left: auto;
 
 }
 
-.flow-card,
-
-.payment-summary,
-
-.payment-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .flow-card,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-summary,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-card {
 
   background: white;
   border: 1px solid var(--border);
@@ -1000,25 +994,23 @@
 
 }
 
-.flow-card h3,
-
-.payment-summary h3,
-
-.payment-card h3 {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .flow-card h3,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-summary h3,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-card h3 {
 
   font-size: 18px;
   margin-bottom: 18px;
 
 }
 
-.details-grid {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .details-grid {
 
   display: flex;
   flex-direction: column;
 
 }
 
-.detail-row {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .detail-row {
 
   display: grid;
   grid-template-columns: 175px minmax(0, 1fr);
@@ -1030,26 +1022,26 @@
 
 }
 
-.detail-row:last-child {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .detail-row:last-child {
 
   border-bottom: none;
 
 }
 
-.detail-row > span:first-child {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .detail-row > span:first-child {
 
   color: #6685b5;
 
 }
 
-.detail-row strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .detail-row strong {
 
   color: #234d88;
   font-weight: 600;
 
 }
 
-.feature-list {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .feature-list {
 
   list-style: none;
   padding: 0;
@@ -1057,7 +1049,7 @@
 
 }
 
-.feature-list li {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .feature-list li {
 
   display: flex;
   align-items: center;
@@ -1068,16 +1060,15 @@
 
 }
 
-.feature-list li svg {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .feature-list li svg {
 
   color: var(--green);
   flex-shrink: 0;
 
 }
 
-.flow-bottom-actions,
-
-.payment-actions {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .flow-bottom-actions,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-actions {
 
   display: flex;
   align-items: center;
@@ -1093,7 +1084,7 @@
 
 \======================================== */
 
-.plans-grid {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plans-grid {
 
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1102,7 +1093,7 @@
 
 }
 
-.plan-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card {
 
   position: relative;
   display: flex;
@@ -1117,7 +1108,7 @@
 
 }
 
-.plan-card.selected {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card.selected {
 
   border: 2px solid var(--primary);
   padding: 23px;
@@ -1125,7 +1116,7 @@
 
 }
 
-.plan-card-header {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card-header {
 
   display: flex;
   justify-content: space-between;
@@ -1135,14 +1126,14 @@
 
 }
 
-.plan-card-header h3 {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card-header h3 {
 
   font-size: 19px;
   margin-bottom: 8px;
 
 }
 
-.plan-card-header p {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card-header p {
 
   color: #6685b5;
   font-size: 13px;
@@ -1151,9 +1142,8 @@
 
 }
 
-.current-plan-badge,
-
-.popular-badge {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .current-plan-badge,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .popular-badge {
 
   position: absolute;
   top: 10px;
@@ -1168,7 +1158,7 @@
 
 }
 
-.popular-badge {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .popular-badge {
 
   left: 50%;
   right: auto;
@@ -1177,7 +1167,7 @@
 
 }
 
-.plan-radio {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-radio {
 
   display: flex;
   align-items: center;
@@ -1191,7 +1181,7 @@
 
 }
 
-.plan-card.selected .plan-radio {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card.selected .plan-radio {
 
   background: var(--primary);
   color: white;
@@ -1199,7 +1189,7 @@
 
 }
 
-.plan-price {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-price {
 
   color: var(--text);
   font-size: 25px;
@@ -1208,7 +1198,7 @@
 
 }
 
-.plan-price span {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-price span {
 
   color: #6685b5;
   font-size: 12px;
@@ -1216,7 +1206,7 @@
 
 }
 
-.plan-yearly {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-yearly {
 
   color: #6685b5;
   font-size: 12px;
@@ -1224,7 +1214,7 @@
 
 }
 
-.plan-yearly span {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-yearly span {
 
   color: #00a875;
   background: #ddf7eb;
@@ -1236,7 +1226,7 @@
 
 }
 
-.plan-divider {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-divider {
 
   height: 1px;
   background: var(--border);
@@ -1244,7 +1234,7 @@
 
 }
 
-.plan-card > p {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card > p {
 
   color: #6685b5;
   font-size: 14px;
@@ -1252,20 +1242,20 @@
 
 }
 
-.plan-card > p strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card > p strong {
 
   color: var(--text);
 
 }
 
-.plan-card .feature-list {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card .feature-list {
 
   margin: 12px 0 20px;
   flex: 1;
 
 }
 
-.plan-card .feature-list li {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card .feature-list li {
 
   font-size: 13px;
   line-height: 1.4;
@@ -1273,7 +1263,7 @@
 
 }
 
-.select-plan-btn {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-plan-btn {
 
   width: 100%;
   border: 1px solid var(--border);
@@ -1286,14 +1276,14 @@
 
 }
 
-.select-plan-btn:hover {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-plan-btn:hover {
 
   border-color: var(--primary);
   background: #f3f7ff;
 
 }
 
-.select-plan-btn.chosen {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-plan-btn.chosen {
 
   background: #e8f0ff;
   color: var(--primary);
@@ -1307,11 +1297,9 @@
 
 \======================================== */
 
-.info-banner,
-
-.warning-banner,
-
-.success-banner {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .info-banner,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .warning-banner,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-banner {
 
   display: flex;
   align-items: flex-start;
@@ -1324,14 +1312,14 @@
 
 }
 
-.info-banner {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .info-banner {
 
   background: #e9f4ff;
   color: #234d88;
 
 }
 
-.warning-banner {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .warning-banner {
 
   background: #fff3da;
   color: #986400;
@@ -1339,16 +1327,15 @@
 
 }
 
-.success-banner {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-banner {
 
   background: #e5f8ef;
   color: #07845e;
 
 }
 
-.info-banner p,
-
-.warning-banner p {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .info-banner p,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .warning-banner p {
 
   margin: 5px 0 0;
 
@@ -1360,7 +1347,7 @@
 
 \======================================== */
 
-.change-summary {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .change-summary {
 
   display: grid;
   grid-template-columns: 1fr 60px 1fr;
@@ -1370,7 +1357,7 @@
 
 }
 
-.change-plan {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .change-plan {
 
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1379,21 +1366,21 @@
 
 }
 
-.change-plan > span {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .change-plan > span {
 
   color: #6685b5;
   font-size: 13px;
 
 }
 
-.change-plan h3 {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .change-plan h3 {
 
   margin: 10px 0 12px;
   font-size: 18px;
 
 }
 
-.change-plan strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .change-plan strong {
 
   color: var(--text);
   display: block;
@@ -1402,7 +1389,7 @@
 
 }
 
-.change-plan p {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .change-plan p {
 
   color: #31598f;
   font-size: 13px;
@@ -1410,7 +1397,7 @@
 
 }
 
-.change-arrow {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .change-arrow {
 
   display: flex;
   justify-content: center;
@@ -1418,21 +1405,21 @@
 
 }
 
-.change-title {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .change-title {
 
   margin-top: 24px;
   margin-bottom: 14px;
 
 }
 
-.comparison-table-wrapper {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .comparison-table-wrapper {
 
   width: 100%;
   overflow-x: auto;
 
 }
 
-.comparison-table {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .comparison-table {
 
   width: 100%;
   border-collapse: collapse;
@@ -1440,7 +1427,7 @@
 
 }
 
-.comparison-table th {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .comparison-table th {
 
   background: #f8faff;
   color: #173c73;
@@ -1451,7 +1438,7 @@
 
 }
 
-.comparison-table td {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .comparison-table td {
 
   padding: 12px;
   border: 1px solid var(--border);
@@ -1459,7 +1446,7 @@
 
 }
 
-.comparison-table td:first-child {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .comparison-table td:first-child {
 
   font-weight: 600;
   color: var(--text);
@@ -1472,23 +1459,21 @@
 
 \======================================== */
 
-.payment-summary {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-summary {
 
   max-width: 900px;
 
 }
 
-.payment-summary .detail-row {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-summary .detail-row {
 
   grid-template-columns: 190px minmax(0, 1fr);
 
 }
 
-.payment-summary select,
-
-.payment-card input,
-
-.payment-card select {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-summary select,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-card input,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-card select {
 
   width: 100%;
   min-width: 0;
@@ -1502,13 +1487,13 @@
 
 }
 
-.payment-summary select {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-summary select {
 
   max-width: 220px;
 
 }
 
-.payment-total {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-total {
 
   display: flex;
   align-items: center;
@@ -1520,21 +1505,21 @@
 
 }
 
-.payment-total span {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-total span {
 
   color: var(--text);
   font-weight: 700;
 
 }
 
-.payment-total strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-total strong {
 
   color: var(--text);
   font-size: 25px;
 
 }
 
-.payment-note {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-note {
 
   display: block;
   color: var(--muted);
@@ -1543,13 +1528,13 @@
 
 }
 
-.payment-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-card {
 
   max-width: 900px;
 
 }
 
-.payment-tabs {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-tabs {
 
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1558,7 +1543,7 @@
 
 }
 
-.payment-tabs button {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-tabs button {
 
   display: flex;
   align-items: center;
@@ -1573,7 +1558,7 @@
 
 }
 
-.payment-tabs button.active {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-tabs button.active {
 
   color: var(--primary);
   background: #eaf2ff;
@@ -1581,7 +1566,7 @@
 
 }
 
-.payment-form {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-form {
 
   display: flex;
   flex-direction: column;
@@ -1589,7 +1574,7 @@
 
 }
 
-.payment-form label {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-form label {
 
   display: flex;
   flex-direction: column;
@@ -1599,7 +1584,7 @@
 
 }
 
-.form-grid {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .form-grid {
 
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1607,7 +1592,7 @@
 
 }
 
-.save-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .save-card {
 
   display: flex  !important;
   flex-direction: row  !important;
@@ -1618,14 +1603,14 @@
 
 }
 
-.save-card input {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .save-card input {
 
   width: 15px;
   height: 15px;
 
 }
 
-.payment-error {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-error {
 
   background: #ffe5e5;
   color: #d92d20;
@@ -1642,14 +1627,14 @@
 
 \======================================== */
 
-.success-page {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-page {
 
   max-width: 760px;
   text-align: center;
 
 }
 
-.success-icon {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-icon {
 
   width: 88px;
   height: 88px;
@@ -1663,19 +1648,19 @@
 
 }
 
-.success-page .flow-subtitle {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-page .flow-subtitle {
 
   margin-bottom: 25px;
 
 }
 
-.success-details {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-details {
 
   text-align: left;
 
 }
 
-.success-text {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-text {
 
   display: inline-flex;
   align-items: center;
@@ -1684,7 +1669,7 @@
 
 }
 
-.success-text i {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-text i {
 
   width: 7px;
   height: 7px;
@@ -1693,13 +1678,13 @@
 
 }
 
-.success-page .success-banner {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-page .success-banner {
 
   text-align: left;
 
 }
 
-.success-page > .primary-flow-button {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-page > .primary-flow-button {
 
   margin-top: 10px;
 
@@ -1713,27 +1698,27 @@
 
 @media (max-width: 1200px) {
 
-  .subscription-overview {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-overview {
 
     grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr);
 
   }
 
-  .overview-cards {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-cards {
 
     gap: 12px;
     padding: 14px;
 
   }
 
-  .overview-card {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card {
 
     padding: 14px;
     gap: 10px;
 
   }
 
-  .overview-icon {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-icon {
 
     flex-basis: 48px;
     width: 48px;
@@ -1741,40 +1726,40 @@
 
   }
 
-  .overview-card strong {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card strong {
 
     font-size: 27px;
 
   }
 
-  .distribution-content {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .distribution-content {
 
     grid-template-columns: 145px minmax(0, 1fr);
     gap: 12px;
 
   }
 
-  .donut {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut {
 
     width: 145px;
     height: 145px;
 
   }
 
-  .donut::before {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut::before {
 
     width: 88px;
     height: 88px;
 
   }
 
-  .subscription-filter-card {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-filter-card {
 
     grid-template-columns: repeat(3, minmax(0, 1fr));
 
   }
 
-  .search-field {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .search-field {
 
     grid-column: span 1;
 
@@ -1792,19 +1777,19 @@
 
   }
 
-  .subscriptions-heading-row {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscriptions-heading-row {
 
     flex-direction: column;
 
   }
 
-  .subscription-overview {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-overview {
 
     grid-template-columns: 1fr;
 
   }
 
-  .distribution-card {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .distribution-card {
 
     border-left: none;
 
@@ -1812,13 +1797,13 @@
 
   }
 
-  .distribution-content {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .distribution-content {
 
     grid-template-columns: 180px minmax(0, 1fr);
 
   }
 
-  .donut {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut {
 
     width: 180px;
 
@@ -1826,7 +1811,7 @@
 
   }
 
-  .donut::before {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut::before {
 
     width: 108px;
 
@@ -1834,19 +1819,19 @@
 
   }
 
-  .plans-grid {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plans-grid {
 
     grid-template-columns: 1fr;
 
   }
 
-  .change-summary {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .change-summary {
 
     grid-template-columns: 1fr;
 
   }
 
-  .change-arrow {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .change-arrow {
 
     transform: rotate(90deg);
 
@@ -1864,15 +1849,14 @@
 
   }
 
-  .subscriptions-heading-row p,
-
-  .flow-subtitle {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscriptions-heading-row p,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .flow-subtitle {
 
     font-size: 14px;
 
   }
 
-  .overview-cards {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-cards {
 
     gap: 10px;
 
@@ -1880,7 +1864,7 @@
 
   }
 
-  .overview-card {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card {
 
     min-height: 125px;
 
@@ -1890,7 +1874,7 @@
 
   }
 
-  .overview-icon {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-icon {
 
     flex-basis: 40px;
     width: 40px;
@@ -1898,57 +1882,57 @@
 
   }
 
-  .overview-card p {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card p {
 
     font-size: 12px;
 
   }
 
-  .overview-card strong {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card strong {
 
     font-size: 24px;
     margin-bottom: 6px;
 
   }
 
-  .overview-card small {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card small {
 
     font-size: 11px;
 
   }
 
-  .distribution-content {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .distribution-content {
 
     grid-template-columns: 1fr;
     justify-items: center;
 
   }
 
-  .plan-legend {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-legend {
 
     width: 100%;
 
   }
 
-  .subscription-filter-card {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-filter-card {
 
     grid-template-columns: 1fr 1fr;
 
   }
 
-  .search-field {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .search-field {
 
     grid-column: span 2;
 
   }
 
-  .date-field {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .date-field {
 
     grid-column: span 1;
 
   }
 
-  .table-footer {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .table-footer {
 
     flex-direction: column;
 
@@ -1956,21 +1940,20 @@
 
   }
 
-  .merchant-summary-card {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-summary-card {
 
     flex-wrap: wrap;
 
   }
 
-  .merchant-summary-card .status-badge {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .merchant-summary-card .status-badge {
 
     margin-left: 0;
 
   }
 
-  .detail-row,
-
-  .payment-summary .detail-row {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .detail-row,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-summary .detail-row {
 
     grid-template-columns: 1fr;
 
@@ -1978,13 +1961,13 @@
 
   }
 
-  .payment-summary select {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-summary select {
 
     max-width: 100%;
 
   }
 
-  .payment-total {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-total {
 
     align-items: flex-start;
 
@@ -1992,29 +1975,27 @@
 
   }
 
-  .payment-tabs {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-tabs {
 
     grid-template-columns: 1fr;
 
   }
 
-  .form-grid {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .form-grid {
 
     grid-template-columns: 1fr;
 
   }
 
-  .flow-bottom-actions,
-
-  .payment-actions {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .flow-bottom-actions,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-actions {
 
     flex-wrap: wrap;
 
   }
 
-  .flow-bottom-actions button,
-
-  .payment-actions button {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .flow-bottom-actions button,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .payment-actions button {
 
     flex: 1;
 
@@ -2102,7 +2083,7 @@
 
 }
 
-.select-plan-btn:disabled {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-plan-btn:disabled {
 
   background: #e8f0ff;
   color: #2563eb;
@@ -2112,15 +2093,11 @@
 
 }
 
-.plan-radio,
-
-.plan-selection-indicator,
-
-.selection-indicator,
-
-.plan-card .radio,
-
-.plan-card .radio-indicator {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-radio,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-selection-indicator,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .selection-indicator,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card .radio,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .plan-card .radio-indicator {
 
   display: none  !important;
 
@@ -2306,20 +2283,20 @@
 
 /* Keep overview cards compact and prevent text from escaping. */
 
-.subscription-overview {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-overview {
 
   grid-template-columns: minmax(0, 1.18fr) minmax(360px, 1fr);
 
 }
 
-.overview-cards {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-cards {
 
   gap: 8px;
   padding: 10px;
 
 }
 
-.overview-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card {
 
   min-height: 96px;
   height: 96px;
@@ -2329,7 +2306,7 @@
 
 }
 
-.overview-icon {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-icon {
 
   flex-basis: 36px;
   width: 36px;
@@ -2337,14 +2314,14 @@
 
 }
 
-.overview-icon svg {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-icon svg {
 
   width: 21px;
   height: 21px;
 
 }
 
-.overview-card p {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card p {
 
   font-size: 13px;
   line-height: 1.35;
@@ -2352,7 +2329,7 @@
 
 }
 
-.overview-card strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card strong {
 
   font-size: 25px;
   line-height: 1.1;
@@ -2360,7 +2337,7 @@
 
 }
 
-.overview-card small {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card small {
 
   font-size: 11px;
   line-height: 1.25;
@@ -2369,7 +2346,7 @@
 
 /* Elegant, muted chart palette. */
 
-.donut {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut {
 
   background: conic-gradient(
 
@@ -2383,19 +2360,19 @@
 
 }
 
-.legend-dot.purple {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-dot.purple {
 
   background: #6f78c9;
 
 }
 
-.legend-dot.blue {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-dot.blue {
 
   background: #4fa7a0;
 
 }
 
-.legend-dot.orange {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .legend-dot.orange {
 
   background: #d6a45d;
 
@@ -2403,7 +2380,7 @@
 
 /* The merchant data stays contained inside its rounded card. */
 
-.subscription-table-card {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card {
 
   width: 100%;
   max-width: 100%;
@@ -2411,7 +2388,7 @@
 
 }
 
-.table-scroll {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .table-scroll {
 
   width: 100%;
   max-width: 100%;
@@ -2420,7 +2397,7 @@
 
 }
 
-.subscription-table-card table {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card table {
 
   min-width: 920px;
 
@@ -2428,13 +2405,13 @@
 
 @media (max-width: 1100px) {
 
-  .subscription-overview {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-overview {
 
     grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr);
 
   }
 
-  .distribution-content {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .distribution-content {
 
     grid-template-columns: 100px minmax(0, 1fr);
 
@@ -2442,14 +2419,14 @@
 
   }
 
-  .donut {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut {
 
     width: 100px;
     height: 100px;
 
   }
 
-  .donut::before {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .donut::before {
 
     width: 62px;
     height: 62px;
@@ -2460,20 +2437,20 @@
 
 @media (max-width: 900px) {
 
-  .subscription-overview {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-overview {
 
     grid-template-columns: 1fr;
 
   }
 
-  .distribution-card {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .distribution-card {
 
     border-left: 0;
     border-top: 1px solid var(--border);
 
   }
 
-  .overview-card {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card {
 
     height: auto;
     min-height: 92px;
@@ -2484,20 +2461,20 @@
 
 @media (max-width: 600px) {
 
-  .overview-card {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card {
 
     min-height: 88px;
     padding: 9px;
 
   }
 
-  .overview-card p {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card p {
 
     font-size: 12px;
 
   }
 
-  .overview-card strong {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .overview-card strong {
 
     font-size: 23px;
 
@@ -2551,13 +2528,13 @@
 
 }
 
-.subscription-details-heading {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-details-heading {
 
   padding: 0 2px;
 
 }
 
-.subscription-details-heading h1 {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-details-heading h1 {
 
   margin: 0 0 6px;
   color: #081b3a;
@@ -2578,7 +2555,7 @@
 
 /* Merchant summary */
 
-.subscription-details-summary {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-details-summary {
 
   display: grid;
   grid-template-columns: minmax(340px, 1.55fr) minmax(165px, .68fr) minmax(165px, .68fr) minmax(245px, 1fr);
@@ -2592,7 +2569,7 @@
 
 }
 
-.subscription-merchant-profile {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-merchant-profile {
 
   display: flex;
   align-items: center;
@@ -2602,7 +2579,7 @@
 
 }
 
-.subscription-merchant-logo {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-merchant-logo {
 
   display: flex;
   align-items: center;
@@ -2616,13 +2593,13 @@
 
 }
 
-.subscription-merchant-copy {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-merchant-copy {
 
   min-width: 0;
 
 }
 
-.subscription-merchant-copy h2 {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-merchant-copy h2 {
 
   margin: 0 0 6px;
   overflow: hidden;
@@ -2635,7 +2612,7 @@
 
 }
 
-.subscription-reference-line {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-reference-line {
 
   margin-bottom: 12px;
   color: #8294b5;
@@ -2644,7 +2621,7 @@
 
 }
 
-.subscription-profile-badges {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-profile-badges {
 
   display: flex;
   align-items: center;
@@ -2661,7 +2638,7 @@
 
 }
 
-.subscription-plan-pill {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-plan-pill {
 
   display: inline-flex;
   align-items: center;
@@ -2677,7 +2654,7 @@
 
 }
 
-.subscription-plan-pill.inline {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-plan-pill.inline {
 
   min-height: 28px;
   margin: 0;
@@ -2686,7 +2663,7 @@
 
 }
 
-.subscription-summary-metric {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric {
 
   display: flex;
   align-items: center;
@@ -2698,13 +2675,13 @@
 
 }
 
-.subscription-summary-metric > div:last-child {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric > div:last-child {
 
   min-width: 0;
 
 }
 
-.subscription-summary-metric span {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric span {
 
   display: block;
   margin-bottom: 6px;
@@ -2714,7 +2691,7 @@
 
 }
 
-.subscription-summary-metric strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric strong {
 
   display: block;
   margin-bottom: 5px;
@@ -2725,14 +2702,14 @@
 
 }
 
-.subscription-summary-metric small {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric small {
 
   color: #516a96;
   font-size: 12px;
 
 }
 
-.subscription-summary-metric .validity-dates {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric .validity-dates {
 
   font-size: 15px;
   line-height: 1.55;
@@ -2740,7 +2717,7 @@
 
 }
 
-.subscription-metric-icon {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-metric-icon {
 
   display: flex;
   align-items: center;
@@ -2752,15 +2729,15 @@
 
 }
 
-.subscription-metric-icon.purple { background: #f0ecff; color: #6b42f5; }
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-metric-icon.purple { background: #f0ecff; color: #6b42f5; }
 
-.subscription-metric-icon.blue { background: #e8f4ff; color: #086ff5; }
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-metric-icon.blue { background: #e8f4ff; color: #086ff5; }
 
-.subscription-metric-icon.orange { background: #fff1e5; color: #ff8b16; }
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-metric-icon.orange { background: #fff1e5; color: #ff8b16; }
 
 /* Main two-column details area */
 
-.subscription-details-content-grid {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-details-content-grid {
 
   display: grid;
   grid-template-columns: minmax(0, 1.18fr) minmax(390px, .92fr);
@@ -2770,7 +2747,7 @@
 
 }
 
-.subscription-details-panel {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-details-panel {
 
   min-width: 0;
   padding: 16px 18px;
@@ -2781,7 +2758,7 @@
 
 }
 
-.subscription-panel-heading {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-panel-heading {
 
   display: flex;
   align-items: center;
@@ -2791,7 +2768,7 @@
 
 }
 
-.subscription-panel-icon {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-panel-icon {
 
   display: flex;
   align-items: center;
@@ -2803,11 +2780,11 @@
 
 }
 
-.subscription-panel-icon.blue { background: #eaf4ff; color: #0879f9; }
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-panel-icon.blue { background: #eaf4ff; color: #0879f9; }
 
-.subscription-panel-icon.green { background: #eaf8f2; color: #08a872; }
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-panel-icon.green { background: #eaf8f2; color: #08a872; }
 
-.subscription-panel-heading h3 {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-panel-heading h3 {
 
   margin: 0 0 4px;
   color: #081b3a;
@@ -2817,7 +2794,7 @@
 
 }
 
-.subscription-panel-heading p {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-panel-heading p {
 
   margin: 0;
   color: #526b98;
@@ -2826,13 +2803,13 @@
 
 }
 
-.subscription-information-list {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-information-list {
 
   border-top: 1px solid #e5ebf4;
 
 }
 
-.subscription-information-row {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-information-row {
 
   display: grid;
   grid-template-columns: minmax(175px, .78fr) minmax(0, 1.5fr);
@@ -2844,7 +2821,7 @@
 
 }
 
-.subscription-information-row > span {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-information-row > span {
 
   color: #536d9a;
   font-size: 13px;
@@ -2852,7 +2829,7 @@
 
 }
 
-.subscription-information-row > strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-information-row > strong {
 
   min-width: 0;
   overflow-wrap: anywhere;
@@ -2864,7 +2841,7 @@
 
 /* Features: comfortable, readable, but not oversized */
 
-.subscription-entitlements-list {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-entitlements-list {
 
   display: flex;
   flex-direction: column;
@@ -2873,7 +2850,7 @@
 
 }
 
-.subscription-entitlement-item {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-entitlement-item {
 
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr) auto;
@@ -2887,7 +2864,7 @@
 
 }
 
-.subscription-feature-check {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-feature-check {
 
   display: flex;
   align-items: center;
@@ -2900,13 +2877,13 @@
 
 }
 
-.subscription-feature-copy {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-feature-copy {
 
   min-width: 0;
 
 }
 
-.subscription-feature-copy strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-feature-copy strong {
 
   display: block;
   overflow-wrap: anywhere;
@@ -2917,7 +2894,7 @@
 
 }
 
-.subscription-included-pill {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-included-pill {
 
   padding: 6px 10px;
   border-radius: 6px;
@@ -2929,7 +2906,7 @@
 
 }
 
-.subscription-empty-entitlements {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-empty-entitlements {
 
   padding: 24px 16px;
   border-radius: 8px;
@@ -2942,7 +2919,7 @@
 
 /* Bottom plan-change area */
 
-.subscription-change-plan-bar {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-change-plan-bar {
 
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -2956,7 +2933,7 @@
 
 }
 
-.subscription-change-message {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-change-message {
 
   display: flex;
   align-items: center;
@@ -2969,7 +2946,7 @@
 
 }
 
-.subscription-change-info {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-change-info {
 
   display: flex;
   align-items: center;
@@ -2983,7 +2960,7 @@
 
 }
 
-.subscription-change-message strong {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-change-message strong {
 
   display: block;
   margin-bottom: 5px;
@@ -2993,7 +2970,7 @@
 
 }
 
-.subscription-change-message p {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-change-message p {
 
   margin: 0;
   color: #5b72a0;
@@ -3002,7 +2979,7 @@
 
 }
 
-.subscription-change-plan-button {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-change-plan-button {
 
   display: inline-flex;
   align-items: center;
@@ -3022,7 +2999,7 @@
 
 }
 
-.subscription-change-plan-button:hover {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-change-plan-button:hover {
 
   border-color: #0759d1;
   background: #0759d1;
@@ -3031,13 +3008,13 @@
 
 @media (max-width: 1180px) {
 
-  .subscription-details-summary {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-details-summary {
 
     grid-template-columns: minmax(300px, 1.35fr) repeat(2, minmax(140px, .7fr)) minmax(215px, 1fr);
 
   }
 
-  .subscription-merchant-profile {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-merchant-profile {
 
     gap: 16px;
 
@@ -3045,7 +3022,7 @@
 
   }
 
-  .subscription-summary-metric {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric {
 
     gap: 12px;
 
@@ -3053,7 +3030,7 @@
 
   }
 
-  .subscription-metric-icon {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-metric-icon {
 
     width: 44px;
 
@@ -3067,13 +3044,13 @@
 
 @media (max-width: 980px) {
 
-  .subscription-details-summary {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-details-summary {
 
     grid-template-columns: 1fr 1fr;
 
   }
 
-  .subscription-merchant-profile {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-merchant-profile {
 
     grid-column: 1 / -1;
 
@@ -3081,7 +3058,7 @@
 
   }
 
-  .subscription-summary-metric {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric {
 
     margin: 0;
     padding: 18px;
@@ -3090,7 +3067,7 @@
 
   }
 
-  .subscription-summary-metric.validity {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric.validity {
 
     grid-column: 1 / -1;
     border-top: 1px solid #e3eaf4;
@@ -3098,7 +3075,7 @@
 
   }
 
-  .subscription-details-content-grid {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-details-content-grid {
 
     grid-template-columns: 1fr;
 
@@ -3122,23 +3099,21 @@
 
   }
 
-  .subscription-details-heading h1 {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-details-heading h1 {
 
     font-size: 26px;
 
   }
 
-  .subscription-details-summary {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-details-summary {
 
     grid-template-columns: 1fr;
 
   }
 
-  .subscription-merchant-profile,
-
-  .subscription-summary-metric,
-
-  .subscription-summary-metric.validity {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-merchant-profile,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric.validity {
 
     grid-column: auto;
     border-right: 0;
@@ -3147,13 +3122,13 @@
 
   }
 
-  .subscription-summary-metric:last-child {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-summary-metric:last-child {
 
     border-bottom: 0;
 
   }
 
-  .subscription-merchant-logo {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-merchant-logo {
 
     width: 70px;
     height: 70px;
@@ -3161,7 +3136,7 @@
 
   }
 
-  .subscription-information-row {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-information-row {
 
     grid-template-columns: 1fr;
     gap: 4px;
@@ -3169,13 +3144,13 @@
 
   }
 
-  .subscription-entitlement-item {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-entitlement-item {
 
     grid-template-columns: 34px minmax(0, 1fr);
 
   }
 
-  .subscription-included-pill {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-included-pill {
 
     grid-column: 2;
 
@@ -3183,13 +3158,13 @@
 
   }
 
-  .subscription-change-plan-bar {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-change-plan-bar {
 
     grid-template-columns: 1fr;
 
   }
 
-  .subscription-change-plan-button {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-change-plan-button {
 
     width: 100%;
 
