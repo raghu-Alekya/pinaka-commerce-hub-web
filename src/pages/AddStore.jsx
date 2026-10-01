@@ -165,8 +165,10 @@ const normalizeHours = (value) => {
     return {
       day,
       status,
-      open: status === "Open" ? String(row.open || "") : "",
-      close: status === "Open" ? String(row.close || "") : "",
+      // Keep the values returned for closed days too; the API payload must
+      // round-trip all seven schedule rows without discarding saved values.
+      open: String(row.open || ""),
+      close: String(row.close || ""),
       shifts: Number.isInteger(shifts) && shifts >= 0 ? shifts : 0,
     };
   });
@@ -330,8 +332,9 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
   const matrix = {};
   const availability = {};
   const rows = [];
-  for (const feature of features) {
-    const name = featureName(feature);
+  for (const item of features) {
+    const feature = item?.feature || item?.featureDetails || item;
+    const name = featureName(feature) || featureName(item);
     if (!name) continue;
     if (enabled.size && !enabled.has(name.toLowerCase())) continue;
     const actions = Object.fromEntries(
@@ -352,7 +355,7 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
     matrix[name] = actions;
     availability[name] = available;
     rows.push({
-      id: feature.id || name,
+      id: item?.featureId || item?.feature_id || feature.id || name,
       name,
       description: feature.description || "",
       category: feature.category || "More",
@@ -694,18 +697,21 @@ export default function AddStore() {
     };
     const unique = [];
     const seen = new Set();
-    raw
-      .map(featureName)
-      .filter(Boolean)
-      .forEach((name) => {
-        const lower = name.toLowerCase();
-        if (!seen.has(lower)) {
-          seen.add(lower);
-          unique.push(name);
-        }
-      });
+    for (const entry of raw) {
+      const identities = new Set(identityValues(entry));
+      const match = knownFeatures.find(feature =>
+        identityValues(feature).some(value => identities.has(value)),
+      );
+      if (!match) continue;
+      const name = featureName(match);
+      const lower = name.toLowerCase();
+      if (name && !seen.has(lower)) {
+        seen.add(lower);
+        unique.push(name);
+      }
+    }
     return unique;
-  }, [subscription, plan, matchedPlan]);
+  }, [subscription, plan, catalog, typeFeatures]);
 
   const featureRows = useMemo(() => {
     const source = activeStoreTypeId ? typeFeatures : catalog;
@@ -912,11 +918,9 @@ export default function AddStore() {
               id: saved.storeID || saved.storeId || saved.id || "",
               name: saved.storeName || saved.name || "",
               type:
-                saved.storeType?.name ||
-                saved.storeTypeName ||
-                saved.storeType ||
-                saved.type ||
-                "",
+                saved.storeType?.storeTypeCode || saved.storeType?.code ||
+                saved.storeTypeCode || saved.storeTypeName ||
+                (typeof saved.storeType === "string" ? saved.storeType : "") || saved.type || "",
               storeTypeId: String(
                 saved.storeTypeId || saved.storeType?.id || "",
               ),
@@ -1256,6 +1260,45 @@ export default function AddStore() {
     setActiveRole((current) =>
       storeTypeRoleIds.has(String(current)) ? current : allowed[0] || "",
     );
+  }, [storeTypeRoleIds, roles]);
+
+  // Only offer role templates mapped to this store's selected store type.
+  useEffect(() => {
+    let cancelled = false;
+    setStoreTypeRoleIds(null);
+    setRolesError("");
+    if (!activeStoreTypeId) {
+      setStoreTypeRoleIds(new Set());
+      setStoreTypeRolesLoading(false);
+      return () => { cancelled = true; };
+    }
+    setStoreTypeRolesLoading(true);
+    roleTemplatesApi.getForStoreType(activeStoreTypeId).then(response => {
+      if (cancelled) return;
+      const ids = readRoleTemplatesList(response).filter(row => {
+        const status = String(row.status || row.roleTemplate?.status || "ACTIVE").toUpperCase();
+        return row.enabled !== false && row.active !== false && status === "ACTIVE";
+      }).map(row => String(
+        row.roleTemplateId || row.sourceRoleTemplateId || row.roleTemplate?.id ||
+        row.template?.id || row.id || row._id || "",
+      )).filter(Boolean);
+      setStoreTypeRoleIds(new Set(ids));
+    }).catch(err => {
+      if (!cancelled) {
+        setStoreTypeRoleIds(new Set());
+        setRolesError(err?.message || "Unable to load role templates for this store type.");
+      }
+    }).finally(() => {
+      if (!cancelled) setStoreTypeRolesLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [activeStoreTypeId, reload]);
+
+  useEffect(() => {
+    if (storeTypeRoleIds === null) return;
+    const allowed = roles.filter(roleId => storeTypeRoleIds.has(String(roleId)));
+    if (allowed.length !== roles.length) setRoles(allowed);
+    setActiveRole(current => storeTypeRoleIds.has(String(current)) ? current : allowed[0] || "");
   }, [storeTypeRoleIds, roles]);
 
   // Load Store-Type Features
@@ -1647,7 +1690,6 @@ export default function AddStore() {
         "Merchant details are unavailable. Reload and try again."
       );
     if (imageReads.current > 0) return "Wait for the images to finish loading.";
-    if (editing) return "";
     if (index === 0) {
       if (!store.name.trim()) return "Enter the store name.";
       if (store.name.trim().length > 150)
@@ -2072,6 +2114,40 @@ export default function AddStore() {
           setEnabledFeatures(
             refreshedFeatures.map(featureName).filter(Boolean),
           );
+      }
+      if (editing) {
+        // Confirm persistence from the canonical GET response before reporting
+        // a successful update or leaving the edit flow.
+        const verified = await api.get(endpoints.store(encodeURIComponent(storeCode)));
+        const current = verified?.store || verified?.data?.store || verified?.data || verified;
+        const actualName = current?.name || current?.storeName;
+        if (actualName != null && String(actualName) !== storePayload.name) {
+          throw new Error("The store update could not be verified. The API returned a different store name.");
+        }
+        const refreshedAddress = current?.address && typeof current.address === "object" ? current.address : {};
+        setStore(previous => ({
+          ...previous,
+          merchantId: current?.merchantId || previous.merchantId,
+          id: current?.id || current?.storeId || previous.id,
+          name: actualName || storePayload.name,
+          type: current?.storeType?.storeTypeCode || current?.storeTypeCode || current?.type || previous.type,
+          phone: current?.phone ?? previous.phone,
+          email: current?.email ?? previous.email,
+          url: current?.url || current?.baseUrl || previous.url,
+          currency: current?.currency || previous.currency,
+          status: current?.status || previous.status,
+          addressLine1: current?.addressLine1 || refreshedAddress.addressLine1 || refreshedAddress.street || (typeof current?.address === "string" ? current.address : previous.addressLine1),
+          addressLine2: current?.addressLine2 || refreshedAddress.addressLine2 || previous.addressLine2,
+          city: current?.city || refreshedAddress.city || previous.city,
+          state: current?.state || refreshedAddress.state || previous.state,
+          zip: current?.zip || current?.postalCode || refreshedAddress.zipCode || previous.zip,
+          country: current?.country || refreshedAddress.country || previous.country,
+          timezone: current?.timezone || previous.timezone,
+          defaultLanguage: current?.defaultLanguage || previous.defaultLanguage,
+          hours: normalizeHours(current?.hours || previous.hours),
+        }));
+        const refreshedFeatures = current?.features || current?.enabledFeatures;
+        if (Array.isArray(refreshedFeatures)) setEnabledFeatures(refreshedFeatures.map(featureName).filter(Boolean));
       }
       saveLock.current = false;
       backToStores();

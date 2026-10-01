@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listStores } from "../api/stores";
+import { deleteStore, listStores } from "../api/stores";
 import { listMerchants } from "../api/merchants";
 import { useReferenceData } from "../api/referenceData";
 
@@ -69,6 +69,8 @@ export default function Stores() {
     [error, setError] = useState(""),
     [version, setVersion] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -393,7 +395,10 @@ export default function Stores() {
                           className="action-btn delete-action-btn"
                           aria-label={`Delete ${s.storeName}`}
                           title="Delete store"
-                          onClick={() => setDeleteTarget(s)}
+                          onClick={() => {
+                            setDeleteError("");
+                            setDeleteTarget(s);
+                          }}
                         >
                           <i className="bi bi-trash3" />
                         </button>
