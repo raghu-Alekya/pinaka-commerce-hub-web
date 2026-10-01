@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listStores } from "../api/stores";
+import { deleteStore, listStores } from "../api/stores";
 import { listMerchants } from "../api/merchants";
 import { useReferenceData } from "../api/referenceData";
 
@@ -58,6 +58,8 @@ export default function Stores() {
     [error, setError] = useState(""),
     [version, setVersion] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -378,7 +380,10 @@ export default function Stores() {
                           className="action-btn delete-action-btn"
                           aria-label={`Delete ${s.storeName}`}
                           title="Delete store"
-                          onClick={() => setDeleteTarget(s)}
+                          onClick={() => {
+                            setDeleteError("");
+                            setDeleteTarget(s);
+                          }}
                         >
                           <i className="bi bi-trash3" />
                         </button>
@@ -447,8 +452,9 @@ export default function Stores() {
     aria-modal="true"
     aria-labelledby="delete-store-title"
     onClick={(event) => {
-      if (event.target === event.currentTarget) {
+      if (event.target === event.currentTarget && !deleting) {
         setDeleteTarget(null);
+        setDeleteError("");
       }
     }}
   >
@@ -470,12 +476,17 @@ export default function Stores() {
       <p className="pch-delete-warning">
         This action cannot be undone.
       </p>
+      {deleteError && <p className="stores-feedback" role="alert">{deleteError}</p>}
 
       <div className="pch-delete-actions">
         <button
           type="button"
           className="pch-delete-cancel"
-          onClick={() => setDeleteTarget(null)}
+          disabled={deleting}
+          onClick={() => {
+            setDeleteTarget(null);
+            setDeleteError("");
+          }}
         >
           Cancel
         </button>
@@ -483,19 +494,38 @@ export default function Stores() {
         <button
           type="button"
           className="pch-delete-confirm"
-          onClick={() => {
-            const deletedId = String(deleteTarget.id);
-
-            setStores((currentStores) =>
-              currentStores.filter(
-                (store) => String(store.id) !== deletedId
-              )
-            );
-
-            setDeleteTarget(null);
+          disabled={deleting}
+          onClick={async () => {
+            if (deleting || !deleteTarget) return;
+            const storeId = String(displayStoreId(deleteTarget) || "").trim();
+            if (!storeId) {
+              setDeleteError("This store is missing its store ID and cannot be deleted.");
+              return;
+            }
+            setDeleting(true);
+            setDeleteError("");
+            try {
+              const result = await deleteStore(storeId);
+              const deleteFlag = result?.isDeleted;
+              const markedDeleted = [true, 1, "1", "true"].includes(
+                typeof deleteFlag === "string" ? deleteFlag.toLowerCase() : deleteFlag,
+              );
+              if (result?.success === false || (deleteFlag != null && !markedDeleted)) {
+                throw new Error(result?.message || "The store was not deleted.");
+              }
+              const rowId = String(deleteTarget.id);
+              setStores(currentStores => currentStores.filter(store =>
+                String(store.id) !== rowId && String(displayStoreId(store)) !== storeId,
+              ));
+              setDeleteTarget(null);
+            } catch (err) {
+              setDeleteError(err?.message || "Unable to delete this store. Please try again.");
+            } finally {
+              setDeleting(false);
+            }
           }}
         >
-          Delete Store
+          {deleting ? "Deleting…" : "Delete Store"}
         </button>
       </div>
     </div>
