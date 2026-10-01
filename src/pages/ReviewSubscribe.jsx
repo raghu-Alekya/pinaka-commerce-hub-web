@@ -278,18 +278,44 @@ export default function ReviewSubscribe({
                   <label><input type="radio" name="payment-method" value="ach" checked={paymentMethod === "ach"} onChange={() => changePaymentMethod("ach")} /> Bank transfer</label>
                 </fieldset>
                 <p className="rs-preview-note">Your selection will be passed to the subscription service. No payment information is entered on this screen.</p>
-                <button className="rs-subscribe" type="button" onClick={handleSubscribe} disabled={isSubmitting || submitting || !merchant || !plan?.name}>
-                  {isSubmitting || submitting ? <><LoaderCircle className="rs-spinner" size={17} /> Saving…</> : <><Check size={17} /> {isEditing ? "Save Subscription" : "Subscribe"}</>}
-                </button>
                 {(message || externalError) && <p className="rs-feedback" role="alert">{externalError || message}</p>}
               </Card>
             </div>
           </div>
 
           <footer className="rs-footer">
-            <button className="rs-outline-button" type="button" onClick={back}> Back to plan</button>
-            <button className="rs-outline-button" type="button" onClick={goBackToMerchants}>Cancel</button>
-          </footer>
+  <button
+    className="rs-outline-button"
+    type="button"
+    onClick={back}
+  >
+    Back to plan
+  </button>
+
+  <button
+    className="rs-subscribe rs-footer-submit"
+    type="button"
+    onClick={handleSubscribe}
+    disabled={
+      isSubmitting ||
+      submitting ||
+      !merchant ||
+      !plan?.name
+    }
+  >
+    {isSubmitting || submitting ? (
+      <>
+        <LoaderCircle className="rs-spinner" size={17} />
+        Saving…
+      </>
+    ) : (
+      <>
+        <Check size={17} />
+        {isEditing ? "Update" : "Submit"}
+      </>
+    )}
+  </button>
+</footer>
         </main>
       </div>
     </div>

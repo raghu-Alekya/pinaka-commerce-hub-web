@@ -21,70 +21,52 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 18px;
+    margin-bottom: 12px;
 }
 
 .page-header h1 {
-    margin: 0 0 4px;
-    font-size: 21px;
+    margin: 0 0 6px;
+    font-size: 20px;
     font-weight: 700;
     color: #17233e;
 }
 
 .page-header p {
-    margin: 0;
-    font-size: 10px;
+    font-size: 14px;
     color: #7d8697;
+    margin-bottom: 10px;
 }
 
 .page-actions {
     display: flex;
+    align-items: center;
     gap: 12px;
 }
 
 /* First button — Add Store */
 .add-store-btn {
     order: 1;
-
     height: 36px;
-    padding: 0 13px;
+    padding: 0 12px;
     border-radius: 8px;
-
     display: flex;
     align-items: center;
     gap: 14px;
-
     font-size: 14px;
     cursor: pointer;
-
-    background: #5547c7;
-    border: 1px solid #5547c7;
-    color: #fff;
+    background: #5143bc;
+    border: 1px solid #5143bc;
+    color: #fff;  
+   
 }
 
 .add-store-btn:hover {
-    background: #493bb5;
+    background: #4537ad;
 }
 
 
-/* Second button — Refresh */
-.refresh-btn {
-    order: 2;
-
-    height: 36px;
-    padding: 0 13px;
-    border-radius: 8px;
-
-    display: flex;
-    align-items: center;
-    gap: 14px;
-
-    font-size: 14px;
-    cursor: pointer;
-
-    background: #fff;
-    border: 1px solid #dfe3ea;
-    color: #46516a;
+.export-store-btn {
+    order: 3;
 }
 
 /* =========================================================
@@ -164,11 +146,11 @@
 ========================================================= */
 
 .stores-card .store-toolbar {
-    min-height: 48px;
-    padding: 8px 10px;
+    min-height: 55px;
+    padding: 12px 12px 16px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 7px;
     border-bottom: 1px solid #f0f1f4;
 }
 
@@ -225,9 +207,6 @@
     font-weight: 500;
     outline: none;
     cursor: pointer;
-    appearance: auto;
-    -webkit-appearance: auto;
-    -moz-appearance: auto;
 }
 
 .stores-card .filter-select:focus {
@@ -244,7 +223,7 @@
 
 .stores-card .filter-button {
     height: 35px;
-    padding: 0 12px;
+    padding: 0 10px;
     border: 1px solid #e1e4eb;
     border-radius: 6px;
     background: #fff;
@@ -278,23 +257,26 @@
 }
 
 .stores-table thead th {
-    background: #fafbfc;
-    color: #9199aa;
     font-size: 12px;
     font-weight: 600;
-    letter-spacing: .2px;
     padding: 11px 13px;
-    border-bottom: 1px solid #e9ebef;
     white-space: nowrap;
+    height: 42px;
+    background: #f5f9fe;
+    border-bottom: 1px solid #eceef2;
+    color: #484c56;
+    letter-spacing: 0.35px;
+    text-align: left;
 }
 
 .stores-table tbody td {
     padding: 12px 13px;
-    font-size: 12px;
-    color: #5e687b;
+    font-size: 13px;
     vertical-align: middle;
-    border-bottom: 1px solid #f0f1f4;
     white-space: nowrap;
+    min-height: 60px;
+    border-bottom: 1px solid #f1f2f5;
+    color: #697285;
 }
 
 .stores-table tbody tr:hover {
@@ -371,17 +353,17 @@
 ========================================================= */
 
 .store-status {
-    display: inline-flex;
+     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 7px;
+    padding: 5px 10px !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
     font-weight: 500;
 }
 
 .store-status i {
-    font-size: 5px;
+    font-size: 7px;
 }
 
 .store-status.active { color: #319a5b; background: #e5f6ea; }
@@ -397,19 +379,45 @@
 /* =========================================================
    ACTION
 ========================================================= */
+.store-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
 
 .action-btn {
-    width: 28px;
-    height: 28px;
-    border: 0;
+    width: 31px;
+    height: 31px;
+    padding: 0;
+    border: 1px solid #dce3ec;
+    border-radius: 6px;
     background: transparent;
-    border-radius: 4px;
-    color: #788195;
+    color: #5d7190;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    font-size: 12px;
 }
 
 .action-btn:hover {
-    background: #f1f2f6;
+    background: #f2f0ff;
+    color: #5143bc;
+}
+
+.view-btn:hover {
+    background: #edf5ff;
+    color: #4185dd;
+}
+
+.edit-btn:hover {
+    background: #eeeaff;
+    color: #5143bc;
+}
+
+.more-btn:hover {
+    background: #f2f3f6;
+    color: #596276;
 }
 
 /* =========================================================
