@@ -13,7 +13,6 @@ import {
 
 const emptyForm = {
   name: "",
-  code: "",
   vendorType: "Supplier",
   contactPerson: "",
   phone: "",
@@ -408,11 +407,6 @@ export default function Vendors({
       vendorName:
         form.name.trim(),
 
-      vendorCode:
-        form.code
-          .trim()
-          .toUpperCase(),
-
       vendorType:
         getVendorTypeApiValue(
           form.vendorType
@@ -468,7 +462,6 @@ export default function Vendors({
 
   const isFormComplete =
     Boolean(
-      form.code.trim() &&
       form.name.trim() &&
       form.vendorType &&
       form.phone.trim() &&
@@ -513,7 +506,6 @@ export default function Vendors({
     */
 
     if (
-      !form.code.trim() ||
       !form.name.trim() ||
       !form.vendorType ||
       !form.phone.trim() ||
@@ -704,7 +696,6 @@ export default function Vendors({
   ) {
     const viewForm = {
       name: vendor.name || "",
-      code: vendor.code || "",
       vendorType: normalizeVendorType(
         vendor.vendorType
       ),
@@ -745,9 +736,6 @@ export default function Vendors({
     const editForm = {
       name:
         vendor.name || "",
-
-      code:
-        vendor.code || "",
 
       vendorType:
         normalizeVendorType(
@@ -986,29 +974,6 @@ export default function Vendors({
         =================================================== */}
 
         <div className="vendors-form-grid">
-
-          {/* =================================================
-              VENDOR CODE
-          ================================================= */}
-
-          <label>
-            <span>
-              Vendor Code <b>*</b>
-            </span>
-
-            <input
-              type="text"
-              name="code"
-              value={form.code}
-              onChange={handleChange}
-              placeholder="Enter vendor code"
-              autoComplete="off"
-              required
-              disabled={saving || viewingId !== null}
-            />
-
-          </label>
-
           {/* =================================================
               VENDOR NAME
           ================================================= */}

@@ -1,34 +1,4 @@
-import { getAccessToken } from "../auth/tokenStore";
-
-/*
-|--------------------------------------------------------------------------
-| API ROOT
-|--------------------------------------------------------------------------
-|
-| Local React:
-|   /connector/api/v1
-|
-| Vite proxy:
-|   https://pch.alektasolutions.com
-|
-|--------------------------------------------------------------------------
-*/
-
-const API_ROOT = import.meta.env.VITE_API_BASE_URL || "/connector/api/v1";
-
-/*
-|--------------------------------------------------------------------------
-| BUILD API URL
-|--------------------------------------------------------------------------
-*/
-
-function buildUrl(path = "") {
-  const root = API_ROOT.replace(/\/+$/, "");
-
-  const cleanPath = String(path).replace(/^\/+/, "");
-
-  return `${root}/${cleanPath}`;
-}
+import { apiRequest } from "./http";
 
 /*
 |--------------------------------------------------------------------------
@@ -64,75 +34,12 @@ function formatDateTime(value) {
 */
 
 async function request(path, { token, signal, ...options } = {}) {
-  const accessToken = token ?? getAccessToken();
-
-  const response = await fetch(buildUrl(path), {
+  const data = await apiRequest(path, {
     ...options,
-
+    body: options.body ? JSON.parse(options.body) : undefined,
     signal,
-
-    /*
-      |--------------------------------------------------------------------------
-      | Authentication
-      |--------------------------------------------------------------------------
-      */
-
-    credentials: "omit",
-
-    headers: {
-      Accept: "application/json",
-
-      ...(options.body
-        ? {
-            "Content-Type": "application/json",
-          }
-        : {}),
-
-      ...(accessToken
-        ? {
-            Authorization: `Bearer ${accessToken}`,
-          }
-        : {}),
-
-      ...(options.headers || {}),
-    },
+    token,
   });
-
-  /*
-  |--------------------------------------------------------------------------
-  | READ RESPONSE
-  |--------------------------------------------------------------------------
-  */
-
-  const raw = await response.text();
-
-  let data = null;
-
-  if (raw) {
-    try {
-      data = JSON.parse(raw);
-    } catch {
-      throw new Error(`API returned a non-JSON response (${response.status}).`);
-    }
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | HTTP ERROR
-  |--------------------------------------------------------------------------
-  */
-
-  if (!response.ok) {
-    throw new Error(
-      data?.message || data?.error || `Request failed (${response.status}).`,
-    );
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | API SUCCESS FALSE
-  |--------------------------------------------------------------------------
-  */
 
   if (data && data.success === false) {
     throw new Error(data.message || data.error || "API request failed.");
@@ -392,8 +299,6 @@ function prepareVendorPayload(values = {}) {
     vendorName: values.vendorName ?? values.name ?? "",
 
     vendorType: toApiVendorType(values.vendorType),
-
-    vendorCode: values.vendorCode ?? values.code ?? "",
 
     /*
     |--------------------------------------------------------------------------

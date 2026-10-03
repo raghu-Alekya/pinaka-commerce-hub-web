@@ -52,9 +52,16 @@ async function refreshAccessToken() {
  
 export async function apiRequest(
   path,
-  { method = "GET", body, headers, signal, skipAuthRefresh = false } = {}
+  {
+    method = "GET",
+    body,
+    headers,
+    signal,
+    token: tokenOverride,
+    skipAuthRefresh = false,
+  } = {}
 ) {
-  const token = getAccessToken();
+  const token = tokenOverride ?? getAccessToken();
   const requestUrl = buildUrl(path);
   const payload = body !== undefined ? body : undefined;
  
