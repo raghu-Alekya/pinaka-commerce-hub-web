@@ -1227,8 +1227,7 @@ export default function FeaturePermissions() {
             </h1>
 
             <p>
-              Manage feature permissions
-              and permission access.
+              Manage permissions for PCH features.
             </p>
           </div>
         </div>
@@ -1253,9 +1252,7 @@ export default function FeaturePermissions() {
               </h2>
 
               <p>
-                Create a new permission
-                or edit an existing
-                permission.
+                Enter the permission details.
               </p>
             </div>
           </div>
@@ -1337,7 +1334,7 @@ export default function FeaturePermissions() {
                   autoComplete="off"
                 >
                   <option value="">
-                    Select Feature Type
+                    Select a Feature Type
                   </option>
 
                   {Object.keys(
@@ -1396,7 +1393,7 @@ export default function FeaturePermissions() {
                         0
                         ? "Select Feature"
                         : "No Features Available"
-                      : "Select Feature Type First"}
+                      : "Select a Feature Type First"}
                   </option>
 
                   {availableFeatures.map(
@@ -1452,7 +1449,7 @@ export default function FeaturePermissions() {
                 placeholder={
                   form.featureId
                     ? "Enter permission name"
-                    : "Select Feature First"
+                    : "Select a Feature First"
                 }
                 aria-invalid={Boolean(
                   errors.name,
@@ -1495,7 +1492,7 @@ export default function FeaturePermissions() {
                   )}px`;
                 }}
                 autoComplete="off"
-                placeholder="Describe this permission and its purpose."
+                placeholder="Describe what this permission allows."
                 rows={1}
               />
             </div>
@@ -1559,7 +1556,7 @@ export default function FeaturePermissions() {
             >
               {isEditing
                 ? "Update Permission"
-                : "Create Permission"}
+                : "Add Permission"}
             </button>
           </div>
         </form>
@@ -1607,7 +1604,7 @@ export default function FeaturePermissions() {
                 autoComplete="off"
               >
                 <option value="All Statuses">
-                  All Status
+                  All Statuses
                 </option>
 
                 <option value="Active">
