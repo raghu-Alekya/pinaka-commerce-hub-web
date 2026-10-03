@@ -596,8 +596,8 @@ export default function CreateStoreType() {
     <section className="store-types-page">
       <div className="store-types-page-heading">
         <div>
-          <h1>Store Type Information</h1>
-          <p>Define a business vertical and its baseline configuration.</p>
+          <h1>Store Types</h1>
+          <p>Manage store types and their basic information.</p>
         </div>
       </div>
 
@@ -623,8 +623,8 @@ export default function CreateStoreType() {
           </div>
 
           <div>
-            <h2>{editingId ? "Edit Store Type" : "Create Store Type"}</h2>
-            <p>Provide the basic details about the store type.</p>
+            <h2>{editingId ? "Edit Store Type" : "Add Store Type"}</h2>
+            <p>Enter the store type details.</p>
           </div>
         </div>
 
@@ -662,7 +662,7 @@ export default function CreateStoreType() {
           <div className="store-type-field">
             <label>
 
-              Display Name <span className="required">*</span>
+              Store Type Name <span className="required">*</span>
             </label>
             <input
 
@@ -807,7 +807,7 @@ export default function CreateStoreType() {
 
       <section className="store-types-list-card">
         <div className="store-types-list-header">
-          <h2>Store Types List</h2>
+          <h2>Store Types</h2>
 
           <div className="store-types-filters">
             <label className="store-type-search">
@@ -872,7 +872,7 @@ export default function CreateStoreType() {
           <div className="store-types-table">
             <div className="store-types-row store-types-row-head">
               <div>Store Type Code</div>
-              <div>Name</div>
+              <div>Store Type Name</div>
               <div>Description</div>
               <div>Status</div>
               <div>Created At</div>

@@ -53,6 +53,7 @@
     align-items: center;
     gap: 14px;
     font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
     background: #5143bc;
     border: 1px solid #5143bc;
@@ -247,6 +248,8 @@
     font-size: 13px;
     line-height: 1;
 }
+
+
 
 /* =========================================================
    TABLE

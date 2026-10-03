@@ -354,7 +354,7 @@ export default function Stores() {
                         title="View store"
                         onClick={() =>
                           nav(
-                            `/stores/${encodeURIComponent(s.id)}/configuration`,
+                            `/stores/${encodeURIComponent(s.id)}`,
                           )
                         }
                       >
@@ -397,7 +397,7 @@ export default function Stores() {
                           title="View store"
                           onClick={() =>
                             nav(
-                              `/stores/${encodeURIComponent(s.id)}/configuration`,
+                              `/stores/${encodeURIComponent(s.id)}`,
                             )
                           }
                         >
@@ -406,7 +406,7 @@ export default function Stores() {
 
                         <button
                           type="button"
-                          className="action-btn edit-btn"
+                          className="action-btn edit-btn text-primary"
                           aria-label={`Edit ${s.storeName}`}
                           title="Edit store"
                           onClick={() =>
@@ -547,3 +547,4 @@ export default function Stores() {
     </div>
   );
 }
+

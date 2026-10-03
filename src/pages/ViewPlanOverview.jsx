@@ -133,8 +133,8 @@ export default function ViewPlanOverview() {
                 <i className="bi bi-card-text" />
               </div>
               <div>
-                <h2> Plan Information </h2>
-                <p>View the core plan details and its applicable store type.</p>
+                <h2> Plan Details </h2>
+                <p>View plan details and the applicable store type.</p>
               </div>
             </div>
 
@@ -176,10 +176,10 @@ export default function ViewPlanOverview() {
                 <input value={plan.name || ""} readOnly />
               </label>
 
-              {/* Row 2: Applicable Business/Store Type */}
+              {/* Row 2: Applicable Store Type*/}
               <label className="plan-details-field">
                 <span>
-                  Applicable Business/Store Type <b>*</b>
+                  Applicable Store Type <b>*</b>
                 </span>
                 <input value={plan.storeType || ""} readOnly />
                 {/* <small>The store type this plan can be assigned to.</small> */}

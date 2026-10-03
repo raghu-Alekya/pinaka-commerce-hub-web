@@ -501,16 +501,16 @@ function saveAndLeave() {
             </span>
 
             <div>
-              <h2>Feature & Permission Access</h2>
+              <h2>Features & Permissions</h2>
               <p>
-                Select the features and common permissions available to this role.
+                Select the features and permissions included in this role template.
               </p>
             </div>
           </div>
 
           <div className="role-access-actions">
             <button type="button" onClick={selectAll}>Select All</button>
-            <button type="button" onClick={clearAll}>Clear All</button>
+            <button type="button" onClick={clearAll}>Deselect All</button>
           </div>
         </div>
 
@@ -582,7 +582,7 @@ function saveAndLeave() {
 
                       <div className="role-permissions-heading">
                         <strong>Permissions</strong>
-                        <span>Common permissions for this feature</span>
+                        <span>Available permissions for this feature</span>
                       </div>
 
                       <div className="role-permissions-grid">
