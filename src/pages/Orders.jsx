@@ -242,11 +242,6 @@ export default function Orders({
             <div className="orders-header">
 
                 <div className="orders-title-area">
-
-                    <div className="orders-title-icon">
-                        <i className="bi bi-receipt" />
-                    </div>
-
                     <div>
                         <h1>Orders</h1>
 
@@ -518,7 +513,7 @@ export default function Orders({
                         onClick={clearFilters}
                     >
                         <i className="bi bi-arrow-counterclockwise" />
-                        Clear
+                       Reset
                     </button>
 
                 </div>
@@ -788,13 +783,7 @@ function OrderRow({ order, onView }) {
             <td>
 
                 <div className="order-id-cell">
-
-                    <div className="order-icon">
-                        <i className="bi bi-receipt" />
-                    </div>
-
                     <div>
-
                         <strong>
                             {order.wooOrderId}
                         </strong>

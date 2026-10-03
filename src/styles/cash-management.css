@@ -38,10 +38,8 @@
 
 .cash-page-header h1 {
   margin: 0 0 4px;
-
   color: #17233e;
-
-  font-size: 28px;
+  font-size: 20px;
   line-height: 1.15;
   font-weight: 700;
 }
@@ -288,43 +286,37 @@
 ========================================================= */
 
 .cash-search-box {
-  height: 32px;
-
+  height: 35px;
   display: flex;
   align-items: center;
-
   gap: 8px;
-
-  padding: 0 9px;
-
+  padding: 0 10px;
   background: #ffffff;
-
-  border: 1px solid #dfe3ea;
-
-  border-radius: 5px;
-
+  border: 1px solid #e1e4eb;
+  border-radius: 6px;
   box-sizing: border-box;
-}
+  outline: none;
+  color: #59647a;
+  font-size: 12px;
+  min-width: 125px;  
+  font-weight: 500;  
+  cursor: pointer;
+} 
+        
 
 .cash-search-box > i {
   color: #929aaa;
-
   font-size: 12px;
 }
 
 .cash-search-box input {
   width: 100%;
-
   border: 0;
   outline: 0;
-
   padding-left: 2px;
-
   background: transparent;
-
   color: #3e485d;
-
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .cash-search-box input::placeholder {
@@ -338,64 +330,41 @@
 
 .cash-select-wrapper {
   position: relative;
-
   height: 32px;
-
   display: flex;
   align-items: center;
-
   gap: 6px;
-
   padding: 0 9px;
-
   background: #ffffff;
-
   border: 1px solid #dfe3ea;
-
   border-radius: 5px;
-
   box-sizing: border-box;
 }
 
 .cash-select-wrapper > i:first-child {
   color: #667994;
-
   font-size: 12px;
-
   flex: 0 0 auto;
 }
 
 .cash-select-wrapper select {
   width: 100%;
-
   height: 100%;
-
   padding: 0 20px 0 0;
-
   border: none;
-
   outline: none;
-
   appearance: none;
-
   background: transparent;
-
   color: #596378;
-
-  font-size: 9px;
-
+  font-size: 12px;
   cursor: pointer;
 }
 
 .cash-select-arrow {
   position: absolute;
-
   right: 9px;
-
   color: #596378 !important;
-
-  font-size: 10px !important;
-
+  font-size: 12px !important;
   pointer-events: none;
 }
 
@@ -410,25 +379,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
   gap: 6px;
-
   padding: 0 11px;
-
   border: 1px solid #dfe3ea;
-
   border-radius: 5px;
-
   background: #ffffff;
-
   color: #596378;
-
-  font-size: 9px;
-
+  font-size: 12px;
   font-weight: 400;
-
   cursor: pointer;
-
   transition: all 0.2s ease;
 }
 
@@ -438,9 +397,7 @@
 
 .cash-clear-button:hover {
   background: #f5f6fa;
-
   border-color: #cfd5df;
-
   color: #172b4d;
 }
 
@@ -451,14 +408,11 @@
 
 .cash-table-card {
   background: #ffffff;
-
-  border: 1px solid #e4e7ed;
-
+  border: 1px solid #e5e8ee;
   border-radius: 8px;
-
   overflow: hidden;
-
   box-shadow: none;
+  margin-bottom: 12px;
 }
 
 
@@ -467,56 +421,40 @@
 ========================================================= */
 
 .cash-table-header {
-  min-height: 58px;
-
+  min-height: 55px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   padding: 0 18px;
-
   border-bottom: 1px solid #eceef2;
-
   box-sizing: border-box;
 }
 
 .cash-table-title {
-  display: flex;
-  align-items: center;
-
-  gap: 10px;
+   display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .cash-table-title h2 {
-  margin: 0;
-
-  color: #17233e;
-
-  font-size: 18px;
-
-  font-weight: 700;
+    margin: 0;
+    color: #17233e;
+    font-size: 17px;
+    font-weight: 700;
 }
 
 .cash-table-title > span {
   min-width: 30px;
   height: 30px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 0 8px;
-
   border-radius: 50%;
-
   background: #eeeaff;
-
   color: #6250cf;
-
   font-size: 12px;
-
   font-weight: 700;
-
   box-sizing: border-box;
 }
 
@@ -526,28 +464,20 @@
 ========================================================= */
 
 .cash-read-only {
-  height: 36px;
-
+  height: 35px;
   display: flex;
   align-items: center;
-
   gap: 6px;
-
   padding: 0 12px;
-
   background: #f4f6fa;
-
-  border-radius: 7px;
-
+  border-radius: 6px;
   color: #62728c;
-
   font-size: 11px;
-
   font-weight: 500;
 }
 
 .cash-read-only i {
-  font-size: 13px;
+  font-size: 12px;
 }
 
 
@@ -557,7 +487,6 @@
 
 .cash-table-wrapper {
   width: 100%;
-
   overflow-x: auto;
 }
 
@@ -568,12 +497,10 @@
 
 .cash-table {
   width: 100%;
-
-  min-width: 1120px;
-
+  min-width: 980px;
   border-collapse: collapse;
-
   table-layout: fixed;
+  margin: 0;
 }
 
 
@@ -582,33 +509,24 @@
 ========================================================= */
 
 .cash-table th {
-  height: 50px;
-
-  padding: 0 12px;
-
-  background: #fafbfc;
-
-  border-right: 1px solid #e9ebef;
-
-  border-bottom: 1px solid #e9ebef;
-
-  color: #9199aa;
-
-  font-size: 11px;
-
+  height: 42px;
+  padding: 0 11px;
+  background: #f5f9fe;
+  border-bottom: 1px solid #eceef2;
+  color: #484c56;
+  font-size: 12px;
   font-weight: 600;
-
   text-align: left;
-
   text-transform: uppercase;
-
-  letter-spacing: 0.2px;
-
+  letter-spacing: 0.35px;
   vertical-align: middle;
+  border: 0;
+  white-space: nowrap;
 }
 
 .cash-table th:last-child {
   border-right: none;
+  border-right: 0;
 }
 
 
@@ -617,29 +535,27 @@
 ========================================================= */
 
 .cash-table td {
-  height: 64px;
-
-  padding: 10px 12px;
-
-  border-right: 1px solid #f0f1f4;
-
-  border-bottom: 1px solid #f0f1f4;
-
-  color: #5e687b;
-
-  font-size: 12px;
-
+  height: auto;
+  min-height: 60px;
+  padding: 9px 11px;
+  border: 0;
+  border-bottom: 1px solid #f1f2f5;
+  color: #697285;
+  font-size: 13px;
   vertical-align: middle;
-
   box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .cash-table td:last-child {
   border-right: none;
+   border-bottom: 0;
+   border-right: 0;
 }
 
 .cash-table tbody tr:hover {
-  background: #fafbff;
+background: #fcfcff;
+    
 }
 
 
@@ -650,51 +566,61 @@
 .cash-table th:nth-child(1),
 .cash-table td:nth-child(1) {
   width: 17%;
+  border-right: 0 !important;
 }
 
 .cash-table th:nth-child(2),
 .cash-table td:nth-child(2) {
   width: 9%;
+  border-right: 0 !important;
 }
 
 .cash-table th:nth-child(3),
 .cash-table td:nth-child(3) {
   width: 9%;
+  border-right: 0 !important;
 }
 
 .cash-table th:nth-child(4),
 .cash-table td:nth-child(4) {
   width: 10%;
+  border-right: 0 !important;
 }
 
 .cash-table th:nth-child(5),
 .cash-table td:nth-child(5) {
   width: 10%;
+  border-right: 0 !important;
 }
 
 .cash-table th:nth-child(6),
 .cash-table td:nth-child(6) {
   width: 10%;
+  border-right: 0 !important;
 }
 
 .cash-table th:nth-child(7),
 .cash-table td:nth-child(7) {
   width: 11%;
+  border-right: 0 !important;
 }
 
 .cash-table th:nth-child(8),
 .cash-table td:nth-child(8) {
   width: 12%;
+  border-right: 0 !important;
 }
 
 .cash-table th:nth-child(9),
 .cash-table td:nth-child(9) {
   width: 8%;
+  border-right: 0 !important;
 }
 
 .cash-table th:nth-child(10),
 .cash-table td:nth-child(10) {
   width: 4%;
+  border-right: 0 !important;
 }
 
 
@@ -704,21 +630,15 @@
 
 .cash-title {
   display: block;
-
   color: #684ee8;
-
-  font-size: 12px;
-
+  font-size: 13px;
   font-weight: 600;
-
   line-height: 1.35;
-
   text-decoration: none;
 }
 
 .cash-title:hover {
   color: #573adf;
-
   text-decoration: underline;
 }
 
@@ -728,11 +648,9 @@
 ========================================================= */
 
 .cash-sort-icon {
-  margin-left: 4px;
-
-  color: #8493a8;
-
-  font-size: 11px;
+  margin-left: 3px;
+  color: #9aa1ae;
+  font-size: 10px; 
 }
 
 
@@ -760,17 +678,17 @@
 }
 
 .cash-date strong {
-  color: #526784;
-
-  font-size: 11px;
-
+  color: #536078;
+  font-size: 12px;
   font-weight: 500;
+   display: block;
 }
 
 .cash-date span {
-  color: #8b9ab0;
-
+  color: #9aa1ae;
   font-size: 10px;
+  display: block;
+  margin-top: 2px;
 }
 
 
@@ -781,24 +699,20 @@
 .cash-action-button {
   width: 28px;
   height: 28px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border: 0;
-
   background: transparent;
-
-  color: #788195;
-
-  border-radius: 4px;
-
+  color: #7a8497;
+  border-radius: 5px;
   cursor: pointer;
+  font-size: 13px
 }
 
 .cash-action-button:hover {
-  background: #f1f2f6;
+    background: #f1f2f6;
+    color: #5143bc;
 }
 
 .cash-action-button i {
