@@ -96,7 +96,7 @@ export default function Header({ onMobileMenu }) {
             <small>{role}</small>
           </div>
           <button type="button" className="logout-btn" onClick={handleLogout}>
-            Logout
+            Signout
           </button>
         </div>
       </div>

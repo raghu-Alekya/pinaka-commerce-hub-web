@@ -517,9 +517,9 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
     [
       "orange",
       "bi-pause-circle-fill",
-      "Pending Setup",
+      "Set up Incomplete",
       String(merchants.filter((m) => m.status === "Pending Setup").length),
-      "Needs onboarding",
+      "Setup Required",
     ],
     [
       "blue",
@@ -665,13 +665,13 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
           <table className="merchant-table">
             <thead>
               <tr>
-                <th>MERCHANT</th>
-                <th>CONTACT</th><th>LOCATION</th>
-                <th>STORES</th>
-                <th>SUBSCRIPTION PLAN</th>
-                <th>STATUS</th>
-                <th>JOINED ON</th>
-                <th>ACTIONS</th>
+                <th>Merchant Name</th>
+                <th>Contact Information</th><th>Location</th>
+                <th>Stores</th>
+                <th>Subscription Plan</th>
+                <th>Status</th>
+                <th>Joined On</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>

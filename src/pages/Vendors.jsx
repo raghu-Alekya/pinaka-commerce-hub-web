@@ -466,11 +466,6 @@ export default function Vendors({
   |--------------------------------------------------------------------------
   */
 
-  const isVendorCodeValid =
-    /^(?=.{3,30}$)[A-Za-z0-9_]+$/.test(
-      form.code.trim()
-    );
-
   const isFormComplete =
     Boolean(
       form.code.trim() &&
@@ -487,7 +482,6 @@ export default function Vendors({
       (form.vendorType !== "Organizer" ||
         form.contactPerson.trim())
     ) &&
-    isVendorCodeValid &&
     /^\d{10}$/.test(form.phone.trim()) &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
       form.email.trim()
@@ -538,13 +532,6 @@ export default function Vendors({
       return;
     }
 
-    if (!isVendorCodeValid) {
-      setError(
-        "Vendor Code must be 3–30 characters and contain only letters, numbers, or underscores. No spaces."
-      );
-
-      return;
-    }
 
     /*
     |--------------------------------------------------------------------------
@@ -979,14 +966,14 @@ export default function Vendors({
                 {viewingId !== null
                   ? `View Vendor - ${form.name || "Vendor"}`
                   : editingId !== null
-                  ? "Edit Vendor Details"
-                  : "Add Vendor Details"}
+                  ? "Edit Vendor"
+                  : "Add Vendor"}
               </h2>
 
               <p>
                 {viewingId !== null
                   ? "View vendor and business details. Editing is disabled."
-                  : "Provide the vendor and business details."}
+                  : "Enter the vendor details."}
               </p>
             </div>
 
@@ -1016,20 +1003,10 @@ export default function Vendors({
               onChange={handleChange}
               placeholder="Enter vendor code"
               autoComplete="off"
-              maxLength={30}
               required
               disabled={saving || viewingId !== null}
-              aria-invalid={
-                Boolean(form.code) &&
-                !isVendorCodeValid
-              }
             />
 
-            {form.code && !isVendorCodeValid ? (
-              <small className="vendors-field-error">
-                Use 3–30 characters. Letters, numbers, and underscores only. No spaces.
-              </small>
-            ) : null}
           </label>
 
           {/* =================================================
@@ -1151,7 +1128,7 @@ export default function Vendors({
 
           <label>
             <span>
-              Email <b>*</b>
+              Email Address <b>*</b>
             </span>
 
             <input
@@ -1182,7 +1159,7 @@ export default function Vendors({
 
           <label>
             <span>
-              Product <b>*</b>
+              Products Supplied <b>*</b>
             </span>
 
             <input
@@ -1192,7 +1169,7 @@ export default function Vendors({
                 form.category
               }
               onChange={handleChange}
-              placeholder="Enter product or category"
+              placeholder="Enter products or product categories"
               autoComplete="off"
               required
               disabled={saving || viewingId !== null}
@@ -1206,7 +1183,7 @@ export default function Vendors({
 
           <label>
             <span>
-              Address Line 1 <b>*</b>
+              Address Line 1 (Street Address) <b>*</b>
             </span>
 
             <input
@@ -1230,7 +1207,7 @@ export default function Vendors({
 
           <label>
             <span>
-              Address Line 2
+              Address Line 2 (Apartment, Suite, or Unit) (Optional)
             </span>
 
             <input
@@ -1412,7 +1389,7 @@ export default function Vendors({
             ) : (
               <>
                 {editingId !== null
-                  ? "Update Vendor"
+                  ? "Save Changes"
                   : "Create Vendor"}
               </>
             )}
@@ -1439,9 +1416,7 @@ export default function Vendors({
           </h1>
 
           <p>
-            Manage supplier contacts,
-            categories, and vendor
-            information.
+            Manage vendor details and contact information.
           </p>
         </div>
       </div>
@@ -1585,11 +1560,11 @@ export default function Vendors({
                 </th>
 
                 <th>
-                  Email
+                  Email Address
                 </th>
 
                 <th>
-                  Product 
+                  Products Supplied
                 </th>
 
                 <th>
@@ -1852,7 +1827,7 @@ export default function Vendors({
                             )
                           }
                           aria-label={`Edit ${vendor.name}`}
-                          title="Edit"
+                          title="Edit Vendor"
                           disabled={
                             saving ||
                             deleting
@@ -1872,7 +1847,7 @@ export default function Vendors({
                             )
                           }
                           aria-label={`Delete ${vendor.name}`}
-                          title="Delete"
+                          title="Delete Vendor"
                           disabled={
                             saving ||
                             deleting
