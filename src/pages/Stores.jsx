@@ -354,7 +354,7 @@ export default function Stores() {
                         title="View store"
                         onClick={() =>
                           nav(
-                            `/stores/${encodeURIComponent(s.id)}/configuration`,
+                            `/stores/${encodeURIComponent(s.id)}`,
                           )
                         }
                       >
@@ -397,7 +397,7 @@ export default function Stores() {
                           title="View store"
                           onClick={() =>
                             nav(
-                              `/stores/${encodeURIComponent(s.id)}/configuration`,
+                              `/stores/${encodeURIComponent(s.id)}`,
                             )
                           }
                         >
@@ -547,3 +547,4 @@ export default function Stores() {
     </div>
   );
 }
+

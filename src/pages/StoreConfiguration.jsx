@@ -1,8 +1,11 @@
+import { isUuid, normalizeStoreForConfiguration } from "../api/storeDetails";
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate, useParams } from "react-router-dom";
 
 import { getMerchant } from "../api/merchants";
-import Users from "./Users";
+import AddStore from "./AddStore";
+import { getActiveSubscriptions, extractActiveSubscription } from "../api/subscriptions_stores";
+
 import PosConfiguration from "./pos/PosConfiguration";
 import Products from "./Products";
 import Coupons from "./Coupons";
@@ -14,8 +17,9 @@ import StoreShifts from "./StoreShifts";
 import StorePaymentRecords from "./StorePaymentRecords";
 import VendorPayments from "./VendorPayments";
 
-import { ApiError } from "../api/http";
-import { listStores } from "../api/stores";
+import { api, ApiError } from "../api/http";
+import { endpoints } from "../api/endpoints";
+
 
 import {
   getWordpressConnector,
@@ -32,18 +36,27 @@ const navGroups = [
   {
     id: "store-setup",
     label: "Store Overview",
-    collapsible: false,
     items: [
-      ["overview", "bi-shop", "Store Overview"],
+      ["details", "bi-shop", "Store Details"],
+      ["subscription", "bi-credit-card", "Subscription"],
+    ],
+  },
+  {
+    id: "access",
+    label: "Access & Permissions",
+    items: [
+      ["features", "bi-grid", "Features"],
+      ["roles", "bi-shield-check", "Roles & Permissions"],
     ],
   },
 
   {
     id: "configurations",
-    label: "Configurations",
-    collapsible: false,
+    label: "Configuration",
+    collapsible: true,
     items: [
-      ["pos", "bi-phone", "POS Configurations"],
+      ["overview", "bi-globe", "Website Connection"],
+      ["pos", "bi-phone", "POS Configuration"],
     ],
   },
 
@@ -53,6 +66,7 @@ const navGroups = [
     items: [
       ["users", "bi-people", "Employees"],
       ["customers", "bi-person-lines-fill", "Customers"],
+      ["vendors", "bi-truck", "Vendors"],
     ],
   },
 
@@ -63,7 +77,6 @@ const navGroups = [
       ["categories", "bi-tags", "Categories"],
       ["products", "bi-box-seam", "Products"],
       ["fastkeys", "bi-key-fill", "Fast Keys"],
-      ["vendors", "bi-truck", "Vendors Directory"],
     ],
   },
 
@@ -72,7 +85,8 @@ const navGroups = [
     label: "Sales & Payments",
     items: [
       ["orders", "bi-receipt", "Orders"],
-      ["paymentrecords", "bi-credit-card", "Payment Records"],
+      ["paymentrecords", "bi-credit-card", "Payment History"],
+      ["vendorhistory", "bi-clock-history", "Vendor History"],
     ],
   },
 
@@ -93,58 +107,95 @@ const navGroups = [
   },
 ];
 
-function isUuid(value) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
-}
-
-function storeListFromResponse(response) {
-  if (Array.isArray(response)) return response;
-  for (const key of ["stores", "items", "results", "data"]) {
-    const value = response?.[key];
-    if (Array.isArray(value)) return value;
-    if (value && typeof value === "object") {
-      const nested = storeListFromResponse(value);
-      if (nested.length) return nested;
-    }
-  }
-  return [];
-}
-
-function normalizeStoreForConfiguration(store) {
-  const address = store.address && typeof store.address === "object" ? store.address : {};
-  const storeCode = [store.storeCode, store.store_code, store.code, store.storeId, store.storeID]
-    .find(value => value && !isUuid(value)) || "";
-  const type = store.storeType?.name || store.storeType || store.type?.name || store.type || "";
-  const location = [
-    address.street || (typeof store.address === "string" ? store.address : ""),
-    address.city || store.city,
-    address.state || store.state,
-  ].filter(Boolean).join(", ");
-
-  return {
-    ...store,
-    id: store.id || store._id || store.storeUUID || store.storeId || store.storeID,
-    storeCode,
-    name: store.storeName || store.name || storeCode || "Store",
-    type,
-    location: location || store.location || "—",
-    status: store.status || store.operationalStatus || "Active",
-    url: store.baseUrl || store.websiteUrl || store.url || "",
-  };
-}
-
 /* =========================================================
    STORE CONFIGURATION
    ========================================================= */
+
+function SummaryFields({ title, items }) {
+  return <section className="store-overview-card">
+    <h2>{title}</h2>
+    <dl>{items.map(([label, value]) => <div key={label}>
+      <dt>{label}</dt><dd>{value == null || value === "" ? "—" : String(value)}</dd>
+    </div>)}</dl>
+  </section>;
+}
+
+function StoreDetailsSummary({ store, merchant }) {
+  const address = typeof store.address === "object" && store.address ? store.address : {};
+  const hours = store.hours || store.onboardingSetup?.hours || [];
+  return <>
+    <SummaryFields title="Store Details" items={[
+      ["Store Name", store.name], ["Store Code", store.storeCode || store.id],
+      ["Merchant", merchant?.name || store.merchantName],
+      ["Store Type", typeof store.type === "object" ? store.type.name || store.type.code : store.type],
+      ["Status", store.status], ["Currency", store.currency], ["Timezone", store.timezone],
+      ["Default Language", store.defaultLanguage], ["Tax Region", store.taxRegion],
+    ]} />
+    <SummaryFields title="Contact & Location" items={[
+      ["Phone", store.phone], ["Email", store.email || store.storeEmail], ["Website", store.url],
+      ["Address", store.addressLine1 || address.street || address.addressLine1 || (typeof store.address === "string" ? store.address : "")],
+      ["Address Line 2", store.addressLine2 || address.addressLine2],
+      ["City", store.city || address.city], ["State / Province", store.state || address.state],
+      ["Country", store.country || address.country], ["Postal Code", store.zip || store.postalCode || address.zipCode || address.postalCode],
+    ]} />
+    <section className="store-overview-card"><h2>Operating Hours</h2>
+      <div className="store-overview-table"><table>
+        <thead><tr>{["Day", "Status", "Open", "Close", "Shifts"].map(label => <th key={label}>{label}</th>)}</tr></thead>
+        <tbody>{Array.isArray(hours) && hours.length ? hours.map((row, index) => <tr key={row.day || index}>
+          <td>{row.day || "—"}</td><td>{row.status || "—"}</td><td>{row.open || "—"}</td><td>{row.close || "—"}</td><td>{row.shifts ?? "—"}</td>
+        </tr>) : <tr><td colSpan={5}>No operating hours saved.</td></tr>}</tbody>
+      </table></div>
+    </section>
+  </>;
+}
+
+function StoreSubscriptionSummary({ merchantId }) {
+  const [subscription, setSubscription] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let active = true;
+    setLoading(true); setError(""); setSubscription(null);
+    async function load() {
+      try {
+        if (!merchantId) throw new Error("Merchant information is unavailable for this store.");
+        const result = await getActiveSubscriptions(merchantId);
+        if (active) setSubscription(extractActiveSubscription(result));
+      } catch (err) {
+        if (active) setError(err.message || "Unable to load subscription.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    load();
+    return () => { active = false; };
+  }, [merchantId, attempt]);
+  if (loading) return <p role="status">Loading subscription…</p>;
+  if (error) return <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div>;
+  if (!subscription) return <section className="store-overview-card"><h2>Subscription</h2><p className="store-overview-empty">No active subscription found.</p></section>;
+  const plan = subscription.plan || subscription.subscriptionPlan || {};
+  return <SummaryFields title="Subscription" items={[
+    ["Plan", subscription.planName || plan.name || (typeof plan === "string" ? plan : "")],
+    ["Status", subscription.status], ["Billing", subscription.billingCycle || subscription.billingPeriod || plan.billingCycle],
+    ["Price", subscription.price ?? subscription.amount ?? plan.price], ["Currency", subscription.currency || plan.currency],
+    ["Start Date", subscription.startDate || subscription.startsAt],
+    ["Renewal / End Date", subscription.renewalDate || subscription.endDate || subscription.expiresAt],
+    ["Store Limit", subscription.storeLimit ?? subscription.locationLimit ?? plan.includedStores ?? plan.included_stores],
+  ]} />;
+}
 
 export default function StoreConfiguration() {
   const {
     merchantId,
     storeId,
-    section = "overview",
+    section = "details",
   } = useParams();
 
   const nav = useNavigate();
+  const [editingSection, setEditingSection] = useState(false);
+  const [revision, setRevision] = useState(0);
+  useEffect(() => setEditingSection(false), [section, storeId]);
 
   /* =======================================================
      STORE STATE
@@ -215,50 +266,13 @@ export default function StoreConfiguration() {
       setError("");
 
       try {
-        if (merchantId) {
-          const result = await getMerchant(merchantId);
-          const apiStores = Array.isArray(result?.stores) ? result.stores : [];
-          const rawStores = result?.raw?.stores || result?.raw?.merchant?.stores || result?.raw?.data?.stores || [];
-
-          console.log("[STORE CONFIGURATION] Raw merchant API response:", result?.raw);
-          console.log("[STORE CONFIGURATION] Stores from API response:", rawStores);
-          console.log("[STORE CONFIGURATION] Normalized stores:", apiStores);
-
-          const found =
-            apiStores.find((item) =>
-              [item.id, item.storeCode].some((value) => String(value || "") === String(storeId || ""))
-            ) || null;
-
-          if (!cancelled) {
-            setMerchant(result?.merchant || null);
-            setStore(found);
-          }
-        } else {
-          const response = await listStores();
-          const rawStores = storeListFromResponse(response);
-          console.log("[STORE CONFIGURATION] GET /stores response:", response);
-          console.log("[STORE CONFIGURATION] Stores from API response:", rawStores);
-
-          const rawStore = rawStores.find((item) =>
-            [item.id, item._id, item.storeUUID, item.storeId, item.storeID, item.storeCode, item.store_code, item.code]
-              .some((value) => String(value || "") === String(storeId || ""))
-          );
-          const found = rawStore ? normalizeStoreForConfiguration(rawStore) : null;
-          console.log("[STORE CONFIGURATION] Selected store:", found);
-
-          if (!cancelled) {
-            if (!found) {
-              setStore(null);
-              setError(`Store ${storeId} was not found in the stores API response.`);
-              return;
-            }
-            setMerchant({
-              name: found.merchantName || found.merchant?.name || "Merchant",
-              id: found.merchantId || found.merchant?.id || "",
-            });
-            setStore(found);
-          }
-        }
+        const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
+        const raw = response?.store || response?.data?.store || response?.data || response;
+        if (!raw || typeof raw !== "object" || ![raw.id,raw.storeId,raw.storeID,raw.storeName,raw.name].some(Boolean)) throw new Error("Store not found.");
+        const found = normalizeStoreForConfiguration(raw);
+        const owner = merchantId || found.merchantId || found.merchant?.id;
+        const result = owner ? await getMerchant(owner).catch(() => null) : null;
+        if (!cancelled) { setStore(found); setMerchant(result?.merchant || {name:found.merchantName || found.merchant?.name || "",id:owner}); }
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -279,7 +293,7 @@ export default function StoreConfiguration() {
     return () => {
       cancelled = true;
     };
-  }, [merchantId, storeId]);
+  }, [merchantId, storeId, revision]);
 
   /* =======================================================
      LOAD WORDPRESS CONNECTOR
@@ -353,8 +367,18 @@ export default function StoreConfiguration() {
      SAVE WORDPRESS CONNECTION
      ======================================================= */
 
+  const restoreConnection = () => {
+    const saved = getWordpressConnector(storeId);
+    setSiteUrl(saved?.siteUrl || store?.url || "");
+    setJwtToken(saved?.jwtToken || "");
+    setConnected(Boolean(saved?.connected));
+    setMessage("");
+    setShowToken(false);
+  };
+
   const handleSave = async (event) => {
     event.preventDefault();
+    if (!editingSection || saving || testing) return;
 
     if (!siteUrl.trim() || !jwtToken.trim()) {
       setMessage(
@@ -382,6 +406,8 @@ export default function StoreConfiguration() {
           ? "WordPress JWT saved for this store."
           : "WordPress JWT saved for this store on this browser."
       );
+      setEditingSection(false);
+      setShowToken(false);
     } catch (err) {
       setMessage(
         err?.message ||
@@ -487,7 +513,7 @@ export default function StoreConfiguration() {
 
         <span>/</span>
 
-        <span>Store Configuration</span>
+        <span>Store Details & Configuration</span>
 
       </div>
 
@@ -644,279 +670,48 @@ export default function StoreConfiguration() {
                   STORE OVERVIEW & SETUP
                   =========================================== */}
 
-              {section === "overview" ? (
-
-                <div className="store-panel">
-
-                  {/* PAGE HEADER */}
-
-                  <div className="store-panel-heading">
-
-                    <div>
-
-                      <h2>
-                        Store Overview & Setup
-                      </h2>
-
-                      <p>
-                        Manage your store information
-                        and website connection settings.
-                      </p>
-
-                    </div>
-
-                    <span
-                      className={`connection-pill ${
-                        connected
-                          ? "connected"
-                          : "disconnected"
-                      }`}
-                    >
-                      {connected
-                        ? "Website Connected"
-                        : "Website Not Connected"}
-                    </span>
-
-                  </div>
-
-                  {/* =====================================
-                      STORE OVERVIEW
-                      ===================================== */}
-
-                  <div className="store-section-block">
-
-                    <div className="store-section-title">
-
-                      <h3>
-                        Store Overview
-                      </h3>
-
-                      <p>
-                        Store information used by
-                        Pinaka Commerce Hub.
-                      </p>
-
-                    </div>
-
-                    <div className="store-overview-grid">
-
-                      <div>
-                        <span>
-                          Store Name
-                        </span>
-
-                        <strong>
-                          {displayStoreName}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>
-                          Store ID
-                        </span>
-
-                        <strong>
-                          {displayStoreCode || "—"}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>
-                          Type
-                        </span>
-
-                        <strong>
-                          {store?.type || "—"}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>
-                          Location
-                        </span>
-
-                        <strong>
-                          {store?.location || "—"}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>
-                          Website
-                        </span>
-
-                        <strong>
-                          {siteUrl ||
-                            store?.url ||
-                            "Not connected"}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>
-                          JWT Status
-                        </span>
-
-                        <strong>
-                          {connected
-                            ? "Connected"
-                            : "Not connected"}
-                        </strong>
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                  {/* =====================================
-                      WEBSITE CONNECTION
-                      ===================================== */}
-
-                  <div className="store-section-block store-connection-section">
-
-                    <div className="store-section-title">
-
-                      <h3>
-                        Website Connection
-                      </h3>
-
-                      <p>
-                        Connect this store with
-                        its WordPress website.
-                      </p>
-
-                    </div>
-
-                    {/* WORDPRESS SITE URL */}
-
-                    <label className="store-field">
-
-                      WordPress Site URL
-
-                      <input
-                        type="url"
-                        placeholder="https://your-store.com"
-                        value={siteUrl}
-                        onChange={(event) =>
-                          setSiteUrl(
-                            event.target.value
-                          )
-                        }
-                        required
-                      />
-
-                    </label>
-
-                    {/* JWT TOKEN */}
-
-                    <label className="store-field">
-
-                      WordPress JWT Token
-
-                      <div className="token-input">
-
-                        <textarea
-                          rows={5}
-                          placeholder="Paste the JWT generated by WordPress"
-                          value={jwtToken}
-                          onChange={(event) =>
-                            setJwtToken(
-                              event.target.value
-                            )
-                          }
-                          required
-                          spellCheck={false}
-                          style={{
-                            WebkitTextSecurity:
-                              showToken
-                                ? "none"
-                                : "disc",
-                          }}
-                        />
-
-                        <button
-                          type="button"
-                          className="token-toggle-btn"
-                          onClick={() =>
-                            setShowToken(
-                              (current) =>
-                                !current
-                            )
-                          }
-                        >
-
-                          <i
-                            className={`bi ${
-                              showToken
-                                ? "bi-eye-slash"
-                                : "bi-eye"
-                            }`}
-                          />
-
-                          {showToken
-                            ? "Hide Token"
-                            : "Show Token"}
-
-                        </button>
-
-                      </div>
-
-                    </label>
-
-                    {/* MESSAGE */}
-
-                    {message ? (
-                      <div
-                        role="status"
-                        className={`store-message ${
-                          connected
-                            ? "success"
-                            : "info"
-                        }`}
-                      >
-                        {message}
-                      </div>
-                    ) : null}
-
-                    {/* ACTIONS */}
-
-                    <div className="store-form-actions">
-
-                      <button
-                        type="button"
-                        className="store-edit-btn"
-                        onClick={handleTest}
-                        disabled={
-                          testing || saving
-                        }
-                      >
-                        {testing
-                          ? "Syncing Categories & Products..."
-                          : "Sync Categories & Products"}
-                      </button>
-
-                      <button
-                        type="button"
-                        className="store-config-btn"
-                        onClick={handleSave}
-                        disabled={
-                          saving || testing
-                        }
-                      >
-                        {saving
-                          ? "Saving..."
-                          : "Save JWT Token"}
-                      </button>
-
-                    </div>
-
-                  </div>
-
+              {section === "details" ? (
+                <StoreDetailsSummary store={store} merchant={merchant} />
+              ) : section === "subscription" ? (
+                <StoreSubscriptionSummary merchantId={merchantId || store.merchantId || merchant?.id} />
+              ) : ["features", "roles", "users"].includes(section) ? (
+                <div>
+                  <AddStore key={section + ":" + revision + ":" + editingSection} embeddedStep={{features:2,roles:3,users:4}[section]} readOnly={!editingSection} onEdit={() => setEditingSection(true)} onDone={() => {setEditingSection(false);setRevision(v => v + 1);}} />
                 </div>
-
-              /* ===========================================
-                 POS CONFIGURATION
-                 =========================================== */
+              ) : section === "overview" ? (
+                <div className="store-panel">
+                  <div className="store-panel-heading">
+                    <div><h2>Website Connection</h2><p>{editingSection ? "Update the website URL and JWT token for this store." : "View the saved JWT connection status."}</p></div>
+                    {!editingSection && <button type="button" className="store-config-btn" onClick={() => {restoreConnection();setEditingSection(true);}}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
+                  </div>
+                  {!editingSection ? (
+                    <SummaryFields title="Website Connection" items={[
+                      ["Connection Status", connected ? "Connected" : "Not connected"],
+                      ["Website URL", siteUrl],
+                      ["JWT Token", jwtToken],
+                    ]} />
+                  ) : (
+                    <form className="store-connection-section" onSubmit={handleSave}>
+                      <fieldset disabled={saving || testing} style={{border:0,padding:0,margin:0,minWidth:0}}>
+                        <label className="store-field">WordPress Site URL
+                          <input type="url" placeholder="https://your-store.com" value={siteUrl} onChange={event => {setSiteUrl(event.target.value);setConnected(false);}} required />
+                        </label>
+                        <label className="store-field">WordPress JWT Token
+                          <div className="token-input">
+                            <textarea rows={5} placeholder="Paste the JWT generated by WordPress" value={jwtToken} onChange={event => {setJwtToken(event.target.value);setConnected(false);}} required spellCheck={false} style={{WebkitTextSecurity:showToken ? "none" : "disc"}} />
+                            <button type="button" className="token-toggle-btn" onClick={() => setShowToken(value => !value)} aria-pressed={showToken}>{showToken ? "Hide Token" : "Show Token"}</button>
+                          </div>
+                        </label>
+                        <div className="store-form-actions">
+                          <button type="button" className="sf-outline" onClick={() => {restoreConnection();setEditingSection(false);}}>Cancel</button>
+                          <button type="button" className="sf-outline" onClick={handleTest}>{testing ? "Syncing…" : "Sync Categories & Products"}</button>
+                          <button type="submit" className="store-config-btn">{saving ? "Saving…" : "Save Changes"}</button>
+                        </div>
+                      </fieldset>
+                    </form>
+                  )}
+                  {message && <div className="store-message info" role="status">{message}</div>}
+                </div>
 
               ) : section === "pos" ? (
 
@@ -929,18 +724,6 @@ export default function StoreConfiguration() {
 
               /* ===========================================
                  EMPLOYEES
-                 =========================================== */
-
-              ) : section === "users" ? (
-
-                <Users
-                  merchantId={merchantId}
-                  storeId={storeId}
-                  store={store}
-                />
-
-              /* ===========================================
-                 PRODUCTS
                  =========================================== */
 
               ) : section === "products" ? (
@@ -969,9 +752,11 @@ export default function StoreConfiguration() {
                  VENDORS
                  =========================================== */
 
-              ) : section === "vendors" ? (
+              ) : section === "vendors" || section === "vendorhistory" ? (
 
                 <VendorPayments
+                  key={section}
+                  viewMode={section === "vendorhistory" ? "payments" : "vendors"}
                   merchantId={merchantId}
                   storeId={storeId}
                   store={store}
@@ -1080,3 +865,6 @@ export default function StoreConfiguration() {
     </div>
   );
 }
+
+
+
