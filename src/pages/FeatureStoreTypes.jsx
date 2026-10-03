@@ -763,7 +763,7 @@ const FeatureStoreTypes = () => {
  
           >
  
-            Feature &amp; Permission Access
+            Permissions
  
           </button>
  
@@ -997,7 +997,7 @@ const FeatureStoreTypes = () => {
  
                               ? 'Removing...'
  
-                              : `Delete ${s.name}`
+                              :  'Remove Assignment'
  
                           }
  
@@ -1170,9 +1170,7 @@ const FeatureStoreTypes = () => {
  
                 <p>
  
-                  Select the store types to make
- 
-                  available for this feature.
+                  Manage store types where this feature is available.
  
                 </p>
  

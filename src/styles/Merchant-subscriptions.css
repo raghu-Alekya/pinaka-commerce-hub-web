@@ -1364,9 +1364,14 @@
 
    RESPONSIVE
 
+<<<<<<< HEAD
 \======================================== */
 @media (max-width: 1200px){
  
+=======
+\======================================== */@media (max-width: 1200px) {
+
+>>>>>>> origin/prudhvi
   :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-overview {
 
     grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr);
@@ -5984,4 +5989,8 @@
     width: auto !important;
     max-width: none !important;
   }
+<<<<<<< HEAD
 }}
+=======
+}
+>>>>>>> origin/prudhvi
