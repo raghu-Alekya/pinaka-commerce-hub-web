@@ -247,7 +247,7 @@ function createStore(code='') {
 }
 function initialState() {
   return {step:0,furthest:0,done:false,store:0,plan:-1,cycle:'',start:'',enterpriseStores:'',enterpriseDevices:'',enterpriseEmployees:'',employeeCount:0,
-    merchant:{type:'',storeTypeId:'',storeTypeCode:'',code:'',name:'',business:'',display:'',email:'',phone:'',addressLine1:'',addressLine2:'',city:'',state:'',postal:'',country:''},
+    merchant:{type:'',storeTypeId:'',storeTypeCode:'',code:'',ein:'',firstName:'',lastName:'',name:'',business:'',display:'',email:'',phone:'',addressLine1:'',addressLine2:'',city:'',state:'',postal:'',country:''},
     phase:'merchant',subscriptionStatus:'Pending activation',stores:[],roles:[],activeRole:0,devices:[]};
 }
 
@@ -295,7 +295,7 @@ export function validateSchedule(hours = []) {
 export function validate(state, storeTypesState, availablePackages = [], availableRoleTemplates = []) {
   if (state.step === 0 && state.phase !== 'store') {
     const merchant = state.merchant || {};
-    for (const [key, label] of [['business', 'Business name'], ['name', 'Primary contact name']]) {
+    for (const [key, label] of [['business', 'Legal Business Name'], ['display', 'Business Display Name'], ['firstName', 'First Name'], ['lastName', 'Last Name'], ['addressLine1', 'Address Line 1'], ['city', 'City'], ['state', 'State / Province'], ['postal', 'ZIP Code']]) {
       const fieldError = validateAddress(merchant[key], label);
       if (fieldError) return fieldError;
     }
@@ -326,7 +326,7 @@ function Field({ label, value, onChange, type = 'text', required = false, ...pro
   return <label className="pch-field">{label}{required && !props.readOnly ? ' *' : ''}
     <input {...props} type={type} value={value ?? ''} required={required}
       maxLength={type === 'email' ? 254 : props.maxLength}
-      placeholder={type === 'email' ? 'name@example.com' : props.placeholder}
+      placeholder={props.placeholder}
       onChange={onChange ? event => { onChange(event.target.value); } : undefined} />
   </label>;
 }
@@ -445,17 +445,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   const requestKeys=useRef(null);
   const addingStore=useRef(false);
   const pendingStoreKey=useRef(null);
-  useEffect(()=>{
-    if(initialValue) return;
-    let active=true;
-    if(!requestKeys.current) requestKeys.current={merchant:makeSafeId('merchant-request')};
-    if(!initialCodes.current) initialCodes.current=Promise.all(['merchant'].map(async kind=>{
-      if(typeof getNextSequence!=='function') throw new Error('Connect getNextSequence to your backend code reservation service.');
-      return formatGeneratedCode(kind,await getNextSequence({kind,requestId:requestKeys.current[kind]}));
-    }));
-    initialCodes.current.then(([merchantCode,storeCode])=>{if(active){setState(previous=>({...previous,merchant:{...previous.merchant,code:merchantCode},stores:previous.stores.map((store,index)=>index===0?{...store,code:storeCode}:store)}));setCodesReady(true);setCodeError('');}}).catch(error=>{if(active)setCodeError(error.message||'Unable to reserve codes.');});
-    return ()=>{active=false;};
-  },[getNextSequence,codeAttempt,initialValue]);
+  useEffect(() => { setCodesReady(true); }, []);
   const [error, setError] = useState('');
   const [custom, setCustom] = useState({ open: false, code: '', name: '', description: '', status: 'ACTIVE', scope: 'Store', id: null });
   const [returnToReview, setReturnToReview] = useState(false);
@@ -638,10 +628,10 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   const journey = storePhase ? [1,4,3,5,6] : [0,2,6];
   const stepLabels = storePhase
     ? [['Store details','Location & optional operating schedule'],['Subscription & features','Inherited plan and store enablement'],['Devices','Register & allocate licenses'],['Roles & permissions','Templates and custom roles'],['Review & save','Review store configuration']]
-    : [['Merchant details','Business & primary contact'],['Choose plan','Country pricing & subscription limits'],['Review & Subscribe','Plan review & billing summary']];
+    : [['Merchant details','Business & primary contact '],['Select Plan','Plan Pricing and Included Limits'],['Review & Confirm','Merchant, Subscription, and Billing Summary']];
   const position = journey.indexOf(state.step);
   const patch = values => { setError(''); setState(previous => ({ ...previous, ...values })); };
-  const changeMerchant = (key, value) => { setError(''); setState(previous => ({ ...previous, merchant: { ...previous.merchant, [key]: value } })); };
+  const changeMerchant = (key, value) => { setError(''); setState(previous => ({ ...previous, merchant: { ...previous.merchant, [key]: value, ...(['firstName', 'lastName'].includes(key) ? {name: [key === 'firstName' ? value : previous.merchant.firstName, key === 'lastName' ? value : previous.merchant.lastName].filter(Boolean).join(' ')} : {}) } })); };
   const changeStore = (key, value, index = state.store) => { setError(''); setState(previous => ({ ...previous,
     stores: previous.stores.map((item, i) => i === index ? { ...item, [key]: value } : item) })); };
   const changeDevice = (index, key, value) => { setError(''); setState(previous => ({ ...previous,
@@ -649,9 +639,9 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
   const storePicker = <Select label="Store context" value={state.store} onChange={value => patch({ store: Number(value) })}
     options={state.stores.map((item, i) => ({ value: i, label: `${item.code} · ${item.name}` }))} />;
   const merchantField = (label, key, type = 'text') => <Field
-    label={label} value={state.merchant[key]} type={type} required={false}
+    label={label} value={state.merchant[key]} type={type} required={key !== 'ein'}
     maxLength={key === 'phone' ? 10 : undefined} inputMode={key === 'phone' ? 'numeric' : undefined}
-    pattern={key === 'phone' ? '\\d{10}' : undefined} placeholder={key === 'phone' ? '10-digit mobile number' : undefined}
+    pattern={key === 'phone' ? '\\d{10}' : undefined}
     onChange={value => changeMerchant(key, key === 'phone' ? normalizeMerchantPhone(value) : value)} />;
   const storeField = (label, key, type = 'text', required = false) => <Field label={label} value={store[key]} type={type} required={required} onChange={value => changeStore(key, value)} />;
 
@@ -822,17 +812,17 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
           if (state.step === 6) return review();
     switch (state.step) {
       case 0: return <>
-        <Panel title="Business Details"><div className="pch-grid">
-          {merchantField('Legal / Business Name','business')}{merchantField('Business Display Name','display')}
-          <Field label="Merchant code" value={state.merchant.code} readOnly /><Field label="Initial status" value={state.subscriptionStatus || 'Pending activation'} readOnly />
+        <Panel title="Business Information"><div className="pch-grid">
+          {merchantField('Legal Business Name','business')}{merchantField('Business Display Name','display')}
+          <Field label="Merchant Code" value={state.merchant.code} disabled placeholder="Generated after merchant creation" />{merchantField('EIN','ein')}
         </div></Panel>
         <Panel title="Primary Contact"><div className="pch-grid">
-          {merchantField('Merchant Name','name')}{merchantField('Merchant Email','email','email')}{merchantField('Merchant Phone Number','phone','tel')}
-          {merchantField('Address Line 1 (Street number + Street name)','addressLine1')}{<Field label="Address Line 2 (Apartment / Suite / Unit)" value={state.merchant.addressLine2} required={false} onChange={value=>changeMerchant('addressLine2',value)} />}
-          {merchantField('City','city')}{merchantField(['United States','USA'].includes(state.merchant.country)?'State (2-letter abbreviation)':'State / Province','state')}{merchantField((getCountryRule(state.merchant.country)?.postalLabel || 'ZIP / Postal Code'),'postal')}
-          <Select label="Country *" value={state.merchant.country} options={getCountrySelectOptions(state.merchant.country,countryOptions)} onChange={value => { changeMerchant('country', value); }} />
+          {merchantField('First Name','firstName')}{merchantField('Last Name','lastName')}{merchantField('Email Address','email','email')}
+          {merchantField('Phone Number','phone','tel')}
+          {merchantField('Address Line 1 (Street Address)','addressLine1')}{<Field label="Address Line 2 (Apartment / Suite / Unit)" value={state.merchant.addressLine2} required={false} onChange={value=>changeMerchant('addressLine2',value)} />}
+          {merchantField('City','city')}{merchantField('State / Province','state')}{merchantField('ZIP Code','postal')}
+          <Select label="Country *" required value={state.merchant.country} options={getCountrySelectOptions(state.merchant.country,countryOptions)} onChange={value => { changeMerchant('country', value); }} />
           {countriesError && <p className="pch-small pch-error" role="alert">{countriesError}</p>}
-          <p className="pch-small pch-muted">{(getCountryRule(state.merchant.country)?.hint || '')}</p>
         </div></Panel>
       </>;
       case 1: if(!state.stores.length) return <Panel title="Store locations"><p className="pch-note">No store details were returned. Add a location to enter its details.</p><button type="button" disabled={submitting} onClick={async()=>{setSubmitting(true);try{const code=formatGeneratedCode('store',await getNextSequence({kind:'store',requestId:makeSafeId('store-request')}));patch({stores:[{...createStore(code),...businessTypeFields(state.merchant),licensed:true}],store:0});}catch(error){setError(error.message);}finally{setSubmitting(false);}}}>+ Add location</button></Panel>;
@@ -855,7 +845,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
           {storeField('Store name','name')}          {storeField('Store Base URL','url','url',false)}<Field label="Store ID" value={store.code} readOnly />
         </div><div className="pch-note">{store.type && storeTypeDefaults(store.type).f.length ? 'Existing feature and role defaults apply to this store type.' : 'Feature and role mappings are not yet configured for this store type. Custom roles remain available.'} Store types are loaded from master data; they do not grant commercial access.</div></Panel>
         <Panel title="Address & regional settings"><div className="pch-grid">
-          {storeField('Address Line 1 (Street number + Street name)','addressLine1')}{storeField('Address Line 2 (Apartment / Suite / Unit)','addressLine2','text',false)}
+          {storeField('Address Line 1 (Street Address)','addressLine1')}{storeField('Address Line 2 (Apartment / Suite / Unit)','addressLine2','text',false)}
           {storeField('City','city')}{storeField(['United States','USA'].includes(store.country)?'State (2-letter abbreviation)':'State / Province','state')}{storeField((getCountryRule(store.country)?.postalLabel || 'ZIP / Postal Code'),'postal')}
           <Select label="Country *" value={store.country} options={getCountrySelectOptions(store.country,countryOptions)} onChange={value => { changeStore('country', value); changeStore('timezone', ''); }} />
           <Select label="Time zone *" value={store.timezone} options={(getCountryRule(store.country)?.zones || [])} onChange={value=>changeStore('timezone',value)}/><Field label="Currency" value={(getRegion(store.country)?.currency || '')} readOnly />
@@ -871,7 +861,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
         })} /><p className="pch-small pch-muted">Timings and shift counts are optional. Earlier closing times mean next-day closing.</p></Panel>
       </>;
       case 2: return <>
-        <Panel title="Merchant subscription"><div className="pch-row pch-between"><h3>{state.merchant.display || 'Choose Plan'}</h3><span className="pch-pill">{(selectedStoreType?.name || state.merchant.type || 'All Store Types')} · {planCurrency}</span></div>
+        <Panel title="Subscription Plan"><div className="pch-row pch-between"><h3>{state.merchant.display || 'Select Plan'}</h3><span className="pch-pill">{(selectedStoreType?.name || state.merchant.type || 'All Store Types')} · {planCurrency}</span></div>
           {plansLoading && <p className="pch-note">Loading plans…</p>}
           {plansError && <div className="pch-error" role="alert">{plansError}</div>}
           {!plansLoading && !plansError && !packages.length && <p className="pch-note">No active plans are available.</p>}
@@ -934,7 +924,7 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
                     <div><strong>{item.employees ?? 'Custom'}</strong><span>employees</span></div>
                   </div>
                   <details className="pch-plan-features" open>
-                    <summary>Key features <span>{configuredFeatureCount}</span></summary>
+                    <summary>Included Features <span>{configuredFeatureCount}</span></summary>
                     {includedFeatures.length > 0
                       ? <ul>{includedFeatures.map(feature => <li key={feature.id}>{feature.name}</li>)}</ul>
                       : <p>{masterFeaturesState.loading ? 'Loading feature names…' : 'No included features configured for this plan.'}</p>}
@@ -942,13 +932,13 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
                 </div>;
               })}
             </section>
-            <section className="pch-plan-agreement" aria-label="Subscription agreement">
-              <h3>Subscription agreement</h3>
+            <section className="pch-plan-agreement" aria-label="Billing Details">
+              <h3>Billing Details</h3>
               <div className="pch-grid">
                 <Select label="Billing cycle" value={state.cycle} options={['Monthly','Annual']} onChange={value => patch({ cycle: value })} />
                 <Field label="Start date" value={state.start} type="date" onChange={value => patch({ start: value })} />
                 <Field label="Renewal date" value={renewalDate(state.start, state.cycle)} readOnly />
-                <Field label="Agreement price" value={`${price} / ${state.cycle === 'Annual' ? 'year' : 'month'}`} readOnly />
+                <Field label="Subscription Price" value={`${price} / ${state.cycle === 'Annual' ? 'year' : 'month'}`} readOnly />
                 {state.plan >= 0 && plan.stores == null && <Field label="Licensed stores" value={state.enterpriseStores} type="number" min="1" step="1" onChange={value => patch({ enterpriseStores: value })} />}
               </div>
               <div className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</div>
@@ -1230,7 +1220,8 @@ function MerchantOnboarding({ onComplete, onCancel, onDashboard, initialValue, g
     return <ReviewSubscribe
       merchantDetails={{
         businessName: state.merchant.business || state.merchant.display,
-        merchantCode: state.merchant.code,
+        merchantCode: state.merchant.code || 'Generated after merchant creation',
+        ein: state.merchant.ein,
         contactName: state.merchant.name,
         email: state.merchant.email,
         phone: state.merchant.phone,
@@ -1319,7 +1310,7 @@ export function merchantDetailToDraft(result, fallback={}) {
   draft.paymentHistory=Array.isArray(raw.paymentHistory)?raw.paymentHistory:[];
   draft.subscriptionId=subscription.id || subscription.subscriptionId || '';
   draft.start=String(subscription.startDate||subscription.start||'').slice(0,10);
-  draft.merchant={code:String(raw.merchant_code||raw.merchantId||fallback.merchantId||fallback.merchant_code||raw.code||raw.merchantCode||fallback.merchantCode||raw.id||fallback.id||''),business:raw.legalBusinessName||raw.businessName||fallback.name||'',display:raw.businessName||raw.name||fallback.name||'',name:raw.ownerName||[raw.firstName,raw.lastName].filter(Boolean).join(' ')||'',email:raw.email||fallback.email||'',phone:raw.phone||fallback.phone||'',addressLine1:raw.addressLine1||(typeof address==='string'?address:address.addressLine1||address.street||''),addressLine2:raw.addressLine2||(typeof address==='object'?address.addressLine2||address.unit||'':''),city:raw.city||address.city||'',state:raw.state||address.state||'',postal:raw.postalCode||address.zipCode||'',country:raw.country||address.country||''};
+  draft.merchant={firstName:raw.firstName||String(raw.merchantName||raw.ownerName||'').trim().split(/\s+/)[0]||'',lastName:raw.lastName||String(raw.merchantName||raw.ownerName||'').trim().split(/\s+/).slice(1).join(' ')||'',ein:raw.ein||raw.EIN||'',code:String(raw.merchantCode||raw.merchant_code||raw.code||fallback.merchantCode||fallback.merchant_code||''),business:raw.legalBusinessName||raw.businessName||fallback.name||'',display:raw.businessName||raw.name||fallback.name||'',name:raw.ownerName||[raw.firstName,raw.lastName].filter(Boolean).join(' ')||'',email:raw.email||fallback.email||'',phone:raw.phone||fallback.phone||'',addressLine1:raw.addressLine1||(typeof address==='string'?address:address.addressLine1||address.street||''),addressLine2:raw.addressLine2||(typeof address==='object'?address.addressLine2||address.unit||'':''),city:raw.city||address.city||'',state:raw.state||address.state||'',postal:raw.postalCode||address.zipCode||'',country:raw.country||address.country||''};
   draft.merchant={...draft.merchant,type:raw.storeTypeName || raw.storeType?.name || (typeof raw.storeType==='string'?raw.storeType:''),storeTypeId:raw.storeTypeId ?? raw.storeType?.id ?? '',storeTypeCode:raw.storeTypeCode || ''};
   const stores=response.stores||raw.stores||[];
   draft.stores=(Array.isArray(stores)?stores:[]).map(item=>{
@@ -1367,7 +1358,8 @@ function MerchantRouteEditor({merchantId,localMerchants,onSave}) {
 
     const savedMerchant = serverResult?.merchant || serverResult?.data?.merchant || serverResult?.data || serverResult;
     const responseRow = mapMerchantToRow(serverResult);
-    const savedDataWithId = savedData;
+    const generatedCode = savedMerchant?.merchantCode || savedMerchant?.merchant_code || savedMerchant?.code || serverResult?.merchantCode || savedData.merchant.code;
+    const savedDataWithId = {...savedData, merchant: {...savedData.merchant, code: generatedCode}};
     const summary=onboardingToRow(savedDataWithId);
     if(!merchantId && !savedRow.current && localMerchants.some(row=>String(row.id)===String(summary.id))) throw new Error('Merchant code already exists.');
     const existing=savedRow.current || loaded.row;
@@ -1377,7 +1369,7 @@ function MerchantRouteEditor({merchantId,localMerchants,onSave}) {
     const subscription = serverResult?.subscription || serverResult?.data?.subscription;
     return {
       merchantId: row.id,
-      merchantCode: savedData.merchant.code,
+      merchantCode: generatedCode,
       stores: savedDataWithId.stores,
       subscriptionId: subscription?.id || subscription?.subscriptionId || serverResult?.subscriptionId || '',
       subscriptionStatus: subscription?.status || serverResult?.subscriptionStatus || 'Pending activation',
@@ -1399,6 +1391,6 @@ function MerchantRouteEditor({merchantId,localMerchants,onSave}) {
       </div>
     </div>
   );
-  const initialValue=merchantId&&loaded.draft?{...loaded.draft,merchant:{...loaded.draft.merchant,code:loaded.row?.merchantId||loaded.draft.merchant?.code||''}}:undefined;
+  const initialValue=merchantId&&loaded.draft?{...loaded.draft,merchant:{...loaded.draft.merchant,code:loaded.draft.merchant?.code||''}}:undefined;
   return <MerchantOnboarding initialValue={initialValue} onComplete={saveFull} onCancel={cancel} onDashboard={()=>nav('/dashboard')}/>;
 }

@@ -4,6 +4,10 @@ import { useNavigate } from "react-router-dom";
 
 import { storeTypesApi } from "../api/storeTypes";
 
+function getStoreTypesForScreen() {
+  return storeTypesApi.getAll();
+}
+
 function toRow(item) {
 
   const created = item.createdAt ? new Date(item.createdAt) : null;
@@ -126,6 +130,8 @@ export default function CreateStoreType() {
 
   const [form, setForm] = useState(emptyForm);
 
+  const [nextStoreTypeCode, setNextStoreTypeCode] = useState("");
+
   const [originalForm, setOriginalForm] = useState(emptyForm);
 
   const [search, setSearch] = useState("");
@@ -176,6 +182,26 @@ export default function CreateStoreType() {
 
     setStoreTypes(sorted.map(toRow));
 
+    if (response?.nextStoreTypeCode) {
+
+      setNextStoreTypeCode(response.nextStoreTypeCode);
+
+    }
+
+    if (response?.nextStoreTypeCode && editingId === null) {
+
+      setForm((current) => ({ ...current, code: response.nextStoreTypeCode }));
+
+      setOriginalForm((current) => ({
+
+        ...current,
+
+        code: response.nextStoreTypeCode,
+
+      }));
+
+    }
+
   }
 
   useEffect(() => {
@@ -184,9 +210,7 @@ export default function CreateStoreType() {
 
     setLoading(true);
 
-    storeTypesApi
-
-      .getAll()
+    getStoreTypesForScreen()
 
       .then((response) => {
 
@@ -211,6 +235,28 @@ export default function CreateStoreType() {
         );
 
         setStoreTypes(sorted.map(toRow));
+
+        if (response?.nextStoreTypeCode) {
+
+          setNextStoreTypeCode(response.nextStoreTypeCode);
+
+          setForm((current) => ({
+
+            ...current,
+
+            code: response.nextStoreTypeCode,
+
+          }));
+
+          setOriginalForm((current) => ({
+
+            ...current,
+
+            code: response.nextStoreTypeCode,
+
+          }));
+
+        }
 
       })
 
@@ -321,16 +367,13 @@ export default function CreateStoreType() {
   }, [totalPages, currentPage]);
 
   const hasChanges =
-
-    form.code.trim() !== (originalForm.code || "").trim() ||
-
     form.name.trim() !== (originalForm.name || "").trim() ||
 
     form.description.trim() !== (originalForm.description || "").trim() ||
 
     form.status !== originalForm.status;
 
-  const canSubmitStoreType = !!form.code.trim() && !!form.name.trim();
+  const canSubmitStoreType = !!form.name.trim();
 
   function updateField(event) {
 
@@ -340,7 +383,7 @@ export default function CreateStoreType() {
 
       ...current,
 
-      [name]: name === "code" ? value.toUpperCase() : value,
+      [name]: value,
 
     }));
 
@@ -356,9 +399,9 @@ export default function CreateStoreType() {
 
   function resetForm() {
 
-    setForm(emptyForm);
+    setForm({ ...emptyForm, code: nextStoreTypeCode });
 
-    setOriginalForm(emptyForm);
+    setOriginalForm({ ...emptyForm, code: nextStoreTypeCode });
 
     setEditingId(null);
 
@@ -380,37 +423,7 @@ export default function CreateStoreType() {
 
     const nextErrors = {};
 
-    const code = form.code.trim().toUpperCase();
-
     const name = form.name.trim();
-
-    if (!code) {
-
-      nextErrors.code = "Store type code is required.";
-
-    } else if (!/^[A-Z][A-Z0-9_]{2,29}$/.test(code)) {
-
-      nextErrors.code =
-
-        "Use 3–30 uppercase letters, numbers, or underscores only.";
-
-    } else if (
-
-      storeTypes.some(
-
-        (item) =>
-
-          item.code.toLowerCase() === code.toLowerCase() &&
-
-          item.id !== editingId,
-
-      )
-
-    ) {
-
-      nextErrors.code = "This store type code already exists.";
-
-    }
 
     if (!name) {
 
@@ -451,9 +464,6 @@ export default function CreateStoreType() {
     }
 
     const values = {
-
-      storeTypeCode: form.code.trim().toUpperCase(),
-
       name: form.name.trim(),
 
       description: form.description.trim(),
@@ -560,11 +570,11 @@ export default function CreateStoreType() {
 
       if (data?.success === false) {
 
-        throw new Error(data.message || "Failed to deactivate store type.");
+        throw new Error(data.message || "Failed to delete store type.");
 
       }
 
-      setMessage(data?.message || "Store type deactivated successfully.");
+      setMessage(data?.message || "Store type deleted successfully.");
 
       if (String(editingId) === String(deleteTarget.id)) {
 
@@ -632,7 +642,7 @@ export default function CreateStoreType() {
           <div className="store-type-field">
             <label>
 
-              Store Type Code <span className="required">*</span>
+              Store Type Code
             </label>
             <input
 
@@ -640,23 +650,17 @@ export default function CreateStoreType() {
 
               value={form.code}
 
-              onChange={updateField}
+              readOnly
 
-              placeholder="Enter a unique code, e.g. GROCERY"
+              aria-readonly="true"
+
+              placeholder="Loading generated code..."
 
               maxLength={30}
 
-              className={errors.code ? "store-type-input-error" : ""}
+              className="store-type-readonly-input"
 
             />
-
-            {errors.code ? (
-              <small className="field-error">{errors.code}</small>
-
-            ) : (
-              <small></small>
-
-            )}
           </div>
 
           <div className="store-type-field">

@@ -163,6 +163,9 @@ export function toNestedMerchantPayload(data) {
 
   return {
     merchant: {
+      ein: m.ein || m.EIN || "",
+      firstName: m.firstName || "",
+      lastName: m.lastName || "",
       business: businessName,
       display: businessDisplayName,
       name: merchantName,
@@ -305,6 +308,9 @@ export function toFlatMerchantPayload(data) {
     : "CARD";
 
   return {
+    ein: m.ein || m.EIN || "",
+      firstName: m.firstName || "",
+      lastName: m.lastName || "",
     merchantName,
     merchantEmail,
     merchantPhoneNumber,

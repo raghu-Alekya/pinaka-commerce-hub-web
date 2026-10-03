@@ -256,11 +256,7 @@ export default function StoreTypeFeatures() {
     setError("");
 
     try {
-      const createdFeatures = await Promise.all(
-        newFeatures.map((feature) =>
-          storeTypesApi.addFeature(storeTypeId, feature.id),
-        ),
-      );
+      await storeTypesApi.addFeaturesBulk(storeTypeId, newFeatures.map((f) => f.id));
 
       const refreshed = await storeTypesApi.getFeatures(storeTypeId);
       const persistedAssignments = getFeatureAssignments(refreshed);
