@@ -351,18 +351,18 @@ export default function StoreTypeFeatures() {
           type="button"
           onClick={() => navigate(`/store-types/${storeTypeId}`)}
         >
-          Overview
+         Store Type Details
         </button>
 
         <button type="button" className="active">
-          Features
+          Assigned Features
         </button>
 
         <button
           type="button"
           onClick={() => navigate(`/store-types/${storeTypeId}/role-templates`)}
         >
-          Role Templates
+          Assigned Role Templates
         </button>
       </nav>
 
@@ -374,8 +374,8 @@ export default function StoreTypeFeatures() {
             </div>
 
             <div>
-              <h2>Features</h2>
-              <p>Manage platform features and their details.</p>
+              <h2>Assigned Features</h2>
+              <p>Manage features assigned to this store type.</p>
             </div>
           </div>
 
@@ -396,16 +396,16 @@ export default function StoreTypeFeatures() {
               onClick={openAddModal}
             >
               <i className="bi bi-plus-lg" />
-              Assign Feature
+              Assign Features
             </button>
           </div>
         </div>
 
         <div className="store-features-table">
           <div className="store-features-row store-features-row-head">
-            <div>Feature</div>
-            <div>Category</div>
-            <div>Action</div>
+            <div>Feature Name</div>
+            <div>Feature Category</div>
+            <div>Actions</div>
           </div>
 
           {filteredFeatures.map((feature) => (
@@ -422,7 +422,7 @@ export default function StoreTypeFeatures() {
                   aria-label={`Delete ${feature.name}`}
                   onClick={() => setDeleteTarget(feature)}
                 >
-                  <i className="bi bi-trash3" />
+                  Remove Assignment
                 </button>
               </div>
             </div>
@@ -431,7 +431,7 @@ export default function StoreTypeFeatures() {
 
         <div className="store-features-footer">
           <span>
-            Showing 1 to {filteredFeatures.length} of {features.length} entries
+            Showing 1 - {filteredFeatures.length} of {features.length} entries
           </span>
 
           <div className="store-features-pagination">

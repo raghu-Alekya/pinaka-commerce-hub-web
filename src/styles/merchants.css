@@ -1028,17 +1028,13 @@ a {
 
 .merchant-name strong {
     font-size: 12px;
-
     color: #364159;
-
     font-weight: 600;
 }
 
 .merchant-name small {
     font-size: 12px;
-
     color: #9aa1ae;
-
     margin-top: 2px;
 }
 
@@ -1232,9 +1228,9 @@ a {
 ========================================================= */
 
 .row-actions {
-    display: flex;
-    align-items: center;
-    gap: 2px;
+     display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .action-btn {

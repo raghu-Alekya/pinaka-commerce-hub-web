@@ -195,8 +195,8 @@ export default function ViewPlanFeaturesLimits() {
               </div>{" "}
               <div>
                 {" "}
-                <h2> Features &amp; Limits </h2>{" "}
-                <p> Features saved as included in this plan. </p>{" "}
+                <h2> Included Features </h2>{" "}
+                <p> View features included in this plan. </p>{" "}
               </div>{" "}
             </div>{" "}
             {/* ================================================= FEATURES TABLE ================================================= */}{" "}
@@ -208,7 +208,7 @@ export default function ViewPlanFeaturesLimits() {
                   {" "}
                   <tr>
                     {" "}
-                    <th>Feature</th> <th>Category</th> <th>Included</th>{" "}
+                    <th>Feature Name</th> <th>Feature Category</th> <th>Included in Plan</th>{" "}
                   </tr>{" "}
                 </thead>{" "}
                 <tbody>
@@ -248,7 +248,7 @@ export default function ViewPlanFeaturesLimits() {
               {" "}
               {selectedFeatures.length === 0
                 ? "0 included features"
-                : `Showing 1 to ${selectedFeatures.length} of ${selectedFeatures.length} included features`}{" "}
+                : `Showing 1 - ${selectedFeatures.length} of ${selectedFeatures.length} included features`}{" "}
             </p>{" "}
           </section>{" "}
         </>

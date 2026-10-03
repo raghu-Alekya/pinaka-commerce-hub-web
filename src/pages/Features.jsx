@@ -279,7 +279,7 @@ export default function Features() {
     <div className="features-page">
       <header className="features-page-heading">
         <h1>Features</h1>
-        <p>Manage platform features and their details.</p>
+        <p>Manage features available in PCH.</p>
       </header>
 
       {apiError && <p role="alert">{apiError}</p>}
@@ -291,7 +291,7 @@ export default function Features() {
           </div>
           <div>
             <h2>{isEditing ? "Edit Feature" : "Add Feature"}</h2>
-            <p>Provide the basic details and configuration for this feature.</p>
+            <p>Enter the feature details.</p>
           </div>
         </div>
 
@@ -414,7 +414,7 @@ export default function Features() {
               onClick={isEditing ? updateFeature : saveFeature}
               disabled={!canSubmitFeature}
             >
-              {isEditing ? "Update Feature" : "Create Feature"}
+              {isEditing ? "Update Feature" : "Add Feature"}
             </button>
           </div>
         </div>
@@ -422,7 +422,7 @@ export default function Features() {
 
       <section className="features-list-card">
         <div className="features-list-toolbar">
-          <h2>Features List</h2>
+          <h2>Features</h2>
           <div className="features-filters">
             <div className="feature-search">
               <i className="bi bi-search" />
@@ -441,7 +441,7 @@ export default function Features() {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
-                <option value="All Statuses">All Status</option>
+                <option value="All Statuses">All Statuses</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
@@ -591,7 +591,7 @@ export default function Features() {
 
         <div className="feature-pagination-row">
           <span>
-            Showing {totalEntries === 0 ? 0 : startIndex + 1} to {endIndex} of {totalEntries} entries
+            Showing {totalEntries === 0 ? 0 : startIndex + 1} - {endIndex} of {totalEntries} Features
           </span>
           <div className="feature-pagination">
             <button
