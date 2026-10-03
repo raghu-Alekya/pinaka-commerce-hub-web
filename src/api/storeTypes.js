@@ -134,6 +134,12 @@ export const storeTypesApi = {
       `/merchants/${encodeURIComponent(merchantId)}/store-types/${encodeURIComponent(storeTypeId)}/features`,
     );
   },
+  addFeaturesBulk: async (storeTypeId, featureIds) => {
+    return api.post(
+      /store-types//features/bulk,
+      { featureIds },
+    );
+  },
   addFeature: async (storeTypeId, featureId) => {
     return api.post(
       `/store-types/${encodeURIComponent(storeTypeId)}/features`,
