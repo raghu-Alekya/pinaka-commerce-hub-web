@@ -383,7 +383,7 @@ const FeaturePermissions = () => {
         <div className="fp-table-footer">
           <p className="fp-results-text">
             Showing {filteredPermissions.length > 0 ? 1 : 0} - {" "}
-            {filteredPermissions.length} of {filteredPermissions.length} Permissions 
+            {filteredPermissions.length} - {filteredPermissions.length} Permissions 
           </p>
 
           <div className="fp-pagination">
