@@ -4,15 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 import { storeTypesApi } from "../api/storeTypes";
 
-let pendingStoreTypesRequest = null;
-
 function getStoreTypesForScreen() {
-  if (!pendingStoreTypesRequest) {
-    pendingStoreTypesRequest = storeTypesApi.getAll().finally(() => {
-      pendingStoreTypesRequest = null;
-    });
-  }
-  return pendingStoreTypesRequest;
+  return storeTypesApi.getAll();
 }
 
 function toRow(item) {
