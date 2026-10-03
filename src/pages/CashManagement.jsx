@@ -161,14 +161,8 @@ export default function CashManagement() {
       ===================================================== */}
 
       <div className="cash-page-header">
-
-        <div className="cash-page-icon">
-          <i className="bi bi-wallet2" />
-        </div>
-
         <div>
           <h1>Cash Management</h1>
-
           <p>
             View and manage cash payments and transactions for your stores.
           </p>
@@ -381,7 +375,7 @@ export default function CashManagement() {
           onClick={clearFilters}
         >
           <i className="bi bi-arrow-counterclockwise" />
-          Clear
+          Reset
         </button>
 
       </div>
@@ -424,7 +418,6 @@ export default function CashManagement() {
 
                 <th>
                   Title
-                  <span className="cash-sort-icon">↕</span>
                 </th>
 
                 <th>

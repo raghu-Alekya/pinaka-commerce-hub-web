@@ -1356,22 +1356,17 @@
 
   text-align: left;
 
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-page > .primary-flow-button {
+}
+
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success-page > .primary-flow-button {
 
   margin-top: 10px;
 
-}/* ========================================
-
-   RESPONSIVE
-
-<<<<<<< HEAD
-\======================================== */
-@media (max-width: 1200px){
+}
+  
  
-=======
-\======================================== */@media (max-width: 1200px) {
+@media (max-width: 1200px) {
 
->>>>>>> origin/prudhvi
   :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-overview {
 
     grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr);
@@ -1438,7 +1433,9 @@
 
   }
 
-}@media (max-width: 900px) {
+}}
+
+@media (max-width: 900px) {
 
   .merchant-subscriptions-page,
 
@@ -5988,9 +5985,4 @@
     flex: 1 1 240px !important;
     width: auto !important;
     max-width: none !important;
-  }
-<<<<<<< HEAD
-}}
-=======
-}
->>>>>>> origin/prudhvi
+  }}
