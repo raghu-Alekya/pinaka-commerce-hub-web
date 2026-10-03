@@ -188,8 +188,7 @@ export default function StoreTypeRoleTemplates() {
           .map((role) =>
             roleTemplatesApi.assignToStoreType(storeTypeId, {
               roleTemplateId: role.id,
-              defaultEnabled: true,
-              required: false,
+              status: "ACTIVE",
             })
           )
       );
