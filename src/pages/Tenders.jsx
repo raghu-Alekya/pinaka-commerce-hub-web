@@ -349,9 +349,9 @@ export default function Tenders() {
     <section className="tenders-page">
       <div className="tenders-header">
         <div>
-          <h1>Create Tender</h1>
+          <h1>Tender</h1>
 
-          <p>Create and manage tenders and their availability.</p>
+          <p>Manage tenders and their availability.</p>
         </div>
       </div>
 
@@ -364,11 +364,11 @@ export default function Tenders() {
 
             <div>
               <h2>
-                {editingId ? "Edit Tender Details" : "Add Tender Details"}
+                {editingId ? "Edit Tender" : "Add Tender"}
               </h2>
 
               <p>
-                Provide the basic details and configuration for this tender.
+                Enter the tender details.
               </p>
             </div>
           </div>
@@ -446,7 +446,7 @@ export default function Tenders() {
               ? "Saving..."
               : editingId
                 ? "Update Tender"
-                : "Create Tender"}
+                : "Add Tender"}
           </button>
         </div>
       </form>
@@ -454,7 +454,7 @@ export default function Tenders() {
       <div className="tenders-list-card">
         <div className="tenders-list-toolbar">
           <div>
-            <h2>Tenders List</h2>
+            <h2>Tenders</h2>
 
             <p>
               {filteredTenders.length} payment method
@@ -489,7 +489,7 @@ export default function Tenders() {
               onChange={(event) => setSortBy(event.target.value)}
               aria-label="Sort tenders"
             >
-              <option value="newest">Newest to Oldest</option>
+              <option value="newest">Recently Added</option>
 
               <option value="oldest">Oldest to Newest</option>
 
@@ -518,7 +518,7 @@ export default function Tenders() {
           <table className="tenders-table">
             <thead>
               <tr>
-                <th>Code</th>
+                <th>Tender Code</th>
                 <th>Tender</th>
                 <th>Status</th>
                 <th>Created At</th>
