@@ -42,7 +42,6 @@ export function normalizeStoreType(item) {
 const path = (id) => `/store-types/${encodeURIComponent(id)}`;
 
 const payload = (form) => ({
-  storeTypeCode: (form.storeTypeCode || form.code || "").trim().toUpperCase(),
   name: (form.name || "").trim(),
   description: (form.description || "").trim(),
   status: (form.status || "Active").toUpperCase(),
@@ -80,7 +79,12 @@ export const storeTypesApi = {
       res?.data?.storeTypes ||
       (Array.isArray(res) ? res : [])
     ).map(normalizeStoreType);
-    return { success: true, storeTypes, data: storeTypes };
+    return {
+      success: true,
+      storeTypes,
+      nextStoreTypeCode: res?.nextStoreTypeCode || "",
+      data: storeTypes,
+    };
   },
   getForMerchant: async (merchantId) => {
     const res = await api.get(
