@@ -248,6 +248,7 @@ export default function App() {
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/store-types" element={<CreateStoreType />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
         <Route
           path="/store-types/:storeTypeId"
