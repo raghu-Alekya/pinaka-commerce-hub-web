@@ -174,11 +174,21 @@ export default function Features() {
   const saveFeature = async () => {
     if (!validateFeature()) return;
     try {
-      const payload = { ...form, code: form.code.trim().toUpperCase() };
-      await createFeatureApi(payload);
+      const payload = {
+        ...form,
+        category: form.category,
+        feature_category: form.category,
+        code: form.code.trim().toUpperCase(),
+        feature_code: form.code.trim().toUpperCase(),
+      };
+      const created = await createFeatureApi(payload);
+      if (created && created.id) {
+        setFeatures((prev) => [created, ...prev.filter((f) => f.id !== created.id)]);
+      }
       const latestFeatures = await listFeatures();
-
-      setFeatures(latestFeatures);
+      if (Array.isArray(latestFeatures) && latestFeatures.length > 0) {
+        setFeatures(latestFeatures);
+      }
       setCurrentPage(1);
       clearForm();
       setApiError("");
@@ -190,11 +200,31 @@ export default function Features() {
   const updateFeature = async () => {
     if (!validateFeature()) return;
     try {
-      const payload = { ...form, code: form.code.trim().toUpperCase() };
-      await updateFeatureApi(editingId, payload);
+      const payload = {
+        ...form,
+        category: form.category,
+        feature_category: form.category,
+        code: form.code.trim().toUpperCase(),
+        feature_code: form.code.trim().toUpperCase(),
+      };
+      const updated = await updateFeatureApi(editingId, payload);
+      setFeatures((prev) =>
+        prev.map((item) =>
+          String(item.id) === String(editingId)
+            ? {
+                ...item,
+                ...payload,
+                ...(updated || {}),
+                category: form.category,
+                feature_category: form.category,
+              }
+            : item
+        )
+      );
       const latestFeatures = await listFeatures();
-
-      setFeatures(latestFeatures);
+      if (Array.isArray(latestFeatures) && latestFeatures.length > 0) {
+        setFeatures(latestFeatures);
+      }
       setCurrentPage(1);
       clearForm();
       setApiError("");

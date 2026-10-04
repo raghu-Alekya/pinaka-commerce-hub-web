@@ -61,25 +61,23 @@ export const listFeatures = async () => {
 };
 
 export const createFeature = async (form) => {
-  const response = await api.post("/features", {
+  const body = {
     ...payload(form),
-
-    // UI Feature Code -> Backend featureKey
-    featureKey: (form.code || form.name || "").trim().toUpperCase().replace(/\s+/g, '_'),
-  });
-
+    feature_code: (form.code || form.feature_code || form.name || "").trim().toUpperCase().replace(/\s+/g, '_'),
+    featureKey: (form.code || form.feature_code || form.name || "").trim().toUpperCase().replace(/\s+/g, '_'),
+  };
+  const response = await api.post("/features", body);
   const feat = response?.feature || response?.data || response;
   return normalize(feat);
 };
 
 export const updateFeature = async (id, form) => {
-  const response = await api.put(path(id), {
+  const body = {
     ...payload(form),
-
-    // Keep Feature Code mapped correctly during update too
-    featureKey: (form.code || form.name || "").trim().toUpperCase().replace(/\s+/g, '_'),
-  });
-
+    feature_code: (form.code || form.feature_code || form.name || "").trim().toUpperCase().replace(/\s+/g, '_'),
+    featureKey: (form.code || form.feature_code || form.name || "").trim().toUpperCase().replace(/\s+/g, '_'),
+  };
+  const response = await api.put(path(id), body);
   const feat = response?.feature || response?.data || response;
   return normalize(feat);
 };
