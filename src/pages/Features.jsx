@@ -7,6 +7,26 @@ const initialFeatures = [];
 
 const emptyForm = { code: "", name: "", description: "", category: "", status: "Active" };
 
+const defaultCategories = [
+  "Inventory",
+  "Payments",
+  "Operations",
+  "Cash Management",
+  "Refund",
+  "Promotions",
+  "Peripheral",
+  "Billing",
+  "Store Management",
+  "Reports",
+  "Administration",
+  "Integration",
+  "KOT Management",
+  "Kitchen Management",
+  "Financial",
+  "Marketing",
+  "Hardware",
+];
+
 
 function FeatureDescriptionCell({ description = "" }) {
   const textRef = useRef(null);
@@ -57,6 +77,19 @@ export default function Features() {
 
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set(defaultCategories);
+    features.forEach((f) => {
+      if (f.category && f.category.trim()) {
+        set.add(f.category.trim());
+      }
+    });
+    if (form.category && form.category.trim()) {
+      set.add(form.category.trim());
+    }
+    return Array.from(set);
+  }, [features, form.category]);
 
   const requiredFieldsComplete =
     form.code.trim() !== "" &&
@@ -354,27 +387,20 @@ export default function Features() {
             <label>Feature Category<span>*</span></label>
             <div className="select-shell">
               <select
-                  name="category"
-                  value={form.category}
-                  onChange={updateField}
-                  autoComplete="off"
-                >
-                  <option value="">Select category</option>
-                  <option value="Inventory">Inventory</option>
-                  <option value="Payments">Payments</option>
-                  <option value="Operations">Operations</option>
-                  <option value="Cash Management">Cash Management</option>
-                  <option value="Refund">Refund</option>
-                  <option value="Promotions">Promotions</option>
-                  <option value="Peripheral">Peripheral</option>
-                  <option value="Billing">Billing</option>
-                  <option value="Store Management">Store Management</option>
-                  <option value="Reports">Reports</option>
-                  <option value="Administration">Administration</option>
-                  <option value="Integration">Integration</option>
-                  <option value="KOT Management">KOT Management</option>
-                  <option value="Kitchen Management">Kitchen Management</option>
-                </select>
+                name="category"
+                data-field="category"
+                value={form.category}
+                onChange={updateField}
+                autoComplete="off"
+                className={formErrors.category ? "feature-input-error" : ""}
+              >
+                <option value="">Select category</option>
+                {categoryOptions.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
               <i className="bi bi-chevron-down" />
             </div>
             {formErrors.category ? (
