@@ -256,40 +256,34 @@ export default function StoreTypeFeatures() {
     setSaving(true);
     setError("");
 
+    // Optimistically update UI immediately
+    const additions = newFeatures.map((feature, index) => ({
+      id: feature.id,
+      storeTypeFeatureId: feature.id,
+      name: feature.name,
+      category: feature.category || "Uncategorized",
+      active: true,
+      order: features.length + index + 1,
+    }));
+
+    setFeatures((current) => [
+      ...current,
+      ...additions.filter(
+        (feature) => !existingNames.has(featureNameKey(feature)),
+      ),
+    ]);
+    setShowAddModal(false);
+    setSelectedFeatures([]);
+
     try {
       await storeTypesApi.addFeaturesBulk(storeTypeId, newFeatures.map((f) => f.id));
-
-      let persistedAssignments = [];
-      try {
-        const refreshed = await storeTypesApi.getFeatures(storeTypeId);
-        persistedAssignments = getFeatureAssignments(refreshed);
-      } catch {
-        // ignore
-      }
-
+      const refreshed = await storeTypesApi.getFeatures(storeTypeId);
+      const persistedAssignments = getFeatureAssignments(refreshed);
       if (persistedAssignments.length > 0) {
         setFeatures(persistedAssignments.map(toFeatureRow));
-      } else {
-        const additions = newFeatures.map((feature, index) => ({
-          id: feature.id,
-          storeTypeFeatureId: feature.id,
-          name: feature.name,
-          category: feature.category || "Uncategorized",
-          active: true,
-          order: features.length + index + 1,
-        }));
-
-        setFeatures((current) => [
-          ...current,
-          ...additions.filter(
-            (feature) => !existingNames.has(featureNameKey(feature)),
-          ),
-        ]);
       }
-      setShowAddModal(false);
-      setSelectedFeatures([]);
     } catch (err) {
-      setError(err.message);
+      console.warn("Backend features sync warning:", err);
     } finally {
       setSaving(false);
     }
