@@ -158,14 +158,14 @@ export default function Features() {
     setFormErrors({});
   };
 
-  const editFeature = (feature) => {
+    const editFeature = (feature) => {
     setEditingId(feature.id);
     setForm({
-      code: feature.code || feature.name.toUpperCase().replace(/\s+/g, "_"),
-      name: feature.name,
-      description: feature.description,
-      category: feature.category,
-      status: feature.status,
+      code: feature.feature_code || feature.code || feature.featureKey || (feature.name ? feature.name.toUpperCase().replace(/\s+/g, "_") : ""),
+      name: feature.name || "",
+      description: feature.description || "",
+      category: feature.feature_category || feature.category || feature.featureCategory || "Operations",
+      status: feature.status || "Active",
     });
     setFormErrors({});
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -176,8 +176,8 @@ export default function Features() {
     try {
       const payload = {
         ...form,
-        category: form.category,
-        feature_category: form.category,
+        category: form.category || "Operations",
+        feature_category: form.category || "Operations",
         code: form.code.trim().toUpperCase(),
         feature_code: form.code.trim().toUpperCase(),
       };
@@ -202,8 +202,8 @@ export default function Features() {
     try {
       const payload = {
         ...form,
-        category: form.category,
-        feature_category: form.category,
+        category: form.category || "Operations",
+        feature_category: form.category || "Operations",
         code: form.code.trim().toUpperCase(),
         feature_code: form.code.trim().toUpperCase(),
       };
@@ -217,6 +217,8 @@ export default function Features() {
                 ...(updated || {}),
                 category: form.category,
                 feature_category: form.category,
+                updatedAt: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
               }
             : item
         )
@@ -242,10 +244,11 @@ export default function Features() {
   const deleteFeature = async (featureId) => {
     try {
       await deleteFeatureApi(featureId);
-
-      // Re-fetch from the API after delete so the table reflects the persisted backend state.
+      setFeatures((prev) => prev.filter((item) => String(item.id) !== String(featureId)));
       const latestFeatures = await listFeatures();
-      setFeatures(latestFeatures);
+      if (Array.isArray(latestFeatures)) {
+        setFeatures(latestFeatures);
+      }
       setApiError("");
     } catch (e) {
       setApiError(e.message || "Unable to delete feature.");
@@ -259,7 +262,7 @@ export default function Features() {
       await deleteFeature(deleteTarget.id);
       setDeleteTarget(null);
     } catch {
-      // Keep the modal open when the delete request fails.
+      // Keep modal open on error
     }
   };
 
