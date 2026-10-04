@@ -35,7 +35,7 @@ const payload = (form) => ({
   feature_category: (form.category || form.feature_category || "").trim(),
 
   // Existing Features form doesn't always provide type.
-  featureType: ["BOOLEAN", "LIMIT", "CONFIG"].includes(String(form.type || form.featureType || "").toUpperCase()) ? String(form.type || form.featureType).toUpperCase() : "BOOLEAN",
+  featureType: (form.type || form.featureType || "TEXT").trim(),
 
   status: String(form.status || "ACTIVE").toUpperCase(),
 });
