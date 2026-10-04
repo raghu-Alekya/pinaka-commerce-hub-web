@@ -87,6 +87,7 @@ export default function StoreTypeFeatures() {
   const [saving, setSaving] = useState(false);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [error, setError] = useState("");
+  const [modalError, setModalError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -197,9 +198,9 @@ export default function StoreTypeFeatures() {
   function openAddModal() {
     setSelectedFeatures([]);
     setModalSearch("");
+    setModalError("");
     setShowAddModal(true);
     setLoadingCatalog(true);
-    setError("");
 
     listFeatures()
       .then((items) => {
@@ -218,7 +219,7 @@ export default function StoreTypeFeatures() {
         setSelectedFeatures(assignedIds);
       })
       .catch((err) => {
-        setError(err.message);
+        setModalError(err.message || "Failed to load features");
       })
       .finally(() => {
         setLoadingCatalog(false);
