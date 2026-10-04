@@ -553,7 +553,7 @@ export default function Features() {
                       {item.name}
                     </span>
                   </td>
-                  <td>{item.category}</td>
+                  <td>{item.feature_category || item.category || "—"}</td>
                   <FeatureDescriptionCell description={item.description} />
                   <td>
                     <span className={`feature-status ${item.status.toLowerCase()}`}>
