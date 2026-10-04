@@ -258,21 +258,20 @@ export default function StoreTypeFeatures() {
     try {
       await storeTypesApi.addFeaturesBulk(storeTypeId, newFeatures.map((f) => f.id));
 
-      const refreshed = await storeTypesApi.getFeatures(storeTypeId);
-      const persistedAssignments = getFeatureAssignments(refreshed);
+      let persistedAssignments = [];
+      try {
+        const refreshed = await storeTypesApi.getFeatures(storeTypeId);
+        persistedAssignments = getFeatureAssignments(refreshed);
+      } catch {
+        // ignore
+      }
 
       if (persistedAssignments.length > 0) {
         setFeatures(persistedAssignments.map(toFeatureRow));
       } else {
         const additions = newFeatures.map((feature, index) => ({
           id: feature.id,
-          storeTypeFeatureId:
-            createdFeatures[index]?.featureId ||
-            createdFeatures[index]?.feature?.id ||
-            createdFeatures[index]?.feature?.featureId ||
-            createdFeatures[index]?.data?.id ||
-            createdFeatures[index]?.storeTypeFeature?.id ||
-            createdFeatures[index]?.data?.storeTypeFeature?.id,
+          storeTypeFeatureId: feature.id,
           name: feature.name,
           category: feature.category || "Uncategorized",
           active: true,
