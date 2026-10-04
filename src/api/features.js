@@ -25,7 +25,8 @@ const normalize = (item = {}) => ({
 const payload = (form) => ({
   name: (form.name || "").trim(),
   description: (form.description || "").trim(),
-  category: (form.category || "").trim(),
+  category: (form.category || form.feature_category || "").trim(),
+  feature_category: (form.category || form.feature_category || "").trim(),
 
   // Existing Features form doesn't always provide type.
   featureType: (form.type || form.featureType || "TEXT").trim(),
