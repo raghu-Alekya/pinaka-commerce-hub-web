@@ -299,7 +299,7 @@ function extractVendorList(data) {
 */
 
 function prepareVendorPayload(values = {}) {
-  return {
+  const payload = {
     /*
     |--------------------------------------------------------------------------
     | VENDOR INFORMATION
@@ -356,6 +356,14 @@ function prepareVendorPayload(values = {}) {
 
     status: toApiStatus(values.status),
   };
+
+  const codeVal = values.vendorCode ?? values.code;
+  if (codeVal) {
+    payload.vendorCode = codeVal;
+    payload.code = codeVal;
+  }
+
+  return payload;
 }
 
 /*
