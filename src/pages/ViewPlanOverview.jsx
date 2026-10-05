@@ -181,7 +181,7 @@ export default function ViewPlanOverview() {
                 <span>
                   Applicable Business/Store Type <b>*</b>
                 </span>
-                <input value={plan.storeType || ""} readOnly />
+                <input value={plan.storeTypeName || plan.storeType || ""} readOnly />
                 {/* <small>The store type this plan can be assigned to.</small> */}
               </label>
 
