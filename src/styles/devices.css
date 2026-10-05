@@ -21,21 +21,15 @@
 .devices-page-header h1 {
   margin: 0;
   color: #142b4c;
-  font-size: 28px;
-  line-height: 32px;
-  font-weight: 750;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 700;
 }
-.devices-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 4px;
-  color: #8193ad;
+.devices-subtitle {
+  margin: 4px 0 0;
+  color: #7d8697;
   font-size: 13px;
-}
-.devices-breadcrumb strong {
-  color: #405b7d;
-  font-weight: 500;
+  line-height: 1.4;
 }
 .devices-header-actions {
   display: flex;
@@ -326,39 +320,31 @@
 ========================================================= */
 .devices-table th:nth-child(1),
 .devices-table td:nth-child(1) {
-  width: 45px;
+  width: 4%;
 }
 .devices-table th:nth-child(2),
 .devices-table td:nth-child(2) {
-  width: 215px;
+  width: 22%;
 }
 .devices-table th:nth-child(3),
 .devices-table td:nth-child(3) {
-  width: 170px;
+  width: 15%;
 }
 .devices-table th:nth-child(4),
 .devices-table td:nth-child(4) {
-  width: 160px;
+  width: 17%;
 }
 .devices-table th:nth-child(5),
 .devices-table td:nth-child(5) {
-  width: 145px;
+  width: 17%;
 }
 .devices-table th:nth-child(6),
 .devices-table td:nth-child(6) {
-  width: 145px;
+  width: 15%;
 }
 .devices-table th:nth-child(7),
 .devices-table td:nth-child(7) {
-  width: 115px;
-}
-.devices-table th:nth-child(8),
-.devices-table td:nth-child(8) {
-  width: 145px;
-}
-.devices-table th:nth-child(9),
-.devices-table td:nth-child(9) {
-  width: 120px;
+  width: 10%;
 }
 /* =========================================================
    CHECKBOX
@@ -470,8 +456,6 @@
 ========================================================= */
 .devices-table th:last-child,
 .devices-table td:last-child {
-  width: 96px;
-  min-width: 96px;
   text-align: center;
 }
 .device-actions {

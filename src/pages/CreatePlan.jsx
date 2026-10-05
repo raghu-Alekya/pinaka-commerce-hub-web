@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { storeTypesApi } from "../api/storeTypes";
 import { createPlan, deletePlan, listPlans, updatePlan } from "../api/plans";
@@ -148,6 +148,7 @@ export default function CreatePlan() {
   const navigate = useNavigate();
 
   const [storeTypes, setStoreTypes] = useState([]);
+  const storeTypesRequest = useRef(false);
   const [storeTypesLoading, setStoreTypesLoading] = useState(false);
   const [storeTypesError, setStoreTypesError] = useState("");
 
@@ -200,6 +201,8 @@ export default function CreatePlan() {
   }, [form.name]);
 
   async function fetchStoreTypes() {
+    if (storeTypesRequest.current) return;
+    storeTypesRequest.current = true;
     try {
       setStoreTypesLoading(true);
       setStoreTypesError("");
@@ -216,8 +219,8 @@ export default function CreatePlan() {
       setStoreTypes(normalized);
     } catch (error) {
       setStoreTypesError(error?.message || "Failed to load store types.");
-      setStoreTypes([]);
     } finally {
+      storeTypesRequest.current = false;
       setStoreTypesLoading(false);
     }
   }
@@ -355,9 +358,9 @@ export default function CreatePlan() {
         const savedValue =
           typeof savedFeature === "string"
             ? savedFeature
-            : (savedFeature?.name ??
+            : (savedFeature?.featureId ??
+              savedFeature?.name ??
               savedFeature?.featureName ??
-              savedFeature?.featureId ??
               "");
 
         const byId = storeTypeFeatures.find(
@@ -373,7 +376,7 @@ export default function CreatePlan() {
             String(savedValue).trim().toLowerCase(),
         );
 
-        return byName?.featureId;
+        return byName?.featureId || savedValue;
       })
       .filter(Boolean);
 
@@ -419,7 +422,6 @@ export default function CreatePlan() {
   }, [filteredPlans, currentPage]);
 
   const canContinueStepOne =
-    form.code.trim() &&
     form.name.trim() &&
     form.applicableStoreType &&
     !codeError &&
@@ -542,10 +544,7 @@ export default function CreatePlan() {
       code: plan.code || "",
       name: plan.name || "",
       description: plan.description || "",
-      applicableStoreType: storeTypeDisplayName(
-        plan.applicableStoreType || plan.storeType || "",
-        storeTypes,
-      ),
+      applicableStoreType: plan.applicableStoreType || plan.storeType || "",
       billingModel: plan.billingModel || "",
       currency: plan.currency || "",
       billingCycle: plan.billingCycle || plan.cycle || "",
@@ -556,6 +555,7 @@ export default function CreatePlan() {
       includedUsers: String(plan.includedUsers ?? 0),
       additionalUserPrice: String(plan.additionalUserPrice ?? ""),
       trialPeriod: plan.trialPeriod || "",
+      planEndDate: plan.planEndDate,
       effectiveFrom: plan.effectiveFrom
         ? String(plan.effectiveFrom).slice(0, 10)
         : "",
@@ -643,21 +643,22 @@ export default function CreatePlan() {
           <div className="plan-create-grid three-columns plan-information-grid">
             <label className="plan-field">
               <span>
-                Plan Code <b>*</b>
+                Plan Code
               </span>
               <input
                 {...textInputProps}
                 name="code"
                 value={form.code}
                 onChange={updateField}
-                placeholder="e.g. ENTER_PLAN_CODE"
+                placeholder="Auto Generated"
+                readOnly
                 className={codeError ? "input-error" : ""}
               />
               <div className="plan-field-slot">
                 {codeError ? (
                   <small className="plan-field-error">{codeError}</small>
                 ) : (
-                  <small />
+                  <small>Generated automatically when saved.</small>
                 )}
               </div>
             </label>
@@ -691,7 +692,13 @@ export default function CreatePlan() {
                 name="applicableStoreType"
                 value={form.applicableStoreType}
                 onChange={updateField}
-                disabled={storeTypesLoading}
+                onPointerDown={fetchStoreTypes}
+                onKeyDown={(event) => {
+                  if (["ArrowDown", "ArrowUp", "Enter", " "].includes(event.key)) {
+                    fetchStoreTypes();
+                  }
+                }}
+                aria-busy={storeTypesLoading}
               >
                 <option value="">
                   {storeTypesLoading
@@ -702,9 +709,7 @@ export default function CreatePlan() {
                   <option
                     key={storeType.id ?? storeType._id ?? storeType.code}
                     value={
-                      storeType.name ??
-                      storeType.storeTypeName ??
-                      storeType.code
+                      storeType.id ?? storeType._id ?? storeType.storeTypeId
                     }
                   >
                     {storeType.name ??
@@ -804,6 +809,7 @@ export default function CreatePlan() {
                 <option value="Per store">Per Store</option>
                 <option value="Per terminal">Per Terminal</option>
                 <option value="Flat rate">Flat Rate</option>
+                <option value="Custom">Custom</option>
               </select>
             </label>
 
@@ -1124,7 +1130,7 @@ export default function CreatePlan() {
               <dl>
                 <div>
                   <dt>Plan Code</dt>
-                  <dd>{form.code}</dd>
+                  <dd>{form.code || "Generated when saved"}</dd>
                 </div>
                 <div>
                   <dt>Plan Name</dt>
@@ -1300,6 +1306,7 @@ export default function CreatePlan() {
               <option value="Per store">Per Store</option>
               <option value="Per terminal">Per Terminal</option>
               <option value="Flat rate">Flat Rate</option>
+                <option value="Custom">Custom</option>
             </select>
 
             <select

@@ -1,3 +1,5 @@
+import { listStoreTypes } from "./storeTypes";
+import { listFeatures } from "./features";
 import { api } from "./http";
 import { endpoints } from "./endpoints";
 
@@ -16,9 +18,9 @@ const toApiBillingModel = (value) => {
 
   if (
     normalized === "PER TERMINAL" ||
-    normalized === "PER_TERMINAL"
+    normalized === "PER_TERMINAL" || normalized === "PER_DEVICE" || normalized === "PER DEVICE"
   ) {
-    return "PER_TERMINAL";
+    return "PER_DEVICE";
   }
 
   if (
@@ -52,7 +54,7 @@ const toApiBillingCycle = (value) => {
     normalized === "YEARLY" ||
     normalized === "ANNUAL"
   ) {
-    return "YEARLY";
+    return "ANNUAL";
   }
 
   return normalized;
@@ -155,30 +157,27 @@ export function planPayload(
         : "";
 
   const payload = {
-    planCode: String(form.code || "")
-      .trim()
-      .toUpperCase(),
     name: String(form.name || "").trim(),
     description: String(form.description || "").trim(),
-    billingModel: toApiBillingModel(form.billingModel),
-    basePrice: toNumberOrZero(form.basePrice),
-    currency: String(form.currency || "").trim().toUpperCase(),
-    billingCycle: toApiBillingCycle(form.billingCycle),
+    billing_model: toApiBillingModel(form.billingModel),
+    base_price: toNumberOrZero(form.basePrice),
+    currency: String(form.currency || "USD").trim().toUpperCase(),
+    billing_cycle: toApiBillingCycle(form.billingCycle),
     status: toApiStatus(form.status),
-    storeType: normalizedStoreType,
-    includedStores: toNumberOrZero(form.includedStores),
-    includedTerminals: toNumberOrZero(form.includedTerminals),
-    additionalTerminalPrice: toNumberOrZero(form.additionalTerminalPrice),
-    includedEmployees: toNumberOrZero(form.includedUsers),
-    additionalEmployeePrice: toNumberOrZero(form.additionalUserPrice),
-    trialPeriod: toTrialDays(form.trialPeriod),
-    includedFeatures: Array.isArray(includedFeatures) ? includedFeatures : [],
+    store_type_id: normalizedStoreType || null,
+    stores_limit: toNumberOrZero(form.includedStores),
+    terminal_limit: toNumberOrZero(form.includedTerminals),
+    additional_terminal_price: toNumberOrZero(form.additionalTerminalPrice),
+    employees_limit: toNumberOrZero(form.includedUsers),
+    additional_employee_price: toNumberOrZero(form.additionalUserPrice),
+    trial_period: toTrialDays(form.trialPeriod),
+    included_features: includedFeatures.map(feature => String(
+      typeof feature === "object" ? feature.featureId ?? feature.id : feature
+    )),
+    effective_from: toEffectiveFrom(form.effectiveFrom) || null,
   };
-
-  const effectiveFrom = toEffectiveFrom(form.effectiveFrom);
-
-  if (effectiveFrom) {
-    payload.effectiveFrom = effectiveFrom;
+  if (form.planEndDate !== undefined) {
+    payload.plan_end_date = toEffectiveFrom(form.planEndDate) || null;
   }
 
   return payload;
@@ -263,6 +262,7 @@ const displayBillingModel = (value) => {
   }
 
   if (
+    normalized === "PER_DEVICE" ||
     normalized === "PER_TERMINAL" ||
     normalized === "PER TERMINAL"
   ) {
@@ -276,6 +276,7 @@ const displayBillingModel = (value) => {
     return "Flat rate";
   }
 
+  if (normalized === "CUSTOM") return "Custom";
   return value || "";
 };
 
@@ -372,6 +373,7 @@ export function normalizePlan(item) {
    * Plan code
    * ---------------------------------------------------------- */
   const code =
+    item.plan_code ||
     item.planCode ||
     item.code ||
     "";
@@ -492,12 +494,14 @@ export function normalizePlan(item) {
 
     /* Store type */
     storeType:
+      item.store_type_id ||
       item.store_type ||
       item.storeType ||
       item.applicableStoreType ||
       "",
 
     applicableStoreType:
+      item.store_type_id ||
       item.store_type ||
       item.storeType ||
       item.applicableStoreType ||
@@ -550,12 +554,14 @@ export function normalizePlan(item) {
 
     /* Included stores */
     includedStores:
+      item.stores_limit ??
       item.included_stores ??
       item.includedStores ??
       0,
 
     /* Included terminals */
     includedTerminals:
+      item.terminal_limit ??
       item.included_terminals ??
       item.includedTerminals ??
       0,
@@ -568,6 +574,7 @@ export function normalizePlan(item) {
 
     /* Included employees/users */
     includedUsers:
+      item.employees_limit ??
       item.includedEmployees ??
       item.included_employees ??
       item.includedUsers ??
@@ -592,6 +599,8 @@ export function normalizePlan(item) {
       item.effective_from ||
       item.effectiveFrom ||
       "",
+
+    planEndDate: item.plan_end_date ?? item.planEndDate ?? "",
 
     /* Features */
     includedFeatures,
@@ -659,9 +668,22 @@ export async function getPlan(id) {
       endpoints.plan(id)
     );
 
-  return normalizePlan(
-    unwrapPlan(response)
-  );
+  const plan = normalizePlan(unwrapPlan(response));
+  if (!plan) return plan;
+  const [types, features] = await Promise.allSettled([
+    plan.storeType ? listStoreTypes() : Promise.resolve([]),
+    plan.includedFeatures.length ? listFeatures() : Promise.resolve([]),
+  ]);
+  if (types.status === "fulfilled") {
+    plan.storeTypeName = types.value.find(type => String(type.id) === String(plan.storeType))?.name || plan.storeType;
+  }
+  if (features.status === "fulfilled") {
+    plan.includedFeatures = plan.includedFeatures.map(entry => {
+      const feature = features.value.find(feature => String(feature.id) === String(entry.featureId));
+      return feature ? { ...entry, name: feature.name, category: feature.category } : entry;
+    });
+  }
+  return plan;
 }
 
 /* ============================================================
