@@ -92,19 +92,12 @@ export default function Features() {
   }, [features, form.category]);
 
   const requiredFieldsComplete =
-    form.code.trim() !== "" &&
     form.name.trim() !== "" &&
     form.category.trim() !== "";
 
   const hasEditChanges =
     !isEditing ||
     !editingFeature ||
-    form.code.trim().toUpperCase() !==
-      String(
-        editingFeature.code ||
-          editingFeature.name?.toUpperCase().replace(/\s+/g, "_") ||
-          ""
-      ).trim().toUpperCase() ||
     form.name.trim() !== String(editingFeature.name || "").trim() ||
     form.description.trim() !== String(editingFeature.description || "").trim() ||
     form.category !== String(editingFeature.category || "") ||
@@ -125,20 +118,10 @@ export default function Features() {
 
   const validateFeature = () => {
     const errors = {};
-    const code = form.code.trim();
     const name = form.name.trim();
 
-    if (!code) errors.code = "Feature Code is required.";
     if (!name) errors.name = "Feature Name is required.";
     if (!form.category) errors.category = "Category is required.";
-
-    if (code && features.some(
-      (item) =>
-        String(item.id) !== String(editingId) &&
-        (item.code || "").trim().toLowerCase() === code.toLowerCase()
-    )) {
-      errors.code = "Feature Code already exists. Enter a unique code.";
-    }
 
     if (name && features.some(
       (item) =>
@@ -161,10 +144,10 @@ export default function Features() {
     const editFeature = (feature) => {
     setEditingId(feature.id);
     setForm({
-      code: feature.feature_code || feature.code || feature.featureKey || (feature.name ? feature.name.toUpperCase().replace(/\s+/g, "_") : ""),
+      code: feature.feature_code || "",
       name: feature.name || "",
       description: feature.description || "",
-      category: feature.feature_category || feature.category || feature.featureCategory || "Operations",
+      category: feature.feature_type || feature.category || "",
       status: feature.status || "Active",
     });
     setFormErrors({});
@@ -176,17 +159,14 @@ export default function Features() {
     try {
       const payload = {
         ...form,
-        category: form.category || "Operations",
-        feature_category: form.category || "Operations",
-        code: form.code.trim().toUpperCase(),
-        feature_code: form.code.trim().toUpperCase(),
+        category: form.category,
       };
       const created = await createFeatureApi(payload);
       if (created && created.id) {
         setFeatures((prev) => [created, ...prev.filter((f) => f.id !== created.id)]);
       }
       const latestFeatures = await listFeatures();
-      if (Array.isArray(latestFeatures) && latestFeatures.length > 0) {
+      if (Array.isArray(latestFeatures)) {
         setFeatures(latestFeatures);
       }
       setCurrentPage(1);
@@ -202,10 +182,7 @@ export default function Features() {
     try {
       const payload = {
         ...form,
-        category: form.category || "Operations",
-        feature_category: form.category || "Operations",
-        code: form.code.trim().toUpperCase(),
-        feature_code: form.code.trim().toUpperCase(),
+        category: form.category,
       };
       const updated = await updateFeatureApi(editingId, payload);
       setFeatures((prev) =>
@@ -216,15 +193,13 @@ export default function Features() {
                 ...payload,
                 ...(updated || {}),
                 category: form.category,
-                feature_category: form.category,
-                updatedAt: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
+                feature_type: form.category,
               }
             : item
         )
       );
       const latestFeatures = await listFeatures();
-      if (Array.isArray(latestFeatures) && latestFeatures.length > 0) {
+      if (Array.isArray(latestFeatures)) {
         setFeatures(latestFeatures);
       }
       setCurrentPage(1);
@@ -270,13 +245,13 @@ export default function Features() {
     const q = search.trim().toLowerCase();
 
     const getCreatedTime = (item) => {
-      const value = item.createdAt || item.createdOn || item.createdDate || item.created_at;
+      const value = item.created_at;
       const time = value ? new Date(value).getTime() : 0;
       return Number.isNaN(time) ? 0 : time;
     };
 
     const getUpdatedTime = (item) => {
-      const value = item.updatedAt || item.updatedOn || item.updatedDate || item.updated_at;
+      const value = item.updated_at;
       const time = value ? new Date(value).getTime() : 0;
       return Number.isNaN(time) ? 0 : time;
     };
@@ -367,9 +342,9 @@ export default function Features() {
             <input
               data-field="code"
               value={form.code}
-              onChange={updateField}
+              readOnly
               autoComplete="off"
-              placeholder="Enter a unique code, e.g. INVENTORY_MANAGEMENT"
+              placeholder="Generated by backend"
               className={formErrors.code ? "feature-input-error" : ""}
             />
             {formErrors.code ? (
@@ -579,14 +554,14 @@ export default function Features() {
                   aria-label={`Open ${item.name} feature overview`}
                 >
                   <td className="feature-code-cell">
-                    {(item.code || item.name?.replace(/\s+/g, "_") || "—").toUpperCase()}
+                    {item.code || "—"}
                   </td>
                   <td className="feature-name-cell">
                     <span className="feature-name feature-name-button">
                       {item.name}
                     </span>
                   </td>
-                  <td>{item.feature_category || item.category || "—"}</td>
+                  <td>{item.feature_type || item.category || "—"}</td>
                   <FeatureDescriptionCell description={item.description} />
                   <td>
                     <span className={`feature-status ${item.status.toLowerCase()}`}>
@@ -595,7 +570,7 @@ export default function Features() {
                   </td>
                   <td className="feature-created">
                     {(() => {
-                      const created = formatFeatureDate(item.createdAt || item.createdOn || item.createdDate || item.created_at);
+                      const created = formatFeatureDate(item.created_at);
                       return (
                         <div className="feature-date-stack">
                           <strong>{created.date}</strong>
@@ -606,7 +581,7 @@ export default function Features() {
                   </td>
                   <td className="feature-updated">
                     {(() => {
-                      const updated = formatFeatureDate(item.updatedAt || item.updatedOn || item.updatedDate || item.updated_at);
+                      const updated = formatFeatureDate(item.updated_at);
                       return (
                         <div className="feature-date-stack">
                           <strong>{updated.date}</strong>
