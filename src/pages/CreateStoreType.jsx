@@ -570,11 +570,11 @@ export default function CreateStoreType() {
 
       if (data?.success === false) {
 
-        throw new Error(data.message || "Failed to delete store type.");
+        throw new Error(data.message || "Failed to deactivate store type.");
 
       }
 
-      setMessage(data?.message || "Store type deleted successfully.");
+      setMessage(data?.message || "Store type deactivated successfully.");
 
       if (String(editingId) === String(deleteTarget.id)) {
 
@@ -1096,11 +1096,11 @@ export default function CreateStoreType() {
               <i className="bi bi-exclamation-triangle" />
             </div>
 
-            <h2>Delete Store Type?</h2>
+            <h2>Deactivate Store Type?</h2>
 
             <p>
 
-              Are you sure you want to delete{" "}
+              Are you sure you want to deactivate{" "}
               <strong>{deleteTarget.name}</strong>?
             </p>
 
@@ -1113,14 +1113,14 @@ export default function CreateStoreType() {
 
                 {deleteTarget.assignedStores === 1 ? "store" : "stores"}.
 
-                Deleting it may affect their configuration.
+                Deactivating it may affect their configuration.
               </div>
 
             )}
 
             <p className="delete-final-warning">
 
-              This action cannot be undone.
+              The record will remain visible and can be activated again later.
             </p>
 
             <div className="delete-storetype-actions">
@@ -1147,7 +1147,7 @@ export default function CreateStoreType() {
                 disabled={saving}
               >
 
-                Yes, Delete
+                Yes, Deactivate
               </button>
             </div>
           </div>
