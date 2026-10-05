@@ -62,21 +62,18 @@
 #pch-new > header {
     height: 62px;
     padding: 0 24px;
-
     background: #fff;
     border-bottom: 1px solid #e7e9ef;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
 #pch-new .pch-brand {
-    color: var(--pch-primary);
+    color: #5143bc;
     font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.4px;
@@ -188,12 +185,12 @@
 
 #pch-new .pch-rail button:not(:disabled):hover {
     background: #f7f6ff;
-    color: var(--pch-primary);
+    color: #5143bc;
 }
 
 #pch-new .pch-rail button.pch-current {
     background: #f4f2ff;
-    color: var(--pch-primary);
+    color: #5143bc;
 }
 
 #pch-new .pch-rail .pch-number {
@@ -212,13 +209,13 @@
 }
 
 #pch-new .pch-rail button.pch-current .pch-number {
-    background: var(--pch-primary);
-    border-color: var(--pch-primary);
+    background: #5143bc;
+    border-color: #5143bc ;
     color: #fff;
 }
 
 #pch-new .pch-rail button:not(.pch-current) .pch-number {
-    color: var(--pch-primary);
+    color: #5143bc;
 }
 
 #pch-new .pch-rail-description {
@@ -393,20 +390,18 @@
 ========================================================= */
 
 #pch-new button {
-    min-height: 40px;
-
+    min-height: 36px;
     padding: 0 12px;
-
-    border: 1px solid var(--pch-border);
-    border-radius: 7px;
-
+    border: 1px solid #5143bc;
+    border-radius: 8px;
     background: #fff;
-    color: #475168;
-
+    color: #5143bc;
     font-size: 14px;
     font-weight: 500;
-
     transition: 0.2s ease;
+    align-items: center;
+    gap: 14px;
+
 }
 
 #pch-new button:hover:not(:disabled) {
@@ -1229,6 +1224,7 @@
   flex-wrap: wrap;
   gap: 10px;
   font-size:14px;
+  font-weight: 600;
   color: #7c8495;
 }
 #pch-new .pch-breadcrumb button {

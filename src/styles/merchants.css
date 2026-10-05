@@ -575,6 +575,7 @@ a {
     display: flex;
     align-items: center;
     gap: 14px;
+
 }
 
 .page-actions .btn i {
@@ -592,9 +593,9 @@ a {
 }
 
 .page-actions .btn-secondary {
+    border: 1px solid #5143bc;
     background: #f6f7fb;
-    border: 1.5px solid #4537ad;
-    color: #4537ad;
+    color: #5143bc;
 }
 
 .page-actions .btn-secondary:hover {

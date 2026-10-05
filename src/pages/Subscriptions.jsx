@@ -10,10 +10,6 @@ import {
 
   ChevronDown,
 
-  ChevronLeft,
-
-  ChevronRight,
-
   Download,
 
   Store,
@@ -48,7 +44,7 @@ import {
   CircleCheck,
 
   RefreshCw,
-  Plus,
+
   Pencil,
   Trash2,
   X,
@@ -584,32 +580,35 @@ function SubscriptionList({
      PAGINATION
   ======================================== */
 
-  const totalPages =
-    Math.ceil(filtered.length / PAGE_SIZE) || 1;
+ const totalPages =
+  Math.ceil(filtered.length / PAGE_SIZE) || 1;
 
-  const paginatedData = useMemo(() => {
-    const startIdx = (page - 1) * PAGE_SIZE;
+const paginatedData = useMemo(() => {
+  const startIdx = (page - 1) * PAGE_SIZE;
 
-    return filtered.slice(
-      startIdx,
-      startIdx + PAGE_SIZE
-    );
-  }, [filtered, page]);
+  return filtered.slice(
+    startIdx,
+    startIdx + PAGE_SIZE
+  );
+}, [filtered, page]);
 
-  /* ========================================
-     RESET PAGE WHEN FILTER CHANGES
-  ======================================== */
+useEffect(() => {
+  setPage(1);
+}, [
+  search,
+  plan,
+  status,
+  stores,
+  startDate,
+  endDate,
+]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [
-    search,
-    plan,
-    status,
-    stores,
-    startDate,
-    endDate,
-  ]);
+useEffect(() => {
+  setPage((currentPage) =>
+    Math.min(currentPage, totalPages)
+  );
+}, [totalPages]); 
+
 
   /* ========================================
      RESET FILTERS
@@ -695,19 +694,6 @@ function SubscriptionList({
     document.body.removeChild(link);
   };
 
-  /* ========================================
-     PAGINATION HANDLERS
-  ======================================== */
-
-  const goToPreviousPage = () => {
-    setPage((current) => Math.max(1, current - 1));
-  };
-
-  const goToNextPage = () => {
-    setPage((current) =>
-      Math.min(totalPages, current + 1)
-    );
-  };
 
   /* ========================================
      RENDER
@@ -986,136 +972,106 @@ function SubscriptionList({
 
           {/* SEARCH */}
 
-          <div className="subscription-search">
-
-            <Search size={17} />
-
-            <input
-              type="text"
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              placeholder="Search merchant name, code or ID"
-            />
-
-          </div>
+          <div className="cash-search-box">
+  <Search size={16} />
+  <input
+    type="text"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    placeholder="Search merchant name, code or ID"
+  />
+</div>
 
           {/* PLAN */}
 
-          <select
-            value={plan}
-            onChange={(e) =>
-              setPlan(e.target.value)
-            }
-          >
-            <option value="">
-              All Plans
-            </option>
+          <div className="cash-select-wrapper">
+  <select
+    value={plan}
+    onChange={(e) => setPlan(e.target.value)}
+  >
+    <option value="">All Plans</option>
 
-            {availablePlans.map((item) => (
-              <option
-                key={item}
-                value={item}
-              >
-                {item}
-              </option>
-            ))}
+    {availablePlans.map((item) => (
+      <option key={item} value={item}>
+        {item}
+      </option>
+    ))}
+  </select>
 
-          </select>
+  <ChevronDown size={15} />
+</div>
 
           {/* STATUS */}
 
-          <select
-            value={status}
-            onChange={(e) =>
-              setStatus(e.target.value)
-            }
-          >
-            <option value="">
-              All Statuses
-            </option>
+         <div className="cash-select-wrapper">
+  <select
+    value={status}
+    onChange={(e) => setStatus(e.target.value)}
+  >
+    <option value="">All Statuses</option>
 
-            {availableStatuses.map((item) => (
-              <option
-                key={item}
-                value={item}
-              >
-                {item}
-              </option>
-            ))}
+    {availableStatuses.map((item) => (
+      <option key={item} value={item}>
+        {item}
+      </option>
+    ))}
+  </select>
 
-          </select>
+  <ChevronDown size={15} />
+</div>
 
           {/* STORE COUNT */}
 
-          <select
-            value={stores}
-            onChange={(e) =>
-              setStores(e.target.value)
-            }
-          >
-            <option value="">
-              All Store Counts
-            </option>
+          <div className="cash-select-wrapper">
+  <select
+    value={stores}
+    onChange={(e) => setStores(e.target.value)}
+  >
+    <option value="">All Store Counts</option>
 
-            {availableStoreCounts.map((item) => (
-              <option
-                key={item}
-                value={item}
-              >
-                {item}{" "}
-                {Number(item) === 1
-                  ? "Store"
-                  : "Stores"}
-              </option>
-            ))}
+    {availableStoreCounts.map((item) => (
+      <option key={item} value={item}>
+        {item} {Number(item) === 1 ? "Store" : "Stores"}
+      </option>
+    ))}
+  </select>
 
-          </select>
+  <ChevronDown size={15} />
+</div>
 
           {/* START DATE FROM */}
 
-          <div className="subscription-date-filter">
+          <div className="cash-select-wrapper cash-date-wrapper">
+  <span>Start Date From</span>
 
-            <span>Start Date From</span>
-
-            <input
-              type="date"
-              value={startDate}
-              max={endDate || undefined}
-              onChange={(e) =>
-                setStartDate(e.target.value)
-              }
-              aria-label="Start Date From"
-            />
-
-          </div>
+  <input
+    type="date"
+    value={startDate}
+    max={endDate || undefined}
+    onChange={(e) => setStartDate(e.target.value)}
+    aria-label="Start Date From"
+  />
+</div>
 
           {/* START DATE TO */}
 
-          <div className="subscription-date-filter">
+   <div className="cash-select-wrapper cash-date-wrapper">
+  <span>Start Date To</span>
 
-            <span>Start Date To</span>
-
-            <input
-              type="date"
-              value={endDate}
-              min={startDate || undefined}
-              onChange={(e) =>
-                setEndDate(e.target.value)
-              }
-              aria-label="Start Date To"
-            />
-
-          </div>
+  <input
+    type="date"
+    value={endDate}
+    min={startDate || undefined}
+    onChange={(e) => setEndDate(e.target.value)}
+    aria-label="Start Date To"
+  />
+</div>
 
           {/* RESET */}
 
           <button
             type="button"
-            className={`subscription-reset-button ${
-              hasActiveFilters ? "active" : ""
-            }`}
+            className="cash-reset-btn"
             onClick={resetFilters}
             disabled={!hasActiveFilters}
             title="Reset all filters"
@@ -1298,50 +1254,69 @@ function SubscriptionList({
             PAGINATION
         ======================================== */}
 
-        <div className="subscription-pagination">
+        {filtered.length > 0 && (
+  <div className="merchant-pagination">
 
-          <span>
-            Page{" "}
-            <strong>{page}</strong>{" "}
-            of{" "}
-            <strong>{totalPages}</strong>
-          </span>
+    <span>
+      {`Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
+        page * PAGE_SIZE,
+        filtered.length
+      )} of ${filtered.length}`}
+    </span>
 
-            <span>
-            Showing{" "}
-            <strong>
-              {filtered.length}
-            </strong>{" "}
-            of{" "}
-            <strong>
-              {subscriptions.length}
-            </strong>{" "}
-            subscriptions
-          </span>
+    <div>
 
-          <div className="subscription-pagination-controls">
+      <button
+        type="button"
+        disabled={page === 1}
+        onClick={() =>
+          setPage((value) =>
+            Math.max(1, value - 1)
+          )
+        }
+      >
+        Previous
+      </button>
 
-            <button
-              type="button"
-              onClick={goToPreviousPage}
-              disabled={page === 1}
-              title="Previous Page"
-            >
-              <ChevronLeft size={17} />
-            </button>
+      {Array.from(
+        { length: totalPages },
+        (_, index) => (
+          <button
+            type="button"
+            className={
+              page === index + 1
+                ? "active"
+                : ""
+            }
+            key={index}
+            onClick={() =>
+              setPage(index + 1)
+            }
+          >
+            {index + 1}
+          </button>
+        )
+      )}
 
-            <button
-              type="button"
-              onClick={goToNextPage}
-              disabled={page === totalPages}
-              title="Next Page"
-            >
-              <ChevronRight size={17} />
-            </button>
+      <button
+        type="button"
+        disabled={page === totalPages}
+        onClick={() =>
+          setPage((value) =>
+            Math.min(
+              totalPages,
+              value + 1
+            )
+          )
+        }
+      >
+        Next
+      </button>
 
-          </div>
+    </div>
 
-        </div>
+  </div>
+)}
 
       </div>
 
