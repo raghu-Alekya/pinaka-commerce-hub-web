@@ -68,6 +68,14 @@ const getFeatureCategory = (featureName) => {
     : "";
 };
 
+const inferPermissionType = (name) => {
+  const value = String(name || "").toLowerCase();
+  if (/\b(create|add|insert|new)\b/.test(value)) return "CREATE";
+  if (/\b(update|edit|modify|change)\b/.test(value)) return "UPDATE";
+  if (/\b(delete|remove|erase)\b/.test(value)) return "DELETE";
+  return "READ";
+};
+
 /* =========================================================
    DESCRIPTION CELL
    ========================================================= */
@@ -186,6 +194,7 @@ export default function FeaturePermissions() {
     featurePermission,
     setFeaturePermission,
   ] = useState("");
+  const [lastSavedCode, setLastSavedCode] = useState("");
 
   const ITEMS_PER_PAGE = 5;
 
@@ -209,37 +218,16 @@ export default function FeaturePermissions() {
      ========================================================= */
 
   const availableFeatures = useMemo(() => {
-    if (!featureCategory) {
-      return [];
-    }
+    return features.filter((feature) => feature.id !== undefined && feature.id !== null);
+  }, [features]);
 
-    const categoryFeatureNames =
-      featureCategories[
-        featureCategory
-      ] || [];
-
-    return features.filter((feature) =>
-      categoryFeatureNames.some(
-        (featureName) =>
-          normalizeFeatureName(
-            feature.name,
-          ) ===
-          normalizeFeatureName(
-            featureName,
-          ),
-      ),
-    );
-  }, [
-    features,
-    featureCategory,
-  ]);
+  const generatedPermissionKey = isEditing ? form.key : lastSavedCode;
 
   /* =========================================================
      REQUIRED FIELDS
      ========================================================= */
 
   const requiredFieldsComplete =
-    form.key.trim() !== "" &&
     form.name.trim() !== "" &&
     String(form.featureId).trim() !== "";
 
@@ -336,10 +324,17 @@ export default function FeaturePermissions() {
         source.permission_id,
 
       key:
+        source.permissionCode ||
+        source.permission_code ||
         source.permissionKey ||
         source.permission_key ||
         source.key ||
         "",
+
+      permissionType:
+        source.permissionType ||
+        source.permission_type ||
+        "READ",
 
       name: source.name || "",
 
@@ -523,6 +518,8 @@ export default function FeaturePermissions() {
     const value =
       event.target.value;
 
+    setLastSavedCode("");
+
     /*
      * Feature changed:
      * reset Permission Name
@@ -558,6 +555,8 @@ export default function FeaturePermissions() {
     const value =
       event.target.value;
 
+    setLastSavedCode("");
+
     setFeaturePermission(value);
 
     setForm((prev) => ({
@@ -591,6 +590,8 @@ export default function FeaturePermissions() {
 
     setFeaturePermission("");
 
+    setLastSavedCode("");
+
     setErrors({});
   };
 
@@ -599,9 +600,6 @@ export default function FeaturePermissions() {
      ========================================================= */
 
   const savePermission = async () => {
-    const permissionKey =
-      form.key.trim();
-
     const permissionName =
       form.name.trim();
 
@@ -614,19 +612,9 @@ export default function FeaturePermissions() {
 
     const validationErrors = {};
 
-    if (!permissionKey) {
-      validationErrors.key =
-        "Permission key is required.";
-    }
-
     if (!permissionName) {
       validationErrors.name =
         "Permission name is required.";
-    }
-
-    if (!featureCategory) {
-      validationErrors.featureId =
-        "Please select a feature category.";
     }
 
     if (!selectedFeature) {
@@ -650,22 +638,8 @@ export default function FeaturePermissions() {
        DUPLICATE VALIDATION
        ======================================================= */
 
-    const normalizedKey =
-      permissionKey.toLowerCase();
-
     const normalizedName =
       permissionName.toLowerCase();
-
-    const duplicateKey =
-      permissions.some(
-        (item) =>
-          String(item.id) !==
-            String(editingId) &&
-          String(item.key || "")
-            .trim()
-            .toLowerCase() ===
-            normalizedKey,
-      );
 
     const duplicateName =
       permissions.some(
@@ -677,11 +651,6 @@ export default function FeaturePermissions() {
             .toLowerCase() ===
             normalizedName,
       );
-
-    if (duplicateKey) {
-      validationErrors.key =
-        "Permission code already exists.";
-    }
 
     if (duplicateName) {
       validationErrors.name =
@@ -707,6 +676,10 @@ export default function FeaturePermissions() {
     const payload = isEditing
       ? {
           name: permissionName,
+          permissionType: originalEditingPermission.permissionType || inferPermissionType(permissionName),
+          ...(String(selectedFeature.id) !== String(originalEditingPermission.featureId)
+            ? { featureId: selectedFeature.id }
+            : {}),
 
           description:
             form.description.trim(),
@@ -715,9 +688,7 @@ export default function FeaturePermissions() {
             form.status.toUpperCase(),
         }
       : {
-          permissionKey:
-            permissionKey.toUpperCase(),
-
+          permissionType: inferPermissionType(permissionName),
           name: permissionName,
 
           description:
@@ -728,16 +699,18 @@ export default function FeaturePermissions() {
         };
 
     try {
-      await (isEditing
+      const savedPermission = await (isEditing
         ? updateFeaturePermission(
-            selectedFeature.id,
+            originalEditingPermission.featureId,
             editingId,
             payload,
           )
         : createFeaturePermission(
-            selectedFeature.id,
-            payload,
-          ));
+          selectedFeature.id,
+          payload,
+        ));
+
+      const generatedCode = savedPermission?.permissionCode || savedPermission?.permission_code || "";
 
       await loadData();
 
@@ -746,6 +719,7 @@ export default function FeaturePermissions() {
       }
 
       clearForm();
+      if (!isEditing) setLastSavedCode(generatedCode);
     } catch (error) {
       console.error(
         "Save permission failed:",
@@ -928,7 +902,11 @@ export default function FeaturePermissions() {
           permissionId,
         );
 
-        await loadData();
+        setPermissions((current) => current.map((item) =>
+          String(item.id) === String(permissionId)
+            ? { ...item, status: "Inactive", updatedAt: new Date().toISOString() }
+            : item,
+        ));
 
         if (
           String(editingId) ===
@@ -1272,7 +1250,7 @@ export default function FeaturePermissions() {
 >
   <div className="fp-form-grid">
     {/* =================================================
-        PERMISSION KEY
+        PERMISSION CODE
         ================================================= */}
 
     <div
@@ -1281,18 +1259,17 @@ export default function FeaturePermissions() {
       }`}
     >
       <label htmlFor="permission-key">
-        Permission Key
-        <span>*</span>
+        Permission Code
       </label>
 
       <input
         id="permission-key"
         type="text"
-        data-field="key"
-        value={form.key}
-        onChange={updateField}
+        value={generatedPermissionKey}
+        readOnly
+        disabled
         autoComplete="off"
-        placeholder="e.g. coupons.view"
+        placeholder="Generated by server after saving"
         aria-invalid={Boolean(errors.key)}
       />
 
@@ -1603,7 +1580,7 @@ export default function FeaturePermissions() {
             <thead>
               <tr>
                 <th>
-                  Permission Key
+                  Permission Code
                 </th>
 
                 <th>
@@ -1644,7 +1621,7 @@ export default function FeaturePermissions() {
                       permission.id
                     }
                   >
-                    {/* Permission Key */}
+                    {/* Server-generated Permission Code */}
 
                     <td className="fp-permission-code-cell">
                       {String(
@@ -1759,6 +1736,7 @@ export default function FeaturePermissions() {
                           type="button"
                           className="edit edit-button"
                           aria-label={`Edit ${permission.name}`}
+                          title="Edit permission"
                           onClick={() =>
                             editPermission(
                               permission,
@@ -1773,7 +1751,9 @@ export default function FeaturePermissions() {
                         <button
                           type="button"
                           className="delete delete-button"
-                          aria-label={`Delete ${permission.name}`}
+                          aria-label={`Deactivate ${permission.name}`}
+                          disabled={permission.status === "Inactive"}
+                          title={permission.status === "Inactive" ? "Already inactive" : "Deactivate permission"}
                           onClick={() =>
                             openDeleteConfirmation(
                               permission,
@@ -1921,23 +1901,21 @@ export default function FeaturePermissions() {
             </div>
 
             <h2 id="fp-delete-modal-title">
-              Delete Permission?
+              Deactivate Permission?
             </h2>
 
             <p className="fp-delete-modal-message">
-              Are you sure you want to
-              delete{" "}
+              Are you sure you want to mark{" "}
               <strong>
                 {permissionToDelete.name ||
                   permissionToDelete.key ||
                   "this permission"}
               </strong>
-              ?
+              as inactive?
             </p>
 
             <p className="fp-delete-modal-warning">
-              This action cannot be
-              undone.
+              The permission will remain in the list with Inactive status.
             </p>
 
             <div className="fp-delete-modal-actions">
@@ -1965,8 +1943,8 @@ export default function FeaturePermissions() {
                 }
               >
                 {isDeleting
-                  ? "Deleting..."
-                  : "Delete"}
+                  ? "Deactivating..."
+                  : "Deactivate"}
               </button>
             </div>
           </div>
