@@ -22,13 +22,6 @@ import "../styles/feature-detail-header.css";
 const FeaturePermissions = () => {
   const navigate = useNavigate();
   const { featureId } = useParams();
-  const inferPermissionType = (name) => {
-    const value = String(name || "").toLowerCase();
-    if (/\b(create|add|insert|new)\b/.test(value)) return "CREATE";
-    if (/\b(update|edit|modify|change)\b/.test(value)) return "UPDATE";
-    if (/\b(delete|remove|erase)\b/.test(value)) return "DELETE";
-    return "READ";
-  };
 
   const [permissions, setPermissions] = useState([]);
   const [feature, setFeature] = useState(null);
@@ -42,13 +35,12 @@ const FeaturePermissions = () => {
         setPermissions(
           (Array.isArray(list) ? list : []).map((p) => ({
             ...p,
-            id: p.id || p._id || p.permissionId || p.permission_id,
-            key: p.permissionCode || p.permission_code || p.permissionKey || p.permission_key || p.key || "",
-            permissionType: p.permissionType || p.permission_type || "READ",
-            name: p.permissionName || p.permission_name || p.name || "",
-            feature: f?.name || p.feature?.name || "",
+            id: p.permission_id ?? p.id,
+            key: p.permission_code || p.permission_key || p.permissionKey || "",
+            name: p.permission_name || p.name || "",
+            feature: f?.name || p.feature?.feature_name || "",
             description:
-              p.permissionDescription || p.permission_description || p.description || "",
+              p.permission_description || p.description || "",
             active:
               String(p.status || "ACTIVE").toUpperCase() === "ACTIVE",
           }))
@@ -109,12 +101,16 @@ const FeaturePermissions = () => {
       setError("");
 
       await deleteFeaturePermission(featureId, deleteTarget.id);
-
-      setPermissions((current) => current.map((permission) =>
-        permission.id === deleteTarget.id
-          ? { ...permission, active: false, status: "INACTIVE" }
-          : permission,
-      ));
+      const latest = await listFeaturePermissions(featureId);
+      setPermissions(latest.map((p) => ({
+        ...p,
+        id: p.permission_id ?? p.id,
+        key: p.permission_code || p.permission_key || p.permissionKey || "",
+        name: p.permission_name || p.name || "",
+        feature: feature?.name || "",
+        description: p.permission_description || p.description || "",
+        active: String(p.status || "ACTIVE").toUpperCase() === "ACTIVE",
+      })));
 
       setDeleteTarget(null);
     } catch (e) {
@@ -154,35 +150,23 @@ const FeaturePermissions = () => {
     setFormError("");
 
     try {
-      const created = await createFeaturePermission(featureId, {
-        permissionType: inferPermissionType(name),
+      await createFeaturePermission(featureId, {
+        permissionType: "READ",
         name,
         description: form.description.trim(),
         status: form.status.toUpperCase(),
       });
 
-      const item = created?.permission || created?.data?.permission || created?.data || created || {};
-
-      setPermissions((current) => [
-        {
-          ...item,
-
-          id: item.id || `${featureId}-${Date.now()}`,
-
-          key: item.permissionCode || item.permission_code || item.permissionKey || item.permission_key || item.key || "",
-          permissionType: item.permissionType || item.permission_type || form.permissionType,
-
-          name: item.permissionName || item.permission_name || item.name || name,
-
-          feature: feature?.name || item.feature?.name || "",
-
-          description: item.description || item.permission_description || form.description.trim(),
-
-          active: String(item.status || form.status).toUpperCase() === "ACTIVE",
-        },
-
-        ...current,
-      ]);
+      const latest = await listFeaturePermissions(featureId);
+      setPermissions(latest.map((p) => ({
+        ...p,
+        id: p.permission_id ?? p.id,
+        key: p.permission_code || p.permission_key || p.permissionKey || "",
+        name: p.permission_name || p.name || "",
+        feature: feature?.name || "",
+        description: p.permission_description || p.description || "",
+        active: String(p.status || "ACTIVE").toUpperCase() === "ACTIVE",
+      })));
 
       setIsCreateOpen(false);
     } catch (e) {
@@ -364,10 +348,9 @@ const FeaturePermissions = () => {
                     <button
                       type="button"
                       className="fp-delete"
-                      title={permission.active ? "Deactivate permission" : "Already inactive"}
-                      disabled={!permission.active}
+                      title="Remove Assignment"
                       onClick={() => setDeleteTarget(permission)}
-                      aria-label={`Deactivate ${permission.name}`}
+                      aria-label={`Delete ${permission.name}`}
                     >
                       <Trash2 size={15} strokeWidth={2} />
                     </button>
@@ -453,13 +436,11 @@ const FeaturePermissions = () => {
             <form className="fp-create-form" onSubmit={saveNewPermission}>
               <div className="fp-create-grid">
                 <label>
-                  Permission Code
+                  Permission Key <span>*</span>
                   <input
                     value={form.key}
-                    disabled
                     readOnly
-                    placeholder="Generated by server after saving"
-                    autoFocus
+                    placeholder="Generated automatically"
                   />
                 </label>
 
@@ -559,15 +540,14 @@ const FeaturePermissions = () => {
               <Trash2 size={23} strokeWidth={2} />
             </div>
 
-            <h2 id="fp-delete-title">Deactivate Permission?</h2>
+            <h2 id="fp-delete-title">Delete Permission?</h2>
 
             <p>
-              Are you sure you want to mark{" "}
+              Are you sure you want to delete{" "}
               <strong>{deleteTarget.name || deleteTarget.key}</strong>?
-              {" "}as inactive?
             </p>
 
-            <p className="fp-delete-warning">The permission will remain in the list with Inactive status.</p>
+            <p className="fp-delete-warning">This action cannot be undone.</p>
 
             <div className="fp-delete-modal-actions">
               <button
@@ -585,7 +565,7 @@ const FeaturePermissions = () => {
                 onClick={confirmDeletePermission}
                 disabled={deleting}
               >
-                {deleting ? "Deactivating..." : "Deactivate"}
+                {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

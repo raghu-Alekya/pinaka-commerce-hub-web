@@ -19,7 +19,7 @@ const FeatureOverview = () => {
 
   const name = feature?.name || 'Feature';
   const description = feature?.description || '—';
-  const code = feature?.code || feature?.featureKey || '—';
+  const code = feature?.feature_code || '—';
   const status = feature?.status || 'Inactive';
 
   return <div className="feature-overview-page feature-detail-page">
