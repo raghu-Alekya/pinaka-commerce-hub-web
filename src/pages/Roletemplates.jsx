@@ -4,7 +4,6 @@ import {
   roleTemplatesApi,
   readRoleTemplatesList,
 } from "../api/roleTemplatesApi";
-
 const initialForm = {
   roleCode: "",
   name: "",
@@ -33,7 +32,19 @@ function displayDate(value) {
     }),
   };
 }
+function generateRoleTemplateCode(templates) {
+  const existingNumbers = templates
+    .map((template) => {
+      const match = String(template.roleCode || "").match(/(\d+)$/);
+      return match ? Number(match[1]) : 0;
+    })
+    .filter((number) => number > 0);
 
+  const nextNumber =
+    existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+
+  return `RTL_${String(nextNumber).padStart(5, "0")}`;
+}
 export default function RoleTemplates() {
   const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
@@ -52,7 +63,7 @@ export default function RoleTemplates() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [roleCodeError, setRoleCodeError] = useState("");
+  // const [roleCodeError, setRoleCodeError] = useState("");
 
   const [deletePopup, setDeletePopup] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState(null);
@@ -69,6 +80,13 @@ export default function RoleTemplates() {
       const validItems = items.filter((item) => item?.id != null);
 
       setTemplates(validItems);
+
+      if (editingId === null) {
+        setForm((currentForm) => ({
+          ...currentForm,
+          roleCode: generateRoleTemplateCode(validItems),
+        }));
+      }
     } catch (err) {
       setError(err?.message || "Unable to load role templates.");
     } finally {
@@ -175,33 +193,21 @@ export default function RoleTemplates() {
     [templates],
   );
 
-  function validateRoleCode(value) {
-    const code = String(value || "").trim();
+  // function validateRoleCode(value) {
+  //   const code = String(value || "").trim();
 
-    if (!code) return "Role Code is required.";
-    if (code.length < 3 || code.length > 30) {
-      return "Role Code must be 3 to 30 characters.";
-    }
-    if (!/^[A-Z0-9_]+$/.test(code)) {
-      return "Use only letters, numbers, and underscores. No spaces or special characters.";
-    }
+  //   if (!code) return "Role Code is required.";
+  //   if (code.length < 3 || code.length > 30) {
+  //     return "Role Code must be 3 to 30 characters.";
+  //   }
+  //   if (!/^[A-Z0-9_]+$/.test(code)) {
+  //     return "Use only letters, numbers, and underscores. No spaces or special characters.";
+  //   }
 
-    return "";
-  }
-
+  //   return "";
+  // }
   function handleChange(event) {
     const { name, value } = event.target;
-
-    if (name === "roleCode") {
-      const nextValue = value.toUpperCase();
-      setRoleCodeError(validateRoleCode(nextValue));
-
-      setForm((currentForm) => ({
-        ...currentForm,
-        roleCode: nextValue,
-      }));
-      return;
-    }
 
     setForm((currentForm) => ({
       ...currentForm,
@@ -216,28 +222,18 @@ export default function RoleTemplates() {
     setError("");
     setRoleCodeError("");
   }
-
   async function saveTemplate() {
     const values = {
-      roleCode: form.roleCode.trim().toUpperCase(),
       name: form.name.trim(),
       description: form.description.trim(),
       status: form.status,
     };
-
-    const codeError = validateRoleCode(values.roleCode);
-
-    if (codeError) {
-      setRoleCodeError(codeError);
-      return;
-    }
 
     if (!values.name) {
       setError("Role Template Name is required.");
       return;
     }
 
-    setRoleCodeError("");
     setSaving(true);
     setError("");
 
@@ -245,13 +241,24 @@ export default function RoleTemplates() {
       const isCreating = editingId === null;
 
       if (editingId !== null) {
-        await roleTemplatesApi.update(editingId, values);
+        await roleTemplatesApi.update(editingId, {
+          roleCode: originalForm?.roleCode || "",
+          name: values.name,
+          description: values.description,
+          status: values.status,
+        });
       } else {
+        // Do NOT send roleCode.
+        // Backend generates it automatically.
         await roleTemplatesApi.create(values);
       }
 
       await loadTemplates();
-      if (isCreating) setCurrentPage(1);
+
+      if (isCreating) {
+        setCurrentPage(1);
+      }
+
       resetForm();
     } catch (err) {
       setError(err?.message || "Unable to save role template.");
