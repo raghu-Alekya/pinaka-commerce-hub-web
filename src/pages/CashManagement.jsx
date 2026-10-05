@@ -200,7 +200,7 @@ const paginatedPayments = useMemo(() => {
         <div className="cash-kpi-card purple">
 
           <div className="cash-kpi-icon">
-            <i className="bi bi-wallet2" />
+            <i className="bi bi-wallet-fill" aria-hidden="true" />
           </div>
 
           <div className="cash-kpi-content">
@@ -224,7 +224,7 @@ const paginatedPayments = useMemo(() => {
         <div className="cash-kpi-card green">
 
           <div className="cash-kpi-icon">
-            <i className="bi bi-check-circle" />
+            <i className="bi bi-check-circle-fill" aria-hidden="true" />
           </div>
 
           <div className="cash-kpi-content">
@@ -248,7 +248,7 @@ const paginatedPayments = useMemo(() => {
         <div className="cash-kpi-card orange">
 
           <div className="cash-kpi-icon">
-            <i className="bi bi-clock" />
+            <i className="bi bi-clock-fill" aria-hidden="true" />
           </div>
 
           <div className="cash-kpi-content">
@@ -272,7 +272,7 @@ const paginatedPayments = useMemo(() => {
         <div className="cash-kpi-card blue">
 
           <div className="cash-kpi-icon">
-            <i className="bi bi-currency-dollar" />
+            <i className="bi bi-cash-stack" aria-hidden="true" />
           </div>
 
           <div className="cash-kpi-content">

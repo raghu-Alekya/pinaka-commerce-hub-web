@@ -525,6 +525,65 @@
   background: #fbfdff;
 }
 
+.vendors-pagination {
+  min-height: 50px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #f0f1f4;
+  background: #fff;
+  color: #697285;
+}
+
+.vendors-showing {
+  flex: 1 1 auto;
+  font-size: 12px;
+  color: #697285;
+  white-space: nowrap;
+}
+
+.vendors-pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.vendors-pagination-controls button {
+  min-width: 27px;
+  height: 28px;
+  padding: 0 7px;
+  border: 1px solid #e1e4eb;
+  border-radius: 4px;
+  background: #fff;
+  color: #7d8697;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.vendors-pagination-controls button:hover:not(:disabled) {
+  background: #f4f2ff;
+  border-color: #d8d2fa;
+  color: #5143bc;
+}
+
+.vendors-pagination-controls button.active {
+  background: #5143bc;
+  border-color: #5143bc;
+  color: #fff;
+}
+
+.vendors-pagination-controls button:disabled {
+  color: #c0c5cf;
+  background: #fafbfc;
+  cursor: not-allowed;
+}
+
 
 /* =========================================================
    STATUS

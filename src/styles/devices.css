@@ -100,95 +100,69 @@
 }
 .device-stat-card {
   min-width: 0;
-  height: 134px;
-  padding: 20px;
+  height: 95px;
+  min-height: 95px;
+  padding: 10px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 18px;
-  background: #fff;
-  border: 1px solid #e7edf5;
+  gap: 0;
+  background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
+  border: 1px solid #e6e8ee;
   border-radius: 8px;
 }
+.device-stat-card:has(.device-stat-icon.green) {
+  background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+}
+.device-stat-card:has(.device-stat-icon.orange) {
+  background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+}
+.device-stat-card:has(.device-stat-icon.red) {
+  background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+}
 .device-stat-icon {
-  width: 62px;
-  height: 62px;
-  min-width: 62px;
-  border-radius: 18px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  flex-shrink: 0;
+  margin: 0 18px 0 6px;
+  border-radius: 50%;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .device-stat-icon.purple {
-  color: #5d3ddd;
-  background: #eeeaff;
+  color: #674ed9;
+  background: #eeebff;
 }
 .device-stat-icon.green {
-  color: #08a866;
-  background: #e2f8ec;
+  color: #2eaa62;
+  background: #e4f7eb;
 }
 .device-stat-icon.orange {
-  color: #f5a000;
-  background: #fff2db;
+  color: #e99b2b;
+  background: #fff1df;
 }
 .device-stat-icon.red {
-  color: #ee3d55;
-  background: #ffe8ed;
+  color: #df5c66;
+  background: #ffe9ea;
 }
 .device-stat-content {
   min-width: 0;
   flex: 1;
 }
 .device-stat-title {
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   color: #557091;
-  font-size: 13px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .device-stat-value {
-  margin-bottom: 4px;
   color: #162e50;
-  font-size: 28px;
-  line-height: 30px;
-  font-weight: 750;
-}
-.device-stat-change {
-  font-size: 11px;
-  line-height: 15px;
-}
-.device-stat-change.purple {
-  color: #09a968;
-}
-.device-stat-change.green {
-  color: #304969;
-}
-.device-stat-change.orange {
-  color: #f03e50;
-}
-.device-stat-change.red {
-  color: #304969;
-}
-.device-stat-progress {
-  width: 100%;
-  max-width: 198px;
-  height: 7px;
-  margin-top: 7px;
-  border-radius: 10px;
-  background: #e8edf4;
-  overflow: hidden;
-}
-.device-progress-bar {
-  height: 100%;
-  border-radius: 10px;
-}
-.device-progress-bar.green {
-  background: #08ae68;
-}
-.device-progress-bar.orange {
-  background: #f5a000;
-}
-.device-progress-bar.red {
-  background: #ee3d55;
+  font-size: 21px;
+  font-weight: 700;
 }
 /* =========================================================
    LIST CARD
@@ -733,14 +707,15 @@
     gap: 10px;
   }
   .device-stat-card {
-    height: 125px;
-    padding: 15px;
-    gap: 12px;
+    height: 95px;
+    min-height: 95px;
+    padding: 10px;
+    gap: 0;
   }
   .device-stat-icon {
-    width: 53px;
-    height: 53px;
-    min-width: 53px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
   }
   .device-stat-value {
     font-size: 20px;
@@ -781,25 +756,16 @@
     gap: 8px;
   }
   .device-stat-card {
-    height: 112px;
-    padding: 11px;
-    gap: 8px;
+    height: 95px;
+    min-height: 95px;
+    padding: 10px;
+    gap: 0;
   }
   .device-stat-icon {
-    width: 45px;
-    height: 45px;
-    min-width: 45px;
-    border-radius: 14px;
-  }
-  .device-stat-title {
-    font-size: 10px;
-  }
-  .device-stat-value {
-    font-size: 22px;
-    line-height: 24px;
-  }
-  .device-stat-change {
-    font-size: 9px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 50%;
   }
   .devices-filter-bar {
     grid-template-columns: minmax(180px, 1fr) 120px 135px 110px 145px 95px;
@@ -855,5 +821,12 @@
   }
   .devices-pagination-controls {
     order: 2;
+  }
+}
+
+@media (max-width: 1050px) {
+  .device-stat-card {
+    height: 95px;
+    min-height: 95px;
   }
 }

@@ -1732,8 +1732,22 @@ dialog.merchant-delete-dialog::backdrop {
   margin-bottom: 10px;
 }
 .page-content:has(> .merchant-table-card) .stat-card {
+    height: 95px;
   min-height: 95px;
   padding: 10px;
+    background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
+}
+.page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.blue) {
+    background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
+}
+.page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.green) {
+    background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+}
+.page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.orange) {
+    background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+}
+.page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.red) {
+    background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
 }
 .page-content > .merchant-table-card {
   margin-bottom: 8px;
