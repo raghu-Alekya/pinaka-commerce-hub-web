@@ -1,14 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listEmployees } from "../api/employees";
-
 import {
   Search,
   ChevronDown,
   ChevronRight,
   ChevronLeft,
-  ChevronsLeft,
-  ChevronsRight,
   Plus,
   Download,
   CalendarDays,
@@ -20,9 +17,7 @@ import {
   X,
   UserPlus,
 } from "lucide-react";
-
 import "../styles/Employees.css";
-
 /* =========================================================
    AVATAR COMPONENT WITH SAFE FALLBACK
 ========================================================= */
@@ -48,11 +43,9 @@ function EmployeeAvatar({ src, name, initials, colorClass }) {
     </div>
   );
 }
-
 /* =========================================================
    EMPLOYEE DATA
 ========================================================= */
-
 const employees = [
   {
     initials: "SK",
@@ -124,9 +117,7 @@ const employees = [
     active: "30 mins ago",
     avatar: "blue",
   },
-
   /* Extra data to test search + pagination */
-
   {
     initials: "VK",
     name: "Vikram Kumar",
@@ -198,7 +189,6 @@ const employees = [
     avatar: "blue",
   },
 ];
-
 export async function listMerchants() {
   const data = await api.get(endpoints.merchants);
   const items = Array.isArray(data)
@@ -213,21 +203,16 @@ export async function listMerchants() {
 /* =========================================================
    STAT CARD
 ========================================================= */
-
 function StatCard({ icon: Icon, title, value, description, type, progress }) {
   return (
     <div className="employees-stat-card">
       <div className={`employees-stat-icon ${type}`}>
         <Icon size={24} />
       </div>
-
       <div className="employees-stat-content">
         <div className="employees-stat-title">{title}</div>
-
         <div className="employees-stat-value">{value}</div>
-
         <div className={`employees-stat-change ${type}`}>{description}</div>
-
         {progress !== undefined && (
           <div className="employees-progress-track">
             <div
@@ -242,11 +227,9 @@ function StatCard({ icon: Icon, title, value, description, type, progress }) {
     </div>
   );
 }
-
 /* =========================================================
    FILTER DROPDOWN
 ========================================================= */
-
 function FilterSelect({ value, options, onChange }) {
   return (
     <div className="employees-select">
@@ -257,24 +240,19 @@ function FilterSelect({ value, options, onChange }) {
           </option>
         ))}
       </select>
-
       <ChevronDown size={15} className="employees-select-icon" />
     </div>
   );
 }
-
 /* =========================================================
    EMPLOYEES PAGE
 ========================================================= */
-
 export default function Employees() {
   /* SEARCH */
-
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
   const [employeeRows, setEmployeeRows] = useState([]);
   const [loadError, setLoadError] = useState("");
-
   useEffect(() => {
     let active = true;
     listEmployees()
@@ -289,29 +267,19 @@ export default function Employees() {
     };
   }, []);
   /* FILTERS */
-
   const [merchant, setMerchant] = useState("All Merchants");
-
   const [store, setStore] = useState("All Stores");
-
   const [role, setRole] = useState("All Roles");
-
   const [status, setStatus] = useState("All Statuses");
-
   /* PAGINATION */
-
   const [page, setPage] = useState(1);
-
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-
+  const rowsPerPage = 5;
   /* =====================================================
      FILTER EMPLOYEES
   ===================================================== */
-
   const filteredEmployees = useMemo(() => {
     return employeeRows.filter((employee) => {
       const searchValue = search.trim().toLowerCase();
-
       const matchesSearch =
         !searchValue ||
         employee.name.toLowerCase().includes(searchValue) ||
@@ -320,17 +288,12 @@ export default function Employees() {
         employee.role.toLowerCase().includes(searchValue) ||
         employee.merchant.toLowerCase().includes(searchValue) ||
         employee.store.toLowerCase().includes(searchValue);
-
       const matchesMerchant =
         merchant === "All Merchants" || employee.merchant === merchant;
-
       const matchesStore = store === "All Stores" || employee.store === store;
-
       const matchesRole = role === "All Roles" || employee.role === role;
-
       const matchesStatus =
         status === "All Statuses" || employee.status === status;
-
       return (
         matchesSearch &&
         matchesMerchant &&
@@ -340,82 +303,54 @@ export default function Employees() {
       );
     });
   }, [employeeRows, search, merchant, store, role, status]);
-
   /* =====================================================
      PAGINATION CALCULATIONS
   ===================================================== */
-
   const totalPages = Math.max(
     1,
     Math.ceil(filteredEmployees.length / rowsPerPage),
   );
-
   const safePage = Math.min(page, totalPages);
-
   const startIndex = (safePage - 1) * rowsPerPage;
-
   const endIndex = startIndex + rowsPerPage;
-
   const visibleEmployees = filteredEmployees.slice(startIndex, endIndex);
-
   /* =====================================================
      SEARCH HANDLER
   ===================================================== */
-
   const handleSearch = (value) => {
     setSearch(value);
     setPage(1);
   };
-
   /* =====================================================
      FILTER HANDLER
   ===================================================== */
-
   const handleMerchantChange = (value) => {
     setMerchant(value);
     setPage(1);
   };
-
   const handleStoreChange = (value) => {
     setStore(value);
     setPage(1);
   };
-
   const handleRoleChange = (value) => {
     setRole(value);
     setPage(1);
   };
-
   const handleStatusChange = (value) => {
     setStatus(value);
     setPage(1);
   };
-
-  /* =====================================================
-     ROWS PER PAGE
-  ===================================================== */
-
-  const handleRowsChange = (value) => {
-    const newRows = Number(value);
-
-    setRowsPerPage(newRows);
-    setPage(1);
-  };
-
   /* =====================================================
      PAGINATION
   ===================================================== */
-
   const goToPage = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
     }
   };
-
   /* =====================================================
      RESET FILTERS
   ===================================================== */
-
   const resetFilters = () => {
     setSearch("");
     setMerchant("All Merchants");
@@ -424,30 +359,21 @@ export default function Employees() {
     setStatus("All Statuses");
     setPage(1);
   };
-
   /* =====================================================
      RETURN
   ===================================================== */
-
   return (
     <div className="employees-page">
       {/* =================================================
           PAGE HEADER
       ================================================= */}
-
       <div className="employees-page-header">
         <div>
           <h1>Employees</h1>
-
-          <div className="employees-breadcrumb">
-            <span>Home</span>
-
-            <ChevronRight size={14} />
-
-            <strong>Employees</strong>
-          </div>
+          <p className="employees-subtitle">
+            View and manage employees across your stores.
+          </p>
         </div>
-
         <div className="employees-header-actions">
           <button
             className="employees-add-btn"
@@ -465,11 +391,9 @@ export default function Employees() {
           </button>
         </div>
       </div>
-
       {/* =================================================
           STATISTICS
       ================================================= */}
-
       <div className="employees-stats">
         <StatCard
           icon={Users}
@@ -478,7 +402,6 @@ export default function Employees() {
           description="↑ 12 this month"
           type="purple"
         />
-
         <StatCard
           icon={Check}
           title="Active Employees"
@@ -487,7 +410,6 @@ export default function Employees() {
           type="green"
           progress={86}
         />
-
         <StatCard
           icon={Pause}
           title="Employees on Leave"
@@ -496,7 +418,6 @@ export default function Employees() {
           type="orange"
           progress={18}
         />
-
         <StatCard
           icon={X}
           title="Inactive Employees"
@@ -505,7 +426,6 @@ export default function Employees() {
           type="red"
           progress={22}
         />
-
         <StatCard
           icon={UserPlus}
           title="New This Month"
@@ -514,20 +434,15 @@ export default function Employees() {
           type="blue"
         />
       </div>
-
       {/* =================================================
           EMPLOYEE LIST
       ================================================= */}
-
       <div className="employees-list-card">
         {/* FILTER BAR */}
-
         <div className="employees-filter-bar">
           {/* SEARCH */}
-
           <div className="employees-search">
             <Search size={18} />
-
             <input
               type="text"
               value={search}
@@ -535,9 +450,7 @@ export default function Employees() {
               placeholder="Search by name, email, phone number, or role…"
             />
           </div>
-
           {/* MERCHANT */}
-
           <FilterSelect
             value={merchant}
             onChange={handleMerchantChange}
@@ -546,9 +459,7 @@ export default function Employees() {
               ...Array.from(new Set(employeeRows.map((e) => e.merchant))),
             ]}
           />
-
           {/* STORE */}
-
           <FilterSelect
             value={store}
             onChange={handleStoreChange}
@@ -557,9 +468,7 @@ export default function Employees() {
               ...Array.from(new Set(employeeRows.map((e) => e.store))),
             ]}
           />
-
           {/* ROLE */}
-
           <FilterSelect
             value={role}
             onChange={handleRoleChange}
@@ -568,44 +477,31 @@ export default function Employees() {
               ...Array.from(new Set(employeeRows.map((e) => e.role))),
             ]}
           />
-
           {/* STATUS */}
-
           <FilterSelect
             value={status}
             onChange={handleStatusChange}
             options={["All Statuses", "Active", "Inactive"]}
           />
         </div>
-
         {/* =================================================
             TABLE
         ================================================= */}
-
         <div className="employees-table-wrap">
           <table className="employees-table">
             <thead>
               <tr>
                 <th>Employee Name</th>
-
                 <th>Contact Information</th>
-
                 <th>Assigned Role</th>
-
                 <th>Merchant Name</th>
-
                 <th>Assigned Store</th>
-
                 <th>Employee Status</th>
-
                 <th>Date Added</th>
-
                 <th>Last Active</th>
-
                 <th>Actions</th>
               </tr>
             </thead>
-
             <tbody>
               {loadError ? (
                 <tr>
@@ -617,7 +513,6 @@ export default function Employees() {
                 visibleEmployees.map((employee) => (
                   <tr key={employee.rowKey}>
                     {/* EMPLOYEE */}
-
                     {/* EMPLOYEE COLUMN */}
                     {/* EMPLOYEE COLUMN */}
                     <td>
@@ -632,38 +527,26 @@ export default function Employees() {
                             employee.initials
                           )}
                         </div>
-
                         <div>
                           <div className="employee-name">{employee.name}</div>
                           <div className="employee-id">{employee.id}</div>
                         </div>
                       </div>
                     </td>
-
                     {/* CONTACT */}
-
                     <td>
                       <div className="employee-contact">
                         <div>{employee.email}</div>
-
                         <div>{employee.phone}</div>
                       </div>
                     </td>
-
                     {/* ROLE */}
-
                     <td>{employee.role}</td>
-
                     {/* MERCHANT */}
-
                     <td>{employee.merchant}</td>
-
                     {/* STORE */}
-
                     <td>{employee.store}</td>
-
                     {/* STATUS */}
-
                     <td>
                       <span
                         className={`employee-status ${employee.status.toLowerCase()}`}
@@ -671,13 +554,9 @@ export default function Employees() {
                         {employee.status}
                       </span>
                     </td>
-
                     {/* JOINED */}
-
                     <td>{employee.joined}</td>
-
                     {/* LAST ACTIVE */}
-
                     <td>
                       <div
                         className={`employee-last-active ${
@@ -685,13 +564,10 @@ export default function Employees() {
                         }`}
                       >
                         <span />
-
                         {employee.active}
                       </div>
                     </td>
-
                     {/* ACTIONS */}
-
                     <td>
                       <div className="employee-actions">
                         <button
@@ -716,90 +592,28 @@ export default function Employees() {
             </tbody>
           </table>
         </div>
-
         {/* =================================================
             PAGINATION
         ================================================= */}
-
         <div className="employees-pagination">
-          {/* SHOWING */}
-
           <div className="employees-showing">
-            Showing{" "}
-            <strong>
-              {filteredEmployees.length === 0 ? 0 : startIndex + 1}
-            </strong>{" "}
-            to <strong>{Math.min(endIndex, filteredEmployees.length)}</strong>{" "}
-            of <strong>{filteredEmployees.length}</strong> employees
+            Showing {filteredEmployees.length === 0 ? 0 : startIndex + 1} -{" "}
+            {Math.min(endIndex, filteredEmployees.length)} of {filteredEmployees.length} entries
           </div>
-
-          {/* PAGE BUTTONS */}
-
           <div className="employees-pages">
-            <button onClick={() => goToPage(1)} disabled={safePage === 1}>
-              <ChevronsLeft size={15} />
-            </button>
-
             <button
               onClick={() => goToPage(safePage - 1)}
               disabled={safePage === 1}
             >
               <ChevronLeft size={15} />
             </button>
-
-            {Array.from(
-              {
-                length: totalPages,
-              },
-              (_, index) => index + 1,
-            )
-              .slice(0, 5)
-              .map((number) => (
-                <button
-                  key={number}
-                  className={safePage === number ? "employees-page-active" : ""}
-                  onClick={() => goToPage(number)}
-                >
-                  {number}
-                </button>
-              ))}
-
+            <button className="employees-page-active">{safePage}</button>
             <button
               onClick={() => goToPage(safePage + 1)}
               disabled={safePage === totalPages}
             >
               <ChevronRight size={15} />
             </button>
-
-            <button
-              onClick={() => goToPage(totalPages)}
-              disabled={safePage === totalPages}
-            >
-              <ChevronsRight size={15} />
-            </button>
-          </div>
-
-          {/* ROWS PER PAGE */}
-
-          <div className="employees-rows">
-            <span>Employees per page</span>
-
-            <div className="employees-row-select">
-              <select
-                value={rowsPerPage}
-                onChange={(e) => handleRowsChange(e.target.value)}
-              >
-                <option value="5">5</option>
-
-                <option value="10">10</option>
-
-                <option value="15">15</option>
-
-                <option value="20">20</option>
-              </select>
-
-              <ChevronDown size={14} />
-            </div>
           </div>
         </div>
       </div>

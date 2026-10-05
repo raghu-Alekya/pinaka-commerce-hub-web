@@ -306,13 +306,11 @@ export default function Devices() {
 
           <h1>Devices</h1>{" "}
 
-          <div className="devices-breadcrumb">
+          <p className="devices-subtitle">
 
-            {" "}
+            View and manage devices connected to your stores.
 
-            <span>Home</span> <span>›</span> <strong>Devices</strong>{" "}
-
-          </div>{" "}
+          </p>{" "}
 
         </div>{" "}
 
@@ -340,7 +338,7 @@ export default function Devices() {
 
             {" "}
 
-            <span className="export-icon">↓</span> Export{" "}
+            <span className="export-icon">↓</span> Export {" "}
 
           </button>{" "}
 

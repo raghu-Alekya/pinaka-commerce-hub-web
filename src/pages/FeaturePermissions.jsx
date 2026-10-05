@@ -1816,7 +1816,7 @@ export default function FeaturePermissions() {
               ? 0
               : startIndex + 1}{" "}
             to {endIndex} of{" "}
-            {totalEntries} entries
+            {totalEntries} Permissions
           </span>
 
           <div className="fp-pagination">
