@@ -233,10 +233,14 @@ a {
   transition: 0.2s;
 }
 
-.master-setup-submenu-item:hover,
-.master-setup-submenu-item.active {
+.master-setup-submenu-item:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.08);
+}
+
+.master-setup-submenu-item.active {
+  color: #fff;
+  background: #5543c5;
 }
 
 
