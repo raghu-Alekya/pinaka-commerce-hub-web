@@ -147,8 +147,10 @@ export default function RoleTemplates() {
     return filteredTemplates.slice(startIndex, startIndex + PAGE_SIZE);
   }, [filteredTemplates, currentPage]);
 
-  const showingFrom = totalEntries === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const showingTo = totalEntries === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, totalEntries);
+  const showingFrom =
+    totalEntries === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const showingTo =
+    totalEntries === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, totalEntries);
 
   // Search/filter/sort changes always start from the first valid page.
   useEffect(() => {
@@ -390,7 +392,8 @@ export default function RoleTemplates() {
                   : "Add Role Template"}
               </h2>
               <p>
-                Provide the basic details and configuration for this role template.
+                Provide the basic details and configuration for this role
+                template.
               </p>
             </div>
           </div>
@@ -762,22 +765,31 @@ export default function RoleTemplates() {
 
           <div className="role-pagination">
             <span className="role-pagination-info">
-              Showing {showingFrom} to {showingTo} of {totalEntries} role templates
+              Showing {showingFrom} to {showingTo} of {totalEntries} role
+              templates
             </span>
 
             {totalEntries > 0 && (
-              <div className="role-pagination-controls" aria-label="Role templates pagination">
+              <div
+                className="role-pagination-controls"
+                aria-label="Role templates pagination"
+              >
                 <button
                   type="button"
                   className="role-page-btn role-page-arrow"
-                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.max(1, page - 1))
+                  }
                   disabled={currentPage === 1}
                   aria-label="Previous page"
                 >
                   <i className="bi bi-chevron-left" />
                 </button>
 
-                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                {Array.from(
+                  { length: totalPages },
+                  (_, index) => index + 1,
+                ).map((page) => (
                   <button
                     key={page}
                     type="button"
@@ -792,7 +804,9 @@ export default function RoleTemplates() {
                 <button
                   type="button"
                   className="role-page-btn role-page-arrow"
-                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                  }
                   disabled={currentPage === totalPages}
                   aria-label="Next page"
                 >

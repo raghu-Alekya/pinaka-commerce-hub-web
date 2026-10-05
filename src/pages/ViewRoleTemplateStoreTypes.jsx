@@ -77,20 +77,18 @@ export default function ViewRoleTemplateStoreTypes() {
   };
 
   const initialSelectedStoreTypes = getStateArray(
-    location.state?.selectedStoreTypes
+    location.state?.selectedStoreTypes,
   );
 
-  const [storeTypesList, setStoreTypesList] = useState(
-    fallbackStoreTypesList
-  );
+  const [storeTypesList, setStoreTypesList] = useState(fallbackStoreTypesList);
   const [selectedStoreTypes, setSelectedStoreTypes] = useState(
-    initialSelectedStoreTypes
+    initialSelectedStoreTypes,
   );
   const [enabledFeatures, setEnabledFeatures] = useState(
-    getStateArray(location.state?.enabledFeatures)
+    getStateArray(location.state?.enabledFeatures),
   );
   const [selectedPermissions, setSelectedPermissions] = useState(
-    getStateArray(location.state?.selectedPermissions)
+    getStateArray(location.state?.selectedPermissions),
   );
 
   const [loading, setLoading] = useState(true);
@@ -102,15 +100,11 @@ export default function ViewRoleTemplateStoreTypes() {
 
   // This snapshot represents the last state received/saved for this screen.
   const [savedStoreTypes, setSavedStoreTypes] = useState(
-    initialSelectedStoreTypes
+    initialSelectedStoreTypes,
   );
 
   const tabs = [
-    [
-      "overview",
-      "Overview",
-      `/role-templates/${roleId || "store-manager"}`,
-    ],
+    ["overview", "Overview", `/role-templates/${roleId || "store-manager"}`],
     [
       "store-types",
       "Applicable Store Types",
@@ -139,14 +133,12 @@ export default function ViewRoleTemplateStoreTypes() {
           setSelectedStoreTypes(
             items
               .filter((storeType) => Boolean(storeType.checked))
-              .map((storeType) => storeType.id)
+              .map((storeType) => storeType.id),
           );
         }
       } catch (requestError) {
         if (!cancelled) {
-          setError(
-            requestError?.message || "Unable to load store types."
-          );
+          setError(requestError?.message || "Unable to load store types.");
         }
       } finally {
         if (!cancelled) {
@@ -176,14 +168,12 @@ export default function ViewRoleTemplateStoreTypes() {
     try {
       await roleTemplatesApi.bulkUpdateStoreTypes(
         roleId,
-        nextSelectedStoreTypes
+        nextSelectedStoreTypes,
       );
       setSavedStoreTypes(nextSelectedStoreTypes);
     } catch (requestError) {
       setSelectedStoreTypes(selectedStoreTypes);
-      setError(
-        requestError?.message || "Unable to save store type selection."
-      );
+      setError(requestError?.message || "Unable to save store type selection.");
     } finally {
       setSaving(false);
     }
@@ -216,20 +206,16 @@ export default function ViewRoleTemplateStoreTypes() {
 
     setSavedStoreTypes(selectedStoreTypes);
 
-    navigate(
-      `/role-templates/${roleId || "store-manager"}/access`,
-      {
-        state: buildNavigationState(),
-      }
-    );
+    navigate(`/role-templates/${roleId || "store-manager"}/access`, {
+      state: buildNavigationState(),
+    });
 
     setSaving(false);
   }
 
   function hasUnsavedChanges() {
     return (
-      JSON.stringify(selectedStoreTypes) !==
-      JSON.stringify(savedStoreTypes)
+      JSON.stringify(selectedStoreTypes) !== JSON.stringify(savedStoreTypes)
     );
   }
 
@@ -284,7 +270,7 @@ export default function ViewRoleTemplateStoreTypes() {
 
     localStorage.setItem(
       "pinaka_role_template_configs",
-      JSON.stringify(configuration)
+      JSON.stringify(configuration),
     );
 
     setSavedStoreTypes(selectedStoreTypes);
@@ -370,33 +356,23 @@ export default function ViewRoleTemplateStoreTypes() {
 
           <div className="role-store-types-grid">
             {loading && (
-              <p className="role-loading-message">
-                Loading store types...
-              </p>
+              <p className="role-loading-message">Loading store types...</p>
             )}
 
             {!loading && storeTypesList.length === 0 && (
-              <p className="role-empty-message">
-                No store types found.
-              </p>
+              <p className="role-empty-message">No store types found.</p>
             )}
 
             {!loading &&
               storeTypesList.map((storeType) => {
                 const storeTypeId =
-                  storeType.id ??
-                  storeType._id ??
-                  storeType.storeTypeId;
+                  storeType.id ?? storeType._id ?? storeType.storeTypeId;
 
                 const storeTypeName =
-                  storeType.name ||
-                  storeType.storeTypeName ||
-                  "Store Type";
+                  storeType.name || storeType.storeTypeName || "Store Type";
 
                 const storeTypeCode =
-                  storeType.code ||
-                  storeType.storeTypeCode ||
-                  "";
+                  storeType.code || storeType.storeTypeCode || "";
 
                 const isSelected = selectedStoreTypes.includes(storeTypeId);
 
