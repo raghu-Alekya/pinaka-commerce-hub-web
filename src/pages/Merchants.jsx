@@ -517,9 +517,9 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
     [
       "orange",
       "bi-pause-circle-fill",
-      "Pending Setup",
+      "Set up Incomplete",
       String(merchants.filter((m) => m.status === "Pending Setup").length),
-      "Needs onboarding",
+      "Setup Required",
     ],
     [
       "blue",
@@ -551,13 +551,8 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
       <div className="page-header">
         <div>
           <h1>Merchants</h1>
-          <div className="breadcrumb">
-            <span>Home</span>
-            <span>
-              <i className="bi bi-chevron-right" />
-            </span>
-            <strong>Merchants</strong>
-          </div>
+           <p className="page-subtitle">
+             Manage merchant accounts, subscriptions, stores, and business details. </p>
         </div>
         <div className="page-actions">
           <button
@@ -670,13 +665,13 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
           <table className="merchant-table">
             <thead>
               <tr>
-                <th>MERCHANT</th>
-                <th>CONTACT</th><th>LOCATION</th>
-                <th>STORES</th>
-                <th>SUBSCRIPTION PLAN</th>
-                <th>STATUS</th>
-                <th>JOINED ON</th>
-                <th>ACTIONS</th>
+                <th>Merchant Name</th>
+                <th>Contact Information</th><th>Location</th>
+                <th>Stores</th>
+                <th>Subscription Plan</th>
+                <th>Status</th>
+                <th>Joined On</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -741,9 +736,10 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
                       </div>
                     </td>
                     <td>
-                      <span className={`status ${String(m.status || '').toLowerCase()}`}>
-                        {m.status}
-                      </span>
+                      <span className={`status ${String(m.status || '') .trim() .toLowerCase() .replace(/\s+/g, '-')}`} >
+                         <i></i>
+                         {m.status || 'Unknown'}
+                         </span>
                     </td>
                     <td>{m.joined}</td>
                     <td>
@@ -757,8 +753,10 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
                         >
                           <i className="bi bi-eye" />
                         </button>
+
+
                         <button
-                          type="button" className="action-btn edit-btn"
+                          type="button" className="action-btn edit-btn text primary"
                           onClick={() => openEdit(m)}
                           title="Edit"
                         >

@@ -228,7 +228,7 @@ const FeaturePermissions = () => {
           </button>
 
           <button type="button" className="feature-detail-tab active">
-            Feature &amp; Permission Access
+            Permissions
           </button>
         </nav>
       </section>
@@ -247,9 +247,9 @@ const FeaturePermissions = () => {
             </div>
 
             <div className="fp-title-copy">
-              <h2>Permissions List ({permissions.length})</h2>
+              <h2>Feature Permissions</h2>
 
-              <p>Manage and configure permissions for this feature.</p>
+              <p>Manage permissions for this feature.</p>
             </div>
           </div>
 
@@ -311,7 +311,7 @@ const FeaturePermissions = () => {
             <thead>
               <tr>
                 <th>
-                  <div className="fp-table-heading">Permission Key</div>
+                  <div className="fp-table-heading">Permission Code</div>
                 </th>
 
                 <th>
@@ -319,7 +319,7 @@ const FeaturePermissions = () => {
                 </th>
 
                 <th>
-                  <div className="fp-table-heading">Feature</div>
+                  <div className="fp-table-heading">Feature Name</div>
                 </th>
 
                 <th>
@@ -353,6 +353,7 @@ const FeaturePermissions = () => {
                     <button
                       type="button"
                       className="fp-delete"
+                      title="Remove Assignment"
                       onClick={() => setDeleteTarget(permission)}
                       aria-label={`Delete ${permission.name}`}
                     >
@@ -381,8 +382,8 @@ const FeaturePermissions = () => {
 
         <div className="fp-table-footer">
           <p className="fp-results-text">
-            Showing {filteredPermissions.length > 0 ? 1 : 0} to{" "}
-            {filteredPermissions.length} of {filteredPermissions.length} entries
+            Showing {filteredPermissions.length > 0 ? 1 : 0} - {" "}
+            {filteredPermissions.length} - {filteredPermissions.length} Permissions 
           </p>
 
           <div className="fp-pagination">

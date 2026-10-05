@@ -239,21 +239,22 @@ export default function ReviewSubscribe({
       <div className="rs-card-grid">
               <Card title="Merchant Details" editLabel="Edit merchant details" onEdit={editMerchant} className="rs-details-card">
                 <dl className="rs-detail-list">
-                  <DetailRow label="Business">{merchant?.businessName || merchant?.name}</DetailRow>
+                  <DetailRow label="Business Name">{merchant?.businessName || merchant?.name}</DetailRow>
                   <DetailRow label="Merchant code">{merchant?.merchantCode}</DetailRow>
-                  <DetailRow label="Primary contact">{merchant?.contactName}</DetailRow>
-                  <DetailRow label="Email">{merchant?.email}</DetailRow>
-                  <DetailRow label="Phone">{merchant?.phone}</DetailRow>
-                  <DetailRow label="Address">{merchant?.address}</DetailRow>
+                  <DetailRow label="EIN">{merchant?.ein}</DetailRow>
+                  <DetailRow label="Primary Contact">{merchant?.contactName}</DetailRow>
+                  <DetailRow label="Email Address">{merchant?.email}</DetailRow>
+                  <DetailRow label="Phone Number">{merchant?.phone}</DetailRow>
+                  <DetailRow label="Business Address">{merchant?.address}</DetailRow>
                 </dl>
               </Card>
 
               <Card title="Plan Details" editLabel="Change plan" onEdit={editPlan} className="rs-details-card">
                 <dl className="rs-detail-list rs-plan-list">
-                  <DetailRow label="Plan">{plan?.name}</DetailRow>
+                  <DetailRow label="Subscription Plan">{plan?.name}</DetailRow>
                   <DetailRow label="Store type">{plan?.storeType}</DetailRow>
                   <DetailRow label="Billing cycle">{cycle}</DetailRow>
-                  <DetailRow label="Included limits">
+                  <DetailRow label="Plan Includes">
                     <span className="rs-limit-lines">
                       <span>{plan?.stores ?? "Custom"} stores</span>
                       <span>{plan?.devices ?? "Custom"} devices</span>
@@ -266,7 +267,7 @@ export default function ReviewSubscribe({
               </Card>
 
               <Card title="Billing Summary" className="rs-billing-card">
-                <div className="rs-billing-line"><span>Plan amount</span><strong>{money(number)}</strong></div>
+                <div className="rs-billing-line"><span>Subscription Subtotal</span><strong>{money(number)}</strong></div>
                 {safeTaxRate > 0 && <div className="rs-billing-line"><span>Tax ({(safeTaxRate * 100).toFixed(2)}%)</span><strong>{money(tax)}</strong></div>}
                 <div className="rs-billing-total"><strong>Total due</strong><strong>{money(total)}</strong></div>
               </Card>
@@ -274,22 +275,48 @@ export default function ReviewSubscribe({
               <Card title="Payment Method" className="rs-payment-card">
                 <fieldset className="rs-payment-options">
                   <legend className="rs-sr-only">Select a payment method</legend>
-                  <label><input type="radio" name="payment-method" value="card" checked={paymentMethod === "card"} onChange={() => changePaymentMethod("card")} /><CreditCard size={17} /> Card</label>
+                  <label><input type="radio" name="payment-method" value="card" checked={paymentMethod === "card"} onChange={() => changePaymentMethod("card")} /><CreditCard size={17} /> Credit or Debit Card</label>
                   <label><input type="radio" name="payment-method" value="ach" checked={paymentMethod === "ach"} onChange={() => changePaymentMethod("ach")} /> Bank transfer</label>
                 </fieldset>
                 <p className="rs-preview-note">Your selection will be passed to the subscription service. No payment information is entered on this screen.</p>
-                <button className="rs-subscribe" type="button" onClick={handleSubscribe} disabled={isSubmitting || submitting || !merchant || !plan?.name}>
-                  {isSubmitting || submitting ? <><LoaderCircle className="rs-spinner" size={17} /> Saving…</> : <><Check size={17} /> {isEditing ? "Save Subscription" : "Subscribe"}</>}
-                </button>
                 {(message || externalError) && <p className="rs-feedback" role="alert">{externalError || message}</p>}
               </Card>
             </div>
           </div>
 
           <footer className="rs-footer">
-            <button className="rs-outline-button" type="button" onClick={back}> Back to plan</button>
-            <button className="rs-outline-button" type="button" onClick={goBackToMerchants}>Cancel</button>
-          </footer>
+  <button
+    className="rs-outline-button"
+    type="button"
+    onClick={back}
+  >
+    Back to Plan Selection
+  </button>
+
+  <button
+    className="rs-subscribe rs-footer-submit"
+    type="button"
+    onClick={handleSubscribe}
+    disabled={
+      isSubmitting ||
+      submitting ||
+      !merchant ||
+      !plan?.name
+    }
+  >
+    {isSubmitting || submitting ? (
+      <>
+        <LoaderCircle className="rs-spinner" size={17} />
+        Saving…
+      </>
+    ) : (
+      <>
+        <Check size={17} />
+        {isEditing ? "Save Changes" : "Create Merchant"}
+      </>
+    )}
+  </button>
+</footer>
         </main>
       </div>
     </div>

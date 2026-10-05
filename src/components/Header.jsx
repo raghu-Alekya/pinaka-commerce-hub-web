@@ -7,9 +7,16 @@ import { useAuth } from "../auth/AuthContext";
 export default function Header({ onMobileMenu }) {
   const nav = useNavigate();
   const { pathname } = useLocation();
+  const isStoreTypesScreen = pathname.startsWith("/store-types");
   const [merchants, setMerchants] = useState([]),
     [merchantError, setMerchantError] = useState("");
   useEffect(() => {
+    if (isStoreTypesScreen) {
+      setMerchants([]);
+      setMerchantError("");
+      return undefined;
+    }
+
     let active = true;
     listMerchants()
       .then((rows) => {
@@ -24,7 +31,7 @@ export default function Header({ onMobileMenu }) {
     return () => {
       active = false;
     };
-  }, [pathname]);
+  }, [isStoreTypesScreen, pathname]);
   const { user, logout } = useAuth();
   const displayName = user
     ? [user.firstName, user.lastName].filter(Boolean).join(" ") ||
@@ -96,7 +103,7 @@ export default function Header({ onMobileMenu }) {
             <small>{role}</small>
           </div>
           <button type="button" className="logout-btn" onClick={handleLogout}>
-            Logout
+            Signout
           </button>
         </div>
       </div>

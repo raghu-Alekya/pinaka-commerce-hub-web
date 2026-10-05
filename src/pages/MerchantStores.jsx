@@ -66,7 +66,7 @@ export default function MerchantStores({
 
         const [result, storesResult] = await Promise.all([
           getMerchant(merchantId),
-          api.get(endpoints.merchantStores(merchantId)).catch(() => null),
+          api.get(endpoints.merchantStores(merchantId)),
         ]);
 
         if (!cancelled) {
@@ -74,10 +74,9 @@ export default function MerchantStores({
             throw new Error("Merchant details were not returned.");
           }
 
-          const listed = storesResult?.stores ?? storesResult?.data?.stores ?? [];
-          const rows = Array.isArray(listed) && listed.length ? listed : result.stores;
+          const listed = storesResult?.stores ?? storesResult?.data?.stores ?? result.stores ?? [];
           setMerchant(result.merchant);
-          setStores((Array.isArray(rows) ? rows : []).map(toStoreRow));
+          setStores((Array.isArray(listed) ? listed : []).map(toStoreRow));
         }
       } catch (err) {
         if (!cancelled) {
@@ -218,9 +217,9 @@ export default function MerchantStores({
     nav(`/merchants/${encodeURIComponent(targetId)}/stores/new`);
   };
 
-  const handleStoreConfiguration = (store) => {
+  const handleStoreOverview = (store) => {
     const targetId = merchantId || merchant?.merchantId || merchant?.merchantCode || merchant?.id;
-    nav(`/merchants/${encodeURIComponent(targetId)}/stores/${getStoreId(store)}/configuration`);
+    nav(`/merchants/${encodeURIComponent(targetId)}/stores/${getStoreId(store)}`);
   };
 
   const handleEdit = (store) => {
@@ -461,13 +460,13 @@ export default function MerchantStores({
                                 type="button"
                                 className="store-config-btn"
                                 onClick={() =>
-                                  handleStoreConfiguration(
+                                  handleStoreOverview(
                                     store
                                   )
                                 }
                               >
-                                <i className="bi bi-sliders" />
-                                Store Configuration
+                                <i className="bi bi-eye" />
+                                Store Overview
                               </button>
 
                               <button
@@ -561,3 +560,5 @@ export default function MerchantStores({
     </div>
   );
 }
+
+

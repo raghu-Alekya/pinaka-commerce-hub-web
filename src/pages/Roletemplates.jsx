@@ -373,7 +373,7 @@ export default function RoleTemplates() {
         <div className="role-templates-page-heading">
           <div>
             <h1>Role Template</h1>
-            <p>Create and manage role templates using feature permissions.</p>
+            <p>Manage reusable role templates and their permissions.</p>
           </div>
         </div>
 
@@ -390,8 +390,7 @@ export default function RoleTemplates() {
                   : "Add Role Template"}
               </h2>
               <p>
-                Provide the basic details and configuration for this role
-                template.
+                Provide the basic details and configuration for this role template.
               </p>
             </div>
           </div>
@@ -405,7 +404,7 @@ export default function RoleTemplates() {
           <div className="role-form-grid role-create-fields-grid">
             <label className="role-field role-code-field">
               <span>
-                Role Code <b>*</b>
+                Role Template Code <b>*</b>
               </span>
 
               <div className="role-input-wrap">
@@ -493,7 +492,7 @@ export default function RoleTemplates() {
                   )}px`;
                 }}
                 autoComplete="off"
-                placeholder="Enter a brief description..."
+                placeholder="Describe the role template’s purpose."
                 maxLength={500}
               />
 
@@ -524,7 +523,7 @@ export default function RoleTemplates() {
                 ? "Saving..."
                 : editingId !== null
                   ? "Update Role Template"
-                  : "Create Role Template"}
+                  : "Add Role Template"}
             </button>
           </div>
         </div>
@@ -532,7 +531,7 @@ export default function RoleTemplates() {
         <div className="role-list-card">
           <div className="role-list-header">
             <div>
-              <h2>Role Templates List</h2>
+              <h2>Role Templates</h2>
             </div>
 
             <div className="role-filters">
@@ -763,7 +762,7 @@ export default function RoleTemplates() {
 
           <div className="role-pagination">
             <span className="role-pagination-info">
-              Showing {showingFrom} to {showingTo} of {totalEntries} entries
+              Showing {showingFrom} to {showingTo} of {totalEntries} role templates
             </span>
 
             {totalEntries > 0 && (

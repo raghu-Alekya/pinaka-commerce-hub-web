@@ -19,8 +19,47 @@ const initials = (name) =>
     .join("")
     .toUpperCase();
 const displayStoreId = (store) =>
-  [store.storeCode, store.store_code, store.code, store.storeId, store.storeID]
-    .find((value) => value && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value))) || store.id;
+  [
+    store.storeCode,
+    store.store_code,
+    store.code,
+    store.storeId,
+    store.storeID,
+  ].find(
+    (value) =>
+      value &&
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        String(value),
+      ),
+  ) || store.id;
+
+function exportStores(rows, merchants) {
+  if (!rows.length) {
+    alert("There are no stores to export.");
+    return;
+  }
+  const header = ["Store", "Store ID", "Merchant", "Location", "POS Devices", "Status"];
+  const data = rows.map((store) => [
+    store.storeName,
+    displayStoreId(store),
+    merchantNameOf(store, merchants),
+    locationOf(store),
+    staticPosDeviceCounts[store.id] ?? 0,
+    store.status,
+  ]);
+  const csv = [header, ...data]
+    .map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "pch-stores.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
 
 const merchantNameOf = (store, merchants) => {
   const merchant = merchants.find(
@@ -55,8 +94,7 @@ export default function Stores() {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
   const [loading, setLoading] = useState(true),
-    [error, setError] = useState(""),
-    [version, setVersion] = useState(0);
+    [error, setError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -80,11 +118,13 @@ export default function Stores() {
     return () => {
       active = false;
     };
-  }, [version]);
+  }, []);
   const rows = stores.filter(
     (s) =>
       (!query ||
-        `${s.storeName} ${displayStoreId(s)}`.toLowerCase().includes(query.toLowerCase())) &&
+        `${s.storeName} ${displayStoreId(s)}`
+          .toLowerCase()
+          .includes(query.toLowerCase())) &&
       (!merchant || String(s.merchantId) === String(merchant)) &&
       (!status || s.status === status) &&
       (!location || locationOf(s) === location),
@@ -164,16 +204,15 @@ export default function Stores() {
           <p>Manage and monitor all stores connected to Pinaka Commerce Hub</p>
         </div>
         <div className="page-actions">
-          <button
-            className="refresh-btn"
-            disabled={loading}
-            onClick={() => setVersion((v) => v + 1)}
-          >
-            <i className={`bi bi-arrow-clockwise ${loading ? "spin" : ""}`} />{" "}
-            Refresh
-          </button>
           <button className="add-store-btn" onClick={() => nav("/stores/new")}>
             <i className="bi bi-plus-lg" /> Add Store
+          </button>
+          <button
+            className="btn btn-secondary export-store-btn"
+            type="button"
+            onClick={() => exportStores(rows, merchants)}
+          >
+            <i className="bi bi-download" /> Export
           </button>
         </div>
       </div>
@@ -314,7 +353,9 @@ export default function Stores() {
                         aria-label={`View ${s.storeName}`}
                         title="View store"
                         onClick={() =>
-                          nav(`/stores/${encodeURIComponent(s.id)}/configuration`)
+                          nav(
+                            `/stores/${encodeURIComponent(s.id)}`,
+                          )
                         }
                       >
                         <div className="store-avatar purple-bg">
@@ -339,9 +380,7 @@ export default function Stores() {
                         <span>{locationOf(s) || "—"}</span>
                       </div>
                     </td>
-                    <td>
-                      {staticPosDeviceCounts[s.id] ?? 0}
-                    </td>
+                    <td>{staticPosDeviceCounts[s.id] ?? 0}</td>
                     <td>
                       <span
                         className={`store-status ${String(s.status).toLowerCase()}`}
@@ -351,13 +390,15 @@ export default function Stores() {
                     </td>
                     <td>
                       <div className="store-item-actions">
-                       <button
+                        <button
                           type="button"
-                          className="action-btn"
+                          className="action-btn view-btn"
                           aria-label={`View ${s.storeName}`}
                           title="View store"
                           onClick={() =>
-                            nav(`/stores/${encodeURIComponent(s.id)}/configuration`)
+                            nav(
+                              `/stores/${encodeURIComponent(s.id)}`,
+                            )
                           }
                         >
                           <i className="bi bi-eye" />
@@ -365,7 +406,7 @@ export default function Stores() {
 
                         <button
                           type="button"
-                          className="action-btn"
+                          className="action-btn edit-btn text-primary"
                           aria-label={`Edit ${s.storeName}`}
                           title="Edit store"
                           onClick={() =>
@@ -375,9 +416,7 @@ export default function Stores() {
                           <i className="bi bi-pencil" />
                         </button>
 
-                        <button
-                          type="button"
-                          className="action-btn delete-action-btn"
+                        <button type="button" className="action-btn text-danger"
                           aria-label={`Delete ${s.storeName}`}
                           title="Delete store"
                           onClick={() => {
@@ -423,8 +462,9 @@ export default function Stores() {
                 <button
                   type="button"
                   key={page}
-                  className={`pagination-page ${page === safeCurrentPage ? "active" : ""
-                    }`}
+                  className={`pagination-page ${
+                    page === safeCurrentPage ? "active" : ""
+                  }`}
                   onClick={() => goToPage(page)}
                 >
                   {page}
@@ -445,93 +485,66 @@ export default function Stores() {
         </div>
       </div>
 
-     {deleteTarget && (
-  <div
-    className="pch-delete-overlay"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="delete-store-title"
-    onClick={(event) => {
-      if (event.target === event.currentTarget && !deleting) {
-        setDeleteTarget(null);
-        setDeleteError("");
-      }
-    }}
-  >
-    <div className="pch-delete-modal">
-      <div className="pch-delete-icon" aria-hidden="true">
-        <i className="bi bi-trash3" />
-      </div>
-
-      <h2 id="delete-store-title">Delete Store?</h2>
-
-      <p className="pch-delete-message">
-        Are you sure you want to delete{" "}
-        <strong>
-          {deleteTarget.storeName || deleteTarget.name || "this store"}
-        </strong>
-        ?
-      </p>
-
-      <p className="pch-delete-warning">
-        This action cannot be undone.
-      </p>
-      {deleteError && <p className="stores-feedback" role="alert">{deleteError}</p>}
-
-      <div className="pch-delete-actions">
-        <button
-          type="button"
-          className="pch-delete-cancel"
-          disabled={deleting}
-          onClick={() => {
-            setDeleteTarget(null);
-            setDeleteError("");
-          }}
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          className="pch-delete-confirm"
-          disabled={deleting}
-          onClick={async () => {
-            if (deleting || !deleteTarget) return;
-            const storeId = String(displayStoreId(deleteTarget) || "").trim();
-            if (!storeId) {
-              setDeleteError("This store is missing its store ID and cannot be deleted.");
-              return;
-            }
-            setDeleting(true);
-            setDeleteError("");
-            try {
-              const result = await deleteStore(storeId);
-              const deleteFlag = result?.isDeleted;
-              const markedDeleted = [true, 1, "1", "true"].includes(
-                typeof deleteFlag === "string" ? deleteFlag.toLowerCase() : deleteFlag,
-              );
-              if (result?.success === false || (deleteFlag != null && !markedDeleted)) {
-                throw new Error(result?.message || "The store was not deleted.");
-              }
-              const rowId = String(deleteTarget.id);
-              setStores(currentStores => currentStores.filter(store =>
-                String(store.id) !== rowId && String(displayStoreId(store)) !== storeId,
-              ));
+      {deleteTarget && (
+        <div
+          className="pch-delete-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-store-title"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
               setDeleteTarget(null);
-            } catch (err) {
-              setDeleteError(err?.message || "Unable to delete this store. Please try again.");
-            } finally {
-              setDeleting(false);
             }
           }}
         >
-          {deleting ? "Deleting…" : "Delete Store"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+          <div className="pch-delete-modal">
+            <div className="pch-delete-icon" aria-hidden="true">
+              <i className="bi bi-trash3" />
+            </div>
 
+            <h2 id="delete-store-title">Delete Store?</h2>
+
+            <p className="pch-delete-message">
+              Are you sure you want to delete{" "}
+              <strong>
+                {deleteTarget.storeName || deleteTarget.name || "this store"}
+              </strong>
+              ?
+            </p>
+
+            <p className="pch-delete-warning">This action cannot be undone.</p>
+
+            <div className="pch-delete-actions">
+              <button
+                type="button"
+                className="pch-delete-cancel"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="pch-delete-confirm"
+                onClick={() => {
+                  const deletedId = String(deleteTarget.id);
+
+                  setStores((currentStores) =>
+                    currentStores.filter(
+                      (store) => String(store.id) !== deletedId,
+                    ),
+                  );
+
+                  setDeleteTarget(null);
+                }}
+              >
+                Delete Store
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

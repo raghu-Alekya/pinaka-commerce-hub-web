@@ -7,6 +7,26 @@ const initialFeatures = [];
 
 const emptyForm = { code: "", name: "", description: "", category: "", status: "Active" };
 
+const defaultCategories = [
+  "Inventory",
+  "Payments",
+  "Operations",
+  "Cash Management",
+  "Refund",
+  "Promotions",
+  "Peripheral",
+  "Billing",
+  "Store Management",
+  "Reports",
+  "Administration",
+  "Integration",
+  "KOT Management",
+  "Kitchen Management",
+  "Financial",
+  "Marketing",
+  "Hardware",
+];
+
 
 function FeatureDescriptionCell({ description = "" }) {
   const textRef = useRef(null);
@@ -57,6 +77,19 @@ export default function Features() {
 
   const isEditing = editingId !== null;
   const editingFeature = features.find((item) => item.id === editingId);
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set(defaultCategories);
+    features.forEach((f) => {
+      if (f.category && f.category.trim()) {
+        set.add(f.category.trim());
+      }
+    });
+    if (form.category && form.category.trim()) {
+      set.add(form.category.trim());
+    }
+    return Array.from(set);
+  }, [features, form.category]);
 
   const requiredFieldsComplete =
     form.code.trim() !== "" &&
@@ -125,14 +158,14 @@ export default function Features() {
     setFormErrors({});
   };
 
-  const editFeature = (feature) => {
+    const editFeature = (feature) => {
     setEditingId(feature.id);
     setForm({
-      code: feature.code || feature.name.toUpperCase().replace(/\s+/g, "_"),
-      name: feature.name,
-      description: feature.description,
-      category: feature.category,
-      status: feature.status,
+      code: feature.feature_code || feature.code || feature.featureKey || (feature.name ? feature.name.toUpperCase().replace(/\s+/g, "_") : ""),
+      name: feature.name || "",
+      description: feature.description || "",
+      category: feature.feature_category || feature.category || feature.featureCategory || "Operations",
+      status: feature.status || "Active",
     });
     setFormErrors({});
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -141,11 +174,21 @@ export default function Features() {
   const saveFeature = async () => {
     if (!validateFeature()) return;
     try {
-      const payload = { ...form, code: form.code.trim().toUpperCase() };
-      await createFeatureApi(payload);
+      const payload = {
+        ...form,
+        category: form.category || "Operations",
+        feature_category: form.category || "Operations",
+        code: form.code.trim().toUpperCase(),
+        feature_code: form.code.trim().toUpperCase(),
+      };
+      const created = await createFeatureApi(payload);
+      if (created && created.id) {
+        setFeatures((prev) => [created, ...prev.filter((f) => f.id !== created.id)]);
+      }
       const latestFeatures = await listFeatures();
-
-      setFeatures(latestFeatures);
+      if (Array.isArray(latestFeatures) && latestFeatures.length > 0) {
+        setFeatures(latestFeatures);
+      }
       setCurrentPage(1);
       clearForm();
       setApiError("");
@@ -157,11 +200,33 @@ export default function Features() {
   const updateFeature = async () => {
     if (!validateFeature()) return;
     try {
-      const payload = { ...form, code: form.code.trim().toUpperCase() };
-      await updateFeatureApi(editingId, payload);
+      const payload = {
+        ...form,
+        category: form.category || "Operations",
+        feature_category: form.category || "Operations",
+        code: form.code.trim().toUpperCase(),
+        feature_code: form.code.trim().toUpperCase(),
+      };
+      const updated = await updateFeatureApi(editingId, payload);
+      setFeatures((prev) =>
+        prev.map((item) =>
+          String(item.id) === String(editingId)
+            ? {
+                ...item,
+                ...payload,
+                ...(updated || {}),
+                category: form.category,
+                feature_category: form.category,
+                updatedAt: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              }
+            : item
+        )
+      );
       const latestFeatures = await listFeatures();
-
-      setFeatures(latestFeatures);
+      if (Array.isArray(latestFeatures) && latestFeatures.length > 0) {
+        setFeatures(latestFeatures);
+      }
       setCurrentPage(1);
       clearForm();
       setApiError("");
@@ -179,10 +244,11 @@ export default function Features() {
   const deleteFeature = async (featureId) => {
     try {
       await deleteFeatureApi(featureId);
-
-      // Re-fetch from the API after delete so the table reflects the persisted backend state.
+      setFeatures((prev) => prev.filter((item) => String(item.id) !== String(featureId)));
       const latestFeatures = await listFeatures();
-      setFeatures(latestFeatures);
+      if (Array.isArray(latestFeatures)) {
+        setFeatures(latestFeatures);
+      }
       setApiError("");
     } catch (e) {
       setApiError(e.message || "Unable to delete feature.");
@@ -196,7 +262,7 @@ export default function Features() {
       await deleteFeature(deleteTarget.id);
       setDeleteTarget(null);
     } catch {
-      // Keep the modal open when the delete request fails.
+      // Keep modal open on error
     }
   };
 
@@ -279,7 +345,7 @@ export default function Features() {
     <div className="features-page">
       <header className="features-page-heading">
         <h1>Features</h1>
-        <p>Manage platform features and their details.</p>
+        <p>Manage features available in PCH.</p>
       </header>
 
       {apiError && <p role="alert">{apiError}</p>}
@@ -291,7 +357,7 @@ export default function Features() {
           </div>
           <div>
             <h2>{isEditing ? "Edit Feature" : "Add Feature"}</h2>
-            <p>Provide the basic details and configuration for this feature.</p>
+            <p>Enter the feature details.</p>
           </div>
         </div>
 
@@ -354,27 +420,20 @@ export default function Features() {
             <label>Feature Category<span>*</span></label>
             <div className="select-shell">
               <select
-                  name="category"
-                  value={form.category}
-                  onChange={updateField}
-                  autoComplete="off"
-                >
-                  <option value="">Select category</option>
-                  <option value="Inventory">Inventory</option>
-                  <option value="Payments">Payments</option>
-                  <option value="Operations">Operations</option>
-                  <option value="Cash Management">Cash Management</option>
-                  <option value="Refund">Refund</option>
-                  <option value="Promotions">Promotions</option>
-                  <option value="Peripheral">Peripheral</option>
-                  <option value="Billing">Billing</option>
-                  <option value="Store Management">Store Management</option>
-                  <option value="Reports">Reports</option>
-                  <option value="Administration">Administration</option>
-                  <option value="Integration">Integration</option>
-                  <option value="KOT Management">KOT Management</option>
-                  <option value="Kitchen Management">Kitchen Management</option>
-                </select>
+                name="category"
+                data-field="category"
+                value={form.category}
+                onChange={updateField}
+                autoComplete="off"
+                className={formErrors.category ? "feature-input-error" : ""}
+              >
+                <option value="">Select category</option>
+                {categoryOptions.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
               <i className="bi bi-chevron-down" />
             </div>
             {formErrors.category ? (
@@ -414,7 +473,7 @@ export default function Features() {
               onClick={isEditing ? updateFeature : saveFeature}
               disabled={!canSubmitFeature}
             >
-              {isEditing ? "Update Feature" : "Create Feature"}
+              {isEditing ? "Update Feature" : "Add Feature"}
             </button>
           </div>
         </div>
@@ -422,7 +481,7 @@ export default function Features() {
 
       <section className="features-list-card">
         <div className="features-list-toolbar">
-          <h2>Features List</h2>
+          <h2>Features</h2>
           <div className="features-filters">
             <div className="feature-search">
               <i className="bi bi-search" />
@@ -441,7 +500,7 @@ export default function Features() {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
-                <option value="All Statuses">All Status</option>
+                <option value="All Statuses">All Statuses</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
@@ -527,7 +586,7 @@ export default function Features() {
                       {item.name}
                     </span>
                   </td>
-                  <td>{item.category}</td>
+                  <td>{item.feature_category || item.category || "—"}</td>
                   <FeatureDescriptionCell description={item.description} />
                   <td>
                     <span className={`feature-status ${item.status.toLowerCase()}`}>
@@ -591,7 +650,7 @@ export default function Features() {
 
         <div className="feature-pagination-row">
           <span>
-            Showing {totalEntries === 0 ? 0 : startIndex + 1} to {endIndex} of {totalEntries} entries
+            Showing {totalEntries === 0 ? 0 : startIndex + 1} - {endIndex} of {totalEntries} Features
           </span>
           <div className="feature-pagination">
             <button

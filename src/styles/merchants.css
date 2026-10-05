@@ -532,8 +532,7 @@ a {
 ========================================================= */
 
 .page-content {
-    padding: 12px 24px 0;
-
+    padding: 18px 24px 0;
     flex: 1;
 }
 
@@ -544,44 +543,18 @@ a {
 
 .page-header {
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
-
     margin-bottom: 12px;
 }
 
 .page-header h1 {
     font-size: 20px;
-
     margin: 0 0 6px;
-
     font-weight: 700;
-
     color: #17233e;
 }
 
-.breadcrumb {
-    display: flex;
-    align-items: center;
-
-    gap: 8px;
-
-    font-size: 14px;
-
-    color: #9aa2b1;
-}
-
-.breadcrumb i {
-    font-size: 12px;
-}
-
-.breadcrumb strong {
-    color: #697387;
-
-    font-weight: 600;
-}
 
 
 /* =========================================================
@@ -590,8 +563,8 @@ a {
 
 .page-actions {
     display: flex;
-
-    gap: 8px;
+    align-items: center;
+    gap: 12px;
 }
 
 .page-actions .btn {
@@ -949,40 +922,25 @@ a {
 }
 
 .merchant-table thead th {
-    height: 39px;
-
+    height: 42px;
     padding: 0 11px;
-
-    background: #fafbfc;
-
+    background: #f5f9fe;
     border-bottom: 1px solid #eceef2;
-
-    color: #969dac;
-
-    font-size: 11px;
-
+    color: #484c56;
+    font-size: 12px;
     font-weight: 600;
-
     letter-spacing: 0.35px;
-
     white-space: nowrap;
-
     text-align: left;
 }
 
 .merchant-table tbody td {
     min-height: 60px;
-
     padding: 9px 11px;
-
     border-bottom: 1px solid #f1f2f5;
-
     color: #697285;
-
-    font-size: 12px;
-
+    font-size: 13px;
     vertical-align: middle;
-
     white-space: nowrap;
 }
 
@@ -1070,17 +1028,13 @@ a {
 
 .merchant-name strong {
     font-size: 12px;
-
     color: #364159;
-
     font-weight: 600;
 }
 
 .merchant-name small {
-    font-size: 10px;
-
+    font-size: 12px;
     color: #9aa1ae;
-
     margin-top: 2px;
 }
 
@@ -1104,7 +1058,7 @@ a {
 }
 
 .contact-info span {
-    font-size: 10px;
+    font-size: 12px;
 
     color: #9aa1ae;
 
@@ -1147,23 +1101,18 @@ a {
 
 .plan-info {
     display: flex;
-
     flex-direction: column;
 }
 
 .plan-info strong {
     font-size: 12px;
-
     color: #3f4a60;
-
     font-weight: 600;
 }
 
 .plan-info span {
-    font-size: 10px;
-
+    font-size: 12px;
     color: #9aa1ae;
-
     margin-top: 3px;
 }
 
@@ -1174,35 +1123,55 @@ a {
 
 .status {
     display: inline-flex;
-
     align-items: center;
-    justify-content: center;
-
-    padding: 3px 7px;
-
-    border-radius: 3px;
-
-    font-size: 12px;
-
+    gap: 5px;
+    padding: 5px 10px !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
     font-weight: 500;
 }
 
-.status.active {
-    background: #e4f6e9;
+.status i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+}
 
-    color: #319b5c;
+.status.active {
+    color: #319a5b;
+    background: #e5f6ea;
+}
+
+.status.active i {
+    background: #319a5b;
 }
 
 .status.suspended {
-    background: #fff1df;
+    color: #dc5964;
+    background: #ffe8ea;
+}
 
-    color: #d88e2b;
+.status.suspended i {
+    background: #dc5964;
 }
 
 .status.inactive {
-    background: #eef0f3;
-
     color: #858d9d;
+    background: #eef0f3;
+}
+
+.status.inactive i {
+    background: #858d9d;
+}
+
+.status.pending-setup {
+    color: #d18d25;
+    background: #fff0d9;
+}
+
+.status.pending-setup i {
+    background: #d18d25;
 }
 
 .location-info {
@@ -1232,13 +1201,13 @@ a {
 
     align-items: center;
 
-    gap: 4px;
+    gap: 5px;
 
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .last-active i {
-    font-size: 5px;
+    font-size: 8px;
 }
 
 .active-dot {
@@ -1259,57 +1228,43 @@ a {
 ========================================================= */
 
 .row-actions {
-    display: flex;
-
-    align-items: center;
-
-    gap: 2px;
+     display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .action-btn {
-    width: 27px;
-    height: 27px;
-
+   width: 31px;
+    height: 31px;
     padding: 0;
-
-    border: 0;
-
-    border-radius: 4px;
-
+    border: 1px solid #dce3ec;
+    border-radius: 6px;
     background: transparent;
-
-    color: #8991a2;
-
+    color: #5d7190;
     display: flex;
     align-items: center;
     justify-content: center;
-
     cursor: pointer;
-
     font-size: 12px;
 }
 
 .action-btn:hover {
     background: #f2f0ff;
-
     color: #5143bc;
 }
 
 .view-btn:hover {
     background: #edf5ff;
-
     color: #4185dd;
 }
 
 .edit-btn:hover {
     background: #eeeaff;
-
     color: #5143bc;
 }
 
 .more-btn:hover {
     background: #f2f3f6;
-
     color: #596276;
 }
 
@@ -1782,12 +1737,7 @@ dialog.merchant-delete-dialog::backdrop {
 }
 /* Append to the END of src/styles/merchants.css. */
 /* Scoped to the merchant list; onboarding and store pages keep their spacing. */
-.page-content:has(> .merchant-table-card) {
-  padding: 8px 16px 0;
-}
-.page-content:has(> .merchant-table-card) > .page-header {
-  margin-bottom: 8px;
-}
+
 .page-content:has(> .merchant-table-card) > .stats-grid {
   --bs-gutter-x: 10px;
   --bs-gutter-y: 10px;
@@ -1802,7 +1752,7 @@ dialog.merchant-delete-dialog::backdrop {
 }
 .merchant-table-card > .filter-bar {
   min-height: 48px;
-  padding: 8px 10px;
+  padding: 12px 12px 16px;
   gap: 10px;
 }
 .merchant-table-card > .merchant-pagination {

@@ -461,7 +461,7 @@ export default function Employees() {
             onClick={() => console.log("Export clicked")}
           >
             <Download size={18} />
-            Export
+            Export Employees
           </button>
         </div>
       </div>
@@ -490,7 +490,7 @@ export default function Employees() {
 
         <StatCard
           icon={Pause}
-          title="On Leave"
+          title="Employees on Leave"
           value="6"
           description="↓ 4.7% of total"
           type="orange"
@@ -532,7 +532,7 @@ export default function Employees() {
               type="text"
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search employees by name, email, phone or role..."
+              placeholder="Search by name, email, phone number, or role…"
             />
           </div>
 
@@ -586,23 +586,23 @@ export default function Employees() {
           <table className="employees-table">
             <thead>
               <tr>
-                <th>EMPLOYEE</th>
+                <th>Employee Name</th>
 
-                <th>CONTACT</th>
+                <th>Contact Information</th>
 
-                <th>ROLE</th>
+                <th>Assigned Role</th>
 
-                <th>MERCHANT</th>
+                <th>Merchant Name</th>
 
-                <th>STORE</th>
+                <th>Assigned Store</th>
 
-                <th>STATUS</th>
+                <th>Employee Status</th>
 
-                <th>JOINED ON</th>
+                <th>Date Added</th>
 
-                <th>LAST ACTIVE</th>
+                <th>Last Active</th>
 
-                <th>ACTIONS</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
@@ -782,7 +782,7 @@ export default function Employees() {
           {/* ROWS PER PAGE */}
 
           <div className="employees-rows">
-            <span>Rows per page</span>
+            <span>Employees per page</span>
 
             <div className="employees-row-select">
               <select

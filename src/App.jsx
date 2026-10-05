@@ -186,6 +186,8 @@ export default function App() {
         {/* Stores */}
         <Route path="/stores" element={<Stores />} />
         <Route path="/stores/new" element={<AddStore />} />
+        <Route path="/stores/:storeId" element={<StoreConfiguration />} />
+        <Route path="/merchants/:merchantId/stores/:storeId" element={<StoreConfiguration />} />
         <Route path="/stores/:storeId/edit" element={<AddStore />} />
         <Route
           path="/stores/:storeId/configuration"
@@ -246,6 +248,7 @@ export default function App() {
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/store-types" element={<CreateStoreType />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
         <Route
           path="/store-types/:storeTypeId"
@@ -283,3 +286,4 @@ export default function App() {
     </Routes>
   );
 }
+
