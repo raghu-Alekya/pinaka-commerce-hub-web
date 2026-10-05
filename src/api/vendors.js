@@ -125,7 +125,17 @@ function toApiStatus(status) {
 |--------------------------------------------------------------------------
 */
 
-function toUiStatus(status) {
+function toUiStatus(status, vendor = {}) {
+  if (
+    vendor.is_deleted === true ||
+    vendor.is_deleted === "true" ||
+    vendor.isDeleted === true ||
+    vendor.isDeleted === "true" ||
+    Boolean(vendor.deletedAt)
+  ) {
+    return "Inactive";
+  }
+
   const value = String(status || "").trim();
 
   if (value.toUpperCase() === "ACTIVE") {
@@ -213,7 +223,7 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    status: toUiStatus(vendor.status),
+    status: toUiStatus(vendor.status, vendor),
 
     /*
     |--------------------------------------------------------------------------
@@ -358,8 +368,26 @@ function prepareVendorPayload(values = {}) {
 |--------------------------------------------------------------------------
 */
 
-export async function getVendors({ token, signal } = {}) {
-  const data = await request("/vendors", {
+export async function getVendors({ is_deleted, isDeleted, status, search, token, signal } = {}) {
+  const params = new URLSearchParams();
+
+  const isDeletedVal = is_deleted ?? isDeleted;
+  if (isDeletedVal !== undefined && isDeletedVal !== null) {
+    params.set("is_deleted", String(isDeletedVal));
+  }
+
+  if (status && String(status).trim()) {
+    params.set("status", String(status).trim());
+  }
+
+  if (search && String(search).trim()) {
+    params.set("search", String(search).trim());
+  }
+
+  const query = params.toString();
+  const path = "/vendors" + (query ? `?${query}` : "");
+
+  const data = await request(path, {
     method: "GET",
     token,
     signal,
