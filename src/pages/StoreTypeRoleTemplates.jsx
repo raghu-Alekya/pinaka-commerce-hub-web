@@ -285,10 +285,7 @@ export default function StoreTypeRoleTemplates() {
 
             <div>
               <h2>Assigned Role Templates</h2>
-              <p>
-                Role templates mapped to this store type. These are
-                recommendations and do not assign roles to employees.
-              </p>
+              <p>Role templates mapped to this store type.</p>
             </div>
           </div>
 
@@ -331,11 +328,11 @@ export default function StoreTypeRoleTemplates() {
                 <button
                   type="button"
                   className="role-template-delete-button"
-                  title={`Delete ${role.name}`}
-                  aria-label={`Delete ${role.name}`}
+                  title={`Remove ${role.name} assignment`}
+                  aria-label={`Remove ${role.name} assignment`}
                   onClick={() => setDeleteTarget(role)}
                 >
-                  Remove Assignment
+                  <i className="bi bi-trash3" aria-hidden="true" />
                 </button>
               </div>
             </div>

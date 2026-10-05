@@ -55,10 +55,51 @@ function toFeatureRow(assignment, index) {
       assignmentData.storeTypeFeatureId ??
       assignmentData.featureId,
     name: feature.name ?? feature.featureKey ?? "Unnamed feature",
-    category: feature.category ?? "Uncategorized",
+    code:
+      feature.featureKey ??
+      feature.feature_code ??
+      assignment.featureKey ??
+      assignment.feature_code ??
+      "",
+    category:
+      feature.category ??
+      feature.featureCategory ??
+      feature.feature_category ??
+      assignment.category ??
+      assignment.featureCategory ??
+      assignment.feature_category ??
+      "Uncategorized",
     active: assignment.defaultEnabled ?? true,
     order: assignment.displayOrder ?? index + 1,
   };
+}
+
+function withCatalogCategories(assignments, catalog) {
+  const byId = new Map();
+  const byCode = new Map();
+  const byName = new Map();
+
+  catalog.forEach((feature) => {
+    if (feature?.id) byId.set(String(feature.id).toLowerCase(), feature);
+    if (feature?.code) byCode.set(String(feature.code).toLowerCase(), feature);
+    if (feature?.name) byName.set(String(feature.name).toLowerCase(), feature);
+  });
+
+  return assignments.map((assignment, index) => {
+    const row = toFeatureRow(assignment, index);
+    const master =
+      byId.get(String(assignment?.featureId ?? row.id ?? "").toLowerCase()) ??
+      byCode.get(String(row.code ?? "").toLowerCase()) ??
+      byName.get(String(row.name ?? "").toLowerCase());
+
+    return {
+      ...row,
+      category:
+        row.category !== "Uncategorized"
+          ? row.category
+          : master?.category || "Uncategorized",
+    };
+  });
 }
 function featureKey(feature) {
   return String(feature?.id ?? feature?.featureId ?? feature?.name ?? "")
@@ -117,14 +158,14 @@ export default function StoreTypeFeatures() {
   useEffect(() => {
     let cancelled = false;
 
-    storeTypesApi
-      .getFeatures(storeTypeId)
-      .then((response) => {
+    Promise.all([storeTypesApi.getFeatures(storeTypeId), listFeatures()])
+      .then(([response, catalog]) => {
         const assignments = getFeatureAssignments(response);
 
         if (cancelled) return;
 
-        setFeatures(assignments.map(toFeatureRow));
+        setFeatureCatalog(catalog);
+        setFeatures(withCatalogCategories(assignments, catalog));
       })
       .catch((err) => {
         if (!cancelled) setError(err.message);
@@ -280,7 +321,7 @@ export default function StoreTypeFeatures() {
       const refreshed = await storeTypesApi.getFeatures(storeTypeId);
       const persistedAssignments = getFeatureAssignments(refreshed);
       if (persistedAssignments.length > 0) {
-        setFeatures(persistedAssignments.map(toFeatureRow));
+        setFeatures(withCatalogCategories(persistedAssignments, featureCatalog));
       }
     } catch (err) {
       console.warn("Backend features sync warning:", err);
@@ -412,11 +453,11 @@ export default function StoreTypeFeatures() {
                 <button
                   type="button"
                   className="feature-delete-button"
-                  title={`Delete ${feature.name}`}
-                  aria-label={`Delete ${feature.name}`}
+                  title={`Remove ${feature.name} assignment`}
+                  aria-label={`Remove ${feature.name} assignment`}
                   onClick={() => setDeleteTarget(feature)}
                 >
-                  Remove Assignment
+                  <i className="bi bi-trash3" aria-hidden="true" />
                 </button>
               </div>
             </div>

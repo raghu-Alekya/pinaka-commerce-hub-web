@@ -129,6 +129,12 @@ export const storeTypesApi = {
   getFeatures: async (storeTypeId) => {
     return api.get(`/store-types/${encodeURIComponent(storeTypeId)}/features`);
   },
+  getAvailableFeatures: async (storeTypeId, unmappedOnly = false) => {
+    const query = unmappedOnly ? "?unmappedOnly=true" : "";
+    return api.get(
+      `/store-types/${encodeURIComponent(storeTypeId)}/features/by-category${query}`,
+    );
+  },
   getMerchantFeatures: async (merchantId, storeTypeId) => {
     return api.get(
       `/merchants/${encodeURIComponent(merchantId)}/store-types/${encodeURIComponent(storeTypeId)}/features`,
@@ -154,6 +160,12 @@ export const storeTypesApi = {
   getRoleTemplates: async (storeTypeId) => {
     return api.get(
       `/store-types/${encodeURIComponent(storeTypeId)}/role-templates`,
+    );
+  },
+  getAvailableRoleTemplates: async (storeTypeId, unmappedOnly = false) => {
+    const query = unmappedOnly ? "?unmappedOnly=true" : "";
+    return api.get(
+      `/store-types/${encodeURIComponent(storeTypeId)}/role-templates/available${query}`,
     );
   },
   addRoleTemplate: async (storeTypeId, roleTemplateId) => {
