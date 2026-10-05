@@ -3,6 +3,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import {
   getVendors,
@@ -190,6 +191,11 @@ export default function Vendors({
   const [search, setSearch] =
     useState("");
 
+  const [currentPage, setCurrentPage] =
+    useState(1);
+
+  const rowsPerPage = 5;
+
   const [statusFilter, setStatusFilter] =
     useState("All Statuses");
 
@@ -337,6 +343,22 @@ export default function Vendors({
       statusFilter,
       vendorTypeFilter,
     ]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredVendors.length / rowsPerPage),
+  );
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * rowsPerPage;
+  const displayedVendors = filteredVendors.slice(
+    startIndex,
+    startIndex + rowsPerPage,
+  );
+
+  function handleFilterChange(setter, value) {
+    setter(value);
+    setCurrentPage(1);
+  }
 
   /*
   |--------------------------------------------------------------------------
@@ -885,6 +907,7 @@ export default function Vendors({
 
   function clearFilters() {
     setSearch("");
+    setCurrentPage(1);
 
     setStatusFilter(
       "All Statuses"
@@ -1460,7 +1483,7 @@ export default function Vendors({
     <input
       type="text"
       value={search}
-      onChange={(event) => setSearch(event.target.value)}
+      onChange={(event) => handleFilterChange(setSearch, event.target.value)}
       placeholder="Search vendors..."
       autoComplete="off"
       data-lpignore="true"
@@ -1471,7 +1494,7 @@ export default function Vendors({
   {/* Vendor Type */}
   <select
     value={vendorTypeFilter}
-    onChange={(event) => setVendorTypeFilter(event.target.value)}
+    onChange={(event) => handleFilterChange(setVendorTypeFilter, event.target.value)}
   >
     <option>All Vendor Types</option>
     <option value="Supplier">Supplier</option>
@@ -1481,7 +1504,7 @@ export default function Vendors({
   {/* Status */}
   <select
     value={statusFilter}
-    onChange={(event) => setStatusFilter(event.target.value)}
+    onChange={(event) => handleFilterChange(setStatusFilter, event.target.value)}
   >
     <option>All Statuses</option>
     <option value="Active">Active</option>
@@ -1578,7 +1601,7 @@ export default function Vendors({
                   </td>
                 </tr>
               ) : (
-                filteredVendors.map(
+                displayedVendors.map(
                   (vendor) => (
                     <tr
                       key={vendor.id}
@@ -1877,6 +1900,33 @@ export default function Vendors({
               </div>
             )}
 
+        </div>
+
+        <div className="vendors-pagination">
+          <div className="vendors-showing">
+            Showing {filteredVendors.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, filteredVendors.length)} of {filteredVendors.length} entries
+          </div>
+          <div className="vendors-pagination-controls">
+            <button
+              type="button"
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              aria-label="Previous page"
+            >
+              <ChevronLeft size={15} />
+            </button>
+            <button type="button" className="active" aria-current="page">
+              {safePage}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+              disabled={safePage === totalPages}
+              aria-label="Next page"
+            >
+              <ChevronRight size={15} />
+            </button>
+          </div>
         </div>
 
       </div>

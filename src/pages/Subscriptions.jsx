@@ -10,10 +10,6 @@ import {
 
   ChevronDown,
 
-  ChevronLeft,
-
-  ChevronRight,
-
   Download,
 
   Store,
@@ -48,7 +44,6 @@ import {
   CircleCheck,
 
   RefreshCw,
-  Plus,
   Pencil,
   Trash2,
   X,
@@ -584,32 +579,35 @@ function SubscriptionList({
      PAGINATION
   ======================================== */
 
-  const totalPages =
-    Math.ceil(filtered.length / PAGE_SIZE) || 1;
+ const totalPages =
+  Math.ceil(filtered.length / PAGE_SIZE) || 1;
 
-  const paginatedData = useMemo(() => {
-    const startIdx = (page - 1) * PAGE_SIZE;
+const paginatedData = useMemo(() => {
+  const startIdx = (page - 1) * PAGE_SIZE;
 
-    return filtered.slice(
-      startIdx,
-      startIdx + PAGE_SIZE
-    );
-  }, [filtered, page]);
+  return filtered.slice(
+    startIdx,
+    startIdx + PAGE_SIZE
+  );
+}, [filtered, page]);
 
-  /* ========================================
-     RESET PAGE WHEN FILTER CHANGES
-  ======================================== */
+useEffect(() => {
+  setPage(1);
+}, [
+  search,
+  plan,
+  status,
+  stores,
+  startDate,
+  endDate,
+]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [
-    search,
-    plan,
-    status,
-    stores,
-    startDate,
-    endDate,
-  ]);
+useEffect(() => {
+  setPage((currentPage) =>
+    Math.min(currentPage, totalPages)
+  );
+}, [totalPages]); 
+
 
   /* ========================================
      RESET FILTERS
@@ -695,19 +693,6 @@ function SubscriptionList({
     document.body.removeChild(link);
   };
 
-  /* ========================================
-     PAGINATION HANDLERS
-  ======================================== */
-
-  const goToPreviousPage = () => {
-    setPage((current) => Math.max(1, current - 1));
-  };
-
-  const goToNextPage = () => {
-    setPage((current) =>
-      Math.min(totalPages, current + 1)
-    );
-  };
 
   /* ========================================
      RENDER
@@ -1077,8 +1062,6 @@ function SubscriptionList({
 
           <div className="subscription-date-filter">
 
-            <span>Start Date From</span>
-
             <input
               type="date"
               value={startDate}
@@ -1093,9 +1076,7 @@ function SubscriptionList({
 
           {/* START DATE TO */}
 
-          <div className="subscription-date-filter">
-
-            <span>Start Date To</span>
+          <div className="subscription-date-filter"> 
 
             <input
               type="date"
@@ -1298,50 +1279,69 @@ function SubscriptionList({
             PAGINATION
         ======================================== */}
 
-        <div className="subscription-pagination">
+        {filtered.length > 0 && (
+  <div className="merchant-pagination">
 
-          <span>
-            Page{" "}
-            <strong>{page}</strong>{" "}
-            of{" "}
-            <strong>{totalPages}</strong>
-          </span>
+    <span>
+      {`Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
+        page * PAGE_SIZE,
+        filtered.length
+      )} of ${filtered.length}`}
+    </span>
 
-            <span>
-            Showing{" "}
-            <strong>
-              {filtered.length}
-            </strong>{" "}
-            of{" "}
-            <strong>
-              {subscriptions.length}
-            </strong>{" "}
-            subscriptions
-          </span>
+    <div>
 
-          <div className="subscription-pagination-controls">
+      <button
+        type="button"
+        disabled={page === 1}
+        onClick={() =>
+          setPage((value) =>
+            Math.max(1, value - 1)
+          )
+        }
+      >
+        Previous
+      </button>
 
-            <button
-              type="button"
-              onClick={goToPreviousPage}
-              disabled={page === 1}
-              title="Previous Page"
-            >
-              <ChevronLeft size={17} />
-            </button>
+      {Array.from(
+        { length: totalPages },
+        (_, index) => (
+          <button
+            type="button"
+            className={
+              page === index + 1
+                ? "active"
+                : ""
+            }
+            key={index}
+            onClick={() =>
+              setPage(index + 1)
+            }
+          >
+            {index + 1}
+          </button>
+        )
+      )}
 
-            <button
-              type="button"
-              onClick={goToNextPage}
-              disabled={page === totalPages}
-              title="Next Page"
-            >
-              <ChevronRight size={17} />
-            </button>
+      <button
+        type="button"
+        disabled={page === totalPages}
+        onClick={() =>
+          setPage((value) =>
+            Math.min(
+              totalPages,
+              value + 1
+            )
+          )
+        }
+      >
+        Next
+      </button>
 
-          </div>
+    </div>
 
-        </div>
+  </div>
+)}
 
       </div>
 

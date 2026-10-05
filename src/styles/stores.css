@@ -40,14 +40,14 @@
 .page-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
 /* First button — Add Store */
 .add-store-btn {
     order: 1;
-    height: 36px;
-    padding: 0 12px;
+    height: 40px;
+    padding: 2px 12px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -57,12 +57,32 @@
     cursor: pointer;
     background: #5143bc;
     border: 1px solid #5143bc;
-    color: #fff;  
+    
    
 }
 
-.add-store-btn:hover {
-    background: #4537ad;
+.add-store-btn .btn-primary {
+    background: #5143bc;
+    border-color: #5143bc
+}
+
+.add-store-btn .btn-primary:hover {
+     background: #4537ad;
+    border-color: #4537ad;
+}
+
+.add-store-btn i {
+    font-size: 14px;
+}
+
+.add-store-btn .btn-secondary {
+    background: #f6f7fb;
+    border: 1.5px solid #4537ad;
+    color: #4537ad;
+}
+
+.add-store-btn .btn-secondary:hover {
+    background: #fafbfc;
 }
 
 
@@ -82,28 +102,53 @@
     background: #fff;
     border: 1px solid #e4e7ed;
     border-radius: 8px;
-    min-height: 105px;
-    padding: 16px;
+    min-height: 95px;
+    height: 95px;
+    padding: 10px;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 0;
+}
+
+.stores-page .summary-card {
+    background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
+}
+
+.stores-page .summary-card:has(.summary-icon.green) {
+    background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+}
+
+.stores-page .summary-card:has(.summary-icon.orange) {
+    background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+}
+
+.stores-page .summary-card:has(.summary-icon.red) {
+    background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+}
+
+.stores-page .summary-card:has(.summary-icon.blue) {
+    background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
 }
 
 .summary-icon {
-    width: 45px;
-    height: 45px;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    margin: 0 18px 0 6px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 19px;
+    font-size: 16px;
     flex-shrink: 0;
 }
 
 .summary-icon.purple { background: #eeeaff; color: #6250cf; }
-.summary-icon.green { background: #e5f6eb; color: #35a467; }
-.summary-icon.red { background: #ffe9eb; color: #df5964; }
-.summary-icon.orange { background: #fff1dc; color: #e59c2d; }
+.summary-icon.purple { background: #eeebff; color: #674ed9; }
+.summary-icon.green { background: #e4f7eb; color: #2eaa62; }
+.summary-icon.red { background: #ffe9ea; color: #df5c66; }
+.summary-icon.orange { background: #fff1df; color: #e99b2b; }
+.summary-icon.blue { background: #e7f1ff; color: #4185dd; }
 
 .summary-card span {
     display: block;

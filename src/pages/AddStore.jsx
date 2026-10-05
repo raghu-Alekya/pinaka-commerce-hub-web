@@ -3529,14 +3529,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         <span>/</span>
         <strong>{editing ? "Edit store" : "Add store"}</strong>
         <span className="sf-topbar-spacer" />
-        <button
-          type="button"
-          className="sf-outline"
-          disabled={saving || subscriptionLoading}
-          onClick={backToStores}
-        >
-          Cancel
-        </button>
+      
       </header>
       <div className="sf-shell">
         <aside className="sf-sidebar">
@@ -3635,14 +3628,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             >
               <div className="sf-screen">{screens[step]()}</div>
               <div className="sf-footer">
-                <button
-                  type="button"
-                  className="sf-outline"
-                  disabled={saving || subscriptionLoading}
-                  onClick={() => (step === 0 ? backToStores() : goTo(step - 1))}
-                >
-                  <i className="bi bi-arrow-left" /> Back
-                </button>
+              
                 <span className="sf-footer-spacer" />
                 {step === 0 && (
                   <button
@@ -3668,7 +3654,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       "Checking Subscription…"
                     ) : (
                       <>
-                        Save &amp; Continue <i className="bi bi-arrow-right" />
+                        Save &amp; Continue 
                       </>
                     )}
                   </button>

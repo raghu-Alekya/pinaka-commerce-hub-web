@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { merchants } from "../data/data";
+import ViewDetailsModal from "../components/ViewDetailsModal";
 import "../styles/cash-management.css";
 
 export default function CashManagement() {
@@ -7,6 +8,8 @@ export default function CashManagement() {
   const [selectedStore, setSelectedStore] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("All Dates");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const cashPayments = [
     {
@@ -125,6 +128,23 @@ export default function CashManagement() {
     });
   }, [selectedMerchant, selectedStore, searchTerm]);
 
+  const totalItems = filteredPayments.length;
+
+const totalPages = Math.max(
+    1,
+    Math.ceil(totalItems / pageSize)
+);
+
+const paginatedPayments = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    return filteredPayments.slice(
+        startIndex,
+        endIndex
+    );
+}, [filteredPayments, currentPage, pageSize]);
+
   /* =========================================================
      DASHBOARD VALUES
   ========================================================= */
@@ -180,7 +200,7 @@ export default function CashManagement() {
         <div className="cash-kpi-card purple">
 
           <div className="cash-kpi-icon">
-            <i className="bi bi-wallet2" />
+            <i className="bi bi-wallet-fill" aria-hidden="true" />
           </div>
 
           <div className="cash-kpi-content">
@@ -204,7 +224,7 @@ export default function CashManagement() {
         <div className="cash-kpi-card green">
 
           <div className="cash-kpi-icon">
-            <i className="bi bi-check-circle" />
+            <i className="bi bi-check-circle-fill" aria-hidden="true" />
           </div>
 
           <div className="cash-kpi-content">
@@ -228,7 +248,7 @@ export default function CashManagement() {
         <div className="cash-kpi-card orange">
 
           <div className="cash-kpi-icon">
-            <i className="bi bi-clock" />
+            <i className="bi bi-clock-fill" aria-hidden="true" />
           </div>
 
           <div className="cash-kpi-content">
@@ -252,7 +272,7 @@ export default function CashManagement() {
         <div className="cash-kpi-card blue">
 
           <div className="cash-kpi-icon">
-            <i className="bi bi-currency-dollar" />
+            <i className="bi bi-cash-stack" aria-hidden="true" />
           </div>
 
           <div className="cash-kpi-content">
@@ -280,333 +300,302 @@ export default function CashManagement() {
 
       </div>
 
-      {/* =====================================================
-          FILTER BAR
-      ===================================================== */}
-
-      <div className="cash-filter-bar">
-
-        {/* SEARCH */}
-        <div className="cash-search-box">
-
-          <i className="bi bi-search" />
-
-          <input
-            type="text"
-            placeholder="Search payment title, order ID, transaction ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-
-        </div>
-
-        {/* DATE */}
-        <div className="cash-select-wrapper">
-
-          <i className="bi bi-calendar3" />
-
-          <select
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          >
-            <option>All Dates</option>
-            <option>Today</option>
-            <option>Last 7 Days</option>
-            <option>Last 30 Days</option>
-          </select>
-
-          <i className="bi bi-chevron-down cash-select-arrow" />
-
-        </div>
-
-        {/* MERCHANT */}
-        <div className="cash-select-wrapper">
-
-          <i className="bi bi-shop" />
-
-          <select
-            value={selectedMerchant}
-            onChange={(e) => {
-              setSelectedMerchant(e.target.value);
-              setSelectedStore("");
-            }}
-          >
-            <option value="">All Merchants</option>
-
-            {merchants.map((merchant) => (
-              <option key={merchant.id} value={merchant.id}>
-                {merchant.name}
-              </option>
-            ))}
-
-          </select>
-
-          <i className="bi bi-chevron-down cash-select-arrow" />
-
-        </div>
-
-        {/* STORE */}
-        <div className="cash-select-wrapper">
-
-          <i className="bi bi-building" />
-
-          <select
-            value={selectedStore}
-            onChange={(e) => setSelectedStore(e.target.value)}
-          >
-            <option value="">All Stores</option>
-
-            {stores.map((store) => (
-              <option key={store} value={store}>
-                {store}
-              </option>
-            ))}
-
-          </select>
-
-          <i className="bi bi-chevron-down cash-select-arrow" />
-
-        </div>
-
-        {/* CLEAR */}
-        <button
-          type="button"
-          className="cash-clear-button"
-          onClick={clearFilters}
-        >
-          <i className="bi bi-arrow-counterclockwise" />
-          Reset
-        </button>
-
-      </div>
 
       {/* =====================================================
-          TABLE CARD
-      ===================================================== */}
+    TABLE CARD
+===================================================== */}
 
-      <div className="cash-table-card">
+<div className="cash-table-card">
 
-        {/* TABLE HEADER */}
-        <div className="cash-table-header">
+  {/* FILTER BAR */}
+  <div className="cash-filter-bar">
 
-          <div className="cash-table-title">
+    {/* SEARCH */}
+    <div className="cash-search-box">
 
-            <h2>Cash Payments</h2>
+      <i className="bi bi-search" />
 
-            <span>{filteredPayments.length}</span>
+      <input
+        type="text"
+        placeholder="Search payment title, order ID, transaction ID..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
 
-          </div>
+    </div>
 
-          <div className="cash-read-only">
+    {/* DATE */}
+    <div className="cash-select-wrapper">
 
-            <i className="bi bi-lock" />
+      <select
+        value={dateFilter}
+        onChange={(e) => setDateFilter(e.target.value)}
+      >
+        <option>All Dates</option>
+        <option>Today</option>
+        <option>Last 7 Days</option>
+        <option>Last 30 Days</option>
+      </select>
 
-            Read Only
+      <i className="bi bi-chevron-down cash-select-arrow" />
 
-          </div>
+    </div>
 
-        </div>
+    {/* MERCHANT */}
+    <div className="cash-select-wrapper">
 
-        {/* TABLE */}
-        <div className="cash-table-wrapper">
+      <select
+        value={selectedMerchant}
+        onChange={(e) => {
+          setSelectedMerchant(e.target.value);
+          setSelectedStore("");
+        }}
+      >
+        <option value="">All Merchants</option>
 
-          <table className="cash-table">
+        {merchants.map((merchant) => (
+          <option key={merchant.id} value={merchant.id}>
+            {merchant.name}
+          </option>
+        ))}
 
-            <thead>
+      </select>
 
-              <tr>
+      <i className="bi bi-chevron-down cash-select-arrow" />
 
-                <th>
-                  Title
-                </th>
+    </div>
 
-                <th>
-                  Order ID
-                </th>
+    {/* STORE */}
+    <div className="cash-select-wrapper">
 
-                <th>
-                  Order Total
-                </th>
+      <select
+        value={selectedStore}
+        onChange={(e) => setSelectedStore(e.target.value)}
+      >
+        <option value="">All Stores</option>
 
-                <th>
-                  Tender
-                  <br />
-                  Amount
-                </th>
+        {stores.map((store) => (
+          <option key={store} value={store}>
+            {store}
+          </option>
+        ))}
 
-                <th>
-                  Balance
-                  <br />
-                  Amount
-                </th>
+      </select>
 
-                <th>
-                  Change
-                  <br />
-                  Amount
-                </th>
+      <i className="bi bi-chevron-down cash-select-arrow" />
 
-                <th>
-                  Transaction ID
-                </th>
+    </div>
 
-                <th>
-                  Payment
-                  <br />
-                  Accepted By
-                </th>
+    {/* RESET */}
+    <button
+      type="button"
+      className="cash-clear-button"
+      onClick={clearFilters}
+    >
+      <i className="bi bi-arrow-counterclockwise" />
+      Reset
+    </button>
 
-                <th>
-                  Date
-                </th>
+  </div>
 
-                <th>
-                  Actions
-                </th>
+  {/* TABLE */}
+  <div className="cash-table-wrapper">
 
-              </tr>
+    <table className="cash-table">
 
-            </thead>
+      <thead>
+        <tr>
 
-            <tbody>
+          <th>Title</th>
 
-              {filteredPayments.map((payment) => (
+          <th>Order ID</th>
 
-                <tr key={payment.id}>
+          <th>Order Total</th>
 
-                  {/* TITLE */}
-                  <td>
+          <th>
+            Tender
+            <br />
+            Amount
+          </th>
 
-                    <a
-                      href="#cash-payment"
-                      className="cash-title"
-                    >
-                      {payment.title}
-                    </a>
+          <th>
+            Balance
+            <br />
+            Amount
+          </th>
 
-                  </td>
+          <th>
+            Change
+            <br />
+            Amount
+          </th>
 
-                  {/* ORDER ID */}
-                  <td>
-                    {payment.orderId}
-                  </td>
+          <th>Transaction ID</th>
 
-                  {/* ORDER TOTAL */}
-                  <td>
-                    {payment.orderTotal}
-                  </td>
+          <th>
+            Payment
+            <br />
+            Accepted By
+          </th>
 
-                  {/* TENDER */}
-                  <td>
-                    {payment.tenderAmount}
-                  </td>
+          <th>Date</th>
 
-                  {/* BALANCE */}
-                  <td>
-                    {payment.balanceAmount}
-                  </td>
 
-                  {/* CHANGE */}
-                  <td className="cash-change-positive">
-                    {payment.changeAmount}
-                  </td>
+        </tr>
+      </thead>
 
-                  {/* TRANSACTION ID */}
-                  <td>
-                    {payment.transactionId}
-                  </td>
+      <tbody>
 
-                  {/* ACCEPTED BY */}
-                  <td>
-                    {payment.acceptedBy}
-                  </td>
+        {paginatedPayments.map((payment) => (
 
-                  {/* DATE */}
-                  <td className="cash-date">
+          <tr key={payment.id}>
 
-                    <strong>
-                      {payment.date}
-                    </strong>
+            {/* TITLE */}
+            <td>
+              <a
+                href="#cash-payment"
+               className="cash-title" >
+                Cash Payment for Order
+                <br />
+                {payment.orderId}
+                </a>
+            </td>
 
-                    <span>
-                      {payment.time}
-                    </span>
+            {/* ORDER ID */}
+            <td>
+              {payment.orderId}
+            </td>
 
-                  </td>
+            {/* ORDER TOTAL */}
+            <td>
+              {payment.orderTotal}
+            </td>
 
-                  {/* ACTION */}
-                  <td>
+            {/* TENDER */}
+            <td>
+              {payment.tenderAmount}
+            </td>
 
-                    <button
-                      type="button"
-                      className="cash-action-button"
-                      title="More actions"
-                    >
-                      <i className="bi bi-three-dots-vertical" />
-                    </button>
+            {/* BALANCE */}
+            <td>
+              {payment.balanceAmount}
+            </td>
 
-                  </td>
+            {/* CHANGE */}
+            <td className="cash-change-positive">
+              {payment.changeAmount}
+            </td>
 
-                </tr>
+            {/* TRANSACTION ID */}
+            <td>
+              {payment.transactionId}
+            </td>
 
-              ))}
+            {/* ACCEPTED BY */}
+            <td>
+              {payment.acceptedBy}
+            </td>
 
-              {filteredPayments.length === 0 && (
+            {/* DATE */}
+            <td className="cash-date">
 
-                <tr>
+              <strong>
+                {payment.date}
+              </strong>
 
-                  <td
-                    colSpan="10"
-                    className="cash-empty-row"
-                  >
-                    No cash payments found.
+              <span>
+                {payment.time}
+              </span>
 
-                  </td>
+            </td>
 
-                </tr>
+          </tr>
 
-              )}
+        ))}
 
-            </tbody>
+        {filteredPayments.length === 0 && (
 
-          </table>
+          <tr>
 
-        </div>
+            <td
+              colSpan="9"
+              className="cash-empty-row"
+               >
+              No cash payments found.
+            </td>
 
-        {/* TABLE FOOTER */}
-        <div className="cash-table-footer">
+          </tr>
 
-          <span>
-            Showing 1 to {filteredPayments.length} of{" "}
-            {filteredPayments.length} entries
-          </span>
+        )}
 
-          <div className="cash-pagination">
+      </tbody>
 
-            <button type="button">
-              <i className="bi bi-chevron-left" />
+    </table>
+
+  </div>
+
+  {/* TABLE FOOTER */}
+  {filteredPayments.length > 0 && (
+    <div className="merchant-pagination">
+        <span>
+            {`Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(
+                currentPage * pageSize,
+                totalItems
+            )} of ${totalItems}`}
+        </span>
+
+        <div>
+            <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() =>
+                    setCurrentPage((value) =>
+                        Math.max(1, value - 1)
+                    )
+                }
+            >
+                Previous
             </button>
+
+            {Array.from(
+                { length: totalPages },
+                (_, index) => (
+                    <button
+                        type="button"
+                        className={
+                            currentPage === index + 1
+                                ? "active"
+                                : ""
+                        }
+                        key={index}
+                        onClick={() =>
+                            setCurrentPage(index + 1)
+                        }
+                    >
+                        {index + 1}
+                    </button>
+                )
+            )}
 
             <button
-              type="button"
-              className="active"
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                    setCurrentPage((value) =>
+                        Math.min(
+                            totalPages,
+                            value + 1
+                        )
+                    )
+                }
             >
-              1
+                Next
             </button>
-
-            <button type="button">
-              2
-            </button>
-
-            <button type="button">
-              <i className="bi bi-chevron-right" />
-            </button>
-
-          </div>
-
         </div>
+    </div>
+)}
 
-      </div>
+</div>
 
     </div>
   );

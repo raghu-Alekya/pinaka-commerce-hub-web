@@ -157,21 +157,21 @@ export default function Stores() {
   const stats = [
     [
       "purple",
-      "bi-shop",
+      "bi-building-fill",
       "Total Stores",
       stores.length,
       `${recent} added this week`,
     ],
     [
       "green",
-      "bi-check-circle",
+      "bi-check-circle-fill",
       "Active Stores",
       activeCount,
       `${stores.length ? ((activeCount / stores.length) * 100).toFixed(1) : "0.0"}% of total`,
     ],
     [
       "red",
-      "bi-wifi-off",
+      "bi-x-circle-fill",
       "Offline Stores",
       offline ?? "—",
       offline === null
@@ -182,7 +182,7 @@ export default function Stores() {
     ],
     [
       "orange",
-      "bi-arrow-repeat",
+      "bi-exclamation-triangle-fill",
       "Sync Issues",
       syncIssues ?? "—",
       syncIssues === null
@@ -204,11 +204,11 @@ export default function Stores() {
           <p>Manage and monitor all stores connected to Pinaka Commerce Hub</p>
         </div>
         <div className="page-actions">
-          <button className="add-store-btn" onClick={() => nav("/stores/new")}>
+          <button className="add-store-btn btn-primary" onClick={() => nav("/stores/new")}>
             <i className="bi bi-plus-lg" /> Add Store
           </button>
           <button
-            className="btn btn-secondary export-store-btn"
+            className="add-store-btn btn-secondary"
             type="button"
             onClick={() => exportStores(rows, merchants)}
           >

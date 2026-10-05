@@ -21,6 +21,11 @@ input {
     width: 100%;
 }
 
+.page-content {
+    padding: 18px 24px 0;
+    flex: 1;
+}
+
 /* =========================================================
    HEADER
 ========================================================= */
@@ -30,7 +35,7 @@ input {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 12px; 
+    margin-bottom: 12px;
 }
 
 .orders-title-area {
@@ -56,7 +61,8 @@ input {
     color: #17233e;
     font-size: 20px;
     font-weight: 700;
-     line-height: 1.2;
+     line-height: 1.2; 
+
 }
     
 .orders-header p {
@@ -135,42 +141,60 @@ input {
 }
 
 .order-summary-card {
+    height: 95px;
+    min-height: 95px;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
-    gap: 13px;
-    padding: 16px;
+    gap: 0;
+    padding: 10px;
     border: 1px solid #e0e4ec;
-    border-radius: 10px;
-    background: #fff;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
+}
+
+.order-summary-card:has(.order-summary-icon.green) {
+    background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+}
+
+.order-summary-card:has(.order-summary-icon.orange) {
+    background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+}
+
+.order-summary-card:has(.order-summary-icon.blue) {
+    background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
 }
 
 .order-summary-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    margin: 0 18px 0 6px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 16px;
 }
 
 .order-summary-icon.purple {
-    background: #f0ebff;
-    color: #5b45d5;
+    background: #eeebff;
+    color: #674ed9;
 }
 
 .order-summary-icon.green {
-    background: #e8f8ef;
-    color: #168d52;
+    background: #e4f7eb;
+    color: #2eaa62;
 }
 
 .order-summary-icon.orange {
-    background: #fff3df;
-    color: #d58412;
+    background: #fff1df;
+    color: #e99b2b;
 }
 
 .order-summary-icon.blue {
-    background: #eaf4fb;
-    color: #2678ad;
+    background: #e7f1ff;
+    color: #4185dd;
 }
 
 .order-summary-card span {
@@ -203,28 +227,36 @@ input {
 .orders-toolbar {
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 12px 12px 16px;
+    gap: 10px;
+    padding: 10px 12px;
     border-bottom: 1px solid #f0f1f4;
     background: #fbfcfe;
-
-     
-    
-    
+    min-height: 48px;
+    box-sizing: border-box; 
 }
 
 .orders-search {
-    position: relative;
-    flex: 1;
-    min-width: 250px;
+    width: 230px;
+    height: 32px;
+    flex: 0 0 230px;
+    border: 1px solid #e1e4eb;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    padding: 0 9px;
+    color: #9aa2b3;
+    box-sizing: border-box;
+    min-width: 0;   
+    
 }
 
 .orders-search i {
-    position: absolute;
-    top: 50%;
-    left: 13px;
-    transform: translateY(-50%);
-    color: #9aa4b5;
+     position: static;
+    transform: none;
+    flex-shrink: 0;
+    font-size: 12px;
+    color: #9aa2b3; 
+  
 }
 
 .orders-search input,
@@ -232,29 +264,37 @@ input {
     height: 35px;
     border: 1px solid #e1e4eb;
     border-radius: 6px;
-    outline: none;
-    background: #fff;
-     color: #59647a;
+    background-color: #fff;
+    color: #59647a;
     font-size: 12px;
-    min-width: 125px;
-    padding: 0 10px;
     font-weight: 500;
+    outline: none;
     cursor: pointer;
 
 }
 
 .orders-toolbar select:hover {
-    border-color: #d3d7e0;
+     border-color: #d3d7e0;
 }
 
 .orders-toolbar select:focus {
     border-color: #c8c1f2;
+    outline: none;
     box-shadow: none;
 }
    
 .orders-search input {
     width: 100%;
-    padding: 0 13px 0 37px;
+    height: 100%;
+    flex: 1;
+    border: 0;
+    outline: 0;
+    padding: 0 8px;
+    background: transparent;
+    color: #3c465a;
+    font-size: 12px;
+    font-weight: 400;
+    box-sizing: border-box;
 }
 
 .orders-toolbar select {
@@ -266,11 +306,17 @@ input {
 .orders-toolbar select:focus {
     border-color: #c8c1f2;
     box-shadow: none;
+    border: 0;
+    outline: 0;
+}
+
+.orders-search input::placeholder {
+     color: #a0a6b5;
 }
 
 .orders-clear-btn {
     height: 35px;
-    padding: 0 10px;
+    padding: 0 12px;
     border: 1px solid #e1e4eb;
     border-radius: 6px;
     background: #fff;
@@ -282,12 +328,21 @@ input {
     white-space: nowrap;
     font-size: 12px;
     font-weight: 500;
+    margin-left: auto;
+    justify-content: center;
+    box-sizing: border-box;  
 }
 
 .orders-clear-btn:hover {
-    background: #fafbfc;
+     background: #fafbfc;
     border-color: #d3d7e0;
 }
+
+.orders-clear-btn i {
+   font-size: 13px;
+    line-height: 1;
+}
+
 
 /* =========================================================
    TABLE HEADING
@@ -454,11 +509,17 @@ input {
 .order-status {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 7px 10px;
+    gap: 6px;
+    padding: 0 10px;
     border-radius: 6px;
     font-size: 11px;
     white-space: nowrap;
+    width: 120px;
+    min-width: 120px;
+    height: 30px;
+    justify-content: center;
+    box-sizing: border-box;
+
 }
 
 .order-status i {
@@ -622,8 +683,18 @@ input {
     }
 
     .orders-search {
-        flex-basis: 100%;
+        width: 100%;
+        flex: 1 1 100%;
     }
+
+      .orders-toolbar select {
+        flex: 1;
+    }
+
+    .orders-clear-btn {
+        margin-left: 0;
+    }
+
 }
 
 @media (max-width: 1000px) {
@@ -645,10 +716,17 @@ input {
 
         .orders-toolbar {
         flex-wrap: wrap;
+        align-items: stretch;
     }
 
     .orders-search {
         flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .orders-toolbar select,
+    .orders-clear-btn {
+        flex: 1;
     }
 
     .orders-summary {
@@ -665,4 +743,21 @@ input {
 .orders-page {
     width: 100%;
     padding: 20px;
+}
+
+
+@media (max-width: 500px) {
+
+    .orders-search {
+        width: 100%;
+
+        flex: none;
+    }
+
+    .orders-toolbar select,
+    .orders-clear-btn {
+        width: 100%;
+
+        flex: none;
+    }
 }

@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import Pagination from "../components/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
 import { ordersSeed } from "../data/data";
 import ViewDetailsModal from "../components/ViewDetailsModal";
 import "../styles/orders.css";
@@ -22,7 +21,7 @@ export default function Orders({
     // =========================================================
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const pageSize = 10;
 
     // =========================================================
     // ORDERS
@@ -138,9 +137,10 @@ export default function Orders({
 
     const totalItems = filteredOrders.length;
 
-    const totalPages = Math.ceil(
-        totalItems / pageSize
-    );
+    const totalPages = Math.max(
+    1,
+    Math.ceil(totalItems / pageSize)
+);
 
     const paginatedOrders = useMemo(() => {
         const startIndex =
@@ -233,7 +233,7 @@ export default function Orders({
     // =========================================================
 
     return (
-        <div className="orders-page">
+        <div className="page-content orders-page">
 
             {/* =================================================
                 HEADER
@@ -290,7 +290,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon purple">
-                        <i className="bi bi-receipt" />
+                        <i className="bi bi-bag-fill" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -308,7 +308,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon green">
-                        <i className="bi bi-check-circle" />
+                        <i className="bi bi-check-circle-fill" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -326,7 +326,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon orange">
-                        <i className="bi bi-clock" />
+                        <i className="bi bi-clock-fill" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -344,7 +344,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon blue">
-                        <i className="bi bi-currency-dollar" />
+                        <i className="bi bi-currency-dollar" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -518,31 +518,7 @@ export default function Orders({
 
                 </div>
 
-                {/* =================================================
-                    TABLE HEADING
-                ================================================= */}
-
-                <div className="orders-table-heading">
-
-                    <div>
-
-                        Orders
-
-                        <span>
-                            {filteredOrders.length}
-                        </span>
-
-                    </div>
-
-                    <div className="orders-read-only">
-
-                        <i className="bi bi-lock" />
-
-                        Read Only
-
-                    </div>
-
-                </div>
+    
 
                 {/* =================================================
                     TABLE
@@ -622,19 +598,61 @@ export default function Orders({
                 ================================================= */}
 
                 {filteredOrders.length > 0 && (
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        totalItems={totalItems}
-                        pageSize={pageSize}
-                        onPageChange={setCurrentPage}
-                        onPageSizeChange={(size) => {
-                            setPageSize(size);
-                            setCurrentPage(1);
-                        }}
-                    />
-                )}
+    <div className="merchant-pagination">
+        <span>
+            {`Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(
+                currentPage * pageSize,
+                totalItems
+            )} of ${totalItems}`}
+        </span>
 
+        <div>
+            <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() =>
+                    setCurrentPage((value) =>
+                        Math.max(1, value - 1)
+                    )
+                }
+            >
+                Previous
+            </button>
+
+            {Array.from(
+                { length: totalPages },
+                (_, index) => (
+                    <button
+                        type="button"
+                        className={
+                            currentPage === index + 1
+                                ? "active"
+                                : ""
+                        }
+                        key={index}
+                        onClick={() =>
+                            setCurrentPage(index + 1)
+                        }
+                    >
+                        {index + 1}
+                    </button>
+                )
+            )}
+
+            <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                    setCurrentPage((value) =>
+                        Math.min(totalPages, value + 1)
+                    )
+                }
+            >
+                Next
+            </button>
+        </div>
+    </div>
+)}
                 {/* =================================================
                     FOOTER
                 ================================================= */}
