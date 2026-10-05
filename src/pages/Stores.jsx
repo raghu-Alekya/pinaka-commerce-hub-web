@@ -204,11 +204,11 @@ export default function Stores() {
           <p>Manage and monitor all stores connected to Pinaka Commerce Hub</p>
         </div>
         <div className="page-actions">
-          <button className="add-store-btn" onClick={() => nav("/stores/new")}>
+          <button className="add-store-btn btn-primary" onClick={() => nav("/stores/new")}>
             <i className="bi bi-plus-lg" /> Add Store
           </button>
           <button
-            className="btn btn-secondary export-store-btn"
+            className="add-store-btn btn-secondary"
             type="button"
             onClick={() => exportStores(rows, merchants)}
           >

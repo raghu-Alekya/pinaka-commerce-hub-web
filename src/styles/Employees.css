@@ -54,29 +54,29 @@
 
 .employees-add-btn,
 .employees-export-btn {
-  height: 38px;
-  padding: 0 15px;
-  border-radius: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  font-size: 12px;
+  gap: 14px;
+  font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .employees-add-btn {
-  border: none;
+  
   color: #fff;
-  background: linear-gradient(90deg, #5d35dd, #5b40df);
-  box-shadow: 0 4px 10px rgba(89, 58, 220, 0.2);
+  background: #5143bc;
+  border: none;
 }
 
 .employees-export-btn {
-  color: #294363;
-  background: #fff;
-  border: 1px solid #d8e1ed;
+  background: #f6f7fb;
+    border: 1.5px solid #4537ad;
+    color: #4537ad;
 }
 
 /* =========================================================

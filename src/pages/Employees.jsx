@@ -461,7 +461,7 @@ export default function Employees() {
             onClick={() => console.log("Export clicked")}
           >
             <Download size={18} />
-            Export Employees
+            Export
           </button>
         </div>
       </div>

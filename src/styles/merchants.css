@@ -569,16 +569,11 @@ a {
 
 .page-actions .btn {
     height: 36px;
-
     border-radius: 8px;
-
     font-size: 14px;
-
     padding: 0 12px;
-
     display: flex;
     align-items: center;
-
     gap: 14px;
 }
 
@@ -588,21 +583,17 @@ a {
 
 .page-actions .btn-primary {
     background: #5143bc;
-
     border-color: #5143bc;
 }
 
 .page-actions .btn-primary:hover {
     background: #4537ad;
-
     border-color: #4537ad;
 }
 
 .page-actions .btn-secondary {
     background: #f6f7fb;
-
     border: 1.5px solid #4537ad;
-
     color: #4537ad;
 }
 
@@ -784,21 +775,17 @@ a {
 
 .filter-bar {
     min-height: 55px;
-
     padding: 10px 12px;
-
     display: flex;
     align-items: center;
-
     gap: 7px;
-
     border-bottom: 1px solid #f0f1f4;
 }
 
 .merchant-search {
     width: 230px;
 
-    height: 32px;
+    height: 35px;
 
     border: 1px solid #e1e4eb;
 

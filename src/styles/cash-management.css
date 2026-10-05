@@ -8,6 +8,10 @@
   padding-bottom: 30px;
 }
 
+.page-content {
+    padding: 18px 24px 0;
+    flex: 1;
+}
 
 /* =========================================================
    PAGE HEADER
@@ -252,32 +256,23 @@
 ========================================================= */
 
 .cash-filter-bar {
-  min-height: 58px;
-
-  padding: 11px 13px;
-
+  min-height: 55px;
+  padding: 10px 12px;
   margin-bottom: 16px;
-
-  display: grid;
-
+  display: flex;
   grid-template-columns:
     minmax(270px, 2fr)
     minmax(125px, 1fr)
     minmax(125px, 1fr)
     minmax(125px, 1fr)
     90px;
-
-  gap: 8px;
-
+  gap: 7px;
   align-items: center;
-
   background: #ffffff;
-
   border: 1px solid #e4e7ed;
-
   border-radius: 8px;
-
   box-sizing: border-box;
+
 }
 
 
@@ -287,20 +282,23 @@
 
 .cash-search-box {
   height: 35px;
+  width: 230px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 10px;
+  padding: 0 9px;
   background: #ffffff;
   border: 1px solid #e1e4eb;
-  border-radius: 6px;
+  border-radius: 5px;
   box-sizing: border-box;
   outline: none;
-  color: #59647a;
+  color: #9aa2b3;
   font-size: 12px;
   min-width: 125px;  
   font-weight: 500;  
   cursor: pointer;
+  flex: 0 0 230px;
+
 } 
         
 
@@ -313,14 +311,18 @@
   width: 100%;
   border: 0;
   outline: 0;
-  padding-left: 2px;
+  padding: 0 8px;
   background: transparent;
-  color: #3e485d;
+  color: #3c465a;
   font-size: 12px;
+  flex: 1;
+  height: 100%;
+  font-weight: 400;
+  box-sizing: border-box;
 }
 
 .cash-search-box input::placeholder {
-  color: #9ca3b1;
+   color: #a0a6b5;
 }
 
 
@@ -330,19 +332,20 @@
 
 .cash-select-wrapper {
   position: relative;
-  height: 32px;
+  height: 35px;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 9px;
+  padding: 0 10px;
   background: #ffffff;
-  border: 1px solid #dfe3ea;
-  border-radius: 5px;
-  box-sizing: border-box;
+  border: 1px solid #e1e4eb;
+  border-radius: 6px;
+  box-sizing: border-box; 
+  min-width: 125px;
 }
 
 .cash-select-wrapper > i:first-child {
-  color: #667994;
+  color: #59647a;
   font-size: 12px;
   flex: 0 0 auto;
 }
@@ -350,22 +353,36 @@
 .cash-select-wrapper select {
   width: 100%;
   height: 100%;
-  padding: 0 20px 0 0;
+  padding: 0 28px 0 0;
   border: none;
   outline: none;
   appearance: none;
   background: transparent;
-  color: #596378;
+  color: #59647a;
   font-size: 12px;
   cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  font-weight: 500;
+  box-sizing: border-box;
+
+}
+
+.cash-select-wrapper select:focus {
+
+  border: none;
+  outline: none;
 }
 
 .cash-select-arrow {
   position: absolute;
-  right: 9px;
-  color: #596378 !important;
+  right: 10px;
+  color: #59647a !important;
   font-size: 12px !important;
   pointer-events: none;
+  top: 50%;
+  transform: translateY(-50%);
+
 }
 
 
@@ -374,31 +391,33 @@
 ========================================================= */
 
 .cash-clear-button {
-  height: 32px;
+  height: 35px;
 
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 0 11px;
-  border: 1px solid #dfe3ea;
-  border-radius: 5px;
+  padding: 0 12px;
+  border: 1px solid #e1e4eb;
+  border-radius: 6px;
   background: #ffffff;
-  color: #596378;
+  color: #59647a;
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin-left: auto;
+  box-sizing: border-box;
 }
 
 .cash-clear-button i {
-  font-size: 11px;
+   font-size: 13px;
+   line-height: 1;
 }
 
 .cash-clear-button:hover {
-  background: #f5f6fa;
-  border-color: #cfd5df;
-  color: #172b4d;
+   background: #fafbfc;
+   border-color: #d3d7e0;
 }
 
 
@@ -495,6 +514,8 @@
    TABLE
 ========================================================= */
 
+
+
 .cash-table {
   width: 100%;
   min-width: 980px;
@@ -508,6 +529,10 @@
    TABLE HEADER
 ========================================================= */
 
+.cash-table td:first-child {
+    width: 240px;
+}
+
 .cash-table th {
   height: 42px;
   padding: 0 11px;
@@ -517,7 +542,6 @@
   font-size: 12px;
   font-weight: 600;
   text-align: left;
-  text-transform: uppercase;
   letter-spacing: 0.35px;
   vertical-align: middle;
   border: 0;
@@ -630,11 +654,15 @@ background: #fcfcff;
 
 .cash-title {
   display: block;
-  color: #684ee8;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.35;
   text-decoration: none;
+  width: 220px;
+  line-height: 20px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  color: #697285;
 }
 
 .cash-title:hover {
@@ -814,18 +842,20 @@ background: #fcfcff;
 @media (max-width: 1250px) {
 
   .cash-filter-bar {
-    grid-template-columns:
-      2fr
-      1fr
-      1fr;
+    flex-wrap: wrap;
   }
 
   .cash-search-box {
-    grid-column: span 2;
+      flex: 1 1 230px;
+  }
+
+    .cash-select-wrapper {
+    flex: 1 1 125px;
   }
 
   .cash-clear-button {
     grid-column: span 1;
+     margin-left: auto;
   }
 
   .cash-kpi-grid {
@@ -876,14 +906,24 @@ background: #fcfcff;
 
   .cash-filter-bar {
     grid-template-columns: 1fr;
+    align-items: stretch;
+    flex-wrap: wrap;
   }
 
   .cash-search-box {
     grid-column: auto;
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+   .cash-select-wrapper {
+    flex: 1;
   }
 
   .cash-clear-button {
     grid-column: auto;
+    margin-left: 0;
+    flex: 1;
   }
 
 }
@@ -941,6 +981,19 @@ background: #fcfcff;
 
   .cash-kpi-content small {
     font-size: 8px;
+  }
+
+    .cash-search-box {
+    width: 100%;
+
+    flex: none;
+  }
+
+  .cash-select-wrapper,
+  .cash-clear-button {
+    width: 100%;
+
+    flex: none;
   }
 
 }

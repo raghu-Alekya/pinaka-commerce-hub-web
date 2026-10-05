@@ -40,14 +40,14 @@
 .page-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
 /* First button — Add Store */
 .add-store-btn {
     order: 1;
-    height: 36px;
-    padding: 0 12px;
+    height: 40px;
+    padding: 2px 12px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -57,12 +57,32 @@
     cursor: pointer;
     background: #5143bc;
     border: 1px solid #5143bc;
-    color: #fff;  
+    
    
 }
 
-.add-store-btn:hover {
-    background: #4537ad;
+.add-store-btn .btn-primary {
+    background: #5143bc;
+    border-color: #5143bc
+}
+
+.add-store-btn .btn-primary:hover {
+     background: #4537ad;
+    border-color: #4537ad;
+}
+
+.add-store-btn i {
+    font-size: 14px;
+}
+
+.add-store-btn .btn-secondary {
+    background: #f6f7fb;
+    border: 1.5px solid #4537ad;
+    color: #4537ad;
+}
+
+.add-store-btn .btn-secondary:hover {
+    background: #fafbfc;
 }
 
 
