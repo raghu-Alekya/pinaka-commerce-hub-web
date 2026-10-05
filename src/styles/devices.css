@@ -93,40 +93,54 @@
 }
 .device-stat-card {
   min-width: 0;
-  height: 134px;
-  padding: 20px;
+  height: 95px;
+  min-height: 95px;
+  padding: 10px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 18px;
-  background: #fff;
-  border: 1px solid #e7edf5;
+  gap: 0;
+  background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
+  border: 1px solid #e6e8ee;
   border-radius: 8px;
 }
+.device-stat-card:has(.device-stat-icon.green) {
+  background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+}
+.device-stat-card:has(.device-stat-icon.orange) {
+  background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+}
+.device-stat-card:has(.device-stat-icon.red) {
+  background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+}
 .device-stat-icon {
-  width: 62px;
-  height: 62px;
-  min-width: 62px;
-  border-radius: 18px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  flex-shrink: 0;
+  margin: 0 18px 0 6px;
+  border-radius: 50%;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .device-stat-icon.purple {
-  color: #5d3ddd;
-  background: #eeeaff;
+  color: #674ed9;
+  background: #eeebff;
 }
 .device-stat-icon.green {
-  color: #08a866;
-  background: #e2f8ec;
+  color: #2eaa62;
+  background: #e4f7eb;
 }
 .device-stat-icon.orange {
-  color: #f5a000;
-  background: #fff2db;
+  color: #e99b2b;
+  background: #fff1df;
 }
 .device-stat-icon.red {
-  color: #ee3d55;
-  background: #ffe8ed;
+  color: #df5c66;
+  background: #ffe9ea;
 }
 .device-stat-content {
   min-width: 0;
@@ -726,14 +740,15 @@
     gap: 10px;
   }
   .device-stat-card {
-    height: 125px;
-    padding: 15px;
-    gap: 12px;
+    height: 95px;
+    min-height: 95px;
+    padding: 10px;
+    gap: 0;
   }
   .device-stat-icon {
-    width: 53px;
-    height: 53px;
-    min-width: 53px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
   }
   .device-stat-value {
     font-size: 20px;
@@ -774,15 +789,16 @@
     gap: 8px;
   }
   .device-stat-card {
-    height: 112px;
-    padding: 11px;
-    gap: 8px;
+    height: 95px;
+    min-height: 95px;
+    padding: 10px;
+    gap: 0;
   }
   .device-stat-icon {
-    width: 45px;
-    height: 45px;
-    min-width: 45px;
-    border-radius: 14px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 50%;
   }
   .device-stat-title {
     font-size: 10px;
@@ -848,5 +864,12 @@
   }
   .devices-pagination-controls {
     order: 2;
+  }
+}
+
+@media (max-width: 1050px) {
+  .device-stat-card {
+    height: 95px;
+    min-height: 95px;
   }
 }

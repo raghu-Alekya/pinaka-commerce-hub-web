@@ -6,10 +6,6 @@ import {
 
   Monitor,
 
-  CheckCircle,
-
-  Clock3,
-
   AlertCircle,
 
   Search,
@@ -378,7 +374,7 @@ export default function Devices() {
 
         <StatCard
 
-          icon={<Monitor size={22} />}
+          icon={<i className="bi bi-laptop-fill" aria-hidden="true" />}
 
           title="Total Devices"
 
@@ -392,7 +388,7 @@ export default function Devices() {
 
         <StatCard
 
-          icon={<CheckCircle size={22} />}
+          icon={<i className="bi bi-check-circle-fill" aria-hidden="true" />}
 
           title="Online Devices"
 
@@ -408,7 +404,7 @@ export default function Devices() {
 
         <StatCard
 
-          icon={<Clock3 size={22} />}
+          icon={<i className="bi bi-pause-circle-fill" aria-hidden="true" />}
 
           title="Offline Devices"
 
@@ -424,7 +420,7 @@ export default function Devices() {
 
         <StatCard
 
-          icon={<AlertCircle size={22} />}
+          icon={<i className="bi bi-x-circle-fill" aria-hidden="true" />}
 
           title="Inactive Devices"
 

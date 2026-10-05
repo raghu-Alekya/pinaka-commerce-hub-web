@@ -157,21 +157,21 @@ export default function Stores() {
   const stats = [
     [
       "purple",
-      "bi-shop",
+      "bi-building-fill",
       "Total Stores",
       stores.length,
       `${recent} added this week`,
     ],
     [
       "green",
-      "bi-check-circle",
+      "bi-check-circle-fill",
       "Active Stores",
       activeCount,
       `${stores.length ? ((activeCount / stores.length) * 100).toFixed(1) : "0.0"}% of total`,
     ],
     [
       "red",
-      "bi-wifi-off",
+      "bi-x-circle-fill",
       "Offline Stores",
       offline ?? "—",
       offline === null
@@ -182,7 +182,7 @@ export default function Stores() {
     ],
     [
       "orange",
-      "bi-arrow-repeat",
+      "bi-exclamation-triangle-fill",
       "Sync Issues",
       syncIssues ?? "—",
       syncIssues === null

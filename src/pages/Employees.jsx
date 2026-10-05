@@ -14,11 +14,6 @@ import {
   CalendarDays,
   Filter,
   Pencil,
-  Users,
-  Check,
-  Pause,
-  X,
-  UserPlus,
 } from "lucide-react";
 
 import "../styles/Employees.css";
@@ -214,11 +209,11 @@ export async function listMerchants() {
    STAT CARD
 ========================================================= */
 
-function StatCard({ icon: Icon, title, value, description, type, progress }) {
+function StatCard({ icon, title, value, description, type, progress }) {
   return (
     <div className="employees-stat-card">
       <div className={`employees-stat-icon ${type}`}>
-        <Icon size={24} />
+        <i className={`bi ${icon}`} aria-hidden="true" />
       </div>
 
       <div className="employees-stat-content">
@@ -472,7 +467,7 @@ export default function Employees() {
 
       <div className="employees-stats">
         <StatCard
-          icon={Users}
+          icon="bi-people-fill"
           title="Total Employees"
           value="128"
           description="↑ 12 this month"
@@ -480,7 +475,7 @@ export default function Employees() {
         />
 
         <StatCard
-          icon={Check}
+          icon="bi-check-circle-fill"
           title="Active Employees"
           value="110"
           description="↑ 85.9% of total"
@@ -489,7 +484,7 @@ export default function Employees() {
         />
 
         <StatCard
-          icon={Pause}
+          icon="bi-pause-circle-fill"
           title="Employees on Leave"
           value="6"
           description="↓ 4.7% of total"
@@ -498,7 +493,7 @@ export default function Employees() {
         />
 
         <StatCard
-          icon={X}
+          icon="bi-x-circle-fill"
           title="Inactive Employees"
           value="12"
           description="↓ 9.4% of total"
@@ -507,7 +502,7 @@ export default function Employees() {
         />
 
         <StatCard
-          icon={UserPlus}
+          icon="bi-person-plus-fill"
           title="New This Month"
           value="14"
           description="↑ 12.3% vs last month"

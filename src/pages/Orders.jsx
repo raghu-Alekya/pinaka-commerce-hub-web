@@ -290,7 +290,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon purple">
-                        <i className="bi bi-receipt" />
+                        <i className="bi bi-bag-fill" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -308,7 +308,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon green">
-                        <i className="bi bi-check-circle" />
+                        <i className="bi bi-check-circle-fill" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -326,7 +326,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon orange">
-                        <i className="bi bi-clock" />
+                        <i className="bi bi-clock-fill" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -344,7 +344,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon blue">
-                        <i className="bi bi-currency-dollar" />
+                        <i className="bi bi-currency-dollar" aria-hidden="true" />
                     </div>
 
                     <div>

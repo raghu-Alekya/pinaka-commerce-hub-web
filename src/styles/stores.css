@@ -82,28 +82,53 @@
     background: #fff;
     border: 1px solid #e4e7ed;
     border-radius: 8px;
-    min-height: 105px;
-    padding: 16px;
+    min-height: 95px;
+    height: 95px;
+    padding: 10px;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 0;
+}
+
+.stores-page .summary-card {
+    background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
+}
+
+.stores-page .summary-card:has(.summary-icon.green) {
+    background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+}
+
+.stores-page .summary-card:has(.summary-icon.orange) {
+    background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+}
+
+.stores-page .summary-card:has(.summary-icon.red) {
+    background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+}
+
+.stores-page .summary-card:has(.summary-icon.blue) {
+    background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
 }
 
 .summary-icon {
-    width: 45px;
-    height: 45px;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    margin: 0 18px 0 6px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 19px;
+    font-size: 16px;
     flex-shrink: 0;
 }
 
 .summary-icon.purple { background: #eeeaff; color: #6250cf; }
-.summary-icon.green { background: #e5f6eb; color: #35a467; }
-.summary-icon.red { background: #ffe9eb; color: #df5964; }
-.summary-icon.orange { background: #fff1dc; color: #e59c2d; }
+.summary-icon.purple { background: #eeebff; color: #674ed9; }
+.summary-icon.green { background: #e4f7eb; color: #2eaa62; }
+.summary-icon.red { background: #ffe9ea; color: #df5c66; }
+.summary-icon.orange { background: #fff1df; color: #e99b2b; }
+.summary-icon.blue { background: #e7f1ff; color: #4185dd; }
 
 .summary-card span {
     display: block;

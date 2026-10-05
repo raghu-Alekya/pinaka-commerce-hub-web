@@ -77,15 +77,15 @@
 .cash-kpi-card {
   position: relative;
 
-  min-height: 105px;
-  height: 105px;
+  min-height: 95px;
+  height: 95px;
 
-  padding: 16px;
+  padding: 10px;
 
   display: flex;
   align-items: center;
 
-  gap: 12px;
+  gap: 0;
 
   background: #ffffff;
 
@@ -98,6 +98,19 @@
   overflow: hidden;
 
   box-shadow: none;
+  background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
+}
+
+.cash-kpi-card.green {
+  background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+}
+
+.cash-kpi-card.orange {
+  background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+}
+
+.cash-kpi-card.blue {
+  background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
 }
 
 
@@ -116,10 +129,11 @@
 ========================================================= */
 
 .cash-kpi-icon {
-  width: 43px;
-  height: 43px;
+  width: 40px;
+  height: 40px;
 
-  flex: 0 0 43px;
+  flex: 0 0 40px;
+  margin: 0 18px 0 6px;
 
   display: flex;
   align-items: center;
@@ -127,27 +141,27 @@
 
   border-radius: 50%;
 
-  font-size: 19px;
+  font-size: 16px;
 }
 
 .cash-kpi-card.purple .cash-kpi-icon {
-  background: #eeeaff;
-  color: #6250cf;
+  background: #eeebff;
+  color: #674ed9;
 }
 
 .cash-kpi-card.green .cash-kpi-icon {
-  background: #e5f6eb;
-  color: #35a467;
+  background: #e4f7eb;
+  color: #2eaa62;
 }
 
 .cash-kpi-card.orange .cash-kpi-icon {
-  background: #fff1dc;
-  color: #e59c2d;
+  background: #fff1df;
+  color: #e99b2b;
 }
 
 .cash-kpi-card.blue .cash-kpi-icon {
-  background: #e4f0ff;
-  color: #4181d5;
+  background: #e7f1ff;
+  color: #4185dd;
 }
 
 
@@ -896,8 +910,8 @@ background: #fcfcff;
   }
 
   .cash-kpi-card {
-    min-height: 105px;
-    height: 105px;
+    min-height: 95px;
+    height: 95px;
   }
 
 }
@@ -921,14 +935,14 @@ background: #fcfcff;
   }
 
   .cash-kpi-card {
-    padding: 14px;
+    padding: 10px;
   }
 
   .cash-kpi-icon {
-    width: 43px;
-    height: 43px;
-    flex-basis: 43px;
-    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+    font-size: 16px;
   }
 
   .cash-kpi-content > span {
