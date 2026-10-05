@@ -219,13 +219,19 @@ export default function Vendors({
   |--------------------------------------------------------------------------
   */
 
-  async function loadVendors() {
+  async function loadVendors(overrideStatusFilter) {
     try {
       setLoading(true);
       setError("");
 
-      const data =
-        await getVendors();
+      const activeStatus = overrideStatusFilter ?? statusFilter;
+      const options = {};
+
+      if (activeStatus === "Inactive") {
+        options.is_deleted = true;
+      }
+
+      const data = await getVendors(options);
 
       setVendors(
         Array.isArray(data)
@@ -251,7 +257,7 @@ export default function Vendors({
 
   useEffect(() => {
     loadVendors();
-  }, []);
+  }, [statusFilter]);
 
   /*
   |--------------------------------------------------------------------------
@@ -301,7 +307,14 @@ export default function Vendors({
             statusFilter ===
               "All Statuses" ||
             vendor.status ===
-              statusFilter;
+              statusFilter ||
+            (statusFilter === "Inactive" &&
+              (vendor.status === "Inactive" ||
+                vendor.is_deleted === true ||
+                vendor.is_deleted === "true" ||
+                vendor.isDeleted === true ||
+                vendor.isDeleted === "true" ||
+                Boolean(vendor.deletedAt)));
 
           const matchesVendorType =
             vendorTypeFilter ===
