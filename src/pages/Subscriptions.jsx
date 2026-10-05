@@ -44,7 +44,6 @@ import {
   CircleCheck,
 
   RefreshCw,
-
   Pencil,
   Trash2,
   X,
@@ -972,106 +971,132 @@ useEffect(() => {
 
           {/* SEARCH */}
 
-          <div className="cash-search-box">
-  <Search size={16} />
-  <input
-    type="text"
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    placeholder="Search merchant name, code or ID"
-  />
-</div>
+          <div className="subscription-search">
+
+            <Search size={17} />
+
+            <input
+              type="text"
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              placeholder="Search merchant name, code or ID"
+            />
+
+          </div>
 
           {/* PLAN */}
 
-          <div className="cash-select-wrapper">
-  <select
-    value={plan}
-    onChange={(e) => setPlan(e.target.value)}
-  >
-    <option value="">All Plans</option>
+          <select
+            value={plan}
+            onChange={(e) =>
+              setPlan(e.target.value)
+            }
+          >
+            <option value="">
+              All Plans
+            </option>
 
-    {availablePlans.map((item) => (
-      <option key={item} value={item}>
-        {item}
-      </option>
-    ))}
-  </select>
+            {availablePlans.map((item) => (
+              <option
+                key={item}
+                value={item}
+              >
+                {item}
+              </option>
+            ))}
 
-  <ChevronDown size={15} />
-</div>
+          </select>
 
           {/* STATUS */}
 
-         <div className="cash-select-wrapper">
-  <select
-    value={status}
-    onChange={(e) => setStatus(e.target.value)}
-  >
-    <option value="">All Statuses</option>
+          <select
+            value={status}
+            onChange={(e) =>
+              setStatus(e.target.value)
+            }
+          >
+            <option value="">
+              All Statuses
+            </option>
 
-    {availableStatuses.map((item) => (
-      <option key={item} value={item}>
-        {item}
-      </option>
-    ))}
-  </select>
+            {availableStatuses.map((item) => (
+              <option
+                key={item}
+                value={item}
+              >
+                {item}
+              </option>
+            ))}
 
-  <ChevronDown size={15} />
-</div>
+          </select>
 
           {/* STORE COUNT */}
 
-          <div className="cash-select-wrapper">
-  <select
-    value={stores}
-    onChange={(e) => setStores(e.target.value)}
-  >
-    <option value="">All Store Counts</option>
+          <select
+            value={stores}
+            onChange={(e) =>
+              setStores(e.target.value)
+            }
+          >
+            <option value="">
+              All Store Counts
+            </option>
 
-    {availableStoreCounts.map((item) => (
-      <option key={item} value={item}>
-        {item} {Number(item) === 1 ? "Store" : "Stores"}
-      </option>
-    ))}
-  </select>
+            {availableStoreCounts.map((item) => (
+              <option
+                key={item}
+                value={item}
+              >
+                {item}{" "}
+                {Number(item) === 1
+                  ? "Store"
+                  : "Stores"}
+              </option>
+            ))}
 
-  <ChevronDown size={15} />
-</div>
+          </select>
 
           {/* START DATE FROM */}
 
-          <div className="cash-select-wrapper cash-date-wrapper">
-  <span>Start Date From</span>
+          <div className="subscription-date-filter">
 
-  <input
-    type="date"
-    value={startDate}
-    max={endDate || undefined}
-    onChange={(e) => setStartDate(e.target.value)}
-    aria-label="Start Date From"
-  />
-</div>
+            <input
+              type="date"
+              value={startDate}
+              max={endDate || undefined}
+              onChange={(e) =>
+                setStartDate(e.target.value)
+              }
+              aria-label="Start Date From"
+            />
+
+          </div>
 
           {/* START DATE TO */}
 
-   <div className="cash-select-wrapper cash-date-wrapper">
-  <span>Start Date To</span>
+          <div className="subscription-date-filter"> 
 
-  <input
-    type="date"
-    value={endDate}
-    min={startDate || undefined}
-    onChange={(e) => setEndDate(e.target.value)}
-    aria-label="Start Date To"
-  />
-</div>
+            <input
+              type="date"
+              value={endDate}
+              min={startDate || undefined}
+              onChange={(e) =>
+                setEndDate(e.target.value)
+              }
+              aria-label="Start Date To"
+            />
+
+          </div>
 
           {/* RESET */}
 
           <button
             type="button"
-            className="cash-reset-btn"
+            className={`subscription-reset-button ${
+              hasActiveFilters ? "active" : ""
+            }`}
             onClick={resetFilters}
             disabled={!hasActiveFilters}
             title="Reset all filters"
