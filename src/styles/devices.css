@@ -147,55 +147,15 @@
   flex: 1;
 }
 .device-stat-title {
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   color: #557091;
-  font-size: 13px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .device-stat-value {
-  margin-bottom: 4px;
   color: #162e50;
-  font-size: 28px;
-  line-height: 30px;
-  font-weight: 750;
-}
-.device-stat-change {
-  font-size: 11px;
-  line-height: 15px;
-}
-.device-stat-change.purple {
-  color: #09a968;
-}
-.device-stat-change.green {
-  color: #304969;
-}
-.device-stat-change.orange {
-  color: #f03e50;
-}
-.device-stat-change.red {
-  color: #304969;
-}
-.device-stat-progress {
-  width: 100%;
-  max-width: 198px;
-  height: 7px;
-  margin-top: 7px;
-  border-radius: 10px;
-  background: #e8edf4;
-  overflow: hidden;
-}
-.device-progress-bar {
-  height: 100%;
-  border-radius: 10px;
-}
-.device-progress-bar.green {
-  background: #08ae68;
-}
-.device-progress-bar.orange {
-  background: #f5a000;
-}
-.device-progress-bar.red {
-  background: #ee3d55;
+  font-size: 21px;
+  font-weight: 700;
 }
 /* =========================================================
    LIST CARD
@@ -799,16 +759,6 @@
     height: 40px;
     min-width: 40px;
     border-radius: 50%;
-  }
-  .device-stat-title {
-    font-size: 10px;
-  }
-  .device-stat-value {
-    font-size: 22px;
-    line-height: 24px;
-  }
-  .device-stat-change {
-    font-size: 9px;
   }
   .devices-filter-bar {
     grid-template-columns: minmax(180px, 1fr) 120px 135px 110px 145px 95px;

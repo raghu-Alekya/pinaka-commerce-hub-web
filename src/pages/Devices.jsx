@@ -214,30 +214,6 @@ export default function Devices() {
 
   ).length;
 
-  const onlinePercentage =
-
-    totalDevices > 0
-
-      ? ((onlineDevices / totalDevices) * 100).toFixed(1)
-
-      : "0.0";
-
-  const offlinePercentage =
-
-    totalDevices > 0
-
-      ? ((offlineDevices / totalDevices) * 100).toFixed(1)
-
-      : "0.0";
-
-  const inactivePercentage =
-
-    totalDevices > 0
-
-      ? ((inactiveDevices / totalDevices) * 100).toFixed(1)
-
-      : "0.0";
-
   /* ========================================================= DELETE DEVICE ========================================================= */ const handleDeleteDevice =
 
     async () => {
@@ -380,8 +356,6 @@ export default function Devices() {
 
           value={totalDevices}
 
-          change="Registered devices"
-
           variant="purple"
 
         />{" "}
@@ -394,11 +368,7 @@ export default function Devices() {
 
           value={onlineDevices}
 
-          change={`↑ ${onlinePercentage}% of total`}
-
           variant="green"
-
-          progress={Number(onlinePercentage)}
 
         />{" "}
 
@@ -410,11 +380,7 @@ export default function Devices() {
 
           value={offlineDevices}
 
-          change={`↓ ${offlinePercentage}% of total`}
-
           variant="orange"
-
-          progress={Number(offlinePercentage)}
 
         />{" "}
 
@@ -426,11 +392,7 @@ export default function Devices() {
 
           value={inactiveDevices}
 
-          change={`↓ ${inactivePercentage}% of total`}
-
           variant="red"
-
-          progress={Number(inactivePercentage)}
 
         />{" "}
 
@@ -832,11 +794,7 @@ export default function Devices() {
 
   value,
 
-  change,
-
   variant,
-
-  progress,
 
 }) {
 
@@ -855,26 +813,6 @@ export default function Devices() {
         <div className="device-stat-title"> {title} </div>{" "}
 
         <div className="device-stat-value"> {value} </div>{" "}
-
-        <div className={`device-stat-change ${variant}`}> {change} </div>{" "}
-
-        {progress !== undefined && (
-
-          <div className="device-stat-progress">
-
-            {" "}
-
-            <div
-
-              className={`device-progress-bar ${variant}`}
-
-              style={{ width: `${Math.min(Math.max(progress, 0), 100)}%` }}
-
-            />{" "}
-
-          </div>
-
-        )}{" "}
 
       </div>{" "}
 
