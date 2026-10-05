@@ -4,6 +4,7 @@ const path = (id) => `/features/${encodeURIComponent(id)}`;
 
 const normalize = (item = {}) => ({
   ...item,
+  id: item.id ?? item.feature_id ?? item.featureId ?? item._id,
 
   // Backend feature_code / featureKey -> UI code
   code: item.feature_code || item.featureKey || item.code || item.name?.toUpperCase().replace(/\s+/g, '_') || '',
