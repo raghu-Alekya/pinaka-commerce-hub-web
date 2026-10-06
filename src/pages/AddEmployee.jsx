@@ -1,3 +1,4 @@
+import { EmployeeToast } from "../components/EmployeeFeedback";
 import React, { useEffect, useState } from "react";
 import PhoneInputModule from "react-phone-input-2";
 
@@ -401,6 +402,7 @@ export default function AddEmployee() {
 
   // Profile image preview
   const [profileImage, setProfileImage] = useState(null);
+  const [profileImageFile, setProfileImageFile] = useState(null);
 
   const [formData, setFormData] = useState({
     employeeCode: "",
@@ -597,7 +599,6 @@ export default function AddEmployee() {
     const nextErrors = {};
 
     const requiredFields = [
-      "employeeCode",
       "firstName",
       "lastName",
       "email",
@@ -741,18 +742,19 @@ export default function AddEmployee() {
 
     // Check image type
     if (!file.type.startsWith("image/")) {
-      alert("Please select a JPG or PNG image.");
+      setSubmitError("Please select a JPG or PNG image.");
       e.target.value = "";
       return;
     }
 
     // Maximum 2MB
     if (file.size > 2 * 1024 * 1024) {
-      alert("Image size must be less than 2MB.");
+      setSubmitError("Image size must be less than 2MB.");
       e.target.value = "";
       return;
     }
 
+    setProfileImageFile(file);
     // Create preview URL
     const reader = new FileReader();
     reader.onload = () => setProfileImage(reader.result);
@@ -812,13 +814,9 @@ export default function AddEmployee() {
 
     try {
       setIsSaving(true);
-      await createEmployee(formData, storeAssignments);
-      if (profileImage && formData.employeeCode) {
-        window.localStorage.setItem(
-          `employee-profile-photo:${formData.employeeCode}`,
-          profileImage,
-        );
-      }
+      await createEmployee(formData, storeAssignments, profileImageFile);
+      setProfileImageFile(null);
+      setProfileImage(null);
       setFormData({
         employeeCode: "",
         firstName: "",
@@ -1228,16 +1226,18 @@ export default function AddEmployee() {
                 )}
               </div>
 
-              <div style={{ marginTop: "24px" }}>
-                <FormField
-                  label="Employee Code"
-                  required
+              <div className="employee-field" style={{ marginTop: "24px" }}>
+                <label htmlFor="create-employee-code">Employee Code</label>
+                <input
+                  id="create-employee-code"
                   name="employeeCode"
-                  placeholder="e.g. EMP-1008"
-                  value={formData.employeeCode}
-                  onChange={handleChange}
-                  error={errors.employeeCode}
+                  type="text"
+                  value=""
+                  placeholder="Auto Generated"
+                  readOnly
+                  aria-describedby="create-employee-code-help"
                 />
+                <small id="create-employee-code-help" className="employee-code-help">Generated automatically when saved.</small>
               </div>
 
               {/* EMPLOYEE LOGIN PIN */}
@@ -1304,10 +1304,8 @@ export default function AddEmployee() {
         ===================================================== */}
 
         <div className="employee-form-actions">
-          {submitError && <span className="field-error">{submitError}</span>}
-          {successMessage && (
-            <span className="employee-success-message">{successMessage}</span>
-          )}
+          <EmployeeToast message={submitError || successMessage} onClose={() => { setSubmitError(""); setSuccessMessage(""); }} />
+
 
           <button
             type="button"

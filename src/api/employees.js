@@ -1,101 +1,89 @@
 import { api } from "./http";
 import { endpoints } from "./endpoints";
 
-/**
- * Payload for POST /merchants/employees (Create Employee)
- */
-export function toEmployeePayload(data) {
-  return {
-    merchantId: data.merchant || data.merchantId,
-
-    firstName: data.firstName?.trim() || "",
-    lastName: data.lastName?.trim() || "",
-    email: data.email?.trim() || "",
-    phone: data.phone?.trim() || "",
-
-    dateOfBirth: data.dob || data.dateOfBirth || "",
-    gender: data.gender || "",
-
-    addressLine1: data.address1?.trim() || data.addressLine1?.trim() || "",
-    addressLine2: data.address2?.trim() || data.addressLine2?.trim() || "",
-    city: data.city?.trim() || "",
-    state: data.state?.trim() || "",
-    postalCode: data.pinCode || data.postalCode || "",
-    country: data.country || "India",
-
-    username: data.username?.trim() || "",
-
-    ...(data.password ? { temporaryPassword: data.password } : {}),
-
-    sendCredentials: Boolean(data.sendCredentials),
-
-    status: data.status || "ACTIVE",
-  };
-}
-
-/**
- * Payload for PUT /merchants/employees/:employeeId (Replace/Update Employee)
- * Matches Postman request body for Update Employee
- */
+// Keep UI camelCase values at the API boundary; employee HTTP fields are snake_case.
 export function toEmployeeUpdatePayload(data) {
-  return {
-    firstName: data.firstName?.trim() || "",
-    lastName: data.lastName?.trim() || "",
+  const payload = {
+    first_name: data.firstName?.trim() || "",
+    last_name: data.lastName?.trim() || "",
     email: data.email?.trim() || "",
     phone: data.phone?.trim() || "",
-
-    dateOfBirth: data.dob || data.dateOfBirth || "",
     gender: data.gender || "",
-
-    addressLine1: data.address1?.trim() || data.addressLine1?.trim() || "",
-    addressLine2: data.address2?.trim() || data.addressLine2?.trim() || "",
+    address_line1: data.address1?.trim() || data.addressLine1?.trim() || "",
+    address_line2: data.address2?.trim() || data.addressLine2?.trim() || "",
     city: data.city?.trim() || "",
     state: data.state?.trim() || "",
-    postalCode: data.pinCode || data.postalCode || "",
+    postal_code: data.pinCode || data.postalCode || "",
     country: data.country || "India",
-
     username: data.username?.trim() || "",
+    ...(data.status ? { status: data.status.toUpperCase() } : {}),
+    ...(data.password ? { temporary_password: data.password } : {}),
+    ...(typeof data.sendCredentials === "boolean" ? { send_credentials: data.sendCredentials } : {}),
+  };
+  const dob = data.dob || data.dateOfBirth;
+  if (dob) payload.date_of_birth = dob;
+  if (data.employeeLoginPin || data.loginPin) payload.login_pin = data.employeeLoginPin || data.loginPin;
+  return payload;
+}
 
-    status: data.status || "ACTIVE",
-
-    ...(data.password ? { temporaryPassword: data.password } : {}),
-    ...(typeof data.sendCredentials === "boolean"
-      ? { sendCredentials: data.sendCredentials }
-      : {}),
+export function toEmployeePayload(data, assignments = []) {
+  return {
+    ...toEmployeeUpdatePayload(data),
+    merchant_id: data.merchantId || data.merchant,
+    status: String(data.status || "ACTIVE").toUpperCase(),
+    ...(assignments.length ? { store_assignments: assignments.map(item => ({
+      store: item.store,
+      roles: item.roles || [],
+      ...(item.loginPin ? { login_pin: item.loginPin } : {}),
+    })) } : {}),
   };
 }
-// Helper to resolve relative backend image URLs
-function getFullImageUrl(url) {
-  if (!url) return null;
-  if (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("blob:") ||
-    url.startsWith("data:")
-  ) {
-    return url;
+
+function employeeBody(payload, image) {
+  if (!image) return payload;
+  const body = new FormData();
+  for (const [key, value] of Object.entries(payload)) {
+    if (value !== undefined) body.append(key, typeof value === "object" ? JSON.stringify(value) : String(value));
   }
-  const backendOrigin =
-    process.env.REACT_APP_API_ORIGIN || "http://localhost:3003";
-  return url.startsWith("/")
-    ? `${backendOrigin}${url}`
-    : `${backendOrigin}/${url}`;
+  body.append("image", image);
+  return body;
 }
 
-/*
- * CREATE EMPLOYEE
- */
-export function createEmployee(data) {
-  return api.post(endpoints.employees, toEmployeePayload(data));
+function normalizeEmployee(value) {
+  if (Array.isArray(value)) return value.map(normalizeEmployee);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).map(([key, field]) => [
+    key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase()), normalizeEmployee(field),
+  ]));
 }
 
-/*
- * UPDATE EMPLOYEE
- */
-export function updateEmployee(employeeId, data) {
-  const payload = toEmployeeUpdatePayload(data);
+function employeeResponse(response) {
+  const result = normalizeEmployee(response?.data || response);
+  if (result?.employee) result.employee = mapEmployeeToRow(result.employee);
+  return result;
+}
 
-  return api.put(endpoints.employee(employeeId), payload);
+export async function createEmployee(data, assignments = [], image) {
+  return employeeResponse(await api.post(endpoints.employees, employeeBody(toEmployeePayload(data, assignments), image)));
+}
+
+export async function updateEmployee(employeeId, data, image) {
+  return employeeResponse(await api.put(endpoints.employee(employeeId), employeeBody(toEmployeeUpdatePayload(data), image)));
+}
+
+export async function getEmployee(employeeId) {
+  return employeeResponse(await api.get(endpoints.employee(employeeId)));
+}
+
+export function deleteEmployee(employeeId) {
+  return api.delete(endpoints.employee(employeeId));
+}
+
+function getFullImageUrl(url) {
+  if (!url || /^(https?:|blob:|data:)/i.test(url)) return url || null;
+  // Development images live on the same merchant service as the employee APIs.
+  const origin = import.meta.env.VITE_API_ORIGIN || "";
+  return origin ? origin.replace(/\/$/, "") + "/" + url.replace(/^\//, "") : url;
 }
 
 /*
@@ -157,6 +145,7 @@ function toInitials(firstName, lastName, name) {
 }
 
 export function mapEmployeeToRow(employee) {
+  employee = normalizeEmployee(employee);
   const firstName = employee.firstName || "";
   const lastName = employee.lastName || "";
 
@@ -175,7 +164,8 @@ export function mapEmployeeToRow(employee) {
 
     initials: toInitials(firstName, lastName, name),
 
-    profileImage,
+    profileImage: getFullImageUrl(profileImage),
+    profileImageUrl: getFullImageUrl(profileImage),
 
     name,
 
@@ -234,8 +224,13 @@ function mapEmployeeList(data) {
     .map(mapEmployeeToRow);
 }
 
+export async function getEmployeeList() {
+  const response = await api.get(endpoints.employees);
+  return { employees: mapEmployeeList(response), statistics: response?.statistics ?? response?.data?.statistics ?? null };
+}
+
 export async function listEmployees() {
-  return mapEmployeeList(await api.get(endpoints.employees));
+  return (await getEmployeeList()).employees;
 }
 
 export async function listMerchantEmployees(merchantId) {
@@ -255,83 +250,15 @@ export async function listStoreRolePermissions(merchantId, storeId) {
 export async function saveStoreEmployees(merchantId, storeId, employees) {
   return api.put(endpoints.storeEmployees(merchantId, storeId), { employees });
 }
-// Helper to safely get backend origin in Vite/React without "process is not defined" error
-function getBackendOrigin() {
-  if (typeof import.meta !== "undefined" && import.meta?.env) {
-    return (
-      import.meta.env.VITE_API_ORIGIN ||
-      import.meta.env.VITE_API_BASE_URL ||
-      "http://localhost:3003"
-    );
-  }
-  return "http://localhost:3003";
-}
-/* =========================================================
-   EMPLOYEE PROFILE IMAGE
-========================================================= */
-
+// Photos use the employee update API, with exactly one multipart image field.
 export async function uploadEmployeeProfileImage(employeeId, file) {
-  const formData = new FormData();
-
-  // Append under all standard field keys to guarantee Multer compatibility
-  formData.append("file", file);
-  formData.append("image", file);
-  formData.append("profileImage", file);
-
-  const url = endpoints.employeeProfileImage
-    ? endpoints.employeeProfileImage(employeeId)
-    : `/merchants/employees/${encodeURIComponent(employeeId)}/profile-image`;
-
-  try {
-    const response = await api.post(url, formData, {
-      headers: {
-        "Content-Type": undefined, // Unsets default JSON header so browser inserts multipart boundary
-      },
-    });
-
-    return response?.data || response;
-  } catch (err) {
-    // Direct fetch fallback if custom api instance transforms FormData
-    const token =
-      localStorage.getItem("token") ||
-      localStorage.getItem("accessToken") ||
-      localStorage.getItem("authToken") ||
-      "";
-
-    const backendOrigin = getBackendOrigin();
-
-    const res = await fetch(`${backendOrigin}${url}`, {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(
-        Array.isArray(data?.message)
-          ? data.message.join(", ")
-          : data?.message || data?.error || "Failed to upload profile image.",
-      );
-    }
-    return data;
-  }
+  return employeeResponse(await api.put(endpoints.employee(employeeId), employeeBody({}, file)));
 }
 
 export async function getEmployeeProfileImage(employeeId) {
-  const url = endpoints.employeeProfileImage
-    ? endpoints.employeeProfileImage(employeeId)
-    : `/merchants/employees/${encodeURIComponent(employeeId)}/profile-image`;
-
-  const response = await api.get(url);
-  return response?.data || response;
+  return getEmployee(employeeId);
 }
 
 export async function deleteEmployeeProfileImage(employeeId) {
-  const url = endpoints.employeeProfileImage
-    ? endpoints.employeeProfileImage(employeeId)
-    : `/merchants/employees/${encodeURIComponent(employeeId)}/profile-image`;
-
-  const response = await api.delete(url);
-  return response?.data || response;
+  return employeeResponse(await api.put(endpoints.employee(employeeId), { profile_image_url: "" }));
 }
