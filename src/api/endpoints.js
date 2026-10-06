@@ -31,7 +31,7 @@ export const endpoints = {
 
   // Merchant Employees (Connector API)
   employees: "/employees",
-  employee: (id) => `/merchants/employees/${encodeURIComponent(id)}`,
+  employee: (id) => `/employees/${encodeURIComponent(id)}`,
   merchantEmployees: (merchantId, status = "ACTIVE") =>
     `/connector/api/v1/merchants/${encodeURIComponent(merchantId)}/employees${
       status ? `?status=${encodeURIComponent(status)}` : ""

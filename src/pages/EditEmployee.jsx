@@ -1,10 +1,6 @@
+import { EmployeeToast, EmployeeDeleteDialog } from "../components/EmployeeFeedback";
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import PhoneInputModule from "react-phone-input-2";
-
-const PhoneInput = PhoneInputModule.default || PhoneInputModule;
-
-import "react-phone-input-2/lib/style.css";
 import { listMerchants } from "../api/merchants";
 
 import {
@@ -181,6 +177,8 @@ export default function EditEmployee() {
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [confirmPhotoDelete, setConfirmPhotoDelete] = useState(false);
 
   // DYNAMIC MERCHANTS STATE
   const [merchants, setMerchants] = useState([]);
@@ -243,6 +241,7 @@ export default function EditEmployee() {
     employeeLoginPin: employee.loginPin || employee.employeeLoginPin || "",
     manager: employee.manager || "",
     username: employee.username || employee.employeeCode || employee.id || "",
+    status: String(employee.status || "INACTIVE").toUpperCase() === "ACTIVE" ? "Active" : "Inactive",
     password: "",
     sendCredentials: employee.sendCredentials ?? true,
   });
@@ -362,19 +361,13 @@ export default function EditEmployee() {
         }
         return "";
 
+      case "status":
+        return ["Active", "Inactive"].includes(value) ? "" : "Select Active or Inactive.";
+
       case "password":
-        if (!trimmed) return "";
-        if (trimmed.length < 8)
-          return "Password must be at least 8 characters.";
-        if (trimmed.length > 64) return "Password cannot exceed 64 characters.";
-        if (
-          !/[A-Z]/.test(trimmed) ||
-          !/[a-z]/.test(trimmed) ||
-          !/\d/.test(trimmed) ||
-          !/[^A-Za-z0-9]/.test(trimmed)
-        ) {
-          return "Password must contain uppercase, lowercase, number and special character.";
-        }
+        if (!value) return "";
+        if (trimmed.length < 8) return "Temporary password must be at least 8 characters.";
+        if (trimmed.length > 128) return "Temporary password cannot exceed 128 characters.";
         return "";
 
       default:
@@ -399,6 +392,7 @@ export default function EditEmployee() {
       "country",
       "merchant",
       "username",
+      "status",
     ];
 
     requiredFields.forEach((name) => {
@@ -471,19 +465,19 @@ export default function EditEmployee() {
     if (!file) return;
 
     if (!employeeId) {
-      alert("Employee ID is missing.");
+      setNotice("Employee ID is missing.");
       e.target.value = "";
       return;
     }
 
     if (!file.type.startsWith("image/")) {
-      alert("Please select a JPG or PNG image.");
+      setNotice("Please select a JPG or PNG image.");
       e.target.value = "";
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      alert("Image size must be less than 2MB.");
+      setNotice("Image size must be less than 2MB.");
       e.target.value = "";
       return;
     }
@@ -511,7 +505,7 @@ export default function EditEmployee() {
 
       setProfileImageFile(null);
 
-      alert("Profile photo updated successfully.");
+      setNotice("Profile photo updated successfully.");
     } catch (error) {
       console.error("Profile image upload failed:", error);
 
@@ -528,7 +522,7 @@ export default function EditEmployee() {
         error?.message ||
         "Failed to upload profile photo.";
 
-      alert(Array.isArray(message) ? message.join(", ") : String(message));
+      setNotice(Array.isArray(message) ? message.join(", ") : String(message));
     } finally {
       setUploadingProfileImage(false);
       e.target.value = "";
@@ -545,11 +539,7 @@ export default function EditEmployee() {
   const handleDeleteProfileImage = async () => {
     if (!employeeId || !profileImage) return;
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete the employee profile photo?",
-    );
-
-    if (!confirmed) return;
+    setConfirmPhotoDelete(false);
 
     try {
       setDeletingProfileImage(true);
@@ -559,7 +549,7 @@ export default function EditEmployee() {
       setProfileImage(null);
       setProfileImageFile(null);
 
-      alert("Profile photo deleted successfully.");
+      setNotice("Profile photo deleted successfully.");
     } catch (error) {
       console.error("Delete profile image failed:", error);
 
@@ -569,7 +559,7 @@ export default function EditEmployee() {
         error?.message ||
         "Failed to delete profile photo.";
 
-      alert(Array.isArray(message) ? message.join(", ") : String(message));
+      setNotice(Array.isArray(message) ? message.join(", ") : String(message));
     } finally {
       setDeletingProfileImage(false);
     }
@@ -605,8 +595,7 @@ export default function EditEmployee() {
       const response = await updateEmployee(employeeId, formData);
       console.log("Employee update response:", response);
 
-      alert("Employee updated successfully");
-      navigate("/employees");
+      navigate("/employees", { state: { employeeMessage: "Employee updated successfully." } });
     } catch (error) {
       console.error("Update employee failed:", error);
 
@@ -657,7 +646,8 @@ export default function EditEmployee() {
       </div>
 
       {/* API ERROR BANNER */}
-      {apiError && <div className="employee-api-error">{apiError}</div>}
+      <EmployeeToast message={notice || apiError} onClose={() => { setNotice(""); setApiError(""); }} />
+      {confirmPhotoDelete && <EmployeeDeleteDialog title="Delete Profile Photo?" description="Are you sure you want to remove this employee’s profile photo?" busy={deletingProfileImage} onCancel={() => setConfirmPhotoDelete(false)} onConfirm={handleDeleteProfileImage} />}
 
       {/* FORM */}
       <form onSubmit={handleSave} autoComplete="off">
@@ -714,19 +704,17 @@ export default function EditEmployee() {
                     Phone Number <span>*</span>
                   </label>
 
-                  <PhoneInput
-                    country="in"
-                    enableSearch
-                    countryCodeEditable={false}
-                    autoFormat
-                    placeholder="Enter phone number"
+                  <input
+                    type="tel"
+                    id="employee-phone"
+                    name="phone"
+                    aria-label="Phone Number"
+                    placeholder="Enter phone number, including country code"
                     value={formData.phone}
-                    onChange={handlePhoneChange}
-                    inputProps={{
-                      name: "phone",
-                      required: true,
-                      autoComplete: "tel",
-                    }}
+                    onChange={(event) => handlePhoneChange(event.target.value)}
+                    required
+                    autoComplete="tel"
+                    className={errors.phone ? "field-invalid" : ""}
                   />
 
                   {errors.phone && (
@@ -913,6 +901,23 @@ export default function EditEmployee() {
                 description="Assign roles to one or more stores under the selected merchant."
               />
 
+              <div className="employee-field">
+                <label htmlFor="employee-code">Employee Code</label>
+                <input id="employee-code" name="employeeCode" value={employee.employeeCode || employee.employee_code || ""} readOnly />
+              </div>
+
+              <div style={{ marginTop: "24px" }}>
+                <SelectField
+                  label="Status"
+                  required
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  options={["Active", "Inactive"]}
+                  error={errors.status}
+                />
+              </div>
+
               {/* DYNAMIC MERCHANT DROPDOWN */}
               {/* MERCHANT - DISPLAY ONLY */}
               <div className="employee-field work-merchant-field">
@@ -950,26 +955,38 @@ export default function EditEmployee() {
                 />
 
                 <div className="employee-field">
-                  <label>Temporary Password</label>
+                  <label htmlFor="employee-temporary-password">Temporary Password</label>
 
                   <div className="password-input">
                     <input
                       type={showPassword ? "text" : "password"}
+                      id="employee-temporary-password"
                       name="password"
-                      placeholder="Enter new password (optional)"
+                      placeholder="Enter a new temporary password"
                       value={formData.password}
                       onChange={handleChange}
                       autoComplete="new-password"
+                      spellCheck={false}
+                      autoCapitalize="none"
+
                       className={errors.password ? "field-invalid" : ""}
                     />
 
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide temporary password" : "Show temporary password"}
+                      aria-pressed={showPassword}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setShowPassword((visible) => !visible);
+                        document.getElementById("employee-temporary-password")?.focus();
+                      }}
                     >
                       {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                     </button>
                   </div>
+
+
 
                   {errors.password && (
                     <span className="field-error">{errors.password}</span>
