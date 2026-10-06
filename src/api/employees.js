@@ -85,56 +85,56 @@ function getFullImageUrl(url) {
   const origin = import.meta.env.VITE_API_ORIGIN || "";
   return origin ? origin.replace(/\/$/, "") + "/" + url.replace(/^\//, "") : url;
 }
-
+ 
 /*
  * LIST EMPLOYEES
  */
 function formatDate(value) {
   if (!value) return "—";
-
+ 
   const date = new Date(value);
-
+ 
   if (Number.isNaN(date.getTime())) return "—";
-
+ 
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
 }
-
+ 
 function formatRelative(value) {
   if (!value) return "—";
-
+ 
   const date = new Date(value);
-
+ 
   if (Number.isNaN(date.getTime())) return "—";
-
+ 
   const minutes = Math.max(
     0,
     Math.round((Date.now() - date.getTime()) / 60000),
   );
-
+ 
   if (minutes < 1) return "Just now";
-
+ 
   if (minutes < 60) {
     return `${minutes} min${minutes === 1 ? "" : "s"} ago`;
   }
-
+ 
   const hours = Math.round(minutes / 60);
-
+ 
   if (hours < 24) {
     return `${hours} hour${hours === 1 ? "" : "s"} ago`;
   }
-
+ 
   return `${Math.round(hours / 24)} days ago`;
 }
-
+ 
 function toInitials(firstName, lastName, name) {
   const parts = [firstName, lastName].filter(Boolean);
-
+ 
   const label = parts.length ? parts.join(" ") : name || "Employee";
-
+ 
   return (
     label
       .split(/\s+/)
@@ -143,14 +143,14 @@ function toInitials(firstName, lastName, name) {
       .join("") || "E"
   );
 }
-
+ 
 export function mapEmployeeToRow(employee) {
   employee = normalizeEmployee(employee);
   const firstName = employee.firstName || "";
   const lastName = employee.lastName || "";
-
+ 
   const name = employee.name || `${firstName} ${lastName}`.trim() || "Employee";
-
+ 
   // Capture profile photo URL from backend response
   const profileImage =
     employee.profileImageUrl ||
@@ -158,46 +158,46 @@ export function mapEmployeeToRow(employee) {
     employee.avatarUrl ||
     employee.image ||
     null;
-
+ 
   return {
     ...employee,
-
+ 
     initials: toInitials(firstName, lastName, name),
 
     profileImage: getFullImageUrl(profileImage),
     profileImageUrl: getFullImageUrl(profileImage),
 
     name,
-
+ 
     id: employee.id || employee.employeeCode || employee.employeeId || "—",
-
+ 
     email: employee.email || "—",
-
+ 
     phone: employee.phone || "—",
-
+ 
     role: employee.role || "—",
-
+ 
     merchant:
       employee.merchantName ||
       employee.merchant?.name ||
       employee.merchantId ||
       "—",
-
+ 
     store: employee.storeName || employee.store?.name || employee.store || "—",
-
+ 
     status:
       String(employee.status || "INACTIVE").toUpperCase() === "ACTIVE"
         ? "Active"
         : "Inactive",
-
+ 
     joined: formatDate(employee.createdAt || employee.joinedAt),
-
+ 
     active: formatRelative(employee.lastActiveAt || employee.updatedAt),
-
+ 
     avatar: "purple",
   };
 }
-
+ 
 function mapEmployeeList(data) {
   const listKeys = [
     "employees",
@@ -218,7 +218,7 @@ function mapEmployeeList(data) {
     return [];
   }
   const items = findItems(data);
-
+ 
   return items
     .filter((item) => item && typeof item === "object")
     .map(mapEmployeeToRow);
@@ -232,21 +232,21 @@ export async function getEmployeeList() {
 export async function listEmployees() {
   return (await getEmployeeList()).employees;
 }
-
+ 
 export async function listMerchantEmployees(merchantId) {
   return mapEmployeeList(
     await api.get(endpoints.merchantEmployees(merchantId)),
   );
 }
-
+ 
 export async function listStoreEmployees(merchantId, storeId) {
   return api.get(endpoints.storeEmployees(merchantId, storeId));
 }
-
+ 
 export async function listStoreRolePermissions(merchantId, storeId) {
   return api.get(endpoints.storeRolePermissions(merchantId, storeId));
 }
-
+ 
 export async function saveStoreEmployees(merchantId, storeId, employees) {
   return api.put(endpoints.storeEmployees(merchantId, storeId), { employees });
 }
@@ -254,11 +254,11 @@ export async function saveStoreEmployees(merchantId, storeId, employees) {
 export async function uploadEmployeeProfileImage(employeeId, file) {
   return employeeResponse(await api.put(endpoints.employee(employeeId), employeeBody({}, file)));
 }
-
+ 
 export async function getEmployeeProfileImage(employeeId) {
   return getEmployee(employeeId);
 }
-
+ 
 export async function deleteEmployeeProfileImage(employeeId) {
   return employeeResponse(await api.put(endpoints.employee(employeeId), { profile_image_url: "" }));
 }

@@ -63,6 +63,7 @@ export const endpoints = {
   permissions: "/permissions",
   permission: (id) => `/permissions/${id}`,
   plans: "/plans",
+  plansMerchantForm: "/plans/merchant-form",
   plan: (id) => `/plans/${encodeURIComponent(id)}`,
   planStatus: (id) => `/plans/${encodeURIComponent(id)}`,
   tendors: "/tendors",

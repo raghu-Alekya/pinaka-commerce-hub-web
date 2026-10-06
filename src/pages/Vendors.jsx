@@ -13,6 +13,7 @@ import {
 } from "../api/vendors";
 
 const emptyForm = {
+  code: "",
   name: "",
   vendorType: "Supplier",
   contactPerson: "",
@@ -79,6 +80,23 @@ function normalizeVendorType(
   }
 
   return "Supplier";
+}
+
+function generateNextVendorCode(vendorsList = []) {
+  let maxNum = 0;
+  (Array.isArray(vendorsList) ? vendorsList : []).forEach((v) => {
+    const code = String(v.code || v.vendorCode || "");
+    const match = code.match(/VND[_\-]?(\d+)/i);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!Number.isNaN(num) && num > maxNum) {
+        maxNum = num;
+      }
+    }
+  });
+
+  const nextNum = maxNum + 1;
+  return `VND_${String(nextNum).padStart(5, "0")}`;
 }
 
 /*
@@ -216,8 +234,10 @@ export default function Vendors({
   const [error, setError] =
     useState("");
 
-  const [hoveredCell, setHoveredCell] =
-    useState(null);
+  const nextVendorCode = useMemo(
+    () => generateNextVendorCode(vendors),
+    [vendors]
+  );
 
   /*
   |--------------------------------------------------------------------------
@@ -231,17 +251,34 @@ export default function Vendors({
       setError("");
 
       const activeStatus = overrideStatusFilter ?? statusFilter;
-      const options = {};
+
+      let resultList = [];
 
       if (activeStatus === "Inactive") {
-        options.is_deleted = true;
+        resultList = await getVendors({ is_deleted: true });
+      } else if (activeStatus === "Active") {
+        resultList = await getVendors();
+      } else {
+        // "All Statuses": Fetch both active vendors and inactive/deleted vendors
+        const [activeList, inactiveList] = await Promise.all([
+          getVendors().catch(() => []),
+          getVendors({ is_deleted: true }).catch(() => []),
+        ]);
+
+        const map = new Map();
+        (Array.isArray(activeList) ? activeList : []).forEach((v) => {
+          if (v && v.id) map.set(String(v.id), v);
+        });
+        (Array.isArray(inactiveList) ? inactiveList : []).forEach((v) => {
+          if (v && v.id) map.set(String(v.id), v);
+        });
+
+        resultList = Array.from(map.values());
       }
 
-      const data = await getVendors(options);
-
       setVendors(
-        Array.isArray(data)
-          ? data
+        Array.isArray(resultList)
+          ? resultList
           : []
       );
     } catch (err) {
@@ -439,6 +476,11 @@ export default function Vendors({
 
   function buildPayload() {
     return {
+      code:
+        editingId !== null
+          ? form.code
+          : nextVendorCode,
+
       vendorName:
         form.name.trim(),
 
@@ -730,6 +772,7 @@ export default function Vendors({
     vendor
   ) {
     const viewForm = {
+      code: vendor.code || "",
       name: vendor.name || "",
       vendorType: normalizeVendorType(
         vendor.vendorType
@@ -769,6 +812,9 @@ export default function Vendors({
     vendor
   ) {
     const editForm = {
+      code:
+        vendor.code || "",
+
       name:
         vendor.name || "",
 
@@ -918,41 +964,7 @@ export default function Vendors({
     );
   }
 
-  function showCellTooltip(event, value) {
-    if (!value || value === "—") {
-      setHoveredCell(null);
-      return;
-    }
 
-    const valueElement =
-      event.currentTarget.querySelector(
-        ".vendors-cell-value"
-      );
-
-    // Show the full value only when the visible cell
-    // is actually truncated.
-    if (
-      !valueElement ||
-      valueElement.scrollWidth <=
-        valueElement.clientWidth
-    ) {
-      setHoveredCell(null);
-      return;
-    }
-
-    const rect =
-      valueElement.getBoundingClientRect();
-
-    setHoveredCell({
-      value: String(value),
-      left: rect.left + rect.width / 2,
-      top: rect.top - 8,
-    });
-  }
-
-  function hideCellTooltip() {
-    setHoveredCell(null);
-  }
 
   /*
   |--------------------------------------------------------------------------
@@ -1010,6 +1022,31 @@ export default function Vendors({
         =================================================== */}
 
         <div className="vendors-form-grid">
+          {/* =================================================
+              VENDOR CODE
+          ================================================= */}
+
+          <label>
+            <span>
+              Vendor Code
+            </span>
+
+            <input
+              type="text"
+              name="code"
+              value={
+                editingId !== null || viewingId !== null
+                  ? (form.code || "—")
+                  : nextVendorCode
+              }
+              placeholder="VND_00001"
+              autoComplete="off"
+              disabled
+              readOnly
+            />
+
+          </label>
+
           {/* =================================================
               VENDOR NAME
           ================================================= */}
@@ -1606,15 +1643,9 @@ export default function Vendors({
                     <tr
                       key={vendor.id}
                     >
-
                       {/* CODE */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(event, vendor.code || "—")
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
+                      <td>
                         <VendorCell
                           value={vendor.code}
                           strong
@@ -1623,12 +1654,7 @@ export default function Vendors({
 
                       {/* NAME */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(event, vendor.name || "—")
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
+                      <td>
                         <VendorCell
                           value={vendor.name}
                           strong
@@ -1637,15 +1663,7 @@ export default function Vendors({
 
                       {/* ADDRESS */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(
-                            event,
-                            vendor.addressLine1 || "—"
-                          )
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
+                      <td>
                         <VendorCell
                           value={vendor.addressLine1}
                         />
@@ -1653,17 +1671,7 @@ export default function Vendors({
 
                       {/* TYPE */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(
-                            event,
-                            getVendorTypeLabel(
-                              vendor.vendorType
-                            )
-                          )
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
+                      <td>
                         <span
                           className={`vendors-type ${
                             String(
@@ -1680,19 +1688,7 @@ export default function Vendors({
 
                       {/* CONTACT PERSON */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(
-                            event,
-                            getVendorTypeLabel(
-                              vendor.vendorType
-                            ) === "Organizer"
-                              ? vendor.contactPerson || "—"
-                              : "—"
-                          )
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
+                      <td>
                         <VendorCell
                           value={
                             getVendorTypeLabel(
@@ -1706,15 +1702,7 @@ export default function Vendors({
 
                       {/* PHONE */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(
-                            event,
-                            vendor.phone || "—"
-                          )
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
+                      <td>
                         <VendorCell
                           value={vendor.phone}
                         />
@@ -1722,15 +1710,7 @@ export default function Vendors({
 
                       {/* EMAIL */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(
-                            event,
-                            vendor.email || "—"
-                          )
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
+                      <td>
                         <VendorCell
                           value={vendor.email}
                         />
@@ -1738,15 +1718,7 @@ export default function Vendors({
 
                       {/* CATEGORY */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(
-                            event,
-                            vendor.category || "—"
-                          )
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
+                      <td>
                         <VendorCell
                           value={vendor.category}
                         />
@@ -1759,20 +1731,12 @@ export default function Vendors({
                              String(vendor.status || "").toLowerCase() }`} >
                              <i className="bi bi-circle-fill" />
                               {vendor.status || "—"}
-                                 </span>
+                                  </span>
                      </td>
 
                       {/* CREATED TIME */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(
-                            event,
-                            vendor.createdTime || "—"
-                          )
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
+                      <td>
                         <VendorAuditCell
                           value={vendor.createdTime}
                         />
@@ -1780,15 +1744,7 @@ export default function Vendors({
 
                       {/* UPDATED TIME */}
 
-                      <td
-                        onMouseEnter={(event) =>
-                          showCellTooltip(
-                            event,
-                            vendor.updatedTime || "—"
-                          )
-                        }
-                        onMouseLeave={hideCellTooltip}
-                      >
+                      <td>
                         <VendorAuditCell
                           value={vendor.updatedTime}
                         />
@@ -2022,19 +1978,6 @@ export default function Vendors({
 
           </div>
 
-        </div>
-      )}
-
-      {hoveredCell && (
-        <div
-          className="vendors-hover-tooltip"
-          style={{
-            left: `${hoveredCell.left}px`,
-            top: `${hoveredCell.top}px`,
-          }}
-          role="tooltip"
-        >
-          {hoveredCell.value}
         </div>
       )}
 

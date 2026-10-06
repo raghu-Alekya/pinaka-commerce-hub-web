@@ -1,13 +1,13 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-
+ 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const proxyTarget = env.VITE_API_PROXY_TARGET;
+  const proxyTarget = env.VITE_API_PROXY_TARGET || "https://pch.alektasolutions.com";
   const authProxyTarget = env.VITE_AUTH_PROXY_TARGET || proxyTarget;
-
+ 
   const proxy = {};
-
+ 
   if (authProxyTarget) {
     proxy["/api/v1/auth"] = {
       target: authProxyTarget,
@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       secure: false,
     };
   }
-
+ 
   if (proxyTarget) {
     proxy["/api"] = {
       target: proxyTarget,
@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
       secure: false,
     };
   }
-
+ 
   return {
     plugins: [react()],
     build: {
@@ -59,3 +59,4 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
+ 
