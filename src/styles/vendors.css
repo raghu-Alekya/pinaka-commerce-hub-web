@@ -49,11 +49,12 @@
 .vendors-save-button {
   border: 0;
   border-radius: 8px;
-  background: #684ee3;
+  background: #5143bc;
   color: #ffffff;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
+
   transition:
     background 0.2s ease,
     box-shadow 0.2s ease,

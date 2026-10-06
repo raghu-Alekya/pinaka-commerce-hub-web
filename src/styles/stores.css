@@ -63,7 +63,9 @@
 
 .add-store-btn .btn-primary {
     background: #5143bc;
-    border-color: #5143bc
+    border-color: #5143bc;
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(81, 67, 188, .16);
 }
 
 .add-store-btn .btn-primary:hover {
@@ -76,7 +78,7 @@
 }
 
 .add-store-btn .btn-secondary {
-    background: #f6f7fb;
+    background: transparent;
     border: 1.5px solid #4537ad;
     color: #4537ad;
 }
@@ -198,6 +200,53 @@
     align-items: center;
     gap: 7px;
     border-bottom: 1px solid #f0f1f4;
+}
+
+.store-toolbar .filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    padding-right: 36px;
+
+    background-color: #ffffff;
+    background-image: none;
+
+    position: relative;
+}
+
+/* Custom dropdown arrow */
+.store-toolbar .filter-select {
+    --select-arrow: "⌄";
+}
+
+.store-toolbar .filter-select {
+    text-overflow: ellipsis;
+}
+
+.store-toolbar .filter-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.store-toolbar .filter-select {
+    width: 100%;
+    padding-right: 36px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+}
+
+.store-toolbar .filter-select-arrow {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+
+    color: #64748b;
+    font-size: 13px;
+    pointer-events: none;
 }
 
 /* =========================================================

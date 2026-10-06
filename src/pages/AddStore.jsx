@@ -3628,51 +3628,52 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             >
               <div className="sf-screen">{screens[step]()}</div>
               <div className="sf-footer">
-              
-                <span className="sf-footer-spacer" />
-                {step === 0 && (
-                  <button
-                    type="button"
-                    className="sf-outline sf-save-draft"
-                    disabled={saving || subscriptionLoading}
-                    onClick={(event) => submit(event, true)}
-                  >
-                    Save as Draft
-                  </button>
-                )}
-                {step < STEPS.length - 1 ? (
-                  <button
-                    type="button"
-                    className="sf-primary"
-                    disabled={saving || subscriptionLoading}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      goTo(step + 1);
-                    }}
-                  >
-                    {step === 0 && subscriptionLoading ? (
-                      "Checking Subscription…"
-                    ) : (
-                      <>
-                        Save &amp; Continue 
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    className="sf-primary"
-                    disabled={saving || subscriptionLoading}
-                  >
-                    <i className="bi bi-shop" />{" "}
-                    {saving
-                      ? "Creating…"
-                      : editing
-                        ? "Save Changes"
-                        : "Create Store"}
-                  </button>
-                )}
-              </div>
+  <div className="sf-footer-right">
+    <button
+      type="button"
+      className="sf-outline"
+      disabled={saving || subscriptionLoading}
+      onClick={() => {
+        if (step > 0) {
+          goTo(step - 1);
+        } else {
+          backToStores();
+        }
+      }}
+    >
+      Back
+    </button>
+
+    {step < STEPS.length - 1 ? (
+      <button
+        type="button"
+        className="sf-primary"
+        disabled={saving || subscriptionLoading}
+        onClick={(event) => {
+          event.preventDefault();
+          goTo(step + 1);
+        }}
+      >
+        {step === 0 && subscriptionLoading
+          ? "Checking Subscription…"
+          : "Save & Continue"}
+      </button>
+    ) : (
+      <button
+        type="submit"
+        className="sf-primary"
+        disabled={saving || subscriptionLoading}
+      >
+        <i className="bi bi-shop" />{" "}
+        {saving
+          ? "Creating…"
+          : editing
+            ? "Save Changes"
+            : "Create Store"}
+      </button>
+    )}
+  </div>
+</div>
             </fieldset>
           </form>
         </main>

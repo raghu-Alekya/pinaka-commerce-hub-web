@@ -11,6 +11,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant } from "../api/merchants";
 import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
+import Pagination from "../components/Pagination";
 import "../styles/merchants.css";
 
 function readValue(value) {
@@ -542,7 +543,15 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [plan, setPlan] = useState("");
-  const [joinedRange, setJoinedRange] = useState(""); const [storeCount, setStoreCount] = useState(""); const [location, setLocation] = useState(""); const [page, setPage] = useState(1); const pageSize = 10;
+  const [joinedRange, setJoinedRange] = useState("");
+const [storeCount, setStoreCount] = useState("");
+const [page, setPage] = useState(1);
+const [pageSize, setPageSize] = useState(10);
+
+const handlePageSizeChange = (size) => {
+  setPageSize(size);
+  setPage(1);
+};
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState(''); const [dateTo, setDateTo] = useState('');
   const [draftFrom, setDraftFrom] = useState(''); const [draftTo, setDraftTo] = useState('');
@@ -910,7 +919,15 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
             </tbody>
           </table>
         </div>
-        <div className="merchant-pagination"><span>{rows.length ? `Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, rows.length)} of ${rows.length}` : 'Showing 0 of 0'}</span><div><button type="button" disabled={currentPage === 1} onClick={() => setPage(value => Math.max(1, value - 1))}>Previous</button>{Array.from({ length: pageCount }, (_, index) => <button type="button" className={currentPage === index + 1 ? 'active' : ''} key={index} onClick={() => setPage(index + 1)}>{index + 1}</button>)}<button type="button" disabled={currentPage === pageCount} onClick={() => setPage(value => Math.min(pageCount, value + 1))}>Next</button></div></div>
+        <Pagination
+    currentPage={currentPage}
+    totalPages={pageCount}
+    totalItems={rows.length}
+    pageSize={pageSize}
+    onPageChange={setPage}
+    onPageSizeChange={handlePageSizeChange}
+    itemLabel="merchants"
+/>
       </div>
       {deleteTarget && <dialog className="merchant-delete-dialog" ref={deleteDialog} aria-labelledby="merchant-delete-title" onCancel={event => { event.preventDefault(); if (!deleting) setDeleteTarget(null); }}>
         <h2 id="merchant-delete-title">Delete merchant? </h2>

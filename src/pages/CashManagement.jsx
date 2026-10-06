@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { merchants } from "../data/data";
 import ViewDetailsModal from "../components/ViewDetailsModal";
+import Pagination from "../components/Pagination";
 import "../styles/cash-management.css";
 
 export default function CashManagement() {
@@ -9,7 +10,11 @@ export default function CashManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("All Dates");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
+  const handlePageSizeChange = (size) => {
+  setPageSize(size);
+  setCurrentPage(1);
+  };
 
   const cashPayments = [
     {
@@ -144,6 +149,30 @@ const paginatedPayments = useMemo(() => {
         endIndex
     );
 }, [filteredPayments, currentPage, pageSize]);
+
+// =========================================================
+// RESET PAGINATION WHEN FILTERS CHANGE
+// =========================================================
+
+useEffect(() => {
+  setCurrentPage(1);
+}, [
+  selectedMerchant,
+  selectedStore,
+  searchTerm,
+  dateFilter,
+]);
+
+
+// =========================================================
+// KEEP CURRENT PAGE VALID
+// =========================================================
+
+useEffect(() => {
+  setCurrentPage((page) =>
+    Math.min(page, totalPages)
+  );
+}, [totalPages]);
 
   /* =========================================================
      DASHBOARD VALUES
@@ -534,65 +563,19 @@ const paginatedPayments = useMemo(() => {
 
   </div>
 
+
   {/* TABLE FOOTER */}
-  {filteredPayments.length > 0 && (
-    <div className="merchant-pagination">
-        <span>
-            {`Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(
-                currentPage * pageSize,
-                totalItems
-            )} of ${totalItems}`}
-        </span>
 
-        <div>
-            <button
-                type="button"
-                disabled={currentPage === 1}
-                onClick={() =>
-                    setCurrentPage((value) =>
-                        Math.max(1, value - 1)
-                    )
-                }
-            >
-                Previous
-            </button>
-
-            {Array.from(
-                { length: totalPages },
-                (_, index) => (
-                    <button
-                        type="button"
-                        className={
-                            currentPage === index + 1
-                                ? "active"
-                                : ""
-                        }
-                        key={index}
-                        onClick={() =>
-                            setCurrentPage(index + 1)
-                        }
-                    >
-                        {index + 1}
-                    </button>
-                )
-            )}
-
-            <button
-                type="button"
-                disabled={currentPage === totalPages}
-                onClick={() =>
-                    setCurrentPage((value) =>
-                        Math.min(
-                            totalPages,
-                            value + 1
-                        )
-                    )
-                }
-            >
-                Next
-            </button>
-        </div>
-    </div>
+{filteredPayments.length > 0 && (
+  <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    totalItems={totalItems}
+    pageSize={pageSize}
+    onPageChange={setCurrentPage}
+    onPageSizeChange={handlePageSizeChange}
+    itemLabel="cash payments"
+  />
 )}
 
 </div>

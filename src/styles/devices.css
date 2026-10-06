@@ -38,7 +38,7 @@
 }
 .devices-add-btn,
 .devices-export-btn {
-  height: 36px;
+  height: 40px;
   padding: 0 12px;
   display: flex;
   align-items: center;
@@ -631,7 +631,7 @@
    PAGINATION
    Match the compact pagination used on other PCH screens
 ========================================================= */
-.devices-pagination {
+/* .devices-pagination {
   min-height: 50px;
   padding: 8px 12px;
   display: flex;
@@ -641,14 +641,14 @@
   border-top: 1px solid #f0f1f4;
   background: #fff;
   color: #697285;
-}
+} */
 .devices-showing {
   flex: 1 1 auto;
   font-size: 12px;
   color: #697285;
   white-space: nowrap;
 }
-.devices-pagination-controls {
+/* .devices-pagination-controls {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -682,7 +682,7 @@
   color: #c0c5cf;
   background: #fafbfc;
   cursor: not-allowed;
-}
+} */
 @media (max-width: 1300px) {
   .devices-page {
     padding: 16px 18px 20px;
@@ -764,9 +764,9 @@
   .devices-filter-btn {
     grid-column: auto;
   }
-  .devices-pagination {
+  /* .devices-pagination {
     padding: 0 10px;
-  }
+  } */
 }
 /* =========================================================
    MOBILE
@@ -794,18 +794,18 @@
   .devices-table {
     min-width: 1050px;
   }
-  .devices-pagination {
+  /* .devices-pagination {
     flex-wrap: wrap;
     height: auto;
     padding: 10px 12px;
     gap: 10px;
-  }
+  } */
   .devices-showing {
     flex: 1 1 100%;
   }
-  .devices-pagination-controls {
+  /* .devices-pagination-controls {
     order: 2;
-  }
+  } */
 }
 
 @media (max-width: 1050px) {
