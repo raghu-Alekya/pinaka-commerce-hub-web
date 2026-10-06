@@ -580,6 +580,20 @@ export async function deleteMerchant(id) {
   return result;
 }
 
+export async function updateMerchantStatus(id, status) {
+  const normalizedStatus = String(status || "").trim().toUpperCase();
+  if (!["ACTIVE", "INACTIVE"].includes(normalizedStatus)) {
+    throw new Error("Merchant status must be ACTIVE or INACTIVE.");
+  }
+  const result = await api.patch(`${endpoints.merchant(id)}/status`, {
+    status: normalizedStatus,
+  });
+  if (result && result.success === false) {
+    throw new Error(result.message || "Unable to update merchant status.");
+  }
+  return result;
+}
+
 export async function getMerchantForm(id) {
   const { raw } = await getMerchant(id);
   const merchant = raw.merchant || raw;
