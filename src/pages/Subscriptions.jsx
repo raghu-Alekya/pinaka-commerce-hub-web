@@ -498,13 +498,22 @@ useEffect(() => {
   }, [subscriptions]);
 
   const availableStatuses = useMemo(() => {
-    return [
-      ...new Set(
-        subscriptions
-          .map((s) => s.status)
-          .filter(Boolean)
-      ),
-    ];
+    const list = ["Active", "Inactive"];
+    subscriptions.forEach((s) => {
+      if (s.status) {
+        const formatted =
+          String(s.status).trim().charAt(0).toUpperCase() +
+          String(s.status).trim().slice(1).toLowerCase();
+        if (
+          !list.some(
+            (item) => item.toLowerCase() === formatted.toLowerCase()
+          )
+        ) {
+          list.push(formatted);
+        }
+      }
+    });
+    return list;
   }, [subscriptions]);
 
   const availableStoreCounts = useMemo(() => {
@@ -555,9 +564,19 @@ useEffect(() => {
         !plan ||
         itemPlan === String(plan).toLowerCase();
 
+      const filterStatus = String(status || "").trim().toLowerCase();
+
       const matchesStatus =
         !status ||
-        itemStatus === String(status).toLowerCase();
+        itemStatus === filterStatus ||
+        (filterStatus === "inactive" &&
+          (itemStatus === "inactive" ||
+            itemStatus === "cancelled" ||
+            itemStatus === "canceled" ||
+            itemStatus === "expired" ||
+            item.is_deleted === true ||
+            Boolean(item.deletedAt))) ||
+        (filterStatus === "active" && itemStatus === "active");
 
       const matchesStores =
         !stores ||
@@ -1188,7 +1207,11 @@ useEffect(() => {
 
                 paginatedData.map(
                   (item, index) => (
-                    <tr key={item.id || index}>
+                    <tr
+                      key={item.id || index}
+                      onClick={() => onView(item)}
+                      style={{ cursor: "pointer" }}
+                    >
 
                       <td>
                        {(currentPage - 1) *
@@ -1204,7 +1227,7 @@ useEffect(() => {
                             {item.merchant}
                           </strong>
 
-                          {item.merchantId && (
+                          {item.merchantId && item.merchantId !== item.merchant && (
                             
                             <small>
                               {item.merchantId}
@@ -1244,37 +1267,20 @@ useEffect(() => {
                         />
                       </td>
 
-                      <td>
+                      <td onClick={(e) => e.stopPropagation()}>
 
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                           <button
                             type="button"
                             className="subscription-view-button"
-                            onClick={() => onView(item)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onView(item);
+                            }}
                             title="View Subscription"
                             disabled={crudBusy}
                           >
                             <Eye size={16} />
-                          </button>
-
-                          <button
-                            type="button"
-                            className="subscription-view-button text-primary"
-                            onClick={() => onEdit(item)}
-                            title="Edit Subscription"
-                            disabled={crudBusy}
-                          >
-                            <Pencil size={15} />
-                          </button>
-
-                          <button
-                            type="button"
-                            className="subscription-view-button text-danger"
-                            onClick={() => onDelete(item)}
-                            title="Delete Subscription"
-                            disabled={crudBusy}
-                          >
-                            <Trash2 size={15} />
                           </button>
                         </div>
 

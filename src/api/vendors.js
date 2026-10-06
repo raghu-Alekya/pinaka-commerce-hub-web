@@ -173,13 +173,13 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    name: vendor.name ?? vendor.vendorName ?? "",
+    name: vendor.name ?? vendor.vendorName ?? vendor.vendor_name ?? "",
 
-    code: vendor.code ?? vendor.vendorCode ?? "",
+    code: vendor.code ?? vendor.vendorCode ?? vendor.vendor_code ?? "",
 
-    vendorType: toUiVendorType(vendor.vendorType),
+    vendorType: toUiVendorType(vendor.vendorType ?? vendor.vendor_type),
 
-    contactPerson: vendor.contactPerson ?? "",
+    contactPerson: vendor.contactPerson ?? vendor.contact_person ?? "",
 
     phone:
       vendor.phone ??
@@ -197,7 +197,7 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    category: vendor.category ?? vendor.productCategory ?? "",
+    category: vendor.category ?? vendor.productCategory ?? vendor.product_category ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -205,15 +205,15 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    addressLine1: vendor.addressLine1 ?? "",
+    addressLine1: vendor.addressLine1 ?? vendor.address_line1 ?? "",
 
-    addressLine2: vendor.addressLine2 ?? "",
+    addressLine2: vendor.addressLine2 ?? vendor.address_line2 ?? "",
 
     city: vendor.city ?? "",
 
     state: vendor.state ?? "",
 
-    zipCode: vendor.zipCode ?? "",
+    zipCode: vendor.zipCode ?? vendor.zip_code ?? "",
 
     country: vendor.country ?? "",
 
@@ -231,7 +231,7 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    createdTime: formatDateTime(vendor.createdTime ?? vendor.createdAt),
+    createdTime: formatDateTime(vendor.createdTime ?? vendor.createdAt ?? vendor.created_at),
 
     /*
     |--------------------------------------------------------------------------
@@ -239,7 +239,7 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    updatedTime: formatDateTime(vendor.updatedTime ?? vendor.updatedAt),
+    updatedTime: formatDateTime(vendor.updatedTime ?? vendor.updatedAt ?? vendor.updated_at),
 
     /*
     |--------------------------------------------------------------------------
@@ -247,7 +247,7 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    deletedAt: vendor.deletedAt ?? null,
+    deletedAt: vendor.deletedAt ?? vendor.deleted_at ?? null,
 
     /*
     |--------------------------------------------------------------------------
