@@ -1,3 +1,4 @@
+import { useLocationOptions } from "../data/useLocationOptions";
 import {
   useLocation,
   useNavigate,
@@ -88,6 +89,8 @@ export function MerchantEmployeeForm({
     password: "",
     sendCredentials: true,
   });
+  const locationOptions = useLocationOptions(formData);
+
 
   const [errors, setErrors] = useState({});
 
@@ -166,11 +169,7 @@ export function MerchantEmployeeForm({
 
       case "city":
         if (!trimmed) return "City is required.";
-        if (!/^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/.test(trimmed)) {
-          return "City can contain letters, spaces, apostrophes and hyphens only.";
-        }
-        if (trimmed.length < 2 || trimmed.length > 50)
-          return "City must be between 2 and 50 characters.";
+        if (trimmed.length > 50) return "City cannot exceed 50 characters.";
         return "";
 
       case "state":
@@ -274,6 +273,7 @@ export function MerchantEmployeeForm({
     setFormData((prev) => ({
       ...prev,
       [name]: nextValue,
+      ...(name === "country" ? { state: "", city: "" } : name === "state" ? { city: "" } : {}),
     }));
 
     if (errors[name]) {
@@ -591,69 +591,21 @@ export function MerchantEmployeeForm({
                   />
                 </div>
 
-                <div className="employee-form-grid two-columns">
-                  <FormField
-                    label={
-                      <>
-                        City <span>*</span>
-                      </>
-                    }
-                    name="city"
-                    placeholder="Enter city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    error={errors.city}
-                  />
-
-                  <SelectField
-                    label={
-                      <>
-                        State <span>*</span>
-                      </>
-                    }
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    error={errors.state}
-                    placeholder="Select state"
-                    options={[
-                      "Telangana",
-                      "Andhra Pradesh",
-                      "Karnataka",
-                      "Tamil Nadu",
-                      "Maharashtra",
-                      "Kerala",
-                    ]}
-                  />
-                </div>
-                <div className="employee-form-grid two-columns">
-                  <FormField
-                    label={
-                      <>
-                        PIN Code <span>*</span>
-                      </>
-                    }
-                    name="pinCode"
-                    placeholder="Enter PIN code"
-                    value={formData.pinCode}
-                    onChange={handleChange}
-                    error={errors.pinCode}
-                  />
-                  <SelectField
-                    label="Country"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleChange}
-                    error={errors.country}
-                    options={[
-                      "India",
-                      "United States",
-                      "United Kingdom",
-                      "Australia",
-                    ]}
-                  />
-                </div>
-              </section>
+                {locationOptions.error && <p role="alert" className="field-error">{locationOptions.error}</p>}
+              <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
+                <SelectField label="Country" required name="country" value={formData.country}
+                  onChange={handleChange} error={errors.country} options={locationOptions.countries}
+                  placeholder={locationOptions.loading ? "Loading countries..." : "Select country"} disabled={locationOptions.loading} />
+                <SelectField label="State" required name="state" value={formData.state}
+                  onChange={handleChange} error={errors.state} options={locationOptions.states}
+                  placeholder="Select state" disabled={locationOptions.loading || !formData.country} />
+                <SelectField label="City" required name="city" value={formData.city}
+                  onChange={handleChange} error={errors.city} options={locationOptions.cities}
+                  placeholder={formData.state ? "Select city" : "Select state first"} disabled={locationOptions.loading || !formData.state} />
+                <FormField label="PIN Code" required name="pinCode" placeholder="Enter PIN code"
+                  value={formData.pinCode} onChange={handleChange} error={errors.pinCode} />
+              </div>
+            </section>
             </div>
 
             {/* =================================================
@@ -859,6 +811,7 @@ function SelectField({
   options,
   placeholder,
   error,
+  disabled = false,
 }) {
   return (
     <div className="employee-field">
@@ -869,6 +822,7 @@ function SelectField({
       <div className="employee-select">
         <select
           name={name}
+          disabled={disabled}
           value={value}
           onChange={onChange}
           className={error ? "field-invalid" : ""}
