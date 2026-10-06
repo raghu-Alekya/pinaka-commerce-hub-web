@@ -260,43 +260,28 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const displayRenewalDate = rawEndVal ? String(rawEndVal).slice(0, 10) : undefined;
 
   const displayStoreAllowance =
-    subMatch?.includedStores ??
-    subscription.includedStores ??
-    subscription.included_stores ??
-    subscription.stores_limit ??
-    subscription.maxStoresAllowed ??
-    subscription.max_stores_allowed ??
-    subscription.storeLimit ??
-    (typeof subPlan === 'object' && subPlan ? subPlan.includedStores ?? subPlan.included_stores ?? subPlan.stores_limit : undefined) ??
-    matchedPlan?.includedStores ??
-    matchedPlan?.included_stores ??
-    matchedPlan?.stores_limit ??
-    summary.storeLimit;
+    (subscription.includedStores || subscription.included_stores || subscription.stores_limit || subscription.maxStoresAllowed || subscription.max_stores_allowed || subscription.storeLimit) ||
+    (typeof subPlan === 'object' && subPlan ? (subPlan.stores_limit || subPlan.storesLimit || subPlan.includedStores || subPlan.included_stores) : undefined) ||
+    (subMatch?.includedStores || subMatch?.stores_limit) ||
+    (matchedPlan?.stores_limit || matchedPlan?.storesLimit || matchedPlan?.includedStores || matchedPlan?.included_stores) ||
+    summary.storeLimit ||
+    1;
 
   const displayDeviceAllowance =
-    subMatch?.includedTerminals ??
-    subscription.includedTerminals ??
-    subscription.included_terminals ??
-    subscription.terminal_limit ??
-    subscription.licensedDeviceCount ??
-    subscription.deviceLimit ??
-    (typeof subPlan === 'object' && subPlan ? subPlan.includedTerminals ?? subPlan.included_terminals ?? subPlan.terminal_limit : undefined) ??
-    matchedPlan?.includedTerminals ??
-    matchedPlan?.included_terminals ??
-    matchedPlan?.terminal_limit ??
-    summary.deviceLimit;
+    (subscription.includedTerminals || subscription.included_terminals || subscription.terminal_limit || subscription.licensedDeviceCount || subscription.deviceLimit) ||
+    (typeof subPlan === 'object' && subPlan ? (subPlan.terminal_limit || subPlan.terminalLimit || subPlan.includedTerminals || subPlan.included_terminals) : undefined) ||
+    (subMatch?.includedTerminals || subMatch?.terminal_limit) ||
+    (matchedPlan?.terminal_limit || matchedPlan?.terminalLimit || matchedPlan?.includedTerminals || matchedPlan?.included_terminals) ||
+    summary.deviceLimit ||
+    2;
 
   const displayEmployeeAllowance =
-    subMatch?.includedEmployees ??
-    subscription.includedEmployees ??
-    subscription.included_employees ??
-    subscription.employees_limit ??
-    subscription.employeeLimit ??
-    (typeof subPlan === 'object' && subPlan ? subPlan.includedEmployees ?? subPlan.included_employees ?? subPlan.employees_limit : undefined) ??
-    matchedPlan?.includedEmployees ??
-    matchedPlan?.included_employees ??
-    matchedPlan?.employees_limit ??
-    summary.employeeLimit;
+    (subscription.includedEmployees || subscription.included_employees || subscription.employees_limit || subscription.employeeLimit) ||
+    (typeof subPlan === 'object' && subPlan ? (subPlan.employees_limit || subPlan.employeesLimit || subPlan.includedEmployees || subPlan.included_employees) : undefined) ||
+    (subMatch?.includedEmployees || subMatch?.employees_limit) ||
+    (matchedPlan?.employees_limit || matchedPlan?.employeesLimit || matchedPlan?.includedEmployees || matchedPlan?.included_employees) ||
+    summary.employeeLimit ||
+    0;
 
   const address = contact.address || raw.businessAddress || {};
   const list = value => Array.isArray(value) ? value : [];

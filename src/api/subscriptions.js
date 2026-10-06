@@ -106,35 +106,18 @@ export function mapSubscriptionToRow(item, index = 0) {
     "";
 
   const storesCount =
-    item.includedStores ??
-    item.included_stores ??
-    item.stores_limit ??
-    plan.includedStores ??
-    plan.included_stores ??
-    plan.stores_limit ??
-    item.maxStoresAllowed ??
-    item.max_stores_allowed ??
-    item.licensedStoreCount ??
+    (item.includedStores || item.included_stores || item.stores_limit || item.maxStoresAllowed || item.max_stores_allowed || item.licensedStoreCount) ||
+    (plan.stores_limit || plan.storesLimit || plan.includedStores || plan.included_stores) ||
     1;
 
   const devicesCount =
-    item.includedTerminals ??
-    item.included_terminals ??
-    item.terminal_limit ??
-    plan.includedTerminals ??
-    plan.included_terminals ??
-    plan.terminal_limit ??
-    item.licensedDeviceCount ??
+    (item.includedTerminals || item.included_terminals || item.terminal_limit || item.licensedDeviceCount) ||
+    (plan.terminal_limit || plan.terminalLimit || plan.includedTerminals || plan.included_terminals) ||
     1;
 
   const employeesCount =
-    item.includedEmployees ??
-    item.included_employees ??
-    item.employees_limit ??
-    plan.includedEmployees ??
-    plan.included_employees ??
-    plan.employees_limit ??
-    plan.includedUsers ??
+    (item.includedEmployees || item.included_employees || item.employees_limit) ||
+    (plan.employees_limit || plan.employeesLimit || plan.includedEmployees || plan.included_employees || plan.includedUsers) ||
     0;
 
   const rawStart =
