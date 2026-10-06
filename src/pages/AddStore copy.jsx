@@ -1434,7 +1434,7 @@ export default function AddStore() {
         <div className="sf-sub-options"><div className="sf-sub-option selected"><span className="sf-option-icon bi bi-file-earmark-check" /><span><strong>Use Existing Subscription</strong><small>Use the plan assigned to this merchant.</small></span><i className="bi bi-check-circle-fill" /></div></div>
       </Panel>
       <Panel title="2. Select a Plan" subtitle="Plan details from the selected merchant subscription.">
-        <div className="sf-plan-table-wrap"><table className="sf-plan-table"><thead><tr><th>SELECTED PLAN</th><th>PLAN NAME</th><th>BILLING TYPE</th><th>PRICE</th><th>VALIDITY</th><th>STORES USED</th><th>STORES LIMIT</th><th>STATUS</th></tr></thead>
+        <div className="sf-plan-table-wrap"><table className="sf-plan-table"><thead><tr><th>Selected Plan</th><th>Plan Name</th><th>Billing Type</th><th>Price</th><th>Validity</th><th>Stores Used</th><th>Stores Limit</th><th>Status</th></tr></thead>
           <tbody><tr><td><span className="sf-radio-dot" /></td><td><strong>{planName}</strong><small>{plan?.description || "Merchant subscription plan"}</small></td><td>{billing}</td><td>{planPrice == null ? "—" : `${subscription?.currency || currencyCode} ${planPrice}`}</td><td>{validity}</td><td>{used}</td><td>{limit}</td><td><span className="sf-status-pill">{subscription?.status || "Not provided"}</span></td></tr></tbody>
         </table></div>
       </Panel>
@@ -1445,7 +1445,7 @@ export default function AddStore() {
         </div>
       </Panel>
       <Panel title="Existing stores mapped to this merchant" subtitle={Number.isFinite(storeLimit) ? `${Math.max(0, storeLimit - used)} remaining store${Math.max(0, storeLimit - used) === 1 ? "" : "s"} allowed to map (${used} of ${limit} used).` : "Store allowance was not returned with this subscription."}>
-        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>#</th><th>STORE NAME</th><th>STORE CODE</th><th>STORE TYPE</th><th>LOCATION</th><th>STATUS</th></tr></thead><tbody>
+        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>#</th><th>Store Name</th><th>Store Code</th><th>Store Type</th><th>Location</th><th>Status</th></tr></thead><tbody>
           {merchantStores.map((item, index) => <tr key={item.storeCode || item.id || item.storeId || index}><td>{index + 1}</td><td>{item.storeName || item.name || "Unnamed store"}</td><td>{item.storeCode || item.code || "—"}</td><td>{(typeof item.storeType === "string" ? item.storeType : item.storeType?.name) || item.type || "—"}</td><td>{[item.city || item.address?.city, item.state || item.address?.state].filter(Boolean).join(", ") || item.address?.street || (typeof item.address === "string" ? item.address : "—")}</td><td>{item.status || "—"}</td></tr>)}
           {!used && <tr><td colSpan="6" className="sf-empty">No existing stores are mapped to this merchant.</td></tr>}
         </tbody></table></div>
@@ -1660,11 +1660,11 @@ export default function AddStore() {
               <table className="sf-table sf-hours-table">
                 <thead>
                   <tr>
-                    <th>DAY</th>
-                    <th>STATUS</th>
-                    <th>OPENS</th>
-                    <th>CLOSES</th>
-                    <th>SHIFTS</th>
+                    <th>Day</th>
+                    <th>Status</th>
+                    <th>Opens</th>
+                    <th>Closes</th>
+                    <th>Shifts</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1849,10 +1849,10 @@ export default function AddStore() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>FEATURE</th>
-                  <th>DESCRIPTION</th>
-                  <th>PLAN ACCESS</th>
-                  <th>ENABLE FOR THIS STORE</th>
+                  <th>Feature</th>
+                  <th>Description</th>
+                  <th>Plan Access</th>
+                  <th>Enable For This Store</th>
                 </tr>
               </thead>
               <tbody>
@@ -1972,8 +1972,8 @@ export default function AddStore() {
               <table className="sf-table sf-permission-table">
                 <thead>
                   <tr>
-                    <th>MODULE / FEATURE</th>
-                    {STANDARD_ACTIONS.map(action => <th key={action}>{action.toUpperCase()}</th>)}
+                    <th>Module / Feature</th>
+                    {STANDARD_ACTIONS.map(action => <th key={action}>{action}</th>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -2018,7 +2018,7 @@ export default function AddStore() {
       </Panel>
       <Panel title="Assign employees to this store" subtitle="Choose employees from the merchant to assign to this store. You can assign a store role for each employee.">
         <div className="sf-employee-tools"><label className="sf-search"><i className="bi bi-search" /><input placeholder="Search employees..." value={employeeSearch} onChange={event => { setEmployeeSearch(event.target.value); setEmployeePage(1); }} /></label><SelectField label="Filter" value={employeeFilter} onChange={value => { setEmployeeFilter(value); setEmployeePage(1); }} options={["All", "Assigned", "Available"]} /></div>
-        <div className="sf-table-wrap"><table className="sf-table sf-employees-table"><thead><tr><th><span className="sr-only">Select</span></th><th>#</th><th>EMPLOYEE NAME</th><th>EMPLOYEE ID</th><th>PHONE</th><th>EMAIL</th><th>CURRENT ROLE (MERCHANT)</th><th>STORE ROLE</th><th>LOGIN PIN</th><th>STATUS</th></tr></thead><tbody>
+        <div className="sf-table-wrap"><table className="sf-table sf-employees-table"><thead><tr><th><span className="sr-only">Select</span></th><th>#</th><th>Employee Name</th><th>Employee ID</th><th>Phone</th><th>Email</th><th>Current Role (Merchant)</th><th>Store Role</th><th>Login PIN</th><th>Status</th></tr></thead><tbody>
           {pagedEmployees.map((employee, index) => {
             const employeeId = String(employee.id ?? employee.employeeId ?? "");
             const assignment = employeeAssignments.find(item => item.employeeId === employeeId);
@@ -2053,10 +2053,10 @@ export default function AddStore() {
         <div className="sf-review-feature-list">{featureRows.map(feature => <span className={enabledFeatures.includes(feature.name) ? "enabled" : "disabled"} key={feature.name}><i className={`bi ${enabledFeatures.includes(feature.name) ? "bi-check-circle-fill" : "bi-dash-circle-fill"}`} />{feature.name}</span>)}</div>
       </Panel>
       <Panel title={<><i className="bi bi-shield-lock" /> Roles & Permissions ({roles.length} roles)</>} action={<button className="sf-link" type="button" onClick={() => goTo(3)}>✎ Edit</button>}>
-        <div className="sf-table-wrap"><table className="sf-table sf-review-table"><thead><tr><th>ROLE NAME</th><th>ACCESS LEVEL</th><th>NO. OF PERMISSIONS</th></tr></thead><tbody>{roles.map(roleId => <tr key={roleId}><td>{roleName(roleId)}</td><td>{roleById[roleId]?.level || "Custom"}</td><td>{permissionCount(roleId)}</td></tr>)}{!roles.length && <tr><td colSpan="3">No roles selected</td></tr>}</tbody></table></div>
+        <div className="sf-table-wrap"><table className="sf-table sf-review-table"><thead><tr><th>Role Name</th><th>Access Level</th><th>No. Of Permissions</th></tr></thead><tbody>{roles.map(roleId => <tr key={roleId}><td>{roleName(roleId)}</td><td>{roleById[roleId]?.level || "Custom"}</td><td>{permissionCount(roleId)}</td></tr>)}{!roles.length && <tr><td colSpan="3">No roles selected</td></tr>}</tbody></table></div>
       </Panel>
       <Panel title={<><i className="bi bi-people" /> Employees ({employeeAssignments.length} assigned)</>} action={<button className="sf-link" type="button" onClick={() => goTo(4)}>✎ Edit</button>}>
-        <div className="sf-table-wrap"><table className="sf-table sf-review-table"><thead><tr><th>#</th><th>EMPLOYEE NAME</th><th>EMPLOYEE ID</th><th>ROLE</th></tr></thead><tbody>{employeeAssignments.map((item, index) => { const employee = employees.find(row => String(row.id ?? row.employeeId) === item.employeeId); return <tr key={item.employeeId}><td>{index + 1}</td><td>{employee?.name || "Employee"}</td><td>{employee?.employeeCode || item.employeeId}</td><td>{roleName(item.role) || item.role}</td></tr>; })}{!employeeAssignments.length && <tr><td colSpan="4">No employees assigned</td></tr>}</tbody></table></div>
+        <div className="sf-table-wrap"><table className="sf-table sf-review-table"><thead><tr><th>#</th><th>Employee Name</th><th>Employee ID</th><th>Role</th></tr></thead><tbody>{employeeAssignments.map((item, index) => { const employee = employees.find(row => String(row.id ?? row.employeeId) === item.employeeId); return <tr key={item.employeeId}><td>{index + 1}</td><td>{employee?.name || "Employee"}</td><td>{employee?.employeeCode || item.employeeId}</td><td>{roleName(item.role) || item.role}</td></tr>; })}{!employeeAssignments.length && <tr><td colSpan="4">No employees assigned</td></tr>}</tbody></table></div>
       </Panel>
       <Panel title={<><i className="bi bi-link-45deg" /> Store Base URL & Contact</>} action={<button className="sf-link" type="button" onClick={() => goTo(0)}>✎ Edit</button>}>
         <Detail label="Store Base URL">{store.url}</Detail><Detail label="Store Phone">{store.phone}</Detail><Detail label="Store Email">{store.email}</Detail>

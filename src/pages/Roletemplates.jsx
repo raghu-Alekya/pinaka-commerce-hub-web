@@ -647,17 +647,11 @@ export default function RoleTemplates() {
                       </div>
                     </td>
  
-                    <td
-                      className="role-name-cell role-equal-col"
-                      title={template.name || "—"}
-                    >
+                    <td className="role-name-cell role-equal-col">
                       <strong>{template.name || "—"}</strong>
                     </td>
  
-                    <td
-                      className="role-description-cell role-equal-col"
-                      title={template.description || "—"}
-                    >
+                    <td className="role-description-cell role-equal-col">
                       <span className="role-description-text">
                         {template.description || "—"}
                       </span>
@@ -890,5 +884,5 @@ export default function RoleTemplates() {
     </>
   );
 }
- 
+
  

@@ -369,19 +369,19 @@ function DailyShiftSummary({
           <thead>
             <tr>
               <th className="check-col"><input type="checkbox" /></th>
-              <th>DATE</th>
-              <th>TOTAL SHIFTS</th>
-              <th>TOTAL SALES</th>
-              <th>PAYOUTS</th>
-              <th>CASHBACK</th>
-              <th>REFUND</th>
-              <th>VOID ITEMS</th>
-              <th>TOTAL ORDERS</th>
-              <th>CANCELLED ORDERS</th>
-              <th>OPENING BAL</th>
-              <th>CLOSING BAL</th>
-              <th>SAFE DROP</th>
-              <th>DETAILS</th>
+              <th>Date</th>
+              <th>Total Shifts</th>
+              <th>Total Sales</th>
+              <th>Payouts</th>
+              <th>Cashback</th>
+              <th>Refund</th>
+              <th>Void Items</th>
+              <th>Total Orders</th>
+              <th>Cancelled Orders</th>
+              <th>Opening Bal</th>
+              <th>Closing Bal</th>
+              <th>Safe Drop</th>
+              <th>Details</th>
             </tr>
           </thead>
 
@@ -548,19 +548,19 @@ function DailyShiftDetails({
           <thead>
             <tr>
               <th className="check-col"><input type="checkbox" /></th>
-              <th>TITLE</th>
-              <th>START TIME</th>
-              <th>SALES</th>
-              <th>PAYOUTS</th>
-              <th>CASHBACK</th>
-              <th>REFUND</th>
-              <th>VOID ITEMS</th>
-              <th>SAFE DROP TOTAL</th>
-              <th>STATUS</th>
-              <th>OPENING BAL</th>
-              <th>CLOSING BAL</th>
-              <th>OVER/SHORT</th>
-              <th>TILL AMOUNT</th>
+              <th>Title</th>
+              <th>Start Time</th>
+              <th>Sales</th>
+              <th>Payouts</th>
+              <th>Cashback</th>
+              <th>Refund</th>
+              <th>Void Items</th>
+              <th>Safe Drop Total</th>
+              <th>Status</th>
+              <th>Opening Bal</th>
+              <th>Closing Bal</th>
+              <th>Over/Short</th>
+              <th>Till Amount</th>
             </tr>
           </thead>
 

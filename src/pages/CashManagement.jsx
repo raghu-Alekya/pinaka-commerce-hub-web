@@ -239,8 +239,8 @@ useEffect(() => {
             <strong>{totalPayments}</strong>
 
             <small className="cash-kpi-positive">
-           
-            
+              <i className="bi bi-circle-fill" aria-hidden="true" />
+              Live Records
             </small>
 
           </div>
@@ -263,8 +263,8 @@ useEffect(() => {
             <strong>{completedPayments}</strong>
 
             <small className="cash-kpi-positive">
-           
-              {/* <span>vs last 30 days</span> */}
+              <i className="bi bi-circle-fill" aria-hidden="true" />
+              {totalPayments ? ((completedPayments / totalPayments) * 100).toFixed(1) : "0.0"}% of total
             </small>
 
           </div>
@@ -287,8 +287,8 @@ useEffect(() => {
             <strong>{pendingPayments}</strong>
 
             <small className="cash-kpi-negative">
-           
-              {/* <span>vs last 30 days</span> */}
+              <i className="bi bi-circle-fill" aria-hidden="true" />
+              {totalPayments ? ((pendingPayments / totalPayments) * 100).toFixed(1) : "0.0"}% of total
             </small>
 
           </div>
@@ -316,9 +316,8 @@ useEffect(() => {
             </strong>
 
             <small className="cash-kpi-positive">
-          
-             
-              {/* <span>vs last 30 days</span> */}
+              <i className="bi bi-circle-fill" aria-hidden="true" />
+              Across all payments
             </small>
 
           </div>

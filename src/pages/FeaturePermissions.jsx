@@ -83,55 +83,14 @@ const inferPermissionType = (name) => {
 function PermissionDescriptionCell({
   description = "",
 }) {
-  const textRef = useRef(null);
-
-  const [isTruncated, setIsTruncated] =
-    useState(false);
-
-  useEffect(() => {
-    const checkTruncation = () => {
-      const element = textRef.current;
-
-      if (!element) return;
-
-      setIsTruncated(
-        element.scrollHeight >
-          element.clientHeight + 1,
-      );
-    };
-
-    checkTruncation();
-
-    window.addEventListener(
-      "resize",
-      checkTruncation,
-    );
-
-    return () =>
-      window.removeEventListener(
-        "resize",
-        checkTruncation,
-      );
-  }, [description]);
-
   return (
     <td className="fp-description-cell">
-      <div className="fp-description-tooltip-wrap">
+      <div className="fp-description-content">
         <span
-          ref={textRef}
           className="fp-description-clamp"
         >
           {description || "—"}
         </span>
-
-        {isTruncated && (
-          <div
-            className="fp-description-tooltip"
-            role="tooltip"
-          >
-            {description}
-          </div>
-        )}
       </div>
     </td>
   );

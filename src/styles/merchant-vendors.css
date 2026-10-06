@@ -293,17 +293,17 @@
 ========================================================= */
 
 .merchant-vendors th {
-    height: 52px;
+    height: 44px;
 
-    padding: 0 16px;
+    padding: 0 14px;
 
-    background: #f8fafc;
+    background: #f1f3fd;
 
-    border-bottom: 1px solid #e5e9f1;
+    border-bottom: 1px solid #dfe5ef;
 
     color: #17233e;
 
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
 
     text-align: left;
@@ -317,17 +317,18 @@
 ========================================================= */
 
 .merchant-vendors td {
-    height: 64px;
+    height: 52px;
 
-    padding: 0 16px;
+    padding: 10px 14px;
 
     background: #ffffff;
 
-    border-bottom: 1px solid #edf0f5;
+    border-bottom: 1px solid #e4e8ef;
 
     color: #17233e;
 
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 18px;
 
     text-align: left;
     vertical-align: middle;
@@ -678,9 +679,9 @@
 
 .merchant-vendors .mv-options th,
 .merchant-vendors .mv-options td {
-    height: 56px;
+    height: 52px;
 
-    padding: 0 14px;
+    padding: 10px 14px;
 }
 
 .merchant-vendors .mv-options th:first-child,

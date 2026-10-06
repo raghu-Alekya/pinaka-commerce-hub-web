@@ -207,6 +207,8 @@ const handlePageSizeChange = (size) => {
     (device) => device.status === "Online",
 
   ).length;
+  const devicePercentage = (count) =>
+    totalDevices ? ((count / totalDevices) * 100).toFixed(1) : "0.0";
 
   const offlineDevices = devices.filter(
 
@@ -361,6 +363,7 @@ const handlePageSizeChange = (size) => {
           value={totalDevices}
 
           variant="purple"
+          description="Live Records"
 
         />{" "}
 
@@ -373,6 +376,7 @@ const handlePageSizeChange = (size) => {
           value={onlineDevices}
 
           variant="green"
+          description={`${devicePercentage(onlineDevices)}% of total`}
 
         />{" "}
 
@@ -385,6 +389,7 @@ const handlePageSizeChange = (size) => {
           value={offlineDevices}
 
           variant="orange"
+          description={`${devicePercentage(offlineDevices)}% of total`}
 
         />{" "}
 
@@ -397,6 +402,7 @@ const handlePageSizeChange = (size) => {
           value={inactiveDevices}
 
           variant="red"
+          description={`${devicePercentage(inactiveDevices)}% of total`}
 
         />{" "}
 
@@ -520,11 +526,11 @@ const handlePageSizeChange = (size) => {
 
                 </th>{" "}
 
-                <th>DEVICE NAME</th> <th>DEVICE TYPE</th> <th>SERIAL NUMBER</th>{" "}
+                <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
 
-                <th>MERCHANT NAME</th> <th>CONNECTION STATUS</th>{" "}
+                <th>Merchant Name</th> <th>Connection Status</th>{" "}
 
-                 <th>ACTIONS</th>{" "}
+                 <th>Actions</th>{" "}
 
               </tr>{" "}
 
@@ -782,6 +788,7 @@ const handlePageSizeChange = (size) => {
   value,
 
   variant,
+  description,
 
 }) {
 
@@ -800,6 +807,9 @@ const handlePageSizeChange = (size) => {
         <div className="device-stat-title"> {title} </div>{" "}
 
         <div className="device-stat-value"> {value} </div>{" "}
+        <div className={`device-stat-description ${variant}`}>
+          <i className="bi bi-circle-fill" aria-hidden="true" /> {description}
+        </div>{" "}
 
       </div>{" "}
 

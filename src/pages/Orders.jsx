@@ -233,6 +233,8 @@ const handlePageSizeChange = (size) => {
             Number(order.totalValue || 0),
         0
     );
+    const orderPercentage = (count) =>
+        orders.length ? ((count / orders.length) * 100).toFixed(1) : "0.0";
 
     // =========================================================
     // RENDER
@@ -305,6 +307,9 @@ const handlePageSizeChange = (size) => {
                         <strong>
                             {orders.length}
                         </strong>
+                        <small className="order-summary-meta positive">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> Live Records
+                        </small>
                     </div>
 
                 </div>
@@ -323,6 +328,9 @@ const handlePageSizeChange = (size) => {
                         <strong>
                             {completedCount}
                         </strong>
+                        <small className="order-summary-meta positive">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> {orderPercentage(completedCount)}% of total
+                        </small>
                     </div>
 
                 </div>
@@ -341,6 +349,9 @@ const handlePageSizeChange = (size) => {
                         <strong>
                             {pendingCount}
                         </strong>
+                        <small className="order-summary-meta warning">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> {orderPercentage(pendingCount)}% of total
+                        </small>
                     </div>
 
                 </div>
@@ -350,7 +361,7 @@ const handlePageSizeChange = (size) => {
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon blue">
-                        <i className="bi bi-currency-dollar" aria-hidden="true" />
+                        <i className="bi bi-cash-stack" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -359,6 +370,9 @@ const handlePageSizeChange = (size) => {
                         <strong>
                             ${totalAmount.toFixed(2)}
                         </strong>
+                        <small className="order-summary-meta info">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> Across all orders
+                        </small>
                     </div>
 
                 </div>
@@ -499,12 +513,12 @@ const handlePageSizeChange = (size) => {
 
                             <tr>
 
-                                <th>WOO ORDER ID</th>
-                                <th>OFFLINE ORDER ID</th>
-                                <th>DATE</th>
-                                <th>STATUS</th>
-                                <th>AUTHOR</th>
-                                <th>TOTAL</th>
+                                <th>Woo Order ID</th>
+                                <th>Offline Order ID</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Author</th>
+                                <th>Total</th>
 
                             </tr>
 

@@ -2196,14 +2196,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <table className="sf-plan-table">
               <thead>
                 <tr>
-                  <th>SELECTED PLAN</th>
-                  <th>PLAN NAME</th>
-                  <th>BILLING TYPE</th>
-                  <th>PRICE</th>
-                  <th>VALIDITY</th>
-                  <th>STORES USED</th>
-                  <th>STORES LIMIT</th>
-                  <th>STATUS</th>
+                  <th>Selected Plan</th>
+                  <th>Plan Name</th>
+                  <th>Billing Type</th>
+                  <th>Price</th>
+                  <th>Validity</th>
+                  <th>Stores Used</th>
+                  <th>Stores Limit</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -2309,11 +2309,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>STORE NAME</th>
-                  <th>STORE CODE</th>
-                  <th>STORE TYPE</th>
-                  <th>LOCATION</th>
-                  <th>STATUS</th>
+                  <th>Store Name</th>
+                  <th>Store Code</th>
+                  <th>Store Type</th>
+                  <th>Location</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -2579,11 +2579,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               <table className="sf-table sf-hours-table">
                 <thead>
                   <tr>
-                    <th>DAY</th>
-                    <th>STATUS</th>
-                    <th>OPENS</th>
-                    <th>CLOSES</th>
-                    <th>SHIFTS</th>
+                    <th>Day</th>
+                    <th>Status</th>
+                    <th>Opens</th>
+                    <th>Closes</th>
+                    <th>Shifts</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2768,10 +2768,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>FEATURE</th>
-                  <th>DESCRIPTION</th>
-                  <th>PLAN ACCESS</th>
-                  <th>ENABLE FOR THIS STORE</th>
+                  <th>Feature</th>
+                  <th>Description</th>
+                  <th>Plan Access</th>
+                  <th>Enable For This Store</th>
                 </tr>
               </thead>
               <tbody>
@@ -2969,9 +2969,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 <table className="sf-table sf-permission-table">
                   <thead>
                     <tr>
-                      <th>MODULE / FEATURE</th>
+                      <th>Module / Feature</th>
                       {STANDARD_ACTIONS.map((action) => (
-                        <th key={action}>{action.toUpperCase()}</th>
+                        <th key={action}>{action}</th>
                       ))}
                     </tr>
                   </thead>
@@ -3089,14 +3089,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                     <span className="sr-only">Select</span>
                   </th>
                   <th>#</th>
-                  <th>EMPLOYEE NAME</th>
-                  <th>EMPLOYEE ID</th>
-                  <th>PHONE</th>
-                  <th>EMAIL</th>
-                  <th>CURRENT ROLE (MERCHANT)</th>
-                  <th>STORE ROLE</th>
-                  <th>LOGIN PIN</th>
-                  <th>STATUS</th>
+                  <th>Employee Name</th>
+                  <th>Employee ID</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Current Role (Merchant)</th>
+                  <th>Store Role</th>
+                  <th>Login PIN</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -3385,9 +3385,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <table className="sf-table sf-review-table">
               <thead>
                 <tr>
-                  <th>ROLE NAME</th>
-                  <th>ACCESS LEVEL</th>
-                  <th>NO. OF PERMISSIONS</th>
+                  <th>Role Name</th>
+                  <th>Access Level</th>
+                  <th>No. Of Permissions</th>
                 </tr>
               </thead>
               <tbody>
@@ -3425,9 +3425,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>EMPLOYEE NAME</th>
-                  <th>EMPLOYEE ID</th>
-                  <th>ROLE</th>
+                  <th>Employee Name</th>
+                  <th>Employee ID</th>
+                  <th>Role</th>
                 </tr>
               </thead>
               <tbody>

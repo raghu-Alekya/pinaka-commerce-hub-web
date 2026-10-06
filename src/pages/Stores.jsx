@@ -347,12 +347,12 @@ useEffect(() => {
             <thead>
               <tr>
                 {[
-                  "STORE",
-                  "MERCHANT",
-                  "LOCATION",
-                  "POS DEVICES",
-                  "STATUS",
-                  "ACTION",
+                  "Store",
+                  "Merchant",
+                  "Location",
+                  "POS Devices",
+                  "Status",
+                  "Action",
                 ].map((h) => (
                   <th key={h}>{h}</th>
                 ))}
@@ -541,4 +541,3 @@ useEffect(() => {
     </div>
   );
 }
-

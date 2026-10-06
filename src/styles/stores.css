@@ -356,23 +356,24 @@
 .stores-table thead th {
     font-size: 12px;
     font-weight: 600;
-    padding: 11px 13px;
+    padding: 0 14px;
     white-space: nowrap;
-    height: 42px;
-    background: #f5f9fe;
-    border-bottom: 1px solid #eceef2;
+    height: 44px;
+    background: #f1f3fd;
+    border-bottom: 1px solid #dfe5ef;
     color: #484c56;
     letter-spacing: 0.35px;
     text-align: left;
+    vertical-align: middle;
 }
 
 .stores-table tbody td {
-    padding: 12px 13px;
+    height: 52px;
+    padding: 10px 14px;
     font-size: 13px;
     vertical-align: middle;
     white-space: nowrap;
-    min-height: 60px;
-    border-bottom: 1px solid #f1f2f5;
+    border-bottom: 1px solid #e4e8ef;
     color: #697285;
 }
 
@@ -845,5 +846,41 @@
     .stores-pagination-controls {
         width: 100%;
         justify-content: flex-end;
+    }
+}
+
+.stores-card,
+.stores-card .table-responsive {
+    min-width: 0;
+}
+
+.stores-card .table-responsive {
+    box-sizing: border-box;
+    width: calc(100% - 24px);
+    max-width: calc(100% - 24px);
+    margin: 0 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    border: 1px solid #dfe9f4;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.stores-card .store-toolbar {
+    border-bottom: 0;
+}
+
+.stores-card .stores-table {
+    width: 100%;
+    min-width: 900px;
+    table-layout: fixed;
+}
+
+@media (max-width: 600px) {
+    .stores-card .table-responsive {
+        width: calc(100% - 20px);
+        max-width: calc(100% - 20px);
+        margin-right: 10px;
+        margin-left: 10px;
     }
 }

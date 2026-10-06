@@ -550,27 +550,27 @@ export default function StoreCategories({
             <tr>
 
               <th>
-                CATEGORY
+                Category
               </th>
 
               <th>
-                SLUG
+                Slug
               </th>
 
               <th>
-                PARENT CATEGORY
+                Parent Category
               </th>
 
               <th>
-                PRODUCTS
+                Products
               </th>
 
               <th>
-                STATUS
+                Status
               </th>
 
               <th>
-                ACTION
+                Action
               </th>
 
             </tr>
@@ -783,23 +783,23 @@ export default function StoreCategories({
             <tr>
 
               <th>
-                TAG
+                Tag
               </th>
 
               <th>
-                SLUG
+                Slug
               </th>
 
               <th>
-                PRODUCTS
+                Products
               </th>
 
               <th>
-                STATUS
+                Status
               </th>
 
               <th>
-                ACTION
+                Action
               </th>
 
             </tr>
@@ -998,27 +998,27 @@ export default function StoreCategories({
             <tr>
 
               <th>
-                ATTRIBUTE
+                Attribute
               </th>
 
               <th>
-                SLUG
+                Slug
               </th>
 
               <th>
-                TERMS / VALUES
+                Terms / Values
               </th>
 
               <th>
-                PRODUCTS
+                Products
               </th>
 
               <th>
-                STATUS
+                Status
               </th>
 
               <th>
-                ACTION
+                Action
               </th>
 
             </tr>

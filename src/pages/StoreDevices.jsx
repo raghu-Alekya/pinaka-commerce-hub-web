@@ -497,12 +497,12 @@ export default function StoreDevices({
           <table className="store-devices-table">
             <thead>
               <tr>
-                <th>DEVICE</th>
-                <th>DEVICE ID</th>
-                <th>DEVICE TYPE</th>
-                <th>STATUS</th>
-                <th>LAST UPDATED</th>
-                <th>ACTIONS</th>
+                <th>Device</th>
+                <th>Device ID</th>
+                <th>Device Type</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
