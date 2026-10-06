@@ -15,6 +15,37 @@ const idOf = (value) =>
       : (value ?? ""),
   );
 
+const tendorsFrom = (response) => {
+  const candidates = [
+    response?.tendors,
+    response?.data?.tendors,
+    response?.data?.items,
+    response?.items,
+    response?.data,
+    response,
+  ];
+
+  return candidates.find(Array.isArray) || [];
+};
+
+const assignedIdsFrom = (response) => {
+  const candidates = [
+    response?.tendorIds,
+    response?.tenderIds,
+    response?.data?.tendorIds,
+    response?.data?.tenderIds,
+    response?.tendors,
+    response?.data?.tendors,
+    response?.items,
+    response?.data?.items,
+    response?.data,
+    response,
+  ];
+  const assigned = candidates.find(Array.isArray);
+
+  return assigned ? assigned.map(idOf).filter(Boolean) : [];
+};
+
 function formatDate(value) {
   if (!value) return "—";
 
@@ -89,6 +120,8 @@ export default function MerchantTenders({
 
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [assignmentsLoading, setAssignmentsLoading] = useState(true);
+  const [assignmentError, setAssignmentError] = useState("");
 
   const lock = useRef(false);
   const dialog = useRef(null);
@@ -101,6 +134,76 @@ export default function MerchantTenders({
     setPage(1);
     setModal(null);
   }, [merchantId, signature]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadMasterTenders() {
+      setMasterLoading(true);
+      setMasterError("");
+
+      try {
+        const response = await tendorsApi.getAll();
+
+        if (!cancelled) {
+          setMasterTenders(tendorsFrom(response));
+        }
+      } catch (loadError) {
+        console.error("Failed to load master tenders:", loadError);
+
+        if (!cancelled) {
+          setMasterError(
+            loadError?.message || "Unable to load master tenders.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setMasterLoading(false);
+        }
+      }
+    }
+
+    loadMasterTenders();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAssignments() {
+      setAssignmentsLoading(true);
+      setAssignmentError("");
+
+      try {
+        const response = await tendorsApi.getMerchantTendors(merchantId);
+
+        if (!cancelled) {
+          setIds(assignedIdsFrom(response));
+        }
+      } catch (loadError) {
+        console.error("Failed to load merchant tender assignments:", loadError);
+
+        if (!cancelled) {
+          setAssignmentError(
+            loadError?.message || "Unable to load merchant tender assignments.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setAssignmentsLoading(false);
+        }
+      }
+    }
+
+    loadAssignments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [merchantId]);
 
   useEffect(() => {
     if (modal) {
@@ -171,21 +274,7 @@ export default function MerchantTenders({
 
       console.log("TENDORS API RESPONSE:", response);
 
-      const list = Array.isArray(response)
-        ? response
-        : Array.isArray(response?.tendors)
-          ? response.tendors
-          : Array.isArray(response?.data?.tendors)
-            ? response.data.tendors
-            : Array.isArray(response?.data)
-              ? response.data
-              : Array.isArray(response?.items)
-                ? response.items
-                : [];
-
-      console.log("TENDORS LIST:", list);
-
-      setMasterTenders(Array.isArray(list) ? list : []);
+      setMasterTenders(tendorsFrom(response));
 
       setModal({
         type: "select",
@@ -370,10 +459,10 @@ export default function MerchantTenders({
           </button>
         </div>
 
-        {loading ? (
+        {loading || assignmentsLoading ? (
           <p role="status">Loading tenders…</p>
-        ) : error ? (
-          <p role="alert">{error}</p>
+        ) : error || assignmentError || masterError ? (
+          <p role="alert">{error || assignmentError || masterError}</p>
         ) : (
           <>
             <div className="mt-scroll">
