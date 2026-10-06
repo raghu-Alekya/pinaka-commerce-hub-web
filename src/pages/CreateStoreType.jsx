@@ -929,8 +929,7 @@ export default function CreateStoreType() {
                 <div
 
                   className="store-type-description-cell"
-
-                  title={item.description}
+                  data-pch-table-cell
                 >
 
                   {item.description}

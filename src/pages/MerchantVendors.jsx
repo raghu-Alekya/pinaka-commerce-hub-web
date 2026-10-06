@@ -32,11 +32,13 @@ const normalize = (value) => ({
     name:
         value.name ||
         value.vendorName ||
+        value.vendor_name ||
         "Unnamed vendor",
 
     type:
         value.type ||
         value.vendorType ||
+        value.vendor_type ||
         "—",
 
     phone:

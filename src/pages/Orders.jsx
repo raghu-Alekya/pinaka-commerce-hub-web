@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ordersSeed } from "../data/data";
 import ViewDetailsModal from "../components/ViewDetailsModal";
+import Pagination from "../components/Pagination";
 import "../styles/orders.css";
 
 export default function Orders({
@@ -21,7 +22,12 @@ export default function Orders({
     // =========================================================
 
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10;
+const [pageSize, setPageSize] = useState(10);
+
+const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setCurrentPage(1);
+};
 
     // =========================================================
     // ORDERS
@@ -227,6 +233,8 @@ export default function Orders({
             Number(order.totalValue || 0),
         0
     );
+    const orderPercentage = (count) =>
+        orders.length ? ((count / orders.length) * 100).toFixed(1) : "0.0";
 
     // =========================================================
     // RENDER
@@ -299,6 +307,9 @@ export default function Orders({
                         <strong>
                             {orders.length}
                         </strong>
+                        <small className="order-summary-meta positive">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> Live Records
+                        </small>
                     </div>
 
                 </div>
@@ -317,6 +328,9 @@ export default function Orders({
                         <strong>
                             {completedCount}
                         </strong>
+                        <small className="order-summary-meta positive">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> {orderPercentage(completedCount)}% of total
+                        </small>
                     </div>
 
                 </div>
@@ -335,6 +349,9 @@ export default function Orders({
                         <strong>
                             {pendingCount}
                         </strong>
+                        <small className="order-summary-meta warning">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> {orderPercentage(pendingCount)}% of total
+                        </small>
                     </div>
 
                 </div>
@@ -344,7 +361,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon blue">
-                        <i className="bi bi-currency-dollar" aria-hidden="true" />
+                        <i className="bi bi-cash-stack" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -353,6 +370,9 @@ export default function Orders({
                         <strong>
                             ${totalAmount.toFixed(2)}
                         </strong>
+                        <small className="order-summary-meta info">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> Across all orders
+                        </small>
                     </div>
 
                 </div>
@@ -390,60 +410,39 @@ export default function Orders({
 
                     {/* DATE */}
 
-                    <select
-                        value={dateFilter}
-                        onChange={(e) =>
-                            setDateFilter(e.target.value)
-                        }
-                    >
+                    <div className="orders-select-wrapper">
+    <select
+        value={dateFilter}
+        onChange={(e) => setDateFilter(e.target.value)}
+    >
+        <option value="">All Dates</option>
+        <option value="today">Today</option>
+        <option value="7days">Last 7 Days</option>
+        <option value="30days">Last 30 Days</option>
+    </select>
 
-                        <option value="">
-                            All Dates
-                        </option>
-
-                        <option value="today">
-                            Today
-                        </option>
-
-                        <option value="7days">
-                            Last 7 Days
-                        </option>
-
-                        <option value="30days">
-                            Last 30 Days
-                        </option>
-
-                    </select>
-
+    <i className="bi bi-chevron-down orders-select-arrow" />
+</div>
+ 
                     {/* SALES CHANNEL */}
 
-                    <select
-                        value={salesChannel}
-                        onChange={(e) =>
-                            setSalesChannel(e.target.value)
-                        }
-                    >
+<div className="orders-select-wrapper">
+    <select
+      value={salesChannel}
+       onChange={(e) => setSalesChannel(e.target.value)}
+        >
+        <option value="">All Sales Channels</option>
+        <option value="POS">POS</option>
+        <option value="Online">Online</option>
+        <option value="WooCommerce"> WooCommerce</option>
+    </select>
 
-                        <option value="">
-                            All Sales Channels
-                        </option>
-
-                        <option value="POS">
-                            POS
-                        </option>
-
-                        <option value="Online">
-                            Online
-                        </option>
-
-                        <option value="WooCommerce">
-                            WooCommerce
-                        </option>
-
-                    </select>
+    <i className="bi bi-chevron-down orders-select-arrow" />
+</div>
 
                     {/* AUTHOR */}
 
+<div className="orders-select-wrapper">
                     <select
                         value={authorFilter}
                         onChange={(e) =>
@@ -465,45 +464,27 @@ export default function Orders({
                         ))}
 
                     </select>
+                    <i className="bi bi-chevron-down orders-select-arrow" />
+                    </div>
 
                     {/* STATUS */}
 
-                    <select
-                        value={statusFilter}
-                        onChange={(e) =>
-                            setStatusFilter(e.target.value)
-                        }
-                    >
-
-                        <option value="">
-                            All Status
-                        </option>
-
-                        <option value="Completed">
-                            Completed
-                        </option>
-
-                        <option value="Pending payment">
-                            Pending Payment
-                        </option>
-
-                        <option value="Processing">
-                            Processing
-                        </option>
-
-                        <option value="Cancelled">
-                            Cancelled
-                        </option>
-
-                        <option value="Refunded">
-                            Refunded
-                        </option>
-
-                        <option value="Partially Refunded">
-                            Partially Refunded
-                        </option>
-
-                    </select>
+<div className="orders-select-wrapper">
+     <select
+           value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+                 >
+                 <option value=""> All Status </option>
+                 <option value="Completed"> Completed </option>
+                 <option value="Pending payment"> Pending Payment </option>
+                 <option value="Processing"> Processing </option>
+                 <option value="Cancelled"> Cancelled </option>
+                 <option value="Refunded"> Refunded </option>
+                 <option value="Partially Refunded">  Partially Refunded </option>
+      </select>
+<i className="bi bi-chevron-down orders-select-arrow" />
+</div>
+                   
 
                     {/* CLEAR */}
 
@@ -532,12 +513,12 @@ export default function Orders({
 
                             <tr>
 
-                                <th>WOO ORDER ID</th>
-                                <th>OFFLINE ORDER ID</th>
-                                <th>DATE</th>
-                                <th>STATUS</th>
-                                <th>AUTHOR</th>
-                                <th>TOTAL</th>
+                                <th>Woo Order ID</th>
+                                <th>Offline Order ID</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Author</th>
+                                <th>Total</th>
 
                             </tr>
 
@@ -597,61 +578,16 @@ export default function Orders({
                     PAGINATION
                 ================================================= */}
 
-                {filteredOrders.length > 0 && (
-    <div className="merchant-pagination">
-        <span>
-            {`Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(
-                currentPage * pageSize,
-                totalItems
-            )} of ${totalItems}`}
-        </span>
-
-        <div>
-            <button
-                type="button"
-                disabled={currentPage === 1}
-                onClick={() =>
-                    setCurrentPage((value) =>
-                        Math.max(1, value - 1)
-                    )
-                }
-            >
-                Previous
-            </button>
-
-            {Array.from(
-                { length: totalPages },
-                (_, index) => (
-                    <button
-                        type="button"
-                        className={
-                            currentPage === index + 1
-                                ? "active"
-                                : ""
-                        }
-                        key={index}
-                        onClick={() =>
-                            setCurrentPage(index + 1)
-                        }
-                    >
-                        {index + 1}
-                    </button>
-                )
-            )}
-
-            <button
-                type="button"
-                disabled={currentPage === totalPages}
-                onClick={() =>
-                    setCurrentPage((value) =>
-                        Math.min(totalPages, value + 1)
-                    )
-                }
-            >
-                Next
-            </button>
-        </div>
-    </div>
+               {filteredOrders.length > 0 && (
+    <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+        itemLabel="orders"
+    />
 )}
                 {/* =================================================
                     FOOTER

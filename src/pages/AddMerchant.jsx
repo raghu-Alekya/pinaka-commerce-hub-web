@@ -56,7 +56,6 @@ export function formatGeneratedCode(kind, sequence) {
     String(sequence).padStart(kind === "merchant" ? 4 : 5, "0")
   );
 }
-
 // Sample master data. Replace with your API catalog.
 const catalog = [
   { n: "Fastkeys", a: ["View", "Use"] },

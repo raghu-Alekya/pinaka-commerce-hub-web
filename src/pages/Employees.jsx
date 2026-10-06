@@ -1,16 +1,19 @@
+import { EmployeeToast, EmployeeDeleteDialog } from "../components/EmployeeFeedback";
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { listEmployees } from "../api/employees";
+import Pagination from "../components/Pagination";
+import { useNavigate, useLocation } from "react-router-dom";
+import { getEmployeeList, deleteEmployee } from "../api/employees";
+
 import {
   Search,
   ChevronDown,
-  ChevronRight,
-  ChevronLeft,
   Plus,
   Download,
   CalendarDays,
   Filter,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import "../styles/Employees.css";
 /* =========================================================
@@ -247,13 +250,49 @@ export default function Employees() {
   /* SEARCH */
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const [notice, setNotice] = useState(location.state?.employeeMessage || "");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  useEffect(() => {
+    if (location.state?.employeeMessage) navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate]);
   const [employeeRows, setEmployeeRows] = useState([]);
+  const [statistics, setStatistics] = useState(null);
   const [loadError, setLoadError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+
+  async function handleDelete(employee) {
+    if (deletingId) return;
+    setDeletingId(employee.id);
+    setDeleteError("");
+    try {
+      await deleteEmployee(employee.id);
+      const result = await getEmployeeList();
+      setEmployeeRows(result.employees);
+      setStatistics(result.statistics);
+      setDeleteTarget(null);
+      setNotice("Employee deleted successfully.");
+    } catch (error) {
+      setDeleteError(error.message || "Unable to delete employee.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  function displayTimestamp(value) {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("en-US", {
+      month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
+    });
+  }
+
   useEffect(() => {
     let active = true;
-    listEmployees()
-      .then((items) => {
-        if (active) setEmployeeRows(items);
+    getEmployeeList()
+      .then((result) => {
+        if (active) { setEmployeeRows(result.employees); setStatistics(result.statistics); }
       })
       .catch((error) => {
         if (active) setLoadError(error.message || "Unable to load employees.");
@@ -264,12 +303,17 @@ export default function Employees() {
   }, []);
   /* FILTERS */
   const [merchant, setMerchant] = useState("All Merchants");
-  const [store, setStore] = useState("All Stores");
+
   const [role, setRole] = useState("All Roles");
-  const [status, setStatus] = useState("All Statuses");
+
   /* PAGINATION */
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+const [rowsPerPage, setRowsPerPage] = useState(10);
+
+const handlePageSizeChange = (size) => {
+  setRowsPerPage(size);
+  setPage(1);
+};
   /* =====================================================
      FILTER EMPLOYEES
   ===================================================== */
@@ -286,19 +330,17 @@ export default function Employees() {
         employee.store.toLowerCase().includes(searchValue);
       const matchesMerchant =
         merchant === "All Merchants" || employee.merchant === merchant;
-      const matchesStore = store === "All Stores" || employee.store === store;
+
       const matchesRole = role === "All Roles" || employee.role === role;
-      const matchesStatus =
-        status === "All Statuses" || employee.status === status;
+
       return (
         matchesSearch &&
         matchesMerchant &&
-        matchesStore &&
-        matchesRole &&
-        matchesStatus
+        matchesRole
       );
     });
-  }, [employeeRows, search, merchant, store, role, status]);
+  }, [employeeRows, search, merchant, role]);
+
   /* =====================================================
      PAGINATION CALCULATIONS
   ===================================================== */
@@ -310,6 +352,8 @@ export default function Employees() {
   const startIndex = (safePage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const visibleEmployees = filteredEmployees.slice(startIndex, endIndex);
+
+
   /* =====================================================
      SEARCH HANDLER
   ===================================================== */
@@ -324,35 +368,34 @@ export default function Employees() {
     setMerchant(value);
     setPage(1);
   };
-  const handleStoreChange = (value) => {
-    setStore(value);
-    setPage(1);
-  };
+
+
   const handleRoleChange = (value) => {
     setRole(value);
     setPage(1);
   };
-  const handleStatusChange = (value) => {
-    setStatus(value);
-    setPage(1);
-  };
+
+
+  /* =====================================================
+     ROWS PER PAGE
+  ===================================================== */
+
+
   /* =====================================================
      PAGINATION
   ===================================================== */
-  const goToPage = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setPage(newPage);
-    }
-  };
+  useEffect(() => {
+  setPage((currentPage) =>
+    Math.min(currentPage, totalPages)
+  );
+}, [totalPages]);
   /* =====================================================
      RESET FILTERS
   ===================================================== */
   const resetFilters = () => {
     setSearch("");
     setMerchant("All Merchants");
-    setStore("All Stores");
     setRole("All Roles");
-    setStatus("All Statuses");
     setPage(1);
   };
   /* =====================================================
@@ -394,39 +437,31 @@ export default function Employees() {
         <StatCard
           icon="bi-people-fill"
           title="Total Employees"
-          value="128"
-          description="↑ 12 this month"
+          value={statistics?.total_employees ?? "—"}
+          description={statistics ? `${statistics.current_month_added_employees} this month` : ""}
           type="purple"
         />
         <StatCard
           icon="bi-check-circle-fill"
           title="Active Employees"
-          value="110"
-          description="↑ 85.9% of total"
+          value={statistics?.active_employees ?? "—"}
+          description={statistics ? `${statistics.active_employees_percentage}% of total` : ""}
           type="green"
-          progress={86}
-        />
-        <StatCard
-          icon="bi-pause-circle-fill"
-          title="Employees on Leave"
-          value="6"
-          description="↓ 4.7% of total"
-          type="orange"
-          progress={18}
+          progress={statistics?.active_employees_percentage ?? 0}
         />
         <StatCard
           icon="bi-x-circle-fill"
           title="Inactive Employees"
-          value="12"
-          description="↓ 9.4% of total"
+          value={statistics?.inactive_employees ?? "—"}
+          description={statistics ? `${statistics.inactive_employees_percentage}% of total` : ""}
           type="red"
-          progress={22}
+          progress={statistics?.inactive_employees_percentage ?? 0}
         />
         <StatCard
           icon="bi-person-plus-fill"
           title="New This Month"
-          value="14"
-          description="↑ 12.3% vs last month"
+          value={statistics?.current_month_added_employees ?? "—"}
+          description={statistics ? `${statistics.monthly_growth_direction === "INCREASE" ? "↑" : statistics.monthly_growth_direction === "DECREASE" ? "↓" : "→"} ${Math.abs(statistics.monthly_growth_percentage)}% vs last month` : ""}
           type="blue"
         />
       </div>
@@ -455,15 +490,7 @@ export default function Employees() {
               ...Array.from(new Set(employeeRows.map((e) => e.merchant))),
             ]}
           />
-          {/* STORE */}
-          <FilterSelect
-            value={store}
-            onChange={handleStoreChange}
-            options={[
-              "All Stores",
-              ...Array.from(new Set(employeeRows.map((e) => e.store))),
-            ]}
-          />
+
           {/* ROLE */}
           <FilterSelect
             value={role}
@@ -473,41 +500,43 @@ export default function Employees() {
               ...Array.from(new Set(employeeRows.map((e) => e.role))),
             ]}
           />
-          {/* STATUS */}
-          <FilterSelect
-            value={status}
-            onChange={handleStatusChange}
-            options={["All Statuses", "Active", "Inactive"]}
-          />
+
         </div>
         {/* =================================================
             TABLE
         ================================================= */}
+
+        <EmployeeToast message={deleteError || notice} onClose={() => { setDeleteError(""); setNotice(""); }} />
+        {deleteTarget && <EmployeeDeleteDialog title="Delete Employee?" description={`Are you sure you want to delete ${deleteTarget.name}?`} busy={Boolean(deletingId)} onCancel={() => setDeleteTarget(null)} onConfirm={() => handleDelete(deleteTarget)} />}
         <div className="employees-table-wrap">
           <table className="employees-table">
             <thead>
               <tr>
-                <th>Employee Name</th>
-                <th>Contact Information</th>
-                <th>Assigned Role</th>
-                <th>Merchant Name</th>
-                <th>Assigned Store</th>
-                <th>Employee Status</th>
-                <th>Date Added</th>
-                <th>Last Active</th>
+                <th>Employee</th>
+
+                <th>Contact</th>
+
+                <th>Merchant</th>
+
+                <th>Status</th>
+
+                <th>Created At</th>
+
+                <th>Updated At</th>
+
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loadError ? (
                 <tr>
-                  <td colSpan="9" className="employees-no-results">
+                  <td colSpan="7" className="employees-no-results">
                     {loadError}
                   </td>
                 </tr>
               ) : visibleEmployees.length > 0 ? (
                 visibleEmployees.map((employee) => (
-                  <tr key={employee.rowKey}>
+                  <tr key={employee.id}>
                     {/* EMPLOYEE */}
                     {/* EMPLOYEE COLUMN */}
                     {/* EMPLOYEE COLUMN */}
@@ -525,7 +554,7 @@ export default function Employees() {
                         </div>
                         <div>
                           <div className="employee-name">{employee.name}</div>
-                          <div className="employee-id">{employee.id}</div>
+                          <div className="employee-id">{employee.employeeCode || employee.employee_code || employee.id}</div>
                         </div>
                       </div>
                     </td>
@@ -537,11 +566,11 @@ export default function Employees() {
                       </div>
                     </td>
                     {/* ROLE */}
-                    <td>{employee.role}</td>
+
                     {/* MERCHANT */}
                     <td>{employee.merchant}</td>
                     {/* STORE */}
-                    <td>{employee.store}</td>
+
                     {/* STATUS */}
                     <td>
                       <span
@@ -551,18 +580,13 @@ export default function Employees() {
                       </span>
                     </td>
                     {/* JOINED */}
-                    <td>{employee.joined}</td>
+
+                    <td>{displayTimestamp(employee.createdAt)}</td>
+
                     {/* LAST ACTIVE */}
-                    <td>
-                      <div
-                        className={`employee-last-active ${
-                          employee.status === "Inactive" ? "red" : "green"
-                        }`}
-                      >
-                        <span />
-                        {employee.active}
-                      </div>
-                    </td>
+
+                    <td>{displayTimestamp(employee.updatedAt)}</td>
+
                     {/* ACTIONS */}
                     <td>
                       <div className="employee-actions">
@@ -574,13 +598,17 @@ export default function Employees() {
                         >
                           <Pencil size={17} />
                         </button>
+                        <button type="button" title="Delete employee" aria-label={`Delete ${employee.name}`}
+                          disabled={Boolean(deletingId)} onClick={() => setDeleteTarget(employee)}>
+                          <Trash2 size={17} />
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="9" className="employees-no-results">
+                  <td colSpan="7" className="employees-no-results">
                     No employees found
                   </td>
                 </tr>
@@ -588,30 +616,19 @@ export default function Employees() {
             </tbody>
           </table>
         </div>
-        {/* =================================================
-            PAGINATION
-        ================================================= */}
-        <div className="employees-pagination">
-          <div className="employees-showing">
-            Showing {filteredEmployees.length === 0 ? 0 : startIndex + 1} -{" "}
-            {Math.min(endIndex, filteredEmployees.length)} of {filteredEmployees.length} entries
-          </div>
-          <div className="employees-pages">
-            <button
-              onClick={() => goToPage(safePage - 1)}
-              disabled={safePage === 1}
-            >
-              <ChevronLeft size={15} />
-            </button>
-            <button className="employees-page-active">{safePage}</button>
-            <button
-              onClick={() => goToPage(safePage + 1)}
-              disabled={safePage === totalPages}
-            >
-              <ChevronRight size={15} />
-            </button>
-          </div>
-        </div>
+       {/* ================================================= 
+    PAGINATION 
+================================================= */}
+
+<Pagination
+  currentPage={safePage}
+  totalPages={totalPages}
+  totalItems={filteredEmployees.length}
+  pageSize={rowsPerPage}
+  onPageChange={setPage}
+  onPageSizeChange={handlePageSizeChange}
+  itemLabel="employees"
+/>
       </div>
     </div>
   );

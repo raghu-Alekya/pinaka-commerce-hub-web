@@ -546,16 +546,16 @@ export default function Coupons({
 
                             <tr>
 
-                                <th>CODE</th>
-                                <th>ISSUED ORDER ID</th>
-                                <th>USED ORDER ID</th>
-                                <th>COUPON TYPE</th>
-                                <th>COUPON AMOUNT</th>
-                                <th>DESCRIPTION</th>
-                                <th>PRODUCT IDS</th>
-                                <th>USAGE / LIMIT</th>
-                                <th>EXPIRY DATE</th>
-                                <th>BARCODE</th>
+                                <th>Code</th>
+                                <th>Issued Order ID</th>
+                                <th>Used Order ID</th>
+                                <th>Coupon Type</th>
+                                <th>Coupon Amount</th>
+                                <th>Description</th>
+                                <th>Product IDS</th>
+                                <th>Usage / Limit</th>
+                                <th>Expiry Date</th>
+                                <th>Barcode</th>
 
                             </tr>
 

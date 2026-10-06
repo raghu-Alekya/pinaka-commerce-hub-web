@@ -1436,7 +1436,7 @@
   white-space: normal !important;
 }
 
-.feature-permissions-page .fp-description-tooltip-wrap {
+.feature-permissions-page .fp-description-content {
   position: relative;
   width: 240px;
 }
@@ -1451,40 +1451,6 @@
   line-height: 18px;
   white-space: normal;
   overflow-wrap: anywhere;
-}
-
-.feature-permissions-page .fp-description-tooltip {
-  position: absolute;
-  z-index: 40;
-  top: calc(100% + 7px);
-  left: 0;
-  width: max-content;
-  min-width: 220px;
-  max-width: 220px;
-  padding: 10px 12px;
-  border: 1px solid #dce4ef;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #34435e;
-  box-shadow: 0 8px 24px rgba(16, 38, 77, 0.14);
-  font-size: 12px;
-  line-height: 18px;
-  font-weight: 400;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-2px);
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
-}
-
-.feature-permissions-page
-  .fp-description-tooltip-wrap:hover
-  .fp-description-tooltip {
-  visibility: visible;
-  opacity: 1;
-  transform: translateY(0);
 }
 
 /* Keep timestamp readable on one line */
@@ -1685,16 +1651,18 @@
 }
 
 .feature-permissions-page .fp-table th {
-  height: 48px !important;
+  height: 44px !important;
   color: #394052 !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   line-height: 18px !important;
   font-weight: 600 !important;
   white-space: nowrap !important;
 }
 
 .feature-permissions-page .fp-table td {
-  height: 58px !important;
+  height: 52px !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
   font-size: 13px !important;
   line-height: 18px !important;
 }
@@ -2211,7 +2179,7 @@ body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn i
 }
 
 .feature-permissions-page .fp-table th {
-  height: 48px !important;
+  height: 44px !important;
   padding: 0 14px !important;
   border: 0 !important;
   border-bottom: 1px solid #dfe5ef !important;
@@ -2219,7 +2187,7 @@ body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn i
   color: #394052 !important;
   text-align: left !important;
   vertical-align: middle !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   line-height: 18px !important;
   font-weight: 600 !important;
   white-space: nowrap !important;
@@ -2234,9 +2202,9 @@ body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn i
    ========================================================= */
 
 .feature-permissions-page .fp-table td {
-  height: 58px !important;
+  height: 52px !important;
 
-  padding: 0 14px !important;
+  padding: 10px 14px !important;
 
   border: 0 !important;
   border-bottom: 1px solid #e4e8ef !important;
@@ -2330,7 +2298,7 @@ body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn i
    10. DESCRIPTION WRAPPER
    ========================================================= */
 
-.feature-permissions-page .fp-description-tooltip-wrap {
+.feature-permissions-page .fp-description-content {
   position: relative !important;
 
   width: 100% !important;
@@ -2365,69 +2333,6 @@ body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn i
 
   overflow-wrap: anywhere;
   word-break: normal;
-}
-
-
-/* =========================================================
-   12. DESCRIPTION TOOLTIP
-
-   Existing hover preview preserved
-   ========================================================= */
-
-.feature-permissions-page .fp-description-tooltip {
-  position: absolute;
-
-  z-index: 100;
-
-  top: calc(100% + 7px);
-  left: 0;
-
-  width: max-content;
-  min-width: 220px;
-  max-width: 280px;
-
-  padding: 10px 12px;
-
-  border: 1px solid #dce4ef;
-  border-radius: 8px;
-
-  background: #ffffff;
-
-  color: #34435e;
-
-  box-shadow:
-    0 8px 24px rgba(16, 38, 77, 0.14);
-
-  font-size: 12px;
-  line-height: 18px;
-  font-weight: 400;
-
-  white-space: normal;
-
-  overflow-wrap: anywhere;
-
-  visibility: hidden;
-  opacity: 0;
-
-  pointer-events: none;
-
-  transform: translateY(-2px);
-
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease,
-    visibility 0.15s ease;
-}
-
-
-.feature-permissions-page
-.fp-description-tooltip-wrap:hover
-.fp-description-tooltip {
-  visibility: visible;
-
-  opacity: 1;
-
-  transform: translateY(0);
 }
 
 
@@ -2526,7 +2431,7 @@ body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn i
   width: auto !important;
   min-width: 0 !important;
 
-  height: 58px !important;
+  height: 52px !important;
 
   color: #64748b !important;
 

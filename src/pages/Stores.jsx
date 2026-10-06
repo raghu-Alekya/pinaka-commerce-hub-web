@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { deleteStore, listStores } from "../api/stores";
 import { listMerchants } from "../api/merchants";
 import { useReferenceData } from "../api/referenceData";
+import Pagination from "../components/Pagination";
 
 const title = (value) =>
   String(value || "")
@@ -92,7 +93,12 @@ export default function Stores() {
     [status, setStatus] = useState(""),
     [location, setLocation] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+const [pageSize, setPageSize] = useState(10);
+
+const handlePageSizeChange = (size) => {
+  setPageSize(size);
+  setCurrentPage(1);
+};
   const [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -130,16 +136,26 @@ export default function Stores() {
       (!location || locationOf(s) === location),
   );
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-  const startIndex = (safeCurrentPage - 1) * rowsPerPage;
-  const paginatedRows = rows.slice(startIndex, startIndex + rowsPerPage);
-  const showingFrom = rows.length === 0 ? 0 : startIndex + 1;
-  const showingTo = Math.min(startIndex + rowsPerPage, rows.length);
+ const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
 
-  const goToPage = (page) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  };
+const safeCurrentPage = Math.min(currentPage, totalPages);
+
+const startIndex = (safeCurrentPage - 1) * pageSize;
+
+const paginatedRows = rows.slice(
+  startIndex,
+  startIndex + pageSize
+);
+
+useEffect(() => {
+  setCurrentPage(1);
+}, [query, merchant, status, location]);
+
+useEffect(() => {
+  setCurrentPage((previous) =>
+    Math.min(previous, totalPages)
+  );
+}, [totalPages]);
   const activeCount = stores.filter((s) => s.status === "ACTIVE").length;
   const recent = stores.filter(
     (s) => new Date(s.createdAt).getTime() >= Date.now() - 7 * 86400000,
@@ -248,54 +264,66 @@ export default function Stores() {
               }}
             />
           </div>
-          <select
-            aria-label="Merchant"
-            className="filter-select"
-            value={merchant}
-            onChange={(e) => {
-              setMerchant(e.target.value);
-              setCurrentPage(1);
-            }}
-          >
-            <option value="">All Merchants</option>
-            {merchants.map((m) => (
-              <option key={m.id} value={m.id}>
+          <div className="filter-select-wrapper">
+    <select
+        aria-label="Merchant"
+        className="filter-select"
+        value={merchant}
+        onChange={(e) => {
+            setMerchant(e.target.value);
+            setCurrentPage(1);
+        }}
+    >
+        <option value="">All Merchants</option>
+        {merchants.map((m) => (
+            <option key={m.id} value={m.id}>
                 {m.name}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Status"
+            </option>
+        ))}
+    </select>
+    <i className="bi bi-chevron-down filter-select-arrow" />
+</div> 
+
+<div className="filter-select-wrapper">
+    <select
+        aria-label="Status"
             className="filter-select"
-            value={status}
+        value={status}
             onChange={(e) => {
               setStatus(e.target.value);
               setCurrentPage(1);
-            }}
-          >
-            <option value="">All Status</option>
+        }}
+    >
+        <option value="">All Status</option>
             {statuses.filter(Boolean).map((s) => (
               <option key={s} value={s}>
                 {title(s)}
               </option>
-            ))}
-          </select>
-          <select
-            aria-label="Location"
+        ))}
+    </select>
+    <i className="bi bi-chevron-down filter-select-arrow" />
+</div>
+        
+         <div className="filter-select-wrapper">
+    <select
+        aria-label="Location"
             className="filter-select"
-            value={location}
+        value={location}
             onChange={(e) => {
               setLocation(e.target.value);
               setCurrentPage(1);
-            }}
-          >
-            <option value="">All Locations</option>
+        }}
+    >
+        <option value="">All Locations</option>
             {[...new Set(stores.map(locationOf).filter(Boolean))]
               .sort()
               .map((l) => (
                 <option key={l}>{l}</option>
-              ))}
-          </select>
+        ))}
+    </select>
+    <i className="bi bi-chevron-down filter-select-arrow" />
+</div> 
+    
           <button
             className="filter-button"
             onClick={() => {
@@ -319,12 +347,12 @@ export default function Stores() {
             <thead>
               <tr>
                 {[
-                  "STORE",
-                  "MERCHANT",
-                  "LOCATION",
-                  "POS DEVICES",
-                  "STATUS",
-                  "ACTION",
+                  "Store",
+                  "Merchant",
+                  "Location",
+                  "POS Devices",
+                  "Status",
+                  "Action",
                 ].map((h) => (
                   <th key={h}>{h}</th>
                 ))}
@@ -439,50 +467,16 @@ export default function Stores() {
           </table>
         </div>
 
-        <div className="stores-pagination">
-          <div className="pagination-info">
-            Showing <strong>{showingFrom}</strong> to{" "}
-            <strong>{showingTo}</strong> of <strong>{rows.length}</strong>{" "}
-            stores
-          </div>
+    <Pagination
+  currentPage={safeCurrentPage}
+  totalPages={totalPages}
+  totalItems={rows.length}
+  pageSize={pageSize}
+  onPageChange={setCurrentPage}
+  onPageSizeChange={handlePageSizeChange}
+  itemLabel="stores"
+/>
 
-          <div className="pagination-controls">
-            <button
-              type="button"
-              className="pagination-arrow"
-              aria-label="Previous page"
-              disabled={safeCurrentPage === 1}
-              onClick={() => goToPage(safeCurrentPage - 1)}
-            >
-              <i className="bi bi-chevron-left" />
-            </button>
-
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-              (page) => (
-                <button
-                  type="button"
-                  key={page}
-                  className={`pagination-page ${
-                    page === safeCurrentPage ? "active" : ""
-                  }`}
-                  onClick={() => goToPage(page)}
-                >
-                  {page}
-                </button>
-              ),
-            )}
-
-            <button
-              type="button"
-              className="pagination-arrow"
-              aria-label="Next page"
-              disabled={safeCurrentPage === totalPages}
-              onClick={() => goToPage(safeCurrentPage + 1)}
-            >
-              <i className="bi bi-chevron-right" />
-            </button>
-          </div>
-        </div>
       </div>
 
       {deleteTarget && (
@@ -547,4 +541,3 @@ export default function Stores() {
     </div>
   );
 }
-

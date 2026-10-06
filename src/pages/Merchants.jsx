@@ -5,12 +5,14 @@ import MerchantRoles from "./MerchantRoles";
 import AddMerchantDevice from "./AddMerchantDevice";
 import { MerchantEmployeeForm } from "./AddMerchantEmployee";
 import { useReferenceData } from "../api/referenceData";
-import { listSubscriptionPlans } from "../api/subscriptions";
+import { formatDate, listSubscriptions, listSubscriptionPlans } from "../api/subscriptions";
+import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant } from "../api/merchants";
 import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
+import Pagination from "../components/Pagination";
 import "../styles/merchants.css";
 
 function readValue(value) {
@@ -97,6 +99,23 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const [apiEmployees, setApiEmployees] = useState(null);
   const [employeesLoading, setEmployeesLoading] = useState(false);
   const [employeesError, setEmployeesError] = useState('');
+  const [allSubscriptions, setAllSubscriptions] = useState([]);
+  const [allPlans, setAllPlans] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      listSubscriptions().catch(() => []),
+      listPlans().catch(() => [])
+    ]).then(([subs, plans]) => {
+      if (active) {
+        setAllSubscriptions(Array.isArray(subs) ? subs : []);
+        setAllPlans(Array.isArray(plans) ? plans : []);
+      }
+    });
+    return () => { active = false; };
+  }, []);
+
   useEffect(() => {
     if (draft) { setLoading(false); setError(''); return; }
     let active = true;
@@ -129,6 +148,142 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const summary = { ...(result?.merchant || {}), ...(merchant || {}) };
   const contact = saved?.merchant || raw;
   const subscription = result?.subscription || raw.subscription || response.subscription || {};
+  const subPlan = subscription.plan || raw.plan || response.plan || {};
+  const subStoreType = subscription.storeType || subscription.store_type || subPlan.storeType || subPlan.store_type || raw.storeType || {};
+
+  const subMatch = useMemo(() => {
+    if (!allSubscriptions.length) return null;
+    const targetId = String(apiMerchantId || merchantId || "").toLowerCase();
+    const targetName = String(raw.merchantName || summary.name || merchant?.name || contact.name || "").toLowerCase();
+    const targetCode = String(raw.merchant_code || raw.merchantCode || summary.merchantId || "").toLowerCase();
+
+    return allSubscriptions.find((s) => {
+      const sMerchId = String(s.merchantId || s.merchantApiId || s.raw?.merchantId || s.raw?.merchant_id || "").toLowerCase();
+      const sMerchName = String(s.merchant || s.raw?.merchantName || s.raw?.businessName || "").toLowerCase();
+      const sId = String(s.id || "").toLowerCase();
+
+      return (
+        (targetId && (sMerchId === targetId || sId === targetId)) ||
+        (targetCode && sMerchId === targetCode) ||
+        (targetName && sMerchName === targetName)
+      );
+    });
+  }, [allSubscriptions, apiMerchantId, merchantId, summary, merchant, raw, contact]);
+
+  const matchedPlan = useMemo(() => {
+    const targetPlanName = String(
+      subMatch?.plan ||
+      subscription.planName ||
+      (typeof subPlan === 'object' && subPlan ? subPlan.name : subPlan) ||
+      raw.planName ||
+      summary.plan ||
+      ""
+    ).toLowerCase();
+
+    if (!targetPlanName || !allPlans.length) return null;
+
+    return allPlans.find((p) => {
+      const pName = String(p.name || p.planName || p.planCode || p.code || "").toLowerCase();
+      const pId = String(p.id || p.planId || "").toLowerCase();
+      return pName === targetPlanName || (subscription?.planId && pId === String(subscription.planId).toLowerCase());
+    });
+  }, [allPlans, subMatch, subscription, subPlan, raw, summary]);
+
+  const displayPlanName =
+    subMatch?.plan ||
+    subscription.planName ||
+    subscription.plan_name ||
+    (typeof subPlan === 'object' && subPlan ? subPlan.name || subPlan.planName : undefined) ||
+    (typeof subPlan === 'string' ? subPlan : undefined) ||
+    matchedPlan?.name ||
+    matchedPlan?.planName ||
+    raw.planName ||
+    summary.plan ||
+    "Pro Plan";
+
+  const rawCycle =
+    subMatch?.billingCycle ||
+    subscription.billingCycle ||
+    subscription.billing_cycle ||
+    (typeof subPlan === 'object' && subPlan ? subPlan.billingCycle || subPlan.billing_cycle : undefined) ||
+    saved?.cycle ||
+    matchedPlan?.billingCycle ||
+    "MONTHLY";
+
+  const displayBillingCycle = rawCycle
+    ? String(rawCycle).trim().toUpperCase() === "MONTHLY"
+      ? "Monthly"
+      : String(rawCycle).trim().toUpperCase() === "ANNUAL" || String(rawCycle).trim().toUpperCase() === "YEARLY"
+      ? "Yearly"
+      : String(rawCycle).charAt(0).toUpperCase() + String(rawCycle).slice(1).toLowerCase()
+    : "Monthly";
+
+  const displayStoreType =
+    subMatch?.storeTypeName ||
+    (typeof subStoreType === "object" && subStoreType ? subStoreType.name || subStoreType.storeTypeName || subStoreType.code : subStoreType) ||
+    subscription.storeTypeName ||
+    subscription.store_type_name ||
+    matchedPlan?.storeTypeName ||
+    raw.storeTypeName ||
+    raw.storeType ||
+    summary.storeType ||
+    "Convenience Store";
+
+  const displayStatus =
+    subMatch?.status ||
+    subscription.status ||
+    saved?.subscriptionStatus ||
+    raw.status ||
+    "ACTIVE";
+
+  const rawStartVal =
+    subMatch?.start ||
+    subMatch?.rawStart ||
+    subscription.startDate ||
+    subscription.start_date ||
+    subscription.createdAt ||
+    subscription.created_at ||
+    saved?.start;
+
+  const displayStartDate = rawStartVal ? String(rawStartVal).slice(0, 10) : undefined;
+
+  const rawEndVal =
+    subMatch?.end ||
+    subMatch?.rawEnd ||
+    subscription.renewalDate ||
+    subscription.renewal_date ||
+    subscription.nextBillingDate ||
+    subscription.next_billing_date ||
+    subscription.currentPeriodEnd ||
+    subscription.current_period_end ||
+    summary.renewal;
+
+  const displayRenewalDate = rawEndVal ? String(rawEndVal).slice(0, 10) : undefined;
+
+  const displayStoreAllowance =
+    (subscription.includedStores || subscription.included_stores || subscription.stores_limit || subscription.maxStoresAllowed || subscription.max_stores_allowed || subscription.storeLimit) ||
+    (typeof subPlan === 'object' && subPlan ? (subPlan.stores_limit || subPlan.storesLimit || subPlan.includedStores || subPlan.included_stores) : undefined) ||
+    (subMatch?.includedStores || subMatch?.stores_limit) ||
+    (matchedPlan?.stores_limit || matchedPlan?.storesLimit || matchedPlan?.includedStores || matchedPlan?.included_stores) ||
+    summary.storeLimit ||
+    1;
+
+  const displayDeviceAllowance =
+    (subscription.includedTerminals || subscription.included_terminals || subscription.terminal_limit || subscription.licensedDeviceCount || subscription.deviceLimit) ||
+    (typeof subPlan === 'object' && subPlan ? (subPlan.terminal_limit || subPlan.terminalLimit || subPlan.includedTerminals || subPlan.included_terminals) : undefined) ||
+    (subMatch?.includedTerminals || subMatch?.terminal_limit) ||
+    (matchedPlan?.terminal_limit || matchedPlan?.terminalLimit || matchedPlan?.includedTerminals || matchedPlan?.included_terminals) ||
+    summary.deviceLimit ||
+    2;
+
+  const displayEmployeeAllowance =
+    (subscription.includedEmployees || subscription.included_employees || subscription.employees_limit || subscription.employeeLimit) ||
+    (typeof subPlan === 'object' && subPlan ? (subPlan.employees_limit || subPlan.employeesLimit || subPlan.includedEmployees || subPlan.included_employees) : undefined) ||
+    (subMatch?.includedEmployees || subMatch?.employees_limit) ||
+    (matchedPlan?.employees_limit || matchedPlan?.employeesLimit || matchedPlan?.includedEmployees || matchedPlan?.included_employees) ||
+    summary.employeeLimit ||
+    0;
+
   const address = contact.address || raw.businessAddress || {};
   const list = value => Array.isArray(value) ? value : [];
   const stores = list(saved?.stores ?? response.stores ?? raw.stores);
@@ -144,7 +299,49 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   )?.name || employee.storeId;
   const devices = [...createdDevices,...list(saved?.devices ?? raw.devices ?? response.devices).filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))].filter(device=>device.merchantId==null || String(device.merchantId)===String(merchantId));
   const payments = list(saved?.paymentHistory ?? raw.paymentHistory);
-  const business = contact.business || raw.legalBusinessName || raw.businessName || summary.name;
+  const subscriptionPlan = subscription.plan && typeof subscription.plan === 'object'
+    ? subscription.plan
+    : subscription.planDetails && typeof subscription.planDetails === 'object'
+      ? subscription.planDetails
+      : response.plan && typeof response.plan === 'object'
+        ? response.plan
+        : raw.plan && typeof raw.plan === 'object'
+          ? raw.plan
+          : {};
+  const subscriptionStoreType = subscription.storeType && typeof subscription.storeType === 'object'
+    ? subscription.storeType
+    : subscriptionPlan.storeType && typeof subscriptionPlan.storeType === 'object'
+      ? subscriptionPlan.storeType
+      : {};
+  const registeredStores = raw.storeCount ?? response.storeCount ?? summary.storeCount ?? stores.length;
+  const registeredDevices = raw.deviceCount ?? response.deviceCount ?? summary.deviceCount ?? devices.length;
+  const registeredEmployees = raw.employeeCount ?? response.employeeCount ?? summary.employeeCount ?? employees.length;
+  const storeAllowance = subscriptionPlan.includedStores ?? subscriptionPlan.storesLimit ?? subscriptionPlan.stores_limit;
+  const deviceAllowance = subscriptionPlan.includedTerminals ?? subscriptionPlan.terminalLimit ?? subscriptionPlan.terminal_limit;
+  const employeeAllowance = subscriptionPlan.includedEmployees ?? subscriptionPlan.employeesLimit ?? subscriptionPlan.employees_limit;
+  const startDateValue = subscription.startDate || subscription.start_date || saved?.start;
+  const renewalDateValue = subscription.renewalDate || subscription.renewal_date || subscription.nextBillingDate || summary.renewal;
+  const inferredBillingCycle = (() => {
+    if (!startDateValue || !renewalDateValue) return undefined;
+    const start = new Date(startDateValue);
+    const renewal = new Date(renewalDateValue);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(renewal.getTime())) return undefined;
+    const months = (renewal.getUTCFullYear() - start.getUTCFullYear()) * 12 + renewal.getUTCMonth() - start.getUTCMonth();
+    if (months >= 11) return 'ANNUAL';
+    if (months >= 3) return 'QUARTERLY';
+    if (months >= 1) return 'MONTHLY';
+    return undefined;
+  })();
+  const billingCycle = subscription.billingCycle || subscription.billing_cycle || subscription.cycle
+    || subscriptionPlan.billingCycle || subscriptionPlan.billing_cycle || subscriptionPlan.cycle
+    || raw.billingCycle || raw.billing_cycle || inferredBillingCycle;
+  const business = contact.business || raw.legalBusinessName || raw.businessName || raw.business_display_name || raw.businessDisplayName || summary.name;
+  const businessDisplayName = contact.display || raw.businessDisplayName || raw.business_display_name || raw.businessName || raw.name || summary.name;
+  const firstName = raw.firstName || raw.first_name || contact.firstName || contact.first_name;
+  const lastName = raw.lastName || raw.last_name || contact.lastName || contact.last_name;
+  const addressLine1 = contact.addressLine1 || contact.address_line1 || raw.addressLine1 || raw.address_line1 || address.addressLine1 || address.address_line1 || address.street;
+  const addressLine2 = contact.addressLine2 || contact.address_line2 || raw.addressLine2 || raw.address_line2 || address.addressLine2 || address.address_line2;
+  const fullAddress = [addressLine1, addressLine2].filter(Boolean).join(', ');
   const displayMerchantCode = raw.merchant_code || raw.merchantId || summary.merchantId || contact.code || raw.code || raw.merchantCode || summary.id || merchantId;
   const storeName = device => device.storeName || stores.find(store=>device.storeId!=null && [store.id,store.code,store.storeId].some(id=>id!=null && String(id)===String(device.storeId)))?.name || (saved && typeof device.store==='number' ? stores[device.store]?.name : '') || device.storeId || '—';
   return <div className="page-content merchant-readonly">
@@ -182,30 +379,31 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       <div role="tabpanel" id="merchant-panel-overview" aria-labelledby="merchant-tab-overview" hidden={activeTab !== 'overview'} tabIndex={0}>
         <ViewSection title="Business Details"><ViewFields items={[
           ['Merchant Code', displayMerchantCode], ['Legal / Business Name', business],
-          ['Business Display Name', contact.display || raw.businessName || raw.name || summary.name], ['Status', summary.status || raw.status],
-          ['Joined Date', summary.joined || raw.createdAt],
+          ['Business Display Name', businessDisplayName], ['Status', summary.status || raw.status],
+          ['Joined Date', formatDate(summary.joined || raw.createdAt || raw.created_at)],
+          ['Billing Cycle', billingCycle],
         ]} /></ViewSection>
         <ViewSection title="Primary Contact"><ViewFields items={[
-          ['Merchant Name', saved ? contact.name : raw.ownerName || [raw.firstName, raw.lastName].filter(Boolean).join(' ')],
-          ['Email', contact.email || summary.email], ['Phone', contact.phone || summary.phone],
-          ['Country', contact.country || address.country || summary.country], ['City', contact.city || address.city],
-          ['State / Province', contact.state || address.state || summary.state],
-          ['Address', typeof address === 'string' ? address : address.street || address.addressLine1],
-          ['Postal Code', contact.postal || contact.postalCode || address.postalCode || address.zipCode],
+          ['Merchant Name', contact.name || raw.merchantName || raw.ownerName || [firstName, lastName].filter(Boolean).join(' ')],
+          ['Email', contact.email || raw.merchantEmail || summary.email], ['Phone', contact.phone || raw.merchantPhoneNumber || summary.phone],
+          ['Country', contact.country || raw.country || address.country || summary.country], ['City', contact.city || raw.city || address.city],
+          ['State / Province', contact.state || raw.state || address.state || summary.state],
+          ['Address', typeof address === 'string' ? address : fullAddress],
+          ['Postal Code', contact.postal || contact.postalCode || contact.postal_code || raw.postalCode || raw.postal_code || address.postalCode || address.postal_code || address.zipCode],
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-subscription" aria-labelledby="merchant-tab-subscription" hidden={activeTab !== 'subscription'} tabIndex={0}>
         <ViewSection title="Subscription & Usage"><ViewFields items={[
-          ['Plan', subscription.planName || subscription.plan?.name || summary.plan], ['Billing Cycle', saved?.cycle || subscription.billingCycle],
-          ['Store Type', subscription?.plan?.storeType || ''],
-          ['Subscription Status', saved?.subscriptionStatus || subscription.status], ['Start Date', saved?.start || subscription.startDate],
-          ['Renewal Date', subscription.renewalDate || subscription.nextBillingDate || summary.renewal],
-          ['Registered Stores', saved ? stores.length : summary.stores ?? raw.storeCount ?? (Array.isArray(raw.stores) ? stores.length : undefined)],
-          ['Store Allowance', summary.storeLimit ?? subscription.storeLimit],
-          ['Registered Devices', saved ? devices.length : raw.deviceCount ?? (Array.isArray(raw.devices) ? devices.length : undefined)],
-          ['Device Allowance', subscription.deviceLimit ?? summary.deviceLimit],
-          ['Registered Employees', Array.isArray(employeeRecords) ? employees.length : saved?.employeeCount ?? raw.employeeCount ?? summary.employeeCount],
-          ['Employee Allowance', summary.employeeLimit ?? subscription.employeeLimit],
+          ['Plan', displayPlanName], ['Billing Cycle', displayBillingCycle],
+          ['Store Type', displayStoreType],
+          ['Subscription Status', displayStatus], ['Start Date', displayStartDate],
+          ['Renewal Date', displayRenewalDate],
+          ['Registered Stores', stores.length > 0 ? stores.length : (subMatch?.stores ?? summary.stores ?? raw.storeCount ?? (Array.isArray(raw.stores) ? raw.stores.length : 0))],
+          ['Store Allowance', displayStoreAllowance],
+          ['Registered Devices', devices.length > 0 ? devices.length : (subMatch?.devices ?? raw.deviceCount ?? (Array.isArray(raw.devices) ? raw.devices.length : 0))],
+          ['Device Allowance', displayDeviceAllowance],
+          ['Registered Employees', employees.length > 0 ? employees.length : (subMatch?.employees ?? (Array.isArray(employeeRecords) ? employees.length : saved?.employeeCount ?? raw.employeeCount ?? summary.employeeCount ?? 0))],
+          ['Employee Allowance', displayEmployeeAllowance],
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-stores" aria-labelledby="merchant-tab-stores" hidden={activeTab !== 'stores'} tabIndex={0}>
@@ -406,7 +604,16 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [plan, setPlan] = useState("");
-  const [joinedRange, setJoinedRange] = useState(""); const [storeCount, setStoreCount] = useState(""); const [location, setLocation] = useState(""); const [page, setPage] = useState(1); const pageSize = 10;
+  const [location, setLocation] = useState("");
+  const [joinedRange, setJoinedRange] = useState("");
+  const [storeCount, setStoreCount] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPage(1);
+  };
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState(''); const [dateTo, setDateTo] = useState('');
   const [draftFrom, setDraftFrom] = useState(''); const [draftTo, setDraftTo] = useState('');
@@ -459,8 +666,8 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
             `${m.name} ${m.id} ${m.email}`
               .toLowerCase()
               .includes(q.toLowerCase())) &&
-          (!status || m.status === status) &&
-          (!plan || m.plan === plan) && (!storeCount || (storeCount === 'none' ? Number(m.stores) === 0 : storeCount === 'one' ? Number(m.stores) === 1 : Number(m.stores) > 1)) && (!location || `${m.country || ''} ${m.state || ''}`.trim() === location) && (!joinedRange || joinedMatch(m, joinedRange, dateFrom, dateTo)),
+          (!status || String(m.status || '').toLowerCase() === String(status).toLowerCase()) &&
+          (!plan || m.plan === plan) && (!storeCount || (storeCount === 'none' ? Number(m.stores) === 0 : storeCount === 'one' ? Number(m.stores) === 1 : Number(m.stores) > 1)) && (!location || `${m.country || ''} ${m.state || ''}`.trim().toLowerCase() === location.toLowerCase()) && (!joinedRange || joinedMatch(m, joinedRange, dateFrom, dateTo)),
       ),
     [merchants, q, status, plan, joinedRange, storeCount, location, dateFrom, dateTo],
   );
@@ -774,7 +981,15 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
             </tbody>
           </table>
         </div>
-        <div className="merchant-pagination"><span>{rows.length ? `Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, rows.length)} of ${rows.length}` : 'Showing 0 of 0'}</span><div><button type="button" disabled={currentPage === 1} onClick={() => setPage(value => Math.max(1, value - 1))}>Previous</button>{Array.from({ length: pageCount }, (_, index) => <button type="button" className={currentPage === index + 1 ? 'active' : ''} key={index} onClick={() => setPage(index + 1)}>{index + 1}</button>)}<button type="button" disabled={currentPage === pageCount} onClick={() => setPage(value => Math.min(pageCount, value + 1))}>Next</button></div></div>
+        <Pagination
+    currentPage={currentPage}
+    totalPages={pageCount}
+    totalItems={rows.length}
+    pageSize={pageSize}
+    onPageChange={setPage}
+    onPageSizeChange={handlePageSizeChange}
+    itemLabel="merchants"
+/>
       </div>
       {deleteTarget && <dialog className="merchant-delete-dialog" ref={deleteDialog} aria-labelledby="merchant-delete-title" onCancel={event => { event.preventDefault(); if (!deleting) setDeleteTarget(null); }}>
         <h2 id="merchant-delete-title">Delete merchant? </h2>
@@ -804,10 +1019,10 @@ function MerchantEmployeeList({employees,merchantName,onAdd}) {
   const pages=Math.max(1,Math.ceil(filtered.length/10)),current=Math.min(page,pages);
   return <div className="mel"><header className="mel-card mel-heading"><div><h2>Employees</h2><p>These are the employees connected to this merchant.</p></div><button className="mel-primary" onClick={onAdd}>＋ Add Employee</button></header>
     <section className="mel-card"><h3>Employee List</h3><div className="mel-search"><input aria-label="Search employees" placeholder="Search employee, ID, username, phone or email…" value={filters.query} onChange={e=>update('query',e.target.value)}/><button onClick={()=>{setFilters(blank);setPage(1);}}>↺ Reset</button></div>
-    <div className="mel-scroll"><table><thead><tr>{['Employee','Email','Phone','Gender','Assigned Stores','Actions'].map(title=><th key={title}>{title}</th>)}</tr></thead><tbody>{filtered.slice((current-1)*10,current*10).map((e,index)=><tr key={e.id || e.employeeCode || index}><td><strong>{employeeName(e)}</strong>{e.employeeCode&&<small>{e.employeeCode}</small>}</td><td>{e.email || '—'}</td><td>{e.phone || e.phoneNumber || '—'}</td><td>{e.gender || '—'}</td><td>{assignedStoreCount(e)}</td><td><button aria-label={'View '+employeeName(e)} onClick={event=>{lastFocus.current=event.currentTarget;setView(e);}}>View</button></td></tr>)}{!filtered.length&&<tr><td colSpan={6}>No employees found for this merchant.</td></tr>}</tbody></table></div>
+    <div className="mel-scroll"><table><thead><tr>{['Employee','Email','Phone','Gender','Actions'].map(title=><th key={title}>{title}</th>)}</tr></thead><tbody>{filtered.slice((current-1)*10,current*10).map((e,index)=><tr key={e.id || e.employeeCode || index}><td><strong>{employeeName(e)}</strong>{e.employeeCode&&<small>{e.employeeCode}</small>}</td><td>{e.email || '—'}</td><td>{e.phone || e.phoneNumber || '—'}</td><td>{e.gender || '—'}</td><td><button aria-label={'View '+employeeName(e)} onClick={event=>{lastFocus.current=event.currentTarget;setView(e);}}>View</button></td></tr>)}{!filtered.length&&<tr><td colSpan={5}>No employees found for this merchant.</td></tr>}</tbody></table></div>
       <footer><span>Showing {filtered.length?(current-1)*10+1:0} to {Math.min(current*10,filtered.length)} of {filtered.length} entries</span><div className="mel-pages"><button disabled={current===1} onClick={()=>setPage(current-1)}>‹</button><span>{current} / {pages}</span><button disabled={current===pages} onClick={()=>setPage(current+1)}>›</button></div></footer>
     </section>
-    <dialog ref={dialog} className="mel-dialog" aria-labelledby="mel-title" onCancel={event=>{event.preventDefault();setView(null);}}><header className="mel-heading"><h2 id="mel-title">Employee Details</h2><button onClick={()=>setView(null)} aria-label="Close employee details">×</button></header>{view&&<dl>{Object.entries({Name:employeeName(view),Email:view.email,Phone:view.phone || view.phoneNumber,Username:view.username,Gender:view.gender,Status:view.status,'Assigned Stores':assignedStoreCount(view),Roles:roleNames(view).join(', ')}).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value || '—'}</dd></div>)}</dl>}</dialog>
+    <dialog ref={dialog} className="mel-dialog" aria-labelledby="mel-title" onCancel={event=>{event.preventDefault();setView(null);}}><header className="mel-heading"><h2 id="mel-title">Employee Details</h2><button onClick={()=>setView(null)} aria-label="Close employee details">×</button></header>{view&&<dl>{Object.entries({Name:employeeName(view),Email:view.email,Phone:view.phone || view.phoneNumber,Username:view.username,Gender:view.gender,Status:view.status,'Employee Code':view.employeeCode || view.employee_code}).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value || '—'}</dd></div>)}</dl>}</dialog>
   </div>;
 }
 

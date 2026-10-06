@@ -1,3 +1,5 @@
+import { loadLocations } from "../data/locations";
+import { EmployeeToast } from "../components/EmployeeFeedback";
 import React, { useEffect, useState } from "react";
 import PhoneInputModule from "react-phone-input-2";
 
@@ -397,10 +399,21 @@ function StoreRoleAssignmentStyles() {
 }
 
 export default function AddEmployee() {
+  const [locations, setLocations] = useState([]);
+  const [locationError, setLocationError] = useState("");
+  const [locationsLoading, setLocationsLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    loadLocations().then(data => { if (active) setLocations(data); })
+      .catch(error => { if (active) setLocationError(error.message); })
+      .finally(() => { if (active) setLocationsLoading(false); });
+    return () => { active = false; };
+  }, []);
   const [showPassword, setShowPassword] = useState(false);
 
   // Profile image preview
   const [profileImage, setProfileImage] = useState(null);
+  const [profileImageFile, setProfileImageFile] = useState(null);
 
   const [formData, setFormData] = useState({
     employeeCode: "",
@@ -425,6 +438,11 @@ export default function AddEmployee() {
     password: "",
     sendCredentials: true,
   });
+
+  const selectedCountry = locations.find(country => country.name === formData.country);
+  const stateOptions = selectedCountry?.states || [];
+  const selectedState = stateOptions.find(state => state.name === formData.state);
+  const cityOptions = [...new Set((selectedState?.cities || []).map(city => city.name))];
 
   // Store + role assignments.
   // Nothing is pre-populated: the user adds a store and then selects
@@ -536,11 +554,8 @@ export default function AddEmployee() {
 
       case "city":
         if (!trimmed) return "City is required.";
-        if (!/^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/.test(trimmed)) {
-          return "City can contain letters, spaces, apostrophes and hyphens only.";
-        }
-        if (trimmed.length < 2 || trimmed.length > 50)
-          return "City must be between 2 and 50 characters.";
+        if (!cityOptions.includes(trimmed)) return "Select a city for the selected state.";
+        if (trimmed.length > 50) return "City cannot exceed 50 characters.";
         return "";
 
       case "state":
@@ -597,7 +612,6 @@ export default function AddEmployee() {
     const nextErrors = {};
 
     const requiredFields = [
-      "employeeCode",
       "firstName",
       "lastName",
       "email",
@@ -718,6 +732,7 @@ export default function AddEmployee() {
     setFormData((prev) => ({
       ...prev,
       [name]: nextValue,
+      ...(name === "country" ? { state: "", city: "" } : name === "state" ? { city: "" } : {}),
     }));
 
     if (errors[name]) {
@@ -741,18 +756,19 @@ export default function AddEmployee() {
 
     // Check image type
     if (!file.type.startsWith("image/")) {
-      alert("Please select a JPG or PNG image.");
+      setSubmitError("Please select a JPG or PNG image.");
       e.target.value = "";
       return;
     }
 
     // Maximum 2MB
     if (file.size > 2 * 1024 * 1024) {
-      alert("Image size must be less than 2MB.");
+      setSubmitError("Image size must be less than 2MB.");
       e.target.value = "";
       return;
     }
 
+    setProfileImageFile(file);
     // Create preview URL
     const reader = new FileReader();
     reader.onload = () => setProfileImage(reader.result);
@@ -812,13 +828,9 @@ export default function AddEmployee() {
 
     try {
       setIsSaving(true);
-      await createEmployee(formData, storeAssignments);
-      if (profileImage && formData.employeeCode) {
-        window.localStorage.setItem(
-          `employee-profile-photo:${formData.employeeCode}`,
-          profileImage,
-        );
-      }
+      await createEmployee(formData, storeAssignments, profileImageFile);
+      setProfileImageFile(null);
+      setProfileImage(null);
       setFormData({
         employeeCode: "",
         firstName: "",
@@ -1057,71 +1069,30 @@ export default function AddEmployee() {
                 />
               </div>
 
-              <div
-                className="employee-form-grid three-columns"
-                style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}
-              >
-                <FormField
-                  label={
-                    <>
-                      City <span>*</span>
-                    </>
-                  }
-                  name="city"
-                  placeholder="Enter city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  error={errors.city}
-                />
-
+              {locationError && <p role="alert" className="field-error">{locationError}</p>}
+              <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
                 <SelectField
-                  label={
-                    <>
-                      State <span>*</span>
-                    </>
-                  }
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  error={errors.state}
-                  placeholder="Select state"
-                  options={[
-                    "Telangana",
-                    "Andhra Pradesh",
-                    "Karnataka",
-                    "Tamil Nadu",
-                    "Maharashtra",
-                    "Kerala",
-                  ]}
+                  label="Country" required name="country" value={formData.country}
+                  onChange={handleChange} error={errors.country}
+                  options={locations.map(country => country.name)}
+                  placeholder={locationsLoading ? "Loading countries..." : "Select country"}
+                  disabled={locationsLoading}
                 />
-
-                <FormField
-                  label={
-                    <>
-                      PIN Code <span>*</span>
-                    </>
-                  }
-                  name="pinCode"
-                  placeholder="Enter PIN code"
-                  value={formData.pinCode}
-                  onChange={handleChange}
-                  error={errors.pinCode}
-                />
-              </div>
-
-              <div className="country-field" style={{ marginTop: "18px", maxWidth: "calc((100% - 56px) / 3)" }}>
                 <SelectField
-                  label="Country"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  error={errors.country}
-                  options={[
-                    "India",
-                    "United States",
-                    "United Kingdom",
-                    "Australia",
-                  ]}
+                  label="State" required name="state" value={formData.state}
+                  onChange={handleChange} error={errors.state}
+                  placeholder="Select state" options={stateOptions.map(state => state.name)}
+                  disabled={locationsLoading || !formData.country}
+                />
+                <SelectField
+                  label="City" required name="city" value={formData.city}
+                  onChange={handleChange} error={errors.city} options={cityOptions}
+                  placeholder={formData.state ? "Select city" : "Select state first"}
+                  disabled={locationsLoading || !formData.state}
+                />
+                <FormField
+                  label="PIN Code" required name="pinCode" placeholder="Enter PIN code"
+                  value={formData.pinCode} onChange={handleChange} error={errors.pinCode}
                 />
               </div>
             </section>
@@ -1228,16 +1199,18 @@ export default function AddEmployee() {
                 )}
               </div>
 
-              <div style={{ marginTop: "24px" }}>
-                <FormField
-                  label="Employee Code"
-                  required
+              <div className="employee-field" style={{ marginTop: "24px" }}>
+                <label htmlFor="create-employee-code">Employee Code</label>
+                <input
+                  id="create-employee-code"
                   name="employeeCode"
-                  placeholder="e.g. EMP-1008"
-                  value={formData.employeeCode}
-                  onChange={handleChange}
-                  error={errors.employeeCode}
+                  type="text"
+                  value=""
+                  placeholder="Auto Generated"
+                  readOnly
+                  aria-describedby="create-employee-code-help"
                 />
+                <small id="create-employee-code-help" className="employee-code-help">Generated automatically when saved.</small>
               </div>
 
               {/* EMPLOYEE LOGIN PIN */}
@@ -1304,10 +1277,8 @@ export default function AddEmployee() {
         ===================================================== */}
 
         <div className="employee-form-actions">
-          {submitError && <span className="field-error">{submitError}</span>}
-          {successMessage && (
-            <span className="employee-success-message">{successMessage}</span>
-          )}
+          <EmployeeToast message={submitError || successMessage} onClose={() => { setSubmitError(""); setSuccessMessage(""); }} />
+
 
           <button
             type="button"
@@ -1516,6 +1487,7 @@ function SelectField({
   options,
   placeholder,
   error,
+  disabled = false,
 }) {
   return (
     <div className="employee-field">
@@ -1526,6 +1498,7 @@ function SelectField({
       <div className="employee-select">
         <select
           name={name}
+          disabled={disabled}
           value={value}
           onChange={onChange}
           className={error ? "field-invalid" : ""}

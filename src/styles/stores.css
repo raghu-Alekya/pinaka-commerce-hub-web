@@ -63,7 +63,9 @@
 
 .add-store-btn .btn-primary {
     background: #5143bc;
-    border-color: #5143bc
+    border-color: #5143bc;
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(81, 67, 188, .16);
 }
 
 .add-store-btn .btn-primary:hover {
@@ -76,7 +78,7 @@
 }
 
 .add-store-btn .btn-secondary {
-    background: #f6f7fb;
+    background: transparent;
     border: 1.5px solid #4537ad;
     color: #4537ad;
 }
@@ -200,6 +202,53 @@
     border-bottom: 1px solid #f0f1f4;
 }
 
+.store-toolbar .filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    padding-right: 36px;
+
+    background-color: #ffffff;
+    background-image: none;
+
+    position: relative;
+}
+
+/* Custom dropdown arrow */
+.store-toolbar .filter-select {
+    --select-arrow: "⌄";
+}
+
+.store-toolbar .filter-select {
+    text-overflow: ellipsis;
+}
+
+.store-toolbar .filter-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.store-toolbar .filter-select {
+    width: 100%;
+    padding-right: 36px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+}
+
+.store-toolbar .filter-select-arrow {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+
+    color: #64748b;
+    font-size: 13px;
+    pointer-events: none;
+}
+
 /* =========================================================
    STORE SEARCH
 ========================================================= */
@@ -307,23 +356,24 @@
 .stores-table thead th {
     font-size: 12px;
     font-weight: 600;
-    padding: 11px 13px;
+    padding: 0 14px;
     white-space: nowrap;
-    height: 42px;
-    background: #f5f9fe;
-    border-bottom: 1px solid #eceef2;
+    height: 44px;
+    background: #f1f3fd;
+    border-bottom: 1px solid #dfe5ef;
     color: #484c56;
     letter-spacing: 0.35px;
     text-align: left;
+    vertical-align: middle;
 }
 
 .stores-table tbody td {
-    padding: 12px 13px;
+    height: 52px;
+    padding: 10px 14px;
     font-size: 13px;
     vertical-align: middle;
     white-space: nowrap;
-    min-height: 60px;
-    border-bottom: 1px solid #f1f2f5;
+    border-bottom: 1px solid #e4e8ef;
     color: #697285;
 }
 
@@ -796,5 +846,41 @@
     .stores-pagination-controls {
         width: 100%;
         justify-content: flex-end;
+    }
+}
+
+.stores-card,
+.stores-card .table-responsive {
+    min-width: 0;
+}
+
+.stores-card .table-responsive {
+    box-sizing: border-box;
+    width: calc(100% - 24px);
+    max-width: calc(100% - 24px);
+    margin: 0 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    border: 1px solid #dfe9f4;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.stores-card .store-toolbar {
+    border-bottom: 0;
+}
+
+.stores-card .stores-table {
+    width: 100%;
+    min-width: 900px;
+    table-layout: fixed;
+}
+
+@media (max-width: 600px) {
+    .stores-card .table-responsive {
+        width: calc(100% - 20px);
+        max-width: calc(100% - 20px);
+        margin-right: 10px;
+        margin-left: 10px;
     }
 }
