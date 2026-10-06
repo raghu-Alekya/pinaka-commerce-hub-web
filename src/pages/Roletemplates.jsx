@@ -4,6 +4,7 @@ import {
   roleTemplatesApi,
   readRoleTemplatesList,
 } from "../api/roleTemplatesApi";
+
 const initialForm = {
   roleCode: "",
   name: "",
@@ -15,11 +16,8 @@ function displayDate(value) {
   if (!value) return null;
  
   const date = new Date(value);
- 
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
- 
+  if (Number.isNaN(date.getTime())) return null;
+
   return {
     date: date.toLocaleDateString("en-US", {
       month: "short",
@@ -32,21 +30,26 @@ function displayDate(value) {
     }),
   };
 }
+
+// Updated to generate RLC_001 format
 function generateRoleTemplateCode(templates) {
   const existingNumbers = templates
     .map((template) => {
       const match = String(template.roleCode || "").match(/(\d+)$/);
       return match ? Number(match[1]) : 0;
     })
-    .filter((number) => number > 0);
- 
+    .filter((n) => n > 0);
+
   const nextNumber =
     existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
- 
-  return `RTL_${String(nextNumber).padStart(5, "0")}`;
+
+  // Changed prefix to RLC_ and padding to 3 digits
+  return `RLC_${String(nextNumber).padStart(3, "0")}`;
 }
+
 export default function RoleTemplates() {
   const navigate = useNavigate();
+
   const [templates, setTemplates] = useState([]);
   const [form, setForm] = useState(initialForm);
  
@@ -63,12 +66,17 @@ export default function RoleTemplates() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // `roleCode` is generated automatically; we keep the state only
+  // for possible future display of server‑side validation errors.
   const [roleCodeError, setRoleCodeError] = useState("");
- 
+
   const [deletePopup, setDeletePopup] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState(null);
-  const [deleteError, setDeleteError] = useState(""); // <-- ADD THIS
- 
+  const [deleteError, setDeleteError] = useState("");
+
+  /** --------------------------------------------------------------
+   *  Load all role templates from the backend
+   * -------------------------------------------------------------- */
   async function loadTemplates() {
     setLoading(true);
     setError("");
@@ -76,14 +84,13 @@ export default function RoleTemplates() {
     try {
       const response = await roleTemplatesApi.getAll();
       const items = readRoleTemplatesList(response);
- 
       const validItems = items.filter((item) => item?.id != null);
- 
       setTemplates(validItems);
- 
+
+      // When we are not editing, generate the next code for the blank form
       if (editingId === null) {
-        setForm((currentForm) => ({
-          ...currentForm,
+        setForm((cur) => ({
+          ...cur,
           roleCode: generateRoleTemplateCode(validItems),
         }));
       }
@@ -97,12 +104,15 @@ export default function RoleTemplates() {
   useEffect(() => {
     loadTemplates();
   }, []);
- 
+
+  /** --------------------------------------------------------------
+   *  Filtering / sorting logic (client‑side)
+   * -------------------------------------------------------------- */
   const filteredTemplates = useMemo(() => {
     const query = search.trim().toLowerCase();
  
     const filtered = templates.filter((template) => {
-      const searchableText = [
+      const searchable = [
         template.roleCode,
         template.name,
         template.description,
@@ -111,9 +121,8 @@ export default function RoleTemplates() {
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
- 
-      const matchesSearch = !query || searchableText.includes(query);
- 
+
+      const matchesSearch = !query || searchable.includes(query);
       const matchesStatus =
         statusFilter === "ALL" ||
         String(template.status).toUpperCase() === statusFilter;
@@ -122,37 +131,24 @@ export default function RoleTemplates() {
     });
  
     const getDateValue = (template) => {
-      const value =
+      const v =
         template.createdAt || template.created_at || template.createdDate;
- 
-      const timestamp = value ? new Date(value).getTime() : 0;
-      return Number.isNaN(timestamp) ? 0 : timestamp;
+      const ts = v ? new Date(v).getTime() : 0;
+      return Number.isNaN(ts) ? 0 : ts;
     };
  
     return [...filtered].sort((a, b) => {
-      if (sortBy === "NEWEST") {
-        return getDateValue(b) - getDateValue(a);
-      }
- 
-      if (sortBy === "OLDEST") {
-        return getDateValue(a) - getDateValue(b);
-      }
- 
+      if (sortBy === "NEWEST") return getDateValue(b) - getDateValue(a);
+      if (sortBy === "OLDEST") return getDateValue(a) - getDateValue(b);
+
       const nameA = String(a.name || "").trim();
       const nameB = String(b.name || "").trim();
- 
-      if (sortBy === "A_Z") {
-        return nameA.localeCompare(nameB, undefined, {
-          sensitivity: "base",
-        });
-      }
- 
-      if (sortBy === "Z_A") {
-        return nameB.localeCompare(nameA, undefined, {
-          sensitivity: "base",
-        });
-      }
- 
+
+      if (sortBy === "A_Z")
+        return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
+      if (sortBy === "Z_A")
+        return nameB.localeCompare(nameA, undefined, { sensitivity: "base" });
+
       return 0;
     });
   }, [templates, search, statusFilter, sortBy]);
@@ -161,58 +157,35 @@ export default function RoleTemplates() {
   const totalPages = Math.max(1, Math.ceil(totalEntries / PAGE_SIZE));
  
   const paginatedTemplates = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredTemplates.slice(startIndex, startIndex + PAGE_SIZE);
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredTemplates.slice(start, start + PAGE_SIZE);
   }, [filteredTemplates, currentPage]);
  
   const showingFrom =
     totalEntries === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const showingTo =
     totalEntries === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, totalEntries);
- 
-  // Search/filter/sort changes always start from the first valid page.
+
+  /** --------------------------------------------------------------
+   *  Keep pagination in sync when filters change
+   * -------------------------------------------------------------- */
   useEffect(() => {
     setCurrentPage(1);
   }, [search, statusFilter, sortBy]);
- 
-  // If a delete makes the current page invalid, move to the last valid page.
+
+  /** --------------------------------------------------------------
+   *  Adjust page when a delete makes the current page invalid
+   * -------------------------------------------------------------- */
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
+    if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, totalPages]);
- 
-  const roleNameSuggestions = useMemo(
-    () => [
-      ...new Set(
-        templates
-          .map((template) => String(template.name || "").trim())
-          .filter(Boolean),
-      ),
-    ],
-    [templates],
-  );
- 
-  // function validateRoleCode(value) {
-  //   const code = String(value || "").trim();
- 
-  //   if (!code) return "Role Code is required.";
-  //   if (code.length < 3 || code.length > 30) {
-  //     return "Role Code must be 3 to 30 characters.";
-  //   }
-  //   if (!/^[A-Z0-9_]+$/.test(code)) {
-  //     return "Use only letters, numbers, and underscores. No spaces or special characters.";
-  //   }
- 
-  //   return "";
-  // }
+
+  /** --------------------------------------------------------------
+   *  Form handling helpers
+   * -------------------------------------------------------------- */
   function handleChange(event) {
     const { name, value } = event.target;
- 
-    setForm((currentForm) => ({
-      ...currentForm,
-      [name]: value,
-    }));
+    setForm((cur) => ({ ...cur, [name]: value }));
   }
  
   function resetForm() {
@@ -220,8 +193,11 @@ export default function RoleTemplates() {
     setEditingId(null);
     setOriginalForm(null);
     setError("");
-    setRoleCodeError("");
   }
+
+  /** --------------------------------------------------------------
+   *  Save (create / update) a role template
+   * -------------------------------------------------------------- */
   async function saveTemplate() {
     const values = {
       name: form.name.trim(),
@@ -241,6 +217,7 @@ export default function RoleTemplates() {
       const isCreating = editingId === null;
  
       if (editingId !== null) {
+        // Updating – keep the existing generated roleCode
         await roleTemplatesApi.update(editingId, {
           roleCode: originalForm?.roleCode || "",
           name: values.name,
@@ -248,17 +225,13 @@ export default function RoleTemplates() {
           status: values.status,
         });
       } else {
-        // Do NOT send roleCode.
-        // Backend generates it automatically.
+        // Creating – **do NOT** send roleCode; backend generates it
         await roleTemplatesApi.create(values);
       }
  
       await loadTemplates();
- 
-      if (isCreating) {
-        setCurrentPage(1);
-      }
- 
+
+      if (isCreating) setCurrentPage(1);
       resetForm();
     } catch (err) {
       setError(err?.message || "Unable to save role template.");
@@ -266,7 +239,10 @@ export default function RoleTemplates() {
       setSaving(false);
     }
   }
- 
+
+  /** --------------------------------------------------------------
+   *  Populate form for editing an existing template
+   * -------------------------------------------------------------- */
   function editTemplate(template) {
     const nextForm = {
       roleCode: template.roleCode || "",
@@ -278,25 +254,23 @@ export default function RoleTemplates() {
     setEditingId(template.id);
     setForm(nextForm);
     setOriginalForm(nextForm);
- 
     setError("");
     setRoleCodeError("");
- 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
- 
+
+  /** --------------------------------------------------------------
+   *  Delete (soft‑deactivate) helpers
+   * -------------------------------------------------------------- */
   function openDeletePopup(template) {
     setTemplateToDelete(template);
     setDeletePopup(true);
-    setDeleteError(""); // <-- Reset delete erro
+    setDeleteError("");
   }
  
   function closeDeletePopup() {
     if (saving) return;
- 
     setDeletePopup(false);
     setTemplateToDelete(null);
   }
@@ -318,24 +292,18 @@ export default function RoleTemplates() {
     setDeleteError("");
  
     try {
-      console.log("Deactivating Role Template:", targetId);
- 
-      // Soft delete: change status to INACTIVE
       await roleTemplatesApi.update(targetId, {
         roleCode: templateToDelete.roleCode || "",
         name: templateToDelete.name || "",
         description: templateToDelete.description || "",
         status: "INACTIVE",
       });
- 
-      // Reload from backend
+
       await loadTemplates();
- 
-      // If this template was being edited, clear the form
-      if (editingId !== null && String(editingId) === String(targetId)) {
+
+      if (editingId !== null && String(editingId) === String(targetId))
         resetForm();
-      }
- 
+
       setDeletePopup(false);
       setTemplateToDelete(null);
       setDeleteError("");
@@ -354,6 +322,7 @@ export default function RoleTemplates() {
       setSaving(false);
     }
   }
+
   function resetFilters() {
     setSearch("");
     setStatusFilter("ALL");
@@ -412,6 +381,7 @@ export default function RoleTemplates() {
           )}
  
           <div className="role-form-grid role-create-fields-grid">
+            {/* ------------------ ROLE CODE (disabled) ------------------ */}
             <label className="role-field role-code-field">
               <span>
                 Role Template Code <b>*</b>
@@ -422,8 +392,8 @@ export default function RoleTemplates() {
                   type="text"
                   name="roleCode"
                   value={form.roleCode}
-                  onChange={handleChange}
-                  placeholder="e.g. CASHIER"
+                  disabled
+                  placeholder="e.g. RLC_001"
                   maxLength={30}
                   autoComplete="off"
                   aria-invalid={Boolean(roleCodeError)}
@@ -435,7 +405,8 @@ export default function RoleTemplates() {
                 {roleCodeError || ""}
               </small>
             </label>
- 
+
+            {/* ------------------ NAME ------------------ */}
             <label className="role-field role-name-field">
               <span>
                 Role Template Name <b>*</b>
@@ -455,7 +426,8 @@ export default function RoleTemplates() {
  
               <small></small>
             </label>
- 
+
+            {/* ------------------ STATUS ------------------ */}
             <label className="role-field role-status-field">
               <span>
                 Status <b>*</b>
@@ -486,7 +458,8 @@ export default function RoleTemplates() {
  
               <small></small>
             </label>
- 
+
+            {/* ------------------ DESCRIPTION ------------------ */}
             <label className="role-field role-description-field">
               <span>Description</span>
  
@@ -494,18 +467,14 @@ export default function RoleTemplates() {
                 name="description"
                 value={form.description}
                 onChange={handleChange}
-                onInput={(event) => {
-                  event.currentTarget.style.height = "44px";
-                  event.currentTarget.style.height = `${Math.max(
-                    44,
-                    event.currentTarget.scrollHeight,
-                  )}px`;
+                onInput={(e) => {
+                  e.currentTarget.style.height = "44px";
+                  e.currentTarget.style.height = `${Math.max(44, e.currentTarget.scrollHeight)}px`;
                 }}
                 autoComplete="off"
                 placeholder="Describe the role template’s purpose."
                 maxLength={500}
               />
- 
               <div className="role-description-meta">
                 <small> </small>
                 <span>{form.description.length}/500</span>
@@ -537,7 +506,8 @@ export default function RoleTemplates() {
             </button>
           </div>
         </div>
- 
+
+        {/* ------------------ LIST & FILTERS ------------------ */}
         <div className="role-list-card">
           <div className="role-list-header">
             <div>
@@ -547,18 +517,17 @@ export default function RoleTemplates() {
             <div className="role-filters">
               <div className="role-search">
                 <i className="bi bi-search" />
- 
                 <input
                   type="text"
                   value={search}
-                  onChange={(event) => setSearch(event.target.value)}
+                  onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search role templates..."
                 />
               </div>
  
               <select
                 value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value)}
+                onChange={(e) => setStatusFilter(e.target.value)}
                 aria-label="Filter by status"
               >
                 <option value="ALL">All Statuses</option>
@@ -568,7 +537,7 @@ export default function RoleTemplates() {
  
               <select
                 value={sortBy}
-                onChange={(event) => setSortBy(event.target.value)}
+                onChange={(e) => setSortBy(e.target.value)}
                 aria-label="Sort role templates"
               >
                 <option value="NEWEST">Newest to Oldest</option>
@@ -631,9 +600,9 @@ export default function RoleTemplates() {
                         state: { roleTemplate: template },
                       })
                     }
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
                         navigate(`/role-templates/${template.id}`, {
                           state: { roleTemplate: template },
                         });
@@ -659,9 +628,7 @@ export default function RoleTemplates() {
  
                     <td className="role-status-cell role-equal-col">
                       <span
-                        className={`role-status ${String(
-                          template.status || "",
-                        ).toLowerCase()}`}
+                        className={`role-status ${String(template.status || "").toLowerCase()}`}
                       >
                         <i />
                         {String(template.status).toUpperCase() === "ACTIVE"
@@ -672,20 +639,15 @@ export default function RoleTemplates() {
  
                     <td className="role-created-cell role-equal-col">
                       {(() => {
-                        const formatted = displayDate(
+                        const f = displayDate(
                           template.createdAt ||
                             template.created_at ||
                             template.createdDate,
                         );
- 
-                        return formatted ? (
+                        return f ? (
                           <>
-                            <span className="role-date-value">
-                              {formatted.date}
-                            </span>
-                            <span className="role-time-value">
-                              {formatted.time}
-                            </span>
+                            <span className="role-date-value">{f.date}</span>
+                            <span className="role-time-value">{f.time}</span>
                           </>
                         ) : (
                           "—"
@@ -695,20 +657,15 @@ export default function RoleTemplates() {
  
                     <td className="role-updated-cell role-equal-col">
                       {(() => {
-                        const formatted = displayDate(
+                        const f = displayDate(
                           template.updatedAt ||
                             template.updated_at ||
                             template.updatedDate,
                         );
- 
-                        return formatted ? (
+                        return f ? (
                           <>
-                            <span className="role-date-value">
-                              {formatted.date}
-                            </span>
-                            <span className="role-time-value">
-                              {formatted.time}
-                            </span>
+                            <span className="role-date-value">{f.date}</span>
+                            <span className="role-time-value">{f.time}</span>
                           </>
                         ) : (
                           "—"
@@ -720,29 +677,26 @@ export default function RoleTemplates() {
                       <button
                         type="button"
                         className="role-edit-action"
-                        onClick={(event) => {
-                          event.stopPropagation();
+                        onClick={(e) => {
+                          e.stopPropagation();
                           editTemplate(template);
                         }}
                         disabled={saving}
-                        aria-label={`Edit ${
-                          template.name || template.roleCode
-                        }`}
+                        aria-label={`Edit ${template.name || template.roleCode}`}
                         title="Edit role template"
                       >
                         <i className="bi bi-pencil" />
                       </button>
+
                       <button
                         type="button"
                         className="role-delete-action"
-                        onClick={(event) => {
-                          event.stopPropagation();
+                        onClick={(e) => {
+                          e.stopPropagation();
                           openDeletePopup(template);
                         }}
                         disabled={saving}
-                        aria-label={`Delete ${
-                          template.name || template.roleCode
-                        }`}
+                        aria-label={`Delete ${template.name || template.roleCode}`}
                         title="Delete role template"
                       >
                         <i className="bi bi-trash" />
@@ -755,7 +709,7 @@ export default function RoleTemplates() {
                   <tr>
                     <td colSpan={7} className="role-empty-state">
                       {loading
-                        ? "Loading role templates..."
+                        ? "Loading role templates…"
                         : "No role templates found."}
                     </td>
                   </tr>
@@ -763,7 +717,8 @@ export default function RoleTemplates() {
               </tbody>
             </table>
           </div>
- 
+
+          {/* ------------------ PAGINATION ------------------ */}
           <div className="role-pagination">
             <span className="role-pagination-info">
               Showing {showingFrom} to {showingTo} of {totalEntries} role
@@ -778,35 +733,32 @@ export default function RoleTemplates() {
                 <button
                   type="button"
                   className="role-page-btn role-page-arrow"
-                  onClick={() =>
-                    setCurrentPage((page) => Math.max(1, page - 1))
-                  }
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   aria-label="Previous page"
                 >
                   <i className="bi bi-chevron-left" />
                 </button>
- 
-                {Array.from(
-                  { length: totalPages },
-                  (_, index) => index + 1,
-                ).map((page) => (
-                  <button
-                    key={page}
-                    type="button"
-                    className={`role-page-btn ${currentPage === page ? "active" : ""}`}
-                    onClick={() => setCurrentPage(page)}
-                    aria-current={currentPage === page ? "page" : undefined}
-                  >
-                    {page}
-                  </button>
-                ))}
- 
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      className={`role-page-btn ${currentPage === page ? "active" : ""}`}
+                      onClick={() => setCurrentPage(page)}
+                      aria-current={currentPage === page ? "page" : undefined}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
+
                 <button
                   type="button"
                   className="role-page-btn role-page-arrow"
                   onClick={() =>
-                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
                   }
                   disabled={currentPage === totalPages}
                   aria-label="Next page"
@@ -818,6 +770,8 @@ export default function RoleTemplates() {
           </div>
         </div>
       </section>
+
+      {/* ------------------ DELETE (Deactivate) MODAL ------------------ */}
       {deletePopup && templateToDelete && (
         <div
           className="role-delete-overlay"
@@ -829,8 +783,7 @@ export default function RoleTemplates() {
             <div className="role-delete-icon">
               <i className="bi bi-trash" />
             </div>
- 
-            {/* <h3 id="delete-role-template-title">Delete Role Template?</h3> */}
+
             <h3 id="delete-role-template-title">Deactivate Role Template?</h3>
  
             <p>
@@ -846,8 +799,7 @@ export default function RoleTemplates() {
             </p>
  
             <p>This action cannot be undone.</p>
- 
-            {/* RENDER DELETE ERROR HERE */}
+
             {deleteError && (
               <p
                 className="role-error-message"
@@ -874,8 +826,7 @@ export default function RoleTemplates() {
                 onClick={confirmDeleteTemplate}
                 disabled={saving}
               >
-                {/* {saving ? "Deleting..." : "Yes, Delete"} */}
-                {saving ? "Deactivating..." : "Yes, Deactivate"}
+                {saving ? "Deactivating…" : "Yes, Deactivate"}
               </button>
             </div>
           </div>
