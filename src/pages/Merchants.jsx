@@ -604,15 +604,16 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [plan, setPlan] = useState("");
+  const [location, setLocation] = useState("");
   const [joinedRange, setJoinedRange] = useState("");
-const [storeCount, setStoreCount] = useState("");
-const [page, setPage] = useState(1);
-const [pageSize, setPageSize] = useState(10);
+  const [storeCount, setStoreCount] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-const handlePageSizeChange = (size) => {
-  setPageSize(size);
-  setPage(1);
-};
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPage(1);
+  };
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState(''); const [dateTo, setDateTo] = useState('');
   const [draftFrom, setDraftFrom] = useState(''); const [draftTo, setDraftTo] = useState('');
@@ -665,8 +666,8 @@ const handlePageSizeChange = (size) => {
             `${m.name} ${m.id} ${m.email}`
               .toLowerCase()
               .includes(q.toLowerCase())) &&
-          (!status || m.status === status) &&
-          (!plan || m.plan === plan) && (!storeCount || (storeCount === 'none' ? Number(m.stores) === 0 : storeCount === 'one' ? Number(m.stores) === 1 : Number(m.stores) > 1)) && (!location || `${m.country || ''} ${m.state || ''}`.trim() === location) && (!joinedRange || joinedMatch(m, joinedRange, dateFrom, dateTo)),
+          (!status || String(m.status || '').toLowerCase() === String(status).toLowerCase()) &&
+          (!plan || m.plan === plan) && (!storeCount || (storeCount === 'none' ? Number(m.stores) === 0 : storeCount === 'one' ? Number(m.stores) === 1 : Number(m.stores) > 1)) && (!location || `${m.country || ''} ${m.state || ''}`.trim().toLowerCase() === location.toLowerCase()) && (!joinedRange || joinedMatch(m, joinedRange, dateFrom, dateTo)),
       ),
     [merchants, q, status, plan, joinedRange, storeCount, location, dateFrom, dateTo],
   );
