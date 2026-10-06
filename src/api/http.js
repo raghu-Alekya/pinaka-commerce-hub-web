@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "../config/env";
 import { getAccessToken, getRefreshToken, setAccessToken, setRefreshToken, setStoredUser } from "../auth/tokenStore";
 import { endpoints } from "./endpoints";
- 
+
 export class ApiError extends Error {
   constructor(message, status, body) {
     super(message);
@@ -10,7 +10,7 @@ export class ApiError extends Error {
     this.body = body;
   }
 }
- 
+
 // Fixed buildUrl with safety checks
 function buildUrl(path) {
   if (!path || typeof path !== "string") {
@@ -42,14 +42,14 @@ function buildUrl(path) {
 async function parseBody(response) {
   const text = await response.text();
   if (!text) return null;
- 
+
   try {
     return JSON.parse(text);
   } catch {
     return text;
   }
 }
- 
+
 let refreshPromise = null;
  
 async function refreshAccessToken() {
@@ -77,7 +77,7 @@ async function refreshAccessToken() {
  
   return refreshPromise;
 }
- 
+
 export async function apiRequest(
   path,
   {
@@ -92,7 +92,7 @@ export async function apiRequest(
   const token = tokenOverride ?? getAccessToken();
   const requestUrl = buildUrl(path);
   const payload = body !== undefined ? body : undefined;
- 
+
   console.log("[API REQUEST]", {
     method,
     url: requestUrl,
@@ -100,7 +100,7 @@ export async function apiRequest(
     payload,
     authenticated: Boolean(token),
   });
- 
+
   const response = await fetch(requestUrl, {
     method,
     credentials: "include",
@@ -113,9 +113,9 @@ export async function apiRequest(
     },
     body: payload !== undefined ? JSON.stringify(payload) : undefined,
   });
- 
+
   const data = await parseBody(response);
- 
+
   console.log("[API RESPONSE]", {
     method,
     url: requestUrl,
@@ -123,7 +123,7 @@ export async function apiRequest(
     ok: response.ok,
     data,
   });
- 
+
   if (
     response.status === 401 &&
     !skipAuthRefresh &&
@@ -143,7 +143,7 @@ export async function apiRequest(
       setAccessToken(null);
     }
   }
- 
+
   if (!response.ok) {
     const message =
       (data && (data.message || data.error)) ||
@@ -160,10 +160,10 @@ export async function apiRequest(
       data
     );
   }
- 
+
   return data;
 }
- 
+
 export const api = {
   get: (path, options) => apiRequest(path, { ...options, method: "GET" }),
   post: (path, body, options) =>

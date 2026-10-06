@@ -212,30 +212,61 @@ const unwrapPlan = (response) => {
  * possible API response formats.
  */
 const extractPlans = (response) => {
+  if (!response) return [];
+
   // API returned an array directly.
   if (Array.isArray(response)) {
     return response;
   }
 
-  // API returned:
-  // { plans: [...] }
+  // API returned planGroups (e.g. GET /plans/merchant-form or GET /connector/api/v1/plans/merchant-form)
+  const planGroups =
+    response?.planGroups ||
+    response?.data?.planGroups ||
+    response?.result?.planGroups;
+
+  if (Array.isArray(planGroups)) {
+    const list = [];
+    planGroups.forEach((group) => {
+      const groupStoreType =
+        group.storeType || group.store_type || group.storeTypeId || "";
+      const groupPlans = Array.isArray(group.plans)
+        ? group.plans
+        : Array.isArray(group.items)
+        ? group.items
+        : [];
+
+      groupPlans.forEach((plan) => {
+        list.push({
+          ...plan,
+          storeType: plan.storeType || plan.store_type || groupStoreType,
+          storeTypeId:
+            plan.storeTypeId ||
+            plan.store_type_id ||
+            group.storeTypeId ||
+            (typeof groupStoreType === "object" ? groupStoreType?.id : groupStoreType) ||
+            "",
+        });
+      });
+    });
+
+    if (list.length > 0) {
+      return list;
+    }
+  }
+
+  // API returned: { plans: [...] }
   if (Array.isArray(response?.plans)) {
     return response.plans;
   }
 
-  // API returned:
-  // { data: [...] }
+  // API returned: { data: [...] }
   if (Array.isArray(response?.data)) {
     return response.data;
   }
 
-  // API returned:
-  // { data: { plans: [...] } }
-  if (
-    Array.isArray(
-      response?.data?.plans
-    )
-  ) {
+  // API returned: { data: { plans: [...] } }
+  if (Array.isArray(response?.data?.plans)) {
     return response.data.plans;
   }
 
@@ -554,16 +585,16 @@ export function normalizePlan(item) {
 
     /* Included stores */
     includedStores:
-      item.stores_limit ??
-      item.included_stores ??
       item.includedStores ??
+      item.included_stores ??
+      item.stores_limit ??
       0,
 
     /* Included terminals */
     includedTerminals:
-      item.terminal_limit ??
-      item.included_terminals ??
       item.includedTerminals ??
+      item.included_terminals ??
+      item.terminal_limit ??
       0,
 
     /* Additional terminal price */
@@ -573,10 +604,17 @@ export function normalizePlan(item) {
       0,
 
     /* Included employees/users */
-    includedUsers:
-      item.employees_limit ??
+    includedEmployees:
       item.includedEmployees ??
       item.included_employees ??
+      item.employees_limit ??
+      item.includedUsers ??
+      0,
+
+    includedUsers:
+      item.includedEmployees ??
+      item.included_employees ??
+      item.employees_limit ??
       item.includedUsers ??
       0,
 
@@ -641,14 +679,43 @@ export function normalizePlan(item) {
 /**
  * GET /plans
  */
-export async function listPlans() {
-  const response =
-    await api.get(
-      endpoints.plans
-    );
+export async function getMerchantFormPlans() {
+  let response = null;
+  try {
+    response = await api.get(endpoints.plansMerchantForm || "/plans/merchant-form");
+  } catch {
+    try {
+      response = await api.get("/connector/api/v1/plans/merchant-form");
+    } catch {
+      response = await api.get(endpoints.plans);
+    }
+  }
 
-  const plans =
-    extractPlans(response);
+  const plans = extractPlans(response);
+  return plans.map(normalizePlan).filter(Boolean);
+}
+
+/**
+ * GET /plans
+ */
+export async function listPlans() {
+  let response = null;
+  try {
+    response = await api.get(endpoints.plans);
+  } catch {
+    response = null;
+  }
+
+  let plans = extractPlans(response);
+
+  if (!plans.length) {
+    try {
+      const merchantFormRes = await api.get(endpoints.plansMerchantForm || "/plans/merchant-form");
+      plans = extractPlans(merchantFormRes);
+    } catch {
+      // fallback handled below
+    }
+  }
 
   return plans
     .map(normalizePlan)

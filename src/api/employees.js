@@ -335,5 +335,3 @@ export async function deleteEmployeeProfileImage(employeeId) {
   const response = await api.delete(url);
   return response?.data || response;
 }
- 
- 
