@@ -512,19 +512,19 @@ const handlePageSizeChange = (size) => {
           <table className="employees-table">
             <thead>
               <tr>
-                <th>EMPLOYEE</th>
+                <th>Employee</th>
 
-                <th>CONTACT</th>
+                <th>Contact</th>
 
-                <th>MERCHANT</th>
+                <th>Merchant</th>
 
-                <th>STATUS</th>
+                <th>Status</th>
 
-                <th>CREATED AT</th>
+                <th>Created At</th>
 
-                <th>UPDATED AT</th>
+                <th>Updated At</th>
 
-                <th>ACTIONS</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>

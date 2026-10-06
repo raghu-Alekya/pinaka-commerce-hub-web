@@ -429,7 +429,7 @@
 .sf-outline,
 .sf-primary {
   display: inline-flex;
-  min-height: 36px;
+  min-height: 40px;
   align-items: center;
   justify-content: center;
   gap: 7px;
@@ -1832,7 +1832,7 @@
 .sf-panel-head p { margin: 3px 0 0; color: #8994a8; font-size: 11px; }
 .sf-outline, .sf-primary { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 7px; padding: 0 13px; border: 1px solid #5143bc; border-radius: 7px; background: #f6f8fc; color:#5143bc; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .sf-outline:hover { background: #fafbfc; }
-.sf-primary { min-height: 42px; padding: 0 20px; border-color:#5143bc; background: #5143bc; color: #fff; box-shadow: 0 4px 10px #5937e82b; }
+.sf-primary { min-height: 40px; padding: 0 20px; border-color:#5143bc; background: #5143bc; color: #fff; box-shadow: 0 4px 10px #5937e82b; }
 .sf-primary:hover { background: #4537ad; }
 .sf-form-grid { display: grid; gap: 15px 16px; padding: 17px; }
 .sf-basic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
@@ -1876,7 +1876,7 @@
 .sf-hours-table th:first-child, .sf-hours-table td:first-child { width: 19%; font-weight: 600; }
 .sf-hours-table td input[type="number"] { max-width: 80px; }
 .sf-hours-table td input:disabled { background: #f5f6f9; color: #a8b0c0; }
-.sf-footer { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 10px; margin: 14px -8px 0; padding: 13px 8px 0; border-top: 1px solid #e5e9f1; background: #f6f8fcf2; }
+.sf-footer { position: static; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 10px; margin: 14px -8px 0; padding: 13px 8px 0; border-top: 1px solid #e5e9f1; background: #f6f8fcf2; }
 .sf-footer .sf-save-draft { margin-right: 5px; }
 .sf-info-banner { display: flex; align-items: center; gap: 9px; margin-bottom: 15px; padding: 12px 15px; border: 1px solid #e1dcff; border-radius: 8px; background: #f7f5ff; color: #5f6b84; font-size: 11px; }
 .sf-info-banner > i, .sf-info-banner > span { color: var(--sf-purple); }
