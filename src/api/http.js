@@ -18,7 +18,7 @@ function buildUrl(path) {
   }
   if (/^https?:\/\//i.test(path)) return path;
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
+ 
   if (/^https?:\/\//i.test(API_BASE_URL || "")) {
     try {
       const urlObj = new URL(API_BASE_URL);
@@ -31,14 +31,14 @@ function buildUrl(path) {
       return `${API_BASE_URL}${normalizedPath}`;
     }
   }
-
+ 
   if (normalizedPath.startsWith("/connector/") || normalizedPath.startsWith("/connectors/")) {
     return normalizedPath;
   }
   return `${API_BASE_URL || ""}${normalizedPath}`;
 }
-
-
+ 
+ 
 async function parseBody(response) {
   const text = await response.text();
   if (!text) return null;
@@ -51,7 +51,7 @@ async function parseBody(response) {
 }
 
 let refreshPromise = null;
-
+ 
 async function refreshAccessToken() {
   if (!refreshPromise) {
     refreshPromise = (async () => {
@@ -74,7 +74,7 @@ async function refreshAccessToken() {
       refreshPromise = null;
     });
   }
-
+ 
   return refreshPromise;
 }
 
@@ -174,3 +174,5 @@ export const api = {
     apiRequest(path, { ...options, method: "PATCH", body }),
   delete: (path, options) => apiRequest(path, { ...options, method: "DELETE" }),
 };
+ 
+ 

@@ -5,7 +5,7 @@ import MerchantRoles from "./MerchantRoles";
 import AddMerchantDevice from "./AddMerchantDevice";
 import { MerchantEmployeeForm } from "./AddMerchantEmployee";
 import { useReferenceData } from "../api/referenceData";
-import { listSubscriptionPlans } from "../api/subscriptions";
+import { formatDate, listSubscriptionPlans } from "../api/subscriptions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant } from "../api/merchants";
@@ -237,7 +237,49 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   )?.name || employee.storeId;
   const devices = [...createdDevices,...list(saved?.devices ?? raw.devices ?? response.devices).filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))].filter(device=>device.merchantId==null || String(device.merchantId)===String(merchantId));
   const payments = list(saved?.paymentHistory ?? raw.paymentHistory);
-  const business = contact.business || raw.legalBusinessName || raw.businessName || summary.name;
+  const subscriptionPlan = subscription.plan && typeof subscription.plan === 'object'
+    ? subscription.plan
+    : subscription.planDetails && typeof subscription.planDetails === 'object'
+      ? subscription.planDetails
+      : response.plan && typeof response.plan === 'object'
+        ? response.plan
+        : raw.plan && typeof raw.plan === 'object'
+          ? raw.plan
+          : {};
+  const subscriptionStoreType = subscription.storeType && typeof subscription.storeType === 'object'
+    ? subscription.storeType
+    : subscriptionPlan.storeType && typeof subscriptionPlan.storeType === 'object'
+      ? subscriptionPlan.storeType
+      : {};
+  const registeredStores = raw.storeCount ?? response.storeCount ?? summary.storeCount ?? stores.length;
+  const registeredDevices = raw.deviceCount ?? response.deviceCount ?? summary.deviceCount ?? devices.length;
+  const registeredEmployees = raw.employeeCount ?? response.employeeCount ?? summary.employeeCount ?? employees.length;
+  const storeAllowance = subscriptionPlan.includedStores ?? subscriptionPlan.storesLimit ?? subscriptionPlan.stores_limit;
+  const deviceAllowance = subscriptionPlan.includedTerminals ?? subscriptionPlan.terminalLimit ?? subscriptionPlan.terminal_limit;
+  const employeeAllowance = subscriptionPlan.includedEmployees ?? subscriptionPlan.employeesLimit ?? subscriptionPlan.employees_limit;
+  const startDateValue = subscription.startDate || subscription.start_date || saved?.start;
+  const renewalDateValue = subscription.renewalDate || subscription.renewal_date || subscription.nextBillingDate || summary.renewal;
+  const inferredBillingCycle = (() => {
+    if (!startDateValue || !renewalDateValue) return undefined;
+    const start = new Date(startDateValue);
+    const renewal = new Date(renewalDateValue);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(renewal.getTime())) return undefined;
+    const months = (renewal.getUTCFullYear() - start.getUTCFullYear()) * 12 + renewal.getUTCMonth() - start.getUTCMonth();
+    if (months >= 11) return 'ANNUAL';
+    if (months >= 3) return 'QUARTERLY';
+    if (months >= 1) return 'MONTHLY';
+    return undefined;
+  })();
+  const billingCycle = subscription.billingCycle || subscription.billing_cycle || subscription.cycle
+    || subscriptionPlan.billingCycle || subscriptionPlan.billing_cycle || subscriptionPlan.cycle
+    || raw.billingCycle || raw.billing_cycle || inferredBillingCycle;
+  const business = contact.business || raw.legalBusinessName || raw.businessName || raw.business_display_name || raw.businessDisplayName || summary.name;
+  const businessDisplayName = contact.display || raw.businessDisplayName || raw.business_display_name || raw.businessName || raw.name || summary.name;
+  const firstName = raw.firstName || raw.first_name || contact.firstName || contact.first_name;
+  const lastName = raw.lastName || raw.last_name || contact.lastName || contact.last_name;
+  const addressLine1 = contact.addressLine1 || contact.address_line1 || raw.addressLine1 || raw.address_line1 || address.addressLine1 || address.address_line1 || address.street;
+  const addressLine2 = contact.addressLine2 || contact.address_line2 || raw.addressLine2 || raw.address_line2 || address.addressLine2 || address.address_line2;
+  const fullAddress = [addressLine1, addressLine2].filter(Boolean).join(', ');
   const displayMerchantCode = raw.merchant_code || raw.merchantId || summary.merchantId || contact.code || raw.code || raw.merchantCode || summary.id || merchantId;
   const storeName = device => device.storeName || stores.find(store=>device.storeId!=null && [store.id,store.code,store.storeId].some(id=>id!=null && String(id)===String(device.storeId)))?.name || (saved && typeof device.store==='number' ? stores[device.store]?.name : '') || device.storeId || '—';
   return <div className="page-content merchant-readonly">
@@ -275,16 +317,17 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       <div role="tabpanel" id="merchant-panel-overview" aria-labelledby="merchant-tab-overview" hidden={activeTab !== 'overview'} tabIndex={0}>
         <ViewSection title="Business Details"><ViewFields items={[
           ['Merchant Code', displayMerchantCode], ['Legal / Business Name', business],
-          ['Business Display Name', contact.display || raw.businessName || raw.name || summary.name], ['Status', summary.status || raw.status],
-          ['Joined Date', summary.joined || raw.createdAt],
+          ['Business Display Name', businessDisplayName], ['Status', summary.status || raw.status],
+          ['Joined Date', formatDate(summary.joined || raw.createdAt || raw.created_at)],
+          ['Billing Cycle', billingCycle],
         ]} /></ViewSection>
         <ViewSection title="Primary Contact"><ViewFields items={[
-          ['Merchant Name', saved ? contact.name : raw.ownerName || [raw.firstName, raw.lastName].filter(Boolean).join(' ')],
-          ['Email', contact.email || summary.email], ['Phone', contact.phone || summary.phone],
-          ['Country', contact.country || address.country || summary.country], ['City', contact.city || address.city],
-          ['State / Province', contact.state || address.state || summary.state],
-          ['Address', typeof address === 'string' ? address : address.street || address.addressLine1],
-          ['Postal Code', contact.postal || contact.postalCode || address.postalCode || address.zipCode],
+          ['Merchant Name', contact.name || raw.merchantName || raw.ownerName || [firstName, lastName].filter(Boolean).join(' ')],
+          ['Email', contact.email || raw.merchantEmail || summary.email], ['Phone', contact.phone || raw.merchantPhoneNumber || summary.phone],
+          ['Country', contact.country || raw.country || address.country || summary.country], ['City', contact.city || raw.city || address.city],
+          ['State / Province', contact.state || raw.state || address.state || summary.state],
+          ['Address', typeof address === 'string' ? address : fullAddress],
+          ['Postal Code', contact.postal || contact.postalCode || contact.postal_code || raw.postalCode || raw.postal_code || address.postalCode || address.postal_code || address.zipCode],
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-subscription" aria-labelledby="merchant-tab-subscription" hidden={activeTab !== 'subscription'} tabIndex={0}>
