@@ -198,21 +198,23 @@
 
 .shifts-table th,
 .shifts-table td {
-    height: 30px;
+    height: 52px;
     box-sizing: border-box;
-    border-right: 1px solid #d5d7da;
-    border-bottom: 1px solid #d5d7da;
-    padding: 4px 8px;
+    border-right: 1px solid #dfe5ef;
+    border-bottom: 1px solid #e4e8ef;
+    padding: 10px 14px;
     text-align: left;
     white-space: nowrap;
-    font-size: 10px;
+    font-size: 13px;
+    vertical-align: middle;
 }
 
 .shifts-table th {
-    height: 29px;
-    background: #f4f4f5;
+    height: 44px;
+    background: #f1f3fd;
     color: #303030;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .shifts-table td {
