@@ -18,11 +18,26 @@ function buildUrl(path) {
   }
   if (/^https?:\/\//i.test(path)) return path;
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+ 
+  if (/^https?:\/\//i.test(API_BASE_URL || "")) {
+    try {
+      const urlObj = new URL(API_BASE_URL);
+      const basePath = urlObj.pathname.replace(/\/+$/, "");
+      if (basePath && (normalizedPath.startsWith(basePath) || normalizedPath.startsWith("/connector/"))) {
+        return `${urlObj.origin}${normalizedPath}`;
+      }
+      return `${API_BASE_URL}${normalizedPath}`;
+    } catch {
+      return `${API_BASE_URL}${normalizedPath}`;
+    }
+  }
+ 
   if (normalizedPath.startsWith("/connector/") || normalizedPath.startsWith("/connectors/")) {
     return normalizedPath;
   }
   return `${API_BASE_URL || ""}${normalizedPath}`;
 }
+ 
  
 async function parseBody(response) {
   const text = await response.text();
@@ -36,7 +51,7 @@ async function parseBody(response) {
 }
  
 let refreshPromise = null;
-
+ 
 async function refreshAccessToken() {
   if (!refreshPromise) {
     refreshPromise = (async () => {
@@ -59,7 +74,7 @@ async function refreshAccessToken() {
       refreshPromise = null;
     });
   }
-
+ 
   return refreshPromise;
 }
  
@@ -159,3 +174,5 @@ export const api = {
     apiRequest(path, { ...options, method: "PATCH", body }),
   delete: (path, options) => apiRequest(path, { ...options, method: "DELETE" }),
 };
+ 
+ 
