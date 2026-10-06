@@ -354,6 +354,40 @@
   table-layout: fixed;
   border-collapse: collapse;
 }
+
+.employees-list-card,
+.employees-table-wrap {
+  min-width: 0;
+}
+
+.employees-table-wrap {
+  box-sizing: border-box;
+  width: calc(100% - 24px);
+  max-width: calc(100% - 24px);
+  margin: 0 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border: 1px solid #dfe9f4;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.employees-list-card > .employees-filter-bar {
+  border-bottom: 0;
+}
+
+.employees-table {
+  min-width: 1100px;
+}
+
+@media (max-width: 600px) {
+  .employees-table-wrap {
+    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+}
 /* Column widths */
 .employees-table th:nth-child(1),
 .employees-table td:nth-child(1) {
