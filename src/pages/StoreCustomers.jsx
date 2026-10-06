@@ -423,14 +423,14 @@ export default function StoreCustomers({
 
               <thead>
                 <tr>
-                  <th>CUSTOMER</th>
-                  <th>EMAIL</th>
-                  <th>PHONE</th>
-                  <th>TYPE</th>
-                  <th>ORDERS</th>
-                  <th>TOTAL SPENT</th>
-                  <th>STATUS</th>
-                  <th>LAST UPDATED</th>
+                  <th>Customer</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Type</th>
+                  <th>Orders</th>
+                  <th>Total Spent</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
                 </tr>
               </thead>
 

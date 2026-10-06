@@ -520,11 +520,11 @@ const handlePageSizeChange = (size) => {
 
                 </th>{" "}
 
-                <th>DEVICE NAME</th> <th>DEVICE TYPE</th> <th>SERIAL NUMBER</th>{" "}
+                <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
 
-                <th>MERCHANT NAME</th> <th>CONNECTION STATUS</th>{" "}
+                <th>Merchant Name</th> <th>Connection Status</th>{" "}
 
-                 <th>ACTIONS</th>{" "}
+                 <th>Actions</th>{" "}
 
               </tr>{" "}
 

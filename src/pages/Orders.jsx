@@ -499,12 +499,12 @@ const handlePageSizeChange = (size) => {
 
                             <tr>
 
-                                <th>WOO ORDER ID</th>
-                                <th>OFFLINE ORDER ID</th>
-                                <th>DATE</th>
-                                <th>STATUS</th>
-                                <th>AUTHOR</th>
-                                <th>TOTAL</th>
+                                <th>Woo Order ID</th>
+                                <th>Offline Order ID</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Author</th>
+                                <th>Total</th>
 
                             </tr>
 

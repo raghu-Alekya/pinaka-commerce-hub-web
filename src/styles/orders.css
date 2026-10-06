@@ -452,30 +452,32 @@ input {
 }
 
 .orders-table th {
-    padding: 0px 11px;
-    border-top: 1px solid #eceef2;;
-    border-bottom: 1px solid #eceef2;;
-    background: #f5f9fe;
+    height: 44px;
+    padding: 0 14px;
+    border-top: 1px solid #dfe5ef;
+    border-bottom: 1px solid #dfe5ef;
+    background: #f1f3fd;
     color: #484c56;
     font-size: 12px;
+    vertical-align: middle;
     font-weight: 600;
     text-align: left;
     letter-spacing: .35px;
     white-space: nowrap;
-    height: 40px;
 }
 
 .orders-table td {
-    padding: 13px 14px;
-    border-bottom: 1px solid #edf0f4;     
+    height: 52px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e4e8ef;
     color: #4d5970;
-    font-size: 12px;
+    font-size: 13px;
     vertical-align: middle;
 }
 
 .merchant-table tbody td {
-    min-height: 60px;
-    padding: 9px 11px;
+    min-height: 52px;
+    padding: 10px 14px;
     border-bottom: 1px solid #f1f2f5;
     color: #697285;
     font-size: 13px;
