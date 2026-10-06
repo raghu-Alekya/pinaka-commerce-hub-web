@@ -67,9 +67,9 @@
 
   grid-template-columns: repeat(4, minmax(0, 1fr));
 
-  gap: 18px;
+  gap: 10px;
 
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 
@@ -93,7 +93,7 @@
 
   background: #ffffff;
 
-  border: 1px solid #e4e7ed;
+  border: 1px solid #edf0f5;
 
   border-radius: 8px;
 
@@ -188,13 +188,15 @@
 .cash-kpi-content > span {
   display: block;
 
-  color: #697286;
+  color: #536b8c;
 
-  font-size: 12px;
+  font-size: 11px;
 
-  line-height: 1.2;
+  line-height: 15px;
 
-  margin-bottom: 3px;
+  margin-bottom: 0;
+
+  font-weight: 400;
 }
 
 
@@ -203,13 +205,13 @@
 .cash-kpi-content > strong {
   display: block;
 
-  color: #1d2942;
+  color: #152d4e;
 
-  font-size: 20px;
+  font-size: 22px;
 
-  line-height: 1.1;
+  line-height: 25px;
 
-  font-weight: 700;
+  font-weight: 750;
 }
 
 
@@ -221,25 +223,29 @@
   display: flex;
   align-items: center;
 
-  gap: 3px;
+  gap: 5px;
 
-  margin-top: 5px;
+  margin-top: 2px;
 
-  font-size: 8px;
+  font-size: 10px;
 
-  line-height: 1.2;
+  line-height: 14px;
 
   white-space: nowrap;
 }
 
+.cash-kpi-content small:empty {
+  display: none;
+}
+
 .cash-kpi-content small i {
-  font-size: 9px;
+  font-size: 6px;
 }
 
 .cash-kpi-content small span {
   color: #8d95a5;
 
-  font-size: 8px;
+  font-size: 10px;
 
   font-weight: 400;
 
@@ -829,7 +835,7 @@ background: #fcfcff;
 
   color: #667085;
 
-  font-size: 8px;
+  font-size: 10px;
 
   cursor: pointer;
 }
@@ -876,6 +882,33 @@ background: #fcfcff;
     grid-template-columns: repeat(2, 1fr);
   }
 
+}
+
+.cash-table-card,
+.cash-table-wrapper {
+  min-width: 0;
+}
+
+.cash-table-wrapper {
+  box-sizing: border-box;
+  width: calc(100% - 24px);
+  max-width: calc(100% - 24px);
+  margin: 0 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border: 1px solid #dfe9f4;
+  border-radius: 8px;
+  background: #fff;
+  border-top: 0;
+}
+
+@media (max-width: 600px) {
+  .cash-table-wrapper {
+    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
+    margin-right: 10px;
+    margin-left: 10px;
+  }
 }
 
 
@@ -986,11 +1019,11 @@ background: #fcfcff;
   }
 
   .cash-kpi-content > span {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .cash-kpi-content > strong {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .cash-kpi-content small {

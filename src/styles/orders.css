@@ -136,8 +136,8 @@ input {
 .orders-summary {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-bottom: 18px;
+    gap: 10px;
+    margin-bottom: 14px;
 }
 
 .order-summary-card {
@@ -148,7 +148,7 @@ input {
     align-items: center;
     gap: 0;
     padding: 10px;
-    border: 1px solid #e0e4ec;
+    border: 1px solid #edf0f5;
     border-radius: 8px;
     background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
 }
@@ -199,14 +199,45 @@ input {
 
 .order-summary-card span {
     display: block;
-    margin-bottom: 3px;
-    color: #7d889b;
-    font-size: 12px;
+    margin-bottom: 0;
+    color: #536b8c;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 15px;
 }
 
 .order-summary-card strong {
-    color: #1e2d48;
-    font-size: 21px;
+    color: #152d4e;
+    font-size: 22px;
+    font-weight: 750;
+    line-height: 25px;
+}
+
+.order-summary-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 2px;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 14px;
+    white-space: nowrap;
+}
+
+.order-summary-meta i {
+    font-size: 6px;
+}
+
+.order-summary-meta.positive {
+    color: #06a866;
+}
+
+.order-summary-meta.warning {
+    color: #ea8a00;
+}
+
+.order-summary-meta.info {
+    color: #4185dd;
 }
 
 /* =========================================================
@@ -759,5 +790,31 @@ input {
         width: 100%;
 
         flex: none;
+    }
+}
+
+.orders-table-wrapper {
+    box-sizing: border-box;
+    width: calc(100% - 24px);
+    max-width: calc(100% - 24px);
+    min-width: 0;
+    margin: 0 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    border: 1px solid #dfe9f4;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.orders-card > .orders-toolbar {
+    border-bottom: 0;
+}
+
+@media (max-width: 600px) {
+    .orders-table-wrapper {
+        width: calc(100% - 20px);
+        max-width: calc(100% - 20px);
+        margin-right: 10px;
+        margin-left: 10px;
     }
 }

@@ -1730,6 +1730,7 @@ dialog.merchant-delete-dialog::backdrop {
     height: 95px;
   min-height: 95px;
   padding: 10px;
+    border: 1px solid #edf0f5;
     background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
 }
 .page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.blue) {
@@ -1743,6 +1744,33 @@ dialog.merchant-delete-dialog::backdrop {
 }
 .page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.red) {
     background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+}
+.page-content:has(> .merchant-table-card) .stat-content>span {
+  margin-bottom: 0;
+  color: #536b8c;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 15px;
+}
+.page-content:has(> .merchant-table-card) .stat-content>strong {
+  color: #152d4e;
+  font-size: 22px;
+  font-weight: 750;
+  line-height: 25px;
+}
+.page-content:has(> .merchant-table-card) .stat-content>small {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 14px;
+}
+.page-content:has(> .merchant-table-card) .stat-content small i {
+  font-size: 10px;
+}
+.page-content:has(> .merchant-table-card) .stat-card .progress {
+  width: 100%;
+  max-width: 110px;
+  height: 6px;
+  margin-top: 5px;
 }
 .page-content > .merchant-table-card {
   margin-bottom: 8px;
@@ -1918,4 +1946,34 @@ dialog.merchant-delete-dialog::backdrop {
 .merchant-table-card .filter-button i {
     font-size: 13px;
     line-height: 1;
+}
+
+.merchant-table-card,
+.merchant-table-card .table-wrapper {
+    min-width: 0;
+}
+
+.merchant-table-card .table-wrapper {
+    box-sizing: border-box;
+    width: calc(100% - 24px);
+    max-width: calc(100% - 24px);
+    margin: 0 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    border: 1px solid #dfe9f4;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.merchant-table-card > .filter-bar {
+    border-bottom: 0;
+}
+
+@media (max-width: 600px) {
+    .merchant-table-card .table-wrapper {
+        width: calc(100% - 20px);
+        max-width: calc(100% - 20px);
+        margin-right: 10px;
+        margin-left: 10px;
+    }
 }

@@ -410,60 +410,6 @@ function SubscriptionList({
   }, [subscriptions]);
 
   /* ========================================
-     PLAN DISTRIBUTION
-  ======================================== */
-
-  const planDistribution = useMemo(() => {
-    const counts = {};
-
-    subscriptions.forEach((s) => {
-      const pName = s.plan || "Unassigned";
-      counts[pName] = (counts[pName] || 0) + 1;
-    });
-
-    const total = subscriptions.length || 1;
-
-    const colors = ["purple", "blue", "orange", "green", "red"];
-
-    return Object.entries(counts).map(([name, count], index) => ({
-      name,
-      count,
-      percentage: ((count / total) * 100).toFixed(1),
-      color: colors[index % colors.length],
-    }));
-  }, [subscriptions]);
-
-  const distributionDonutStyle = useMemo(() => {
-    if (!planDistribution.length) {
-      return {
-        background: "#e9eef6",
-      };
-    }
-
-    const palette = [
-      "#737bd1",
-      "#4d8de8",
-      "#ef8b17",
-      "#28a873",
-      "#e0a755",
-    ];
-
-    let cursor = 0;
-
-    const segments = planDistribution.map((item, index) => {
-      const start = cursor;
-
-      cursor += Number(item.percentage || 0);
-
-      return `${palette[index % palette.length]} ${start}% ${cursor}%`;
-    });
-
-    return {
-      background: `conic-gradient(${segments.join(", ")})`,
-    };
-  }, [planDistribution]);
-
-  /* ========================================
      FILTER OPTIONS
   ======================================== */
 
@@ -795,7 +741,7 @@ useEffect(() => {
           <div className="overview-card total-card">
 
             <span className="overview-icon purple">
-              <Store size={24} />
+              <i className="bi bi-shop-window" aria-hidden="true" />
             </span>
 
             <div>
@@ -813,7 +759,7 @@ useEffect(() => {
           <div className="overview-card active-card">
 
             <span className="overview-icon green">
-              <CheckCircle2 size={25} />
+              <i className="bi bi-check-circle-fill" aria-hidden="true" />
             </span>
 
             <div>
@@ -831,7 +777,7 @@ useEffect(() => {
           <div className="overview-card inactive-card">
 
             <span className="overview-icon red">
-              <XCircle size={25} />
+              <i className="bi bi-x-circle-fill" aria-hidden="true" />
             </span>
 
             <div>
@@ -849,7 +795,7 @@ useEffect(() => {
           <div className="overview-card expiring-card">
 
             <span className="overview-icon orange">
-              <Clock3 size={25} />
+              <i className="bi bi-clock-fill" aria-hidden="true" />
             </span>
 
             <div>
@@ -863,92 +809,6 @@ useEffect(() => {
                   ? "Within next 30 days"
                   : "Review required"}
               </small>
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* ========================================
-            PLAN DISTRIBUTION
-        ======================================== */}
-
-        <div className="distribution-card">
-
-          <div className="distribution-header">
-
-            <div>
-              <h2>Subscription Plan Distribution</h2>
-
-              <p>
-                Number of merchants by subscription plan
-              </p>
-            </div>
-
-            <div
-              className="distribution-plan-count distribution-plan-count-badge"
-              aria-label={`${availablePlans.length} Plans`}
-            >
-              <span>
-                {availablePlans.length}{" "}
-                {availablePlans.length === 1
-                  ? "Plan"
-                  : "Plans"}
-              </span>
-            </div>
-
-          </div>
-
-          <div className="distribution-content">
-
-            <div
-              className="donut"
-              style={distributionDonutStyle}
-            >
-              <div>
-                <strong>{stats.total}</strong>
-                <span>Records</span>
-              </div>
-            </div>
-
-            <div className="plan-legend">
-
-              {planDistribution.map(
-                (item, index) => (
-                  <div
-                    key={item.name}
-                    className="legend-row"
-                  >
-                    <span className="legend-name">
-
-                      <i
-                        className="legend-dot"
-                        style={{
-                          backgroundColor:
-                            [
-                              "#737bd1",
-                              "#4d8de8",
-                              "#ef8b17",
-                              "#28a873",
-                              "#e0a755",
-                            ][index % 5],
-                        }}
-                      />
-
-                      {item.name}
-
-                    </span>
-
-                    <b>{item.count}</b>
-
-                    <span>
-                      {item.percentage}%
-                    </span>
-
-                  </div>
-                )
-              )}
-
             </div>
 
           </div>

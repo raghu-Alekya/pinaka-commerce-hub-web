@@ -227,6 +227,8 @@ export default function Orders({
             Number(order.totalValue || 0),
         0
     );
+    const orderPercentage = (count) =>
+        orders.length ? ((count / orders.length) * 100).toFixed(1) : "0.0";
 
     // =========================================================
     // RENDER
@@ -299,6 +301,9 @@ export default function Orders({
                         <strong>
                             {orders.length}
                         </strong>
+                        <small className="order-summary-meta positive">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> Live Records
+                        </small>
                     </div>
 
                 </div>
@@ -317,6 +322,9 @@ export default function Orders({
                         <strong>
                             {completedCount}
                         </strong>
+                        <small className="order-summary-meta positive">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> {orderPercentage(completedCount)}% of total
+                        </small>
                     </div>
 
                 </div>
@@ -335,6 +343,9 @@ export default function Orders({
                         <strong>
                             {pendingCount}
                         </strong>
+                        <small className="order-summary-meta warning">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> {orderPercentage(pendingCount)}% of total
+                        </small>
                     </div>
 
                 </div>
@@ -344,7 +355,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon blue">
-                        <i className="bi bi-currency-dollar" aria-hidden="true" />
+                        <i className="bi bi-cash-stack" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -353,6 +364,9 @@ export default function Orders({
                         <strong>
                             ${totalAmount.toFixed(2)}
                         </strong>
+                        <small className="order-summary-meta info">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> Across all orders
+                        </small>
                     </div>
 
                 </div>

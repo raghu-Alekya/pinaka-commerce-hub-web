@@ -798,3 +798,39 @@
         justify-content: flex-end;
     }
 }
+
+.stores-card,
+.stores-card .table-responsive {
+    min-width: 0;
+}
+
+.stores-card .table-responsive {
+    box-sizing: border-box;
+    width: calc(100% - 24px);
+    max-width: calc(100% - 24px);
+    margin: 0 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    border: 1px solid #dfe9f4;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.stores-card .store-toolbar {
+    border-bottom: 0;
+}
+
+.stores-card .stores-table {
+    width: 100%;
+    min-width: 900px;
+    table-layout: fixed;
+}
+
+@media (max-width: 600px) {
+    .stores-card .table-responsive {
+        width: calc(100% - 20px);
+        max-width: calc(100% - 20px);
+        margin-right: 10px;
+        margin-left: 10px;
+    }
+}

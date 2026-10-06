@@ -201,6 +201,8 @@ export default function Devices() {
     (device) => device.status === "Online",
 
   ).length;
+  const devicePercentage = (count) =>
+    totalDevices ? ((count / totalDevices) * 100).toFixed(1) : "0.0";
 
   const offlineDevices = devices.filter(
 
@@ -355,6 +357,7 @@ export default function Devices() {
           value={totalDevices}
 
           variant="purple"
+          description="Live Records"
 
         />{" "}
 
@@ -367,6 +370,7 @@ export default function Devices() {
           value={onlineDevices}
 
           variant="green"
+          description={`${devicePercentage(onlineDevices)}% of total`}
 
         />{" "}
 
@@ -379,6 +383,7 @@ export default function Devices() {
           value={offlineDevices}
 
           variant="orange"
+          description={`${devicePercentage(offlineDevices)}% of total`}
 
         />{" "}
 
@@ -391,6 +396,7 @@ export default function Devices() {
           value={inactiveDevices}
 
           variant="red"
+          description={`${devicePercentage(inactiveDevices)}% of total`}
 
         />{" "}
 
@@ -793,6 +799,7 @@ export default function Devices() {
   value,
 
   variant,
+  description,
 
 }) {
 
@@ -811,6 +818,9 @@ export default function Devices() {
         <div className="device-stat-title"> {title} </div>{" "}
 
         <div className="device-stat-value"> {value} </div>{" "}
+        <div className={`device-stat-description ${variant}`}>
+          <i className="bi bi-circle-fill" aria-hidden="true" /> {description}
+        </div>{" "}
 
       </div>{" "}
 

@@ -6015,3 +6015,102 @@
     width: auto !important;
     max-width: none !important;
   }}
+
+.merchant-subscriptions-page .subscription-overview-refined .overview-card {
+  align-items: center;
+  height: 95px;
+  min-height: 95px;
+  gap: 0;
+  padding: 10px;
+}
+.merchant-subscriptions-page .subscription-overview-refined {
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 14px;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.merchant-subscriptions-page .subscription-overview-refined .overview-cards {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+}
+.merchant-subscriptions-page .subscription-overview-refined .overview-icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  margin: 0 18px 0 6px;
+}
+.merchant-subscriptions-page .subscription-overview-refined .overview-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.merchant-subscriptions-page .subscription-overview-refined .overview-icon i {
+  font-size: 16px;
+}
+.merchant-subscriptions-page .subscription-overview-refined .overview-card > div:last-child {
+  min-width: 0;
+}
+.merchant-subscriptions-page .subscription-overview-refined .overview-card p {
+  margin: 0;
+  color: #536b8c;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 15px;
+  white-space: nowrap;
+}
+.merchant-subscriptions-page .subscription-overview-refined .overview-card strong {
+  margin: 0;
+  color: #152d4e;
+  font-size: 22px;
+  font-weight: 750;
+  line-height: 25px;
+}
+.merchant-subscriptions-page .subscription-overview-refined .overview-card small {
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 14px;
+}
+@media (max-width: 900px) {
+  .merchant-subscriptions-page .subscription-overview-refined .overview-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .merchant-subscriptions-page .subscription-overview-refined .overview-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card,
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-wrapper {
+  min-width: 0;
+}
+
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-wrapper {
+  box-sizing: border-box;
+  width: calc(100% - 24px);
+  max-width: calc(100% - 24px);
+  margin: 0 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border: 1px solid #dfe9f4;
+  border-radius: 8px;
+  background: #fff;
+}
+
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-filter-bar {
+  border-bottom: 0;
+}
+
+@media (max-width: 600px) {
+  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-wrapper {
+    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+}
