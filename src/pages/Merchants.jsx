@@ -9,7 +9,7 @@ import { formatDate, listSubscriptions, listSubscriptionPlans } from "../api/sub
 import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant } from "../api/merchants";
+import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant, updateMerchantStatus } from "../api/merchants";
 import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
 import Pagination from "../components/Pagination";
@@ -583,10 +583,24 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
       console.log("[DELETE MERCHANT API RESPONSE]", res);
       onLocalDelete?.(target.id);
       if (!mounted.current) return;
-      setMerchants(previous => previous.filter(item => item.id !== target.id));
-      setNotice(target.name + ' was deleted.'); setDeleteTarget(null);
+      setMerchants(previous => previous.map(item => item.id === target.id
+        ? { ...item, status: 'Inactive', isDeleted: true }
+        : item));
+      setNotice(target.name + ' was deactivated.'); setDeleteTarget(null);
     } catch (error) { if (mounted.current) setDeleteError(error.message || 'Unable to delete merchant. Please try again.'); }
     finally { deleteInFlight.current = false; if (mounted.current) setDeleting(false); }
+  }
+  async function activateMerchant(merchant) {
+    setDeleteError('');
+    try {
+      await updateMerchantStatus(merchant.merchantId || merchant.id, 'ACTIVE');
+      setMerchants(previous => previous.map(item => item.id === merchant.id
+        ? { ...item, status: 'Active', isDeleted: false }
+        : item));
+      setNotice(merchant.name + ' was activated.');
+    } catch (error) {
+      setError(error.message || 'Unable to activate merchant.');
+    }
   }
   const { data: reference } = useReferenceData();
   const [masterPlans, setMasterPlans] = useState([]);
@@ -969,10 +983,17 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
                         >
                           <i className="bi bi-pencil" />
                         </button>
-                        <button type="button" className="action-btn text-danger" title="Delete" aria-label={`Delete ${m.name}`} disabled={deleting}
-                          onClick={() => { setDeleteError(''); setDeleteTarget(m); }}>
-                          <i className="bi bi-trash" />
-                        </button>
+                        {m.status === "Inactive" ? (
+                          <button type="button" className="action-btn text-success" title="Activate" aria-label={`Activate ${m.name}`} disabled={deleting}
+                            onClick={() => activateMerchant(m)}>
+                            <i className="bi bi-arrow-counterclockwise" />
+                          </button>
+                        ) : (
+                          <button type="button" className="action-btn text-danger" title="Deactivate" aria-label={`Deactivate ${m.name}`} disabled={deleting}
+                            onClick={() => { setDeleteError(''); setDeleteTarget(m); }}>
+                            <i className="bi bi-trash" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -992,13 +1013,13 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
 />
       </div>
       {deleteTarget && <dialog className="merchant-delete-dialog" ref={deleteDialog} aria-labelledby="merchant-delete-title" onCancel={event => { event.preventDefault(); if (!deleting) setDeleteTarget(null); }}>
-        <h2 id="merchant-delete-title">Delete merchant? </h2>
+        <h2 id="merchant-delete-title">Deactivate merchant? </h2>
         <p><strong>{deleteTarget.name}</strong> · {deleteTarget.id}</p>
-        <p>Confirm deletion of this merchant. Its linked stores and subscriptions will be handled according to your backend deletion rules.</p>
+        <p>This merchant will become inactive and remain available for later reactivation.</p>
         {deleteError && <p className="alert alert-danger" role="alert">{deleteError}</p>}
         <div className="d-flex justify-content-end gap-2">
           <button type="button" className="btn btn-secondary" autoFocus disabled={deleting} onClick={() => setDeleteTarget(null)}>Cancel</button>
-          <button type="button" className="btn btn-danger" disabled={deleting} onClick={confirmDelete}>{deleting ? 'Deleting…' : 'Delete merchant'}</button>
+          <button type="button" className="btn btn-danger" disabled={deleting} onClick={confirmDelete}>{deleting ? 'Deactivating…' : 'Deactivate merchant'}</button>
         </div>
       </dialog>}
     </div>
