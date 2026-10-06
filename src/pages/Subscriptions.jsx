@@ -50,7 +50,7 @@ import {
 
 } from "lucide-react";
 
-import { listPlans } from "../api/plans";
+import { listPlans, getMerchantFormPlans } from "../api/plans";
 
 import {
 
@@ -2875,7 +2875,7 @@ export default function MerchantSubscriptions() {
 
     }
 
-    listPlans()
+    getMerchantFormPlans()
 
       .then((allPlans) => {
 

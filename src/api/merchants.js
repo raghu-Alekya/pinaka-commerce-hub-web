@@ -134,7 +134,7 @@ export function toNestedMerchantPayload(data) {
   if (!isUuid(planId)) planId = DEFAULT_PLAN_ID;
 
   const billingCycle = String(
-    s.billingCycle || data.cycle || data.billingCycle || "MONTHLY",
+    s.billingCycle || s.billing_cycle || data.cycle || data.billingCycle || data.billing_cycle || m.billingCycle || m.billing_cycle || "MONTHLY",
   ).toUpperCase();
   const startDate =
     s.startDate ||
@@ -260,7 +260,7 @@ export function toFlatMerchantPayload(data) {
   if (!isUuid(planId)) planId = DEFAULT_PLAN_ID;
 
   const rawCycle = String(
-    s.billingCycle || data.cycle || data.billingCycle || "MONTHLY",
+    s.billingCycle || s.billing_cycle || data.cycle || data.billingCycle || data.billing_cycle || m.billingCycle || m.billing_cycle || "MONTHLY",
   ).toUpperCase();
   const billingCycle =
     rawCycle.includes("ANNUAL") || rawCycle.includes("YEAR")
@@ -601,7 +601,14 @@ export async function getMerchantForm(id) {
       "",
     plan: subscription?.planCode || subscription?.plan_id || "",
     billingCycle:
-      subscription?.billingCycle || subscription?.billing_cycle || "",
+      subscription?.billingCycle ||
+      subscription?.billing_cycle ||
+      raw.billingCycle ||
+      raw.billing_cycle ||
+      raw.cycle ||
+      merchant.billingCycle ||
+      merchant.billing_cycle ||
+      "MONTHLY",
     trialPeriod: String(subscription?.trialDays ?? 0),
     stores: (raw.stores || []).map((store) => ({
       persisted: true,
