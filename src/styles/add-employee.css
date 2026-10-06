@@ -633,3 +633,9 @@
     padding: 0 12px;
   }
 }
+.employee-field .employee-code-help {
+  display: block;
+  margin-top: 6px;
+  color: #7b8da8;
+  font-size: 12px;
+}
