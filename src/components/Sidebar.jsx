@@ -43,7 +43,6 @@ const sections = [
       ["/cash-management", "bi-wallet2", "Cash Management"],
       ["/employees", "bi-people", "Employees",],
       ["/devices", "bi-display", "Devices",],
-      ["/pos-configuration", "bi-cpu", "POS Configuration"],
       ["/shifts", "bi-clock", "Shifts"],
       ["/attendance", "bi-person-check", "Attendance"],
     ],
