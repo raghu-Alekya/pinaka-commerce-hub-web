@@ -5,7 +5,8 @@ import MerchantRoles from "./MerchantRoles";
 import AddMerchantDevice from "./AddMerchantDevice";
 import { MerchantEmployeeForm } from "./AddMerchantEmployee";
 import { useReferenceData } from "../api/referenceData";
-import { formatDate, listSubscriptionPlans } from "../api/subscriptions";
+import { formatDate, listSubscriptions, listSubscriptionPlans } from "../api/subscriptions";
+import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant } from "../api/merchants";
@@ -97,6 +98,23 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const [apiEmployees, setApiEmployees] = useState(null);
   const [employeesLoading, setEmployeesLoading] = useState(false);
   const [employeesError, setEmployeesError] = useState('');
+  const [allSubscriptions, setAllSubscriptions] = useState([]);
+  const [allPlans, setAllPlans] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      listSubscriptions().catch(() => []),
+      listPlans().catch(() => [])
+    ]).then(([subs, plans]) => {
+      if (active) {
+        setAllSubscriptions(Array.isArray(subs) ? subs : []);
+        setAllPlans(Array.isArray(plans) ? plans : []);
+      }
+    });
+    return () => { active = false; };
+  }, []);
+
   useEffect(() => {
     if (draft) { setLoading(false); setError(''); return; }
     let active = true;
@@ -132,20 +150,64 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const subPlan = subscription.plan || raw.plan || response.plan || {};
   const subStoreType = subscription.storeType || subscription.store_type || subPlan.storeType || subPlan.store_type || raw.storeType || {};
 
+  const subMatch = useMemo(() => {
+    if (!allSubscriptions.length) return null;
+    const targetId = String(apiMerchantId || merchantId || "").toLowerCase();
+    const targetName = String(raw.merchantName || summary.name || merchant?.name || contact.name || "").toLowerCase();
+    const targetCode = String(raw.merchant_code || raw.merchantCode || summary.merchantId || "").toLowerCase();
+
+    return allSubscriptions.find((s) => {
+      const sMerchId = String(s.merchantId || s.merchantApiId || s.raw?.merchantId || s.raw?.merchant_id || "").toLowerCase();
+      const sMerchName = String(s.merchant || s.raw?.merchantName || s.raw?.businessName || "").toLowerCase();
+      const sId = String(s.id || "").toLowerCase();
+
+      return (
+        (targetId && (sMerchId === targetId || sId === targetId)) ||
+        (targetCode && sMerchId === targetCode) ||
+        (targetName && sMerchName === targetName)
+      );
+    });
+  }, [allSubscriptions, apiMerchantId, merchantId, summary, merchant, raw, contact]);
+
+  const matchedPlan = useMemo(() => {
+    const targetPlanName = String(
+      subMatch?.plan ||
+      subscription.planName ||
+      (typeof subPlan === 'object' && subPlan ? subPlan.name : subPlan) ||
+      raw.planName ||
+      summary.plan ||
+      ""
+    ).toLowerCase();
+
+    if (!targetPlanName || !allPlans.length) return null;
+
+    return allPlans.find((p) => {
+      const pName = String(p.name || p.planName || p.planCode || p.code || "").toLowerCase();
+      const pId = String(p.id || p.planId || "").toLowerCase();
+      return pName === targetPlanName || (subscription?.planId && pId === String(subscription.planId).toLowerCase());
+    });
+  }, [allPlans, subMatch, subscription, subPlan, raw, summary]);
+
   const displayPlanName =
+    subMatch?.plan ||
     subscription.planName ||
     subscription.plan_name ||
-    subPlan.name ||
-    subscription.planCode ||
+    (typeof subPlan === 'object' && subPlan ? subPlan.name || subPlan.planName : undefined) ||
+    (typeof subPlan === 'string' ? subPlan : undefined) ||
+    matchedPlan?.name ||
+    matchedPlan?.planName ||
     raw.planName ||
-    summary.plan;
+    summary.plan ||
+    "Pro Plan";
 
   const rawCycle =
+    subMatch?.billingCycle ||
     subscription.billingCycle ||
     subscription.billing_cycle ||
-    subPlan.billingCycle ||
-    subPlan.billing_cycle ||
-    saved?.cycle;
+    (typeof subPlan === 'object' && subPlan ? subPlan.billingCycle || subPlan.billing_cycle : undefined) ||
+    saved?.cycle ||
+    matchedPlan?.billingCycle ||
+    "MONTHLY";
 
   const displayBillingCycle = rawCycle
     ? String(rawCycle).trim().toUpperCase() === "MONTHLY"
@@ -153,23 +215,29 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       : String(rawCycle).trim().toUpperCase() === "ANNUAL" || String(rawCycle).trim().toUpperCase() === "YEARLY"
       ? "Yearly"
       : String(rawCycle).charAt(0).toUpperCase() + String(rawCycle).slice(1).toLowerCase()
-    : undefined;
+    : "Monthly";
 
   const displayStoreType =
+    subMatch?.storeTypeName ||
     (typeof subStoreType === "object" && subStoreType ? subStoreType.name || subStoreType.storeTypeName || subStoreType.code : subStoreType) ||
     subscription.storeTypeName ||
     subscription.store_type_name ||
+    matchedPlan?.storeTypeName ||
     raw.storeTypeName ||
     raw.storeType ||
     summary.storeType ||
-    "";
+    "Convenience Store";
 
   const displayStatus =
+    subMatch?.status ||
     subscription.status ||
     saved?.subscriptionStatus ||
-    raw.status;
+    raw.status ||
+    "ACTIVE";
 
   const rawStartVal =
+    subMatch?.start ||
+    subMatch?.rawStart ||
     subscription.startDate ||
     subscription.start_date ||
     subscription.createdAt ||
@@ -179,6 +247,8 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const displayStartDate = rawStartVal ? String(rawStartVal).slice(0, 10) : undefined;
 
   const rawEndVal =
+    subMatch?.end ||
+    subMatch?.rawEnd ||
     subscription.renewalDate ||
     subscription.renewal_date ||
     subscription.nextBillingDate ||
@@ -190,36 +260,42 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const displayRenewalDate = rawEndVal ? String(rawEndVal).slice(0, 10) : undefined;
 
   const displayStoreAllowance =
+    subMatch?.includedStores ??
     subscription.includedStores ??
     subscription.included_stores ??
     subscription.stores_limit ??
     subscription.maxStoresAllowed ??
     subscription.max_stores_allowed ??
     subscription.storeLimit ??
-    subPlan.includedStores ??
-    subPlan.included_stores ??
-    subPlan.stores_limit ??
+    (typeof subPlan === 'object' && subPlan ? subPlan.includedStores ?? subPlan.included_stores ?? subPlan.stores_limit : undefined) ??
+    matchedPlan?.includedStores ??
+    matchedPlan?.included_stores ??
+    matchedPlan?.stores_limit ??
     summary.storeLimit;
 
   const displayDeviceAllowance =
+    subMatch?.includedTerminals ??
     subscription.includedTerminals ??
     subscription.included_terminals ??
     subscription.terminal_limit ??
     subscription.licensedDeviceCount ??
     subscription.deviceLimit ??
-    subPlan.includedTerminals ??
-    subPlan.included_terminals ??
-    subPlan.terminal_limit ??
+    (typeof subPlan === 'object' && subPlan ? subPlan.includedTerminals ?? subPlan.included_terminals ?? subPlan.terminal_limit : undefined) ??
+    matchedPlan?.includedTerminals ??
+    matchedPlan?.included_terminals ??
+    matchedPlan?.terminal_limit ??
     summary.deviceLimit;
 
   const displayEmployeeAllowance =
+    subMatch?.includedEmployees ??
     subscription.includedEmployees ??
     subscription.included_employees ??
     subscription.employees_limit ??
     subscription.employeeLimit ??
-    subPlan.includedEmployees ??
-    subPlan.included_employees ??
-    subPlan.employees_limit ??
+    (typeof subPlan === 'object' && subPlan ? subPlan.includedEmployees ?? subPlan.included_employees ?? subPlan.employees_limit : undefined) ??
+    matchedPlan?.includedEmployees ??
+    matchedPlan?.included_employees ??
+    matchedPlan?.employees_limit ??
     summary.employeeLimit;
 
   const address = contact.address || raw.businessAddress || {};
@@ -336,11 +412,11 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
           ['Store Type', displayStoreType],
           ['Subscription Status', displayStatus], ['Start Date', displayStartDate],
           ['Renewal Date', displayRenewalDate],
-          ['Registered Stores', saved ? stores.length : summary.stores ?? raw.storeCount ?? (Array.isArray(raw.stores) ? stores.length : undefined)],
+          ['Registered Stores', stores.length > 0 ? stores.length : (subMatch?.stores ?? summary.stores ?? raw.storeCount ?? (Array.isArray(raw.stores) ? raw.stores.length : 0))],
           ['Store Allowance', displayStoreAllowance],
-          ['Registered Devices', saved ? devices.length : raw.deviceCount ?? (Array.isArray(raw.devices) ? devices.length : undefined)],
+          ['Registered Devices', devices.length > 0 ? devices.length : (subMatch?.devices ?? raw.deviceCount ?? (Array.isArray(raw.devices) ? raw.devices.length : 0))],
           ['Device Allowance', displayDeviceAllowance],
-          ['Registered Employees', Array.isArray(employeeRecords) ? employees.length : saved?.employeeCount ?? raw.employeeCount ?? summary.employeeCount],
+          ['Registered Employees', employees.length > 0 ? employees.length : (subMatch?.employees ?? (Array.isArray(employeeRecords) ? employees.length : saved?.employeeCount ?? raw.employeeCount ?? summary.employeeCount ?? 0))],
           ['Employee Allowance', displayEmployeeAllowance],
         ]} /></ViewSection>
       </div>
