@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listEmployees } from "../api/employees";
+import Pagination from "../components/Pagination";
 import {
   Search,
   ChevronDown,
-  ChevronRight,
-  ChevronLeft,
   Plus,
   Download,
   CalendarDays,
   Filter,
   Pencil,
+  User,
 } from "lucide-react";
 import "../styles/Employees.css";
 /* =========================================================
@@ -269,7 +269,12 @@ export default function Employees() {
   const [status, setStatus] = useState("All Statuses");
   /* PAGINATION */
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+const [rowsPerPage, setRowsPerPage] = useState(10);
+
+const handlePageSizeChange = (size) => {
+  setRowsPerPage(size);
+  setPage(1);
+};
   /* =====================================================
      FILTER EMPLOYEES
   ===================================================== */
@@ -310,6 +315,8 @@ export default function Employees() {
   const startIndex = (safePage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const visibleEmployees = filteredEmployees.slice(startIndex, endIndex);
+
+
   /* =====================================================
      SEARCH HANDLER
   ===================================================== */
@@ -339,11 +346,11 @@ export default function Employees() {
   /* =====================================================
      PAGINATION
   ===================================================== */
-  const goToPage = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setPage(newPage);
-    }
-  };
+  useEffect(() => {
+  setPage((currentPage) =>
+    Math.min(currentPage, totalPages)
+  );
+}, [totalPages]);
   /* =====================================================
      RESET FILTERS
   ===================================================== */
@@ -588,30 +595,19 @@ export default function Employees() {
             </tbody>
           </table>
         </div>
-        {/* =================================================
-            PAGINATION
-        ================================================= */}
-        <div className="employees-pagination">
-          <div className="employees-showing">
-            Showing {filteredEmployees.length === 0 ? 0 : startIndex + 1} -{" "}
-            {Math.min(endIndex, filteredEmployees.length)} of {filteredEmployees.length} entries
-          </div>
-          <div className="employees-pages">
-            <button
-              onClick={() => goToPage(safePage - 1)}
-              disabled={safePage === 1}
-            >
-              <ChevronLeft size={15} />
-            </button>
-            <button className="employees-page-active">{safePage}</button>
-            <button
-              onClick={() => goToPage(safePage + 1)}
-              disabled={safePage === totalPages}
-            >
-              <ChevronRight size={15} />
-            </button>
-          </div>
-        </div>
+       {/* ================================================= 
+    PAGINATION 
+================================================= */}
+
+<Pagination
+  currentPage={safePage}
+  totalPages={totalPages}
+  totalItems={filteredEmployees.length}
+  pageSize={rowsPerPage}
+  onPageChange={setPage}
+  onPageSizeChange={handlePageSizeChange}
+  itemLabel="employees"
+/>
       </div>
     </div>
   );

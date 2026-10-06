@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useReferenceData } from "../api/referenceData";
 import { listMerchants } from "../api/merchants";
-
+import Pagination from "../components/Pagination";
 import {
 
   Eye,
@@ -367,8 +367,28 @@ function SubscriptionList({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
+const [pageSize, setPageSize] = useState(10);
+const handlePageSizeChange = (size) => {
+  setPageSize(size);
+  setPage(1);
 
-  const PAGE_SIZE = 10;
+  useEffect(() => {
+  setPage(1);
+}, [
+  search,
+  plan,
+  status,
+  stores,
+  startDate,
+  endDate,
+]);
+
+useEffect(() => {
+  setPage((currentPage) =>
+    Math.min(currentPage, totalPages)
+  );
+}, [totalPages]);
+};
 
   /* ========================================
      OVERVIEW STATS
@@ -573,23 +593,20 @@ function SubscriptionList({
     stores,
     startDate,
     endDate,
-  ]);
+  ]); 
 
   /* ========================================
      PAGINATION
   ======================================== */
 
- const totalPages =
-  Math.ceil(filtered.length / PAGE_SIZE) || 1;
+ const totalPages = Math.ceil(filtered.length / pageSize) || 1;
 
-const paginatedData = useMemo(() => {
-  const startIdx = (page - 1) * PAGE_SIZE;
+const currentPage = Math.min(page, totalPages);
 
-  return filtered.slice(
-    startIdx,
-    startIdx + PAGE_SIZE
-  );
-}, [filtered, page]);
+const paginatedData = filtered.slice(
+  (currentPage - 1) * pageSize,
+  currentPage * pageSize
+);
 
 useEffect(() => {
   setPage(1);
@@ -1174,10 +1191,10 @@ useEffect(() => {
                     <tr key={item.id || index}>
 
                       <td>
-                        {(page - 1) *
-                          PAGE_SIZE +
-                          index +
-                          1}
+                       {(currentPage - 1) *
+                       pageSize +
+                        index +
+                        1}
                       </td>
 
                       <td>
@@ -1279,69 +1296,16 @@ useEffect(() => {
             PAGINATION
         ======================================== */}
 
-        {filtered.length > 0 && (
-  <div className="merchant-pagination">
-
-    <span>
-      {`Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
-        page * PAGE_SIZE,
-        filtered.length
-      )} of ${filtered.length}`}
-    </span>
-
-    <div>
-
-      <button
-        type="button"
-        disabled={page === 1}
-        onClick={() =>
-          setPage((value) =>
-            Math.max(1, value - 1)
-          )
-        }
-      >
-        Previous
-      </button>
-
-      {Array.from(
-        { length: totalPages },
-        (_, index) => (
-          <button
-            type="button"
-            className={
-              page === index + 1
-                ? "active"
-                : ""
-            }
-            key={index}
-            onClick={() =>
-              setPage(index + 1)
-            }
-          >
-            {index + 1}
-          </button>
-        )
-      )}
-
-      <button
-        type="button"
-        disabled={page === totalPages}
-        onClick={() =>
-          setPage((value) =>
-            Math.min(
-              totalPages,
-              value + 1
-            )
-          )
-        }
-      >
-        Next
-      </button>
-
-    </div>
-
-  </div>
-)}
+      
+ <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  totalItems={filtered.length}
+  pageSize={pageSize}
+  onPageChange={setPage}
+  onPageSizeChange={handlePageSizeChange}
+  itemLabel="subscriptions"
+/>
 
       </div>
 
@@ -2954,6 +2918,8 @@ export default function MerchantSubscriptions() {
     };
 
   }, [screen, selectedMerchant]);
+
+  
 
   const updatePaymentField = (field, value) => {
 

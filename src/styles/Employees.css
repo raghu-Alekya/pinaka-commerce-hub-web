@@ -40,7 +40,7 @@
 }
 .employees-add-btn,
 .employees-export-btn {
-  height: 36px;
+  height: 40px;
   padding: 0 12px;
   border-radius: 8px;
   display: flex;
@@ -569,13 +569,13 @@
 /* =========================================================
    PAGINATION
 ========================================================= */
-.employees-pagination {
+/* .employees-pagination {
   height: 38px;
   padding: 0 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
+} */
 .employees-showing {
   flex: 1 1 auto;
   color: #5c7190;

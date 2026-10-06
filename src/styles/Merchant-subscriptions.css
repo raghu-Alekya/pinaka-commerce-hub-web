@@ -742,37 +742,6 @@
   color: #31598f;
   font-size: 13px;
 
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .pagination {
-
-  display: flex;
-  gap: 5px;
-  align-items: center;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .pagination button {
-
-  min-width: 32px;
-  height: 32px;
-  padding: 0 8px;
-  border: none;
-  border-radius: 6px;
-  background: white;
-  color: #234d88;
-  font-weight: 600;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .pagination button:hover {
-
-  background: #f5f3ff;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .pagination button.active {
-
-  background: var(--primary);
-  color: white;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .pagination button:disabled {
-
-  color: #a3b5ce;
-  background: #f4f7fc;
-
 }/* ========================================
 
    FLOW PAGES
@@ -5460,7 +5429,7 @@
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) input,
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) select,
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) textarea {
-  font: inherit;
+  font-family: "Inter", sans-serif;
 }
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) button {
   cursor: pointer;
@@ -5560,7 +5529,7 @@
 
 
 /* =========================================================
-   FIX: SUBSCRIPTION HEADER ACTIONS + PAGINATION
+   FIX: SUBSCRIPTION HEADER ACTIONS
    Matches the class names used by MerchantSubscriptions.jsx
 ========================================================= */
 .merchant-subscriptions-page .subscriptions-heading-row > div:last-child,
@@ -5578,7 +5547,7 @@
   align-items: center;
   justify-content: center;
   gap: 14px;
-  height: 36px;
+  height: 40px;
   padding: 0px 12px;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -5615,56 +5584,6 @@
   box-shadow: none;
 }
 
-:is(.merchant-subscriptions-page, .subscription-page, .subscription-flow-page) .subscription-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px 20px;
-  padding: 14px 18px;
-  border-top: 1px solid #e2e8f2;
-  background: #fff;
-  color: #5b6f91;
-  font-size: 12px;
-  line-height: 1.5;
-}
-:is(.merchant-subscriptions-page, .subscription-page, .subscription-flow-page) .subscription-pagination strong {
-  color: #17345f;
-  font-weight: 700;
-}
-:is(.merchant-subscriptions-page, .subscription-page, .subscription-flow-page) .subscription-pagination-controls {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-:is(.merchant-subscriptions-page, .subscription-page, .subscription-flow-page) .subscription-pagination-controls button {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid #d7e1ef;
-  border-radius: 7px;
-  background: #fff;
-  color: #344b70;
-  cursor: pointer;
-  transition: background-color .18s ease, border-color .18s ease, color .18s ease;
-}
-:is(.merchant-subscriptions-page, .subscription-page, .subscription-flow-page) .subscription-pagination-controls button:hover:not(:disabled) {
-  color: #5143bc;
-  border-color: #bdb5ee;
-  background: #f6f4ff;
-}
-:is(.merchant-subscriptions-page, .subscription-page, .subscription-flow-page) .subscription-pagination-controls button:disabled {
-  color: #aab5c6;
-  background: #f7f9fc;
-  border-color: #e5eaf2;
-  cursor: not-allowed;
-  opacity: .7;
-}
 @media (max-width: 640px) {
   :is(.merchant-subscriptions-page, .subscription-page, .subscription-flow-page) .subscriptions-heading-row {
     align-items: stretch;
@@ -5673,10 +5592,7 @@
   :is(.merchant-subscriptions-page, .subscription-page, .subscription-flow-page) .subscriptions-heading-row > div:last-child {
     justify-content: flex-start;
   }
-  :is(.merchant-subscriptions-page, .subscription-page, .subscription-flow-page) .subscription-pagination {
-    align-items: flex-start;
-    flex-direction: column;
-  }
+
 }
 
 /* =========================================================
