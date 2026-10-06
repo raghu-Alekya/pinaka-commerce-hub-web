@@ -316,7 +316,7 @@ const readMerchantSelectedTemplates = (response) => {
         scopeType: String(row.scopeType || "STORE"),
         level: levelForRole(row),
         required: false,
-        defaultEnabled: true,
+        defaultEnabled: false,
       };
     })
     .filter((row) => row.id && row.name);
@@ -1148,7 +1148,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           templates = readMerchantSelectedTemplates(roleResult);
         }
         setRoleDefinitions(templates);
-        // Inherit operational defaults only. Each new location gets its own name/code/address.
+        // A new store starts with no role assignments; the user selects them explicitly.
         if (!editing) {
           const country =
             info.owner.country || info.owner.address?.country || "";
@@ -1166,14 +1166,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             timezone: info.owner.timezone || "",
             defaultLanguage: info.owner.defaultLanguage || "",
           }));
-          const inherited = templates
-            .filter((role) => role.defaultEnabled || role.required)
-            .map((role) => role.id);
-          const nextRoles = inherited.length
-            ? inherited
-            : templates.map((role) => role.id);
-          setRoles(nextRoles);
-          setActiveRole(nextRoles[0] || "");
+          setRoles([]);
+          setActiveRole("");
           loadedRolePermissions.current = new Set();
           setPermissions({});
           setPermissionAvailability({});
