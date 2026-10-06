@@ -63,7 +63,7 @@ export default function RoleTemplates() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  // const [roleCodeError, setRoleCodeError] = useState("");
+  const [roleCodeError, setRoleCodeError] = useState("");
 
   const [deletePopup, setDeletePopup] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState(null);

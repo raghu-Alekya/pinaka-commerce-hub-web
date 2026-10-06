@@ -75,8 +75,7 @@ function getFullImageUrl(url) {
   ) {
     return url;
   }
-  const backendOrigin =
-    process.env.REACT_APP_API_ORIGIN || "http://localhost:3003";
+  const backendOrigin = getBackendOrigin();
   return url.startsWith("/")
     ? `${backendOrigin}${url}`
     : `${backendOrigin}/${url}`;
@@ -260,11 +259,12 @@ function getBackendOrigin() {
   if (typeof import.meta !== "undefined" && import.meta?.env) {
     return (
       import.meta.env.VITE_API_ORIGIN ||
+      import.meta.env.VITE_API_PROXY_TARGET ||
       import.meta.env.VITE_API_BASE_URL ||
-      "http://localhost:3003"
+      ""
     );
   }
-  return "http://localhost:3003";
+  return "";
 }
 /* =========================================================
    EMPLOYEE PROFILE IMAGE

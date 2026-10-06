@@ -129,6 +129,99 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const summary = { ...(result?.merchant || {}), ...(merchant || {}) };
   const contact = saved?.merchant || raw;
   const subscription = result?.subscription || raw.subscription || response.subscription || {};
+  const subPlan = subscription.plan || raw.plan || response.plan || {};
+  const subStoreType = subscription.storeType || subscription.store_type || subPlan.storeType || subPlan.store_type || raw.storeType || {};
+
+  const displayPlanName =
+    subscription.planName ||
+    subscription.plan_name ||
+    subPlan.name ||
+    subscription.planCode ||
+    raw.planName ||
+    summary.plan;
+
+  const rawCycle =
+    subscription.billingCycle ||
+    subscription.billing_cycle ||
+    subPlan.billingCycle ||
+    subPlan.billing_cycle ||
+    saved?.cycle;
+
+  const displayBillingCycle = rawCycle
+    ? String(rawCycle).trim().toUpperCase() === "MONTHLY"
+      ? "Monthly"
+      : String(rawCycle).trim().toUpperCase() === "ANNUAL" || String(rawCycle).trim().toUpperCase() === "YEARLY"
+      ? "Yearly"
+      : String(rawCycle).charAt(0).toUpperCase() + String(rawCycle).slice(1).toLowerCase()
+    : undefined;
+
+  const displayStoreType =
+    (typeof subStoreType === "object" && subStoreType ? subStoreType.name || subStoreType.storeTypeName || subStoreType.code : subStoreType) ||
+    subscription.storeTypeName ||
+    subscription.store_type_name ||
+    raw.storeTypeName ||
+    raw.storeType ||
+    summary.storeType ||
+    "";
+
+  const displayStatus =
+    subscription.status ||
+    saved?.subscriptionStatus ||
+    raw.status;
+
+  const rawStartVal =
+    subscription.startDate ||
+    subscription.start_date ||
+    subscription.createdAt ||
+    subscription.created_at ||
+    saved?.start;
+
+  const displayStartDate = rawStartVal ? String(rawStartVal).slice(0, 10) : undefined;
+
+  const rawEndVal =
+    subscription.renewalDate ||
+    subscription.renewal_date ||
+    subscription.nextBillingDate ||
+    subscription.next_billing_date ||
+    subscription.currentPeriodEnd ||
+    subscription.current_period_end ||
+    summary.renewal;
+
+  const displayRenewalDate = rawEndVal ? String(rawEndVal).slice(0, 10) : undefined;
+
+  const displayStoreAllowance =
+    subscription.includedStores ??
+    subscription.included_stores ??
+    subscription.stores_limit ??
+    subscription.maxStoresAllowed ??
+    subscription.max_stores_allowed ??
+    subscription.storeLimit ??
+    subPlan.includedStores ??
+    subPlan.included_stores ??
+    subPlan.stores_limit ??
+    summary.storeLimit;
+
+  const displayDeviceAllowance =
+    subscription.includedTerminals ??
+    subscription.included_terminals ??
+    subscription.terminal_limit ??
+    subscription.licensedDeviceCount ??
+    subscription.deviceLimit ??
+    subPlan.includedTerminals ??
+    subPlan.included_terminals ??
+    subPlan.terminal_limit ??
+    summary.deviceLimit;
+
+  const displayEmployeeAllowance =
+    subscription.includedEmployees ??
+    subscription.included_employees ??
+    subscription.employees_limit ??
+    subscription.employeeLimit ??
+    subPlan.includedEmployees ??
+    subPlan.included_employees ??
+    subPlan.employees_limit ??
+    summary.employeeLimit;
+
   const address = contact.address || raw.businessAddress || {};
   const list = value => Array.isArray(value) ? value : [];
   const stores = list(saved?.stores ?? response.stores ?? raw.stores);
@@ -196,16 +289,16 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       </div>
       <div role="tabpanel" id="merchant-panel-subscription" aria-labelledby="merchant-tab-subscription" hidden={activeTab !== 'subscription'} tabIndex={0}>
         <ViewSection title="Subscription & Usage"><ViewFields items={[
-          ['Plan', subscription.planName || subscription.plan?.name || summary.plan], ['Billing Cycle', saved?.cycle || subscription.billingCycle],
-          ['Store Type', subscription?.plan?.storeType || ''],
-          ['Subscription Status', saved?.subscriptionStatus || subscription.status], ['Start Date', saved?.start || subscription.startDate],
-          ['Renewal Date', subscription.renewalDate || subscription.nextBillingDate || summary.renewal],
+          ['Plan', displayPlanName], ['Billing Cycle', displayBillingCycle],
+          ['Store Type', displayStoreType],
+          ['Subscription Status', displayStatus], ['Start Date', displayStartDate],
+          ['Renewal Date', displayRenewalDate],
           ['Registered Stores', saved ? stores.length : summary.stores ?? raw.storeCount ?? (Array.isArray(raw.stores) ? stores.length : undefined)],
-          ['Store Allowance', summary.storeLimit ?? subscription.storeLimit],
+          ['Store Allowance', displayStoreAllowance],
           ['Registered Devices', saved ? devices.length : raw.deviceCount ?? (Array.isArray(raw.devices) ? devices.length : undefined)],
-          ['Device Allowance', subscription.deviceLimit ?? summary.deviceLimit],
+          ['Device Allowance', displayDeviceAllowance],
           ['Registered Employees', Array.isArray(employeeRecords) ? employees.length : saved?.employeeCount ?? raw.employeeCount ?? summary.employeeCount],
-          ['Employee Allowance', summary.employeeLimit ?? subscription.employeeLimit],
+          ['Employee Allowance', displayEmployeeAllowance],
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-stores" aria-labelledby="merchant-tab-stores" hidden={activeTab !== 'stores'} tabIndex={0}>
