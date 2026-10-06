@@ -1303,8 +1303,8 @@ export function merchantDetailToDraft(result, fallback={}) {
   const matchPlan=String(planName).toLowerCase().replace(/[^a-z]/g,'').replace(/plan$/,'');
   draft.planId = planId;
   draft.planName = planName;
-  draft.plan=fallbackPackages.findIndex(plan=>plan.name.toLowerCase()===matchPlan);
-  const cycle=String(subscription.billingCycle||raw.billingCycle||'').toLowerCase();draft.cycle=cycle==='monthly'?'Monthly':cycle==='annual'||cycle==='yearly'?'Annual':'';
+  const cycle=String(subscription.billingCycle||subscription.billing_cycle||raw.billingCycle||raw.billing_cycle||raw.cycle||'').toLowerCase();
+  draft.cycle=cycle==='monthly'||cycle==='month'?'Monthly':cycle==='annual'||cycle==='yearly'||cycle==='year'?'Annual':(cycle?cycle.charAt(0).toUpperCase()+cycle.slice(1):'Monthly');
   draft.subscriptionStatus=subscription.status || 'Pending activation';
   draft.paymentHistory=Array.isArray(raw.paymentHistory)?raw.paymentHistory:[];
   draft.subscriptionId=subscription.id || subscription.subscriptionId || '';
