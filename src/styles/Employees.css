@@ -787,7 +787,7 @@
   table-layout: fixed;
   border-collapse: collapse;
 }/* Employee table aligned with the Plans list. */
-.employees-list-card { padding: 20px 22px; }
+.employees-list-card { margin: 12px; }
 .employees-list-card .employees-table-wrap {
   overflow-x: auto;
   border: 1px solid #e3ecf5;
@@ -815,7 +815,7 @@
 .employees-list-card .employees-table td:nth-child(7) { width: 8%; }
 .employees-list-card .employees-table th {
   height: 39px; padding: 0 13px; background: #f1f3fd;
-  color: #102d59; font-size: 13px; font-weight: 600;
+  color: #102d59; font-size: 12px; font-weight: 600;
   border-bottom: 1px solid #edf0f4;
 }
 .employees-list-card .employees-table td {
