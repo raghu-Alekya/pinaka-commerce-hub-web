@@ -426,13 +426,6 @@ export default function Devices() {
           <table className="devices-table">
             <thead>
               <tr>
-                <th className="device-check-col">
-                  <input
-                    type="checkbox"
-                    aria-label="Select all devices"
-                  />
-                </th>
-
                 <th>DEVICE NAME</th>
                 <th>DEVICE TYPE</th>
                 <th>SERIAL NUMBER</th>
@@ -446,7 +439,7 @@ export default function Devices() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="6"
                     className="devices-empty"
                   >
                     Loading devices...
@@ -471,7 +464,7 @@ export default function Devices() {
               ) : (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="6"
                     className="devices-empty"
                   >
                     No devices found
@@ -647,15 +640,6 @@ function DeviceRow({
 
   return (
     <tr>
-      <td className="device-check-col">
-        <input
-          type="checkbox"
-          aria-label={`Select ${
-            device.name || "device"
-          }`}
-        />
-      </td>
-
       <td>
         <div className="device-name-cell">
           <div className="device-type-icon">

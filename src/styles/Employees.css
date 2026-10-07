@@ -838,13 +838,6 @@
 .employees-list-card .employee-name { font-size: 13px; font-weight: 600; color: #102d59; }
 .employees-list-card .employee-id { font-size: 11px; color: #6380ae; }
 .employees-list-card .employee-contact { font-size: 12px; line-height: 1.5; color: #4d5970; }
-.employees-list-card .employee-status {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 76px; height: 26px; padding: 0 6px; box-sizing: border-box;
-  border-radius: 12px; font-size: 11px;
-}
-.employees-list-card .employee-status.active { color: #08a961; background: #dff9eb; }
-.employees-list-card .employee-status.inactive { color: #ed304d; background: #ffe2e7; }
 .employees-list-card .employee-actions { justify-content: center; gap: 8px; }
 .employees-list-card .employee-actions button {
   display: grid; place-items: center; width: 35px; height: 35px;

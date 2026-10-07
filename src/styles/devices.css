@@ -348,15 +348,15 @@
 ========================================================= */
 .devices-table th:nth-child(1),
 .devices-table td:nth-child(1) {
-  width: 4%;
+  width: 26%;
 }
 .devices-table th:nth-child(2),
 .devices-table td:nth-child(2) {
-  width: 22%;
+  width: 15%;
 }
 .devices-table th:nth-child(3),
 .devices-table td:nth-child(3) {
-  width: 15%;
+  width: 17%;
 }
 .devices-table th:nth-child(4),
 .devices-table td:nth-child(4) {
@@ -364,28 +364,11 @@
 }
 .devices-table th:nth-child(5),
 .devices-table td:nth-child(5) {
-  width: 17%;
+  width: 15%;
 }
 .devices-table th:nth-child(6),
 .devices-table td:nth-child(6) {
-  width: 15%;
-}
-.devices-table th:nth-child(7),
-.devices-table td:nth-child(7) {
   width: 10%;
-}
-/* =========================================================
-   CHECKBOX
-========================================================= */
-.device-check-col {
-  text-align: center !important;
-}
-.device-check-col input {
-  width: 17px;
-  height: 17px;
-  margin: 0;
-  accent-color: #5b3ddd;
-  cursor: pointer;
 }
 /* =========================================================
    DEVICE NAME
@@ -752,7 +735,7 @@
     min-width: 33px;
   }
   .device-name {
-    font-size: 9px;
+    font-size: 12px;
   }
   .device-id {
     font-size: 8px;
@@ -868,6 +851,28 @@
 
 .devices-table {
   min-width: 1050px;
+}
+
+/* Balanced outer spacing without compressing the action buttons. */
+.devices-table th:first-child,
+.devices-table td:first-child {
+  padding-left: 24px;
+}
+
+.devices-table th:last-child,
+.devices-table td:last-child {
+  width: 150px;
+  min-width: 150px;
+  padding-right: 24px;
+}
+
+.devices-table td:last-child .list-actions {
+  flex-wrap: nowrap;
+  min-width: 108px;
+}
+
+.devices-table td:last-child .list-action-btn {
+  flex: 0 0 32px;
 }
 
 @media (max-width: 600px) {
