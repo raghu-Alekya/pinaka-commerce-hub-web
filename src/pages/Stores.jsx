@@ -5,6 +5,7 @@ import { listMerchants } from "../api/merchants";
 import { useReferenceData } from "../api/referenceData";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
+import FiltersBar from "../components/FiltersBar";
 
 const title = (value) =>
   String(value || "")
@@ -252,92 +253,92 @@ useEffect(() => {
         ))}
       </div>
       <div className="stores-card">
-        <div className="store-toolbar">
-          <div className="store-search">
-            <i className="bi bi-search" />
-            <input
-              aria-label="Search stores"
-              placeholder="Search stores..."
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
+        <FiltersBar
+    searchValue={query}
+    onSearchChange={(value) => {
+        setQuery(value);
+        setCurrentPage(1);
+    }}
+    searchPlaceholder="Search stores..."
+    filters={[
+        {
+            key: "merchant",
+            label: "Merchant",
+            value: merchant,
+            options: [
+                {
+                    label: "All Merchants",
+                    value: "",
+                },
+                ...merchants.map((m) => ({
+                    label: m.name,
+                    value: m.id,
+                })),
+            ],
+            onChange: (value) => {
+                setMerchant(value);
                 setCurrentPage(1);
-              }}
-            />
-          </div>
-          <div className="filter-select-wrapper">
-    <select
-        aria-label="Merchant"
-        className="filter-select"
-        value={merchant}
-        onChange={(e) => {
-            setMerchant(e.target.value);
-            setCurrentPage(1);
-        }}
-    >
-        <option value="">All Merchants</option>
-        {merchants.map((m) => (
-            <option key={m.id} value={m.id}>
-                {m.name}
-            </option>
-        ))}
-    </select>
-    <i className="bi bi-chevron-down filter-select-arrow" />
-</div> 
+            },
+        },
 
-<div className="filter-select-wrapper">
-    <select
-        aria-label="Status"
-            className="filter-select"
-        value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setCurrentPage(1);
-        }}
-    >
-        <option value="">All Status</option>
-            {statuses.filter(Boolean).map((s) => (
-              <option key={s} value={s}>
-                {title(s)}
-              </option>
-        ))}
-    </select>
-    <i className="bi bi-chevron-down filter-select-arrow" />
-</div>
-        
-         <div className="filter-select-wrapper">
-    <select
-        aria-label="Location"
-            className="filter-select"
-        value={location}
-            onChange={(e) => {
-              setLocation(e.target.value);
-              setCurrentPage(1);
-        }}
-    >
-        <option value="">All Locations</option>
-            {[...new Set(stores.map(locationOf).filter(Boolean))]
-              .sort()
-              .map((l) => (
-                <option key={l}>{l}</option>
-        ))}
-    </select>
-    <i className="bi bi-chevron-down filter-select-arrow" />
-</div> 
-    
-          <button
-            className="filter-button"
-            onClick={() => {
-              setQuery("");
-              setMerchant("");
-              setStatus("");
-              setLocation("");
-              setCurrentPage(1);
-            }}
-          >
-            <i className="bi bi-arrow-counterclockwise" /> Reset
-          </button>
-        </div>
+        {
+            key: "status",
+            label: "Status",
+            value: status,
+            options: [
+                {
+                    label: "All Status",
+                    value: "",
+                },
+                ...statuses
+                    .filter(Boolean)
+                    .map((s) => ({
+                        label: title(s),
+                        value: s,
+                    })),
+            ],
+            onChange: (value) => {
+                setStatus(value);
+                setCurrentPage(1);
+            },
+        },
+
+        {
+            key: "location",
+            label: "Location",
+            value: location,
+            options: [
+                {
+                    label: "All Locations",
+                    value: "",
+                },
+                ...[
+                    ...new Set(
+                        stores
+                            .map(locationOf)
+                            .filter(Boolean)
+                    ),
+                ]
+                    .sort()
+                    .map((l) => ({
+                        label: l,
+                        value: l,
+                    })),
+            ],
+            onChange: (value) => {
+                setLocation(value);
+                setCurrentPage(1);
+            },
+        },
+    ]}
+    onClear={() => {
+        setQuery("");
+        setMerchant("");
+        setStatus("");
+        setLocation("");
+        setCurrentPage(1);
+    }}
+/>
         {referenceError && (
           <p className="stores-feedback" role="alert">
             Could not load status options: {referenceError}
@@ -392,7 +393,7 @@ useEffect(() => {
                         </div>
                         <div>
                           <strong>{s.storeName}</strong>
-                          <small>Store ID: {displayStoreId(s)}</small>
+                          <small>{displayStoreId(s)}</small>
                         </div>
                       </button>
                     </td>

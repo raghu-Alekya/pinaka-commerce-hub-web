@@ -2,6 +2,7 @@ import { EmployeeToast, EmployeeDeleteDialog } from "../components/EmployeeFeedb
 import React, { useEffect, useMemo, useState } from "react";
 import { listEmployees } from "../api/employees";
 import Pagination from "../components/Pagination";
+import FiltersBar from "../components/FiltersBar";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getEmployeeList, deleteEmployee } from "../api/employees";
 
@@ -247,7 +248,6 @@ function FilterSelect({ value, options, onChange }) {
 ========================================================= */
 export default function Employees() {
   /* SEARCH */
-  const [search, setSearch] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
   const [notice, setNotice] = useState(location.state?.employeeMessage || "");
@@ -260,6 +260,10 @@ export default function Employees() {
   const [loadError, setLoadError] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+const [roleFilter, setRoleFilter] = useState("");
+const [statusFilter, setStatusFilter] = useState("");
+const [storeFilter, setStoreFilter] = useState("");
 
   async function handleDelete(employee) {
     if (deletingId) return;
@@ -307,10 +311,6 @@ export default function Employees() {
       active = false;
     };
   }, []);
-  /* FILTERS */
-  const [merchant, setMerchant] = useState("All Merchants");
-
-  const [role, setRole] = useState("All Roles");
 
   /* PAGINATION */
   const [page, setPage] = useState(1);
@@ -324,28 +324,41 @@ const handlePageSizeChange = (size) => {
      FILTER EMPLOYEES
   ===================================================== */
   const filteredEmployees = useMemo(() => {
-    return employeeRows.filter((employee) => {
-      const searchValue = search.trim().toLowerCase();
-      const matchesSearch =
-        !searchValue ||
-        employee.name.toLowerCase().includes(searchValue) ||
-        employee.email.toLowerCase().includes(searchValue) ||
-        employee.phone.toLowerCase().includes(searchValue) ||
-        employee.role.toLowerCase().includes(searchValue) ||
-        employee.merchant.toLowerCase().includes(searchValue) ||
-        employee.store.toLowerCase().includes(searchValue);
-      const matchesMerchant =
-        merchant === "All Merchants" || employee.merchant === merchant;
+  return employeeRows.filter((employee) => {
+    const searchValue = searchTerm.trim().toLowerCase();
 
-      const matchesRole = role === "All Roles" || employee.role === role;
+    const matchesSearch =
+      !searchValue ||
+      employee.name?.toLowerCase().includes(searchValue) ||
+      employee.email?.toLowerCase().includes(searchValue) ||
+      employee.phone?.toLowerCase().includes(searchValue) ||
+      employee.role?.toLowerCase().includes(searchValue) ||
+      employee.merchant?.toLowerCase().includes(searchValue) ||
+      employee.store?.toLowerCase().includes(searchValue);
 
-      return (
-        matchesSearch &&
-        matchesMerchant &&
-        matchesRole
-      );
-    });
-  }, [employeeRows, search, merchant, role]);
+    const matchesRole =
+      !roleFilter || employee.role === roleFilter;
+
+    const matchesStatus =
+      !statusFilter || employee.status === statusFilter;
+
+    const matchesStore =
+      !storeFilter || employee.store === storeFilter;
+
+    return (
+      matchesSearch &&
+      matchesRole &&
+      matchesStatus &&
+      matchesStore
+    );
+  });
+}, [
+  employeeRows,
+  searchTerm,
+  roleFilter,
+  statusFilter,
+  storeFilter,
+]);
 
   /* =====================================================
      PAGINATION CALCULATIONS
@@ -358,34 +371,6 @@ const handlePageSizeChange = (size) => {
   const startIndex = (safePage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const visibleEmployees = filteredEmployees.slice(startIndex, endIndex);
-
-
-  /* =====================================================
-     SEARCH HANDLER
-  ===================================================== */
-  const handleSearch = (value) => {
-    setSearch(value);
-    setPage(1);
-  };
-  /* =====================================================
-     FILTER HANDLER
-  ===================================================== */
-  const handleMerchantChange = (value) => {
-    setMerchant(value);
-    setPage(1);
-  };
-
-
-  const handleRoleChange = (value) => {
-    setRole(value);
-    setPage(1);
-  };
-
-
-  /* =====================================================
-     ROWS PER PAGE
-  ===================================================== */
-
 
   /* =====================================================
      PAGINATION
@@ -476,44 +461,95 @@ const handlePageSizeChange = (size) => {
       ================================================= */}
       <div className="employees-list-card">
         {/* FILTER BAR */}
-        <div className="employees-filter-bar">
-          {/* SEARCH */}
-          <div className="employees-search">
-            <Search size={18} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search by name, email, phone number, or role…"
-            />
-          </div>
-          {/* MERCHANT */}
-          <FilterSelect
-            value={merchant}
-            onChange={handleMerchantChange}
-            options={[
-              "All Merchants",
-              ...Array.from(new Set(employeeRows.map((e) => e.merchant))),
-            ]}
-          />
-
-          {/* ROLE */}
-          <FilterSelect
-            value={role}
-            onChange={handleRoleChange}
-            options={[
-              "All Roles",
-              ...Array.from(new Set(employeeRows.map((e) => e.role))),
-            ]}
-          />
-
-        </div>
+       <FiltersBar
+    searchValue={searchTerm}
+    onSearchChange={(value) => {
+        setSearchTerm(value);
+        setPage(1);
+    }}
+    searchPlaceholder="Search employee name, email, or phone..."
+    filters={[
+        {
+            key: "role",
+            label: "Role",
+            value: roleFilter,
+            options: [
+                { label: "All Roles", value: "" },
+                ...[
+                    ...new Set(
+                        employees
+                            .map((employee) => employee.role)
+                            .filter(Boolean)
+                    ),
+                ].map((role) => ({
+                    label: role,
+                    value: role,
+                })),
+            ],
+            onChange: (value) => {
+                setRoleFilter(value);
+                setPage(1);
+            },
+        },
+        {
+            key: "status",
+            label: "Status",
+            value: statusFilter,
+            options: [
+                { label: "All Status", value: "" },
+                { label: "Active", value: "Active" },
+                { label: "Inactive", value: "Inactive" },
+            ],
+            onChange: (value) => {
+                setStatusFilter(value);
+                setPage(1);
+            },
+        },
+        {
+            key: "store",
+            label: "Store",
+            value: storeFilter,
+            options: [
+                { label: "All Stores", value: "" },
+                ...[
+                    ...new Set(
+                        employees
+                            .map((employee) => employee.store)
+                            .filter(Boolean)
+                    ),
+                ].map((store) => ({
+                    label: store,
+                    value: store,
+                })),
+            ],
+            onChange: (value) => {
+                setStoreFilter(value);
+                setPage(1);
+            },
+        },
+    ]}
+    onClear={() => {
+        setSearchTerm("");
+        setRoleFilter("");
+        setStatusFilter("");
+        setStoreFilter("");
+        setPage(1);
+    }}
+/>
         {/* =================================================
             TABLE
         ================================================= */}
 
         <EmployeeToast message={deleteError || notice} onClose={() => { setDeleteError(""); setNotice(""); }} />
-        {deleteTarget && <EmployeeDeleteDialog title="Delete Employee?" description={`Are you sure you want to delete ${deleteTarget.name}?`} busy={Boolean(deletingId)} onCancel={() => setDeleteTarget(null)} onConfirm={() => handleDelete(deleteTarget)} />}
+        {deleteTarget && (
+          <EmployeeDeleteDialog
+    title="Deactivate Employee?"
+    description={`Are you sure you want to deactivate ${deleteTarget.name}?`}
+    busy={Boolean(deletingId)}
+    onCancel={() => setDeleteTarget(null)}
+    onConfirm={() => handleDelete(deleteTarget)}
+  />
+)}
         <div className="employees-table-wrap">
           <table className="employees-table">
             <thead>

@@ -480,58 +480,52 @@
 }
 /* =========================================================
    DEVICE ACTIONS
-   Reusable ListActions component
+   Match the Merchants action alignment/style
 ========================================================= */
-.list-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.list-action-btn {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid #d8e1ee;
-  border-radius: 7px;
-  background: #fff;
-  color: #536985;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 12px;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-  transition: all 0.16s ease;
-}
-
-.list-action-btn:hover {
-  background: #f2f0ff;
-  color: #5143bc;
-}
-
-.list-action-btn.text-success {
-  color: #198754;
-}
-
-.list-action-btn.text-danger {
-  color: #dc3545;
-}
-
-.list-action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .devices-table th:last-child,
 .devices-table td:last-child {
   text-align: center;
 }
-
-.devices-table td:last-child .list-actions {
+.device-actions {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 2px;
+  width: 100%;
 }
-
+.device-actions .action-btn {
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #8991a2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+}
+.device-actions .action-btn:hover {
+  background: #f2f0ff;
+  color: #5143bc;
+}
+.device-actions .edit-btn:hover {
+  background: #eeeaff;
+  color: #5143bc;
+}
+.device-actions .text-danger {
+  color: #ff3348;
+}
+.device-actions .text-danger:hover {
+  background: #fff0f1;
+  color: #ff3348;
+}
+.device-actions .action-btn i {
+  font-size: 13px;
+  line-height: 1;
+}
 /* =========================================================
    DELETE CONFIRMATION MODAL
 ========================================================= */
@@ -661,62 +655,14 @@
     width: 100%;
   }
 }
-/* =========================================================
-   PAGINATION
-   Match the compact pagination used on other PCH screens
-========================================================= */
-/* .devices-pagination {
-  min-height: 50px;
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  border-top: 1px solid #f0f1f4;
-  background: #fff;
-  color: #697285;
-} */
+
 .devices-showing {
   flex: 1 1 auto;
   font-size: 12px;
   color: #697285;
   white-space: nowrap;
 }
-/* .devices-pagination-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-}
-.devices-pagination-controls button {
-  min-width: 27px;
-  height: 28px;
-  padding: 0 7px;
-  border: 1px solid #e1e4eb;
-  border-radius: 4px;
-  background: #fff;
-  color: #7d8697;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.devices-pagination-controls button:hover:not(:disabled) {
-  background: #f4f2ff;
-  border-color: #d8d2fa;
-  color: #5143bc;
-}
-.devices-pagination-controls button.active {
-  background: #5143bc;
-  border-color: #5143bc;
-  color: #fff;
-}
-.devices-pagination-controls button:disabled {
-  color: #c0c5cf;
-  background: #fafbfc;
-  cursor: not-allowed;
-} */
+
 @media (max-width: 1300px) {
   .devices-page {
     padding: 16px 18px 20px;

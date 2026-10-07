@@ -15,6 +15,7 @@ import { ApiError } from "../api/http";
 import { devicesApi } from "../api/devices";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
+import FiltersBar from "../components/FiltersBar";
 import "../styles/merchants.css";
 import "../styles/global.css";
 
@@ -521,7 +522,7 @@ function parseFilterDate(value) {
   }
   const date = new Date(text); return Number.isNaN(date.getTime()) ? null : date;
 }
-function joinedMatch(merchant, value, from = '', to = '', now = new Date()) {
+function dateRangeMatch(merchant, value, from = '', to = '', now = new Date()) {
   if (!value) return true;
   const date = parseFilterDate(merchant.createdAt) || parseFilterDate(merchant.joined);
   if (!date) return false;
@@ -705,7 +706,7 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
               .toLowerCase()
               .includes(q.toLowerCase())) &&
           (!status || String(m.status || '').toLowerCase() === String(status).toLowerCase()) &&
-          (!plan || m.plan === plan) && (!storeCount || (storeCount === 'none' ? Number(m.stores) === 0 : storeCount === 'one' ? Number(m.stores) === 1 : Number(m.stores) > 1)) && (!location || `${m.country || ''} ${m.state || ''}`.trim().toLowerCase() === location.toLowerCase()) && (!joinedRange || joinedMatch(m, joinedRange, dateFrom, dateTo)),
+          (!plan || m.plan === plan) && (!storeCount || (storeCount === 'none' ? Number(m.stores) === 0 : storeCount === 'one' ? Number(m.stores) === 1 : Number(m.stores) > 1)) && (!location || `${m.country || ''} ${m.state || ''}`.trim().toLowerCase() === location.toLowerCase()) && (!joinedRange || dateRangeMatch(m, joinedRange, dateFrom, dateTo)),
       ),
     [merchants, q, status, plan, joinedRange, storeCount, location, dateFrom, dateTo],
   );
@@ -858,52 +859,117 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
         ))}
       </div>
       <div className="merchant-table-card">
-        <div className="filter-bar">
-          <div className="merchant-search">
-            <i className="bi bi-search" />
-            <input
-              id="merchantSearch"
-              placeholder="Search merchants..."
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-          </div>
-          <select
-            id="statusFilter"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="">All Statuses</option>
-            {statuses.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-          <select value={joinedRange} aria-label="Joined date filter" onChange={e => { if (e.target.value === 'custom') openDateRange(); else { setJoinedRange(e.target.value); setDatePickerOpen(false); } }}><option value="">Any Joined Date</option><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option><option value="custom">Custom Date Range</option></select>
-          <select value={storeCount} onChange={e => setStoreCount(e.target.value)}><option value="">Any Store Count</option><option value="none">No Stores</option><option value="one">1 Store</option><option value="many">Multiple Stores</option></select>
-          <select value={location} onChange={e => setLocation(e.target.value)}><option value="">All Locations</option>{locations.map(item => <option key={item}>{item}</option>)}</select>
-          <select
-            id="subscriptionFilter"
-            value={plan}
-            onChange={(e) => setPlan(e.target.value)}
-          >
-            <option value="">All Plans</option>
-            {plans.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-          <button
-            className="filter-button"
-            onClick={() => {
-              setQ("");
-              setStatus("");
-              setPlan("");
-              setJoinedRange(""); setDateFrom(""); setDateTo(""); setDraftFrom(""); setDraftTo(""); setDatePickerOpen(false); setDateError(""); setStoreCount(""); setLocation(""); setPage(1);
-            }}
-          >
-            <i className="bi bi-arrow-counterclockwise" /> Reset
-          </button>
-        </div>
-        {datePickerOpen && <section id="merchant-date-range" aria-label="Custom joined date range" style={{ padding: 16, background: '#f8f7ff', borderBottom: '1px solid #e1e4eb' }}>
+        <FiltersBar
+    searchValue={q}
+    onSearchChange={(value) => {
+        setQ(value);
+        setPage(1);
+    }}
+    searchPlaceholder="Search merchants..."
+    filters={[
+        {
+            key: "status",
+            label: "Status",
+            value: status,
+            options: [
+                { label: "All Statuses", value: "" },
+                ...statuses.map((item) => ({
+                    label: item,
+                    value: item,
+                })),
+            ],
+            onChange: (value) => {
+                setStatus(value);
+                setPage(1);
+            },
+        },
+        {
+            key: "joinedRange",
+            label: "Date Range",
+            value: joinedRange,
+            options: [
+                { label: "Any Date", value: "" },
+                { label: "Today", value: "today" },
+                { label: "This Week", value: "week" },
+                { label: "This Month", value: "month" },
+                { label: "Custom Range", value: "custom" },
+            ],
+            onChange: (value) => {
+                if (value === "custom") {
+                    openDateRange();
+                } else {
+                    setJoinedRange(value);
+                    setDateFrom("");
+                    setDateTo("");
+                    setPage(1);
+                }
+            },
+        },
+        {
+            key: "storeCount",
+            label: "Store Count",
+            value: storeCount,
+            options: [
+                { label: "Any Store Count", value: "" },
+                { label: "No Stores", value: "none" },
+                { label: "1 Store", value: "one" },
+                { label: "Multiple Stores", value: "multiple" },
+            ],
+            onChange: (value) => {
+                setStoreCount(value);
+                setPage(1);
+            },
+        },
+        {
+            key: "location",
+            label: "Location",
+            value: location,
+            options: [
+                { label: "All Locations", value: "" },
+                ...locations.map((item) => ({
+                    label: item,
+                    value: item,
+                })),
+            ],
+            onChange: (value) => {
+                setLocation(value);
+                setPage(1);
+            },
+        },
+        {
+            key: "plan",
+            label: "Subscription Plan",
+            value: plan,
+            options: [
+                { label: "All Plans", value: "" },
+                ...plans
+                    .filter(Boolean)
+                    .map((item) => ({
+                        label: item,
+                        value: item,
+                    })),
+            ],
+            onChange: (value) => {
+                setPlan(value);
+                setPage(1);
+            },
+        },
+    ]}
+    onClear={() => {
+        setQ("");
+        setStatus("");
+        setPlan("");
+        setLocation("");
+        setStoreCount("");
+        setJoinedRange("");
+        setDateFrom("");
+        setDateTo("");
+        setDatePickerOpen(false);
+        setDateError("");
+        setPage(1);
+    }}
+/>
+        {datePickerOpen && <section id="merchant-date-range" aria-label="Custom date range" style={{ padding: 16, background: '#f8f7ff', borderBottom: '1px solid #e1e4eb' }}>
           <div style={{ display: 'flex', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
             <CalendarField label="From date" value={draftFrom} max={draftTo || undefined} onChange={value => { setDraftFrom(value); setDateError(''); }} />
             <CalendarField label="To date" value={draftTo} min={draftFrom || undefined} onChange={value => { setDraftTo(value); setDateError(''); }} />
@@ -921,22 +987,23 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
                 <th>Stores</th>
                 <th>Subscription Plan</th>
                 <th>Status</th>
-                <th>Joined On</th>
+                <th>Created At</th>
+                <th>Updated At</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8}>Loading merchants...</td>
+                  <td colSpan={9}>Loading merchants...</td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={8}>{error}</td>
+                  <td colSpan={9}>{error}</td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>No merchants found.</td>
+                  <td colSpan={9}>No merchants found.</td>
                 </tr>
               ) : (
                 visibleRows.map((m, index) => (
@@ -992,7 +1059,8 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
                          {m.status || 'Unknown'}
                          </span>
                     </td>
-                    <td>{m.joined}</td>
+                    <td>{formatDate(m.createdAt || m.created_at || m.createdDate || m.joined)}</td>
+                    <td>{formatDate(m.updatedAt || m.updated_at || m.updatedDate)}</td>
                     <td>
     <ListActions
         onView={() => openView(m)}
@@ -1032,16 +1100,73 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
     itemLabel="merchants"
 />
       </div>
-      {deleteTarget && <dialog className="merchant-delete-dialog" ref={deleteDialog} aria-labelledby="merchant-delete-title" onCancel={event => { event.preventDefault(); if (!deleting) setDeleteTarget(null); }}>
-        <h2 id="merchant-delete-title">Deactivate merchant? </h2>
-        <p><strong>{deleteTarget.name}</strong> · {deleteTarget.id}</p>
-        <p>This merchant will become inactive and remain available for later reactivation.</p>
-        {deleteError && <p className="alert alert-danger" role="alert">{deleteError}</p>}
-        <div className="d-flex justify-content-end gap-2">
-          <button type="button" className="btn btn-secondary" autoFocus disabled={deleting} onClick={() => setDeleteTarget(null)}>Cancel</button>
-          <button type="button" className="btn btn-danger" disabled={deleting} onClick={confirmDelete}>{deleting ? 'Deactivating…' : 'Deactivate merchant'}</button>
-        </div>
-      </dialog>}
+      {deleteTarget && (
+  <dialog
+    className="merchant-deactivate-dialog"
+    ref={deleteDialog}
+    aria-labelledby="merchant-deactivate-title"
+    onCancel={(event) => {
+      event.preventDefault();
+      if (!deleting) {
+        setDeleteTarget(null);
+      }
+    }}
+  >
+    <div className="merchant-deactivate-content">
+
+      {/* Red trash icon */}
+      <div className="merchant-deactivate-icon">
+        <i className="bi bi-trash3"></i>
+      </div>
+
+      {/* Title */}
+      <h2 id="merchant-deactivate-title">
+        Deactivate Merchant?
+      </h2>
+
+      {/* Confirmation text */}
+      <p className="merchant-deactivate-message">
+        Are you sure you want to deactivate{" "}
+        <strong>{deleteTarget.name}</strong>?
+      </p>
+
+      {/* Warning */}
+      <p className="merchant-deactivate-warning">
+        This action cannot be undone.
+      </p>
+
+      {/* API error */}
+      {deleteError && (
+        <p className="merchant-deactivate-error" role="alert">
+          {deleteError}
+        </p>
+      )}
+
+      {/* Buttons */}
+      <div className="merchant-deactivate-actions">
+        <button
+          type="button"
+          className="merchant-deactivate-cancel"
+          autoFocus
+          disabled={deleting}
+          onClick={() => setDeleteTarget(null)}
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          className="merchant-deactivate-confirm"
+          disabled={deleting}
+          onClick={confirmDelete}
+        >
+          {deleting ? "Deactivating…" : "Deactivate Merchant"}
+        </button>
+      </div>
+
+    </div>
+  </dialog>
+)}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { merchants } from "../data/data";
 import ViewDetailsModal from "../components/ViewDetailsModal";
 import Pagination from "../components/Pagination";
+import FiltersBar from "../components/FiltersBar";
 import "../styles/cash-management.css";
 
 export default function CashManagement() {
@@ -129,16 +130,53 @@ export default function CashManagement() {
         payment.transactionId.toLowerCase().includes(search) ||
         payment.acceptedBy.toLowerCase().includes(search);
 
-      return merchantMatch && storeMatch && searchMatch;
+      let dateMatch = true;
+
+if (dateFilter && dateFilter !== "All Dates") {
+    const paymentDate = new Date(payment.date);
+    const today = new Date();
+
+    if (dateFilter === "today") {
+        dateMatch =
+            paymentDate.toDateString() ===
+            today.toDateString();
+    }
+
+    if (dateFilter === "7days") {
+        const from = new Date(today);
+        from.setDate(today.getDate() - 6);
+
+        dateMatch =
+            paymentDate >= from &&
+            paymentDate <= today;
+    }
+
+    if (dateFilter === "30days") {
+        const from = new Date(today);
+        from.setDate(today.getDate() - 29);
+
+        dateMatch =
+            paymentDate >= from &&
+            paymentDate <= today;
+    }
+}
+
+return (
+    merchantMatch &&
+    storeMatch &&
+    searchMatch &&
+    dateMatch
+);
+
     });
-  }, [selectedMerchant, selectedStore, searchTerm]);
+    }, [selectedMerchant, selectedStore, searchTerm, dateFilter]);
 
   const totalItems = filteredPayments.length;
 
-const totalPages = Math.max(
-    1,
-    Math.ceil(totalItems / pageSize)
-);
+  const totalPages = Math.max(
+      1,
+      Math.ceil(totalItems / pageSize)
+  );
 
 const paginatedPayments = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -335,96 +373,85 @@ useEffect(() => {
 
 <div className="cash-table-card">
 
-  {/* FILTER BAR */}
-  <div className="cash-filter-bar">
+ {/* =====================================================
+    FILTER BAR
+===================================================== */}
 
-    {/* SEARCH */}
-    <div className="cash-search-box">
+<FiltersBar
+    searchValue={searchTerm}
+    onSearchChange={(value) => {
+        setSearchTerm(value);
+        setCurrentPage(1);
+    }}
+    searchPlaceholder="Search order ID, transaction ID, or accepted by..."
+    filters={[
+        {
+            key: "merchant",
+            value: selectedMerchant,
+            options: [
+                {
+                    label: "All Merchants",
+                    value: "",
+                },
+                ...merchants.map((merchant) => ({
+                    label: merchant.name,
+                    value: merchant.id,
+                })),
+            ],
+            onChange: (value) => {
+                setSelectedMerchant(value);
+                setCurrentPage(1);
+            },
+        },
 
-      <i className="bi bi-search" />
+        {
+            key: "store",
+            value: selectedStore,
+            options: [
+                {
+                    label: "All Stores",
+                    value: "",
+                },
+                ...stores.map((store) => ({
+                    label: store,
+                    value: store,
+                })),
+            ],
+            onChange: (value) => {
+                setSelectedStore(value);
+                setCurrentPage(1);
+            },
+        },
 
-      <input
-        type="text"
-        placeholder="Search payment title, order ID, transaction ID..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-
-    </div>
-
-    {/* DATE */}
-    <div className="cash-select-wrapper">
-
-      <select
-        value={dateFilter}
-        onChange={(e) => setDateFilter(e.target.value)}
-      >
-        <option>All Dates</option>
-        <option>Today</option>
-        <option>Last 7 Days</option>
-        <option>Last 30 Days</option>
-      </select>
-
-      <i className="bi bi-chevron-down cash-select-arrow" />
-
-    </div>
-
-    {/* MERCHANT */}
-    <div className="cash-select-wrapper">
-
-      <select
-        value={selectedMerchant}
-        onChange={(e) => {
-          setSelectedMerchant(e.target.value);
-          setSelectedStore("");
-        }}
-      >
-        <option value="">All Merchants</option>
-
-        {merchants.map((merchant) => (
-          <option key={merchant.id} value={merchant.id}>
-            {merchant.name}
-          </option>
-        ))}
-
-      </select>
-
-      <i className="bi bi-chevron-down cash-select-arrow" />
-
-    </div>
-
-    {/* STORE */}
-    <div className="cash-select-wrapper">
-
-      <select
-        value={selectedStore}
-        onChange={(e) => setSelectedStore(e.target.value)}
-      >
-        <option value="">All Stores</option>
-
-        {stores.map((store) => (
-          <option key={store} value={store}>
-            {store}
-          </option>
-        ))}
-
-      </select>
-
-      <i className="bi bi-chevron-down cash-select-arrow" />
-
-    </div>
-
-    {/* RESET */}
-    <button
-      type="button"
-      className="cash-clear-button"
-      onClick={clearFilters}
-    >
-      <i className="bi bi-arrow-counterclockwise" />
-      Reset
-    </button>
-
-  </div>
+        {
+            key: "date",
+            value: dateFilter,
+            options: [
+                {
+                    label: "All Dates",
+                    value: "All Dates",
+                },
+                {
+                    label: "Today",
+                    value: "today",
+                },
+                {
+                    label: "Last 7 Days",
+                    value: "7days",
+                },
+                {
+                    label: "Last 30 Days",
+                    value: "30days",
+                },
+            ],
+            onChange: (value) => {
+                setDateFilter(value);
+                setCurrentPage(1);
+            },
+        },
+    ]}
+    onClear={clearFilters}
+/>
 
   {/* TABLE */}
   <div className="cash-table-wrapper">

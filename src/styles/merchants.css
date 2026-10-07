@@ -1835,3 +1835,176 @@ dialog.merchant-delete-dialog::backdrop {
         margin-left: 10px;
     }
 }
+
+/* =========================================
+   Merchant Deactivate Confirmation Popup
+   ========================================= */
+
+.merchant-deactivate-dialog {
+  position: fixed !important;
+  inset: 0 !important;
+
+  width: 100%;
+  max-width: 380px;
+  height: fit-content;
+
+  margin: auto !important;
+  padding: 22px;
+
+  border: none;
+  border-radius: 14px;
+  background: #fff;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  text-align: center;
+  color: #17233e;
+}
+
+.merchant-deactivate-dialog::backdrop {
+  background: rgba(20, 25, 35, 0.58);
+}
+
+
+/* Trash icon circle */
+
+.merchant-deactivate-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+}
+
+.merchant-deactivate-icon i {
+  font-size: 27px;
+  line-height: 1;
+  color: #ef2626;
+}
+
+/* Heading */
+
+.merchant-deactivate-dialog h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #172033;
+    
+}
+
+/* Main question */
+
+.merchant-deactivate-message {
+  margin: 0 0 10px;
+  color: #566176;
+  font-size: 15px;
+  line-height: 1.5; 
+   
+}
+
+.merchant-deactivate-message strong {
+  color: #17233e;
+  font-weight: 700;
+}
+
+/* Red warning */
+
+.merchant-deactivate-warning {
+  margin: 12px 0 28px;
+  color: #ef2626;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Error */
+
+.merchant-deactivate-error {
+  margin: -10px 0 18px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff0f0;
+  color: #ef2626;
+  font-size: 14px;
+}
+
+/* Buttons */
+
+.merchant-deactivate-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.merchant-deactivate-cancel,
+.merchant-deactivate-confirm {
+  min-width: 120px;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.merchant-deactivate-cancel {
+  border: 1px solid #cfd5df;
+  background: #fff;
+  color: #3d485c;
+}
+
+.merchant-deactivate-cancel:hover:not(:disabled) {
+  background: #f7f8fa;
+}
+
+.merchant-deactivate-confirm {
+  border: 1px solid #ef2626;
+  background: #ef2626;
+  color: #fff;
+}
+
+.merchant-deactivate-confirm:hover:not(:disabled) {
+  background: #ef2626;
+  border-color: #ef2626;
+}
+
+.merchant-deactivate-cancel:disabled,
+.merchant-deactivate-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .merchant-deactivate-dialog {
+    width: calc(100vw - 24px);
+    padding: 24px 20px;
+  }
+
+  .merchant-deactivate-dialog h2 {
+    font-size: 25px;
+  }
+
+  .merchant-deactivate-message {
+    font-size: 17px;
+  }
+
+  .merchant-deactivate-warning {
+    font-size: 16px;
+  }
+
+  .merchant-deactivate-actions {
+    flex-direction: column;
+  }
+
+  .merchant-deactivate-cancel,
+  .merchant-deactivate-confirm {
+    width: 100%;
+  }
+}

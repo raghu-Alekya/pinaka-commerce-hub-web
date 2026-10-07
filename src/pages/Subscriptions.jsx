@@ -3,6 +3,7 @@ import { useReferenceData } from "../api/referenceData";
 import { listMerchants } from "../api/merchants";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
+import FiltersBar from "../components/FiltersBar";
 import {
 
   Eye,
@@ -341,34 +342,22 @@ function SubscriptionList({
   onDelete,
   crudBusy,
 }) {
-  const [search, setSearch] = useState("");
-  const [plan, setPlan] = useState("");
-  const [status, setStatus] = useState("");
-  const [stores, setStores] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [page, setPage] = useState(1);
+const [search, setSearch] = useState("");
+const [plan, setPlan] = useState("");
+const [status, setStatus] = useState("");
+const [stores, setStores] = useState("");
+
+const [dateRange, setDateRange] = useState("");
+const [startDate, setStartDate] = useState("");
+const [endDate, setEndDate] = useState("");
+const [datePickerOpen, setDatePickerOpen] = useState(false);
+
+const [page, setPage] = useState(1);
 const [pageSize, setPageSize] = useState(10);
+
 const handlePageSizeChange = (size) => {
   setPageSize(size);
   setPage(1);
-
-  useEffect(() => {
-  setPage(1);
-}, [
-  search,
-  plan,
-  status,
-  stores,
-  startDate,
-  endDate,
-]);
-
-useEffect(() => {
-  setPage((currentPage) =>
-    Math.min(currentPage, totalPages)
-  );
-}, [totalPages]);
 };
 
   /* ========================================
@@ -571,6 +560,47 @@ useEffect(() => {
   );
 }, [totalPages]); 
 
+const handleDateRangeChange = (value) => {
+    setDateRange(value);
+
+    const today = new Date();
+
+    if (value === "") {
+        setStartDate("");
+        setEndDate("");
+    } else if (value === "today") {
+        const date = today.toISOString().split("T")[0];
+
+        setStartDate(date);
+        setEndDate(date);
+    } else if (value === "7days") {
+        const from = new Date(today);
+        from.setDate(today.getDate() - 6);
+
+        setStartDate(from.toISOString().split("T")[0]);
+        setEndDate(today.toISOString().split("T")[0]);
+    } else if (value === "30days") {
+        const from = new Date(today);
+        from.setDate(today.getDate() - 29);
+
+        setStartDate(from.toISOString().split("T")[0]);
+        setEndDate(today.toISOString().split("T")[0]);
+    } else if (value === "month") {
+        const from = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            1
+        );
+
+        setStartDate(from.toISOString().split("T")[0]);
+        setEndDate(today.toISOString().split("T")[0]);
+    } else if (value === "custom") {
+        setDatePickerOpen(true);
+    }
+
+    setPage(1);
+};
+
 
   /* ========================================
      RESET FILTERS
@@ -581,10 +611,12 @@ useEffect(() => {
     setPlan("");
     setStatus("");
     setStores("");
+    setDateRange("");
     setStartDate("");
     setEndDate("");
+    setDatePickerOpen(false);
     setPage(1);
-  };
+};
 
   const hasActiveFilters =
     search !== "" ||
@@ -844,145 +876,81 @@ useEffect(() => {
             FILTER BAR
         ======================================== */}
 
-        <div className="subscription-filter-bar">
-
-          {/* SEARCH */}
-
-          <div className="subscription-search">
-
-            <Search size={17} />
-
-            <input
-              type="text"
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              placeholder="Search merchant name, code or ID"
-            />
-
-          </div>
-
-          {/* PLAN */}
-
-          <select
-            value={plan}
-            onChange={(e) =>
-              setPlan(e.target.value)
-            }
-          >
-            <option value="">
-              All Plans
-            </option>
-
-            {availablePlans.map((item) => (
-              <option
-                key={item}
-                value={item}
-              >
-                {item}
-              </option>
-            ))}
-
-          </select>
-
-          {/* STATUS */}
-
-          <select
-            value={status}
-            onChange={(e) =>
-              setStatus(e.target.value)
-            }
-          >
-            <option value="">
-              All Statuses
-            </option>
-
-            {availableStatuses.map((item) => (
-              <option
-                key={item}
-                value={item}
-              >
-                {item}
-              </option>
-            ))}
-
-          </select>
-
-          {/* STORE COUNT */}
-
-          <select
-            value={stores}
-            onChange={(e) =>
-              setStores(e.target.value)
-            }
-          >
-            <option value="">
-              All Store Counts
-            </option>
-
-            {availableStoreCounts.map((item) => (
-              <option
-                key={item}
-                value={item}
-              >
-                {item}{" "}
-                {Number(item) === 1
-                  ? "Store"
-                  : "Stores"}
-              </option>
-            ))}
-
-          </select>
-
-          {/* START DATE FROM */}
-
-          <div className="subscription-date-filter">
-
-            <input
-              type="date"
-              value={startDate}
-              max={endDate || undefined}
-              onChange={(e) =>
-                setStartDate(e.target.value)
-              }
-              aria-label="Start Date From"
-            />
-
-          </div>
-
-          {/* START DATE TO */}
-
-          <div className="subscription-date-filter"> 
-
-            <input
-              type="date"
-              value={endDate}
-              min={startDate || undefined}
-              onChange={(e) =>
-                setEndDate(e.target.value)
-              }
-              aria-label="Start Date To"
-            />
-
-          </div>
-
-          {/* RESET */}
-
-          <button
-            type="button"
-            className={`subscription-reset-button ${
-              hasActiveFilters ? "active" : ""
-            }`}
-            onClick={resetFilters}
-            disabled={!hasActiveFilters}
-            title="Reset all filters"
-          >
-            <RefreshCw size={15} />
-            Reset
-          </button>
-
-        </div>
+       <FiltersBar
+    searchValue={search}
+    onSearchChange={(value) => {
+        setSearch(value);
+        setPage(1);
+    }}
+    searchPlaceholder="Search merchant name, code or ID"
+    filters={[
+        {
+            key: "plan",
+            label: "Plan",
+            value: plan,
+            options: [
+                { label: "All Plans", value: "" },
+                ...availablePlans.map((item) => ({
+                    label: item,
+                    value: item,
+                })),
+            ],
+            onChange: (value) => {
+                setPlan(value);
+                setPage(1);
+            },
+        },
+        {
+            key: "status",
+            label: "Status",
+            value: status,
+            options: [
+                { label: "All Statuses", value: "" },
+                ...availableStatuses.map((item) => ({
+                    label: item,
+                    value: item,
+                })),
+            ],
+            onChange: (value) => {
+                setStatus(value);
+                setPage(1);
+            },
+        },
+        {
+            key: "stores",
+            label: "Store Count",
+            value: stores,
+            options: [
+                { label: "Any Store Count", value: "" },
+                ...availableStoreCounts.map((item) => ({
+                    label: `${item} ${
+                        Number(item) === 1 ? "Store" : "Stores"
+                    }`,
+                    value: String(item),
+                })),
+            ],
+            onChange: (value) => {
+                setStores(value);
+                setPage(1);
+            },
+        },
+        {
+            key: "dateRange",
+            label: "Date Range",
+            value: dateRange,
+            options: [
+                { label: "Any Date", value: "" },
+                { label: "Today", value: "today" },
+                { label: "Last 7 Days", value: "7days" },
+                { label: "Last 30 Days", value: "30days" },
+                { label: "This Month", value: "month" },
+                { label: "Custom Range", value: "custom" },
+            ],
+            onChange: handleDateRangeChange,
+        },
+    ]}
+    onClear={resetFilters}
+/>
 
         {/* ========================================
             FILTER RESULT INFO
