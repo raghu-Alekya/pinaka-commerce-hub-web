@@ -81,8 +81,10 @@ export function deleteEmployee(employeeId) {
 
 function getFullImageUrl(url) {
   if (!url || /^(https?:|blob:|data:)/i.test(url)) return url || null;
-  // Development images live on the same merchant service as the employee APIs.
-  const origin = import.meta.env.VITE_API_ORIGIN || "";
+  // Relative uploaded photos use the API host; local requests use the Vite proxy.
+  const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+  const origin = import.meta.env.VITE_API_ORIGIN ||
+    (/^https?:\/\//i.test(apiBase) ? new URL(apiBase).origin : "");
   return origin ? origin.replace(/\/$/, "") + "/" + url.replace(/^\//, "") : url;
 }
  
