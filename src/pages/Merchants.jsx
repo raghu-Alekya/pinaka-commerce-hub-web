@@ -12,6 +12,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant, updateMerchantStatus } from "../api/merchants";
 import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
+import { devicesApi } from "../api/devices";
 import Pagination from "../components/Pagination";
 import "../styles/merchants.css";
 
@@ -50,8 +51,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const [addingDevice, setAddingDevice] = useState(false);
   const [createdDevices,setCreatedDevices]=useState([]);
   async function saveDeviceAndRefresh(values) {
-    if(typeof onSaveDevice!=='function')throw new Error('Connect onSaveDevice to your device creation API.');
-    const result=await onSaveDevice(values);
+    const result=typeof onSaveDevice==='function' ? await onSaveDevice(values) : await devicesApi.create(values);
     if(result?.success===false)throw new Error(result.message || 'Device creation failed.');
     const returned=result?.device || result?.data?.device || result?.data || result;
     const record=returned && typeof returned==='object' && !Array.isArray(returned)?returned:{};

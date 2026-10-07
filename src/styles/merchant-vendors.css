@@ -958,6 +958,25 @@
 .mv-existing-footer { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px; border-top: 1px solid #dfe4ee; background: #fff; }
 .mv-existing-content .mv-picker-pagination { margin-bottom: 4px; }
 .mv-existing-content .mv-location-filters { margin-top: 16px; }
+.mv-device-picker .mv-device-scope { margin: 0 0 16px; color: #63708a; font-size: 13px; }
+.mv-device-picker .mv-device-toolbar { grid-template-columns: minmax(260px, 1fr) auto; }
+.mv-device-picker .mv-existing-table-wrap table { min-width: 820px; }
+.mv-device-picker .mv-existing-table-wrap th:nth-child(1), .mv-device-picker .mv-existing-table-wrap td:nth-child(1) { width: 9%; }
+.mv-device-picker .mv-existing-table-wrap th:nth-child(2), .mv-device-picker .mv-existing-table-wrap td:nth-child(2) { width: 18%; text-align: left; }
+.mv-device-picker .mv-existing-table-wrap th:nth-child(3), .mv-device-picker .mv-existing-table-wrap td:nth-child(3) { width: 20%; }
+.mv-device-picker .mv-existing-table-wrap th:nth-child(4), .mv-device-picker .mv-existing-table-wrap td:nth-child(4) { width: 18%; }
+.mv-device-picker .mv-existing-table-wrap th:nth-child(5), .mv-device-picker .mv-existing-table-wrap td:nth-child(5) { width: 20%; }
+.mv-device-picker .mv-existing-table-wrap th:nth-child(6), .mv-device-picker .mv-existing-table-wrap td:nth-child(6) { width: 15%; }
+.mv-device-picker .mv-device-mapped { border-top: 1px solid #dfe4ee; }
+.mv-device-picker .mv-device-remove { border: 0; background: transparent; color: #b42318; cursor: pointer; }
+.mv-device-picker .mv-device-mapped .pc-footer { margin-top: 18px; }
+.mv-device-mapped-page { display: flex; flex-direction: column; gap: 18px; }
+.mv-device-mapped-page > .mv-header { margin: 0; }
+.mv-device-mapped-page .mv-device-list-card { padding: 24px; }
+.mv-device-mapped-page .mv-device-list-card h3 { margin: 0; }
+.mv-device-mapped-page .mv-device-list-card .mv-scroll { margin-top: 0; }
+.mv-device-mapped-page .mv-device-remove { border: 0; background: transparent; color: #b42318; cursor: pointer; }
+.mv-device-mapped-page .pc-footer { margin-top: 18px; }
 .mv-dialog[open]:not(.mv-dialog-create):not(.mv-dialog-select) { display: flex; flex-direction: column; height: min(90vh, 760px); max-height: 90vh; overflow: hidden; }
 .mv-dialog[open]:not(.mv-dialog-create):not(.mv-dialog-select) > .merchant-vendors { display: flex; flex: 1; min-height: 0; flex-direction: column; }
 .mv-dialog[open]:not(.mv-dialog-create):not(.mv-dialog-select) .mv-header,

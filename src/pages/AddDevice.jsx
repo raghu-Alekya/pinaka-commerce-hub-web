@@ -6,7 +6,7 @@ import "../styles/add-device.css";
 import { devicesApi } from "../api/devices";
 import { listMerchants } from "../api/merchants";
 
-export default function AddDevice() {
+export default function AddDevice({ merchantId: scopedMerchantId = "", merchant: scopedMerchant = null, embedded = false, onSave, onCancel } = {}) {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -32,7 +32,9 @@ export default function AddDevice() {
       .then(([merchantResult, typeResult]) => {
         if (!active) return;
         if (merchantResult.status === "fulfilled") {
-          setMerchants(merchantResult.value.map((merchant) => ({ value: String(merchant.merchantId || merchant.id || ""), label: merchant.name })).filter((item) => item.value && item.label));
+          const options = merchantResult.value.map((merchant) => ({ value: String(merchant.merchantId || merchant.id || ""), label: merchant.name || merchant.businessName })).filter((item) => item.value && item.label);
+          if (scopedMerchantId) setMerchants([{ value: String(scopedMerchantId), label: scopedMerchant?.name || scopedMerchant?.businessName || scopedMerchant?.legalBusinessName || String(scopedMerchantId) }]);
+          else setMerchants(options);
         } else {
           setApiError(merchantResult.reason?.message || "Failed to load merchants.");
         }
@@ -42,7 +44,11 @@ export default function AddDevice() {
       })
       .finally(() => { if (active) setLoadingOptions(false); });
     return () => { active = false; };
-  }, []);
+  }, [scopedMerchantId, scopedMerchant]);
+
+  useEffect(() => {
+    if (scopedMerchantId) setFormData((prev) => ({ ...prev, merchantId: String(scopedMerchantId) }));
+  }, [scopedMerchantId]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -90,10 +96,11 @@ export default function AddDevice() {
     setSaving(true);
 
     try {
-      const response = await devicesApi.create(formData);
+      const response = onSave ? await onSave({ ...formData, merchantId: scopedMerchantId || formData.merchantId }) : await devicesApi.create(formData);
       if (response?.success === false) throw new Error(response.message || "Failed to create device.");
 
-      navigate("/devices");
+      if (onSave) setFormData({ deviceName: "", deviceCode: "", deviceType: "", serialNumber: "", merchantId: String(scopedMerchantId || ""), status: "Active", notes: "" });
+      else navigate("/devices");
     } catch (error) {
       console.error("Create device failed:", error);
 
@@ -108,9 +115,9 @@ export default function AddDevice() {
   };
 
   return (
-    <div className="add-device-page">
+    <div className={`add-device-page${embedded ? " add-device-page-embedded" : ""}`}>
       {/* HEADER */}
-      <div className="add-device-header">
+      {!embedded && <div className="add-device-header">
         <div>
           <h1>Add Device</h1>
 
@@ -131,7 +138,7 @@ export default function AddDevice() {
           <ArrowLeft size={15} />
           Back to Devices
         </button>
-      </div>
+      </div>}
 
       {/* ERROR */}
       {apiError && <div className="device-api-error">{apiError}</div>}
@@ -204,7 +211,7 @@ export default function AddDevice() {
                 onChange={handleMerchantChange}
                 placeholder="Select merchant"
                 options={merchants}
-                disabled={loadingOptions || !merchants.length}
+                disabled={Boolean(scopedMerchantId) || loadingOptions || !merchants.length}
                 required
               />
             </FormField>
@@ -243,7 +250,7 @@ export default function AddDevice() {
         <button
           type="button"
           className="device-cancel-btn"
-          onClick={() => navigate("/devices")}
+          onClick={() => (onCancel ? onCancel() : navigate("/devices"))}
           disabled={saving}
         >
           Cancel
