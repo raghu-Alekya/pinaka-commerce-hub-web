@@ -137,7 +137,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
     let active = true;
     setDevicesLoading(true);
     setDevicesError('');
-    devicesApi.listByMerchantId(apiMerchantId).then(items => {
+    devicesApi.listAllByMerchantId(apiMerchantId).then(items => {
       if (active) setApiDevices(items);
     }).catch(failure => {
       if (active) {
