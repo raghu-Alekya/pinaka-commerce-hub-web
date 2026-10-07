@@ -286,9 +286,16 @@ const [storeFilter, setStoreFilter] = useState("");
   function displayTimestamp(value) {
     if (!value) return "—";
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("en-US", {
-      month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
-    });
+    return Number.isNaN(date.getTime()) ? "—" : (
+      <span className="employee-timestamp">
+        <strong>{date.toLocaleDateString("en-US", {
+          month: "short", day: "numeric", year: "numeric",
+        })}</strong>
+        <span>{date.toLocaleTimeString("en-US", {
+          hour: "numeric", minute: "2-digit",
+        })}</span>
+      </span>
+    );
   }
 
   useEffect(() => {
@@ -625,6 +632,8 @@ const handlePageSizeChange = (size) => {
                     {/* ACTIONS */}
                     <td>
                       <ListActions
+                          onView={() => navigate(`/employees/${encodeURIComponent(employee.employeeId || employee.id)}`)}
+                          viewLabel={`View ${employee.name}`}
                           onEdit={() =>
                           navigate("/employees/edit", {
                           state: { employee }, }) }

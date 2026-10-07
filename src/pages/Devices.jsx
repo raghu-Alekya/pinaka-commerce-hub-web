@@ -1,165 +1,47 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { Monitor, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Pagination from "../components/Pagination";
-import FiltersBar from "../components/FiltersBar";
-import ListActions from "../components/ListActions";
+
+import {
+
+  Monitor,
+
+  AlertCircle,
+
+  Search,
+
+  CalendarDays,
+
+  SlidersHorizontal,
+
+  ChevronDown,
+
+  ChevronLeft,
+
+  ChevronRight,
+  Eye,
+
+} from "lucide-react";
 
 import "../styles/devices.css";
 
 import { devicesApi } from "../api/devices";
 
-const ALL_MERCHANTS = "All Merchants";
-const ALL_DEVICE_TYPES = "All Device Types";
-const ALL_STATUSES = "All Statuses";
-
-function getMerchantName(merchantValue) {
-  if (!merchantValue) {
-    return "-";
-  }
-
-  if (typeof merchantValue === "string") {
-    return merchantValue.trim() || "-";
-  }
-
-  if (typeof merchantValue === "object") {
-    return (
-      merchantValue.businessDisplayName ||
-      merchantValue.business_name ||
-      merchantValue.businessName ||
-      merchantValue.merchant_name ||
-      merchantValue.merchantName ||
-      merchantValue.name ||
-      merchantValue.displayName ||
-      `${merchantValue.first_name || ""} ${merchantValue.last_name || ""}`.trim() ||
-      merchantValue.merchant_code ||
-      merchantValue.code ||
-      "-"
-    );
-  }
-
-  return "-";
-}
-
-function normalizeStatus(value) {
-  const raw = String(value ?? "").trim().toLowerCase();
-
-  if (!raw) {
-    return "Unknown";
-  }
-
-  if (["online", "active", "enabled", "connected", "running"].includes(raw)) {
-    return "Online";
-  }
-
-  if (["offline", "disconnected", "disabled"].includes(raw)) {
-    return "Offline";
-  }
-
-  if (["inactive", "not_active", "not active"].includes(raw)) {
-    return "Inactive";
-  }
-
-  return raw.charAt(0).toUpperCase() + raw.slice(1);
-}
-
-function devicePercentage(part, total) {
-  if (!total) {
-    return 0;
-  }
-
-  return Math.round((part / total) * 100);
-}
-
-function StatCard({ icon, title, value, variant, description }) {
-  return (
-    <div className="device-stat-card">
-      <div className={`device-stat-icon ${variant}`}>{icon}</div>
-
-      <div className="device-stat-content">
-        <div className="device-stat-title">{title}</div>
-        <div className="device-stat-value">{value}</div>
-        <div className={`device-stat-description ${variant}`}>
-          <i className="bi bi-circle-fill" aria-hidden="true" />
-          {description}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DeleteDeviceModal({ device, deleting, onCancel, onConfirm }) {
-  if (!device) {
-    return null;
-  }
-
-  return (
-    <div
-      className="device-deactivate-overlay"
-      role="presentation"
-      onMouseDown={onCancel}
-    >
-      <div
-        className="device-deactivate-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="delete-device-title"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <button
-          type="button"
-          className="device-delete-close"
-          aria-label="Close"
-          onClick={onCancel}
-          disabled={deleting}
-        >
-          ×
-        </button>
-
-        <div className="device-deactivate-icon">
-          <i className="bi bi-trash" aria-hidden="true" />
-        </div>
-
-        <h2 id="delete-device-title">Delete Device</h2>
-
-        <p className="device-deactivate-message">
-          <strong>{device.name || device.id || "This device"}</strong> will be permanently removed.
-        </p>
-
-        <p className="device-deactivate-warning">
-          This action cannot be undone.
-        </p>
-
-        <div className="device-deactivate-actions">
-          <button
-            type="button"
-            className="device-deactivate-cancel"
-            onClick={onCancel}
-            disabled={deleting}
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            className="device-deactivate-confirm"
-            onClick={onConfirm}
-            disabled={deleting}
-          >
-            {deleting ? "Deleting..." : "Delete"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function Devices() {
-  const [search, setSearch] = useState("");
-  const [merchant, setMerchant] = useState(ALL_MERCHANTS);
-  const [deviceType, setDeviceType] = useState(ALL_DEVICE_TYPES);
-  const [status, setStatus] = useState(ALL_STATUSES);
+
+  /* ========================================================= STATE ========================================================= */ const [
+
+    search,
+
+    setSearch,
+
+  ] = useState("");
+
+  const [merchant, setMerchant] = useState("All Merchants");
+
+  const [deviceType, setDeviceType] = useState("All Device Types");
+
+  const [status, setStatus] = useState("All Statuses");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -173,6 +55,14 @@ export default function Devices() {
 
   const navigate = useNavigate();
 
+
+
+  /* ========================================================= LOAD DEVICES ========================================================= */ useEffect(() => {
+
+    loadDevices();
+
+  }, []);
+
   const loadDevices = async () => {
     setLoading(true);
     setApiError("");
@@ -182,74 +72,103 @@ export default function Devices() {
       setDevices(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to load devices:", error);
+
+      setApiError(
+
+        error?.message || "Failed to load devices. Please try again.",
+
+      );
+
       setDevices([]);
-      setApiError(error?.message || "Failed to load devices. Please try again.");
+
     } finally {
       setLoading(false);
+
     }
+
   };
 
-  useEffect(() => {
-    loadDevices();
-  }, []);
+  /* ========================================================= DYNAMIC FILTER OPTIONS ========================================================= */ const merchantOptions =
 
-  const merchantOptions = useMemo(() => {
-    const values = devices
-      .map((device) => getMerchantName(device.merchant))
-      .filter((value) => value && value !== "-");
+    useMemo(() => {
 
-    return [ALL_MERCHANTS, ...new Set(values)];
-  }, [devices]);
+      const values = devices.map((device) => device.merchant).filter(Boolean);
+
+      return ["All Merchants", ...new Set(values)];
+
+    }, [devices]);
 
   const deviceTypeOptions = useMemo(() => {
-    const values = devices
-      .map((device) => device.type)
-      .filter(Boolean);
 
-    return [ALL_DEVICE_TYPES, ...new Set(values)];
+    const values = devices.map((device) => device.type).filter(Boolean);
+
+    return ["All Device Types", ...new Set(values)];
+
   }, [devices]);
 
-  const filteredDevices = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  /* ========================================================= FILTER DEVICES ========================================================= */ const filteredDevices =
 
-    return devices.filter((device) => {
-      const merchantName = getMerchantName(device.merchant);
-      const deviceStatus = normalizeStatus(device.status);
+    useMemo(() => {
 
-      const matchesSearch =
-        !query ||
-        [
-          device.name,
-          device.id,
-          device.type,
-          device.serial,
-          merchantName,
-          deviceStatus,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
+      const query = search.trim().toLowerCase();
 
-      const matchesMerchant =
-        merchant === ALL_MERCHANTS || merchantName === merchant;
+      return devices.filter((device) => {
 
-      const matchesType =
-        deviceType === ALL_DEVICE_TYPES || device.type === deviceType;
+        const matchesSearch =
 
-      const matchesStatus =
-        status === ALL_STATUSES || deviceStatus === status;
+          !query ||
 
-      return matchesSearch && matchesMerchant && matchesType && matchesStatus;
-    });
-  }, [devices, search, merchant, deviceType, status]);
+          device.name?.toLowerCase().includes(query) ||
 
-  const totalPages = Math.max(1, Math.ceil(filteredDevices.length / rowsPerPage));
+          device.id?.toLowerCase().includes(query) ||
+
+          device.type?.toLowerCase().includes(query) ||
+
+          device.serial?.toLowerCase().includes(query) ||
+
+          device.merchant?.toLowerCase().includes(query) ;
+
+        const matchesMerchant =
+
+          merchant === "All Merchants" || device.merchant === merchant;
+
+
+
+        const matchesType =
+
+          deviceType === "All Device Types" || device.type === deviceType;
+
+        const matchesStatus =
+
+          status === "All Statuses" || device.status === status;
+
+        return (
+
+          matchesSearch &&
+
+          matchesMerchant &&
+
+          matchesType &&
+
+          matchesStatus
+
+        );
+
+      });
+
+    }, [devices, search, merchant, deviceType, status]);
+
+  /* ========================================================= PAGINATION ========================================================= */ const totalPages =
+
+    Math.max(1, Math.ceil(filteredDevices.length / rowsPerPage));
+
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * rowsPerPage;
   const displayedDevices = filteredDevices.slice(
     startIndex,
+
     startIndex + rowsPerPage,
+
   );
 
   useEffect(() => {
@@ -264,52 +183,92 @@ export default function Devices() {
     setCurrentPage(1);
   };
 
-  const handlePageSizeChange = (size) => {
-    setRowsPerPage(size);
+  const handleFilterChange = (setter, value) => {
+
+    setter(value);
+
     setCurrentPage(1);
+
   };
 
-  const totalDevices = devices.length;
+  /* ========================================================= STATS ========================================================= */ const totalDevices =
+
+    devices.length;
+
   const onlineDevices = devices.filter(
-    (device) => normalizeStatus(device.status) === "Online",
+
+    (device) => ["Active", "Online"].includes(device.status),
+
   ).length;
   const offlineDevices = devices.filter(
-    (device) => normalizeStatus(device.status) === "Offline",
+
+    (device) => device.status === "Offline",
+
   ).length;
   const inactiveDevices = devices.filter(
-    (device) => normalizeStatus(device.status) === "Inactive",
+
+    (device) => device.status === "Inactive",
+
   ).length;
 
-  const handleDeleteDevice = async () => {
-    if (!deleteDevice?.id || deleting) {
-      return;
-    }
+  /* ========================================================= DEACTIVATE DEVICE ========================================================= */ const handleDeactivateDevice =
+
+    async () => {
+
+      if (!deleteDevice?.id || deleting) {
+
+        return;
+
+      }
 
     setDeleting(true);
     setApiError("");
 
-    try {
-      await devicesApi.delete(deleteDevice.id);
-      setDevices((current) =>
-        current.filter((item) => String(item.id) !== String(deleteDevice.id)),
-      );
-      setDeleteDevice(null);
-      setCurrentPage(1);
-    } catch (error) {
-      console.error("Failed to delete device:", error);
-      setApiError(
-        error?.message || "Failed to delete device. Please try again.",
-      );
-    } finally {
-      setDeleting(false);
-    }
-  };
+      try {
 
-  return (
+        await devicesApi.update(deleteDevice.id, { status: "Inactive" });
+
+        setDevices((current) => current.map((item) =>
+          item.id === deleteDevice.id ? { ...item, status: "Inactive" } : item,
+        ));
+
+        setDeleteDevice(null);
+
+        setCurrentPage(1);
+
+      } catch (error) {
+
+        console.error("Failed to deactivate device:", error);
+
+        setApiError(
+
+          error?.message || "Failed to deactivate device. Please try again.",
+
+        );
+
+      } finally {
+
+        setDeleting(false);
+
+      }
+
+    };
+
+  /* ========================================================= RENDER ========================================================= */ return (
+
     <div className="devices-page">
+
+      {" "}
+
+      {/* ===================================================== PAGE HEADER ===================================================== */}{" "}
+
       <div className="devices-page-header">
         <div>
-          <h1>Devices</h1>
+
+          {" "}
+
+          <h1>Devices</h1>{" "}
+
           <p className="devices-subtitle">
             View and manage devices connected to your stores.
           </p>
@@ -325,201 +284,682 @@ export default function Devices() {
           </button>
 
           <button type="button" className="devices-export-btn">
-            <span className="export-icon">↓</span> Export
-          </button>
-        </div>
-      </div>
+
+            {" "}
+
+            <span className="export-icon">↓</span> Export {" "}
+
+          </button>{" "}
+
+        </div>{" "}
+
+      </div>{" "}
+
+      {/* ===================================================== API ERROR ===================================================== */}{" "}
 
       {apiError && (
         <div className="devices-api-error">
-          <i className="bi bi-exclamation-circle" aria-hidden="true" />
-          <span>{apiError}</span>
+
+          {" "}
+
+          <AlertCircle size={17} /> <span>{apiError}</span>{" "}
+
           <button type="button" onClick={loadDevices}>
             Retry
           </button>
         </div>
-      )}
+
+      )}{" "}
+
+      {/* ===================================================== STAT CARDS ===================================================== */}{" "}
 
       <div className="devices-stats">
         <StatCard
+
           icon={<i className="bi bi-laptop-fill" aria-hidden="true" />}
+
           title="Total Devices"
           value={totalDevices}
           variant="purple"
-          description="Live Records"
-        />
+
+        />{" "}
 
         <StatCard
+
           icon={<i className="bi bi-check-circle-fill" aria-hidden="true" />}
+
           title="Online Devices"
           value={onlineDevices}
           variant="green"
-          description={`${devicePercentage(onlineDevices, totalDevices)}% of total`}
-        />
+
+        />{" "}
 
         <StatCard
+
           icon={<i className="bi bi-pause-circle-fill" aria-hidden="true" />}
+
           title="Offline Devices"
           value={offlineDevices}
           variant="orange"
-          description={`${devicePercentage(offlineDevices, totalDevices)}% of total`}
-        />
+
+        />{" "}
 
         <StatCard
+
           icon={<i className="bi bi-x-circle-fill" aria-hidden="true" />}
+
           title="Inactive Devices"
           value={inactiveDevices}
           variant="red"
-          description={`${devicePercentage(inactiveDevices, totalDevices)}% of total`}
-        />
-      </div>
+
+        />{" "}
+
+      </div>{" "}
+
+      {/* ===================================================== FILTER CARD ===================================================== */}{" "}
 
       <div className="devices-list-card">
-        <FiltersBar
-          searchValue={search}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setCurrentPage(1);
-          }}
-          searchPlaceholder="Search by device name or serial number..."
-          filters={[
-            {
-              key: "merchant",
-              value: merchant,
-              options: merchantOptions.map((option) => ({
-                label: option,
-                value: option,
-              })),
-              onChange: (value) => {
-                setMerchant(value);
-                setCurrentPage(1);
-              },
-            },
-            {
-              key: "deviceType",
-              value: deviceType,
-              options: deviceTypeOptions.map((option) => ({
-                label: option,
-                value: option,
-              })),
-              onChange: (value) => {
-                setDeviceType(value);
-                setCurrentPage(1);
-              },
-            },
-            {
-              key: "status",
-              value: status,
-              options: [
-                { label: ALL_STATUSES, value: ALL_STATUSES },
-                { label: "Online", value: "Online" },
-                { label: "Offline", value: "Offline" },
-                { label: "Inactive", value: "Inactive" },
-              ],
-              onChange: (value) => {
-                setStatus(value);
-                setCurrentPage(1);
-              },
-            },
-          ]}
-          onClear={clearFilters}
-        />
+
+        {" "}
+
+        <div className="devices-filter-bar">
+
+          {" "}
+
+          {/* SEARCH */}{" "}
+
+          <div className="devices-search">
+
+            {" "}
+
+            <Search size={17} />{" "}
+
+            <input
+
+              type="text"
+
+              placeholder="Search by device name or serial number,..."
+
+              value={search}
+
+              onChange={(e) => handleFilterChange(setSearch, e.target.value)}
+
+            />{" "}
+
+          </div>{" "}
+
+          {/* MERCHANT */}{" "}
+
+          <FilterSelect
+
+            value={merchant}
+
+            onChange={(value) => handleFilterChange(setMerchant, value)}
+
+            options={merchantOptions}
+
+          />{" "}
+
+
+
+          {/* DEVICE TYPE */}{" "}
+
+          <FilterSelect
+
+            value={deviceType}
+
+            onChange={(value) => handleFilterChange(setDeviceType, value)}
+
+            options={deviceTypeOptions}
+
+          />{" "}
+
+          {/* STATUS */}{" "}
+
+          <FilterSelect
+
+            value={status}
+
+            onChange={(value) => handleFilterChange(setStatus, value)}
+
+            options={["All connection Statuses", "Online", "Offline", "Inactive"]}
+
+          />{" "}
+
+          {/* DATE */}{" "}
+
+          <button type="button" className="devices-date-btn">
+
+            {" "}
+
+            <CalendarDays size={16} /> <span>Date Added </span>{" "}
+
+          </button>{" "}
+
+          {/* FILTER */}{" "}
+
+          <button type="button" className="devices-filter-btn">
+
+            {" "}
+
+            <SlidersHorizontal size={16} /> Filters{" "}
+
+          </button>{" "}
+
+        </div>{" "}
+
+        {/* =================================================== TABLE =================================================== */}{" "}
 
         <div className="devices-table-wrap">
           <table className="devices-table">
             <thead>
+
+              {" "}
+
               <tr>
+
+                {" "}
+
                 <th className="device-check-col">
-                  <input type="checkbox" aria-label="Select all devices" />
-                </th>
-                <th>Device Name</th>
-                <th>Device Type</th>
-                <th>Serial Number</th>
-                <th>Merchant Name</th>
-                <th>Connection Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+
+                  {" "}
+
+                  <input type="checkbox" aria-label="Select all devices" />{" "}
+
+                </th>{" "}
+
+                <th>DEVICE NAME</th> <th>DEVICE TYPE</th> <th>SERIAL NUMBER</th>{" "}
+
+                <th>MERCHANT NAME</th> <th>CONNECTION STATUS</th>{" "}
+
+                 <th>ACTIONS</th>{" "}
+
+              </tr>{" "}
+
+            </thead>{" "}
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="devices-empty">
-                    Loading devices...
-                  </td>
+
+                  {" "}
+
+                  <td colSpan="9" className="devices-empty">
+
+                    {" "}
+
+                    Loading devices...{" "}
+
+                  </td>{" "}
+
                 </tr>
               ) : displayedDevices.length > 0 ? (
-                displayedDevices.map((device) => {
-                  const deviceStatus = normalizeStatus(device.status);
-                  const merchantName = getMerchantName(device.merchant);
 
-                  return (
-                    <tr key={device.id || `${device.name || "device"}-${device.serial || "unknown"}`}>
-                      <td className="device-check-col">
-                        <input type="checkbox" aria-label={`Select ${device.name || "device"}`} />
-                      </td>
+                displayedDevices.map((device) => (
 
-                      <td>
-                        <div className="device-name-cell">
-                          <div className="device-type-icon">
-                            <Monitor size={16} />
-                          </div>
-                          <div>
-                            <div className="device-name">{device.name || "-"}</div>
-                            <div className="device-id">{device.id || "-"}</div>
-                          </div>
-                        </div>
-                      </td>
+                  <DeviceRow
 
-                      <td>{device.type || "-"}</td>
-                      <td>{device.serial || "-"}</td>
-                      <td>{merchantName}</td>
+                    key={device.id}
 
-                      <td>
-                        <span className={`device-status ${deviceStatus.toLowerCase()}`}>
-                          {deviceStatus}
-                        </span>
-                      </td>
+                    device={device}
 
-                      <td>
-                        <ListActions
-                          onEdit={() => navigate(`/devices/${device.id}/edit`)}
-                          onDelete={() => setDeleteDevice(device)}
-                          editLabel="Edit device"
-                          deleteLabel="Delete device"
-                        />
-                      </td>
-                    </tr>
-                  );
-                })
+                    onView={() => navigate(`/devices/${device.id}`)}
+
+                    onDeactivate={() => setDeleteDevice(device)}
+
+                    onEdit={() => navigate(`/devices/${device.id}/edit`)}
+
+                  />
+
+                ))
+
               ) : (
+
                 <tr>
-                  <td colSpan="7" className="devices-empty">
-                    No devices found
-                  </td>
+
+                  {" "}
+
+                  <td colSpan="9" className="devices-empty">
+
+                    {" "}
+
+                    No devices found{" "}
+
+                  </td>{" "}
+
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
 
-        <Pagination
-          currentPage={safePage}
-          totalPages={totalPages}
-          totalItems={filteredDevices.length}
-          pageSize={rowsPerPage}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={handlePageSizeChange}
-          itemLabel="devices"
-        />
-      </div>
+              )}{" "}
 
-      <DeleteDeviceModal
+            </tbody>{" "}
+
+          </table>{" "}
+
+        </div>{" "}
+
+        {/* =================================================== PAGINATION =================================================== */}{" "}
+        <div className="devices-pagination">
+          <div className="devices-showing">
+            Showing {filteredDevices.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, filteredDevices.length)} of {filteredDevices.length} entries
+          </div>{" "}
+          <div className="devices-pagination-controls">
+            <button
+              type="button"
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              aria-label="Previous page"
+            >
+              <ChevronLeft size={15} />
+            </button>{" "}
+            <button type="button" className="active" aria-current="page">
+              {safePage}
+            </button>{" "}
+            <button
+              type="button"
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+              disabled={safePage === totalPages}
+              aria-label="Next page"
+            >
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        </div>{" "}
+      </div>{" "}
+      {/* ===================================================== DELETE MODAL ===================================================== */}{" "}
+
+      <DeactivateDeviceModal
+
         device={deleteDevice}
         deleting={deleting}
+
         onCancel={() => (deleting ? null : setDeleteDevice(null))}
-        onConfirm={handleDeleteDevice}
-      />
+
+        onConfirm={handleDeactivateDevice}
+
+      />{" "}
+
     </div>
+
   );
+
+}
+
+/* ========================================================= DEACTIVATION CONFIRMATION MODAL ========================================================= */ function DeactivateDeviceModal({
+
+  device,
+
+  deleting,
+
+  onCancel,
+
+  onConfirm,
+
+}) {
+
+  if (!device) {
+
+    return null;
+
+  }
+
+  return (
+
+    <div
+
+      className="device-delete-overlay"
+
+      role="presentation"
+
+      onMouseDown={onCancel}
+
+    >
+
+      {" "}
+
+      <div
+
+        className="device-delete-modal"
+
+        role="dialog"
+
+        aria-modal="true"
+
+        aria-labelledby="deactivate-device-title"
+
+        onMouseDown={(event) => event.stopPropagation()}
+
+      >
+
+        {" "}
+
+        <button
+
+          type="button"
+
+          className="device-delete-close"
+
+          aria-label="Close"
+
+          onClick={onCancel}
+
+          disabled={deleting}
+
+        >
+
+          {" "}
+
+          ×{" "}
+
+        </button>{" "}
+
+        <div className="device-delete-heading">
+
+          {" "}
+
+          <div className="device-delete-icon">
+
+            {" "}
+
+            <i className="bi bi-pause-circle" aria-hidden="true" />{" "}
+
+          </div>{" "}
+
+          <h2 id="deactivate-device-title"> Deactivate Device </h2>{" "}
+
+        </div>{" "}
+
+        <p className="device-delete-message">
+
+          {" "}
+
+          Are you sure you want to mark this device inactive?{" "}
+
+        </p>{" "}
+
+        <p className="device-delete-warning">
+
+          {" "}
+
+          The device record will remain in the system and can be reactivated later.{" "}
+
+        </p>{" "}
+
+        <div className="device-delete-actions">
+
+          {" "}
+
+          <button
+
+            type="button"
+
+            className="device-delete-cancel"
+
+            onClick={onCancel}
+
+            disabled={deleting}
+
+          >
+
+            {" "}
+
+            Cancel{" "}
+
+          </button>{" "}
+
+          <button
+
+            type="button"
+
+            className="device-delete-confirm"
+
+            onClick={onConfirm}
+
+            disabled={deleting}
+
+          >
+
+            {" "}
+
+            {deleting ? "Updating..." : "Deactivate"}{" "}
+
+          </button>{" "}
+
+        </div>{" "}
+
+      </div>{" "}
+
+    </div>
+
+  );
+
+}
+
+/* ========================================================= STAT CARD ========================================================= */ function StatCard({
+
+  icon,
+
+  title,
+
+  value,
+
+  variant,
+
+}) {
+
+  return (
+
+    <div className="device-stat-card">
+
+      {" "}
+
+      <div className={`device-stat-icon ${variant}`}> {icon} </div>{" "}
+
+      <div className="device-stat-content">
+
+        {" "}
+
+        <div className="device-stat-title"> {title} </div>{" "}
+
+        <div className="device-stat-value"> {value} </div>{" "}
+
+      </div>{" "}
+
+    </div>
+
+  );
+
+}
+
+/* ========================================================= FILTER SELECT ========================================================= */ function FilterSelect({
+
+  value,
+
+  onChange,
+
+  options,
+
+}) {
+
+  return (
+
+    <div className="device-filter-select">
+
+      {" "}
+
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
+
+        {" "}
+
+        {options.map((option) => (
+
+          <option key={option} value={option}>
+
+            {" "}
+
+            {option}{" "}
+
+          </option>
+
+        ))}{" "}
+
+      </select>{" "}
+
+      <ChevronDown size={15} className="device-filter-arrow" />{" "}
+
+    </div>
+
+  );
+
+}
+
+/* ========================================================= TABLE ROW ========================================================= */ function DeviceRow({
+
+  device,
+
+  onView,
+
+  onDeactivate,
+
+  onEdit,
+
+}) {
+
+  const normalizedStatus =
+
+    device.status?.toLowerCase().replace(/\s+/g, "-") || "unknown";
+
+  return (
+
+    <tr>
+
+      {" "}
+
+      <td className="device-check-col">
+
+        {" "}
+
+        <input
+
+          type="checkbox"
+
+          aria-label={`Select ${device.name || "device"}`}
+
+        />{" "}
+
+      </td>{" "}
+
+      <td>
+
+        {" "}
+
+        <div className="device-name-cell">
+
+          {" "}
+
+          <div className="device-type-icon">
+
+            {" "}
+
+            <Monitor size={16} />{" "}
+
+          </div>{" "}
+
+          <div>
+
+            {" "}
+
+            <div className="device-name"> {device.name || "-"} </div>{" "}
+
+            <div className="device-id"> {device.id || "-"} </div>{" "}
+
+          </div>{" "}
+
+        </div>{" "}
+
+      </td>{" "}
+
+<td>{device.type || "-"}</td>
+
+
+
+<td>{device.serial || "-"}</td>
+
+
+
+<td>{device.merchant || "-"}</td>
+
+
+
+<td>
+
+  <span className={`device-status ${normalizedStatus}`}>
+
+    {device.status || "-"}
+
+  </span>
+
+</td>
+
+
+
+<td>
+
+  <div className="row-actions device-actions">
+
+    <button
+      type="button"
+      className="action-btn"
+      title="View"
+      aria-label={`View ${device.name || "device"}`}
+      onClick={onView}
+    >
+      <Eye size={15} />
+    </button>
+
+    <button
+
+      type="button"
+
+      className="action-btn edit-btn"
+
+      title="Edit"
+
+      aria-label={`Edit ${device.name || "device"}`}
+
+      onClick={onEdit}
+
+    >
+
+      <i className="bi bi-pencil" aria-hidden="true" />
+
+    </button>
+
+
+
+    <button
+
+      type="button"
+
+      className="action-btn text-danger"
+
+      title="Deactivate"
+
+      aria-label={`Deactivate ${device.name || "device"}`}
+
+      onClick={onDeactivate}
+
+    >
+
+      <i className="bi bi-pause-circle" aria-hidden="true" />
+
+    </button>
+
+  </div>
+
+</td>
+
+    </tr>
+
+  );
+
 }

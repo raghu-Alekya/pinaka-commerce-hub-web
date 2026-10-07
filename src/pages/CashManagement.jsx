@@ -467,31 +467,15 @@ useEffect(() => {
 
           <th>Order Total</th>
 
-          <th>
-            Tender
-            <br />
-            Amount
-          </th>
+          <th>Tender Amount</th>
 
-          <th>
-            Balance
-            <br />
-            Amount
-          </th>
+          <th>Balance Amount</th>
 
-          <th>
-            Change
-            <br />
-            Amount
-          </th>
+          <th>Change Amount</th>
 
           <th>Transaction ID</th>
 
-          <th>
-            Payment
-            <br />
-            Accepted By
-          </th>
+          <th>Payment Accepted By</th>
 
           <th>Date</th>
 
@@ -510,8 +494,7 @@ useEffect(() => {
               <a
                 href="#cash-payment"
                className="cash-title" >
-                Cash Payment for Order
-                <br />
+                Cash Payment for Order{" "}
                 {payment.orderId}
                 </a>
             </td>

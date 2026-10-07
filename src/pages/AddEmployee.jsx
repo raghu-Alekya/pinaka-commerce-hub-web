@@ -8,6 +8,7 @@ import "react-phone-input-2/lib/style.css";
 import {
   User,
   Camera,
+  ImagePlus,
   BriefcaseBusiness,
   MapPin,
   Settings,
@@ -15,7 +16,6 @@ import {
   ChevronDown,
   Eye,
   EyeOff,
-  ArrowLeft,
 } from "lucide-react";
 
 import "../styles/add-employee.css";
@@ -881,31 +881,20 @@ export default function AddEmployee() {
           PAGE HEADER
       ===================================================== */}
 
+      <header className="sf-topbar add-employee-topbar">
+        <button type="button" className="sf-back-link" onClick={handleBack}>
+          <i className="bi bi-arrow-left" aria-hidden="true" /> Employees
+        </button>
+        <span>/</span>
+        <strong>Add Employee</strong>
+        <span className="sf-topbar-spacer" />
+      </header>
+
       <div className="add-employee-header">
         <div>
           <h1>Add Employee</h1>
-
-          <div className="add-employee-breadcrumb">
-            <span>Home</span>
-
-            <span className="breadcrumb-arrow">›</span>
-
-            <span>Employees</span>
-
-            <span className="breadcrumb-arrow">›</span>
-
-            <strong>Add Employee</strong>
-          </div>
+          <p>Add and configure a new employee’s details, profile, and work information.</p>
         </div>
-
-        <button
-          type="button"
-          className="back-employees-btn"
-          onClick={handleBack}
-        >
-          <ArrowLeft size={17} />
-          Back to Employees
-        </button>
       </div>
 
       {/* =====================================================
@@ -927,6 +916,7 @@ export default function AddEmployee() {
               <CardHeader
                 icon={<User size={21} />}
                 title="Personal Information"
+                theme="blue"
                 description="Enter the basic details of the employee."
               />
 
@@ -1042,6 +1032,7 @@ export default function AddEmployee() {
               <CardHeader
                 icon={<MapPin size={21} />}
                 title="Address"
+                theme="amber"
                 description="Enter the employee's address details."
               />
 
@@ -1111,6 +1102,7 @@ export default function AddEmployee() {
               <CardHeader
                 icon={<Camera size={21} />}
                 title="Profile Photo"
+                theme="purple"
                 description="Upload a profile photo for the employee."
               />
 
@@ -1125,7 +1117,7 @@ export default function AddEmployee() {
                       className="profile-avatar-image"
                     />
                   ) : (
-                    <User size={39} />
+                    <ImagePlus size={24} aria-hidden="true" />
                   )}
                 </div>
 
@@ -1165,6 +1157,7 @@ export default function AddEmployee() {
               <CardHeader
                 icon={<BriefcaseBusiness size={21} />}
                 title="Work Information"
+                theme="green"
                 description="Assign roles to one or more stores under the selected merchant."
               />
 
@@ -1224,6 +1217,7 @@ export default function AddEmployee() {
               <CardHeader
                 icon={<Settings size={21} />}
                 title="Account Settings"
+                theme="teal"
                 description="Set login and access details."
               />
 
@@ -1426,14 +1420,12 @@ function StoreRoleAssignment({
    CARD HEADER
 ========================================================= */
 
-function CardHeader({ icon, title, description }) {
+function CardHeader({ icon, title, description, theme }) {
   return (
-    <div className="card-header">
-      <div className="card-icon">{icon}</div>
-
+    <div className={`employee-card-header employee-card-header-${theme}`}>
+      <div className="employee-card-icon">{icon}</div>
       <div>
         <h2>{title}</h2>
-
         <p>{description}</p>
       </div>
     </div>
