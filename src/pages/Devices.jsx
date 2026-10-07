@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
-import Pagination from "../components/Pagination";
+
 import {
 
   Monitor,
@@ -14,6 +15,11 @@ import {
   SlidersHorizontal,
 
   ChevronDown,
+
+  ChevronLeft,
+
+  ChevronRight,
+  Eye,
 
 } from "lucide-react";
 
@@ -51,12 +57,7 @@ export default function Devices() {
 
   const navigate = useNavigate();
 
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
-const handlePageSizeChange = (size) => {
-  setRowsPerPage(size);
-  setCurrentPage(1);
-};
+  const rowsPerPage = 5;
 
   /* ========================================================= LOAD DEVICES ========================================================= */ useEffect(() => {
 
@@ -184,12 +185,6 @@ const handlePageSizeChange = (size) => {
 
   );
 
-  useEffect(() => {
-  setCurrentPage((page) =>
-    Math.min(page, totalPages)
-  );
-}, [totalPages]);
-
   const handleFilterChange = (setter, value) => {
 
     setter(value);
@@ -204,11 +199,9 @@ const handlePageSizeChange = (size) => {
 
   const onlineDevices = devices.filter(
 
-    (device) => device.status === "Online",
+    (device) => ["Active", "Online"].includes(device.status),
 
   ).length;
-  const devicePercentage = (count) =>
-    totalDevices ? ((count / totalDevices) * 100).toFixed(1) : "0.0";
 
   const offlineDevices = devices.filter(
 
@@ -222,7 +215,7 @@ const handlePageSizeChange = (size) => {
 
   ).length;
 
-  /* ========================================================= DELETE DEVICE ========================================================= */ const handleDeleteDevice =
+  /* ========================================================= DEACTIVATE DEVICE ========================================================= */ const handleDeactivateDevice =
 
     async () => {
 
@@ -238,13 +231,11 @@ const handlePageSizeChange = (size) => {
 
       try {
 
-        await devicesApi.delete(deleteDevice.id);
+        await devicesApi.update(deleteDevice.id, { status: "Inactive" });
 
-        setDevices((current) =>
-
-          current.filter((item) => item.id !== deleteDevice.id),
-
-        );
+        setDevices((current) => current.map((item) =>
+          item.id === deleteDevice.id ? { ...item, status: "Inactive" } : item,
+        ));
 
         setDeleteDevice(null);
 
@@ -252,11 +243,11 @@ const handlePageSizeChange = (size) => {
 
       } catch (error) {
 
-        console.error("Failed to delete device:", error);
+        console.error("Failed to deactivate device:", error);
 
         setApiError(
 
-          error?.message || "Failed to delete device. Please try again.",
+          error?.message || "Failed to deactivate device. Please try again.",
 
         );
 
@@ -363,7 +354,6 @@ const handlePageSizeChange = (size) => {
           value={totalDevices}
 
           variant="purple"
-          description="Live Records"
 
         />{" "}
 
@@ -376,7 +366,6 @@ const handlePageSizeChange = (size) => {
           value={onlineDevices}
 
           variant="green"
-          description={`${devicePercentage(onlineDevices)}% of total`}
 
         />{" "}
 
@@ -389,7 +378,6 @@ const handlePageSizeChange = (size) => {
           value={offlineDevices}
 
           variant="orange"
-          description={`${devicePercentage(offlineDevices)}% of total`}
 
         />{" "}
 
@@ -402,7 +390,6 @@ const handlePageSizeChange = (size) => {
           value={inactiveDevices}
 
           variant="red"
-          description={`${devicePercentage(inactiveDevices)}% of total`}
 
         />{" "}
 
@@ -526,11 +513,11 @@ const handlePageSizeChange = (size) => {
 
                 </th>{" "}
 
-                <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
+                <th>DEVICE NAME</th> <th>DEVICE TYPE</th> <th>SERIAL NUMBER</th>{" "}
 
-                <th>Merchant Name</th> <th>Connection Status</th>{" "}
+                <th>MERCHANT NAME</th> <th>CONNECTION STATUS</th>{" "}
 
-                 <th>Actions</th>{" "}
+                 <th>ACTIONS</th>{" "}
 
               </tr>{" "}
 
@@ -566,7 +553,9 @@ const handlePageSizeChange = (size) => {
 
                     device={device}
 
-                    onDelete={() => setDeleteDevice(device)}
+                    onView={() => navigate(`/devices/${device.id}`)}
+
+                    onDeactivate={() => setDeleteDevice(device)}
 
                     onEdit={() => navigate(`/devices/${device.id}/edit`)}
 
@@ -599,19 +588,36 @@ const handlePageSizeChange = (size) => {
         </div>{" "}
 
         {/* =================================================== PAGINATION =================================================== */}{" "}
-        <Pagination
-  currentPage={safePage}
-  totalPages={totalPages}
-  totalItems={filteredDevices.length}
-  pageSize={rowsPerPage}
-  onPageChange={setCurrentPage}
-  onPageSizeChange={handlePageSizeChange}
-  itemLabel="devices"
-/>
+        <div className="devices-pagination">
+          <div className="devices-showing">
+            Showing {filteredDevices.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, filteredDevices.length)} of {filteredDevices.length} entries
+          </div>{" "}
+          <div className="devices-pagination-controls">
+            <button
+              type="button"
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              aria-label="Previous page"
+            >
+              <ChevronLeft size={15} />
+            </button>{" "}
+            <button type="button" className="active" aria-current="page">
+              {safePage}
+            </button>{" "}
+            <button
+              type="button"
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+              disabled={safePage === totalPages}
+              aria-label="Next page"
+            >
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        </div>{" "}
       </div>{" "}
       {/* ===================================================== DELETE MODAL ===================================================== */}{" "}
 
-      <DeleteDeviceModal
+      <DeactivateDeviceModal
 
         device={deleteDevice}
 
@@ -619,7 +625,7 @@ const handlePageSizeChange = (size) => {
 
         onCancel={() => (deleting ? null : setDeleteDevice(null))}
 
-        onConfirm={handleDeleteDevice}
+        onConfirm={handleDeactivateDevice}
 
       />{" "}
 
@@ -629,7 +635,7 @@ const handlePageSizeChange = (size) => {
 
 }
 
-/* ========================================================= DELETE CONFIRMATION MODAL ========================================================= */ function DeleteDeviceModal({
+/* ========================================================= DEACTIVATION CONFIRMATION MODAL ========================================================= */ function DeactivateDeviceModal({
 
   device,
 
@@ -669,7 +675,7 @@ const handlePageSizeChange = (size) => {
 
         aria-modal="true"
 
-        aria-labelledby="delete-device-title"
+        aria-labelledby="deactivate-device-title"
 
         onMouseDown={(event) => event.stopPropagation()}
 
@@ -705,11 +711,11 @@ const handlePageSizeChange = (size) => {
 
             {" "}
 
-            <i className="bi bi-trash" aria-hidden="true" />{" "}
+            <i className="bi bi-pause-circle" aria-hidden="true" />{" "}
 
           </div>{" "}
 
-          <h2 id="delete-device-title"> Delete Device </h2>{" "}
+          <h2 id="deactivate-device-title"> Deactivate Device </h2>{" "}
 
         </div>{" "}
 
@@ -717,7 +723,7 @@ const handlePageSizeChange = (size) => {
 
           {" "}
 
-          Are you sure you want to delete this device?{" "}
+          Are you sure you want to mark this device inactive?{" "}
 
         </p>{" "}
 
@@ -725,7 +731,7 @@ const handlePageSizeChange = (size) => {
 
           {" "}
 
-          This action cannot be undone.{" "}
+          The device record will remain in the system and can be reactivated later.{" "}
 
         </p>{" "}
 
@@ -765,7 +771,7 @@ const handlePageSizeChange = (size) => {
 
             {" "}
 
-            {deleting ? "Deleting..." : "Delete"}{" "}
+            {deleting ? "Updating..." : "Deactivate"}{" "}
 
           </button>{" "}
 
@@ -788,7 +794,6 @@ const handlePageSizeChange = (size) => {
   value,
 
   variant,
-  description,
 
 }) {
 
@@ -807,9 +812,6 @@ const handlePageSizeChange = (size) => {
         <div className="device-stat-title"> {title} </div>{" "}
 
         <div className="device-stat-value"> {value} </div>{" "}
-        <div className={`device-stat-description ${variant}`}>
-          <i className="bi bi-circle-fill" aria-hidden="true" /> {description}
-        </div>{" "}
 
       </div>{" "}
 
@@ -865,7 +867,9 @@ const handlePageSizeChange = (size) => {
 
   device,
 
-  onDelete,
+  onView,
+
+  onDeactivate,
 
   onEdit,
 
@@ -954,6 +958,16 @@ const handlePageSizeChange = (size) => {
   <div className="row-actions device-actions">
 
     <button
+      type="button"
+      className="action-btn"
+      title="View"
+      aria-label={`View ${device.name || "device"}`}
+      onClick={onView}
+    >
+      <Eye size={15} />
+    </button>
+
+    <button
 
       type="button"
 
@@ -979,15 +993,15 @@ const handlePageSizeChange = (size) => {
 
       className="action-btn text-danger"
 
-      title="Delete"
+      title="Deactivate"
 
-      aria-label={`Delete ${device.name || "device"}`}
+      aria-label={`Deactivate ${device.name || "device"}`}
 
-      onClick={onDelete}
+      onClick={onDeactivate}
 
     >
 
-      <i className="bi bi-trash" aria-hidden="true" />
+      <i className="bi bi-pause-circle" aria-hidden="true" />
 
     </button>
 
