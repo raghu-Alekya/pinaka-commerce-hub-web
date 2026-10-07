@@ -11,6 +11,7 @@ import { PaymentSettings } from "./card-payments/PaymentSettings";
 import { RegisterConfiguration, registerRows } from "./cash-registers/RegisterConfiguration";
 import { MappingConfiguration, mappingRows } from "./terminal-mappings/MappingConfiguration";
 import { SafeConfiguration } from "./safe-drop/SafeConfiguration";
+import { DeviceMapping } from "./device-mapping/DeviceMapping";
 import { getPosCashRegisters } from "./cash-registers/api";
 import { getPosTerminalMappings } from "./terminal-mappings/api";
 
@@ -94,6 +95,15 @@ const configurationCards = [
         title: "Terminal and Register Mapping",
         description: "Map devices to registers and locations.",
         component: "terminal-mapping",
+        enabled: true,
+    },
+    {
+        id: "device-mapping",
+        icon: "pc-display",
+        iconClass: "green",
+        title: "Store Device Mapping",
+        description: "Assign merchant devices to this store.",
+        component: "device-mapping",
         enabled: true,
     },
 ];
@@ -229,6 +239,9 @@ export default function PosConfiguration({ merchantId, storeId, store } = {}) {
 
             case "terminal-mapping":
                 return <MappingConfiguration value={mappings} registers={registers} onSave={setMappings} onBack={() => requestLeave(null)} onManageRegisters={() => requestLeave("cash-register")} />;
+
+            case "device-mapping":
+                return <DeviceMapping />;
 
             default:
                 return null;

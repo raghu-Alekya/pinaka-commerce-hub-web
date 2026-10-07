@@ -9,9 +9,10 @@ import { formatDate, listSubscriptions, listSubscriptionPlans } from "../api/sub
 import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant, updateMerchantStatus } from "../api/merchants";
+import { listMerchants, getMerchant, updateMerchantStatus } from "../api/merchants";
 import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
+import { devicesApi } from "../api/devices";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
 import "../styles/merchants.css";
@@ -52,8 +53,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const [addingDevice, setAddingDevice] = useState(false);
   const [createdDevices,setCreatedDevices]=useState([]);
   async function saveDeviceAndRefresh(values) {
-    if(typeof onSaveDevice!=='function')throw new Error('Connect onSaveDevice to your device creation API.');
-    const result=await onSaveDevice(values);
+    const result=typeof onSaveDevice==='function' ? await onSaveDevice(values) : await devicesApi.create(values);
     if(result?.success===false)throw new Error(result.message || 'Device creation failed.');
     const returned=result?.device || result?.data?.device || result?.data || result;
     const record=returned && typeof returned==='object' && !Array.isArray(returned)?returned:{};
@@ -550,8 +550,7 @@ function storeLimitFor(merchant, masterPlans) {
 
   return null;
 }
-// Pass your existing delete API function as deleteMerchant until its module contract is connected.
-export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
+export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewedId = searchParams.get('view');
@@ -576,13 +575,12 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
   useEffect(() => { if (deleteTarget && deleteDialog.current && !deleteDialog.current.open) deleteDialog.current.showModal(); }, [deleteTarget]);
   async function confirmDelete() {
     if (deleteInFlight.current || !deleteTarget) return;
-    if (typeof deleteMerchant !== 'function') { setDeleteError('The merchant delete API has not been connected. No record was deleted.'); return; }
     deleteInFlight.current = true; setDeleting(true); setDeleteError('');
     const target = deleteTarget;
     try {
       const targetId = target.merchantId || target.id;
-      const res = await deleteMerchant(targetId);
-      console.log("[DELETE MERCHANT API RESPONSE]", res);
+      const res = await updateMerchantStatus(targetId, 'INACTIVE');
+      console.log("[DEACTIVATE MERCHANT API RESPONSE]", res);
       onLocalDelete?.(target.id);
       if (!mounted.current) return;
       setMerchants(previous => previous.map(item => item.id === target.id
