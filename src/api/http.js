@@ -92,6 +92,7 @@ export async function apiRequest(
   const token = tokenOverride ?? getAccessToken();
   const requestUrl = buildUrl(path);
   const payload = body !== undefined ? body : undefined;
+  const isFormData = payload instanceof FormData;
 
   console.log("[API REQUEST]", {
     method,
@@ -107,11 +108,11 @@ export async function apiRequest(
     signal,
     headers: {
       Accept: "application/json",
-      ...(payload !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(payload !== undefined && !isFormData ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
-    body: payload !== undefined ? JSON.stringify(payload) : undefined,
+    body: payload !== undefined ? (isFormData ? payload : JSON.stringify(payload)) : undefined,
   });
 
   const data = await parseBody(response);
