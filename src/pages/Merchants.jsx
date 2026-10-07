@@ -5,7 +5,7 @@ import MerchantRoles from "./MerchantRoles";
 import AddMerchantDevice from "./AddMerchantDevice";
 import { MerchantEmployeeForm } from "./AddMerchantEmployee";
 import { useReferenceData } from "../api/referenceData";
-import { formatDate, listSubscriptions, listSubscriptionPlans } from "../api/subscriptions";
+import { formatDate, listSubscriptions } from "../api/subscriptions";
 import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -536,6 +536,7 @@ function storeLimitFor(merchant, masterPlans) {
     masterPlan?.storeLimit ??
     masterPlan?.allowedStores ??
     masterPlan?.storeCount ??
+    masterPlan?.includedStores ??
     masterPlan?.stores;
 
   if (Number.isFinite(Number(suppliedLimit))) {
@@ -604,9 +605,15 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
   const [masterPlans, setMasterPlans] = useState([]);
   useEffect(() => {
     let active = true;
-    listSubscriptionPlans()
-      .then((d) => {
-        if (active) setMasterPlans(d.plans || []);
+    listPlans()
+      .then((plans) => {
+        if (active) {
+          setMasterPlans(
+            (Array.isArray(plans) ? plans : []).filter(
+              (item) => String(item.status || "").toUpperCase() === "ACTIVE",
+            ),
+          );
+        }
       })
       .catch(e => { if (active) setError(e.message); });
     return () => {
@@ -756,7 +763,13 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
     ],
   ];
 
-  const plans = [...new Set(masterPlans.map((p) => p.planName))];
+  const plans = [
+    ...new Set(
+      masterPlans
+        .map((item) => item.planName || item.name)
+        .filter(Boolean),
+    ),
+  ];
   const statuses = ["Pending Setup", "Active", "Suspended", "Inactive"];
   const locations = [...new Set(merchants.map(m => `${m.country || ''} ${m.state || ''}`.trim()).filter(Boolean))];
 
