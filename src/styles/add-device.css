@@ -404,3 +404,20 @@
     grid-template-columns: 1fr;
   }
 }
+.add-device-page-embedded {
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+}
+
+.add-device-page-embedded .add-device-form {
+  margin: 0;
+}
+
+.add-device-page-embedded .device-card {
+  box-shadow: none;
+}
+
+.add-device-page-embedded .add-device-actions {
+  padding: 14px 0 0;
+}
