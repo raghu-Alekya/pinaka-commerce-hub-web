@@ -393,7 +393,7 @@ useEffect(() => {
                         </div>
                         <div>
                           <strong>{s.storeName}</strong>
-                          <small>Store ID: {displayStoreId(s)}</small>
+                          <small>{displayStoreId(s)}</small>
                         </div>
                       </button>
                     </td>
