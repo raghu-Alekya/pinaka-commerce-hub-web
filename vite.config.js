@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
   }
  
   if (proxyTarget) {
+    proxy["/uploads/employees"] = { target: proxyTarget, changeOrigin: true, secure: false };
     proxy["/api"] = {
       target: proxyTarget,
       changeOrigin: true,

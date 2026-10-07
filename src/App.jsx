@@ -25,6 +25,7 @@ import Legal from "./pages/Legal";
 import Employees from "./pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
+import EmployeeView from "./pages/EmployeeView";
 import Devices from "./pages/Devices";
 import AddDevice from "./pages/AddDevice";
 import DeviceView from "./pages/DeviceView";
@@ -206,6 +207,7 @@ export default function App() {
         <Route path="/employees" element={<Employees />} />
         <Route path="/employees/add" element={<AddEmployee />} />
         <Route path="/employees/edit" element={<EditEmployee />} />
+        <Route path="/employees/:employeeId" element={<EmployeeView />} />
         <Route path="/editemployee" element={<EditEmployee />} />
         {/* Devices */}
         <Route path="/devices" element={<Devices />} />

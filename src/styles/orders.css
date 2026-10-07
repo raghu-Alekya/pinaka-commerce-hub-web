@@ -493,7 +493,6 @@ input {
     vertical-align: middle;
     font-weight: 600;
     text-align: left;
-    letter-spacing: .35px;
     white-space: nowrap;
 }
 
@@ -504,6 +503,19 @@ input {
     color: #4d5970;
     font-size: 13px;
     vertical-align: middle;
+}
+
+.orders-table th:nth-child(1) { width: 15%; }
+.orders-table th:nth-child(2) { width: 21%; }
+.orders-table th:nth-child(3) { width: 17%; }
+.orders-table th:nth-child(4) { width: 18%; }
+.orders-table th:nth-child(5) { width: 19%; }
+.orders-table th:nth-child(6) { width: 10%; }
+
+.orders-table th:last-child,
+.orders-table td:last-child {
+    text-align: right;
+    padding-right: 24px;
 }
 
 .merchant-table tbody td {
@@ -532,7 +544,7 @@ input {
     display: flex;
     align-items: center;
     gap: 10px;
-    min-width: 170px;
+    min-width: 0;
 }
 
 .order-icon {
@@ -556,8 +568,9 @@ input {
 .order-id-cell small {
     display: block;
     margin-top: 2px;
-    color: #9aa3b2;
-    font-size: 9px;
+    color: #7d889b;
+    font-size: 10px;
+    font-weight: 500;
 }
 
 /* =========================================================
@@ -567,7 +580,7 @@ input {
 .offline-order-id {
     color: #56647b;
     font-family: monospace;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 /* =========================================================
@@ -596,13 +609,13 @@ input {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 0 10px;
+    padding: 0 8px;
     border-radius: 6px;
     font-size: 11px;
     white-space: nowrap;
     width: 120px;
     min-width: 120px;
-    height: 30px;
+    height: 26px;
     justify-content: center;
     box-sizing: border-box;
 
@@ -610,6 +623,8 @@ input {
 
 .order-status i {
     font-size: 7px;
+    flex-shrink: 0;
+    line-height: 1;
 }
 
 .order-status.completed {
@@ -649,7 +664,11 @@ input {
 .order-author {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
+}
+
+.orders-table .order-author .author-avatar {
+    flex-shrink: 0;
 }
 
 .author-avatar {

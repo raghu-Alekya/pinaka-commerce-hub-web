@@ -1362,7 +1362,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           roleName,
         );
         loadedRolePermissions.current.add(activeRole);
-        setPermissions((current) => ({ ...current, [activeRole]: matrix }));
+        setPermissions((current) => {
+          if (current[activeRole]) return current;
+          return { ...current, [activeRole]: matrix };
+        });
         setPermissionAvailability((current) => ({
           ...current,
           [activeRole]: built.availability,

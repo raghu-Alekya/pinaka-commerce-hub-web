@@ -510,9 +510,10 @@ export default function EditEmployee() {
         response?.employee?.profileImageUrl ||
         null;
 
-      if (uploadedImageUrl) {
-        setProfileImage(uploadedImageUrl);
+      if (!uploadedImageUrl || response?.success === false) {
+        throw new Error(response?.message || "The server did not return a saved profile image.");
       }
+      setProfileImage(uploadedImageUrl);
 
       setProfileImageFile(null);
 
