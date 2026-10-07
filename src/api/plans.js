@@ -699,7 +699,8 @@ export async function getMerchantFormPlans() {
  * GET /plans
  */
 export async function listPlans() {
-  return getMerchantFormPlans();
+  const response = await api.get(endpoints.plans);
+  return extractPlans(response).map(normalizePlan).filter(Boolean);
 }
 
 /* ============================================================
