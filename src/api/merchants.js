@@ -464,7 +464,12 @@ export function mapMerchantToRow(item) {
   const phone = merchant.merchantPhoneNumber || merchant.phone || "";
   const stores = Array.isArray(merchant.stores || item.stores)
     ? (merchant.stores || item.stores).length
-    : (merchant.storeCount ?? merchant.storesCount ?? 0);
+    : (item.storeCount ??
+      item.store_count ??
+      merchant.storeCount ??
+      merchant.store_count ??
+      merchant.storesCount ??
+      0);
 
   const planName =
     subscription.planName ||
