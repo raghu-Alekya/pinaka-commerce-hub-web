@@ -66,14 +66,14 @@ function computeRenewalDate(startDateStr, billingCycleStr) {
   }
   const day = date.getUTCDate();
   date.setUTCDate(1);
-  const isAnnual =
-    String(billingCycleStr || "")
-      .toUpperCase()
-      .includes("ANNUAL") ||
-    String(billingCycleStr || "")
-      .toUpperCase()
-      .includes("YEAR");
-  date.setUTCMonth(date.getUTCMonth() + (isAnnual ? 12 : 1));
+  const cycle = String(billingCycleStr || "").toUpperCase();
+  const months =
+    cycle.includes("ANNUAL") || cycle.includes("YEAR")
+      ? 12
+      : cycle.includes("QUARTER")
+        ? 3
+        : 1;
+  date.setUTCMonth(date.getUTCMonth() + months);
   const last = new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0),
   ).getUTCDate();
@@ -265,7 +265,9 @@ export function toFlatMerchantPayload(data) {
   const billingCycle =
     rawCycle.includes("ANNUAL") || rawCycle.includes("YEAR")
       ? "ANNUAL"
-      : "MONTHLY";
+      : rawCycle.includes("QUARTER")
+        ? "QUARTERLY"
+        : "MONTHLY";
 
   const startDate =
     s.startDate ||
