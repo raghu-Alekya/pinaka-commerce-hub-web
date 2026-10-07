@@ -1,6 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
-import { Monitor, AlertCircle } from "lucide-react";
+import Pagination from "../components/Pagination";
+import {
+
+  Monitor,
+
+  AlertCircle,
+
+  Search,
+
+  CalendarDays,
+
+  SlidersHorizontal,
+
+  ChevronDown,
+
+} from "lucide-react";
 
 import "../styles/devices.css";
 
@@ -32,11 +48,15 @@ export default function Devices() {
 
   const navigate = useNavigate();
 
-  /* =========================================================
-     LOAD DEVICES
-  ========================================================= */
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  useEffect(() => {
+const handlePageSizeChange = (size) => {
+  setRowsPerPage(size);
+  setCurrentPage(1);
+};
+
+  /* ========================================================= LOAD DEVICES ========================================================= */ useEffect(() => {
+
     loadDevices();
   }, []);
 
@@ -163,8 +183,10 @@ export default function Devices() {
   );
 
   useEffect(() => {
-    setCurrentPage((page) => Math.min(page, totalPages));
-  }, [totalPages]);
+  setCurrentPage((page) =>
+    Math.min(page, totalPages)
+  );
+}, [totalPages]);
 
   /* =========================================================
      FILTER HANDLERS
@@ -189,8 +211,10 @@ export default function Devices() {
 
   const totalDevices = devices.length;
 
-  const onlineDevices = devices.filter((device) =>
-    ["Active", "Online"].includes(device.status)
+  const onlineDevices = devices.filter(
+
+    (device) => device.status === "Online",
+
   ).length;
 
   const offlineDevices = devices.filter(
@@ -201,9 +225,7 @@ export default function Devices() {
     (device) => device.status === "Inactive"
   ).length;
 
-  /* =========================================================
-     DEACTIVATE DEVICE
-  ========================================================= */
+  /* ========================================================= DELETE DEVICE ========================================================= */ const handleDeleteDevice =
 
   const handleDeactivateDevice = async () => {
     if (!deleteDevice?.id || deleting) {
@@ -213,32 +235,37 @@ export default function Devices() {
     setDeleting(true);
     setApiError("");
 
-    try {
-      await devicesApi.update(deleteDevice.id, {
-        status: "Inactive",
-      });
+      try {
 
-      setDevices((current) =>
-        current.map((item) =>
-          item.id === deleteDevice.id
-            ? { ...item, status: "Inactive" }
-            : item
-        )
-      );
+        await devicesApi.delete(deleteDevice.id);
 
-      setDeleteDevice(null);
-      setCurrentPage(1);
-    } catch (error) {
-      console.error("Failed to deactivate device:", error);
+        setDevices((current) =>
 
-      setApiError(
-        error?.message ||
-          "Failed to deactivate device. Please try again."
-      );
-    } finally {
-      setDeleting(false);
-    }
-  };
+          current.filter((item) => item.id !== deleteDevice.id),
+
+        );
+
+        setDeleteDevice(null);
+
+        setCurrentPage(1);
+
+      } catch (error) {
+
+        console.error("Failed to delete device:", error);
+
+        setApiError(
+
+          error?.message || "Failed to delete device. Please try again.",
+
+        );
+
+      } finally {
+
+        setDeleting(false);
+
+      }
+
+    };
 
   /* =========================================================
      RENDER
@@ -308,7 +335,9 @@ export default function Devices() {
           title="Total Devices"
           value={totalDevices}
           variant="purple"
-        />
+          description="Live Records"
+
+        />{" "}
 
         <StatCard
           icon={
@@ -320,7 +349,9 @@ export default function Devices() {
           title="Online Devices"
           value={onlineDevices}
           variant="green"
-        />
+          description={`${devicePercentage(onlineDevices)}% of total`}
+
+        />{" "}
 
         <StatCard
           icon={
@@ -332,7 +363,9 @@ export default function Devices() {
           title="Offline Devices"
           value={offlineDevices}
           variant="orange"
-        />
+          description={`${devicePercentage(offlineDevices)}% of total`}
+
+        />{" "}
 
         <StatCard
           icon={
@@ -344,8 +377,11 @@ export default function Devices() {
           title="Inactive Devices"
           value={inactiveDevices}
           variant="red"
-        />
-      </div>
+          description={`${devicePercentage(inactiveDevices)}% of total`}
+
+        />{" "}
+
+      </div>{" "}
 
       {/* =====================================================
           DEVICE LIST
@@ -433,14 +469,15 @@ export default function Devices() {
                   />
                 </th>
 
-                <th>DEVICE NAME</th>
-                <th>DEVICE TYPE</th>
-                <th>SERIAL NUMBER</th>
-                <th>MERCHANT NAME</th>
-                <th>CONNECTION STATUS</th>
-                <th>ACTIONS</th>
-              </tr>
-            </thead>
+                <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
+
+                <th>Merchant Name</th> <th>Connection Status</th>{" "}
+
+                 <th>Actions</th>{" "}
+
+              </tr>{" "}
+
+            </thead>{" "}
 
             <tbody>
               {loading ? (
@@ -457,66 +494,65 @@ export default function Devices() {
                   <DeviceRow
                     key={device.id}
                     device={device}
-                    onView={() =>
-                      navigate(`/devices/${device.id}`)
-                    }
-                    onDeactivate={() =>
-                      setDeleteDevice(device)
-                    }
-                    onEdit={() =>
-                      navigate(`/devices/${device.id}/edit`)
-                    }
+
+                    onDelete={() => setDeleteDevice(device)}
+
+                    onEdit={() => navigate(`/devices/${device.id}/edit`)}
+
                   />
+
                 ))
+
               ) : (
+
                 <tr>
-                  <td
-                    colSpan="7"
-                    className="devices-empty"
-                  >
-                    No devices found
-                  </td>
+
+                  {" "}
+
+                  <td colSpan="9" className="devices-empty">
+
+                    {" "}
+
+                    No devices found{" "}
+
+                  </td>{" "}
+
                 </tr>
               )}
             </tbody>
           </table>
         </div>
 
-        {/* ===================================================
-            PAGINATION
-        =================================================== */}
-
+        {/* =================================================== PAGINATION =================================================== */}{" "}
         <Pagination
-          currentPage={safePage}
-          totalPages={totalPages}
-          totalItems={filteredDevices.length}
-          pageSize={rowsPerPage}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={handlePageSizeChange}
-          itemLabel="devices"
-          showWhenEmpty
-        />
-      </div>
+  currentPage={safePage}
+  totalPages={totalPages}
+  totalItems={filteredDevices.length}
+  pageSize={rowsPerPage}
+  onPageChange={setCurrentPage}
+  onPageSizeChange={handlePageSizeChange}
+  itemLabel="devices"
+/>
+      </div>{" "}
+      {/* ===================================================== DELETE MODAL ===================================================== */}{" "}
 
-      {/* =====================================================
-          DEACTIVATE MODAL
-      ===================================================== */}
+      <DeleteDeviceModal
 
       <DeactivateDeviceModal
         device={deleteDevice}
         deleting={deleting}
-        onCancel={() =>
-          deleting ? null : setDeleteDevice(null)
-        }
-        onConfirm={handleDeactivateDevice}
-      />
+
+        onCancel={() => (deleting ? null : setDeleteDevice(null))}
+
+        onConfirm={handleDeleteDevice}
+
+      />{" "}
+
     </div>
   );
 }
 
-/* =========================================================
-   DEACTIVATION CONFIRMATION MODAL
-========================================================= */
+/* ========================================================= DELETE CONFIRMATION MODAL ========================================================= */ function DeleteDeviceModal({
 
 function DeactivateDeviceModal({
   device,
@@ -538,28 +574,66 @@ function DeactivateDeviceModal({
         className="device-deactivate-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="deactivate-device-title"
+
+        aria-labelledby="delete-device-title"
+
         onMouseDown={(event) => event.stopPropagation()}
+
       >
-        <div className="device-deactivate-icon">
-          <i
-            className="bi bi-trash3"
-            aria-hidden="true"
-          />
-        </div>
 
-        <h2 id="deactivate-device-title">
-          Deactivate Device?
-        </h2>
+        {" "}
 
-        <p className="device-deactivate-message">
-          Are you sure you want to deactivate{" "}
-          <strong>{device.name || "this device"}</strong>?
-        </p>
+        <button
 
-        <p className="device-deactivate-warning">
-          This action cannot be undone.
-        </p>
+          type="button"
+
+          className="device-delete-close"
+
+          aria-label="Close"
+
+          onClick={onCancel}
+
+          disabled={deleting}
+
+        >
+
+          {" "}
+
+          ×{" "}
+
+        </button>{" "}
+
+        <div className="device-delete-heading">
+
+          {" "}
+
+          <div className="device-delete-icon">
+
+            {" "}
+
+            <i className="bi bi-trash" aria-hidden="true" />{" "}
+
+          </div>{" "}
+
+          <h2 id="delete-device-title"> Delete Device </h2>{" "}
+
+        </div>{" "}
+
+        <p className="device-delete-message">
+
+          {" "}
+
+          Are you sure you want to delete this device?{" "}
+
+        </p>{" "}
+
+        <p className="device-delete-warning">
+
+          {" "}
+
+          This action cannot be undone.{" "}
+
+        </p>{" "}
 
         <div className="device-deactivate-actions">
           <button
@@ -577,11 +651,19 @@ function DeactivateDeviceModal({
             onClick={onConfirm}
             disabled={deleting}
           >
-            {deleting ? "Deactivating..." : "Deactivate Device"}
-          </button>
-        </div>
-      </div>
+
+            {" "}
+
+            {deleting ? "Deleting..." : "Delete"}{" "}
+
+          </button>{" "}
+
+        </div>{" "}
+
+      </div>{" "}
+
     </div>
+
   );
 }
 
@@ -594,6 +676,8 @@ function StatCard({
   title,
   value,
   variant,
+  description,
+
 }) {
   return (
     <div className="device-stat-card">
@@ -604,9 +688,19 @@ function StatCard({
       </div>
 
       <div className="device-stat-content">
-        <div className="device-stat-title">
-          {title}
-        </div>
+
+        {" "}
+
+        <div className="device-stat-title"> {title} </div>{" "}
+
+        <div className="device-stat-value"> {value} </div>{" "}
+        <div className={`device-stat-description ${variant}`}>
+          <i className="bi bi-circle-fill" aria-hidden="true" /> {description}
+        </div>{" "}
+
+      </div>{" "}
+
+    </div>
 
         <div className="device-stat-value">
           {value}
@@ -622,8 +716,9 @@ function StatCard({
 
 function DeviceRow({
   device,
-  onView,
-  onDeactivate,
+
+  onDelete,
+
   onEdit,
 }) {
   const normalizedStatus =
@@ -674,43 +769,56 @@ function DeviceRow({
         </span>
       </td>
 
-      <td>
-        <ListActions
-          onView={onView}
-          onEdit={onEdit}
-          onDelete={onDeactivate}
-          viewLabel={`View ${device.name || "device"}`}
-          editLabel={`Edit ${device.name || "device"}`}
-          deleteLabel={`Deactivate ${device.name || "device"}`}
-        />
-      </td>
+
+
+<td>
+
+  <div className="row-actions device-actions">
+
+    <button
+
+      type="button"
+
+      className="action-btn edit-btn"
+
+      title="Edit"
+
+      aria-label={`Edit ${device.name || "device"}`}
+
+      onClick={onEdit}
+
+    >
+
+      <i className="bi bi-pencil" aria-hidden="true" />
+
+    </button>
+
+
+
+    <button
+
+      type="button"
+
+      className="action-btn text-danger"
+
+      title="Delete"
+
+      aria-label={`Delete ${device.name || "device"}`}
+
+      onClick={onDelete}
+
+    >
+
+      <i className="bi bi-trash" aria-hidden="true" />
+
+    </button>
+
+  </div>
+
+</td>
+
     </tr>
+
   );
-}
 
-/* =========================================================
-   NOTE:
-   getMerchantName is declared outside the component as well
-   so DeviceRow can use the same API normalization.
-========================================================= */
-
-function getMerchantName(merchantValue) {
-  if (!merchantValue) {
-    return "-";
-  }
-
-  if (typeof merchantValue === "string") {
-    return merchantValue;
-  }
-
-  return (
-    merchantValue.businessDisplayName ||
-    merchantValue.business_name ||
-    merchantValue.businessName ||
-    `${merchantValue.first_name || ""} ${
-      merchantValue.last_name || ""
-    }`.trim() ||
-    merchantValue.merchant_code ||
-    "-"
-  );
 }

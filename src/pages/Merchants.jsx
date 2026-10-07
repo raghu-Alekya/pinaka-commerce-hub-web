@@ -53,6 +53,9 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   }
   const [addingDevice, setAddingDevice] = useState(false);
   const [createdDevices,setCreatedDevices]=useState([]);
+  const [apiDevices, setApiDevices] = useState([]);
+  const [devicesLoading, setDevicesLoading] = useState(false);
+  const [devicesError, setDevicesError] = useState('');
   async function saveDeviceAndRefresh(values) {
     const result=typeof onSaveDevice==='function' ? await onSaveDevice(values) : await devicesApi.create(values);
     if(result?.success===false)throw new Error(result.message || 'Device creation failed.');
@@ -133,6 +136,20 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const raw = response.merchant || response.data?.merchant || response.data || response;
   const merchantIds = [merchant?.merchantId, result?.merchant?.merchantId, raw.merchantId, raw.id, merchantId].filter(Boolean);
   const apiMerchantId = merchantIds.find(value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value))) || merchantIds[0];
+  useEffect(() => {
+    let active = true;
+    setDevicesLoading(true);
+    setDevicesError('');
+    devicesApi.listByMerchantId(apiMerchantId).then(items => {
+      if (active) setApiDevices(items);
+    }).catch(failure => {
+      if (active) {
+        setApiDevices([]);
+        setDevicesError(failure.message || 'Unable to load devices for this merchant.');
+      }
+    }).finally(() => { if (active) setDevicesLoading(false); });
+    return () => { active = false; };
+  }, [apiMerchantId]);
   useEffect(() => {
     let active = true;
     setEmployeesLoading(true);
@@ -300,7 +317,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const employeeStoreName = employee => employee.storeName || employee.store?.name || stores.find(store =>
     [store.id, store.storeId, store.code, store.storeCode].some(id => id != null && String(id) === String(employee.storeId))
   )?.name || employee.storeId;
-  const devices = [...createdDevices,...list(saved?.devices ?? raw.devices ?? response.devices).filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))].filter(device=>device.merchantId==null || String(device.merchantId)===String(merchantId));
+  const devices = [...createdDevices,...apiDevices.filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))];
   const payments = list(saved?.paymentHistory ?? raw.paymentHistory);
   const subscriptionPlan = subscription.plan && typeof subscription.plan === 'object'
     ? subscription.plan
@@ -428,8 +445,8 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       </div>
       <div role="tabpanel" id="merchant-panel-devices" aria-labelledby="merchant-tab-devices" hidden={activeTab !== 'devices'} tabIndex={0}>
         {addingDevice ? <ViewSection title="Add Device" actions={<button type="button" className="merchant-back-employees" onClick={()=>setAddingDevice(false)}>← Back to Devices</button>}>
-          <AddMerchantDevice key={merchantId} merchantId={merchantId} merchant={merchant} onSave={saveDeviceAndRefresh} onBack={()=>setAddingDevice(false)}/>
-        </ViewSection> : <MerchantDeviceList devices={devices} storeName={storeName} onAdd={()=>setAddingDevice(true)}/>}
+          <AddMerchantDevice key={apiMerchantId} merchantId={apiMerchantId} merchant={merchant} onSave={saveDeviceAndRefresh} onBack={()=>setAddingDevice(false)}/>
+        </ViewSection> : <MerchantDeviceList devices={devices} storeName={storeName} onAdd={()=>setAddingDevice(true)} loading={devicesLoading} error={devicesError}/>}
 
       </div>
       <div role="tabpanel" id="merchant-panel-roles" aria-labelledby="merchant-tab-roles" hidden={activeTab !== 'roles'} tabIndex={0}>
@@ -1187,7 +1204,7 @@ function MerchantEmployeeList({employees,merchantName,onAdd}) {
   </div>;
 }
 
-function MerchantDeviceList({devices,storeName,onAdd}) {
+function MerchantDeviceList({devices,storeName,onAdd,loading=false,error=''}) {
   const [query,setQuery]=useState(''),[page,setPage]=useState(1),[sort,setSort]=useState({key:'name',direction:1}),[view,setView]=useState(null);
   const dialog=useRef(null),lastFocus=useRef(null);
   useEffect(()=>{if(view)dialog.current?.showModal();else if(dialog.current?.open){dialog.current.close();lastFocus.current?.focus();}},[view]);

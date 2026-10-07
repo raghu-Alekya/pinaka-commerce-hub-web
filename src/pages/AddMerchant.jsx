@@ -4052,7 +4052,12 @@ export function merchantDetailToDraft(result, fallback = {}) {
     (plan) => plan.name.toLowerCase() === matchPlan,
   );
   const cycle = String(
-    subscription.billingCycle || raw.billingCycle || "",
+    subscription.billingCycle ||
+      subscription.billing_cycle ||
+      raw.billingCycle ||
+      raw.billing_cycle ||
+      raw.cycle ||
+      "",
   ).toLowerCase();
   draft.cycle =
     cycle === "monthly"

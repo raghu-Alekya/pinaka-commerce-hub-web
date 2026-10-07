@@ -66,14 +66,14 @@ function computeRenewalDate(startDateStr, billingCycleStr) {
   }
   const day = date.getUTCDate();
   date.setUTCDate(1);
-  const isAnnual =
-    String(billingCycleStr || "")
-      .toUpperCase()
-      .includes("ANNUAL") ||
-    String(billingCycleStr || "")
-      .toUpperCase()
-      .includes("YEAR");
-  date.setUTCMonth(date.getUTCMonth() + (isAnnual ? 12 : 1));
+  const cycle = String(billingCycleStr || "").toUpperCase();
+  const months =
+    cycle.includes("ANNUAL") || cycle.includes("YEAR")
+      ? 12
+      : cycle.includes("QUARTER")
+        ? 3
+        : 1;
+  date.setUTCMonth(date.getUTCMonth() + months);
   const last = new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0),
   ).getUTCDate();
@@ -265,7 +265,9 @@ export function toFlatMerchantPayload(data) {
   const billingCycle =
     rawCycle.includes("ANNUAL") || rawCycle.includes("YEAR")
       ? "ANNUAL"
-      : "MONTHLY";
+      : rawCycle.includes("QUARTER")
+        ? "QUARTERLY"
+        : "MONTHLY";
 
   const startDate =
     s.startDate ||
@@ -435,7 +437,29 @@ export function mapMerchantToRow(item) {
     merchant.name ||
     "Merchant";
 
-  const id = merchantApiId(merchant) || merchant.code || merchant.merchantCode || "";
+    const uuid = [
+    item.uuid,
+    item.id,
+    item.data?.uuid,
+    item.data?.id,
+    item.data?.merchantUuid,
+    item.data?.merchant_uuid,
+    item.merchantUuid,
+    item.merchant_uuid,
+    item.merchant?.uuid,
+    item.merchant?.id,
+    item.merchant?.merchantUuid,
+    item.merchant?.merchant_uuid,
+    merchant.uuid,
+    merchant.id,
+    merchant.merchantUuid,
+    merchant.merchant_uuid,
+    merchant._id,
+  ].find((value) =>
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value),
+  ) || "";
+  const id = uuid ||(merchant) || merchant.code || merchant.merchantCode || "";
   const email = merchant.merchantEmail || merchant.email || "";
   const phone = merchant.merchantPhoneNumber || merchant.phone || "";
   const stores = Array.isArray(merchant.stores || item.stores)
@@ -471,6 +495,7 @@ export function mapMerchantToRow(item) {
 
   return {
     id,
+    uuid,
     merchantId: merchant.merchantId || id,
     name,
     email,
