@@ -697,38 +697,9 @@
   color: #e99500;
   background: #fff0d3;
 
-}/* ========================================
+}
 
-   VIEW ONLY ACTION
-
-\======================================== */
-:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .row-actions {
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .view-action-button {
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  color: #315b9b;
-  background: transparent;
-  cursor: pointer;
-  transition: 0.2s;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .view-action-button:hover {
-
-  color: var(--primary);
-  background: #f5f3ff;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .empty-row {
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .empty-row {
 
   text-align: center;
   padding: 40px  !important;
@@ -738,7 +709,8 @@
 
    TABLE FOOTER
 
-\======================================== */:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .table-footer {
+\======================================== */
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .table-footer {
 
   display: flex;
   align-items: center;
@@ -753,22 +725,26 @@
 
    FLOW PAGES
 
-\======================================== */.subscription-flow-page {
+\======================================== */
+.subscription-flow-page {
 
   max-width: 1180px;
   margin: 0 auto;
   padding: 28px;
 
-}.subscription-flow-page h1 {
+}
+.subscription-flow-page h1 {
 
   font-size: 30px;
   margin-bottom: 8px;
 
-}.subscription-flow-page .flow-subtitle {
+}
+.subscription-flow-page .flow-subtitle {
 
   margin-bottom: 26px;
 
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .page-back {
+}
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .page-back {
 
   display: inline-flex;
   align-items: center;
@@ -5756,50 +5732,9 @@
 }
 
 /* View / edit / delete buttons in the subscriptions table */
-.merchant-subscriptions-page .subscription-view-button,
-.subscription-page .subscription-view-button,
-.subscription-flow-page .subscription-view-button {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 34px;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 1px solid #d8e1ee;
-  border-radius: 7px;
-  background: #fff;
-  color: #536985;
-  cursor: pointer;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
-  transition: color .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
-}
 
-.merchant-subscriptions-page .subscription-view-button:hover:not(:disabled),
-.subscription-page .subscription-view-button:hover:not(:disabled),
-.subscription-flow-page .subscription-view-button:hover:not(:disabled) {
-  border-color: #bdb5ee;
-  background: #f6f4ff;
-  color: #5143bc;
-  box-shadow: 0 2px 5px rgba(81, 67, 188, .10);
-}
 
-.merchant-subscriptions-page .subscription-view-button.text-primary,
-.subscription-page .subscription-view-button.text-primary,
-.subscription-flow-page .subscription-view-button.text-primary {
-  border-color: #cbdcff;
-  background: #f4f8ff;
-  color: #2563eb;
-}
 
-.merchant-subscriptions-page .subscription-view-button.text-primary:hover:not(:disabled),
-.subscription-page .subscription-view-button.text-primary:hover:not(:disabled),
-.subscription-flow-page .subscription-view-button.text-primary:hover:not(:disabled) {
-  border-color: #93b4f7;
-  background: #eaf2ff;
-  color: #1d4ed8;
-}
 
 .merchant-subscriptions-page .subscription-view-button.text-danger,
 .subscription-page .subscription-view-button.text-danger,

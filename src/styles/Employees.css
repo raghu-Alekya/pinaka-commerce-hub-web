@@ -578,39 +578,11 @@
 .employee-last-active.red span {
   background: #e83d55;
 }
-/* =========================================================
-   ACTIONS
-========================================================= */
-.employee-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-}
-.employee-actions button {
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #536b8b;
-  cursor: pointer;
-}
-.employee-actions button svg {
-  width: 14px;
-  height: 14px;
-}
-.employee-actions button:hover {
-  color: #5b3ddd;
-}
+
 /* =========================================================
    PAGINATION
 ========================================================= */
-/* .employees-pagination {
-  height: 38px;
-  padding: 0 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-} */
+
 .employees-showing {
   flex: 1 1 auto;
   color: #5c7190;
