@@ -495,19 +495,21 @@
 
 .vendors-table th:nth-child(8),
 .vendors-table td:nth-child(8) {
-  width: 165px;
+  width: 170px;
 }
 
 .vendors-table th:nth-child(9),
 .vendors-table td:nth-child(9) {
-  width: 100px;
+  width: 120px;
 }
 
 .vendors-table th:nth-child(10),
-.vendors-table td:nth-child(10),
+.vendors-table td:nth-child(10) {
+  width: 120px;
+}
 .vendors-table th:nth-child(11),
 .vendors-table td:nth-child(11) {
-  width: 145px;
+  width: 110px;
 }
 
 .vendors-table th:nth-child(12),
@@ -516,11 +518,11 @@
 }
 
 .vendors-table th {
-  height: 48px;
+  height: 44px;
   padding: 0 16px;
   background: #f1f3fd;
   color: #23426e;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 16px;
   text-overflow: clip;
@@ -573,7 +575,7 @@
 
 .vendors-table th:last-child {
   color: #23426e;
-  background: #f2f8ff;
+  background: #f1f3fd;
 }
 
 .vendors-table td:last-child {
@@ -1241,7 +1243,7 @@
   width: 100%;
   overflow: hidden;
   color: inherit;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1448,7 +1450,7 @@
 
 .vendors-audit-date {
   color: #29466f;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.15;
   white-space: nowrap;

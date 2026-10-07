@@ -480,52 +480,58 @@
 }
 /* =========================================================
    DEVICE ACTIONS
-   Match the Merchants action alignment/style
+   Reusable ListActions component
 ========================================================= */
-.devices-table th:last-child,
-.devices-table td:last-child {
-  text-align: center;
-}
-.device-actions {
+.list-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 2px;
-  width: 100%;
+  gap: 6px;
 }
-.device-actions .action-btn {
-  width: 27px;
-  height: 27px;
+
+.list-action-btn {
+  width: 32px;
+  height: 32px;
   padding: 0;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: #8991a2;
-  display: flex;
+  border: 1px solid #d8e1ee;
+  border-radius: 7px;
+  background: #fff;
+  color: #536985;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  transition: all 0.16s ease;
 }
-.device-actions .action-btn:hover {
+
+.list-action-btn:hover {
   background: #f2f0ff;
   color: #5143bc;
 }
-.device-actions .edit-btn:hover {
-  background: #eeeaff;
-  color: #5143bc;
+
+.list-action-btn.text-success {
+  color: #198754;
 }
-.device-actions .text-danger {
-  color: #ff3348;
+
+.list-action-btn.text-danger {
+  color: #dc3545;
 }
-.device-actions .text-danger:hover {
-  background: #fff0f1;
-  color: #ff3348;
+
+.list-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-.device-actions .action-btn i {
-  font-size: 13px;
-  line-height: 1;
+
+.devices-table th:last-child,
+.devices-table td:last-child {
+  text-align: center;
 }
+
+.devices-table td:last-child .list-actions {
+  justify-content: center;
+}
+
 /* =========================================================
    DELETE CONFIRMATION MODAL
 ========================================================= */

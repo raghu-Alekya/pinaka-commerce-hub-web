@@ -734,7 +734,7 @@ export default function CreatePlan() {
                 value={form.description}
                 onChange={updateField}
                 maxLength={500}
-                placeholder="Describe the plan, its features and target audience..."
+                placeholder="Describe the plan, features & audience"
               />
               <div className="plan-description-meta">
                 <small />

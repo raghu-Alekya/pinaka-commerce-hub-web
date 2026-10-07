@@ -259,7 +259,8 @@
   background: transparent;
   color: #25314c;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 14px !important;
+  font-weight: 100 !important;
 }
 
 .select-shell > i {
@@ -855,7 +856,7 @@
 }
 
 .feature-pagination button.current {
-  background: #5660e8;
+  background: #684ee3;
   color: #ffffff;
 }
 
