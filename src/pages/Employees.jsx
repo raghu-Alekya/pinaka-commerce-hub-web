@@ -12,9 +12,8 @@ import {
   Download,
   CalendarDays,
   Filter,
-  Pencil,
-  Trash2,
 } from "lucide-react";
+import ListActions from "../components/ListActions";
 import "../styles/Employees.css";
 /* =========================================================
    AVATAR COMPONENT WITH SAFE FALLBACK
@@ -589,21 +588,18 @@ const handlePageSizeChange = (size) => {
 
                     {/* ACTIONS */}
                     <td>
-                      <div className="employee-actions">
-                        <button
-                          title="Edit employee"
-                          onClick={() =>
-                            navigate("/employees/edit", { state: { employee } })
-                          }
-                        >
-                          <Pencil size={17} />
-                        </button>
-                        <button type="button" title="Delete employee" aria-label={`Delete ${employee.name}`}
-                          disabled={Boolean(deletingId)} onClick={() => setDeleteTarget(employee)}>
-                          <Trash2 size={17} />
-                        </button>
-                      </div>
-                    </td>
+                      <ListActions
+                          onEdit={() =>
+                          navigate("/employees/edit", {
+                          state: { employee }, }) }
+                          onDelete={() => {
+                            setDeleteError("");
+                            setDeleteTarget(employee); }}
+                            editLabel={`Edit ${employee.name}`}
+                            deleteLabel={`Delete ${employee.name}`}
+                            deleteDisabled={Boolean(deletingId)}
+                               />
+                   </td>
                   </tr>
                 ))
               ) : (

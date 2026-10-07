@@ -2,52 +2,34 @@ import { useMemo, useState, useEffect } from "react";
 import { useReferenceData } from "../api/referenceData";
 import { listMerchants } from "../api/merchants";
 import Pagination from "../components/Pagination";
+import ListActions from "../components/ListActions";
 import {
 
   Eye,
-
   Search,
-
   ChevronDown,
-
   Download,
-
   Store,
   Crown,
   Zap,
   Star,
-
   CheckCircle2,
-
   XCircle,
-
   Clock3,
-
   ArrowLeft,
-
   ArrowRight,
-
   Check,
-
   ArrowLeftRight,
-
   Info,
-
   CreditCard,
-
   Lock,
-
   Smartphone,
-
   Landmark,
-
   CircleCheck,
-
   RefreshCw,
   Pencil,
   Trash2,
   X,
-
 } from "lucide-react";
 
 import { listPlans, getMerchantFormPlans } from "../api/plans";
@@ -56,7 +38,6 @@ import { listFeatures } from "../api/features";
 import {
 
   changeSubscriptionPlan,
-
   listSubscriptions,
   listSubscriptionPlans,
   getSubscription,
@@ -64,7 +45,6 @@ import {
   updateSubscription,
   deleteSubscription,
   subscriptionPayload,
-
   mapSubscriptionToRow,
 
 } from "../api/subscriptions";
@@ -1129,24 +1109,11 @@ useEffect(() => {
                       </td>
 
                       <td onClick={(e) => e.stopPropagation()}>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <button
-                            type="button"
-                            className="subscription-view-button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onView(item);
-                            }}
-                            title="View Subscription"
-                            disabled={crudBusy}
-                          >
-                            <Eye size={16} />
-                          </button>
-                        </div>
-
-                      </td>
-
+    <ListActions
+        onView={() => onView(item)}
+        viewLabel={`View ${item.merchant || "Subscription"}`}
+    />
+</td>
                     </tr>
                   )
                 )
