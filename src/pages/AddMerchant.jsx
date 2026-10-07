@@ -736,7 +736,8 @@ function renewalDate(start, cycle) {
   if (Number.isNaN(date.getTime())) return "";
   const day = date.getUTCDate();
   date.setUTCDate(1);
-  date.setUTCMonth(date.getUTCMonth() + (cycle === "Annual" ? 12 : 1));
+  const months = cycle === "Annual" ? 12 : cycle === "Quarterly" ? 3 : 1;
+  date.setUTCMonth(date.getUTCMonth() + months);
   const last = new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0),
   ).getUTCDate();
@@ -792,7 +793,7 @@ export function validate(
   if (state.step === 2 && state.phase !== "store") {
     if (!availablePackages[state.plan])
       return "Choose a plan from the available plans.";
-    if (!["Monthly", "Annual"].includes(state.cycle))
+    if (!["Monthly", "Quarterly", "Annual"].includes(state.cycle))
       return "Select a billing cycle.";
     if (
       !state.start ||
@@ -1705,7 +1706,7 @@ function MerchantOnboarding({
               <div>
                 <strong>{plan.name}</strong>
                 <span>
-                  {price} / {state.cycle === "Annual" ? "year" : "month"}
+                  {price} / {state.cycle === "Annual" ? "year" : state.cycle === "Quarterly" ? "quarter" : "month"}
                 </span>
               </div>
             </div>
@@ -2557,7 +2558,7 @@ function MerchantOnboarding({
                         <Select
                           label="Billing cycle"
                           value={state.cycle}
-                          options={["Monthly", "Annual"]}
+                          options={["Monthly", "Quarterly", "Annual"]}
                           onChange={(value) => patch({ cycle: value })}
                         />
                         <Field
@@ -2573,7 +2574,7 @@ function MerchantOnboarding({
                         />
                         <Field
                           label="Subscription Price"
-                          value={`${price} / ${state.cycle === "Annual" ? "year" : "month"}`}
+                          value={`${price} / ${state.cycle === "Annual" ? "year" : state.cycle === "Quarterly" ? "quarter" : "month"}`}
                           readOnly
                         />
                         {state.plan >= 0 && plan.stores == null && (
@@ -3564,7 +3565,7 @@ function MerchantOnboarding({
               label="Amount"
               value={
                 <strong>
-                  {price} / {state.cycle === "Annual" ? "year" : "month"}
+                  {price} / {state.cycle === "Annual" ? "year" : state.cycle === "Quarterly" ? "quarter" : "month"}
                 </strong>
               }
             />
@@ -4051,14 +4052,21 @@ export function merchantDetailToDraft(result, fallback = {}) {
     (plan) => plan.name.toLowerCase() === matchPlan,
   );
   const cycle = String(
-    subscription.billingCycle || raw.billingCycle || "",
+    subscription.billingCycle ||
+      subscription.billing_cycle ||
+      raw.billingCycle ||
+      raw.billing_cycle ||
+      raw.cycle ||
+      "",
   ).toLowerCase();
   draft.cycle =
     cycle === "monthly"
       ? "Monthly"
-      : cycle === "annual" || cycle === "yearly"
-        ? "Annual"
-        : "";
+      : cycle === "quarterly" || cycle === "quarter"
+        ? "Quarterly"
+        : cycle === "annual" || cycle === "yearly"
+          ? "Annual"
+          : "";
   draft.subscriptionStatus = subscription.status || "Pending activation";
   draft.paymentHistory = Array.isArray(raw.paymentHistory)
     ? raw.paymentHistory

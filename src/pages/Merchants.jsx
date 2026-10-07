@@ -9,9 +9,10 @@ import { formatDate, listSubscriptions, listSubscriptionPlans } from "../api/sub
 import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant, updateMerchantStatus } from "../api/merchants";
+import { listMerchants, getMerchant, updateMerchantStatus } from "../api/merchants";
 import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
+import { devicesApi } from "../api/devices";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
 import "../styles/merchants.css";
@@ -51,9 +52,11 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   }
   const [addingDevice, setAddingDevice] = useState(false);
   const [createdDevices,setCreatedDevices]=useState([]);
+  const [apiDevices, setApiDevices] = useState([]);
+  const [devicesLoading, setDevicesLoading] = useState(false);
+  const [devicesError, setDevicesError] = useState('');
   async function saveDeviceAndRefresh(values) {
-    if(typeof onSaveDevice!=='function')throw new Error('Connect onSaveDevice to your device creation API.');
-    const result=await onSaveDevice(values);
+    const result=typeof onSaveDevice==='function' ? await onSaveDevice(values) : await devicesApi.create(values);
     if(result?.success===false)throw new Error(result.message || 'Device creation failed.');
     const returned=result?.device || result?.data?.device || result?.data || result;
     const record=returned && typeof returned==='object' && !Array.isArray(returned)?returned:{};
@@ -132,6 +135,20 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const raw = response.merchant || response.data?.merchant || response.data || response;
   const merchantIds = [merchant?.merchantId, result?.merchant?.merchantId, raw.merchantId, raw.id, merchantId].filter(Boolean);
   const apiMerchantId = merchantIds.find(value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value))) || merchantIds[0];
+  useEffect(() => {
+    let active = true;
+    setDevicesLoading(true);
+    setDevicesError('');
+    devicesApi.listByMerchantId(apiMerchantId).then(items => {
+      if (active) setApiDevices(items);
+    }).catch(failure => {
+      if (active) {
+        setApiDevices([]);
+        setDevicesError(failure.message || 'Unable to load devices for this merchant.');
+      }
+    }).finally(() => { if (active) setDevicesLoading(false); });
+    return () => { active = false; };
+  }, [apiMerchantId]);
   useEffect(() => {
     let active = true;
     setEmployeesLoading(true);
@@ -299,7 +316,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const employeeStoreName = employee => employee.storeName || employee.store?.name || stores.find(store =>
     [store.id, store.storeId, store.code, store.storeCode].some(id => id != null && String(id) === String(employee.storeId))
   )?.name || employee.storeId;
-  const devices = [...createdDevices,...list(saved?.devices ?? raw.devices ?? response.devices).filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))].filter(device=>device.merchantId==null || String(device.merchantId)===String(merchantId));
+  const devices = [...createdDevices,...apiDevices.filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))];
   const payments = list(saved?.paymentHistory ?? raw.paymentHistory);
   const subscriptionPlan = subscription.plan && typeof subscription.plan === 'object'
     ? subscription.plan
@@ -427,8 +444,8 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       </div>
       <div role="tabpanel" id="merchant-panel-devices" aria-labelledby="merchant-tab-devices" hidden={activeTab !== 'devices'} tabIndex={0}>
         {addingDevice ? <ViewSection title="Add Device" actions={<button type="button" className="merchant-back-employees" onClick={()=>setAddingDevice(false)}>← Back to Devices</button>}>
-          <AddMerchantDevice key={merchantId} merchantId={merchantId} merchant={merchant} onSave={saveDeviceAndRefresh} onBack={()=>setAddingDevice(false)}/>
-        </ViewSection> : <MerchantDeviceList devices={devices} storeName={storeName} onAdd={()=>setAddingDevice(true)}/>}
+          <AddMerchantDevice key={apiMerchantId} merchantId={apiMerchantId} merchant={merchant} onSave={saveDeviceAndRefresh} onBack={()=>setAddingDevice(false)}/>
+        </ViewSection> : <MerchantDeviceList devices={devices} storeName={storeName} onAdd={()=>setAddingDevice(true)} loading={devicesLoading} error={devicesError}/>}
 
       </div>
       <div role="tabpanel" id="merchant-panel-roles" aria-labelledby="merchant-tab-roles" hidden={activeTab !== 'roles'} tabIndex={0}>
@@ -550,8 +567,7 @@ function storeLimitFor(merchant, masterPlans) {
 
   return null;
 }
-// Pass your existing delete API function as deleteMerchant until its module contract is connected.
-export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
+export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewedId = searchParams.get('view');
@@ -576,13 +592,12 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
   useEffect(() => { if (deleteTarget && deleteDialog.current && !deleteDialog.current.open) deleteDialog.current.showModal(); }, [deleteTarget]);
   async function confirmDelete() {
     if (deleteInFlight.current || !deleteTarget) return;
-    if (typeof deleteMerchant !== 'function') { setDeleteError('The merchant delete API has not been connected. No record was deleted.'); return; }
     deleteInFlight.current = true; setDeleting(true); setDeleteError('');
     const target = deleteTarget;
     try {
       const targetId = target.merchantId || target.id;
-      const res = await deleteMerchant(targetId);
-      console.log("[DELETE MERCHANT API RESPONSE]", res);
+      const res = await updateMerchantStatus(targetId, 'INACTIVE');
+      console.log("[DEACTIVATE MERCHANT API RESPONSE]", res);
       onLocalDelete?.(target.id);
       if (!mounted.current) return;
       setMerchants(previous => previous.map(item => item.id === target.id
@@ -1064,7 +1079,7 @@ function MerchantEmployeeList({employees,merchantName,onAdd}) {
   </div>;
 }
 
-function MerchantDeviceList({devices,storeName,onAdd}) {
+function MerchantDeviceList({devices,storeName,onAdd,loading=false,error=''}) {
   const [query,setQuery]=useState(''),[page,setPage]=useState(1),[sort,setSort]=useState({key:'name',direction:1}),[view,setView]=useState(null);
   const dialog=useRef(null),lastFocus=useRef(null);
   useEffect(()=>{if(view)dialog.current?.showModal();else if(dialog.current?.open){dialog.current.close();lastFocus.current?.focus();}},[view]);
