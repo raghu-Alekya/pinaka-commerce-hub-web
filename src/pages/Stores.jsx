@@ -4,6 +4,7 @@ import { deleteStore, listStores } from "../api/stores";
 import { listMerchants } from "../api/merchants";
 import { useReferenceData } from "../api/referenceData";
 import Pagination from "../components/Pagination";
+import ListActions from "../components/ListActions";
 
 const title = (value) =>
   String(value || "")
@@ -417,44 +418,18 @@ useEffect(() => {
                       </span>
                     </td>
                     <td>
-                      <div className="store-item-actions">
-                        <button
-                          type="button"
-                          className="action-btn view-btn"
-                          aria-label={`View ${s.storeName}`}
-                          title="View store"
-                          onClick={() =>
-                            nav(
-                              `/stores/${encodeURIComponent(s.id)}`,
-                            )
-                          }
-                        >
-                          <i className="bi bi-eye" />
-                        </button>
-
-                        <button
-                          type="button"
-                          className="action-btn edit-btn text-primary"
-                          aria-label={`Edit ${s.storeName}`}
-                          title="Edit store"
-                          onClick={() =>
-                            nav(`/stores/${encodeURIComponent(s.id)}/edit`)
-                          }
-                        >
-                          <i className="bi bi-pencil" />
-                        </button>
-
-                        <button type="button" className="action-btn text-danger"
-                          aria-label={`Delete ${s.storeName}`}
-                          title="Delete store"
-                          onClick={() => {
-                            setDeleteError("");
-                            setDeleteTarget(s);
-                          }}
-                        >
-                          <i className="bi bi-trash3" />
-                        </button>
-                      </div>
+                      <ListActions
+                         onView={() =>
+                             nav(`/stores/${encodeURIComponent(s.id)}`)}
+                         onEdit={() =>
+                             nav(`/stores/${encodeURIComponent(s.id)}/edit`)}
+                         onDelete={() => {
+                             setDeleteError("");
+                             setDeleteTarget(s); }}
+                         viewLabel={`View ${s.storeName}`}
+                         editLabel={`Edit ${s.storeName}`}
+                         deleteLabel={`Delete ${s.storeName}`}
+                           />
                     </td>
                   </tr>
                 ))
