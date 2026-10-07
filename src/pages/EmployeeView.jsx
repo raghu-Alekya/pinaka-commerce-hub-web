@@ -108,7 +108,7 @@ export default function EmployeeView() {
           ["Postal Code", employee.postalCode || employee.pinCode], ["Country", employee.country],
         ]} />
         <Section title="Account Settings" icon={Settings} fields={[
-          ["Username", employee.username], ["Send Credentials", employee.sendCredentials],
+          ["Username", employee.username],
         ]} />
       </div>}
     </div>

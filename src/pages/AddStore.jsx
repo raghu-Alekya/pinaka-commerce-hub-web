@@ -366,6 +366,17 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
 };
 const permissionAllowed = (value) =>
   value === true || value === "true" || value === "t" || value === 1;
+const roleTemplateKeys = (role) => [
+  role?.id,
+  role?.roleTemplateId,
+  role?.sourceRoleTemplateId,
+  role?.roleTemplate?.id,
+  role?.template?.id,
+  role?.roleCode,
+  role?.code,
+  role?.name,
+  role?.roleName,
+].filter(Boolean).map((value) => String(value).trim().toLowerCase());
 const applySavedRolePermissions = (
   matrix,
   savedRows,
@@ -502,6 +513,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const saveLock = useRef(false);
   const hoursRef = useRef(blankHours());
   const permissionsRef = useRef({});
+  const editedPermissionRoles = useRef(new Set());
   const featureDefaultsScope = useRef("");
   const loadedFeatureType = useRef("");
   const imageReads = useRef(0);
@@ -826,6 +838,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         .includes(featureSearch.toLowerCase())
     );
   });
+  const selectableFeatureNames = filteredFeatures.filter((row) => entitled(row.name)).map((row) => row.name);
+  const allVisibleFeaturesSelected = selectableFeatureNames.length > 0 && selectableFeatureNames.every((name) => enabledFeatures.includes(name));
+  const roleAvailableForStoreType = (role) => storeTypeRoleIds === null || roleTemplateKeys(role).some((key) => storeTypeRoleIds.has(key));
+  const selectableRoleDefinitions = roleDefinitions.filter(roleAvailableForStoreType);
   const activeEmployees = employees.filter(
     (employee) =>
       String(employee.status || "").toUpperCase() === "ACTIVE" ||
@@ -1215,18 +1231,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               status === "ACTIVE"
             );
           })
-          .map((row) =>
-            String(
-              row.roleTemplateId ||
-                row.sourceRoleTemplateId ||
-                row.roleTemplate?.id ||
-                row.template?.id ||
-                row.id ||
-                row._id ||
-                "",
-            ),
-          )
-          .filter(Boolean);
+          .flatMap((row) => roleTemplateKeys(row));
         setStoreTypeRoleIds(new Set(ids));
       })
       .catch((err) => {
@@ -1248,53 +1253,16 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
 
   useEffect(() => {
     if (storeTypeRoleIds === null) return;
-    const allowed = roles.filter((roleId) =>
-      storeTypeRoleIds.has(String(roleId)),
-    );
+    const allowed = roles.filter((roleId) => {
+      const role = roleDefinitions.find((item) => item.id === roleId);
+      const keys = role ? roleTemplateKeys(role) : [String(roleId).toLowerCase()];
+      return keys.some((key) => storeTypeRoleIds.has(key));
+    });
     if (allowed.length !== roles.length) setRoles(allowed);
     setActiveRole((current) =>
-      storeTypeRoleIds.has(String(current)) ? current : allowed[0] || "",
+      allowed.includes(current) ? current : allowed[0] || "",
     );
-  }, [storeTypeRoleIds, roles]);
-
-  // Only offer role templates mapped to this store's selected store type.
-  useEffect(() => {
-    let cancelled = false;
-    setStoreTypeRoleIds(null);
-    setRolesError("");
-    if (!activeStoreTypeId) {
-      setStoreTypeRoleIds(new Set());
-      setStoreTypeRolesLoading(false);
-      return () => { cancelled = true; };
-    }
-    setStoreTypeRolesLoading(true);
-    roleTemplatesApi.getForStoreType(activeStoreTypeId).then(response => {
-      if (cancelled) return;
-      const ids = readRoleTemplatesList(response).filter(row => {
-        const status = String(row.status || row.roleTemplate?.status || "ACTIVE").toUpperCase();
-        return row.enabled !== false && row.active !== false && status === "ACTIVE";
-      }).map(row => String(
-        row.roleTemplateId || row.sourceRoleTemplateId || row.roleTemplate?.id ||
-        row.template?.id || row.id || row._id || "",
-      )).filter(Boolean);
-      setStoreTypeRoleIds(new Set(ids));
-    }).catch(err => {
-      if (!cancelled) {
-        setStoreTypeRoleIds(new Set());
-        setRolesError(err?.message || "Unable to load role templates for this store type.");
-      }
-    }).finally(() => {
-      if (!cancelled) setStoreTypeRolesLoading(false);
-    });
-    return () => { cancelled = true; };
-  }, [activeStoreTypeId, reload]);
-
-  useEffect(() => {
-    if (storeTypeRoleIds === null) return;
-    const allowed = roles.filter(roleId => storeTypeRoleIds.has(String(roleId)));
-    if (allowed.length !== roles.length) setRoles(allowed);
-    setActiveRole(current => storeTypeRoleIds.has(String(current)) ? current : allowed[0] || "");
-  }, [storeTypeRoleIds, roles]);
+  }, [storeTypeRoleIds, roles, roleDefinitions]);
 
   // Load Store-Type Features
   useEffect(() => {
@@ -1378,6 +1346,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   useEffect(() => {
     let cancelled = false;
     if (!activeRole || !roles.includes(activeRole)) return;
+    if (editedPermissionRoles.current.has(activeRole)) return;
     setPermissionsLoading(true);
     roleTemplatesApi
       .getFeatures(activeRole, store.storeTypeId ? [store.storeTypeId] : [])
@@ -1393,7 +1362,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           roleName,
         );
         loadedRolePermissions.current.add(activeRole);
-        setPermissions((current) => ({ ...current, [activeRole]: matrix }));
+        setPermissions((current) => {
+          if (current[activeRole]) return current;
+          return { ...current, [activeRole]: matrix };
+        });
         setPermissionAvailability((current) => ({
           ...current,
           [activeRole]: built.availability,
@@ -1495,6 +1467,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setStore(blankStore(id));
     hoursRef.current = blankHours();
     permissionsRef.current = {};
+    editedPermissionRoles.current = new Set();
     setMerchantInfo(null);
     setSubscription(null);
     setEmployees([]);
@@ -1590,6 +1563,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     });
   };
   const togglePermission = (roleId, feature, action) => {
+    editedPermissionRoles.current.add(roleId);
     setPermissions((current) => {
       const next = {
         ...current,
@@ -2311,8 +2285,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 </tr>
               </thead>
               <tbody>
-                {merchantStores.map((item, index) => (
-                  <tr key={item.storeCode || item.id || item.storeId || index}>
+                {merchantStores.map((item, index) => {
+                  const cityState = [item.city || item.address?.city, item.state || item.address?.state].filter(Boolean);
+                  const locationParts = [...new Map(cityState.map((value) => [String(value).trim().toLowerCase(), String(value).trim()])).values()];
+                  const locationText = locationParts.length ? locationParts.join(", ") : item.address?.street || (typeof item.address === "string" ? item.address : "—");
+                  return <tr key={item.storeCode || item.id || item.storeId || index}>
                     <td>{index + 1}</td>
                     <td>{item.storeName || item.name || "Unnamed store"}</td>
                     <td>{item.storeCode || item.code || "—"}</td>
@@ -2323,19 +2300,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                         item.type ||
                         "—"}
                     </td>
-                    <td>
-                      {[
-                        item.city || item.address?.city,
-                        item.state || item.address?.state,
-                      ]
-                        .filter(Boolean)
-                        .join(", ") ||
-                        item.address?.street ||
-                        (typeof item.address === "string" ? item.address : "—")}
-                    </td>
+                    <td>{locationText}</td>
                     <td>{item.status || "—"}</td>
-                  </tr>
-                ))}
+                  </tr>;
+                })}
                 {!used && (
                   <tr>
                     <td colSpan="6" className="sf-empty">
@@ -2415,6 +2383,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   }));
                   setEnabledFeatures([]);
                   setPermissions({});
+                  permissionsRef.current = {};
+                  editedPermissionRoles.current = new Set();
                   setLoadError("");
                 }}
                 options={[
@@ -2727,6 +2697,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         <Panel
           title="Features"
           subtitle={readOnly ? "Features available to this store and their saved selection status." : "Select the features you want to enable for this store."}
+          action={<label className="sf-select-all-label sf-panel-select-all"><input type="checkbox" disabled={readOnly || mastersLoading || !selectableFeatureNames.length} checked={allVisibleFeaturesSelected} onChange={(event) => setEnabledFeatures((current) => event.target.checked ? [...new Set([...current, ...selectableFeatureNames])] : current.filter((name) => !selectableFeatureNames.includes(name)))} />Select all eligible</label>}
         >
           <div className="sf-feature-tools">
             <div className="sf-tabs">
@@ -2832,6 +2803,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         <Panel
           title="Role Templates"
           subtitle={readOnly ? "Role templates assigned to this store." : "Choose from merchant-selected role templates for this store."}
+          action={<label className="sf-select-all-label sf-panel-select-all"><input type="checkbox" disabled={readOnly || !selectableRoleDefinitions.length || storeTypeRolesLoading} checked={selectableRoleDefinitions.length > 0 && selectableRoleDefinitions.every((role) => roles.includes(role.id))} onChange={(event) => {
+            const ids = selectableRoleDefinitions.map((role) => role.id);
+            const next = event.target.checked ? [...new Set([...roles, ...ids])] : roles.filter((roleId) => !ids.includes(roleId));
+            setRoles(next);
+            setActiveRole((current) => next.includes(current) ? current : next[0] || "");
+          }} />Select all roles</label>}
         >
           {rolesError && (
             <p className="sf-empty" role="alert">
@@ -2847,8 +2824,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               merchant Roles tab first.
             </p>
           )}
+          {!rolesLoading && roleDefinitions.length > 0 && !selectableRoleDefinitions.length && !storeTypeRolesLoading && (
+            <p className="sf-empty">No merchant roles are mapped to this store type yet.</p>
+          )}
           <div className="sf-template-grid">
-            {roleDefinitions.map((role, index) => (
+            {selectableRoleDefinitions.map((role, index) => (
               <label
                 className={`sf-template ${roles.includes(role.id) ? "selected" : ""}`}
                 key={role.id}
@@ -2915,6 +2895,21 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             subtitle={readOnly ? "Saved access for the selected role." : "Set what this role can view, create, edit or delete."}
             action={
               <div className="sf-copy-permissions">
+                <label className="sf-select-all-label">
+                  <input type="checkbox" disabled={readOnly || !active || !matrixRows.length} checked={Boolean(active && matrixRows.length && matrixRows.every((item) => STANDARD_ACTIONS.every((action) => Boolean(permissions[active]?.[item.name]?.[action]))))} onChange={(event) => {
+                    if (!active) return;
+                    const checked = event.target.checked;
+                    setPermissions((current) => {
+                      const rolePermissions = { ...(current[active] || {}) };
+                      matrixRows.forEach((item) => { rolePermissions[item.name] = { ...(rolePermissions[item.name] || {}), ...Object.fromEntries(STANDARD_ACTIONS.map((action) => [action, checked])) }; });
+                      const next = { ...current, [active]: rolePermissions };
+                      permissionsRef.current = next;
+                      editedPermissionRoles.current.add(active);
+                      return next;
+                    });
+                  }} />
+                  Select all permissions
+                </label>
                 <label>
                   Copy from
                   <select
@@ -3132,7 +3127,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                             setEmployeeRole(employeeId, event.target.value)
                           }
                         >
-                          <option value="">Select role</option>
+                          <option value="">{isAssigned ? "Select role" : "Select employee first"}</option>
                           {roles.map((roleId) => (
                             <option key={roleId} value={roleId}>
                               {roleName(roleId)}
