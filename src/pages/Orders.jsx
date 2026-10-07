@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ordersSeed } from "../data/data";
 import ViewDetailsModal from "../components/ViewDetailsModal";
 import Pagination from "../components/Pagination";
+import FiltersBar from "../components/FiltersBar";
 import "../styles/orders.css";
 
 export default function Orders({
@@ -389,115 +390,84 @@ const handlePageSizeChange = (size) => {
                     TOOLBAR
                 ================================================= */}
 
-                <div className="orders-toolbar">
-
-                    {/* SEARCH */}
-
-                    <div className="orders-search">
-
-                        <i className="bi bi-search" />
-
-                        <input
-                            type="text"
-                            placeholder="Search order ID, offline ID, author..."
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(e.target.value)
-                            }
-                        />
-
-                    </div>
-
-                    {/* DATE */}
-
-                    <div className="orders-select-wrapper">
-    <select
-        value={dateFilter}
-        onChange={(e) => setDateFilter(e.target.value)}
-    >
-        <option value="">All Dates</option>
-        <option value="today">Today</option>
-        <option value="7days">Last 7 Days</option>
-        <option value="30days">Last 30 Days</option>
-    </select>
-
-    <i className="bi bi-chevron-down orders-select-arrow" />
-</div>
- 
-                    {/* SALES CHANNEL */}
-
-<div className="orders-select-wrapper">
-    <select
-      value={salesChannel}
-       onChange={(e) => setSalesChannel(e.target.value)}
-        >
-        <option value="">All Sales Channels</option>
-        <option value="POS">POS</option>
-        <option value="Online">Online</option>
-        <option value="WooCommerce"> WooCommerce</option>
-    </select>
-
-    <i className="bi bi-chevron-down orders-select-arrow" />
-</div>
-
-                    {/* AUTHOR */}
-
-<div className="orders-select-wrapper">
-                    <select
-                        value={authorFilter}
-                        onChange={(e) =>
-                            setAuthorFilter(e.target.value)
-                        }
-                    >
-
-                        <option value="">
-                            All Authors
-                        </option>
-
-                        {authors.map((author) => (
-                            <option
-                                key={author}
-                                value={author}
-                            >
-                                {author}
-                            </option>
-                        ))}
-
-                    </select>
-                    <i className="bi bi-chevron-down orders-select-arrow" />
-                    </div>
-
-                    {/* STATUS */}
-
-<div className="orders-select-wrapper">
-     <select
-           value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-                 >
-                 <option value=""> All Status </option>
-                 <option value="Completed"> Completed </option>
-                 <option value="Pending payment"> Pending Payment </option>
-                 <option value="Processing"> Processing </option>
-                 <option value="Cancelled"> Cancelled </option>
-                 <option value="Refunded"> Refunded </option>
-                 <option value="Partially Refunded">  Partially Refunded </option>
-      </select>
-<i className="bi bi-chevron-down orders-select-arrow" />
-</div>
-                   
-
-                    {/* CLEAR */}
-
-                    <button
-                        type="button"
-                        className="orders-clear-btn"
-                        onClick={clearFilters}
-                    >
-                        <i className="bi bi-arrow-counterclockwise" />
-                       Reset
-                    </button>
-
-                </div>
+                <FiltersBar
+    searchValue={search}
+    onSearchChange={(value) => {
+        setSearch(value);
+        setCurrentPage(1);
+    }}
+    searchPlaceholder="Search order ID, offline ID, author..."
+    filters={[
+        {
+            key: "date",
+            label: "Date",
+            value: dateFilter,
+            options: [
+                { label: "All Dates", value: "" },
+                { label: "Today", value: "today" },
+                { label: "Last 7 Days", value: "7days" },
+                { label: "Last 30 Days", value: "30days" },
+            ],
+            onChange: (value) => {
+                setDateFilter(value);
+                setCurrentPage(1);
+            },
+        },
+        {
+            key: "salesChannel",
+            label: "Sales Channel",
+            value: salesChannel,
+            options: [
+                { label: "All Sales Channels", value: "" },
+                { label: "POS", value: "POS" },
+                { label: "Online", value: "Online" },
+                { label: "WooCommerce", value: "WooCommerce" },
+            ],
+            onChange: (value) => {
+                setSalesChannel(value);
+                setCurrentPage(1);
+            },
+        },
+        {
+            key: "author",
+            label: "Author",
+            value: authorFilter,
+            options: [
+                { label: "All Authors", value: "" },
+                ...authors.map((author) => ({
+                    label: author,
+                    value: author,
+                })),
+            ],
+            onChange: (value) => {
+                setAuthorFilter(value);
+                setCurrentPage(1);
+            },
+        },
+        {
+            key: "status",
+            label: "Status",
+            value: statusFilter,
+            options: [
+                { label: "All Status", value: "" },
+                { label: "Completed", value: "Completed" },
+                { label: "Pending Payment", value: "Pending payment" },
+                { label: "Processing", value: "Processing" },
+                { label: "Cancelled", value: "Cancelled" },
+                { label: "Refunded", value: "Refunded" },
+                {
+                    label: "Partially Refunded",
+                    value: "Partially Refunded",
+                },
+            ],
+            onChange: (value) => {
+                setStatusFilter(value);
+                setCurrentPage(1);
+            },
+        },
+    ]}
+    onClear={clearFilters}
+/>
 
     
 

@@ -447,111 +447,10 @@
 
   color: var(--muted);
   text-align: right;
+}
 
-}/* ========================================
 
-   FILTERS
-
-   ALL IN ONE LINE
-
-   RESET REMOVED
-
-\======================================== */:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-filter-card {
-
-  display: grid;
-  grid-template-columns:
-
-    minmax(180px, 1.5fr)
-
-    repeat(3, minmax(115px, 0.9fr))
-
-    minmax(130px, 1fr)
-
-    minmax(130px, 1fr);
-
-  gap: 10px;
-  align-items: end;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: white;
-  margin-bottom: 16px;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .search-field {
-
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 44px;
-  min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0 12px;
-  color: #6683ad;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .search-field input {
-
-  width: 100%;
-  min-width: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: var(--text);
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .search-field input::placeholder {
-
-  color: #8297b8;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-field {
-
-  position: relative;
-  min-width: 0;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-field select {
-
-  width: 100%;
-  height: 44px;
-  appearance: none;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: white;
-  color: var(--text);
-  padding: 0 34px 0 12px;
-  outline: none;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-field svg {
-
-  position: absolute;
-  right: 12px;
-  top: 14px;
-  pointer-events: none;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .date-field {
-
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .date-field span {
-
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-
-}:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .date-field input {
-
-  width: 100%;
-  min-width: 0;
-  height: 44px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0 10px;
-  color: var(--text);
-  background: white;
-  outline: none;
-
-}/* ========================================
+/* ========================================
 
    TABLE
 
@@ -1415,11 +1314,7 @@
 
   }
 
-  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .search-field {
 
-    grid-column: span 1;
-
-  }
 
 }}
 
@@ -1574,11 +1469,7 @@
 
   }
 
-  :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .search-field {
 
-    grid-column: span 2;
-
-  }
 
   :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .date-field {
 
@@ -5153,195 +5044,6 @@
   cursor: not-allowed;
 }
 
-/* ---------- SUBSCRIPTION FILTER BAR ---------- */
-
-.subscription-table-card .subscription-filter-bar {
-  min-height: 55px;
-  padding: 12px 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  width: 100%;
-  box-sizing: border-box;
-  background: #ffffff;
-  border-bottom: 1px solid #f0f1f4;
-  flex-wrap: nowrap;
-}
-
-.subscription-table-card .subscription-search {
-  width: 230px;
-  height: 32px;
-  min-width: 230px;
-  flex: 0 0 230px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 9px;
-  box-sizing: border-box;
-  background: #ffffff;
-  border: 1px solid #e1e4eb;
-  border-radius: 5px;
-  color: #9aa2b3;
-}
-
-.subscription-table-card .subscription-search svg,
-.subscription-table-card .subscription-search i {
-  flex-shrink: 0;
-  font-size: 12px;
-}
-
-.subscription-table-card .subscription-search input {
-  flex: 1;
-  width: auto;
-  min-width: 0;
-  height: 100%;
-  padding: 0 2px;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #3c465a;
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-}
-
-.subscription-table-card .subscription-search input::placeholder {
-  color: #a0a6b5;
-}
-
-.subscription-table-card .subscription-filter-bar > select,
-.subscription-table-card .subscription-filter-bar .subscription-filter-select {
-  width: 125px;
-  min-width: 125px;
-  height: 42px;
-  padding: 0 10px;
-  box-sizing: border-box;
-  border: 1px solid #e1e4eb;
-  border-radius: 6px;
-  outline: none;
-  background: #ffffff;
-  color: #59647a;
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.subscription-table-card .subscription-filter-bar > select:hover,
-.subscription-table-card .subscription-filter-bar .subscription-filter-select:hover {
-  border-color: #d3d7e0;
-}
-
-.subscription-table-card .subscription-filter-bar > select:focus,
-.subscription-table-card .subscription-filter-bar .subscription-filter-select:focus {
-  border-color: #c8c1f2;
-}
-
-.subscription-table-card .subscription-date-filter {
-  width: 165px;
-  min-width: 165px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0 8px;
-  box-sizing: border-box;
-  background: #ffffff;
-  border: 1px solid #e1e4eb;
-  border-radius: 6px;
-}
-
-.subscription-table-card .subscription-date-filter span {
-  flex-shrink: 0;
-  color: #59647a;
-  font-family: "Inter", sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.subscription-table-card .subscription-date-filter input {
-  width: 88px;
-  min-width: 0;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #59647a;
-  font-family: "Inter", sans-serif;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.subscription-table-card .subscription-date-filter input::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  opacity: 0.7;
-}
-
-.subscription-table-card .subscription-reset-button {
-  height: 42px;
-  min-width: 72px;
-  margin-left: auto;
-  padding: 0 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  box-sizing: border-box;
-  border: 1px solid #e1e4eb;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #a0a6b5;
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: not-allowed;
-}
-
-.subscription-table-card .subscription-reset-button.active {
-  border-color: #5143bc;
-  background: #ffffff;
-  color: #5143bc;
-  cursor: pointer;
-}
-
-.subscription-table-card .subscription-reset-button.active:hover {
-  background: #f5f3ff;
-}
-
-.subscription-table-card .subscription-filter-result {
-  min-height: 38px;
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  box-sizing: border-box;
-  border-bottom: 1px solid #f0f1f4;
-  color: #697285;
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-}
-
-.subscription-table-card .subscription-filter-result strong {
-  color: #17233e;
-  font-weight: 600;
-}
-
-.subscription-table-card .subscription-filter-result button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #5143bc;
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.subscription-table-card .subscription-filter-result button:hover {
-  text-decoration: underline;
-}
 
 /* ---------- RESPONSIVE FILTERS ---------- */
 
@@ -5433,26 +5135,9 @@
   cursor: not-allowed;
   opacity: .58;
 }
-:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
-  width: 100%;
-  min-width: 0;
-  min-height: 42px;
-  padding: 10px 12px;
-  border: 1px solid var(--control-border);
-  border-radius: var(--control-radius);
-  background: #fff;
-  color: #092653;
-  outline: none;
-  box-shadow: none;
-}
-:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) :is(input, select, textarea):focus {
-  border-color: var(--control-focus);
-  box-shadow: 0 0 0 3px rgba(81, 67, 188, .12);
-}
+
+
+
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) :is(input, select, textarea):disabled,
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) :is(input, select, textarea)[readonly] {
   background: #f4f6fa;
@@ -5731,10 +5416,6 @@
   cursor: not-allowed;
 }
 
-/* View / edit / delete buttons in the subscriptions table */
-
-
-
 
 .merchant-subscriptions-page .subscription-view-button.text-danger,
 .subscription-page .subscription-view-button.text-danger,
@@ -5788,102 +5469,6 @@
   }
 }
 
-/* Fix date filter inputs: prevent the global input styles from overriding them. */
-.subscription-table-card .subscription-filter-bar .subscription-date-filter {
-  flex: 0 1 165px;
-  width: 165px;
-  min-width: 165px;
-  overflow: hidden;
-}
-
-.subscription-table-card .subscription-filter-bar .subscription-date-filter input,
-.subscription-table-card .subscription-filter-bar .subscription-date-filter input[type="date"] {
-  flex: 1 1 0;
-  width: 0;
-  min-width: 0;
-  max-width: 100%;
-  height: 100%;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  font: inherit;
-  font-size: 11px;
-  line-height: normal;
-  box-sizing: border-box;
-}
-
-.subscription-table-card .subscription-filter-bar .subscription-date-filter input[type="date"]::-webkit-calendar-picker-indicator {
-  flex: 0 0 auto;
-  margin: 0;
-  padding: 0;
-}
-
-/* Fix search field: keep the input inside its search wrapper and prevent
-   the shared/global input styles from adding width, padding, or a second border. */
-.subscription-table-card .subscription-filter-bar .subscription-search {
-  display: flex !important;
-  flex: 0 0 275px !important;
-  width: 275px !important;
-  min-width: 0 !important;
-  max-width: 275px !important;
-  height: 42px !important;
-  min-height: 0 !important;
-  padding: 0 12px !important;
-  gap: 10px !important;
-  overflow: hidden !important;
-  box-sizing: border-box !important;
-  border: 1px solid #d7e1ef !important;
-  border-radius: 9px !important;
-  background: #fff !important;
-  
-}
-
-.subscription-table-card .subscription-filter-bar .subscription-search > svg,
-.subscription-table-card .subscription-filter-bar .subscription-search > i {
-  flex: 0 0 auto !important;
-  width: 18px;
-  height: 18px;
-  color: #98a5bb !important;
-}
-
-.subscription-table-card .subscription-filter-bar .subscription-search input,
-.subscription-table-card .subscription-filter-bar .subscription-search input[type="text"] {
-  display: block !important;
-  flex: 1 1 0 !important;
-  width: 0 !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  outline: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  color: #3c465a !important;
-  font-family: "Inter", sans-serif !important;
-  font-size: 14px !important;
-  line-height: normal !important;
-  box-sizing: border-box !important;
-}
-
-.subscription-table-card .subscription-filter-bar .subscription-search input::placeholder {
-  color: #98a5bb !important;
-  opacity: 1;
-}
-
-@media (max-width: 1100px) {
-  .subscription-table-card .subscription-filter-bar .subscription-search {
-    flex: 1 1 240px !important;
-    width: auto !important;
-    max-width: none !important;
-  }}
 
 .merchant-subscriptions-page .subscription-overview-refined .overview-card {
   align-items: center;

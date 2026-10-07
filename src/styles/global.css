@@ -374,3 +374,236 @@ table thead th {
     cursor: not-allowed;
 }
 
+/* =========================================================
+   REUSABLE FILTERS BAR
+   Same UI as Orders Toolbar
+========================================================= */
+
+.filters-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 12px 16px;
+    background: #fbfcfe;
+    min-height: 48px;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.filter-search {
+    width: 230px;
+    height: 35px;
+    flex: 0 0 230px;
+
+    border: 1px solid #e1e4eb;
+    border-radius: 6px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 9px;
+
+    color: #9aa2b3;
+
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.filter-search i {
+    position: static;
+    transform: none;
+
+    flex-shrink: 0;
+
+    font-size: 12px;
+    color: #9aa2b3;
+    background-color: #fff;
+}
+
+.filter-search input {
+    width: 100%;
+    height: 100%;
+
+    flex: 1;
+
+    border: 0;
+    outline: 0;
+
+    padding: 0 8px;
+
+    background: #fff;
+    color: #3c465a;
+
+    font-size: 12px;
+    font-weight: 400;
+
+    box-sizing: border-box;
+}
+
+.filter-search input::placeholder {
+    color: #a0a6b5;
+    background-color: #fff;
+}
+
+.filter-search input:focus {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+}
+
+
+/* =========================================================
+   FILTER OPTIONS
+========================================================= */
+
+.filter-options {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    flex: 1;
+    min-width: 0;
+}
+
+
+/* =========================================================
+   DROPDOWN WRAPPER
+========================================================= */
+
+.filter-select-wrapper {
+    position: relative;
+    min-width: 130px;
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   DROPDOWN
+========================================================= */
+
+.filter-select-wrapper select {
+    width: 100%;
+    height: 35px;
+
+    padding: 0 34px 0 10px;
+
+    border: 1px solid #e1e4eb;
+    border-radius: 6px;
+
+    background: #fff;
+
+    color: #59647a;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    outline: none;
+    cursor: pointer;
+
+    box-sizing: border-box;
+}
+
+.filter-select-wrapper select:hover {
+    border-color: #d3d7e0;
+}
+
+.filter-select-wrapper select:focus {
+    border-color: #c8c1f2;
+    outline: none;
+    box-shadow: none;
+}
+
+
+/* =========================================================
+   DROPDOWN ARROW
+   Same as Orders
+========================================================= */
+
+.filter-select-arrow {
+    position: absolute;
+
+    top: 50%;
+    right: 10px;
+
+    transform: translateY(-50%);
+
+    color: #59647a;
+    font-size: 11px;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+.filter-reset-btn {
+    height: 35px;
+
+    padding: 0 12px;
+
+    border: 1px solid #e1e4eb;
+    border-radius: 6px;
+
+    background: #fff;
+    color: #59647a;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    cursor: pointer;
+    white-space: nowrap;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    margin-left: auto;
+
+    box-sizing: border-box;
+}
+
+.filter-reset-btn:hover {
+    background: #fafbfc;
+    border-color: #d3d7e0;
+}
+
+.filter-reset-btn i {
+    font-size: 13px;
+    line-height: 1;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+    .filters-bar {
+        flex-wrap: wrap;
+    }
+
+    .filter-search {
+        flex: 1 1 230px;
+    }
+
+    .filter-options {
+        flex-wrap: wrap;
+    }
+
+    .filter-reset-btn {
+        margin-left: 0;
+    }
+}
+

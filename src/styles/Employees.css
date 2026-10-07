@@ -814,15 +814,6 @@
   flex-shrink: 0; border: 1px solid #dce9f5; border-radius: 7px;
   background: #fff; color: #5b67ff;
 }
-.employees-list-card .employee-actions button:last-child { color: #ef3b5c; }
-.employees-list-card .employee-actions button:disabled { opacity: .5; cursor: wait; }
-.employees-list-card .employee-actions button svg { width: 17px; height: 17px; }
-.employees-list-card .employees-pagination { height: auto; min-height: 48px; padding: 9px 0 0; gap: 12px; flex-wrap: wrap; }
-.employees-list-card .employees-showing,
-.employees-list-card .employees-rows { color: #5878a9; font-size: 11px; }
-.employees-list-card .employees-pages { gap: 7px; }
-.employees-list-card .employees-pages button { width: 32px; height: 32px; border: 1px solid #dce9f5; border-radius: 6px; color: #684ee3; font-size: 11px; }
-.employees-list-card .employees-pages button.employees-page-active { color: #fff; background: #684ee3; }
 
 /* Keep the status badge fully visible without table-cell ellipsis. */
 .employees-list-card .employees-table td:nth-child(4) {
@@ -836,4 +827,180 @@
   white-space: nowrap;
   overflow: visible;
   text-overflow: clip;
+}
+
+/* =========================================
+   Employee Deactivate Confirmation Popup
+   ========================================= */
+
+.employee-deactivate-dialog {
+  position: fixed !important;
+  inset: 0 !important;
+
+  width: 100%;
+  max-width: 380px;
+  height: fit-content;
+
+  margin: auto !important;
+  padding: 22px;
+
+  border: none;
+  border-radius: 14px;
+  background: #fff;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  text-align: center;
+  color: #17233e;
+}
+
+.employee-deactivate-dialog::backdrop {
+  background: rgba(20, 25, 35, 0.58);
+}
+
+
+/* Trash icon circle */
+
+.employee-deactivate-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.employee-deactivate-icon i {
+  font-size: 27px;
+  line-height: 1;
+  color: #ef2626;
+}
+
+
+/* Heading */
+
+.employee-deactivate-dialog h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #172033;
+}
+
+
+/* Main question */
+
+.employee-deactivate-message {
+  margin: 0 0 10px;
+  color: #566176;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.employee-deactivate-message strong {
+  color: #17233e;
+  font-weight: 700;
+}
+
+
+/* Red warning */
+
+.employee-deactivate-warning {
+  margin: 12px 0 28px;
+  color: #ef2626;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+
+/* Error */
+
+.employee-deactivate-error {
+  margin: -10px 0 18px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff0f0;
+  color: #ef2626;
+  font-size: 14px;
+}
+
+
+/* Buttons */
+
+.employee-deactivate-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.employee-deactivate-cancel,
+.employee-deactivate-confirm {
+  min-width: 120px;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.employee-deactivate-cancel {
+  border: 1px solid #cfd5df;
+  background: #fff;
+  color: #3d485c;
+}
+
+.employee-deactivate-cancel:hover:not(:disabled) {
+  background: #f7f8fa;
+}
+
+.employee-deactivate-confirm {
+  border: 1px solid #ef2626;
+  background: #ef2626;
+  color: #fff;
+}
+
+.employee-deactivate-confirm:hover:not(:disabled) {
+  background: #ef2626;
+  border-color: #ef2626;
+}
+
+.employee-deactivate-cancel:disabled,
+.employee-deactivate-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .employee-deactivate-dialog {
+    width: calc(100vw - 24px);
+    padding: 24px 20px;
+  }
+
+  .employee-deactivate-dialog h2 {
+    font-size: 25px;
+  }
+
+  .employee-deactivate-message {
+    font-size: 17px;
+  }
+
+  .employee-deactivate-warning {
+    font-size: 16px;
+  }
+
+  .employee-deactivate-actions {
+    flex-direction: column;
+  }
+
+  .employee-deactivate-cancel,
+  .employee-deactivate-confirm {
+    width: 100%;
+  }
 }
