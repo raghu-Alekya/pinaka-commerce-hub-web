@@ -96,27 +96,23 @@ export default function DeviceView() {
     <div className="device-view-page">
       {" "}
       {/* ===================================================== PAGE HEADER ===================================================== */}{" "}
+      <header className="device-view-topbar">
+        <button
+          type="button"
+          className="device-view-back-link"
+          onClick={() => navigate("/devices")}
+        >
+          <i className="bi bi-arrow-left" aria-hidden="true" /> Devices
+        </button>
+        <span>/</span>
+        <strong>View Device</strong>
+      </header>
       <div className="device-view-header">
-        {" "}
         <div>
-          {" "}
-          <h1>View Device</h1>{" "}
-          <div className="device-view-breadcrumb">
-            {" "}
-            <span>Home</span> <span>›</span> <span>Devices</span> <span>›</span>{" "}
-            <strong>{deviceName}</strong>{" "}
-          </div>{" "}
-        </div>{" "}
+          <h1>View Device</h1>
+          <p>View device information, assignment details, and settings.</p>
+        </div>
         <div className="device-view-header-actions">
-          {" "}
-          <button
-            type="button"
-            className="device-view-back"
-            onClick={() => navigate("/devices")}
-          >
-            {" "}
-            <ArrowLeft size={15} /> Back to Devices{" "}
-          </button>{" "}
           <button
             type="button"
             className="device-view-edit"
