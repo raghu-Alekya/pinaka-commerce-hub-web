@@ -1378,6 +1378,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   useEffect(() => {
     let cancelled = false;
     if (!activeRole || !roles.includes(activeRole)) return;
+    if (loadedRolePermissions.current.has(activeRole) && permissionsRef.current[activeRole]) {
+      return;
+    }
     setPermissionsLoading(true);
     roleTemplatesApi
       .getFeatures(activeRole, store.storeTypeId ? [store.storeTypeId] : [])
@@ -1393,7 +1396,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           roleName,
         );
         loadedRolePermissions.current.add(activeRole);
-        setPermissions((current) => ({ ...current, [activeRole]: matrix }));
+        setPermissions((current) => {
+          if (current[activeRole]) return current;
+          return { ...current, [activeRole]: matrix };
+        });
         setPermissionAvailability((current) => ({
           ...current,
           [activeRole]: built.availability,
