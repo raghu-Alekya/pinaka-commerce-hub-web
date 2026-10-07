@@ -247,41 +247,46 @@
     table-layout: fixed;
 }
 
-/* Mapped vendor table column widths, including Products Supplied. */
+/* Mapped vendor list columns, including the required vendor code. */
 
 .merchant-vendors th:nth-child(1),
 .merchant-vendors td:nth-child(1) {
-    width: 19%;
+    width: 14%;
 }
 
 .merchant-vendors th:nth-child(2),
 .merchant-vendors td:nth-child(2) {
-    width: 12%;
+    width: 16%;
 }
 
 .merchant-vendors th:nth-child(3),
 .merchant-vendors td:nth-child(3) {
-    width: 15%;
+    width: 11%;
 }
 
 .merchant-vendors th:nth-child(4),
 .merchant-vendors td:nth-child(4) {
-    width: 13%;
+    width: 17%;
 }
 
 .merchant-vendors th:nth-child(5),
 .merchant-vendors td:nth-child(5) {
-    width: 17%;
+    width: 14%;
 }
 
 .merchant-vendors th:nth-child(6),
 .merchant-vendors td:nth-child(6) {
-    width: 11%;
+    width: 10%;
 }
 
 .merchant-vendors th:nth-child(7),
 .merchant-vendors td:nth-child(7) {
-    width: 13%;
+    width: 9%;
+}
+
+.merchant-vendors th:nth-child(8),
+.merchant-vendors td:nth-child(8) {
+    width: 9%;
 }
 
 /* =========================================================

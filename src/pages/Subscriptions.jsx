@@ -2,60 +2,42 @@ import { useMemo, useState, useEffect } from "react";
 import { useReferenceData } from "../api/referenceData";
 import { listMerchants } from "../api/merchants";
 import Pagination from "../components/Pagination";
+import ListActions from "../components/ListActions";
 import {
 
   Eye,
-
   Search,
-
   ChevronDown,
-
   Download,
-
   Store,
   Crown,
   Zap,
   Star,
-
   CheckCircle2,
-
   XCircle,
-
   Clock3,
-
   ArrowLeft,
-
   ArrowRight,
-
   Check,
-
   ArrowLeftRight,
-
   Info,
-
   CreditCard,
-
   Lock,
-
   Smartphone,
-
   Landmark,
-
   CircleCheck,
-
   RefreshCw,
   Pencil,
   Trash2,
   X,
-
 } from "lucide-react";
 
 import { listPlans, getMerchantFormPlans } from "../api/plans";
+import { listFeatures } from "../api/features";
 
 import {
 
   changeSubscriptionPlan,
-
   listSubscriptions,
   listSubscriptionPlans,
   getSubscription,
@@ -63,7 +45,6 @@ import {
   updateSubscription,
   deleteSubscription,
   subscriptionPayload,
-
   mapSubscriptionToRow,
 
 } from "../api/subscriptions";
@@ -1128,24 +1109,11 @@ useEffect(() => {
                       </td>
 
                       <td onClick={(e) => e.stopPropagation()}>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <button
-                            type="button"
-                            className="subscription-view-button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onView(item);
-                            }}
-                            title="View Subscription"
-                            disabled={crudBusy}
-                          >
-                            <Eye size={16} />
-                          </button>
-                        </div>
-
-                      </td>
-
+    <ListActions
+        onView={() => onView(item)}
+        viewLabel={`View ${item.merchant || "Subscription"}`}
+    />
+</td>
                     </tr>
                   )
                 )
@@ -1187,6 +1155,34 @@ useEffect(() => {
 
 function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
+  const [featureCatalog, setFeatureCatalog] = useState([]);
+
+  useEffect(() => {
+
+    let active = true;
+
+    listFeatures()
+
+      .then((features) => {
+
+        if (active) setFeatureCatalog(Array.isArray(features) ? features : []);
+
+      })
+
+      .catch(() => {
+
+        if (active) setFeatureCatalog([]);
+
+      });
+
+    return () => {
+
+      active = false;
+
+    };
+
+  }, []);
+
   if (!merchant) return null;
 
   const entitlements =
@@ -1200,6 +1196,50 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
   const planLabel = merchant.plan || "Current Plan";
 
   const billingLabel = merchant.billingCycle || "MONTHLY";
+
+  const entitlementItems = entitlements.map((entry, index) => {
+
+    const value = typeof entry === "object" && entry ? entry : {};
+
+    const reference = String(
+
+      value.id || value.featureId || value.feature_id || value.code || entry || "",
+
+    ).trim();
+
+    const match = featureCatalog.find((feature) =>
+
+      [feature.id, feature.featureId, feature.feature_id, feature.code]
+
+        .filter(Boolean)
+
+        .some((candidate) => String(candidate).toLowerCase() === reference.toLowerCase()),
+
+    );
+
+    return {
+
+      id: reference || String(index),
+
+      name:
+
+        match?.name ||
+
+        value.name ||
+
+        value.featureName ||
+
+        value.feature_name ||
+
+        value.featureKey ||
+
+        value.code ||
+
+        reference,
+
+    };
+
+  });
 
   return (
 
@@ -1333,7 +1373,7 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
             <div>
 
-              <h3>Plan Features &amp; Entitlements <span className="subscription-entitlements-count">{entitlements.length}</span></h3>
+              <h3>Plan Features &amp; Entitlements <span className="subscription-entitlements-count">{entitlementItems.length}</span></h3>
 
               <p>Features included in the {planLabel} for this merchant.</p>
 
@@ -1343,13 +1383,13 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
           <div className="subscription-entitlements-list">
 
-            {entitlements.map((feature, idx) => (
+            {entitlementItems.map((feature) => (
 
-              <div className="subscription-entitlement-item" key={feature + idx}>
+              <div className="subscription-entitlement-item" key={feature.id}>
 
                 <span className="subscription-feature-check"><Check size={17} /></span>
 
-                <div className="subscription-feature-copy"><strong>{feature}</strong></div>
+                <div className="subscription-feature-copy"><strong>{feature.name}</strong></div>
 
                 <span className="subscription-included-pill">Included</span>
 
@@ -1357,7 +1397,7 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
             ))}
 
-            {entitlements.length === 0 && (
+            {entitlementItems.length === 0 && (
 
               <div className="subscription-empty-entitlements">No plan features are available for this subscription.</div>
 

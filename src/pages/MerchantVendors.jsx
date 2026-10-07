@@ -579,6 +579,7 @@ export default function MerchantVendors({
                           "contact",
                       ]
                     : [
+                          "code",
                           "name",
                           "type",
                           "products",
@@ -603,6 +604,8 @@ export default function MerchantVendors({
                             <span>
                                 {key === "name"
                                     ? "Vendor Name"
+                                    : key === "code"
+                                    ? "Vendor Code"
                                     : key === "type"
                                     ? "Vendor Type"
                                     : key ===
@@ -772,7 +775,7 @@ export default function MerchantVendors({
 
                     <input
                         aria-label="Search assigned vendors"
-                        placeholder="Search vendors by name, type or phone…"
+                        placeholder="Search vendors by code, name, type or phone…"
                         value={query}
                         onChange={(e) => {
                             setQuery(e.target.value);
@@ -826,6 +829,10 @@ export default function MerchantVendors({
                                             <tr
                                                 key={vendor.id}
                                             >
+
+                                                <td>
+                                                    {displayValue(vendor.code)}
+                                                </td>
 
                                                 <td>
                                                     {name(vendor)}

@@ -6,6 +6,10 @@ import "../styles/add-device.css";
 import { devicesApi } from "../api/devices";
 import { listMerchants } from "../api/merchants";
 
+const deviceTypes = ["POS Terminal", "Kitchen Display", "Barcode Scanner", "Receipt Printer", "Customer Display"]
+  .map((label) => ({ value: label, label }));
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default function AddDevice({ merchantId: scopedMerchantId = "", merchant: scopedMerchant = null, embedded = false, onSave, onCancel } = {}) {
   const navigate = useNavigate();
 
@@ -15,6 +19,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
     deviceType: "",
     serialNumber: "",
     merchantId: "",
+    merchantName: "",
     status: "Active",
     notes: "",
   });
@@ -22,33 +27,35 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState("");
   const [merchants, setMerchants] = useState([]);
-  const [deviceTypes, setDeviceTypes] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
-  const knownDeviceTypes = ["POS Terminal", "Kitchen Display", "Barcode Scanner", "Receipt Printer", "Customer Display"];
 
   useEffect(() => {
+    if (scopedMerchantId && UUID_PATTERN.test(String(scopedMerchantId))) {
+      const label = scopedMerchant?.businessDisplayName || scopedMerchant?.name || scopedMerchant?.businessName || String(scopedMerchantId);
+      setMerchants([{ value: scopedMerchantId, label }]);
+      setFormData((current) => ({ ...current, merchantId: scopedMerchantId, merchantName: label }));
+      setLoadingOptions(false);
+      return undefined;
+    }
     let active = true;
-    Promise.allSettled([listMerchants(), devicesApi.listTypes()])
-      .then(([merchantResult, typeResult]) => {
+    listMerchants()
+      .then((merchantList) => {
         if (!active) return;
-        if (merchantResult.status === "fulfilled") {
-          const options = merchantResult.value.map((merchant) => ({ value: String(merchant.merchantId || merchant.id || ""), label: merchant.name || merchant.businessName })).filter((item) => item.value && item.label);
-          if (scopedMerchantId) setMerchants([{ value: String(scopedMerchantId), label: scopedMerchant?.name || scopedMerchant?.businessName || scopedMerchant?.legalBusinessName || String(scopedMerchantId) }]);
-          else setMerchants(options);
-        } else {
-          setApiError(merchantResult.reason?.message || "Failed to load merchants.");
+        const options = merchantList
+          .map((merchant) => ({
+            value: UUID_PATTERN.test(String(merchant.id || "")) ? merchant.id : merchant.uuid,
+            label: merchant.businessDisplayName || merchant.name,
+          }))
+          .filter((item) => UUID_PATTERN.test(String(item.value || "")) && item.label);
+        setMerchants(options);
+        if (!options.length) {
+          setApiError("No merchant UUIDs were returned. The merchant list must include each database UUID to create a device.");
         }
-        // The supplied Postman collection has no device-type listing route. Keep
-        // the dropdown usable with types shown by the existing device UI/API examples.
-        setDeviceTypes(typeResult.status === "fulfilled" && typeResult.value.length ? typeResult.value : knownDeviceTypes.map((label) => ({ value: label, label })));
       })
+      .catch((error) => { if (active) setApiError(error?.message || "Failed to load merchants."); })
       .finally(() => { if (active) setLoadingOptions(false); });
     return () => { active = false; };
   }, [scopedMerchantId, scopedMerchant]);
-
-  useEffect(() => {
-    if (scopedMerchantId) setFormData((prev) => ({ ...prev, merchantId: String(scopedMerchantId) }));
-  }, [scopedMerchantId]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -61,7 +68,8 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
 
   const handleMerchantChange = async (e) => {
     const merchantId = e.target.value;
-    setFormData((prev) => ({ ...prev, merchantId }));
+    const merchantName = merchants.find((merchant) => merchant.value === merchantId)?.label || "";
+    setFormData((prev) => ({ ...prev, merchantId, merchantName }));
   };
 
   const handleSave = async (e) => {
@@ -96,10 +104,12 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
     setSaving(true);
 
     try {
-      const response = onSave ? await onSave({ ...formData, merchantId: scopedMerchantId || formData.merchantId }) : await devicesApi.create(formData);
+      const response = typeof onSave === "function"
+        ? await onSave({ ...formData, merchantId: scopedMerchantId || formData.merchantId })
+        : await devicesApi.create({ ...formData, merchantId: formData.merchantId });
       if (response?.success === false) throw new Error(response.message || "Failed to create device.");
 
-      if (onSave) setFormData({ deviceName: "", deviceCode: "", deviceType: "", serialNumber: "", merchantId: String(scopedMerchantId || ""), status: "Active", notes: "" });
+      if (typeof onCancel === "function") onCancel();
       else navigate("/devices");
     } catch (error) {
       console.error("Create device failed:", error);
@@ -115,7 +125,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
   };
 
   return (
-    <div className={`add-device-page${embedded ? " add-device-page-embedded" : ""}`}>
+    <div className="add-device-page">
       {/* HEADER */}
       {!embedded && <div className="add-device-header">
         <div>
@@ -133,7 +143,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
         <button
           type="button"
           className="back-devices-btn"
-          onClick={() => navigate("/devices")}
+          onClick={() => (onCancel ? onCancel() : navigate("/devices"))}
         >
           <ArrowLeft size={15} />
           Back to Devices
@@ -198,7 +208,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
                 onChange={handleChange}
                 placeholder="Select device type"
                 options={deviceTypes}
-                disabled={loadingOptions || !deviceTypes.length}
+                disabled={!deviceTypes.length}
                 required
               />
             </FormField>
@@ -211,7 +221,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
                 onChange={handleMerchantChange}
                 placeholder="Select merchant"
                 options={merchants}
-                disabled={Boolean(scopedMerchantId) || loadingOptions || !merchants.length}
+                disabled={loadingOptions || !merchants.length}
                 required
               />
             </FormField>
@@ -222,7 +232,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                options={["Active", "Inactive"]}
+                options={[{ value: "Active", label: "Active" }, { value: "Inactive", label: "Inactive" }]}
                 required
               />
             </FormField>

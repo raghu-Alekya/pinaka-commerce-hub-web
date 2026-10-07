@@ -9,12 +9,14 @@ import { formatDate, listSubscriptions, listSubscriptionPlans } from "../api/sub
 import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant, updateMerchantStatus } from "../api/merchants";
+import { listMerchants, getMerchant, updateMerchantStatus } from "../api/merchants";
 import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
 import { devicesApi } from "../api/devices";
 import Pagination from "../components/Pagination";
+import ListActions from "../components/ListActions";
 import "../styles/merchants.css";
+import "../styles/global.css";
 
 function readValue(value) {
   if (value === null || value === undefined || value === '') return '—';
@@ -50,6 +52,9 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   }
   const [addingDevice, setAddingDevice] = useState(false);
   const [createdDevices,setCreatedDevices]=useState([]);
+  const [apiDevices, setApiDevices] = useState([]);
+  const [devicesLoading, setDevicesLoading] = useState(false);
+  const [devicesError, setDevicesError] = useState('');
   async function saveDeviceAndRefresh(values) {
     const result=typeof onSaveDevice==='function' ? await onSaveDevice(values) : await devicesApi.create(values);
     if(result?.success===false)throw new Error(result.message || 'Device creation failed.');
@@ -130,6 +135,20 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const raw = response.merchant || response.data?.merchant || response.data || response;
   const merchantIds = [merchant?.merchantId, result?.merchant?.merchantId, raw.merchantId, raw.id, merchantId].filter(Boolean);
   const apiMerchantId = merchantIds.find(value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value))) || merchantIds[0];
+  useEffect(() => {
+    let active = true;
+    setDevicesLoading(true);
+    setDevicesError('');
+    devicesApi.listAllByMerchantId(apiMerchantId).then(items => {
+      if (active) setApiDevices(items);
+    }).catch(failure => {
+      if (active) {
+        setApiDevices([]);
+        setDevicesError(failure.message || 'Unable to load devices for this merchant.');
+      }
+    }).finally(() => { if (active) setDevicesLoading(false); });
+    return () => { active = false; };
+  }, [apiMerchantId]);
   useEffect(() => {
     let active = true;
     setEmployeesLoading(true);
@@ -297,7 +316,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const employeeStoreName = employee => employee.storeName || employee.store?.name || stores.find(store =>
     [store.id, store.storeId, store.code, store.storeCode].some(id => id != null && String(id) === String(employee.storeId))
   )?.name || employee.storeId;
-  const devices = [...createdDevices,...list(saved?.devices ?? raw.devices ?? response.devices).filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))].filter(device=>device.merchantId==null || String(device.merchantId)===String(merchantId));
+  const devices = [...createdDevices,...apiDevices.filter(device=>!createdDevices.some(item=>String(item.id)===String(device.id || device.deviceId) || (item.serialNumber && item.serialNumber===(device.serialNumber || device.serial))))];
   const payments = list(saved?.paymentHistory ?? raw.paymentHistory);
   const subscriptionPlan = subscription.plan && typeof subscription.plan === 'object'
     ? subscription.plan
@@ -425,8 +444,8 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       </div>
       <div role="tabpanel" id="merchant-panel-devices" aria-labelledby="merchant-tab-devices" hidden={activeTab !== 'devices'} tabIndex={0}>
         {addingDevice ? <ViewSection title="Add Device" actions={<button type="button" className="merchant-back-employees" onClick={()=>setAddingDevice(false)}>← Back to Devices</button>}>
-          <AddMerchantDevice key={merchantId} merchantId={merchantId} merchant={merchant} onSave={saveDeviceAndRefresh} onBack={()=>setAddingDevice(false)}/>
-        </ViewSection> : <MerchantDeviceList devices={devices} storeName={storeName} onAdd={()=>setAddingDevice(true)}/>}
+          <AddMerchantDevice key={apiMerchantId} merchantId={apiMerchantId} merchant={merchant} onSave={saveDeviceAndRefresh} onBack={()=>setAddingDevice(false)}/>
+        </ViewSection> : <MerchantDeviceList devices={devices} storeName={storeName} onAdd={()=>setAddingDevice(true)} loading={devicesLoading} error={devicesError}/>}
 
       </div>
       <div role="tabpanel" id="merchant-panel-roles" aria-labelledby="merchant-tab-roles" hidden={activeTab !== 'roles'} tabIndex={0}>
@@ -548,8 +567,7 @@ function storeLimitFor(merchant, masterPlans) {
 
   return null;
 }
-// Pass your existing delete API function as deleteMerchant until its module contract is connected.
-export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
+export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewedId = searchParams.get('view');
@@ -574,13 +592,12 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
   useEffect(() => { if (deleteTarget && deleteDialog.current && !deleteDialog.current.open) deleteDialog.current.showModal(); }, [deleteTarget]);
   async function confirmDelete() {
     if (deleteInFlight.current || !deleteTarget) return;
-    if (typeof deleteMerchant !== 'function') { setDeleteError('The merchant delete API has not been connected. No record was deleted.'); return; }
     deleteInFlight.current = true; setDeleting(true); setDeleteError('');
     const target = deleteTarget;
     try {
       const targetId = target.merchantId || target.id;
-      const res = await deleteMerchant(targetId);
-      console.log("[DELETE MERCHANT API RESPONSE]", res);
+      const res = await updateMerchantStatus(targetId, 'INACTIVE');
+      console.log("[DEACTIVATE MERCHANT API RESPONSE]", res);
       onLocalDelete?.(target.id);
       if (!mounted.current) return;
       setMerchants(previous => previous.map(item => item.id === target.id
@@ -964,38 +981,28 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
                     </td>
                     <td>{m.joined}</td>
                     <td>
-                      <div className="row-actions">
-                        <button
-                          className="action-btn view-btn"
-                          type="button"
-                          onClick={() => openView(m)}
-                          title="View merchant details"
-                          aria-label={`View ${m.name} details`}
-                        >
-                          <i className="bi bi-eye" />
-                        </button>
-
-
-                        <button
-                          type="button" className="action-btn edit-btn text primary"
-                          onClick={() => openEdit(m)}
-                          title="Edit"
-                        >
-                          <i className="bi bi-pencil" />
-                        </button>
-                        {m.status === "Inactive" ? (
-                          <button type="button" className="action-btn text-success" title="Activate" aria-label={`Activate ${m.name}`} disabled={deleting}
-                            onClick={() => activateMerchant(m)}>
-                            <i className="bi bi-arrow-counterclockwise" />
-                          </button>
-                        ) : (
-                          <button type="button" className="action-btn text-danger" title="Deactivate" aria-label={`Deactivate ${m.name}`} disabled={deleting}
-                            onClick={() => { setDeleteError(''); setDeleteTarget(m); }}>
-                            <i className="bi bi-trash" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
+    <ListActions
+        onView={() => openView(m)}
+        onEdit={() => openEdit(m)}
+        onActivate={
+            m.status === "Inactive"
+                ? () => activateMerchant(m)
+                : undefined
+        }
+        onDelete={
+            m.status !== "Inactive"
+                ? () => {
+                      setDeleteError("");
+                      setDeleteTarget(m);
+                  }
+                : undefined
+        }
+        viewLabel={`View ${m.name} details`}
+        editLabel={`Edit ${m.name}`}
+        activateLabel={`Activate ${m.name}`}
+        deleteLabel={`Deactivate ${m.name}`}
+    />
+</td>
                   </tr>
                 ))
               )}
@@ -1040,14 +1047,39 @@ function MerchantEmployeeList({employees,merchantName,onAdd}) {
   const pages=Math.max(1,Math.ceil(filtered.length/10)),current=Math.min(page,pages);
   return <div className="mel"><header className="mel-card mel-heading"><div><h2>Employees</h2><p>These are the employees connected to this merchant.</p></div><button className="mel-primary" onClick={onAdd}>＋ Add Employee</button></header>
     <section className="mel-card"><h3>Employee List</h3><div className="mel-search"><input aria-label="Search employees" placeholder="Search employee, ID, username, phone or email…" value={filters.query} onChange={e=>update('query',e.target.value)}/><button onClick={()=>{setFilters(blank);setPage(1);}}>↺ Reset</button></div>
-    <div className="mel-scroll"><table><thead><tr>{['Employee','Email','Phone','Gender','Actions'].map(title=><th key={title}>{title}</th>)}</tr></thead><tbody>{filtered.slice((current-1)*10,current*10).map((e,index)=><tr key={e.id || e.employeeCode || index}><td><strong>{employeeName(e)}</strong>{e.employeeCode&&<small>{e.employeeCode}</small>}</td><td>{e.email || '—'}</td><td>{e.phone || e.phoneNumber || '—'}</td><td>{e.gender || '—'}</td><td><button aria-label={'View '+employeeName(e)} onClick={event=>{lastFocus.current=event.currentTarget;setView(e);}}>View</button></td></tr>)}{!filtered.length&&<tr><td colSpan={5}>No employees found for this merchant.</td></tr>}</tbody></table></div>
+    <div className="mel-scroll"><table><thead><tr>{['Employee','Email','Phone','Gender','Actions'].map(title=><th key={title}>{title}</th>)}</tr></thead><tbody>
+      {filtered.slice((current - 1) * 10, current * 10).map((e, index) => (
+    <tr key={e.id || e.employeeCode || index}>
+        <td>
+            <strong>{employeeName(e)}</strong>
+            {e.employeeCode && <small>{e.employeeCode}</small>}
+        </td>
+
+        <td>{e.email || '—'}</td>
+
+        <td>{e.phone || e.phoneNumber || '—'}</td>
+
+        <td>{e.gender || '—'}</td>
+
+        <td>
+            <ListActions
+                onView={(event) => {
+                    lastFocus.current = event.currentTarget;
+                    setView(e);
+                }}
+                viewLabel={`View ${employeeName(e)}`}
+            />
+        </td>
+    </tr>
+))}
+{!filtered.length&&<tr><td colSpan={5}>No employees found for this merchant.</td></tr>}</tbody></table></div>
       <footer><span>Showing {filtered.length?(current-1)*10+1:0} to {Math.min(current*10,filtered.length)} of {filtered.length} entries</span><div className="mel-pages"><button disabled={current===1} onClick={()=>setPage(current-1)}>‹</button><span>{current} / {pages}</span><button disabled={current===pages} onClick={()=>setPage(current+1)}>›</button></div></footer>
     </section>
     <dialog ref={dialog} className="mel-dialog" aria-labelledby="mel-title" onCancel={event=>{event.preventDefault();setView(null);}}><header className="mel-heading"><h2 id="mel-title">Employee Details</h2><button onClick={()=>setView(null)} aria-label="Close employee details">×</button></header>{view&&<dl>{Object.entries({Name:employeeName(view),Email:view.email,Phone:view.phone || view.phoneNumber,Username:view.username,Gender:view.gender,Status:view.status,'Employee Code':view.employeeCode || view.employee_code}).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value || '—'}</dd></div>)}</dl>}</dialog>
   </div>;
 }
 
-function MerchantDeviceList({devices,storeName,onAdd}) {
+function MerchantDeviceList({devices,storeName,onAdd,loading=false,error=''}) {
   const [query,setQuery]=useState(''),[page,setPage]=useState(1),[sort,setSort]=useState({key:'name',direction:1}),[view,setView]=useState(null);
   const dialog=useRef(null),lastFocus=useRef(null);
   useEffect(()=>{if(view)dialog.current?.showModal();else if(dialog.current?.open){dialog.current.close();lastFocus.current?.focus();}},[view]);
@@ -1055,8 +1087,8 @@ function MerchantDeviceList({devices,storeName,onAdd}) {
   const pages=Math.max(1,Math.ceil(rows.length/10)),current=Math.min(page,pages);
   const badge=value=>['online','active'].includes(String(value).toLowerCase())?'mdl-good':['offline','inactive'].includes(String(value).toLowerCase())?'mdl-off':'mdl-unknown';
   return <div className="mdl"><header className="mdl-card mdl-header"><div><h2>Devices</h2><p>These are the devices connected to this merchant.</p></div><button className="mdl-primary" onClick={onAdd}>＋ Add Device</button></header>
-    <section className="mdl-card"><h3>Device List</h3><div className="mdl-toolbar"><input aria-label="Search devices" placeholder="Search devices by name, type or serial…" value={query} onChange={e=>{setQuery(e.target.value);setPage(1);}}/><button onClick={()=>{setQuery('');setPage(1);setSort({key:'name',direction:1});}}>↺ Reset</button></div>
-    <div className="mdl-scroll"><table><thead><tr>{[['name','Device'],['type','Type'],['storeLabel','Store'],['serial','Serial No.'],['status','Status']].map(([key,title])=><th key={key} aria-sort={sort.key===key?(sort.direction===1?'ascending':'descending'):'none'}><button className="mdl-sort" onClick={()=>setSort(old=>({key,direction:old.key===key?-old.direction:1}))}>{title} {sort.key===key?(sort.direction===1?'↑':'↓'):'↕'}</button></th>)}<th>Actions</th></tr></thead><tbody>{rows.slice((current-1)*10,current*10).map((d,index)=><tr key={d.id || d.deviceId || index}><td><span className="mdl-name"><span className="mdl-icon" aria-hidden="true">▣</span><strong>{d.name}</strong></span></td><td>{d.type}</td><td>{d.storeLabel}</td><td>{d.serial}</td><td><span className={'mdl-badge '+badge(d.status)}>● {d.status}</span></td><td><button aria-label={'View '+d.name} onClick={e=>{lastFocus.current=e.currentTarget;setView(d);}}>View</button></td></tr>)}{!rows.length&&<tr><td colSpan={6}>No devices found for this merchant.</td></tr>}</tbody></table></div>
+    <section className="mdl-card"><h3>Device List</h3>{error&&<p role="alert" className="alert alert-danger">{error}</p>}<div className="mdl-toolbar"><input aria-label="Search devices" placeholder="Search devices by name, type or serial…" value={query} onChange={e=>{setQuery(e.target.value);setPage(1);}}/><button onClick={()=>{setQuery('');setPage(1);setSort({key:'name',direction:1});}}>↺ Reset</button></div>
+    <div className="mdl-scroll"><table><thead><tr>{[['name','Device'],['type','Type'],['storeLabel','Store'],['serial','Serial No.'],['status','Status']].map(([key,title])=><th key={key} aria-sort={sort.key===key?(sort.direction===1?'ascending':'descending'):'none'}><button className="mdl-sort" onClick={()=>setSort(old=>({key,direction:old.key===key?-old.direction:1}))}>{title} {sort.key===key?(sort.direction===1?'↑':'↓'):'↕'}</button></th>)}<th>Actions</th></tr></thead><tbody>{loading&&<tr><td colSpan={6} role="status">Loading merchant devices…</td></tr>}{!loading&&rows.slice((current-1)*10,current*10).map((d,index)=><tr key={d.id || d.deviceId || index}><td><span className="mdl-name"><span className="mdl-icon" aria-hidden="true">▣</span><strong>{d.name}</strong></span></td><td>{d.type}</td><td>{d.storeLabel}</td><td>{d.serial}</td><td><span className={'mdl-badge '+badge(d.status)}>● {d.status}</span></td><td><ListActions viewLabel={'View '+d.name} onView={e=>{lastFocus.current=e.currentTarget;setView(d);}} /></td></tr>)}{!loading&&!rows.length&&<tr><td colSpan={6}>No devices found for this merchant.</td></tr>}</tbody></table></div>
     <footer><span>Showing {rows.length?(current-1)*10+1:0} to {Math.min(current*10,rows.length)} of {rows.length} entries</span><div><button aria-label="Previous page" disabled={current===1} onClick={()=>setPage(current-1)}>‹</button><span>{current} / {pages}</span><button aria-label="Next page" disabled={current===pages} onClick={()=>setPage(current+1)}>›</button></div></footer></section>
     <dialog className="mdl-dialog" ref={dialog} aria-labelledby="mdl-title" onCancel={e=>{e.preventDefault();setView(null);}}><header className="mdl-header"><h2 id="mdl-title">Device Details</h2><button aria-label="Close device details" onClick={()=>setView(null)}>×</button></header>{view&&<dl>{Object.entries({Device:view.name,Type:view.type,Store:view.storeLabel,'Serial No.':view.serial,Status:view.status,'Device ID':view.id || view.deviceId}).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value || '—'}</dd></div>)}</dl>}</dialog>
   </div>;

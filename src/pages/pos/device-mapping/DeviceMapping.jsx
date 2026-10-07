@@ -1,15 +1,43 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { devicesApi } from "../../../api/devices";
-import { ApiError } from "../../../api/http";
+import { createStoreDeviceMapping, deleteStoreDeviceMapping, getStoreDeviceMappings } from "../../../api/storeDeviceMappings";
 import "../../../styles/merchant-vendors.css";
 import { ConfigFooter, useConfigState, usePosSettings, useSaveAction } from "../shared";
 
 const pageSize = 10;
 
+async function combineMappings(rows, devices) {
+  const deviceById = new Map(devices.map((device) => [String(device.id), device]));
+  return Promise.all(rows.map(async (mapping) => {
+    const deviceId = mapping.deviceId || mapping.device_id || mapping.device?.id || mapping.device?.device_id;
+    let device = deviceById.get(String(deviceId)) || mapping.device || null;
+    if (!device && deviceId) {
+      try {
+        device = await devicesApi.get(deviceId);
+      } catch {
+        // Keep mapping data visible if a device detail request fails.
+      }
+    }
+    return {
+      ...(device || {}),
+      deviceId,
+      mappingId: mapping.mappingId || mapping.mapping_id || mapping.id,
+      code: device.code || device.deviceCode || mapping.code || mapping.device_code || "",
+      name: device.name || mapping.name || mapping.device_name || "",
+      type: device.type || mapping.type || mapping.device_type || "",
+      serial: device.serial || mapping.serial || mapping.serial_number || "",
+      status: device.status || mapping.status || "Active",
+    };
+  })).then((mappings) => mappings.filter((mapping) => mapping.deviceId != null));
+}
+
 export function DeviceMapping() {
   const settings = usePosSettings();
   const [devices, setDevices] = useState([]);
   const [mappings, setMappings] = useConfigState("deviceMappings", []);
+  const mappingsRef = useRef(mappings);
+  mappingsRef.current = mappings;
+  const [serverMappings, setServerMappings] = useState([]);
   const [view, setView] = useState("mapped");
   const [selection, setSelection] = useState([]);
   const [search, setSearch] = useState("");
@@ -21,17 +49,36 @@ export function DeviceMapping() {
 
   useEffect(() => {
     let active = true;
-    devicesApi.list().then((items) => {
-      if (active) setDevices(items.filter((device) => String(device.merchantId) === String(settings.merchantId) && String(device.status).toLowerCase() !== "inactive"));
-    }).catch((cause) => {
-      if (!(cause instanceof ApiError && cause.status === 404) && active) setError(cause?.message || "Unable to load merchant devices.");
+    setLoading(true);
+    setError("");
+    Promise.all([
+      devicesApi.listByMerchantId(settings.merchantId).catch((cause) => {
+        if (active) setError(cause?.message || "Unable to load merchant devices.");
+        return [];
+      }),
+      getStoreDeviceMappings(settings.storeId).catch((cause) => {
+        if (active) setError(cause?.message || "Unable to load store device mappings.");
+        return null;
+      }),
+    ]).then(async ([items, mappingRows]) => {
+      if (!active) return;
+      const merchantDevices = Array.isArray(items) ? items : [];
+      const activeDevices = merchantDevices.filter((device) => String(device.status).toLowerCase() !== "inactive");
+      setDevices(activeDevices);
+      if (!Array.isArray(mappingRows)) return;
+      const hydrated = await combineMappings(mappingRows, merchantDevices);
+      setServerMappings(hydrated);
+      setMappings(hydrated);
+      settings.session.baseline.deviceMappings = hydrated;
+      settings.session.draft.deviceMappings = hydrated;
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [settings.merchantId]);
+  }, [settings.merchantId, settings.storeId]);
 
-  const mappedIds = useMemo(() => new Set(mappings.map((item) => String(item.deviceId))), [mappings]);
+  const safeMappings = Array.isArray(mappings) ? mappings : [];
+  const mappedIds = useMemo(() => new Set(safeMappings.map((item) => String(item.deviceId))), [safeMappings]);
   const available = useMemo(() => devices.filter((device) => !mappedIds.has(String(device.id)) && [device.name, device.type, device.serial, device.code, device.deviceCode, device.status].join(" ").toLowerCase().includes(search.trim().toLowerCase())), [devices, mappedIds, search]);
-  const filteredMappings = useMemo(() => mappings.filter((device) => [device.name, device.type, device.serial, device.code].join(" ").toLowerCase().includes(mappedSearch.trim().toLowerCase())), [mappings, mappedSearch]);
+  const filteredMappings = useMemo(() => safeMappings.filter((device) => [device.name, device.type, device.serial, device.code].join(" ").toLowerCase().includes(mappedSearch.trim().toLowerCase())), [safeMappings, mappedSearch]);
   const pageCount = Math.max(1, Math.ceil(available.length / pageSize));
   const mappedPageCount = Math.max(1, Math.ceil(filteredMappings.length / pageSize));
   const pageRows = available.slice((page - 1) * pageSize, page * pageSize);
@@ -47,6 +94,29 @@ export function DeviceMapping() {
     setView("mapped");
   };
   const save = useSaveAction(async () => {
+    const draftMappings = Array.isArray(mappingsRef.current) ? mappingsRef.current : [];
+    const savedMappings = Array.isArray(serverMappings) ? serverMappings : [];
+    const serverByDevice = new Map(savedMappings.map((mapping) => [String(mapping.deviceId), mapping]));
+    const draftByDevice = new Map(draftMappings.map((mapping) => [String(mapping.deviceId), mapping]));
+    const additions = draftMappings.filter((mapping) => !serverByDevice.has(String(mapping.deviceId)));
+    const removals = savedMappings.filter((mapping) => !draftByDevice.has(String(mapping.deviceId)));
+    const persisted = draftMappings.filter((mapping) => serverByDevice.has(String(mapping.deviceId)));
+
+    for (const mapping of additions) {
+      const created = await createStoreDeviceMapping({ storeId: settings.storeId, deviceId: mapping.deviceId });
+      const record = created?.mapping || created?.data?.mapping || created?.data || created || {};
+      persisted.push({
+        ...mapping,
+        mappingId: record.id || record.mapping_id || record.mappingId || "",
+      });
+    }
+    for (const mapping of removals) await deleteStoreDeviceMapping(mapping.mappingId);
+    const savedRows = await getStoreDeviceMappings(settings.storeId);
+    const hydrated = await combineMappings(savedRows, devices);
+    setServerMappings(hydrated);
+    setMappings(hydrated);
+    settings.session.draft.deviceMappings = hydrated;
+    settings.session.baseline.deviceMappings = hydrated;
     settings.session.baseline = { ...settings.session.draft };
     setError("");
     return true;

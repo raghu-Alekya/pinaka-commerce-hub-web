@@ -475,50 +475,6 @@
 }
 
 /* =========================================================
-   ACTION
-========================================================= */
-.store-item-actions {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-}
-
-.action-btn {
-    width: 31px;
-    height: 31px;
-    padding: 0;
-    border: 1px solid #dce3ec;
-    border-radius: 6px;
-    background: transparent;
-    color: #5d7190;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.action-btn:hover {
-    background: #f2f0ff;
-    color: #5143bc;
-}
-
-.view-btn:hover {
-    background: #edf5ff;
-    color: #4185dd;
-}
-
-.edit-btn:hover {
-    background: #eeeaff;
-    color: #5143bc;
-}
-
-.more-btn:hover {
-    background: #f2f3f6;
-    color: #596276;
-}
-
-/* =========================================================
    TABLE FOOTER
 ========================================================= */
 

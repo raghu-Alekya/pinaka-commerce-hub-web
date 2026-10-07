@@ -213,6 +213,18 @@ export default function EditEmployee() {
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
   const [deletingProfileImage, setDeletingProfileImage] = useState(false);
+  useEffect(() => {
+    if (!employeeId) return;
+    let active = true;
+    getEmployeeProfileImage(employeeId)
+      .then((response) => {
+        if (active) setProfileImage(response?.employee?.profileImageUrl || null);
+      })
+      .catch((error) => {
+        if (active) setNotice(error.message || "Unable to load the saved profile photo.");
+      });
+    return () => { active = false; };
+  }, [employeeId]);
 
   const [formData, setFormData] = useState({
     firstName: employee.firstName || employee.name?.split(" ")[0] || "",
