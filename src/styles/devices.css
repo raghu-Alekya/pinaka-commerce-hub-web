@@ -38,7 +38,7 @@
 }
 .devices-add-btn,
 .devices-export-btn {
-  height: 36px;
+  height: 40px;
   padding: 0 12px;
   display: flex;
   align-items: center;
@@ -89,7 +89,7 @@
   display: grid;
   grid-template-columns:
     repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10px;
   margin-bottom: 14px;
 }
 .device-stat-card {
@@ -102,7 +102,7 @@
   align-items: center;
   gap: 0;
   background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
-  border: 1px solid #e6e8ee;
+  border: 1px solid #edf0f5;
   border-radius: 8px;
 }
 .device-stat-card:has(.device-stat-icon.green) {
@@ -148,15 +148,41 @@
   flex: 1;
 }
 .device-stat-title {
-  margin-bottom: 3px;
-  color: #557091;
-  font-size: 12px;
+  margin-bottom: 0;
+  color: #536b8c;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 15px;
   white-space: nowrap;
 }
 .device-stat-value {
-  color: #162e50;
-  font-size: 21px;
-  font-weight: 700;
+  color: #152d4e;
+  font-size: 22px;
+  font-weight: 750;
+  line-height: 25px;
+}
+.device-stat-description {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 14px;
+  white-space: nowrap;
+}
+.device-stat-description i {
+  font-size: 6px;
+}
+.device-stat-description.purple,
+.device-stat-description.green {
+  color: #06a866;
+}
+.device-stat-description.orange {
+  color: #ea8a00;
+}
+.device-stat-description.red {
+  color: #ea354d;
 }
 /* =========================================================
    LIST CARD
@@ -294,23 +320,25 @@
   border-collapse: collapse;
 }
 .devices-table th {
-  height: 38px;
-  padding: 0 10px;
-  background: #fbfcfe;
-  border-bottom: 1px solid #e5eaf1;
+  height: 44px;
+  padding: 0 14px;
+  background: #f1f3fd;
+  border-bottom: 1px solid #dfe5ef;
   color: #526b8a;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   text-align: left;
   white-space: nowrap;
 }
 .devices-table td {
-  height: 49px;
-  padding: 5px 10px;
+  height: 52px;
+  padding: 10px 14px;
   box-sizing: border-box;
-  border-bottom: 1px solid #edf1f5;
+  border-bottom: 1px solid #e4e8ef;
   color: #385474;
-  font-size: 10px;
+  font-size: 13px;
+  line-height: 18px;
+  vertical-align: middle;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -631,7 +659,7 @@
    PAGINATION
    Match the compact pagination used on other PCH screens
 ========================================================= */
-.devices-pagination {
+/* .devices-pagination {
   min-height: 50px;
   padding: 8px 12px;
   display: flex;
@@ -641,14 +669,14 @@
   border-top: 1px solid #f0f1f4;
   background: #fff;
   color: #697285;
-}
+} */
 .devices-showing {
   flex: 1 1 auto;
   font-size: 12px;
   color: #697285;
   white-space: nowrap;
 }
-.devices-pagination-controls {
+/* .devices-pagination-controls {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -682,7 +710,7 @@
   color: #c0c5cf;
   background: #fafbfc;
   cursor: not-allowed;
-}
+} */
 @media (max-width: 1300px) {
   .devices-page {
     padding: 16px 18px 20px;
@@ -702,7 +730,7 @@
     min-width: 40px;
   }
   .device-stat-value {
-    font-size: 20px;
+    font-size: 22px;
   }
   .devices-filter-bar {
     grid-template-columns: minmax(200px, 1fr) 135px 150px 125px 160px 100px;
@@ -764,9 +792,9 @@
   .devices-filter-btn {
     grid-column: auto;
   }
-  .devices-pagination {
+  /* .devices-pagination {
     padding: 0 10px;
-  }
+  } */
 }
 /* =========================================================
    MOBILE
@@ -794,23 +822,78 @@
   .devices-table {
     min-width: 1050px;
   }
-  .devices-pagination {
+  /* .devices-pagination {
     flex-wrap: wrap;
     height: auto;
     padding: 10px 12px;
     gap: 10px;
-  }
+  } */
   .devices-showing {
     flex: 1 1 100%;
   }
-  .devices-pagination-controls {
+  /* .devices-pagination-controls {
     order: 2;
-  }
+  } */
 }
 
 @media (max-width: 1050px) {
   .device-stat-card {
     height: 95px;
     min-height: 95px;
+  }
+}
+
+.devices-table-wrap {
+  box-sizing: border-box;
+  width: calc(100% - 24px);
+  max-width: calc(100% - 24px);
+  min-width: 0;
+  margin: 0 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border: 1px solid #dfe9f4;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.devices-list-card > .devices-filter-bar {
+  border-bottom: 0;
+}
+
+.devices-table {
+  min-width: 1050px;
+}
+
+@media (max-width: 600px) {
+  .devices-table-wrap {
+    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+}
+
+@media (max-width: 800px) {
+  .devices-filter-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .devices-search {
+    flex: 1 0 180px;
+  }
+
+  .device-filter-select {
+    flex: 0 0 120px;
+  }
+
+  .devices-date-btn {
+    flex: 0 0 110px;
+  }
+
+  .devices-filter-btn {
+    flex: 0 0 95px;
   }
 }

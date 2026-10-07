@@ -316,7 +316,7 @@ const readMerchantSelectedTemplates = (response) => {
         scopeType: String(row.scopeType || "STORE"),
         level: levelForRole(row),
         required: false,
-        defaultEnabled: true,
+        defaultEnabled: false,
       };
     })
     .filter((row) => row.id && row.name);
@@ -1148,7 +1148,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           templates = readMerchantSelectedTemplates(roleResult);
         }
         setRoleDefinitions(templates);
-        // Inherit operational defaults only. Each new location gets its own name/code/address.
+        // A new store starts with no role assignments; the user selects them explicitly.
         if (!editing) {
           const country =
             info.owner.country || info.owner.address?.country || "";
@@ -1166,14 +1166,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             timezone: info.owner.timezone || "",
             defaultLanguage: info.owner.defaultLanguage || "",
           }));
-          const inherited = templates
-            .filter((role) => role.defaultEnabled || role.required)
-            .map((role) => role.id);
-          const nextRoles = inherited.length
-            ? inherited
-            : templates.map((role) => role.id);
-          setRoles(nextRoles);
-          setActiveRole(nextRoles[0] || "");
+          setRoles([]);
+          setActiveRole("");
           loadedRolePermissions.current = new Set();
           setPermissions({});
           setPermissionAvailability({});
@@ -2196,14 +2190,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <table className="sf-plan-table">
               <thead>
                 <tr>
-                  <th>SELECTED PLAN</th>
-                  <th>PLAN NAME</th>
-                  <th>BILLING TYPE</th>
-                  <th>PRICE</th>
-                  <th>VALIDITY</th>
-                  <th>STORES USED</th>
-                  <th>STORES LIMIT</th>
-                  <th>STATUS</th>
+                  <th>Selected Plan</th>
+                  <th>Plan Name</th>
+                  <th>Billing Type</th>
+                  <th>Price</th>
+                  <th>Validity</th>
+                  <th>Stores Used</th>
+                  <th>Stores Limit</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -2309,11 +2303,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>STORE NAME</th>
-                  <th>STORE CODE</th>
-                  <th>STORE TYPE</th>
-                  <th>LOCATION</th>
-                  <th>STATUS</th>
+                  <th>Store Name</th>
+                  <th>Store Code</th>
+                  <th>Store Type</th>
+                  <th>Location</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -2579,11 +2573,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               <table className="sf-table sf-hours-table">
                 <thead>
                   <tr>
-                    <th>DAY</th>
-                    <th>STATUS</th>
-                    <th>OPENS</th>
-                    <th>CLOSES</th>
-                    <th>SHIFTS</th>
+                    <th>Day</th>
+                    <th>Status</th>
+                    <th>Opens</th>
+                    <th>Closes</th>
+                    <th>Shifts</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2768,10 +2762,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>FEATURE</th>
-                  <th>DESCRIPTION</th>
-                  <th>PLAN ACCESS</th>
-                  <th>ENABLE FOR THIS STORE</th>
+                  <th>Feature</th>
+                  <th>Description</th>
+                  <th>Plan Access</th>
+                  <th>Enable For This Store</th>
                 </tr>
               </thead>
               <tbody>
@@ -2969,9 +2963,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 <table className="sf-table sf-permission-table">
                   <thead>
                     <tr>
-                      <th>MODULE / FEATURE</th>
+                      <th>Module / Feature</th>
                       {STANDARD_ACTIONS.map((action) => (
-                        <th key={action}>{action.toUpperCase()}</th>
+                        <th key={action}>{action}</th>
                       ))}
                     </tr>
                   </thead>
@@ -3089,14 +3083,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                     <span className="sr-only">Select</span>
                   </th>
                   <th>#</th>
-                  <th>EMPLOYEE NAME</th>
-                  <th>EMPLOYEE ID</th>
-                  <th>PHONE</th>
-                  <th>EMAIL</th>
-                  <th>CURRENT ROLE (MERCHANT)</th>
-                  <th>STORE ROLE</th>
-                  <th>LOGIN PIN</th>
-                  <th>STATUS</th>
+                  <th>Employee Name</th>
+                  <th>Employee ID</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Current Role (Merchant)</th>
+                  <th>Store Role</th>
+                  <th>Login PIN</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -3385,9 +3379,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <table className="sf-table sf-review-table">
               <thead>
                 <tr>
-                  <th>ROLE NAME</th>
-                  <th>ACCESS LEVEL</th>
-                  <th>NO. OF PERMISSIONS</th>
+                  <th>Role Name</th>
+                  <th>Access Level</th>
+                  <th>No. Of Permissions</th>
                 </tr>
               </thead>
               <tbody>
@@ -3425,9 +3419,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>EMPLOYEE NAME</th>
-                  <th>EMPLOYEE ID</th>
-                  <th>ROLE</th>
+                  <th>Employee Name</th>
+                  <th>Employee ID</th>
+                  <th>Role</th>
                 </tr>
               </thead>
               <tbody>
@@ -3628,51 +3622,52 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             >
               <div className="sf-screen">{screens[step]()}</div>
               <div className="sf-footer">
-              
-                <span className="sf-footer-spacer" />
-                {step === 0 && (
-                  <button
-                    type="button"
-                    className="sf-outline sf-save-draft"
-                    disabled={saving || subscriptionLoading}
-                    onClick={(event) => submit(event, true)}
-                  >
-                    Save as Draft
-                  </button>
-                )}
-                {step < STEPS.length - 1 ? (
-                  <button
-                    type="button"
-                    className="sf-primary"
-                    disabled={saving || subscriptionLoading}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      goTo(step + 1);
-                    }}
-                  >
-                    {step === 0 && subscriptionLoading ? (
-                      "Checking Subscription…"
-                    ) : (
-                      <>
-                        Save &amp; Continue 
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    className="sf-primary"
-                    disabled={saving || subscriptionLoading}
-                  >
-                    <i className="bi bi-shop" />{" "}
-                    {saving
-                      ? "Creating…"
-                      : editing
-                        ? "Save Changes"
-                        : "Create Store"}
-                  </button>
-                )}
-              </div>
+  <div className="sf-footer-right">
+    <button
+      type="button"
+      className="sf-outline"
+      disabled={saving || subscriptionLoading}
+      onClick={() => {
+        if (step > 0) {
+          goTo(step - 1);
+        } else {
+          backToStores();
+        }
+      }}
+    >
+      Back
+    </button>
+
+    {step < STEPS.length - 1 ? (
+      <button
+        type="button"
+        className="sf-primary"
+        disabled={saving || subscriptionLoading}
+        onClick={(event) => {
+          event.preventDefault();
+          goTo(step + 1);
+        }}
+      >
+        {step === 0 && subscriptionLoading
+          ? "Checking Subscription…"
+          : "Save & Continue"}
+      </button>
+    ) : (
+      <button
+        type="submit"
+        className="sf-primary"
+        disabled={saving || subscriptionLoading}
+      >
+        <i className="bi bi-shop" />{" "}
+        {saving
+          ? "Creating…"
+          : editing
+            ? "Save Changes"
+            : "Create Store"}
+      </button>
+    )}
+  </div>
+</div>
             </fieldset>
           </form>
         </main>

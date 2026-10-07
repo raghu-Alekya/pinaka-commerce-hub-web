@@ -699,27 +699,7 @@ export async function getMerchantFormPlans() {
  * GET /plans
  */
 export async function listPlans() {
-  let response = null;
-  try {
-    response = await api.get(endpoints.plans);
-  } catch {
-    response = null;
-  }
-
-  let plans = extractPlans(response);
-
-  if (!plans.length) {
-    try {
-      const merchantFormRes = await api.get(endpoints.plansMerchantForm || "/plans/merchant-form");
-      plans = extractPlans(merchantFormRes);
-    } catch {
-      // fallback handled below
-    }
-  }
-
-  return plans
-    .map(normalizePlan)
-    .filter(Boolean);
+  return getMerchantFormPlans();
 }
 
 /* ============================================================

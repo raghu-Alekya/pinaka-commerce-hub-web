@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-
 import { useNavigate } from "react-router-dom";
-
+import Pagination from "../components/Pagination";
 import {
 
   Monitor,
@@ -15,10 +14,6 @@ import {
   SlidersHorizontal,
 
   ChevronDown,
-
-  ChevronLeft,
-
-  ChevronRight,
 
 } from "lucide-react";
 
@@ -56,7 +51,12 @@ export default function Devices() {
 
   const navigate = useNavigate();
 
-  const rowsPerPage = 5;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+const handlePageSizeChange = (size) => {
+  setRowsPerPage(size);
+  setCurrentPage(1);
+};
 
   /* ========================================================= LOAD DEVICES ========================================================= */ useEffect(() => {
 
@@ -184,6 +184,12 @@ export default function Devices() {
 
   );
 
+  useEffect(() => {
+  setCurrentPage((page) =>
+    Math.min(page, totalPages)
+  );
+}, [totalPages]);
+
   const handleFilterChange = (setter, value) => {
 
     setter(value);
@@ -201,6 +207,8 @@ export default function Devices() {
     (device) => device.status === "Online",
 
   ).length;
+  const devicePercentage = (count) =>
+    totalDevices ? ((count / totalDevices) * 100).toFixed(1) : "0.0";
 
   const offlineDevices = devices.filter(
 
@@ -355,6 +363,7 @@ export default function Devices() {
           value={totalDevices}
 
           variant="purple"
+          description="Live Records"
 
         />{" "}
 
@@ -367,6 +376,7 @@ export default function Devices() {
           value={onlineDevices}
 
           variant="green"
+          description={`${devicePercentage(onlineDevices)}% of total`}
 
         />{" "}
 
@@ -379,6 +389,7 @@ export default function Devices() {
           value={offlineDevices}
 
           variant="orange"
+          description={`${devicePercentage(offlineDevices)}% of total`}
 
         />{" "}
 
@@ -391,6 +402,7 @@ export default function Devices() {
           value={inactiveDevices}
 
           variant="red"
+          description={`${devicePercentage(inactiveDevices)}% of total`}
 
         />{" "}
 
@@ -514,11 +526,11 @@ export default function Devices() {
 
                 </th>{" "}
 
-                <th>DEVICE NAME</th> <th>DEVICE TYPE</th> <th>SERIAL NUMBER</th>{" "}
+                <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
 
-                <th>MERCHANT NAME</th> <th>CONNECTION STATUS</th>{" "}
+                <th>Merchant Name</th> <th>Connection Status</th>{" "}
 
-                 <th>ACTIONS</th>{" "}
+                 <th>Actions</th>{" "}
 
               </tr>{" "}
 
@@ -587,32 +599,15 @@ export default function Devices() {
         </div>{" "}
 
         {/* =================================================== PAGINATION =================================================== */}{" "}
-        <div className="devices-pagination">
-          <div className="devices-showing">
-            Showing {filteredDevices.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, filteredDevices.length)} of {filteredDevices.length} entries
-          </div>{" "}
-          <div className="devices-pagination-controls">
-            <button
-              type="button"
-              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-              disabled={safePage === 1}
-              aria-label="Previous page"
-            >
-              <ChevronLeft size={15} />
-            </button>{" "}
-            <button type="button" className="active" aria-current="page">
-              {safePage}
-            </button>{" "}
-            <button
-              type="button"
-              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
-              disabled={safePage === totalPages}
-              aria-label="Next page"
-            >
-              <ChevronRight size={15} />
-            </button>
-          </div>
-        </div>{" "}
+        <Pagination
+  currentPage={safePage}
+  totalPages={totalPages}
+  totalItems={filteredDevices.length}
+  pageSize={rowsPerPage}
+  onPageChange={setCurrentPage}
+  onPageSizeChange={handlePageSizeChange}
+  itemLabel="devices"
+/>
       </div>{" "}
       {/* ===================================================== DELETE MODAL ===================================================== */}{" "}
 
@@ -793,6 +788,7 @@ export default function Devices() {
   value,
 
   variant,
+  description,
 
 }) {
 
@@ -811,6 +807,9 @@ export default function Devices() {
         <div className="device-stat-title"> {title} </div>{" "}
 
         <div className="device-stat-value"> {value} </div>{" "}
+        <div className={`device-stat-description ${variant}`}>
+          <i className="bi bi-circle-fill" aria-hidden="true" /> {description}
+        </div>{" "}
 
       </div>{" "}
 

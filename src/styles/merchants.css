@@ -29,7 +29,7 @@ body {
 button,
 select,
 input {
-    font-family: inherit;
+    font-family: "Inter", sans-serif;
 }
 
 a {
@@ -585,6 +585,8 @@ a {
 .page-actions .btn-primary {
     background: #5143bc;
     border-color: #5143bc;
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(81, 67, 188, .16);
 }
 
 .page-actions .btn-primary:hover {
@@ -594,7 +596,7 @@ a {
 
 .page-actions .btn-secondary {
     border: 1px solid #5143bc;
-    background: #f6f7fb;
+    background: transparent;
     color: #5143bc;
 }
 
@@ -905,9 +907,9 @@ a {
 }
 
 .merchant-table thead th {
-    height: 42px;
-    padding: 0 11px;
-    background: #f5f9fe;
+    height: 44px;
+    padding: 0 14px;
+    background: #f1f3fd;
     border-bottom: 1px solid #eceef2;
     color: #484c56;
     font-size: 12px;
@@ -918,8 +920,8 @@ a {
 }
 
 .merchant-table tbody td {
-    min-height: 60px;
-    padding: 9px 11px;
+    height: 52px;
+    padding: 10px 14px;
     border-bottom: 1px solid #f1f2f5;
     color: #697285;
     font-size: 13px;
@@ -1217,18 +1219,25 @@ a {
 }
 
 .action-btn {
-   width: 31px;
-    height: 31px;
-    padding: 0;
-    border: 1px solid #dce3ec;
-    border-radius: 6px;
-    background: transparent;
-    color: #5d7190;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 12px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #d8e1ee;
+  border-radius: 7px;
+  background: #fff;
+  color: #536985;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 34px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+  transition: color .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
 }
 
 .action-btn:hover {
@@ -1284,7 +1293,7 @@ a {
     gap: 3px;
 }
 
-.pagination-controls select {
+/* .pagination-controls select {
     height: 28px;
 
     border: 1px solid #e1e4eb;
@@ -1347,7 +1356,7 @@ a {
     border-color: #5143bc;
 
     color: #fff;
-}
+} */
 
 
 /* =========================================================
@@ -1420,7 +1429,7 @@ dialog.merchant-delete-dialog::backdrop {
     text-align: left !important
 }
 
-.merchant-pagination {
+/* .merchant-pagination {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1455,9 +1464,9 @@ dialog.merchant-delete-dialog::backdrop {
 .merchant-pagination button:disabled {
     opacity: .5;
     cursor: not-allowed
-}
+} */
 
-@media(max-width:700px) {
+/* @media(max-width:700px) {
     .merchant-pagination {
         align-items: flex-start;
         flex-direction: column
@@ -1466,7 +1475,7 @@ dialog.merchant-delete-dialog::backdrop {
     .merchant-pagination>div {
         flex-wrap: wrap
     }
-}
+} */
 
 
 /* =========================================================
@@ -1730,6 +1739,7 @@ dialog.merchant-delete-dialog::backdrop {
     height: 95px;
   min-height: 95px;
   padding: 10px;
+    border: 1px solid #edf0f5;
     background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
 }
 .page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.blue) {
@@ -1743,6 +1753,33 @@ dialog.merchant-delete-dialog::backdrop {
 }
 .page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.red) {
     background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+}
+.page-content:has(> .merchant-table-card) .stat-content>span {
+  margin-bottom: 0;
+  color: #536b8c;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 15px;
+}
+.page-content:has(> .merchant-table-card) .stat-content>strong {
+  color: #152d4e;
+  font-size: 22px;
+  font-weight: 750;
+  line-height: 25px;
+}
+.page-content:has(> .merchant-table-card) .stat-content>small {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 14px;
+}
+.page-content:has(> .merchant-table-card) .stat-content small i {
+  font-size: 10px;
+}
+.page-content:has(> .merchant-table-card) .stat-card .progress {
+  width: 100%;
+  max-width: 110px;
+  height: 6px;
+  margin-top: 5px;
 }
 .page-content > .merchant-table-card {
   margin-bottom: 8px;
@@ -1798,7 +1835,7 @@ dialog.merchant-delete-dialog::backdrop {
 .mel .mel-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.mel h2{font-size:22px;margin:0;padding:0;border:0}
 .mel button{font:inherit;padding:8px 12px;border:1px solid #dfe3eb;border-radius:6px;background:white;color:#5143bc;cursor:pointer}.mel button:disabled{opacity:.45;cursor:not-allowed}.mel .mel-primary{background:#5143bc;color:white;border-color:#5143bc}
 .mel .mel-card{padding:16px;background:white;border:1px solid #e1e4eb;border-radius:8px;margin-bottom:16px}.mel .mel-search{display:flex;gap:12px;margin-bottom:14px}.mel input,.mel select{height:40px;border:1px solid #dfe3eb;border-radius:6px;padding:8px 12px;font:inherit;color:#43506a;background:white;min-width:0;width:100%}.mel input[readonly]{background:#f6f7fb}.mel input::placeholder{color:#9aa2b3}
-.mel .mel-filters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.mel .mel-scroll{overflow:auto}.mel table{width:100%;border-collapse:collapse;white-space:nowrap}.mel th,.mel td{text-align:left;padding:16px 12px;border-bottom:1px solid #edf0f4}.mel th{background:#f6f7fb;font-size:12px;font-weight:600}.mel td small{display:block;color:#81899a;margin-top:4px}.mel footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;font-size:13px;color:#81899a}.mel .mel-pages{display:flex;align-items:center;gap:10px}
+.mel .mel-filters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.mel .mel-scroll{overflow:auto}.mel table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:13px}.mel th,.mel td{height:52px;text-align:left;padding:10px 14px;border-bottom:1px solid #edf0f4;vertical-align:middle}.mel th{height:44px;background:#f1f3fd;font-size:12px;font-weight:600}.mel td small{display:block;color:#81899a;margin-top:4px}.mel footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;font-size:13px;color:#81899a}.mel .mel-pages{display:flex;align-items:center;gap:10px}
 .mel-dialog{position:fixed;inset:0;margin:auto;width:min(600px,calc(100vw - 32px));max-height:85vh;overflow:auto;border:1px solid #e1e4eb;border-radius:10px;padding:24px;color:#17233e}.mel-dialog::backdrop{background:#17233e66}.mel-dialog dl{display:grid;grid-template-columns:1fr 1fr;gap:20px}.mel-dialog dt{color:#81899a}.mel-dialog dd{margin:5px 0;overflow-wrap:anywhere}.mel :focus-visible{outline:2px solid #5143bc;outline-offset:2px}
 @media(max-width:1000px){.mel .mel-filters{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:600px){.mel .mel-filters{grid-template-columns:1fr 1fr}.mel .mel-heading,.mel footer{flex-wrap:wrap}.mel-dialog dl{grid-template-columns:1fr}}
 .mdl{font-family:"Inter",sans-serif;font-size:14px;line-height:1.5;color:#17233e;min-width:0}
@@ -1814,9 +1851,9 @@ dialog.merchant-delete-dialog::backdrop {
 .mdl input:not([type=checkbox]){height:40px;border:1px solid #dfe3eb;border-radius:6px;padding:10px 12px;font:inherit;width:100%;min-width:0}
 .mdl .mdl-toolbar input{max-width:460px}
 .mdl .mdl-scroll{overflow:auto;border:1px solid #e5ebf4;border-radius:6px}
-.mdl table{border-collapse:collapse;width:100%;white-space:nowrap}
-.mdl th,.mdl td{text-align:left;padding:13px 12px;border-bottom:1px solid #edf0f5}
-.mdl th{background:#fafbfc;font-size:12px;font-weight:600}
+.mdl table{border-collapse:collapse;width:100%;white-space:nowrap;font-size:13px}
+.mdl th,.mdl td{height:52px;text-align:left;padding:10px 14px;border-bottom:1px solid #edf0f5;vertical-align:middle}
+.mdl th{height:44px;background:#f1f3fd;font-size:12px;font-weight:600}
 .mdl .mdl-sort{border:0;padding:0;background:transparent;color:inherit}
 .mdl .mdl-name{display:flex;align-items:center;gap:10px}
 .mdl .mdl-avatar{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#eeeaff;color:#5143bc;font-size:20px}
@@ -1845,8 +1882,8 @@ dialog.merchant-delete-dialog::backdrop {
 .mel .mel-search input{max-width:460px;}
 .mel .mel-search button,.mel .mel-primary{white-space:nowrap;flex-shrink:0;}
 .mel .mel-scroll{border:1px solid #e7ebf2;border-radius:6px;}
-.mel th{background:#fafbfc;}
-.mel th,.mel td{padding:14px 12px;}
+.mel th{background:#f1f3fd;}
+.mel th,.mel td{padding:10px 14px;}
 
 
 /* =========================================================
@@ -1918,4 +1955,34 @@ dialog.merchant-delete-dialog::backdrop {
 .merchant-table-card .filter-button i {
     font-size: 13px;
     line-height: 1;
+}
+
+.merchant-table-card,
+.merchant-table-card .table-wrapper {
+    min-width: 0;
+}
+
+.merchant-table-card .table-wrapper {
+    box-sizing: border-box;
+    width: calc(100% - 24px);
+    max-width: calc(100% - 24px);
+    margin: 0 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    border: 1px solid #dfe9f4;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.merchant-table-card > .filter-bar {
+    border-bottom: 0;
+}
+
+@media (max-width: 600px) {
+    .merchant-table-card .table-wrapper {
+        width: calc(100% - 20px);
+        max-width: calc(100% - 20px);
+        margin-right: 10px;
+        margin-left: 10px;
+    }
 }

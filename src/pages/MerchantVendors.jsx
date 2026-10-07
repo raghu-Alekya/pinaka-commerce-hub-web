@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Eye, Trash2 } from "lucide-react";
 import "../styles/merchant-vendors.css";
 import Vendors from "./Vendors";
 
@@ -35,11 +36,28 @@ const normalize = (value) => ({
         value.vendor_name ||
         "Unnamed vendor",
 
+    code: value.code || value.vendorCode || value.vendor_code || "—",
+
     type:
         value.type ||
         value.vendorType ||
         value.vendor_type ||
         "—",
+
+    products:
+        value.products || value.productList || value.product_list ||
+        value.productCategory || value.product_category || value.category || "—",
+
+    contactPerson: value.contactPerson || value.contact_person || value.contactName || "",
+    email: value.email || "",
+    addressLine1: value.addressLine1 || value.address_line1 || "",
+    addressLine2: value.addressLine2 || value.address_line2 || "",
+    city: value.city || "",
+    state: value.state || "",
+    zipCode: value.zipCode || value.zip_code || "",
+    country: value.country || "",
+    createdTime: value.createdTime || value.createdAt || value.created_at || "",
+    updatedTime: value.updatedTime || value.updatedAt || value.updated_at || "",
 
     phone:
         value.phone ||
@@ -78,6 +96,18 @@ const searchableValues = value => {
     if (typeof value === "object") return Object.values(value).flatMap(searchableValues);
     return [String(value)];
 };
+const displayValue = value => {
+    if (Array.isArray(value)) {
+        const items = value.map(item => item && typeof item === "object"
+            ? item.name || item.productName || item.product_name || JSON.stringify(item)
+            : item).filter(Boolean);
+        return items.length ? items.join(", ") : "—";
+    }
+    if (value && typeof value === "object") {
+        return value.name || value.productName || value.product_name || JSON.stringify(value);
+    }
+    return String(value ?? "").trim() || "—";
+};
 const matches = (vendor, query) => {
     const text = searchableValues(vendor).join(" ").toLowerCase();
     return query.trim().toLowerCase().split(/\s+/).filter(Boolean).every(term => text.includes(term));
@@ -107,7 +137,7 @@ export default function MerchantVendors({
 
     const [page, setPage] = useState(1);
     const [pickerPage, setPickerPage] = useState(1);
-    const [pickerPageSize, setPickerPageSize] = useState(25);
+    const pickerPageSize = 25;
 
     const [sort, setSort] = useState({
         key: "name",
@@ -224,7 +254,7 @@ export default function MerchantVendors({
 
     useEffect(() => {
         if (modal && modal.type !== "create") {
-            dialog.current?.showModal();
+            if (!dialog.current?.open) dialog.current?.showModal();
         } else if (dialog.current?.open) {
             dialog.current.close();
             addButton.current?.focus();
@@ -311,6 +341,13 @@ export default function MerchantVendors({
     const currentPickerPage = Math.min(pickerPage, pickerPages);
     const pickerRows = available.slice((currentPickerPage - 1) * pickerPageSize, currentPickerPage * pickerPageSize);
     const selectable = pickerRows.filter(active);
+
+    const toggleVendorSelection = (vendor) => {
+        if (busy || !active(vendor)) return;
+        setSelection(current => current.includes(vendor.id)
+            ? current.filter(id => id !== vendor.id)
+            : [...current, vendor.id]);
+    };
 
     /* =========================================================
        OPEN ADD VENDOR MODAL
@@ -535,14 +572,16 @@ export default function MerchantVendors({
 
                 {(select
                     ? [
+                          "code",
                           "name",
                           "type",
+                          "products",
                           "contact",
-                          "status",
                       ]
                     : [
                           "name",
                           "type",
+                          "products",
                           "contact",
                           "assignedStoreCount",
                           "status",
@@ -551,43 +590,29 @@ export default function MerchantVendors({
                     <th key={key}>
                         {select ? (
                             {
-                                name: "Vendor",
-                                type: "Type",
+                                code: "Vendor Code",
+                                name: "Vendor Name",
+                                type: "Vendor Type",
+                                products: "Products Supplied",
                                 contact: "Contact",
                                 assignedStoreCount:
                                     "Assigned Stores",
                                 status: "Status",
                             }[key]
                         ) : (
-                            <button
-                                type="button"
-                                className="mv-sort"
-                                onClick={() =>
-                                    setSort((old) => ({
-                                        key,
-                                        direction:
-                                            old.key === key
-                                                ? -old.direction
-                                                : 1,
-                                    }))
-                                }
-                            >
+                            <span>
                                 {key === "name"
-                                    ? "Vendor"
+                                    ? "Vendor Name"
+                                    : key === "type"
+                                    ? "Vendor Type"
                                     : key ===
                                       "assignedStoreCount"
                                     ? "Assigned Stores"
+                                    : key === "products"
+                                    ? "Products Supplied"
                                     : key[0].toUpperCase() +
                                       key.slice(1)}
-
-                                {" "}
-
-                                {sort.key === key
-                                    ? sort.direction === 1
-                                        ? "↑"
-                                        : "↓"
-                                    : "↕"}
-                            </button>
+                            </span>
                         )}
                     </th>
                 ))}
@@ -608,6 +633,93 @@ export default function MerchantVendors({
                 <button type="button" disabled={busy} onClick={close}>← Back to Vendors</button>
             </header>
             <div className="mv-create-content"><Vendors formOnly onCreate={createAndAssignVendor} onCancel={close} /></div>
+        </section>
+    );
+
+    if (modal?.type === "select") return (
+        <section className="merchant-vendors mv-create-page mv-existing-page">
+            <header className="mv-card mv-header">
+                <div>
+                    <h2>Add Existing Vendor</h2>
+                    <p>Choose one or more vendors to add to this merchant.</p>
+                </div>
+                <button type="button" disabled={busy} onClick={close}>← Back to Vendors</button>
+            </header>
+
+            <div className="mv-existing-content">
+                {masterLoading && <p role="status">Loading master vendors…</p>}
+                {masterError && <p role="alert" className="mv-error">{masterError}</p>}
+
+                <div className="mv-existing-toolbar">
+                    <input
+                        className="mv-search"
+                        autoFocus
+                        aria-label="Search master vendors"
+                        placeholder="Search vendors by name, code, contact or product…"
+                        value={search}
+                        disabled={busy || masterLoading}
+                        onChange={e => { setSearch(e.target.value); setPickerPage(1); }}
+                    />
+                    <select aria-label="Filter by country" value={countryFilter} onChange={e => { setCountryFilter(e.target.value); setStateFilter(""); setPickerPage(1); }}><option value="">All countries</option>{countries.map(country => <option key={locationKey(country)} value={locationKey(country)}>{country}</option>)}</select>
+                    <select aria-label="Filter by state" value={stateFilter} onChange={e => { setStateFilter(e.target.value); setPickerPage(1); }}><option value="">All states</option>{states.map(state => <option key={locationKey(state)} value={locationKey(state)}>{state}</option>)}</select>
+                    <button type="button" onClick={() => { setSearch(""); setCountryFilter(""); setStateFilter(""); setPickerPage(1); }}>Clear filters</button>
+                </div>
+
+                <div className="mv-picker-summary">
+                    <span>{available.length} matching vendors · {selection.length} selected</span>
+                </div>
+
+                <div className="mv-existing-table-wrap">
+                    <table>
+                        <thead><tr><th>Select</th><th>Vendor Code</th><th>Vendor Name</th><th>Vendor Type</th><th>Products Supplied</th><th>Contact</th></tr></thead>
+                        <tbody>
+                            {pickerRows.map(vendor => {
+                                const selected = selection.includes(vendor.id);
+                                return (
+                                    <tr
+                                        key={vendor.id}
+                                        className={`${selected ? "mv-row-selected" : ""} ${!active(vendor) ? "mv-row-disabled" : ""}`}
+                                        aria-selected={selected}
+                                        title={active(vendor) ? "Click to select or deselect this vendor" : "Inactive vendors cannot be selected"}
+                                        onClick={event => {
+                                            if (event.target.closest("input,button,a,select")) return;
+                                            toggleVendorSelection(vendor);
+                                        }}
+                                    >
+                                        <td><input type="checkbox" aria-label={`Select ${vendor.name}`} disabled={busy || !active(vendor)} checked={selected} onChange={() => toggleVendorSelection(vendor)} /></td>
+                                        <td>{displayValue(vendor.code)}</td>
+                                        <td><strong>{vendor.name}</strong></td>
+                                        <td>{displayValue(vendor.type)}</td>
+                                        <td>{displayValue(vendor.products)}</td>
+                                        <td>{vendor.phone || vendor.contact || "—"}</td>
+                                    </tr>
+                                );
+                            })}
+                            {!available.length && <tr><td colSpan={6}>No unassigned vendors found in master data.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav className="mv-picker-pagination" aria-label="Existing vendor pages">
+                    <span>Showing {available.length ? (currentPickerPage - 1) * pickerPageSize + 1 : 0}–{Math.min(currentPickerPage * pickerPageSize, available.length)} of {available.length}</span>
+                    <div className="mv-popup-actions">
+                        <button type="button" disabled={currentPickerPage === 1} onClick={() => setPickerPage(currentPickerPage - 1)}>Previous</button>
+                        <span>Page {currentPickerPage} of {pickerPages}</span>
+                        <button type="button" disabled={currentPickerPage === pickerPages} onClick={() => setPickerPage(currentPickerPage + 1)}>Next</button>
+                    </div>
+                </nav>
+                {saveError && <p role="alert" className="mv-error">{saveError}</p>}
+            </div>
+
+            <footer className="mv-existing-footer">
+                <span>{selection.length} vendors selected</span>
+                <div className="mv-popup-actions">
+                    <button type="button" disabled={busy} onClick={close}>Cancel</button>
+                    <button type="button" className="mv-primary" disabled={busy || !selection.length} onClick={() => save([...new Set([...ids, ...selection.filter(id => vendors.some(vendor => vendor.id === id && active(vendor)))])])}>
+                        {busy ? "Saving…" : "Add Selected"}
+                    </button>
+                </div>
+            </footer>
         </section>
     );
 
@@ -724,6 +836,10 @@ export default function MerchantVendors({
                                                 </td>
 
                                                 <td>
+                                                    {displayValue(vendor.products)}
+                                                </td>
+
+                                                <td>
                                                     {vendor.phone ||
                                                         vendor.contact ||
                                                         "—"}
@@ -748,8 +864,9 @@ export default function MerchantVendors({
 
                                                         <button
                                                             type="button"
-                                                            className="mv-view"
+                                                            className="mv-view mv-icon-button"
                                                             aria-label={`View ${vendor.name}`}
+                                                            title={`View ${vendor.name}`}
                                                             onClick={() =>
                                                                 setModal({
                                                                     type: "view",
@@ -757,13 +874,14 @@ export default function MerchantVendors({
                                                                 })
                                                             }
                                                         >
-                                                            View
+                                                            <Eye size={18} aria-hidden="true" />
                                                         </button>
 
                                                         <button
                                                             type="button"
-                                                            className="mv-remove"
+                                                            className="mv-remove mv-icon-button"
                                                             aria-label={`Remove ${vendor.name} assignment`}
+                                                            title={`Remove ${vendor.name} assignment`}
                                                             onClick={() => {
                                                                 setSaveError("");
 
@@ -773,7 +891,7 @@ export default function MerchantVendors({
                                                                 });
                                                             }}
                                                         >
-                                                            Remove
+                                                            <Trash2 size={18} aria-hidden="true" />
                                                         </button>
 
                                                     </div>
@@ -784,7 +902,7 @@ export default function MerchantVendors({
 
                                     {!rows.length && (
                                         <tr>
-                                            <td colSpan={6}>
+                                            <td colSpan={7}>
                                                 No assigned vendors
                                                 match. Use Add Existing Vendor
                                                 to select from master
@@ -873,7 +991,7 @@ export default function MerchantVendors({
             ================================================= */}
 
             <dialog
-                className={`mv-dialog ${modal?.type === "create" ? "mv-dialog-create" : modal?.type === "select" ? "mv-dialog-select" : ""}`}
+                className={`mv-dialog ${modal?.type === "create" ? "mv-dialog-create" : ["select", "view-existing"].includes(modal?.type) ? "mv-dialog-select" : ""}`}
                 ref={dialog}
                 aria-labelledby="mv-dialog-title"
                 onCancel={(e) => {
@@ -891,6 +1009,8 @@ export default function MerchantVendors({
                             <h2 id="mv-dialog-title">
                                 {modal?.type === "create" ? "Add New Vendor" : modal?.type === "select"
                                     ? "Add Existing Vendor"
+                                    : modal?.type === "view-existing"
+                                    ? `Vendor Details — ${modal.vendor?.name || "Vendor"}`
                                     : modal?.type === "remove"
                                     ? "Remove vendor assignment"
                                     : "Vendor Details"}
@@ -899,6 +1019,8 @@ export default function MerchantVendors({
                             <p>
                                 {modal?.type === "create" ? "Create a vendor and connect it to this merchant." : modal?.type === "select"
                                     ? "Choose one or more vendors to add to this merchant."
+                                    : modal?.type === "view-existing"
+                                    ? "Read-only master vendor details."
                                     : modal?.type === "remove"
                                     ? "The vendor remains available in Master Data."
                                     : "Read-only master vendor details."}
@@ -954,8 +1076,8 @@ export default function MerchantVendors({
                                 onChange={(e) => { setSearch(e.target.value); setPickerPage(1); }}
                             />
 
-                            <div className="mv-location-filters"><label>Country<select value={countryFilter} onChange={e => { setCountryFilter(e.target.value); setStateFilter(""); setPickerPage(1); }}><option value="">All countries</option>{countries.map(country => <option key={locationKey(country)} value={locationKey(country)}>{country}</option>)}</select></label><label>State<select value={stateFilter} onChange={e => { setStateFilter(e.target.value); setPickerPage(1); }}><option value="">All states</option>{states.map(state => <option key={locationKey(state)} value={locationKey(state)}>{state}</option>)}</select></label><button type="button" onClick={() => { setSearch(""); setCountryFilter(""); setStateFilter(""); setPickerPage(1); }}>Clear filters</button></div>
-                            <div className="mv-picker-summary"><span>{available.length} matching vendors · {selection.length} selected</span><label>Rows per page <select value={pickerPageSize} onChange={e => { setPickerPageSize(Number(e.target.value)); setPickerPage(1); }}>{[10, 25, 50].map(size => <option key={size} value={size}>{size}</option>)}</select></label></div>
+                            <div className="mv-location-filters"><select aria-label="Filter by country" value={countryFilter} onChange={e => { setCountryFilter(e.target.value); setStateFilter(""); setPickerPage(1); }}><option value="">All countries</option>{countries.map(country => <option key={locationKey(country)} value={locationKey(country)}>{country}</option>)}</select><select aria-label="Filter by state" value={stateFilter} onChange={e => { setStateFilter(e.target.value); setPickerPage(1); }}><option value="">All states</option>{states.map(state => <option key={locationKey(state)} value={locationKey(state)}>{state}</option>)}</select><button type="button" onClick={() => { setSearch(""); setCountryFilter(""); setStateFilter(""); setPickerPage(1); }}>Clear filters</button></div>
+                            <div className="mv-picker-summary"><span>{available.length} matching vendors · {selection.length} selected</span></div>
                             <div className="mv-scroll mv-options">
 
                                 <table>
@@ -1014,6 +1136,10 @@ export default function MerchantVendors({
                                                     </td>
 
                                                     <td>
+                                                        {vendor.code}
+                                                    </td>
+
+                                                    <td>
                                                         {name(
                                                             vendor
                                                         )}
@@ -1026,15 +1152,13 @@ export default function MerchantVendors({
                                                     </td>
 
                                                     <td>
-                                                        {vendor.phone ||
-                                                            vendor.contact ||
-                                                            "—"}
+                                                        {displayValue(vendor.products)}
                                                     </td>
 
                                                     <td>
-                                                        {badge(
-                                                            vendor
-                                                        )}
+                                                        {vendor.phone ||
+                                                            vendor.contact ||
+                                                            "—"}
                                                     </td>
 
                                                 </tr>
@@ -1043,7 +1167,7 @@ export default function MerchantVendors({
 
                                         {!available.length && (
                                             <tr>
-                                                <td colSpan={5}>
+                                                <td colSpan={6}>
                                                     No unassigned
                                                     vendors found
                                                     in master data.
@@ -1063,31 +1187,25 @@ export default function MerchantVendors({
                         modal?.vendor && (
                             <dl className="mv-details">
 
-                                {Object.entries({
-                                    Vendor:
-                                        modal.vendor.name,
-
-                                    Type:
-                                        modal.vendor.type,
-
-                                    Contact:
-                                        modal.vendor.contact,
-
-                                    "Assigned Stores":
-                                        modal.vendor
-                                            .assignedStoreCount,
-
-                                    Status:
-                                        modal.vendor.status,
-
-                                    Email:
-                                        modal.vendor.email ||
-                                        "—",
-
-                                    Phone:
-                                        modal.vendor.phone ||
-                                        "—",
-                                }).map(
+                                {[
+                                    ["Vendor Code", modal.vendor.code],
+                                    ["Vendor Name", modal.vendor.name],
+                                    ["Vendor Type", modal.vendor.type],
+                                    ["Contact Person Name", modal.vendor.contactPerson || modal.vendor.contact],
+                                    ["Phone Number", modal.vendor.phone],
+                                    ["Email Address", modal.vendor.email],
+                                    ["Products Supplied", modal.vendor.products],
+                                    ["Address Line 1", modal.vendor.addressLine1],
+                                    ["Address Line 2", modal.vendor.addressLine2],
+                                    ["City", modal.vendor.city],
+                                    ["State", modal.vendor.state],
+                                    ["ZIP Code", modal.vendor.zipCode],
+                                    ["Country", modal.vendor.country],
+                                    ["Status", modal.vendor.status],
+                                    ["Assigned Stores", modal.vendor.assignedStoreCount],
+                                    ["Created At", modal.vendor.createdTime],
+                                    ["Updated At", modal.vendor.updatedTime],
+                                ].map(
                                     ([label, value]) => (
                                         <div key={label}>
 
@@ -1096,7 +1214,7 @@ export default function MerchantVendors({
                                             </dt>
 
                                             <dd>
-                                                {value}
+                                                {displayValue(value)}
                                             </dd>
 
                                         </div>
@@ -1137,9 +1255,11 @@ export default function MerchantVendors({
                             <button
                                 type="button"
                                 disabled={busy}
-                                onClick={close}
+                                onClick={modal?.type === "view-existing" ? () => setModal({ type: "select" }) : close}
                             >
-                                {modal?.type === "view"
+                                {modal?.type === "view-existing"
+                                    ? "Back to list"
+                                    : modal?.type === "view"
                                     ? "Close"
                                     : "Cancel"}
                             </button>

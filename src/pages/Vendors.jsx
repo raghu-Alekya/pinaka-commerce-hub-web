@@ -1,16 +1,6 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
-import {
-  getVendors,
-  createVendor,
-  updateVendor,
-  deleteVendor as deleteVendorApi,
-} from "../api/vendors";
+import { useEffect, useMemo, useState, } from "react";
+import Pagination from "../components/Pagination";
+import { getVendors, createVendor, updateVendor, deleteVendor as deleteVendorApi, } from "../api/vendors";
 
 const emptyForm = {
   code: "",
@@ -212,7 +202,12 @@ export default function Vendors({
   const [currentPage, setCurrentPage] =
     useState(1);
 
-  const rowsPerPage = 5;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  function handlePageSizeChange(size) {
+  setRowsPerPage(size);
+  setCurrentPage(1);
+}
 
   const [statusFilter, setStatusFilter] =
     useState("All Statuses");
@@ -1858,32 +1853,15 @@ export default function Vendors({
 
         </div>
 
-        <div className="vendors-pagination">
-          <div className="vendors-showing">
-            Showing {filteredVendors.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, filteredVendors.length)} of {filteredVendors.length} entries
-          </div>
-          <div className="vendors-pagination-controls">
-            <button
-              type="button"
-              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-              disabled={safePage === 1}
-              aria-label="Previous page"
-            >
-              <ChevronLeft size={15} />
-            </button>
-            <button type="button" className="active" aria-current="page">
-              {safePage}
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
-              disabled={safePage === totalPages}
-              aria-label="Next page"
-            >
-              <ChevronRight size={15} />
-            </button>
-          </div>
-        </div>
+        <Pagination
+  currentPage={safePage}
+  totalPages={totalPages}
+  totalItems={filteredVendors.length}
+  pageSize={rowsPerPage}
+  onPageChange={setCurrentPage}
+  onPageSizeChange={handlePageSizeChange}
+  itemLabel="vendors"
+/>
 
       </div>
 

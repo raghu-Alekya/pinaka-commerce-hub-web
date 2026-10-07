@@ -5,12 +5,15 @@ import MerchantRoles from "./MerchantRoles";
 import AddMerchantDevice from "./AddMerchantDevice";
 import { MerchantEmployeeForm } from "./AddMerchantEmployee";
 import { useReferenceData } from "../api/referenceData";
-import { formatDate, listSubscriptionPlans } from "../api/subscriptions";
+import { formatDate, listSubscriptions, listSubscriptionPlans } from "../api/subscriptions";
+import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant } from "../api/merchants";
+import { listMerchants, getMerchant, deleteMerchant as apiDeleteMerchant, updateMerchantStatus } from "../api/merchants";
 import { listMerchantEmployees } from "../api/employees";
 import { ApiError } from "../api/http";
+import { devicesApi } from "../api/devices";
+import Pagination from "../components/Pagination";
 import "../styles/merchants.css";
 
 function readValue(value) {
@@ -48,8 +51,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const [addingDevice, setAddingDevice] = useState(false);
   const [createdDevices,setCreatedDevices]=useState([]);
   async function saveDeviceAndRefresh(values) {
-    if(typeof onSaveDevice!=='function')throw new Error('Connect onSaveDevice to your device creation API.');
-    const result=await onSaveDevice(values);
+    const result=typeof onSaveDevice==='function' ? await onSaveDevice(values) : await devicesApi.create(values);
     if(result?.success===false)throw new Error(result.message || 'Device creation failed.');
     const returned=result?.device || result?.data?.device || result?.data || result;
     const record=returned && typeof returned==='object' && !Array.isArray(returned)?returned:{};
@@ -97,6 +99,23 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const [apiEmployees, setApiEmployees] = useState(null);
   const [employeesLoading, setEmployeesLoading] = useState(false);
   const [employeesError, setEmployeesError] = useState('');
+  const [allSubscriptions, setAllSubscriptions] = useState([]);
+  const [allPlans, setAllPlans] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      listSubscriptions().catch(() => []),
+      listPlans().catch(() => [])
+    ]).then(([subs, plans]) => {
+      if (active) {
+        setAllSubscriptions(Array.isArray(subs) ? subs : []);
+        setAllPlans(Array.isArray(plans) ? plans : []);
+      }
+    });
+    return () => { active = false; };
+  }, []);
+
   useEffect(() => {
     if (draft) { setLoading(false); setError(''); return; }
     let active = true;
@@ -132,20 +151,64 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const subPlan = subscription.plan || raw.plan || response.plan || {};
   const subStoreType = subscription.storeType || subscription.store_type || subPlan.storeType || subPlan.store_type || raw.storeType || {};
 
+  const subMatch = useMemo(() => {
+    if (!allSubscriptions.length) return null;
+    const targetId = String(apiMerchantId || merchantId || "").toLowerCase();
+    const targetName = String(raw.merchantName || summary.name || merchant?.name || contact.name || "").toLowerCase();
+    const targetCode = String(raw.merchant_code || raw.merchantCode || summary.merchantId || "").toLowerCase();
+
+    return allSubscriptions.find((s) => {
+      const sMerchId = String(s.merchantId || s.merchantApiId || s.raw?.merchantId || s.raw?.merchant_id || "").toLowerCase();
+      const sMerchName = String(s.merchant || s.raw?.merchantName || s.raw?.businessName || "").toLowerCase();
+      const sId = String(s.id || "").toLowerCase();
+
+      return (
+        (targetId && (sMerchId === targetId || sId === targetId)) ||
+        (targetCode && sMerchId === targetCode) ||
+        (targetName && sMerchName === targetName)
+      );
+    });
+  }, [allSubscriptions, apiMerchantId, merchantId, summary, merchant, raw, contact]);
+
+  const matchedPlan = useMemo(() => {
+    const targetPlanName = String(
+      subMatch?.plan ||
+      subscription.planName ||
+      (typeof subPlan === 'object' && subPlan ? subPlan.name : subPlan) ||
+      raw.planName ||
+      summary.plan ||
+      ""
+    ).toLowerCase();
+
+    if (!targetPlanName || !allPlans.length) return null;
+
+    return allPlans.find((p) => {
+      const pName = String(p.name || p.planName || p.planCode || p.code || "").toLowerCase();
+      const pId = String(p.id || p.planId || "").toLowerCase();
+      return pName === targetPlanName || (subscription?.planId && pId === String(subscription.planId).toLowerCase());
+    });
+  }, [allPlans, subMatch, subscription, subPlan, raw, summary]);
+
   const displayPlanName =
+    subMatch?.plan ||
     subscription.planName ||
     subscription.plan_name ||
-    subPlan.name ||
-    subscription.planCode ||
+    (typeof subPlan === 'object' && subPlan ? subPlan.name || subPlan.planName : undefined) ||
+    (typeof subPlan === 'string' ? subPlan : undefined) ||
+    matchedPlan?.name ||
+    matchedPlan?.planName ||
     raw.planName ||
-    summary.plan;
+    summary.plan ||
+    "Pro Plan";
 
   const rawCycle =
+    subMatch?.billingCycle ||
     subscription.billingCycle ||
     subscription.billing_cycle ||
-    subPlan.billingCycle ||
-    subPlan.billing_cycle ||
-    saved?.cycle;
+    (typeof subPlan === 'object' && subPlan ? subPlan.billingCycle || subPlan.billing_cycle : undefined) ||
+    saved?.cycle ||
+    matchedPlan?.billingCycle ||
+    "MONTHLY";
 
   const displayBillingCycle = rawCycle
     ? String(rawCycle).trim().toUpperCase() === "MONTHLY"
@@ -153,23 +216,29 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       : String(rawCycle).trim().toUpperCase() === "ANNUAL" || String(rawCycle).trim().toUpperCase() === "YEARLY"
       ? "Yearly"
       : String(rawCycle).charAt(0).toUpperCase() + String(rawCycle).slice(1).toLowerCase()
-    : undefined;
+    : "Monthly";
 
   const displayStoreType =
+    subMatch?.storeTypeName ||
     (typeof subStoreType === "object" && subStoreType ? subStoreType.name || subStoreType.storeTypeName || subStoreType.code : subStoreType) ||
     subscription.storeTypeName ||
     subscription.store_type_name ||
+    matchedPlan?.storeTypeName ||
     raw.storeTypeName ||
     raw.storeType ||
     summary.storeType ||
-    "";
+    "Convenience Store";
 
   const displayStatus =
+    subMatch?.status ||
     subscription.status ||
     saved?.subscriptionStatus ||
-    raw.status;
+    raw.status ||
+    "ACTIVE";
 
   const rawStartVal =
+    subMatch?.start ||
+    subMatch?.rawStart ||
     subscription.startDate ||
     subscription.start_date ||
     subscription.createdAt ||
@@ -179,6 +248,8 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const displayStartDate = rawStartVal ? String(rawStartVal).slice(0, 10) : undefined;
 
   const rawEndVal =
+    subMatch?.end ||
+    subMatch?.rawEnd ||
     subscription.renewalDate ||
     subscription.renewal_date ||
     subscription.nextBillingDate ||
@@ -190,37 +261,28 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const displayRenewalDate = rawEndVal ? String(rawEndVal).slice(0, 10) : undefined;
 
   const displayStoreAllowance =
-    subscription.includedStores ??
-    subscription.included_stores ??
-    subscription.stores_limit ??
-    subscription.maxStoresAllowed ??
-    subscription.max_stores_allowed ??
-    subscription.storeLimit ??
-    subPlan.includedStores ??
-    subPlan.included_stores ??
-    subPlan.stores_limit ??
-    summary.storeLimit;
+    (subscription.includedStores || subscription.included_stores || subscription.stores_limit || subscription.maxStoresAllowed || subscription.max_stores_allowed || subscription.storeLimit) ||
+    (typeof subPlan === 'object' && subPlan ? (subPlan.stores_limit || subPlan.storesLimit || subPlan.includedStores || subPlan.included_stores) : undefined) ||
+    (subMatch?.includedStores || subMatch?.stores_limit) ||
+    (matchedPlan?.stores_limit || matchedPlan?.storesLimit || matchedPlan?.includedStores || matchedPlan?.included_stores) ||
+    summary.storeLimit ||
+    1;
 
   const displayDeviceAllowance =
-    subscription.includedTerminals ??
-    subscription.included_terminals ??
-    subscription.terminal_limit ??
-    subscription.licensedDeviceCount ??
-    subscription.deviceLimit ??
-    subPlan.includedTerminals ??
-    subPlan.included_terminals ??
-    subPlan.terminal_limit ??
-    summary.deviceLimit;
+    (subscription.includedTerminals || subscription.included_terminals || subscription.terminal_limit || subscription.licensedDeviceCount || subscription.deviceLimit) ||
+    (typeof subPlan === 'object' && subPlan ? (subPlan.terminal_limit || subPlan.terminalLimit || subPlan.includedTerminals || subPlan.included_terminals) : undefined) ||
+    (subMatch?.includedTerminals || subMatch?.terminal_limit) ||
+    (matchedPlan?.terminal_limit || matchedPlan?.terminalLimit || matchedPlan?.includedTerminals || matchedPlan?.included_terminals) ||
+    summary.deviceLimit ||
+    2;
 
   const displayEmployeeAllowance =
-    subscription.includedEmployees ??
-    subscription.included_employees ??
-    subscription.employees_limit ??
-    subscription.employeeLimit ??
-    subPlan.includedEmployees ??
-    subPlan.included_employees ??
-    subPlan.employees_limit ??
-    summary.employeeLimit;
+    (subscription.includedEmployees || subscription.included_employees || subscription.employees_limit || subscription.employeeLimit) ||
+    (typeof subPlan === 'object' && subPlan ? (subPlan.employees_limit || subPlan.employeesLimit || subPlan.includedEmployees || subPlan.included_employees) : undefined) ||
+    (subMatch?.includedEmployees || subMatch?.employees_limit) ||
+    (matchedPlan?.employees_limit || matchedPlan?.employeesLimit || matchedPlan?.includedEmployees || matchedPlan?.included_employees) ||
+    summary.employeeLimit ||
+    0;
 
   const address = contact.address || raw.businessAddress || {};
   const list = value => Array.isArray(value) ? value : [];
@@ -336,11 +398,11 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
           ['Store Type', displayStoreType],
           ['Subscription Status', displayStatus], ['Start Date', displayStartDate],
           ['Renewal Date', displayRenewalDate],
-          ['Registered Stores', saved ? stores.length : summary.stores ?? raw.storeCount ?? (Array.isArray(raw.stores) ? stores.length : undefined)],
+          ['Registered Stores', stores.length > 0 ? stores.length : (subMatch?.stores ?? summary.stores ?? raw.storeCount ?? (Array.isArray(raw.stores) ? raw.stores.length : 0))],
           ['Store Allowance', displayStoreAllowance],
-          ['Registered Devices', saved ? devices.length : raw.deviceCount ?? (Array.isArray(raw.devices) ? devices.length : undefined)],
+          ['Registered Devices', devices.length > 0 ? devices.length : (subMatch?.devices ?? raw.deviceCount ?? (Array.isArray(raw.devices) ? raw.devices.length : 0))],
           ['Device Allowance', displayDeviceAllowance],
-          ['Registered Employees', Array.isArray(employeeRecords) ? employees.length : saved?.employeeCount ?? raw.employeeCount ?? summary.employeeCount],
+          ['Registered Employees', employees.length > 0 ? employees.length : (subMatch?.employees ?? (Array.isArray(employeeRecords) ? employees.length : saved?.employeeCount ?? raw.employeeCount ?? summary.employeeCount ?? 0))],
           ['Employee Allowance', displayEmployeeAllowance],
         ]} /></ViewSection>
       </div>
@@ -521,10 +583,24 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
       console.log("[DELETE MERCHANT API RESPONSE]", res);
       onLocalDelete?.(target.id);
       if (!mounted.current) return;
-      setMerchants(previous => previous.filter(item => item.id !== target.id));
-      setNotice(target.name + ' was deleted.'); setDeleteTarget(null);
+      setMerchants(previous => previous.map(item => item.id === target.id
+        ? { ...item, status: 'Inactive', isDeleted: true }
+        : item));
+      setNotice(target.name + ' was deactivated.'); setDeleteTarget(null);
     } catch (error) { if (mounted.current) setDeleteError(error.message || 'Unable to delete merchant. Please try again.'); }
     finally { deleteInFlight.current = false; if (mounted.current) setDeleting(false); }
+  }
+  async function activateMerchant(merchant) {
+    setDeleteError('');
+    try {
+      await updateMerchantStatus(merchant.merchantId || merchant.id, 'ACTIVE');
+      setMerchants(previous => previous.map(item => item.id === merchant.id
+        ? { ...item, status: 'Active', isDeleted: false }
+        : item));
+      setNotice(merchant.name + ' was activated.');
+    } catch (error) {
+      setError(error.message || 'Unable to activate merchant.');
+    }
   }
   const { data: reference } = useReferenceData();
   const [masterPlans, setMasterPlans] = useState([]);
@@ -542,7 +618,16 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [plan, setPlan] = useState("");
-  const [joinedRange, setJoinedRange] = useState(""); const [storeCount, setStoreCount] = useState(""); const [location, setLocation] = useState(""); const [page, setPage] = useState(1); const pageSize = 10;
+  const [location, setLocation] = useState("");
+  const [joinedRange, setJoinedRange] = useState("");
+  const [storeCount, setStoreCount] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPage(1);
+  };
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState(''); const [dateTo, setDateTo] = useState('');
   const [draftFrom, setDraftFrom] = useState(''); const [draftTo, setDraftTo] = useState('');
@@ -595,8 +680,8 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
             `${m.name} ${m.id} ${m.email}`
               .toLowerCase()
               .includes(q.toLowerCase())) &&
-          (!status || m.status === status) &&
-          (!plan || m.plan === plan) && (!storeCount || (storeCount === 'none' ? Number(m.stores) === 0 : storeCount === 'one' ? Number(m.stores) === 1 : Number(m.stores) > 1)) && (!location || `${m.country || ''} ${m.state || ''}`.trim() === location) && (!joinedRange || joinedMatch(m, joinedRange, dateFrom, dateTo)),
+          (!status || String(m.status || '').toLowerCase() === String(status).toLowerCase()) &&
+          (!plan || m.plan === plan) && (!storeCount || (storeCount === 'none' ? Number(m.stores) === 0 : storeCount === 'one' ? Number(m.stores) === 1 : Number(m.stores) > 1)) && (!location || `${m.country || ''} ${m.state || ''}`.trim().toLowerCase() === location.toLowerCase()) && (!joinedRange || joinedMatch(m, joinedRange, dateFrom, dateTo)),
       ),
     [merchants, q, status, plan, joinedRange, storeCount, location, dateFrom, dateTo],
   );
@@ -898,10 +983,17 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
                         >
                           <i className="bi bi-pencil" />
                         </button>
-                        <button type="button" className="action-btn text-danger" title="Delete" aria-label={`Delete ${m.name}`} disabled={deleting}
-                          onClick={() => { setDeleteError(''); setDeleteTarget(m); }}>
-                          <i className="bi bi-trash" />
-                        </button>
+                        {m.status === "Inactive" ? (
+                          <button type="button" className="action-btn text-success" title="Activate" aria-label={`Activate ${m.name}`} disabled={deleting}
+                            onClick={() => activateMerchant(m)}>
+                            <i className="bi bi-arrow-counterclockwise" />
+                          </button>
+                        ) : (
+                          <button type="button" className="action-btn text-danger" title="Deactivate" aria-label={`Deactivate ${m.name}`} disabled={deleting}
+                            onClick={() => { setDeleteError(''); setDeleteTarget(m); }}>
+                            <i className="bi bi-trash" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -910,16 +1002,24 @@ export default function Merchants({ deleteMerchant = apiDeleteMerchant, localMer
             </tbody>
           </table>
         </div>
-        <div className="merchant-pagination"><span>{rows.length ? `Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, rows.length)} of ${rows.length}` : 'Showing 0 of 0'}</span><div><button type="button" disabled={currentPage === 1} onClick={() => setPage(value => Math.max(1, value - 1))}>Previous</button>{Array.from({ length: pageCount }, (_, index) => <button type="button" className={currentPage === index + 1 ? 'active' : ''} key={index} onClick={() => setPage(index + 1)}>{index + 1}</button>)}<button type="button" disabled={currentPage === pageCount} onClick={() => setPage(value => Math.min(pageCount, value + 1))}>Next</button></div></div>
+        <Pagination
+    currentPage={currentPage}
+    totalPages={pageCount}
+    totalItems={rows.length}
+    pageSize={pageSize}
+    onPageChange={setPage}
+    onPageSizeChange={handlePageSizeChange}
+    itemLabel="merchants"
+/>
       </div>
       {deleteTarget && <dialog className="merchant-delete-dialog" ref={deleteDialog} aria-labelledby="merchant-delete-title" onCancel={event => { event.preventDefault(); if (!deleting) setDeleteTarget(null); }}>
-        <h2 id="merchant-delete-title">Delete merchant? </h2>
+        <h2 id="merchant-delete-title">Deactivate merchant? </h2>
         <p><strong>{deleteTarget.name}</strong> · {deleteTarget.id}</p>
-        <p>Confirm deletion of this merchant. Its linked stores and subscriptions will be handled according to your backend deletion rules.</p>
+        <p>This merchant will become inactive and remain available for later reactivation.</p>
         {deleteError && <p className="alert alert-danger" role="alert">{deleteError}</p>}
         <div className="d-flex justify-content-end gap-2">
           <button type="button" className="btn btn-secondary" autoFocus disabled={deleting} onClick={() => setDeleteTarget(null)}>Cancel</button>
-          <button type="button" className="btn btn-danger" disabled={deleting} onClick={confirmDelete}>{deleting ? 'Deleting…' : 'Delete merchant'}</button>
+          <button type="button" className="btn btn-danger" disabled={deleting} onClick={confirmDelete}>{deleting ? 'Deactivating…' : 'Deactivate merchant'}</button>
         </div>
       </dialog>}
     </div>

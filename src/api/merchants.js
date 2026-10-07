@@ -134,7 +134,7 @@ export function toNestedMerchantPayload(data) {
   if (!isUuid(planId)) planId = DEFAULT_PLAN_ID;
 
   const billingCycle = String(
-    s.billingCycle || data.cycle || data.billingCycle || "MONTHLY",
+    s.billingCycle || s.billing_cycle || data.cycle || data.billingCycle || data.billing_cycle || m.billingCycle || m.billing_cycle || "MONTHLY",
   ).toUpperCase();
   const startDate =
     s.startDate ||
@@ -260,7 +260,7 @@ export function toFlatMerchantPayload(data) {
   if (!isUuid(planId)) planId = DEFAULT_PLAN_ID;
 
   const rawCycle = String(
-    s.billingCycle || data.cycle || data.billingCycle || "MONTHLY",
+    s.billingCycle || s.billing_cycle || data.cycle || data.billingCycle || data.billing_cycle || m.billingCycle || m.billing_cycle || "MONTHLY",
   ).toUpperCase();
   const billingCycle =
     rawCycle.includes("ANNUAL") || rawCycle.includes("YEAR")
@@ -580,6 +580,20 @@ export async function deleteMerchant(id) {
   return result;
 }
 
+export async function updateMerchantStatus(id, status) {
+  const normalizedStatus = String(status || "").trim().toUpperCase();
+  if (!["ACTIVE", "INACTIVE"].includes(normalizedStatus)) {
+    throw new Error("Merchant status must be ACTIVE or INACTIVE.");
+  }
+  const result = await api.patch(`${endpoints.merchant(id)}/status`, {
+    status: normalizedStatus,
+  });
+  if (result && result.success === false) {
+    throw new Error(result.message || "Unable to update merchant status.");
+  }
+  return result;
+}
+
 export async function getMerchantForm(id) {
   const { raw } = await getMerchant(id);
   const merchant = raw.merchant || raw;
@@ -601,7 +615,14 @@ export async function getMerchantForm(id) {
       "",
     plan: subscription?.planCode || subscription?.plan_id || "",
     billingCycle:
-      subscription?.billingCycle || subscription?.billing_cycle || "",
+      subscription?.billingCycle ||
+      subscription?.billing_cycle ||
+      raw.billingCycle ||
+      raw.billing_cycle ||
+      raw.cycle ||
+      merchant.billingCycle ||
+      merchant.billing_cycle ||
+      "MONTHLY",
     trialPeriod: String(subscription?.trialDays ?? 0),
     stores: (raw.stores || []).map((store) => ({
       persisted: true,

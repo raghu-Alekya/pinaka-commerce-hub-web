@@ -526,7 +526,7 @@
 }
 
 .features-table th {
-  height: 48px;
+  height: 44px;
   padding: 0 14px;
   border: 0;
   border-bottom: 1px solid #dfe5ef;
@@ -534,7 +534,7 @@
   color: #394052;
   text-align: left;
   vertical-align: middle;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 18px;
   font-weight: 600;
   white-space: nowrap;
@@ -547,8 +547,8 @@
 }
 
 .features-table td {
-  height: 58px;
-  padding: 0 14px;
+  height: 52px;
+  padding: 10px 14px;
   border: 0;
   border-bottom: 1px solid #e4e8ef;
   background: #ffffff;
@@ -611,7 +611,7 @@
   white-space: normal !important;
 }
 
-.feature-description-tooltip-wrap {
+.feature-description-content {
   position: relative;
   width: 100%;
 }
@@ -626,38 +626,6 @@
   max-height: 36px;
   white-space: normal;
   overflow-wrap: anywhere;
-}
-
-.feature-description-tooltip {
-  position: absolute;
-  z-index: 30;
-  left: 0;
-  top: calc(100% + 7px);
-  width: max-content;
-  min-width: 220px;
-  max-width: 360px;
-  padding: 10px 12px;
-  border: 1px solid #dce4ef;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #34435e;
-  box-shadow: 0 8px 24px rgba(16, 38, 77, 0.14);
-  font-size: 12px;
-  line-height: 18px;
-  font-weight: 400;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-2px);
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
-}
-
-.feature-description-tooltip-wrap:hover .feature-description-tooltip {
-  visibility: visible;
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .feature-created {
@@ -977,16 +945,16 @@
   }
 
   .features-table th {
-    padding-left: 7px;
-    padding-right: 7px;
+    padding-left: 10px;
+    padding-right: 10px;
     white-space: normal;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .features-table td {
-    padding-left: 7px;
-    padding-right: 7px;
-    font-size: 11px;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 13px;
   }
 
   .features-table th.actions-col,

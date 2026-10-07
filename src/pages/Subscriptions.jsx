@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useReferenceData } from "../api/referenceData";
 import { listMerchants } from "../api/merchants";
-
+import Pagination from "../components/Pagination";
 import {
 
   Eye,
@@ -50,7 +50,7 @@ import {
 
 } from "lucide-react";
 
-import { listPlans } from "../api/plans";
+import { listPlans, getMerchantFormPlans } from "../api/plans";
 
 import {
 
@@ -367,8 +367,28 @@ function SubscriptionList({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
+const [pageSize, setPageSize] = useState(10);
+const handlePageSizeChange = (size) => {
+  setPageSize(size);
+  setPage(1);
 
-  const PAGE_SIZE = 10;
+  useEffect(() => {
+  setPage(1);
+}, [
+  search,
+  plan,
+  status,
+  stores,
+  startDate,
+  endDate,
+]);
+
+useEffect(() => {
+  setPage((currentPage) =>
+    Math.min(currentPage, totalPages)
+  );
+}, [totalPages]);
+};
 
   /* ========================================
      OVERVIEW STATS
@@ -408,60 +428,6 @@ function SubscriptionList({
       inactivePercentage,
     };
   }, [subscriptions]);
-
-  /* ========================================
-     PLAN DISTRIBUTION
-  ======================================== */
-
-  const planDistribution = useMemo(() => {
-    const counts = {};
-
-    subscriptions.forEach((s) => {
-      const pName = s.plan || "Unassigned";
-      counts[pName] = (counts[pName] || 0) + 1;
-    });
-
-    const total = subscriptions.length || 1;
-
-    const colors = ["purple", "blue", "orange", "green", "red"];
-
-    return Object.entries(counts).map(([name, count], index) => ({
-      name,
-      count,
-      percentage: ((count / total) * 100).toFixed(1),
-      color: colors[index % colors.length],
-    }));
-  }, [subscriptions]);
-
-  const distributionDonutStyle = useMemo(() => {
-    if (!planDistribution.length) {
-      return {
-        background: "#e9eef6",
-      };
-    }
-
-    const palette = [
-      "#737bd1",
-      "#4d8de8",
-      "#ef8b17",
-      "#28a873",
-      "#e0a755",
-    ];
-
-    let cursor = 0;
-
-    const segments = planDistribution.map((item, index) => {
-      const start = cursor;
-
-      cursor += Number(item.percentage || 0);
-
-      return `${palette[index % palette.length]} ${start}% ${cursor}%`;
-    });
-
-    return {
-      background: `conic-gradient(${segments.join(", ")})`,
-    };
-  }, [planDistribution]);
 
   /* ========================================
      FILTER OPTIONS
@@ -592,23 +558,20 @@ function SubscriptionList({
     stores,
     startDate,
     endDate,
-  ]);
+  ]); 
 
   /* ========================================
      PAGINATION
   ======================================== */
 
- const totalPages =
-  Math.ceil(filtered.length / PAGE_SIZE) || 1;
+ const totalPages = Math.ceil(filtered.length / pageSize) || 1;
 
-const paginatedData = useMemo(() => {
-  const startIdx = (page - 1) * PAGE_SIZE;
+const currentPage = Math.min(page, totalPages);
 
-  return filtered.slice(
-    startIdx,
-    startIdx + PAGE_SIZE
-  );
-}, [filtered, page]);
+const paginatedData = filtered.slice(
+  (currentPage - 1) * pageSize,
+  currentPage * pageSize
+);
 
 useEffect(() => {
   setPage(1);
@@ -814,7 +777,7 @@ useEffect(() => {
           <div className="overview-card total-card">
 
             <span className="overview-icon purple">
-              <Store size={24} />
+              <i className="bi bi-shop-window" aria-hidden="true" />
             </span>
 
             <div>
@@ -832,7 +795,7 @@ useEffect(() => {
           <div className="overview-card active-card">
 
             <span className="overview-icon green">
-              <CheckCircle2 size={25} />
+              <i className="bi bi-check-circle-fill" aria-hidden="true" />
             </span>
 
             <div>
@@ -850,7 +813,7 @@ useEffect(() => {
           <div className="overview-card inactive-card">
 
             <span className="overview-icon red">
-              <XCircle size={25} />
+              <i className="bi bi-x-circle-fill" aria-hidden="true" />
             </span>
 
             <div>
@@ -868,7 +831,7 @@ useEffect(() => {
           <div className="overview-card expiring-card">
 
             <span className="overview-icon orange">
-              <Clock3 size={25} />
+              <i className="bi bi-clock-fill" aria-hidden="true" />
             </span>
 
             <div>
@@ -882,92 +845,6 @@ useEffect(() => {
                   ? "Within next 30 days"
                   : "Review required"}
               </small>
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* ========================================
-            PLAN DISTRIBUTION
-        ======================================== */}
-
-        <div className="distribution-card">
-
-          <div className="distribution-header">
-
-            <div>
-              <h2>Subscription Plan Distribution</h2>
-
-              <p>
-                Number of merchants by subscription plan
-              </p>
-            </div>
-
-            <div
-              className="distribution-plan-count distribution-plan-count-badge"
-              aria-label={`${availablePlans.length} Plans`}
-            >
-              <span>
-                {availablePlans.length}{" "}
-                {availablePlans.length === 1
-                  ? "Plan"
-                  : "Plans"}
-              </span>
-            </div>
-
-          </div>
-
-          <div className="distribution-content">
-
-            <div
-              className="donut"
-              style={distributionDonutStyle}
-            >
-              <div>
-                <strong>{stats.total}</strong>
-                <span>Records</span>
-              </div>
-            </div>
-
-            <div className="plan-legend">
-
-              {planDistribution.map(
-                (item, index) => (
-                  <div
-                    key={item.name}
-                    className="legend-row"
-                  >
-                    <span className="legend-name">
-
-                      <i
-                        className="legend-dot"
-                        style={{
-                          backgroundColor:
-                            [
-                              "#737bd1",
-                              "#4d8de8",
-                              "#ef8b17",
-                              "#28a873",
-                              "#e0a755",
-                            ][index % 5],
-                        }}
-                      />
-
-                      {item.name}
-
-                    </span>
-
-                    <b>{item.count}</b>
-
-                    <span>
-                      {item.percentage}%
-                    </span>
-
-                  </div>
-                )
-              )}
-
             </div>
 
           </div>
@@ -1197,10 +1074,10 @@ useEffect(() => {
                     >
 
                       <td>
-                        {(page - 1) *
-                          PAGE_SIZE +
-                          index +
-                          1}
+                       {(currentPage - 1) *
+                       pageSize +
+                        index +
+                        1}
                       </td>
 
                       <td>
@@ -1285,69 +1162,16 @@ useEffect(() => {
             PAGINATION
         ======================================== */}
 
-        {filtered.length > 0 && (
-  <div className="merchant-pagination">
-
-    <span>
-      {`Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
-        page * PAGE_SIZE,
-        filtered.length
-      )} of ${filtered.length}`}
-    </span>
-
-    <div>
-
-      <button
-        type="button"
-        disabled={page === 1}
-        onClick={() =>
-          setPage((value) =>
-            Math.max(1, value - 1)
-          )
-        }
-      >
-        Previous
-      </button>
-
-      {Array.from(
-        { length: totalPages },
-        (_, index) => (
-          <button
-            type="button"
-            className={
-              page === index + 1
-                ? "active"
-                : ""
-            }
-            key={index}
-            onClick={() =>
-              setPage(index + 1)
-            }
-          >
-            {index + 1}
-          </button>
-        )
-      )}
-
-      <button
-        type="button"
-        disabled={page === totalPages}
-        onClick={() =>
-          setPage((value) =>
-            Math.min(
-              totalPages,
-              value + 1
-            )
-          )
-        }
-      >
-        Next
-      </button>
-
-    </div>
-
-  </div>
-)}
+      
+ <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  totalItems={filtered.length}
+  pageSize={pageSize}
+  onPageChange={setPage}
+  onPageSizeChange={handlePageSizeChange}
+  itemLabel="subscriptions"
+/>
 
       </div>
 
@@ -2911,7 +2735,7 @@ export default function MerchantSubscriptions() {
 
     }
 
-    listPlans()
+    getMerchantFormPlans()
 
       .then((allPlans) => {
 
@@ -2960,6 +2784,8 @@ export default function MerchantSubscriptions() {
     };
 
   }, [screen, selectedMerchant]);
+
+  
 
   const updatePaymentField = (field, value) => {
 

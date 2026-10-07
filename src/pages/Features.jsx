@@ -29,32 +29,12 @@ const defaultCategories = [
 
 
 function FeatureDescriptionCell({ description = "" }) {
-  const textRef = useRef(null);
-  const [isTruncated, setIsTruncated] = useState(false);
-
-  useEffect(() => {
-    const checkTruncation = () => {
-      const element = textRef.current;
-      if (!element) return;
-      setIsTruncated(element.scrollHeight > element.clientHeight + 1);
-    };
-
-    checkTruncation();
-    window.addEventListener("resize", checkTruncation);
-    return () => window.removeEventListener("resize", checkTruncation);
-  }, [description]);
-
   return (
     <td className="feature-description">
-      <div className="feature-description-tooltip-wrap">
-        <span ref={textRef} className="feature-description-clamp">
+      <div className="feature-description-content">
+        <span className="feature-description-clamp">
           {description || "—"}
         </span>
-        {isTruncated && (
-          <div className="feature-description-tooltip" role="tooltip">
-            {description}
-          </div>
-        )}
       </div>
     </td>
   );

@@ -18,53 +18,26 @@ function readStoreTypes(response) {
   return candidates.find((value) => Array.isArray(value)) || [];
 }
 
-function normalizeStoreTypeEntry(item, index) {
+function normalizeStoreTypeEntry(item) {
   const storeType = item?.storeType ?? item ?? {};
-  const rawId =
-    storeType.id ??
-    storeType._id ??
-    item?.storeTypeId ??
-    item?.id ??
-    `store-type-${index}`;
+  const id = storeType.id ?? storeType._id ?? item?.storeTypeId ?? item?.id;
+
+  if (!id) return null;
 
   return {
     ...storeType,
-    id: rawId,
+    id,
     name:
       storeType.name ??
       storeType.storeTypeName ??
       item?.name ??
       "Unnamed store type",
-    code:
-      storeType.code ??
-      storeType.storeTypeCode ??
-      item?.code ??
-      item?.storeTypeCode ??
-      "",
-    checked:
-      item?.checked ??
-      storeType?.checked ??
-      item?.mapped ??
-      storeType?.mapped ??
-      item?.enabled ??
-      storeType?.enabled ??
-      item?.active ??
-      storeType?.active ??
-      item?.isEnabled ??
-      storeType?.isEnabled ??
-      item?.isActive ??
-      storeType?.isActive ??
-      false,
+    code: storeType.code ?? storeType.storeTypeCode ?? item?.code ?? "",
+    checked: Boolean(
+      item?.checked ?? storeType.checked ?? item?.mapped ?? false,
+    ),
   };
 }
-
-const fallbackStoreTypesList = [
-  { id: "retail", name: "Retail", code: "RETAIL" },
-  { id: "restaurant", name: "Restaurant", code: "RESTAURANT" },
-  { id: "spa", name: "Spa", code: "SPA" },
-  { id: "kiosk", name: "Kiosk", code: "KIOSK" },
-];
-
 const getStateArray = (value) => (Array.isArray(value) ? value : []);
 
 export default function ViewRoleTemplateStoreTypes() {
@@ -80,7 +53,8 @@ export default function ViewRoleTemplateStoreTypes() {
     location.state?.selectedStoreTypes,
   );
 
-  const [storeTypesList, setStoreTypesList] = useState(fallbackStoreTypesList);
+  // Removed the static fallback data. Now initializes as an empty array.
+  const [storeTypesList, setStoreTypesList] = useState([]);
   const [selectedStoreTypes, setSelectedStoreTypes] = useState(
     initialSelectedStoreTypes,
   );
@@ -104,16 +78,16 @@ export default function ViewRoleTemplateStoreTypes() {
   );
 
   const tabs = [
-    ["overview", "Overview", `/role-templates/${roleId || "store-manager"}`],
+    ["overview", "Overview", `/role-templates/${roleId}`],
     [
       "store-types",
       "Applicable Store Types",
-      `/role-templates/${roleId || "store-manager"}/store-types`,
+      `/role-templates/${roleId}/store-types`,
     ],
     [
       "access",
       "Feature & Permission Access",
-      `/role-templates/${roleId || "store-manager"}/access`,
+      `/role-templates/${roleId}/access`,
     ],
   ];
 
@@ -138,7 +112,12 @@ export default function ViewRoleTemplateStoreTypes() {
         }
       } catch (requestError) {
         if (!cancelled) {
-          setError(requestError?.message || "Unable to load store types.");
+          const errMsg =
+            requestError?.response?.data?.message ||
+            requestError?.response?.data?.error ||
+            requestError?.message ||
+            "Unable to load store types.";
+          setError(errMsg);
         }
       } finally {
         if (!cancelled) {
@@ -152,7 +131,7 @@ export default function ViewRoleTemplateStoreTypes() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [roleId]);
 
   async function toggleStoreType(id) {
     if (saving || !roleId) return;
@@ -172,8 +151,18 @@ export default function ViewRoleTemplateStoreTypes() {
       );
       setSavedStoreTypes(nextSelectedStoreTypes);
     } catch (requestError) {
+      // Revert the checkbox if the API call fails
       setSelectedStoreTypes(selectedStoreTypes);
-      setError(requestError?.message || "Unable to save store type selection.");
+
+      // Extract detailed error message from backend if available
+      const errorMessage =
+        requestError?.response?.data?.message ||
+        requestError?.response?.data?.error ||
+        requestError?.response?.data?.errors?.[0]?.message ||
+        requestError?.message ||
+        "Unable to save store type selection.";
+
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -203,7 +192,6 @@ export default function ViewRoleTemplateStoreTypes() {
     }
 
     setSaving(true);
-
     setSavedStoreTypes(selectedStoreTypes);
 
     navigate(`/role-templates/${roleId || "store-manager"}/access`, {
