@@ -110,6 +110,19 @@ export async function getDevicesByMerchantId(merchantId) {
   return items.map(normalizeDevice).filter(Boolean);
 }
 
+/** GET /devices/merchant/:merchantId (includes devices already mapped to stores) */
+export async function listAllDevicesByMerchantId(merchantId) {
+  if (!UUID_PATTERN.test(String(merchantId || ""))) {
+    throw new Error("A valid merchant UUID is required to load devices.");
+  }
+  const response = await api.get(endpoints.merchantDevices(merchantId));
+  const unwrapped = unwrapDevice(response);
+  const items = Array.isArray(unwrapped)
+    ? unwrapped
+    : unwrapped?.devices || unwrapped?.items || [];
+  return items.map(normalizeDevice).filter(Boolean);
+}
+
 /**
  * GET /devices/:deviceId
  */
@@ -190,6 +203,7 @@ export async function deleteDevice(deviceId) {
 export const devicesApi = {
   list: listDevices,
   listByMerchantId: getDevicesByMerchantId,
+  listAllByMerchantId: listAllDevicesByMerchantId,
   get: getDevice,
   create: createDevice,
   update: updateDevice,
