@@ -21,6 +21,7 @@ export default function EditDevice() {
   const [form, setForm] = useState({
     deviceName: "",
     deviceCode: "",
+    deviceId: "",
     deviceType: "",
     serialNumber: "",
     merchantId: "",
@@ -77,7 +78,8 @@ export default function EditDevice() {
       );
       setForm({
         deviceName: data.name || "",
-        deviceCode: data.deviceCode || data.id || "",
+        deviceCode: data.code || "",
+        deviceId: data.deviceId || "",
         deviceType: data.type || "",
         serialNumber: data.serial || "",
         merchantId: selectedMerchant?.value || data.merchantId || "",
@@ -288,13 +290,21 @@ export default function EditDevice() {
 
           {/* DEVICE CODE */}
 
-          <EditField label="Device Code" required>
+          <EditField label="Device Code">
             <input
               name="deviceCode"
               value={form.deviceCode}
               readOnly
-              placeholder="Enter device code"
-              required
+              placeholder="Generated after saving"
+            />
+          </EditField>
+
+          <EditField label="Device ID">
+            <input
+              name="deviceId"
+              value={form.deviceId}
+              onChange={update}
+              placeholder="Enter device ID (optional)"
             />
           </EditField>
 
