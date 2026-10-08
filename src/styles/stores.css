@@ -226,6 +226,22 @@
     color: #697285;
 }
 
+.store-table-details {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.store-table-details strong {
+    color: #394256;
+    font-weight: 500;
+}
+
+.store-table-details small {
+    color: #7a8498;
+    font-size: 12px;
+}
+
 .stores-table tbody tr:hover {
     background: #fafbff;
 }
@@ -680,9 +696,24 @@
 }
 
 .stores-card .stores-table {
-    width: 100%;
-    min-width: 900px;
-    table-layout: fixed;
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
+}
+
+.stores-card .stores-table th,
+.stores-card .stores-table td {
+    min-width: 112px;
+}
+
+.stores-card .stores-table th:first-child,
+.stores-card .stores-table td:first-child {
+    min-width: 120px;
+}
+
+.stores-card .stores-table th:last-child,
+.stores-card .stores-table td:last-child {
+    min-width: 100px;
 }
 
 @media (max-width: 600px) {
