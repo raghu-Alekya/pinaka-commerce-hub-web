@@ -34,7 +34,9 @@ export default function ListActions({
                     title={editLabel}
                     aria-label={editLabel}
                 >
-                    <i className="bi bi-pencil" />
+                    
+                    <i className="bi bi-pencil text-primary" />
+                  
                 </button>
             )}
 

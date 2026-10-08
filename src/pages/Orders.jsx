@@ -557,6 +557,7 @@ const handlePageSizeChange = (size) => {
         onPageChange={setCurrentPage}
         onPageSizeChange={handlePageSizeChange}
         itemLabel="orders"
+        showWhenEmpty={true}
     />
 )}
                 {/* =================================================

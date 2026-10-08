@@ -328,7 +328,7 @@ table thead th {
 }
 
 
-/* paste pagination CSS here */
+
 
 
 /* Shared status pills for the Employees and Devices list tables. */
@@ -375,25 +375,31 @@ table thead th {
 }
 
 .list-action-btn {
-    width: 32px;
-    height: 32px;
+    width: 35px;
+    height: 35px;
     padding: 0;
-    border: 1px solid #d8e1ee;
+    border: 1px solid #dce9f5;
     border-radius: 7px;
-    background: #fff;
-    color: #536985;
+    background: #EEFFEE;
+    color: #63cc66;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 15px;
     box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
     transition: all 0.16s ease;
+
 }
 
 .list-action-btn:hover {
-    background: #f2f0ff;
-    color: #5143bc;
+    color: #a0ffc5;
+}
+
+.list-action-btn .text-primary{
+  color: #5143bc!important;
+  background-color:#f8faff !important  ;
+
 }
 
 .list-action-btn.text-success {
@@ -401,7 +407,12 @@ table thead th {
 }
 
 .list-action-btn.text-danger {
-    color: #dc3545;
+     color: #d9485f !important;
+}
+
+.list-action-btn.text-danger:hover {
+    border-color: #ffd8e1 !important;
+  background: #fff0f3 !important;
 }
 
 .list-action-btn:disabled {

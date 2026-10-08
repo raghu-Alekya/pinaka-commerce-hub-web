@@ -919,13 +919,14 @@ a {
 }
 
 .merchant-table tbody td {
-    height: 52px;
+    min-height: 52px;
     padding: 10px 14px;
     border-bottom: 1px solid #f1f2f5;
     color: #697285;
     font-size: 13px;
     vertical-align: middle;
     white-space: nowrap;
+    text-align: center !important;
 }
 
 .merchant-table tbody tr:last-child td {
@@ -1275,56 +1276,9 @@ dialog.merchant-delete-dialog::backdrop {
 
 .merchant-table th:last-child,
 .merchant-table td:last-child {
-    text-align: left !important
+    text-align: left
 }
-
-/* .merchant-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 16px 20px;
-    border-top: 1px solid #edf0f4;
-    color: #697285;
-    font-size: 13px
-}
-
-.merchant-pagination>div {
-    display: flex;
-    gap: 6px;
-    align-items: center
-}
-
-.merchant-pagination button {
-    border: 1px solid #dfe3ea;
-    background: #fff;
-    border-radius: 6px;
-    padding: 7px 11px;
-    color: #3c465a;
-    cursor: pointer
-}
-
-.merchant-pagination button.active {
-    background: #5143bc;
-    border-color: #5143bc;
-    color: #fff
-}
-
-.merchant-pagination button:disabled {
-    opacity: .5;
-    cursor: not-allowed
-} */
-
-/* @media(max-width:700px) {
-    .merchant-pagination {
-        align-items: flex-start;
-        flex-direction: column
-    }
-
-    .merchant-pagination>div {
-        flex-wrap: wrap
-    }
-} */
+ 
 
 
 /* =========================================================

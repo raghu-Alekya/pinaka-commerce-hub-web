@@ -1861,6 +1861,7 @@ export default function Vendors({
   onPageChange={setCurrentPage}
   onPageSizeChange={handlePageSizeChange}
   itemLabel="vendors"
+  showWhenEmpty={true} 
 />
 
       </div>

@@ -436,7 +436,13 @@ useEffect(() => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6}>No stores found.</td>
+                  <td
+                    colSpan="6"
+                    style={{
+                      textAlign: "center",
+                      padding: "40px",
+                    }}
+                  >No stores found.</td>
                 </tr>
               )}
             </tbody>
@@ -451,6 +457,7 @@ useEffect(() => {
   onPageChange={setCurrentPage}
   onPageSizeChange={handlePageSizeChange}
   itemLabel="stores"
+  showWhenEmpty={true}
 />
 
       </div>

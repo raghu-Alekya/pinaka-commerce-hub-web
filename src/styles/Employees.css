@@ -775,7 +775,6 @@
   table-layout: fixed;
   border-collapse: collapse;
 }/* Employee table aligned with the Plans list. */
-.employees-list-card { margin: 12px; }
 .employees-list-card .employees-table-wrap {
   overflow-x: auto;
   border: 1px solid #e3ecf5;
