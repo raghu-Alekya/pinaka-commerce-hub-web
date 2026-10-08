@@ -174,8 +174,8 @@
 
 .vendors-form label span {
   color: #23426e;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 
@@ -429,10 +429,14 @@
    ========================================================= */
 
 .vendors-table-wrap {
-  overflow-x: auto;
+  overflow: hidden;
   border: 1px solid #dfe9f4;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.vendors-table-scroll {
+  overflow-x: auto;
 }
 
 .vendors-table {
@@ -584,6 +588,10 @@
 
 .vendors-table tbody tr:hover td:last-child {
   background: #fbfdff;
+}
+
+.vendors-page > .vendors-list-card > .pagination-container {
+  border-top: 0;
 }
 
 .vendors-pagination {

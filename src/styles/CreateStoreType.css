@@ -1,3 +1,33 @@
+/* Outer spacing shared only by top-level Master Setup pages. */
+.main-content > :is(
+  .store-types-page,
+  .store-type-details-page,
+  .store-features-page,
+  .features-page,
+  .feature-detail-page,
+  .feature-permissions-page,
+  .role-templates-page,
+  .role-details-page,
+  .plans-page,
+  .plan-details-page,
+  .tenders-page,
+  .vendors-page
+) {
+  padding: 24px;
+}
+
+@media (max-width: 1200px) {
+  .main-content > :is(.store-types-page, .store-type-details-page, .store-features-page, .features-page, .feature-detail-page, .feature-permissions-page, .role-templates-page, .role-details-page, .plans-page, .plan-details-page, .tenders-page, .vendors-page) {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .main-content > :is(.store-types-page, .store-type-details-page, .store-features-page, .features-page, .feature-detail-page, .feature-permissions-page, .role-templates-page, .role-details-page, .plans-page, .plan-details-page, .tenders-page, .vendors-page) {
+    padding: 12px;
+  }
+}
+
 .store-types-page {
   flex: 1;
   min-height: calc(100vh - 72px);
