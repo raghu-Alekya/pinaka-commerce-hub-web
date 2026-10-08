@@ -525,6 +525,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const [rolesLoading, setRolesLoading] = useState(false);
   const [rolesError, setRolesError] = useState("");
   const [roles, setRoles] = useState([]);
+  const [savedRoleKeys, setSavedRoleKeys] = useState([]);
+  const appliedRoleSnapshot = useRef("");
   const [activeRole, setActiveRole] = useState("");
   const [copyFromRole, setCopyFromRole] = useState("");
   const [permissions, setPermissions] = useState({});
@@ -758,6 +760,13 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     () => Object.fromEntries(roleDefinitions.map((role) => [role.id, role])),
     [roleDefinitions],
   );
+  const roleIsSelected = (role) => {
+    const keys = roleTemplateKeys(role);
+    return roles.some(
+      (roleId) =>
+        roleId === role.id || keys.includes(String(roleId).toLowerCase()),
+    );
+  };
   const roleName = (id) => roleById[id]?.name || id;
   const categories = [
     "All Features",
@@ -1252,17 +1261,31 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   }, [activeStoreTypeId, reload]);
 
   useEffect(() => {
-    if (storeTypeRoleIds === null) return;
-    const allowed = roles.filter((roleId) => {
-      const role = roleDefinitions.find((item) => item.id === roleId);
-      const keys = role ? roleTemplateKeys(role) : [String(roleId).toLowerCase()];
-      return keys.some((key) => storeTypeRoleIds.has(key));
+    if (storeTypeRoleIds === null || storeTypeRolesLoading || !activeStoreTypeId) return;
+    setRoles((current) => {
+      const allowed = current.flatMap((roleId) => {
+        const role = roleDefinitions.find(
+          (item) =>
+            item.id === roleId ||
+            roleTemplateKeys(item).includes(String(roleId).toLowerCase()),
+        );
+        if (!role) return [roleId];
+        const keys = roleTemplateKeys(role);
+        const saved = keys.some((key) => savedRoleKeys.includes(key));
+        const allowedForType = keys.some((key) => storeTypeRoleIds.has(key));
+        if (!allowedForType && !saved) return [];
+        return [role.id];
+      });
+      const unique = [...new Set(allowed)];
+      if (
+        unique.length === current.length &&
+        unique.every((id, index) => id === current[index])
+      ) {
+        return current;
+      }
+      return unique;
     });
-    if (allowed.length !== roles.length) setRoles(allowed);
-    setActiveRole((current) =>
-      allowed.includes(current) ? current : allowed[0] || "",
-    );
-  }, [storeTypeRoleIds, roles, roleDefinitions]);
+  }, [storeTypeRoleIds, storeTypeRolesLoading, activeStoreTypeId, roleDefinitions, savedRoleKeys]);
 
   // Load Store-Type Features
   useEffect(() => {
@@ -1281,7 +1304,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               savedPin: [item.loginPin, item.employeeLoginPin, item.pin]
                 .map(value => String(value ?? ""))
                 .find(value => /^\d{6}$/.test(value)) || "",
-              pinSet: Boolean(item.pinSet),
+              pinSet: [item.pinSet, item.hasLoginPin].some(
+                (value) => value === true || value === "t" || value === "true" || value === 1,
+              ) || Boolean(item.loginPinHash),
             }))
             .filter((item) => item.employeeId),
         );
@@ -1324,7 +1349,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       .list(merchantId, storeId)
       .then((response) => {
         if (cancelled) return;
-        const assigned = readStoreRoleTemplates(response)
+        const rows = readStoreRoleTemplates(response);
+        const keys = [...new Set(rows.flatMap((row) => roleTemplateKeys(row)))];
+        appliedRoleSnapshot.current = "";
+        setSavedRoleKeys(keys);
+        const assigned = rows
           .map((row) => row.roleTemplateId || row.id)
           .filter(Boolean);
         setRoles(assigned);
@@ -1342,6 +1371,29 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       cancelled = true;
     };
   }, [editing, merchantId, storeId, reload]);
+
+  useEffect(() => {
+    if (!editing) return;
+    if (rolesLoading || merchantLoading || storeTypeRolesLoading || storeTypeRoleIds === null) return;
+    if (!roleDefinitions.length) return;
+    const snapshot = savedRoleKeys.join("|");
+    if (appliedRoleSnapshot.current === snapshot) return;
+    const selected = roleDefinitions
+      .filter((role) => roleTemplateKeys(role).some((key) => savedRoleKeys.includes(key)))
+      .map((role) => role.id);
+    appliedRoleSnapshot.current = snapshot;
+    if (savedRoleKeys.length && !selected.length) return;
+    setRoles(selected);
+    setActiveRole((current) => (selected.includes(current) ? current : selected[0] || ""));
+  }, [
+    editing,
+    rolesLoading,
+    merchantLoading,
+    storeTypeRolesLoading,
+    storeTypeRoleIds,
+    roleDefinitions,
+    savedRoleKeys,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1552,9 +1604,17 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         : [...current, name],
     );
   const toggleRole = (roleId) => {
+    const keys = new Set(
+      roleTemplateKeys(roleById[roleId] || { id: roleId }),
+    );
     setRoles((current) => {
-      const next = current.includes(roleId)
-        ? current.filter((item) => item !== roleId)
+      const selected = current.some(
+        (item) => item === roleId || keys.has(String(item).toLowerCase()),
+      );
+      const next = selected
+        ? current.filter(
+            (item) => item !== roleId && !keys.has(String(item).toLowerCase()),
+          )
         : [...current, roleId];
       setActiveRole((active) =>
         next.includes(active) ? active : next[0] || "",
@@ -2803,7 +2863,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         <Panel
           title="Role Templates"
           subtitle={readOnly ? "Role templates assigned to this store." : "Choose from merchant-selected role templates for this store."}
-          action={<label className="sf-select-all-label sf-panel-select-all"><input type="checkbox" disabled={readOnly || !selectableRoleDefinitions.length || storeTypeRolesLoading} checked={selectableRoleDefinitions.length > 0 && selectableRoleDefinitions.every((role) => roles.includes(role.id))} onChange={(event) => {
+          action={<label className="sf-select-all-label sf-panel-select-all"><input type="checkbox" disabled={readOnly || !selectableRoleDefinitions.length || storeTypeRolesLoading} checked={selectableRoleDefinitions.length > 0 && selectableRoleDefinitions.every((role) => roleIsSelected(role))} onChange={(event) => {
             const ids = selectableRoleDefinitions.map((role) => role.id);
             const next = event.target.checked ? [...new Set([...roles, ...ids])] : roles.filter((roleId) => !ids.includes(roleId));
             setRoles(next);
@@ -2830,12 +2890,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           <div className="sf-template-grid">
             {selectableRoleDefinitions.map((role, index) => (
               <label
-                className={`sf-template ${roles.includes(role.id) ? "selected" : ""}`}
+                className={`sf-template ${roleIsSelected(role) ? "selected" : ""}`}
                 key={role.id}
               >
                 <input
                   type="checkbox" disabled={readOnly}
-                  checked={roles.includes(role.id)}
+                  checked={roleIsSelected(role)}
                   onChange={() => toggleRole(role.id)}
                 />
                 <span className={`sf-template-icon icon-${index % 5}`}>
@@ -3181,8 +3241,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                         ) : (
                           <div className="sf-pin-action">
                             {(assignment?.pin || assignment?.savedPin || assignment?.pinSet) && (
-                              <span className="sf-pin-set" title={!assignment.pin && !assignment.savedPin ? "The employee API did not return the saved PIN." : undefined}>
-                                {assignment.pin || assignment.savedPin || "PIN unavailable"}
+                              <span className="sf-pin-set">
+                                {assignment.pin || assignment.savedPin || "PIN set"}
                               </span>
                             )}
                             <button

@@ -268,9 +268,10 @@
   color: #269553;
 }
 
+.connection-pill.not-connected,
 .connection-pill.disconnected {
-  background: #f1f2f5;
-  color: #737d8d;
+  background: #fde8e8;
+  color: #b42318;
 }
 
 
@@ -2125,4 +2126,15 @@
   .store-section-editor .sf-search { width: 100%; min-width: 0; }
   .store-section-editor .sf-table { min-width: 640px; }
   .store-section-editor .sf-employees-table { min-width: 1080px; }
+}
+.store-workspace-page .store-panel-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.store-workspace-page .store-panel-actions .sf-outline:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
