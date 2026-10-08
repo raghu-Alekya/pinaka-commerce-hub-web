@@ -1070,8 +1070,8 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
                          {m.status || 'Unknown'}
                          </span>
                     </td>
-                    <td>{formatDate(m.createdAt || m.created_at || m.createdDate || m.joined)}</td>
-                    <td>{formatDate(m.updatedAt || m.updated_at || m.updatedDate)}</td>
+                    <td>{formatDate(m.createdAt || m.created_at || m.createdDate || m._raw?.merchant?.created_at || m.joined)}</td>
+                    <td>{formatDate(m.updatedAt || m.updated_at || m.updatedDate || m._raw?.merchant?.updated_at)}</td>
                     <td>
     <ListActions
         onView={() => openView(m)}
