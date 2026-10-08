@@ -558,6 +558,8 @@ const handlePageSizeChange = (size) => {
 
                 <th>Contact</th>
 
+                <th>Login PIN</th>
+
                 <th>Merchant</th>
 
                 <th>Status</th>
@@ -572,7 +574,7 @@ const handlePageSizeChange = (size) => {
             <tbody>
               {loadError ? (
                 <tr>
-                  <td colSpan="7" className="employees-no-results">
+                  <td colSpan="8" className="employees-no-results">
                     {loadError}
                   </td>
                 </tr>
@@ -607,6 +609,7 @@ const handlePageSizeChange = (size) => {
                         <div>{employee.phone}</div>
                       </div>
                     </td>
+                    <td>{employee.loginPin || "—"}</td>
                     {/* ROLE */}
 
                     {/* MERCHANT */}
@@ -649,7 +652,7 @@ const handlePageSizeChange = (size) => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="employees-no-results">
+                  <td colSpan="8" className="employees-no-results">
                     No employees found
                   </td>
                 </tr>
@@ -669,6 +672,7 @@ const handlePageSizeChange = (size) => {
   onPageChange={setPage}
   onPageSizeChange={handlePageSizeChange}
   itemLabel="employees"
+  showWhenEmpty={true}
 />
       </div>
     </div>

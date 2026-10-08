@@ -919,13 +919,14 @@ a {
 }
 
 .merchant-table tbody td {
-    height: 52px;
+    min-height: 52px;
     padding: 10px 14px;
     border-bottom: 1px solid #f1f2f5;
     color: #697285;
     font-size: 13px;
     vertical-align: middle;
     white-space: nowrap;
+
 }
 
 .merchant-table tbody tr:last-child td {
@@ -949,22 +950,6 @@ a {
     gap: 8px;
 }
 
-.merchant-avatar {
-    width: 30px;
-    height: 30px;
-
-    border-radius: 50%;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 8px;
-
-    font-weight: 600;
-
-    flex-shrink: 0;
-}
 
 .purple-avatar {
     background: #e7e2ff;
@@ -1277,54 +1262,7 @@ dialog.merchant-delete-dialog::backdrop {
 .merchant-table td:last-child {
     text-align: left !important
 }
-
-/* .merchant-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 16px 20px;
-    border-top: 1px solid #edf0f4;
-    color: #697285;
-    font-size: 13px
-}
-
-.merchant-pagination>div {
-    display: flex;
-    gap: 6px;
-    align-items: center
-}
-
-.merchant-pagination button {
-    border: 1px solid #dfe3ea;
-    background: #fff;
-    border-radius: 6px;
-    padding: 7px 11px;
-    color: #3c465a;
-    cursor: pointer
-}
-
-.merchant-pagination button.active {
-    background: #5143bc;
-    border-color: #5143bc;
-    color: #fff
-}
-
-.merchant-pagination button:disabled {
-    opacity: .5;
-    cursor: not-allowed
-} */
-
-/* @media(max-width:700px) {
-    .merchant-pagination {
-        align-items: flex-start;
-        flex-direction: column
-    }
-
-    .merchant-pagination>div {
-        flex-wrap: wrap
-    }
-} */
+ 
 
 
 /* =========================================================
@@ -1588,20 +1526,24 @@ dialog.merchant-delete-dialog::backdrop {
     height: 95px;
   min-height: 95px;
   padding: 10px;
-    border: 1px solid #edf0f5;
+    border: 1px solid #e4dcf5;
     background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
 }
 .page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.blue) {
     background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
+  border-color: #dbe8f4;
 }
 .page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.green) {
     background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+  border-color: #d6ecdf;
 }
 .page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.orange) {
     background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+  border-color: #f2e3cb;
 }
 .page-content:has(> .merchant-table-card) .stat-card:has(.stat-icon.red) {
     background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+  border-color: #f1dce1;
 }
 .page-content:has(> .merchant-table-card) .stat-content>span {
   margin-bottom: 0;
@@ -1633,6 +1575,10 @@ dialog.merchant-delete-dialog::backdrop {
 .page-content > .merchant-table-card {
   margin-bottom: 8px;
 }
+.merchant-table-card > .pagination-container {
+    border-top: 0;
+}
+
 .merchant-table-card > .filter-bar {
   min-height: 48px;
   padding: 12px 12px 16px;
@@ -1644,6 +1590,20 @@ dialog.merchant-delete-dialog::backdrop {
 @media (max-width: 600px) {
   .page-content:has(> .merchant-table-card) {
     padding: 8px 10px 0;
+  }
+}
+
+/* Desktop outer padding for the selected top-level listing screens. */
+@media (min-width: 1201px) {
+  .main-content > .page-content:has(> .merchant-table-card),
+  .main-content > .stores-page,
+  .main-content > .merchant-subscriptions-page:has(> .subscription-table-card),
+  .main-content > .vendors-page:has(> .vendors-list-card),
+  .main-content > .pos-page-content,
+  .main-content > .orders-page,
+  .main-content > .cash-management-page,
+  .main-content > .employees-page {
+    padding: 24px;
   }
 }
 

@@ -513,13 +513,39 @@
    STORE CONFIGURATION BACK NAVIGATION
    ========================================================= */
 
-.store-workspace-page .breadcrumb-area {
+.store-workspace-page > .store-workspace-topbar {
+  min-height: 64px;
   display: flex;
   align-items: center;
+  gap: 13px;
+  padding: 0 28px;
+  margin: -24px -26px 20px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #cdccd7;
+  color: #24324d;
+  font: 14px/1.45 Inter, "Segoe UI", sans-serif;
+}
 
-  gap: 10px;
+.store-workspace-page > .store-workspace-topbar > span {
+  color: #a3acc0;
+}
 
-  margin-bottom: 18px;
+.store-workspace-page > .store-workspace-topbar > strong {
+  font-weight: 600;
+}
+
+@media (max-width: 620px) {
+  .store-workspace-page > .store-workspace-topbar {
+    min-height: 55px;
+    gap: 8px;
+    padding: 0 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .store-workspace-page > .store-workspace-topbar {
+    margin: -16px -16px 20px;
+  }
 }
 
 

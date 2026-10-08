@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, ChevronDown } from "lucide-react";
+import { ArrowLeft, Settings, ChevronDown } from "lucide-react";
 
 import "../styles/add-device.css";
 import { devicesApi } from "../api/devices";
@@ -15,7 +15,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
 
   const [formData, setFormData] = useState({
     deviceName: "",
-    deviceCode: "",
+    deviceId: "",
     deviceType: "",
     serialNumber: "",
     merchantId: "",
@@ -127,25 +127,28 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
   return (
     <div className="add-device-page">
       {/* HEADER */}
-      {!embedded && <>
-        <header className="add-device-topbar">
-          <button
-            type="button"
-            className="add-device-back-link"
-            onClick={() => (onCancel ? onCancel() : navigate("/devices"))}
-          >
-            <i className="bi bi-arrow-left" aria-hidden="true" /> Devices
-          </button>
-          <span>/</span>
-          <strong>Add Device</strong>
-        </header>
-        <div className="add-device-header">
-          <div>
-            <h1>Add Device</h1>
-            <p>Add and configure a new device, assignment details, and settings.</p>
+      {!embedded && <div className="add-device-header">
+        <div>
+          <h1>Add Device</h1>
+
+          <div className="add-device-breadcrumb">
+            <span>Home</span>
+            <span>›</span>
+            <span>Devices</span>
+            <span>›</span>
+            <strong>Add Device</strong>
           </div>
         </div>
-      </>}
+
+        <button
+          type="button"
+          className="back-devices-btn"
+          onClick={() => (onCancel ? onCancel() : navigate("/devices"))}
+        >
+          <ArrowLeft size={15} />
+          Back to Devices
+        </button>
+      </div>}
 
       {/* ERROR */}
       {apiError && <div className="device-api-error">{apiError}</div>}
@@ -175,14 +178,24 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
               />
             </FormField>
 
-            {/* DEVICE CODE */}
-            <FormField label="Device Code" required>
+            {/* DEVICE ID */}
+            <FormField label="Device ID">
               <input
-                name="deviceCode"
-                value={formData.deviceCode}
+                name="deviceId"
+                value={formData.deviceId}
                 onChange={handleChange}
-                placeholder="Enter device code"
-                required
+                placeholder="Enter device ID "
+              />
+            </FormField>
+
+            {/* GENERATED DEVICE CODE */}
+            <FormField label="Device Code">
+              <input
+                value=""
+                readOnly
+                aria-readonly="true"
+                placeholder="Auto-generated (e.g. DVC_00001)"
+                className="device-code-readonly"
               />
             </FormField>
 

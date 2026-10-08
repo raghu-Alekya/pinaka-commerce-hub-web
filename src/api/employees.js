@@ -176,6 +176,8 @@ export function mapEmployeeToRow(employee) {
     email: employee.email || "—",
  
     phone: employee.phone || "—",
+
+    loginPin: employee.loginPin || employee.employeeLoginPin || employee.pin || "",
  
     role: employee.role || "—",
  
@@ -250,7 +252,17 @@ export async function listStoreRolePermissions(merchantId, storeId) {
 }
  
 export async function saveStoreEmployees(merchantId, storeId, employees) {
-  return api.put(endpoints.storeEmployees(merchantId, storeId), { employees });
+  return api.put(endpoints.storeEmployees(merchantId, storeId), {
+    employees: employees.map((employee) => ({
+      employeeId: employee.employeeId || employee.employee_id,
+      ...(employee.roleTemplateId || employee.role_template_id
+        ? { roleTemplateId: employee.roleTemplateId || employee.role_template_id }
+        : {}),
+      ...(employee.loginPin || employee.login_pin
+        ? { login_pin: employee.loginPin || employee.login_pin }
+        : {}),
+    })),
+  });
 }
 // Photos use the employee update API, with exactly one multipart image field.
 export async function uploadEmployeeProfileImage(employeeId, file) {

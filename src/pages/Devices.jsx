@@ -3,27 +3,16 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
  
 import {
- 
   Monitor,
- 
   AlertCircle,
- 
-  Search,
- 
-  CalendarDays,
- 
-  SlidersHorizontal,
- 
-  ChevronDown,
- 
-  Eye,
- 
 } from "lucide-react";
  
 import "../styles/devices.css";
  
 import { devicesApi } from "../api/devices";
 import Pagination from "../components/Pagination";
+import ListActions from "../components/ListActions";
+import FiltersBar from "../components/FiltersBar";
  
 export default function Devices() {
  
@@ -399,91 +388,71 @@ export default function Devices() {
  
         {" "}
  
-        <div className="devices-filter-bar">
- 
-          {" "}
- 
-          {/* SEARCH */}{" "}
- 
-          <div className="devices-search">
- 
-            {" "}
- 
-            <Search size={17} />{" "}
- 
-            <input
- 
-              type="text"
- 
-              placeholder="Search by device name or serial number,..."
- 
-              value={search}
- 
-              onChange={(e) => handleFilterChange(setSearch, e.target.value)}
- 
-            />{" "}
- 
-          </div>{" "}
- 
-          {/* MERCHANT */}{" "}
- 
-          <FilterSelect
- 
-            value={merchant}
- 
-            onChange={(value) => handleFilterChange(setMerchant, value)}
- 
-            options={merchantOptions}
- 
-          />{" "}
- 
- 
- 
-          {/* DEVICE TYPE */}{" "}
- 
-          <FilterSelect
- 
-            value={deviceType}
- 
-            onChange={(value) => handleFilterChange(setDeviceType, value)}
- 
-            options={deviceTypeOptions}
- 
-          />{" "}
- 
-          {/* STATUS */}{" "}
- 
-          <FilterSelect
- 
-            value={status}
- 
-            onChange={(value) => handleFilterChange(setStatus, value)}
- 
-            options={["All connection Statuses", "Online", "Offline", "Inactive"]}
- 
-          />{" "}
- 
-          {/* DATE */}{" "}
- 
-          <button type="button" className="devices-date-btn">
- 
-            {" "}
- 
-            <CalendarDays size={16} /> <span>Date Added </span>{" "}
- 
-          </button>{" "}
- 
-          {/* FILTER */}{" "}
- 
-          <button type="button" className="devices-filter-btn">
- 
-            {" "}
- 
-            <SlidersHorizontal size={16} /> Filters{" "}
- 
-          </button>{" "}
- 
-        </div>{" "}
+        <FiltersBar
+  searchValue={search}
+  onSearchChange={(value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  }}
+  searchPlaceholder="Search by device name or serial number..."
+  filters={[
+    {
+      key: "merchant",
+      value: merchant,
+      options: [
+        { label: "All Merchants", value: "All Merchants" },
+        ...merchantOptions
+          .filter((option) => option !== "All Merchants")
+          .map((option) => ({
+            label: option,
+            value: option,
+          })),
+      ],
+      onChange: (value) => {
+        setMerchant(value);
+        setCurrentPage(1);
+      },
+    },
+    {
+      key: "deviceType",
+      value: deviceType,
+      options: [
+        { label: "All Device Types", value: "All Device Types" },
+        ...deviceTypeOptions
+          .filter((option) => option !== "All Device Types")
+          .map((option) => ({
+            label: option,
+            value: option,
+          })),
+      ],
+      onChange: (value) => {
+        setDeviceType(value);
+        setCurrentPage(1);
+      },
+    },
+    {
+      key: "status",
+      value: status,
+      options: [
+        { label: "All Statuses", value: "All Statuses" },
+        { label: "Online", value: "Online" },
+        { label: "Offline", value: "Offline" },
+        { label: "Inactive", value: "Inactive" },
+      ],
+      onChange: (value) => {
+        setStatus(value);
+        setCurrentPage(1);
+      },
+    },
+  ]}
+  onClear={() => {
+    setSearch("");
+    setMerchant("All Merchants");
+    setDeviceType("All Device Types");
+    setStatus("All Statuses");
+    setCurrentPage(1);
+  }}
+/>{" "}
  
         {/* =================================================== TABLE =================================================== */}{" "}
  
@@ -507,15 +476,14 @@ export default function Devices() {
  
                   {" "}
  
-                  <input type="checkbox" aria-label="Select all devices" />{" "}
  
                 </th>{" "}
  
-                <th>DEVICE NAME</th> <th>DEVICE TYPE</th> <th>SERIAL NUMBER</th>{" "}
+                <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
  
-                <th>MERCHANT NAME</th> <th>CONNECTION STATUS</th>{" "}
+                <th>Merchant Name</th> <th>Connection Status</th>{" "}
  
-                 <th>ACTIONS</th>{" "}
+                 <th>Actions</th>{" "}
  
               </tr>{" "}
  
@@ -567,7 +535,13 @@ export default function Devices() {
  
                   {" "}
  
-                  <td colSpan="9" className="devices-empty">
+                 <td
+                    colSpan="9"
+                    style={{
+                      textAlign: "center",
+                      padding: "40px",
+                    }}
+                  >
  
                     {" "}
  
@@ -597,7 +571,7 @@ export default function Devices() {
             setCurrentPage(1);
           }}
           itemLabel="devices"
-          showWhenEmpty
+           showWhenEmpty={true}
         />
       </div>{" "}
       {/* ===================================================== DELETE MODAL ===================================================== */}{" "}
@@ -620,154 +594,69 @@ export default function Devices() {
  
 }
  
-/* ========================================================= DEACTIVATION CONFIRMATION MODAL ========================================================= */ function DeactivateDeviceModal({
- 
+/* ========================================================= DEACTIVATION CONFIRMATION MODAL ========================================================= */ 
+function DeactivateDeviceModal({
   device,
- 
   deleting,
- 
   onCancel,
- 
   onConfirm,
- 
 }) {
- 
   if (!device) {
- 
     return null;
- 
   }
- 
+
   return (
- 
     <div
- 
-      className="device-delete-overlay"
- 
+      className="device-deactivate-overlay"
       role="presentation"
- 
       onMouseDown={onCancel}
- 
     >
- 
-      {" "}
- 
       <div
- 
-        className="device-delete-modal"
- 
+        className="device-deactivate-modal"
         role="dialog"
- 
         aria-modal="true"
- 
         aria-labelledby="deactivate-device-title"
- 
         onMouseDown={(event) => event.stopPropagation()}
- 
       >
- 
-        {" "}
- 
-        <button
- 
-          type="button"
- 
-          className="device-delete-close"
- 
-          aria-label="Close"
- 
-          onClick={onCancel}
- 
-          disabled={deleting}
- 
-        >
- 
-          {" "}
- 
-          ×{" "}
- 
-        </button>{" "}
- 
-        <div className="device-delete-heading">
- 
-          {" "}
- 
-          <div className="device-delete-icon">
- 
-            {" "}
- 
-            <i className="bi bi-pause-circle" aria-hidden="true" />{" "}
- 
-          </div>{" "}
- 
-          <h2 id="deactivate-device-title"> Deactivate Device </h2>{" "}
- 
-        </div>{" "}
- 
-        <p className="device-delete-message">
- 
-          {" "}
- 
-          Are you sure you want to mark this device inactive?{" "}
- 
-        </p>{" "}
- 
-        <p className="device-delete-warning">
- 
-          {" "}
- 
-          The device record will remain in the system and can be reactivated later.{" "}
- 
-        </p>{" "}
- 
-        <div className="device-delete-actions">
- 
-          {" "}
- 
+        <div className="device-deactivate-icon">
+          <i className="bi bi-trash" aria-hidden="true" />
+        </div>
+
+        <h2 id="deactivate-device-title">
+          Deactivate Device
+        </h2>
+
+        <p className="device-deactivate-message">
+          Are you sure you want to deactivate{" "}
+          <strong>{device.name || "this device"}</strong>?
+        </p>
+
+        <p className="device-deactivate-warning">
+          This device will no longer be active.
+        </p>
+
+        <div className="device-deactivate-actions">
           <button
- 
             type="button"
- 
-            className="device-delete-cancel"
- 
+            className="device-deactivate-cancel"
             onClick={onCancel}
- 
             disabled={deleting}
- 
           >
- 
-            {" "}
- 
-            Cancel{" "}
- 
-          </button>{" "}
- 
+            Cancel
+          </button>
+
           <button
- 
             type="button"
- 
-            className="device-delete-confirm"
- 
+            className="device-deactivate-confirm"
             onClick={onConfirm}
- 
             disabled={deleting}
- 
           >
- 
-            {" "}
- 
-            {deleting ? "Updating..." : "Deactivate"}{" "}
- 
-          </button>{" "}
- 
-        </div>{" "}
- 
-      </div>{" "}
- 
+            {deleting ? "Deactivating..." : "Deactivate"}
+          </button>
+        </div>
+      </div>
     </div>
- 
   );
- 
 }
  
 /* ========================================================= STAT CARD ========================================================= */ function StatCard({
@@ -848,17 +737,14 @@ export default function Devices() {
  
 }
  
-/* ========================================================= TABLE ROW ========================================================= */ function DeviceRow({
- 
+/* ========================================================= TABLE ROW ========================================================= */
+function DeviceRow({
   device,
- 
-  onView,
- 
-  onDeactivate,
- 
+  onDelete,
   onEdit,
- 
-}) {
+  deleting,
+}) 
+{
  
   const normalizedStatus =
  
@@ -939,59 +825,13 @@ export default function Devices() {
  
  
 <td>
- 
-  <div className="row-actions device-actions">
- 
-    <button
-      type="button"
-      className="action-btn"
-      title="View"
-      aria-label={`View ${device.name || "device"}`}
-      onClick={onView}
-    >
-      <Eye size={15} />
-    </button>
- 
-    <button
- 
-      type="button"
- 
-      className="action-btn edit-btn"
- 
-      title="Edit"
- 
-      aria-label={`Edit ${device.name || "device"}`}
- 
-      onClick={onEdit}
- 
-    >
- 
-      <i className="bi bi-pencil" aria-hidden="true" />
- 
-    </button>
- 
- 
- 
-    <button
- 
-      type="button"
- 
-      className="action-btn text-danger"
- 
-      title="Deactivate"
- 
-      aria-label={`Deactivate ${device.name || "device"}`}
- 
-      onClick={onDeactivate}
- 
-    >
- 
-      <i className="bi bi-pause-circle" aria-hidden="true" />
- 
-    </button>
- 
-  </div>
- 
+  <ListActions
+    onEdit={onEdit}
+    onDelete={onDelete}
+    editLabel={`Edit ${device.name || "device"}`}
+    deleteLabel={`Delete ${device.name || "device"}`}
+    deleteDisabled={deleting}
+  />
 </td>
  
     </tr>

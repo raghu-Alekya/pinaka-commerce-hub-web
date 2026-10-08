@@ -5,6 +5,9 @@ import { getMerchant } from "../api/merchants";
 import { api, ApiError } from "../api/http";
 import { endpoints } from "../api/endpoints";
 
+const isUuid = (value) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+
 function toStoreRow(store) {
   const address = store.address && typeof store.address === "object" ? store.address : null;
   const typeValue = store.storeType ?? store.type;
@@ -16,10 +19,14 @@ function toStoreRow(store) {
     address?.city || store.city,
     address?.state || store.state,
   ].filter(Boolean).join(", ");
-  const storeCode = store.storeCode || store.code || store.storeId || store.id || "";
+  const storeUuid = [store.id, store._id, store.storeUUID, store.storeUuid, store.store_uuid, store.uuid, store.storeId, store.storeID]
+    .find(isUuid) || "";
+  const storeCode = [store.storeCode, store.store_code, store.code, store.storeId, store.storeID, store.id]
+    .find((value) => value && !isUuid(value)) || "";
   return {
     ...store,
-    id: storeCode,
+    id: storeUuid,
+    uuid: storeUuid,
     storeId: storeCode,
     storeCode,
     name: store.storeName || store.name || "Unnamed Store",
@@ -162,11 +169,8 @@ export default function MerchantStores({
   ========================== */
 
   const getStoreId = (store) =>
-    store.storeId ??
-    store.id ??
-    store.code ??
-    store.storeCode ??
-    "—";
+    [store.uuid, store.id, store._id, store.storeUUID, store.storeUuid, store.store_uuid]
+      .find(isUuid) || "";
 
   const getStoreName = (store) =>
     store.name ??
@@ -219,12 +223,22 @@ export default function MerchantStores({
 
   const handleStoreOverview = (store) => {
     const targetId = merchantId || merchant?.merchantId || merchant?.merchantCode || merchant?.id;
-    nav(`/merchants/${encodeURIComponent(targetId)}/stores/${getStoreId(store)}`);
+    const storeUuid = getStoreId(store);
+    if (!storeUuid) {
+      setError("This store record does not include a valid UUID.");
+      return;
+    }
+    nav(`/merchants/${encodeURIComponent(targetId)}/stores/${storeUuid}`);
   };
 
   const handleEdit = (store) => {
     const targetId = merchantId || merchant?.merchantId || merchant?.merchantCode || merchant?.id;
-    nav(`/merchants/${encodeURIComponent(targetId)}/stores/edit/${getStoreId(store)}`);
+    const storeUuid = getStoreId(store);
+    if (!storeUuid) {
+      setError("This store record does not include a valid UUID.");
+      return;
+    }
+    nav(`/merchants/${encodeURIComponent(targetId)}/stores/edit/${storeUuid}`);
   };
 
   return (
@@ -375,8 +389,7 @@ export default function MerchantStores({
                   ) : (
                     visibleStores.map((store, index) => {
 
-                      const storeId =
-                        getStoreId(store);
+                      const storeId = store.storeId || store.storeCode || "—";
 
                       const storeName =
                         getStoreName(store);

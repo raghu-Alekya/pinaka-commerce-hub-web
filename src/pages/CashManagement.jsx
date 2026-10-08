@@ -455,6 +455,7 @@ useEffect(() => {
 
   {/* TABLE */}
   <div className="cash-table-wrapper">
+    <div className="cash-table-scroll">
 
     <table className="cash-table">
 
@@ -570,6 +571,7 @@ useEffect(() => {
 
     </table>
 
+    </div>
   </div>
 
 
@@ -584,6 +586,7 @@ useEffect(() => {
     onPageChange={setCurrentPage}
     onPageSizeChange={handlePageSizeChange}
     itemLabel="cash payments"
+    showWhenEmpty={true}
   />
 )}
 

@@ -969,7 +969,6 @@ const handleDateRangeChange = (value) => {
             <thead>
 
               <tr>
-                <th>#</th>
                 <th>Merchant</th>
                 <th>Plan</th>
                 <th>Stores</th>
@@ -1022,12 +1021,6 @@ const handleDateRangeChange = (value) => {
                       style={{ cursor: "pointer" }}
                     >
 
-                      <td>
-                       {(currentPage - 1) *
-                       pageSize +
-                        index +
-                        1}
-                      </td>
 
                       <td>
                         <div className="subscription-merchant-cell">
@@ -1107,6 +1100,7 @@ const handleDateRangeChange = (value) => {
   onPageChange={setPage}
   onPageSizeChange={handlePageSizeChange}
   itemLabel="subscriptions"
+  showWhenEmpty={true}
 />
 
       </div>
@@ -1275,7 +1269,7 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
             <span>Plan Validity</span>
 
-            <strong className="validity-dates">{merchant.start}<br />to {merchant.end}</strong>
+            <strong className="validity-dates">{merchant.start} to {merchant.end}</strong>
 
             <small>{billingLabel === "YEARLY" || billingLabel === "ANNUAL" ? "(1 Year)" : billingLabel}</small>
 

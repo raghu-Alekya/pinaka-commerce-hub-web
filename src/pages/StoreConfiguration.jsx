@@ -272,6 +272,8 @@ export default function StoreConfiguration() {
         const raw = response?.store || response?.data?.store || response?.data || response;
         if (!raw || typeof raw !== "object" || ![raw.id,raw.storeId,raw.storeID,raw.storeName,raw.name].some(Boolean)) throw new Error("Store not found.");
         const found = normalizeStoreForConfiguration(raw);
+        found.uuid = [raw.id, raw._id, raw.storeUUID, raw.storeUuid, raw.store_uuid, raw.uuid, raw.storeId, raw.storeID]
+          .find(isUuid) || "";
         const owner = found.merchantId || found.merchant_id || found.merchant?.id || found.merchant_uuid || merchantId;
         const result = owner ? await getMerchant(owner).catch(() => null) : null;
         if (!cancelled) { setStore(found); setMerchant(result?.merchant || {name:found.merchantName || found.merchant?.name || "",id:owner}); }
@@ -479,7 +481,7 @@ export default function StoreConfiguration() {
           BREADCRUMB
           =================================================== */}
 
-      <div className="breadcrumb-area">
+      <header className="breadcrumb-area store-workspace-topbar">
 
         <button
           className="link-button"
@@ -491,9 +493,9 @@ export default function StoreConfiguration() {
 
         <span>/</span>
 
-        <span>Store Details & Configuration</span>
+        <strong>Store Details & Configuration</strong>
 
-      </div>
+      </header>
 
       {/* ===================================================
           LOADING
@@ -697,7 +699,7 @@ export default function StoreConfiguration() {
 
                 <PosConfiguration
                   merchantId={merchant?.id || merchant?.merchantId || merchant?.merchant_id || store?.merchantId || store?.merchant_id || store?.merchant?.id || merchantId}
-                  storeId={storeId}
+                  storeId={store?.uuid || ""}
                   store={store}
                   embedded
                 />

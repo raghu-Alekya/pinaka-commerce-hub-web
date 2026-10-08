@@ -577,6 +577,7 @@ export default function AddEmployee() {
         return "";
 
       case "employeeLoginPin":
+        if (!trimmed) return "";
         if (!/^\d{6}$/.test(trimmed))
           return "Employee Login PIN must be exactly 6 digits.";
         return "";
@@ -636,6 +637,11 @@ export default function AddEmployee() {
     if (formData.address2) {
       const error = validateField("address2", formData.address2);
       if (error) nextErrors.address2 = error;
+    }
+
+    if (formData.employeeLoginPin) {
+      const error = validateField("employeeLoginPin", formData.employeeLoginPin);
+      if (error) nextErrors.employeeLoginPin = error;
     }
 
     setErrors(nextErrors);
@@ -1206,7 +1212,6 @@ export default function AddEmployee() {
                 <small id="create-employee-code-help" className="employee-code-help">Generated automatically when saved.</small>
               </div>
 
-              {/* EMPLOYEE LOGIN PIN */}
             </section>
 
             {/* =================================================
@@ -1260,6 +1265,22 @@ export default function AddEmployee() {
                   {errors.password && (
                     <span className="field-error">{errors.password}</span>
                   )}
+                </div>
+
+                <div className="employee-login-pin-field">
+                  <label htmlFor="create-employee-login-pin">Employee Login PIN</label>
+                  <input
+                    id="create-employee-login-pin"
+                    name="employeeLoginPin"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={formData.employeeLoginPin}
+                    onChange={handleChange}
+                    placeholder="Enter 6-digit PIN"
+                  />
+                  <small className="employee-login-pin-help">Optional. Enter 6 digits.</small>
+                  {errors.employeeLoginPin && <span className="field-error">{errors.employeeLoginPin}</span>}
                 </div>
               </div>
             </section>

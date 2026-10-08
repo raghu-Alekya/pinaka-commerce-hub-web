@@ -135,3 +135,19 @@ export async function syncWordpressCatalog(storeId, values = {}) {
     }
   }
 }
+
+export async function syncWordpressCatalog(storeId, { siteUrl, jwtToken, merchantId } = {}) {
+  const result = await testWordpressConnection(siteUrl, jwtToken, storeId, merchantId);
+  if (!result?.ok) {
+    throw new Error(result?.message || "Unable to sync WordPress categories and products.");
+  }
+
+  const data = result.data || {};
+  return {
+    ...result,
+    catalog: {
+      categoryCount: data.categoryCount ?? data.syncedCategoriesCount ?? data.catalog?.categoryCount ?? 0,
+      productCount: data.productCount ?? data.syncedProductsCount ?? data.catalog?.productCount ?? 0,
+    },
+  };
+}

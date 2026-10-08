@@ -114,22 +114,27 @@
 
 .stores-page .summary-card {
     background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
+  border-color: #e4dcf5;
 }
 
 .stores-page .summary-card:has(.summary-icon.green) {
     background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+  border-color: #d6ecdf;
 }
 
 .stores-page .summary-card:has(.summary-icon.orange) {
     background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+  border-color: #f2e3cb;
 }
 
 .stores-page .summary-card:has(.summary-icon.red) {
     background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+  border-color: #f1dce1;
 }
 
 .stores-page .summary-card:has(.summary-icon.blue) {
     background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
+  border-color: #dbe8f4;
 }
 
 .summary-icon {
@@ -219,6 +224,22 @@
     white-space: nowrap;
     border-bottom: 1px solid #e4e8ef;
     color: #697285;
+}
+
+.store-table-details {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.store-table-details strong {
+    color: #394256;
+    font-weight: 500;
+}
+
+.store-table-details small {
+    color: #7a8498;
+    font-size: 12px;
 }
 
 .stores-table tbody tr:hover {
@@ -666,14 +687,33 @@
     background: #fff;
 }
 
+.stores-card > .pagination-container {
+    border-top: 0;
+}
+
 .stores-card .store-toolbar {
     border-bottom: 0;
 }
 
 .stores-card .stores-table {
-    width: 100%;
-    min-width: 900px;
-    table-layout: fixed;
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
+}
+
+.stores-card .stores-table th,
+.stores-card .stores-table td {
+    min-width: 112px;
+}
+
+.stores-card .stores-table th:first-child,
+.stores-card .stores-table td:first-child {
+    min-width: 120px;
+}
+
+.stores-card .stores-table th:last-child,
+.stores-card .stores-table td:last-child {
+    min-width: 100px;
 }
 
 @media (max-width: 600px) {
