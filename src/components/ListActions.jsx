@@ -22,7 +22,7 @@ export default function ListActions({
                     title={viewLabel}
                     aria-label={viewLabel}
                 >
-                    <i className="bi bi-eye" />
+                    <i className="bi bi-eye View-btn" />
                 </button>
             )}
 

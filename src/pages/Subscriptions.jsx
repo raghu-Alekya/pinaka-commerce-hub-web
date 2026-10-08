@@ -969,7 +969,6 @@ const handleDateRangeChange = (value) => {
             <thead>
 
               <tr>
-                <th>#</th>
                 <th>Merchant</th>
                 <th>Plan</th>
                 <th>Stores</th>
@@ -1022,12 +1021,6 @@ const handleDateRangeChange = (value) => {
                       style={{ cursor: "pointer" }}
                     >
 
-                      <td>
-                       {(currentPage - 1) *
-                       pageSize +
-                        index +
-                        1}
-                      </td>
 
                       <td>
                         <div className="subscription-merchant-cell">
