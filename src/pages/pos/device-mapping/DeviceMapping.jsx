@@ -113,10 +113,37 @@ export function DeviceMapping() {
     for (const mapping of removals) await deleteStoreDeviceMapping(mapping.mappingId);
     const savedRows = await getStoreDeviceMappings(settings.storeId);
     const hydrated = await combineMappings(savedRows, devices);
-    setServerMappings(hydrated);
-    setMappings(hydrated);
-    settings.session.draft.deviceMappings = hydrated;
-    settings.session.baseline.deviceMappings = hydrated;
+    const hydratedByDevice = new Map(hydrated.map((mapping) => [String(mapping.deviceId), mapping]));
+    // Keep the saved UI state aligned with the user's intended set of mappings.
+    // The immediate GET can briefly return a deleted mapping while the API catches up.
+    const savedMappingsNow = persisted.map((mapping) => {
+      const refreshed = hydratedByDevice.get(String(mapping.deviceId));
+      return refreshed
+        ? { ...mapping, ...refreshed, mappingId: refreshed.mappingId || mapping.mappingId }
+        : mapping;
+    });
+    const removedDevices = removals.map((mapping) => ({
+      ...mapping,
+      id: mapping.id || mapping.deviceId,
+    }));
+    let refreshedDevices = [];
+    try {
+      refreshedDevices = await devicesApi.listByMerchantId(settings.merchantId);
+    } catch {
+      // A successful removal is enough to make these devices selectable locally.
+    }
+    const nextDevicesById = new Map();
+    [...devices, ...(Array.isArray(refreshedDevices) ? refreshedDevices : []), ...removedDevices]
+      .filter((device) => String(device.status).toLowerCase() !== "inactive")
+      .forEach((device) => {
+        const id = device.id || device.deviceId;
+        if (id) nextDevicesById.set(String(id), { ...nextDevicesById.get(String(id)), ...device, id });
+      });
+    setDevices([...nextDevicesById.values()]);
+    setServerMappings(savedMappingsNow);
+    setMappings(savedMappingsNow);
+    settings.session.draft.deviceMappings = savedMappingsNow;
+    settings.session.baseline.deviceMappings = savedMappingsNow;
     settings.session.baseline = { ...settings.session.draft };
     setError("");
     return true;

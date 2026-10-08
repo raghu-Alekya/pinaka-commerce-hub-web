@@ -10,14 +10,13 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
  */
 export function toDevicePayload(data, { includeMerchant = true } = {}) {
   const merchantId = data.merchantId || data.merchant_id || data.merchant || "";
+  const deviceId = String(data.deviceId || data.device_id || "").trim();
   if (includeMerchant && !UUID_PATTERN.test(String(merchantId))) {
     throw new Error("Select a merchant with a valid UUID before saving the device.");
   }
 
   return {
-    ...(data.deviceCode || data.device_code
-      ? { device_code: (data.deviceCode || data.device_code).trim() }
-      : {}),
+    ...(deviceId ? { device_id: deviceId } : {}),
     ...((data.deviceName || data.device_name || data.name)
       ? { device_name: (data.deviceName || data.device_name || data.name).trim() }
       : {}),
@@ -63,8 +62,9 @@ export function normalizeDevice(device) {
   return {
     ...device,
 
-    id: device.id || device.device_id || device.deviceId || device.device_code || device.deviceCode || "",
+    id: device.id || device.uuid || device.deviceUuid || device.device_id || device.deviceId || device.device_code || device.deviceCode || "",
     code: device.device_code || device.deviceCode || device.code || "",
+    deviceId: device.device_id || device.deviceId || "",
     name: device.device_name || device.deviceName || device.name || "",
     type: device.device_type || device.deviceType || device.type || "",
     serial: device.serial_number || device.serialNumber || device.serial || "",

@@ -30,52 +30,38 @@
   font-weight: 750;
 }
 
-.add-device-topbar {
-  min-height: 64px;
+.add-device-breadcrumb {
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 0 28px;
-  margin: -18px -24px 20px;
-  background: #fff;
-  border-bottom: 1px solid #cdccd7;
-  color: #24324d;
-  font: 14px/1.45 Inter, "Segoe UI", sans-serif;
-}
-
-.add-device-topbar > strong {
-  font-weight: 600;
-}
-
-.add-device-topbar > span {
-  color: #a3acc0;
-}
-
-.add-device-back-link {
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
-  border: 0;
-  padding: 0;
-  background: none;
-  color: #5143bc;
+  margin-top: 5px;
+  color: #8193ad;
+  font-size: 12px;
+}
+
+.add-device-breadcrumb strong {
+  color: #405b7d;
+  font-weight: 500;
+}
+
+.back-devices-btn {
+  height: 42px;
+  padding: 0 17px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #d7e1ed;
+  border-radius: 6px;
+  background: #fff;
+  color: #294466;
   font-family: inherit;
-  font-size: 14px;
-  line-height: inherit;
-  font-weight: 600;
+  font-size: 12px;
   cursor: pointer;
 }
 
-.add-device-back-link:focus-visible {
-  outline: 3px solid #b9adff;
-  outline-offset: 2px;
-}
-
-.add-device-header p {
-  margin: 6px 0 0;
-  color: #75819a;
-  font-size: 14px;
-  line-height: 1.45;
+.back-devices-btn:hover {
+  border-color: #6845dc;
+  color: #5c3ddd;
 }
 
 /* =========================================================
@@ -177,6 +163,18 @@
   font-size: 12px;
 }
 
+.device-field input.device-code-readonly {
+  border-color: #d5deea;
+  background: #eef2f7;
+  color: #60728c;
+  cursor: not-allowed;
+}
+
+.device-field input.device-code-readonly::placeholder {
+  color: #60728c;
+  opacity: 1;
+}
+
 .device-field input,
 .device-select-wrapper select {
   height: 35px;
@@ -276,6 +274,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  border-top: 1px solid #e2e8f0;
 }
 
 .device-cancel-btn,
@@ -308,10 +307,6 @@
 @media (max-width: 1300px) {
   .add-device-page {
     padding: 15px 18px 20px;
-  }
-
-  .add-device-topbar {
-    margin: -15px -18px 20px;
   }
 
   .device-card {
@@ -355,10 +350,6 @@
 @media (max-width: 1100px) {
   .add-device-page {
     padding: 13px 14px 18px;
-  }
-
-  .add-device-topbar {
-    margin: -13px -14px 20px;
   }
 
   .device-card {
@@ -425,14 +416,6 @@
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 620px) {
-  .add-device-topbar {
-    min-height: 55px;
-    gap: 8px;
-    padding: 0 12px;
-  }
-}
-
 .add-device-page-embedded {
   padding: 0;
   min-height: 0;

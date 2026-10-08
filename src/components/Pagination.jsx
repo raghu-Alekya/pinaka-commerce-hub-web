@@ -6,21 +6,57 @@ export default function Pagination({
     onPageChange,
     onPageSizeChange,
     itemLabel = "items",
+    showWhenEmpty = false,
 }) {
-    const isEmpty = totalItems === 0;
+    if (!totalItems && !showWhenEmpty) {
+        return null;
+    }
 
-    const startItem = isEmpty
-        ? 0
-        : (currentPage - 1) * pageSize + 1;
+    const startItem = totalItems
+        ? (currentPage - 1) * pageSize + 1
+        : 0;
 
-    const endItem = isEmpty
-        ? 0
-        : Math.min(currentPage * pageSize, totalItems);
+    const endItem = Math.min(
+        currentPage * pageSize,
+        totalItems
+    );
 
-    const getPageNumbers = () => { const pages = []; if (totalPages <= 0) { return pages; } 
-    if (totalPages === 1) { pages.push(1); return pages; } if (currentPage === 1)
-         { pages.push(1, 2); } else if (currentPage === totalPages) { pages.push(totalPages - 1, totalPages); } 
-    else { pages.push(currentPage, currentPage + 1); } return pages; };
+    const getPageNumbers = () => {
+        const pages = [];
+
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+
+            return pages;
+        }
+
+        pages.push(1);
+
+        if (currentPage > 3) {
+            pages.push("...");
+        }
+
+        const start = Math.max(2, currentPage - 1);
+
+        const end = Math.min(
+            totalPages - 1,
+            currentPage + 1
+        );
+
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+
+        if (currentPage < totalPages - 2) {
+            pages.push("...");
+        }
+
+        pages.push(totalPages);
+
+        return pages;
+    };
 
     return (
         <div className="pagination-container">
@@ -44,33 +80,31 @@ export default function Pagination({
                 {/* ROWS PER PAGE */}
 
                 <div className="pagination-page-size">
-                    <span>Rows per page:</span>
+    <span>Rows per page:</span>
 
-                    <div className="pagination-select-wrapper">
-                        <select
-                            value={pageSize}
-                            onChange={(e) =>
-                                onPageSizeChange(
-                                    Number(e.target.value)
-                                )
-                            }
-                        >
-                            <option value={10}>10</option>
-                            <option value={25}>25</option>
-                            <option value={50}>50</option>
-                            <option value={100}>100</option>
-                        </select>
+    <div className="pagination-select-wrapper">
+        <select
+            value={pageSize}
+            onChange={(e) =>
+                onPageSizeChange(Number(e.target.value))
+            }
+        >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+        </select>
 
-                        <i className="bi bi-chevron-down pagination-select-arrow" />
-                    </div>
-                </div>
+        <i className="bi bi-chevron-down pagination-select-arrow" />
+    </div>
+</div>
 
                 {/* PREVIOUS */}
 
                 <button
                     type="button"
                     className="pagination-arrow"
-                    disabled={isEmpty || currentPage === 1}
+                    disabled={currentPage === 1}
                     onClick={() =>
                         onPageChange(currentPage - 1)
                     }
@@ -81,36 +115,34 @@ export default function Pagination({
 
                 {/* PAGE NUMBERS */}
 
-                {!isEmpty && totalPages > 0 && (
-                    <div className="pagination-pages">
-                        {getPageNumbers().map(
-                            (page, index) =>
-                                page === "..." ? (
-                                    <span
-                                        key={`ellipsis-${index}`}
-                                        className="pagination-ellipsis"
-                                    >
-                                        ...
-                                    </span>
-                                ) : (
-                                    <button
-                                        key={page}
-                                        type="button"
-                                        className={
-                                            page === currentPage
-                                                ? "pagination-page active"
-                                                : "pagination-page"
-                                        }
-                                        onClick={() =>
-                                            onPageChange(page)
-                                        }
-                                    >
-                                        {page}
-                                    </button>
-                                )
-                        )}
-                    </div>
-                )}
+                <div className="pagination-pages">
+                    {getPageNumbers().map(
+                        (page, index) =>
+                            page === "..." ? (
+                                <span
+                                    key={`ellipsis-${index}`}
+                                    className="pagination-ellipsis"
+                                >
+                                    ...
+                                </span>
+                            ) : (
+                                <button
+                                    key={page}
+                                    type="button"
+                                    className={
+                                        page === currentPage
+                                            ? "pagination-page active"
+                                            : "pagination-page"
+                                    }
+                                    onClick={() =>
+                                        onPageChange(page)
+                                    }
+                                >
+                                    {page}
+                                </button>
+                            )
+                    )}
+                </div>
 
                 {/* NEXT */}
 
@@ -118,9 +150,7 @@ export default function Pagination({
                     type="button"
                     className="pagination-arrow"
                     disabled={
-                        isEmpty ||
-                        currentPage === totalPages ||
-                        totalPages === 0
+                        currentPage === totalPages
                     }
                     onClick={() =>
                         onPageChange(currentPage + 1)
@@ -134,4 +164,3 @@ export default function Pagination({
         </div>
     );
 }
-

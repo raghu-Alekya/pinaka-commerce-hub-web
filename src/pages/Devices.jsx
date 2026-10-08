@@ -15,6 +15,10 @@ import {
   SlidersHorizontal,
  
   ChevronDown,
+
+  ChevronLeft,
+
+  ChevronRight,
  
   Eye,
  
