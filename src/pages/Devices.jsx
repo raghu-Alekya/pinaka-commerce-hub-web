@@ -471,19 +471,13 @@ export default function Devices() {
               <tr>
  
                 {" "}
+
  
-                <th className="device-check-col">
+                <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
  
-                  {" "}
+                <th>Merchant Name</th> <th>Connection Status</th>{" "}
  
- 
-                </th>{" "}
- 
-                <th>DEVICE NAME</th> <th>DEVICE TYPE</th> <th>SERIAL NUMBER</th>{" "}
- 
-                <th>MERCHANT NAME</th> <th>CONNECTION STATUS</th>{" "}
- 
-                 <th>ACTIONS</th>{" "}
+                 <th>Actions</th>{" "}
  
               </tr>{" "}
  
@@ -511,23 +505,16 @@ export default function Devices() {
  
               ) : displayedDevices.length > 0 ? (
  
-                displayedDevices.map((device) => (
- 
-                  <DeviceRow
- 
-                    key={device.id}
- 
-                    device={device}
- 
-                    onView={() => navigate(`/devices/${device.id}`)}
- 
-                    onDeactivate={() => setDeleteDevice(device)}
- 
-                    onEdit={() => navigate(`/devices/${device.id}/edit`)}
- 
-                  />
- 
-                ))
+        displayedDevices.map((device) => (
+  <DeviceRow
+    key={device.id}
+    device={device}
+    onView={() => navigate(`/devices/${device.id}`)}
+    onEdit={() => navigate(`/devices/${device.id}/edit`)}
+    onDelete={() => setDeleteDevice(device)}
+    deleting={deleting}
+  />
+))
  
               ) : (
  
@@ -737,107 +724,73 @@ function DeactivateDeviceModal({
  
 }
  
-/* ========================================================= TABLE ROW ========================================================= */
+/* =========================================================
+   TABLE ROW
+========================================================= */
 function DeviceRow({
   device,
-  onDelete,
+  onView,
   onEdit,
+  onDelete,
   deleting,
-}) 
-{
- 
+}) {
   const normalizedStatus =
- 
     device.status?.toLowerCase().replace(/\s+/g, "-") || "unknown";
- 
+
   return (
- 
     <tr>
- 
-      {" "}
- 
-      <td className="device-check-col">
- 
-        {" "}
- 
-        <input
- 
-          type="checkbox"
- 
-          aria-label={`Select ${device.name || "device"}`}
- 
-        />{" "}
- 
-      </td>{" "}
- 
+  
+     {/* DEVICE NAME */}
       <td>
- 
-        {" "}
- 
         <div className="device-name-cell">
- 
-          {" "}
- 
-          <div className="device-type-icon">
- 
-            {" "}
- 
-            <Monitor size={16} />{" "}
- 
-          </div>{" "}
- 
           <div>
- 
-            {" "}
- 
-            <div className="device-name"> {device.name || "-"} </div>{" "}
- 
-            <div className="device-id"> {device.id || "-"} </div>{" "}
- 
-          </div>{" "}
- 
-        </div>{" "}
- 
-      </td>{" "}
- 
-<td>{device.type || "-"}</td>
- 
- 
- 
-<td>{device.serial || "-"}</td>
- 
- 
- 
-<td>{device.merchant || "-"}</td>
- 
- 
- 
-<td>
- 
-  <span className={`device-status ${normalizedStatus}`}>
- 
-    {device.status || "-"}
- 
-  </span>
- 
-</td>
- 
- 
- 
-<td>
-  <ListActions
-    onEdit={onEdit}
-    onDelete={onDelete}
-    editLabel={`Edit ${device.name || "device"}`}
-    deleteLabel={`Delete ${device.name || "device"}`}
-    deleteDisabled={deleting}
-  />
-</td>
- 
+            <div className="device-name">
+              {device.name || "-"}
+            </div>
+
+            <div className="device-id">
+              {device.id || "-"}
+            </div>
+          </div>
+        </div>
+      </td>
+
+      {/* DEVICE TYPE */}
+      <td>
+        {device.type || "-"}
+      </td>
+
+      {/* SERIAL NUMBER */}
+      <td>
+        {device.serial || "-"}
+      </td>
+
+      {/* MERCHANT NAME */}
+      <td>
+        {device.merchant || "-"}
+      </td>
+
+      {/* CONNECTION STATUS */}
+      <td>
+        <span className={`device-status ${normalizedStatus}`}>
+          {device.status || "-"}
+        </span>
+      </td>
+
+      {/* ACTIONS */}
+      <td>
+        <ListActions
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          viewLabel={`View ${device.name || "device"}`}
+          editLabel={`Edit ${device.name || "device"}`}
+          deleteLabel={`Deactivate ${device.name || "device"}`}
+          deleteDisabled={deleting}
+        />
+      </td>
     </tr>
- 
   );
- 
 }
  
  
