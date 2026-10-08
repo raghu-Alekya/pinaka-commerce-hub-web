@@ -425,15 +425,18 @@ function merchantApiId(merchant) {
 export function mapMerchantToRow(item) {
   if (!item) return null;
   const merchant = item.merchant || item.data?.merchant || item.data || item;
-  const plan = item.plan || merchant.plan || item.subscription?.plan || {};
   const subscription = item.subscription || merchant.subscription || {};
+  const plan = item.plan || merchant.plan || subscription.plan || {};
 
   const name =
     merchant.businessDisplayName ||
+    merchant.business_display_name ||
     merchant.businessName ||
+    merchant.business_name ||
     merchant.legalBusinessName ||
     merchant.merchantName ||
     merchant.ownerName ||
+    [merchant.firstName || merchant.first_name, merchant.lastName || merchant.last_name].filter(Boolean).join(" ") ||
     merchant.name ||
     "Merchant";
 
@@ -459,13 +462,15 @@ export function mapMerchantToRow(item) {
     typeof value === "string" &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value),
   ) || "";
-  const id = uuid ||(merchant) || merchant.code || merchant.merchantCode || "";
+  const id = uuid || merchant.id || merchant.merchantId || merchant.merchant_id || merchant.merchantCode || merchant.merchant_code || "";
   const email = merchant.merchantEmail || merchant.email || "";
   const phone = merchant.merchantPhoneNumber || merchant.phone || "";
   const stores = Array.isArray(merchant.stores || item.stores)
     ? (merchant.stores || item.stores).length
     : (item.storeCount ??
       item.store_count ??
+      subscription.storeCount ??
+      subscription.store_count ??
       merchant.storeCount ??
       merchant.store_count ??
       merchant.storesCount ??
@@ -473,9 +478,13 @@ export function mapMerchantToRow(item) {
 
   const planName =
     subscription.planName ||
+    subscription.plan_name ||
     plan.name ||
+    plan.planName ||
     subscription.planCode ||
+    subscription.plan_code ||
     plan.code ||
+    plan.plan_code ||
     merchant.plan ||
     merchant.subscriptionPlan ||
     "—";
@@ -483,6 +492,7 @@ export function mapMerchantToRow(item) {
   const renewal =
     subscription.renewalDate ||
     subscription.renewal_date ||
+    subscription.renewalDate ||
     merchant.renewal ||
     merchant.renewsOn ||
     "";
@@ -494,14 +504,16 @@ export function mapMerchantToRow(item) {
     "ACTIVE";
 
   const createdAt =
-    merchant.createdDate || merchant.createdAt || merchant.joined || "";
-
-  const updatedAt = merchant.updatedDate || merchant.updatedAt || createdAt;
+    merchant.createdAt || merchant.created_at || merchant.createdDate ||
+    merchant.created_date || merchant.joined || "";
+  const updatedAt =
+    merchant.updatedAt || merchant.updated_at || merchant.updatedDate ||
+    merchant.updated_date || createdAt;
 
   return {
     id,
     uuid,
-    merchantId: merchant.merchantId || id,
+    merchantId: merchant.merchantId || merchant.merchant_id || merchant.merchantCode || merchant.merchant_code || id,
     name,
     email,
     phone,
@@ -513,6 +525,7 @@ export function mapMerchantToRow(item) {
     active: formatRelative(updatedAt),
     initials: toInitials(name),
     createdAt,
+    updatedAt,
     country: merchant.country || "",
     state: merchant.state || "",
     city: merchant.city || "",

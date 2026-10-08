@@ -1003,7 +1003,15 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={9}>No merchants found.</td>
+                  <td
+                    colSpan="9"
+                    style={{
+                      textAlign: "center",
+                      padding: "40px",
+                    }}
+                  >
+                    No merchants found.
+                  </td>
                 </tr>
               ) : (
                 visibleRows.map((m, index) => (
@@ -1021,11 +1029,7 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
                           }
                         }}
                       >
-                        <div
-                          className={`merchant-avatar ${avatarClass(index)}`}
-                        >
-                          {m.initials}
-                        </div>
+            
                         <div>
                           <strong>{m.name}</strong>
                           <small>{m.merchantId || m.id}</small>
@@ -1059,8 +1063,8 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
                          {m.status || 'Unknown'}
                          </span>
                     </td>
-                    <td>{formatDate(m.createdAt || m.created_at || m.createdDate || m.joined)}</td>
-                    <td>{formatDate(m.updatedAt || m.updated_at || m.updatedDate)}</td>
+                    <td>{formatDate(m.createdAt || m.created_at || m.createdDate || m._raw?.merchant?.created_at || m.joined)}</td>
+                    <td>{formatDate(m.updatedAt || m.updated_at || m.updatedDate || m._raw?.merchant?.updated_at)}</td>
                     <td>
     <ListActions
         onView={() => openView(m)}
@@ -1098,6 +1102,7 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
     onPageChange={setPage}
     onPageSizeChange={handlePageSizeChange}
     itemLabel="merchants"
+    showWhenEmpty={true} 
 />
       </div>
       {deleteTarget && (
