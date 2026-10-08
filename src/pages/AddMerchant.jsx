@@ -3898,11 +3898,11 @@ function MerchantOnboarding({
                 className={index === position ? "pch-current" : ""}
                 aria-current={index === position ? "step" : undefined}
               >
-                <span className="pch-number">
+                <span className={`pch-number${index < position ? " pch-complete" : ""}`}>
                   {index < position ? "✓" : index + 1}
                 </span>
                 <span>
-                  {name}
+                  <strong>{name}</strong>
                   <small className="pch-muted pch-rail-description">
                     {description}
                   </small>

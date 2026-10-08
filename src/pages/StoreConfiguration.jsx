@@ -503,7 +503,7 @@ export default function StoreConfiguration() {
           BREADCRUMB
           =================================================== */}
 
-      <div className="breadcrumb-area">
+      <header className="breadcrumb-area store-workspace-topbar">
 
         <button
           className="link-button"
@@ -515,9 +515,9 @@ export default function StoreConfiguration() {
 
         <span>/</span>
 
-        <span>Store Details & Configuration</span>
+        <strong>Store Details & Configuration</strong>
 
-      </div>
+      </header>
 
       {/* ===================================================
           LOADING

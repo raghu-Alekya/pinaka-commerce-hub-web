@@ -1135,6 +1135,7 @@ export default function Vendors({
             <input
               type="tel"
               name="phone"
+              placeholder="Enter phone number"
               value={form.phone}
               onChange={handleChange}
               inputMode="numeric"
@@ -1167,6 +1168,7 @@ export default function Vendors({
             <input
               type="email"
               name="email"
+              placeholder="Enter email address"
               value={form.email}
               onChange={handleChange}
               autoComplete="off"
@@ -1216,7 +1218,7 @@ export default function Vendors({
 
           <label>
             <span>
-              Address Line 1 (Street Address) <b>*</b>
+              Address Line 1 <b>*</b>
             </span>
 
             <input
@@ -1240,7 +1242,7 @@ export default function Vendors({
 
           <label>
             <span>
-              Address Line 2 (Apartment, Suite, or Unit) (Optional)
+              Address Line 2 (Optional)
             </span>
 
             <input
@@ -1562,6 +1564,7 @@ export default function Vendors({
         =================================================== */}
 
         <div className="vendors-table-wrap">
+          <div className="vendors-table-scroll">
 
           <table className="vendors-table">
 
@@ -1851,6 +1854,7 @@ export default function Vendors({
               </div>
             )}
 
+          </div>
         </div>
 
         <Pagination

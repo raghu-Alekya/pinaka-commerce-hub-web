@@ -114,22 +114,27 @@
 
 .stores-page .summary-card {
     background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
+  border-color: #e4dcf5;
 }
 
 .stores-page .summary-card:has(.summary-icon.green) {
     background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+  border-color: #d6ecdf;
 }
 
 .stores-page .summary-card:has(.summary-icon.orange) {
     background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+  border-color: #f2e3cb;
 }
 
 .stores-page .summary-card:has(.summary-icon.red) {
     background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+  border-color: #f1dce1;
 }
 
 .stores-page .summary-card:has(.summary-icon.blue) {
     background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
+  border-color: #dbe8f4;
 }
 
 .summary-icon {
@@ -664,6 +669,10 @@
     border: 1px solid #dfe9f4;
     border-radius: 8px;
     background: #fff;
+}
+
+.stores-card > .pagination-container {
+    border-top: 0;
 }
 
 .stores-card .store-toolbar {

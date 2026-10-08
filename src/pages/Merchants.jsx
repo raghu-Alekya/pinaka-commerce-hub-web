@@ -375,7 +375,12 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       .merchant-readonly .merchant-view-fields dt{font-weight:500;color:#7c8495;font-size:13px;margin-bottom:5px;}
       .merchant-readonly .merchant-view-fields dd{margin:0;color:#17233e;font-size:15px;overflow-wrap:anywhere;}
       .merchant-readonly .merchant-view-empty{padding:16px 20px;color:#7c8495;margin:0;}
-      .merchant-readonly .merchant-view-back{border:0;background:none;color:#5143bc;padding:0;margin-bottom:12px;cursor:pointer;}
+      .merchant-readonly .merchant-view-topbar{min-height:64px;display:flex;align-items:center;padding:0 28px;margin:-18px -24px 20px;background:#FFFFFF;border-bottom:1px solid #cdccd7;font:14px/1.45 Inter,"Segoe UI",sans-serif;}
+      .merchant-readonly .merchant-view-back{display:inline-flex;align-items:center;border:0;background:none;color:#5143bc;padding:0;font:inherit;font-weight:600;cursor:pointer;}
+      .merchant-readonly .merchant-view-back:focus-visible{outline:3px solid #b9adff;outline-offset:2px;}
+      @media(max-width:1200px){.merchant-readonly .merchant-view-topbar{margin-left:-16px;margin-right:-16px;}}
+      @media(max-width:620px){.merchant-readonly .merchant-view-topbar{min-height:55px;padding:0 12px;}}
+      @media(max-width:500px){.merchant-readonly .merchant-view-topbar{margin:-10px -10px 20px;}}
       .merchant-readonly .merchant-view-section details{padding:14px 20px;border-top:1px solid #edf0f4;}
       .merchant-readonly .merchant-view-section summary{cursor:pointer;color:#5143bc;}
       .merchant-readonly .merchant-view-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:start;}
@@ -387,7 +392,9 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       .merchant-readonly [role="tabpanel"][hidden]{display:none;}
       @media(max-width:650px){.merchant-readonly .merchant-view-fields{grid-template-columns:1fr;}.merchant-readonly .merchant-view-layout{grid-template-columns:1fr;}.merchant-readonly .merchant-view-layout > [role="tabpanel"]{grid-column:1;grid-row:2;}}
     `}</style>
-    <button type="button" className="merchant-view-back" onClick={onBack}>← Merchants</button>
+    <header className="merchant-view-topbar">
+      <button type="button" className="merchant-view-back" onClick={onBack}>← Merchants</button>
+    </header>
     <div className="page-header"><div><h1>Merchant Details</h1><p>{readValue(business)} · {displayMerchantCode}</p></div>
     </div>
     {loading ? <p role="status">Loading merchant details…</p> : error ? <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div> : <div className="merchant-view-layout">

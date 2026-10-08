@@ -148,21 +148,24 @@ input {
     align-items: center;
     gap: 0;
     padding: 10px;
-    border: 1px solid #edf0f5;
+    border: 1px solid #e4dcf5;
     border-radius: 8px;
     background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
 }
 
 .order-summary-card:has(.order-summary-icon.green) {
     background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+  border-color: #d6ecdf;
 }
 
 .order-summary-card:has(.order-summary-icon.orange) {
     background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+  border-color: #f2e3cb;
 }
 
 .order-summary-card:has(.order-summary-icon.blue) {
     background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
+  border-color: #dbe8f4;
 }
 
 .order-summary-icon {
@@ -701,6 +704,10 @@ input {
     border: 1px solid #dfe9f4;
     border-radius: 8px;
     background: #fff;
+}
+
+.orders-card > .pagination-container {
+    border-top: 0;
 }
 
 .orders-card > .orders-toolbar {

@@ -4,7 +4,7 @@
 .devices-page {
   width: 100%;
   min-height: calc(100vh - 64px);
-  padding: 20px 24px 24px;
+  padding: 24px;
   box-sizing: border-box;
   background: #f5f7fb;
   color: #193354;
@@ -102,17 +102,20 @@
   align-items: center;
   gap: 0;
   background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
-  border: 1px solid #edf0f5;
+  border: 1px solid #e4dcf5;
   border-radius: 8px;
 }
 .device-stat-card:has(.device-stat-icon.green) {
   background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+  border-color: #d6ecdf;
 }
 .device-stat-card:has(.device-stat-icon.orange) {
   background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+  border-color: #f2e3cb;
 }
 .device-stat-card:has(.device-stat-icon.red) {
   background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+  border-color: #f1dce1;
 }
 .device-stat-icon {
   width: 40px;
@@ -718,10 +721,13 @@
   white-space: nowrap;
 }
 
-@media (max-width: 1300px) {
+@media (max-width: 1200px) {
   .devices-page {
     padding: 16px 18px 20px;
   }
+}
+
+@media (max-width: 1300px) {
   .devices-stats {
     gap: 10px;
   }
@@ -852,6 +858,10 @@
   border: 1px solid #dfe9f4;
   border-radius: 8px;
   background: #fff;
+}
+
+.devices-list-card > .pagination-container {
+  border-top: 0;
 }
 
 .devices-list-card > .devices-filter-bar {

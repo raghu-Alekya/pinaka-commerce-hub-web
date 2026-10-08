@@ -1652,7 +1652,7 @@
 
 .feature-permissions-page .fp-table th {
   height: 44px !important;
-  color: #394052 !important;
+  color: #102d59 !important;
   font-size: 12px !important;
   line-height: 18px !important;
   font-weight: 600 !important;
@@ -2184,7 +2184,7 @@ body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn i
   border: 0 !important;
   border-bottom: 1px solid #dfe5ef !important;
   background: #f1f3fd !important;
-  color: #394052 !important;
+  color: #102d59 !important;
   text-align: left !important;
   vertical-align: middle !important;
   font-size: 12px !important;
