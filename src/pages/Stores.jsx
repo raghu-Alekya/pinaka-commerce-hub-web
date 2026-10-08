@@ -388,9 +388,7 @@ useEffect(() => {
                           )
                         }
                       >
-                        <div className="store-avatar purple-bg">
-                          {initials(s.storeName)}
-                        </div>
+                  
                         <div>
                           <strong>{s.storeName}</strong>
                           <small>{displayStoreId(s)}</small>

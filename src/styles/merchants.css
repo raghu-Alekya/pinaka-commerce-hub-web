@@ -926,7 +926,7 @@ a {
     font-size: 13px;
     vertical-align: middle;
     white-space: nowrap;
-    text-align: center !important;
+
 }
 
 .merchant-table tbody tr:last-child td {
@@ -950,22 +950,6 @@ a {
     gap: 8px;
 }
 
-.merchant-avatar {
-    width: 30px;
-    height: 30px;
-
-    border-radius: 50%;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 8px;
-
-    font-weight: 600;
-
-    flex-shrink: 0;
-}
 
 .purple-avatar {
     background: #e7e2ff;
@@ -1276,7 +1260,7 @@ dialog.merchant-delete-dialog::backdrop {
 
 .merchant-table th:last-child,
 .merchant-table td:last-child {
-    text-align: left
+    text-align: left !important
 }
  
 

@@ -1036,11 +1036,7 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
                           }
                         }}
                       >
-                        <div
-                          className={`merchant-avatar ${avatarClass(index)}`}
-                        >
-                          {m.initials}
-                        </div>
+            
                         <div>
                           <strong>{m.name}</strong>
                           <small>{m.merchantId || m.id}</small>
