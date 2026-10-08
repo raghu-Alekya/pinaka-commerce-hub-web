@@ -1107,6 +1107,7 @@ const handleDateRangeChange = (value) => {
   onPageChange={setPage}
   onPageSizeChange={handlePageSizeChange}
   itemLabel="subscriptions"
+  showWhenEmpty={true}
 />
 
       </div>

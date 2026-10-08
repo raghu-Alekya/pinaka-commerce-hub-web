@@ -584,6 +584,7 @@ useEffect(() => {
     onPageChange={setCurrentPage}
     onPageSizeChange={handlePageSizeChange}
     itemLabel="cash payments"
+    showWhenEmpty={true}
   />
 )}
 

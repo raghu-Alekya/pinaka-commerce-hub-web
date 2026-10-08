@@ -1003,7 +1003,15 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={9}>No merchants found.</td>
+                  <td
+                    colSpan="9"
+                    style={{
+                      textAlign: "center",
+                      padding: "40px",
+                    }}
+                  >
+                    No merchants found.
+                  </td>
                 </tr>
               ) : (
                 visibleRows.map((m, index) => (
@@ -1098,6 +1106,7 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
     onPageChange={setPage}
     onPageSizeChange={handlePageSizeChange}
     itemLabel="merchants"
+    showWhenEmpty={true} 
 />
       </div>
       {deleteTarget && (
