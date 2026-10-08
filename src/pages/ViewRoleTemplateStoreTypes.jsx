@@ -39,6 +39,14 @@ function normalizeStoreTypeEntry(item) {
   };
 }
 const getStateArray = (value) => (Array.isArray(value) ? value : []);
+function readSavedStoreTypeIds(response) {
+  const mappings = [response?.items, response?.data?.items].find(Array.isArray);
+  if (!mappings) return null;
+
+  return mappings
+    .map((item) => item?.storeTypeId ?? item?.storeType?.id ?? item?.id)
+    .filter((id) => typeof id === "string" && id.length > 0);
+}
 
 export default function ViewRoleTemplateStoreTypes() {
   const navigate = useNavigate();
@@ -104,11 +112,11 @@ export default function ViewRoleTemplateStoreTypes() {
 
         if (!cancelled) {
           setStoreTypesList(items);
-          setSelectedStoreTypes(
-            items
-              .filter((storeType) => Boolean(storeType.checked))
-              .map((storeType) => storeType.id),
-          );
+          const savedIds = items
+            .filter((storeType) => Boolean(storeType.checked))
+            .map((storeType) => storeType.id);
+          setSelectedStoreTypes(savedIds);
+          setSavedStoreTypes(savedIds);
         }
       } catch (requestError) {
         if (!cancelled) {
@@ -145,11 +153,20 @@ export default function ViewRoleTemplateStoreTypes() {
     setSaving(true);
 
     try {
-      await roleTemplatesApi.bulkUpdateStoreTypes(
+      const response = await roleTemplatesApi.bulkUpdateStoreTypes(
         roleId,
         nextSelectedStoreTypes,
       );
-      setSavedStoreTypes(nextSelectedStoreTypes);
+      const savedIds = readSavedStoreTypeIds(response) ?? nextSelectedStoreTypes;
+      setSelectedStoreTypes(savedIds);
+      setSavedStoreTypes(savedIds);
+      setStoreTypesList((items) =>
+        items.map((storeType) => ({
+          ...storeType,
+          checked: savedIds.includes(storeType.id),
+          mapped: savedIds.includes(storeType.id),
+        })),
+      );
     } catch (requestError) {
       // Revert the checkbox if the API call fails
       setSelectedStoreTypes(selectedStoreTypes);
@@ -250,7 +267,6 @@ export default function ViewRoleTemplateStoreTypes() {
     const configuration = {
       roleTemplateId: roleId,
       roleTemplate,
-      selectedStoreTypes,
       enabledFeatures,
       selectedPermissions,
       updatedAt: new Date().toISOString(),
