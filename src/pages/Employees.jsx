@@ -669,6 +669,7 @@ const handlePageSizeChange = (size) => {
   onPageChange={setPage}
   onPageSizeChange={handlePageSizeChange}
   itemLabel="employees"
+  showWhenEmpty={true}
 />
       </div>
     </div>

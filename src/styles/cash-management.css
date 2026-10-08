@@ -93,7 +93,7 @@
 
   background: #ffffff;
 
-  border: 1px solid #edf0f5;
+  border: 1px solid #e4dcf5;
 
   border-radius: 8px;
 
@@ -107,25 +107,21 @@
 
 .cash-kpi-card.green {
   background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+  border-color: #d6ecdf;
 }
 
 .cash-kpi-card.orange {
   background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+  border-color: #f2e3cb;
 }
 
 .cash-kpi-card.blue {
   background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
+  border-color: #dbe8f4;
 }
 
 
-/* Remove colored card borders */
 
-.cash-kpi-card.purple,
-.cash-kpi-card.green,
-.cash-kpi-card.orange,
-.cash-kpi-card.blue {
-  border-color: #e4e7ed;
-}
 
 
 /* =========================================================
@@ -334,7 +330,6 @@
 
 .cash-table-wrapper {
   width: 100%;
-  overflow-x: auto;
 
 }
 
@@ -650,13 +645,16 @@ background: #fcfcff;
   width: calc(100% - 24px);
   max-width: calc(100% - 24px);
   margin: 0 12px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
+  overflow: hidden;
   border: 1px solid #dfe9f4;
   border-radius: 8px;
   background: #fff;
   border-top: 0;
-  border-bottom: 0;
+}
+
+.cash-table-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 @media (max-width: 600px) {

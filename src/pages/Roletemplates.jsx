@@ -189,12 +189,14 @@ export default function RoleTemplates() {
   }
  
   function resetForm() {
-    setForm(initialForm);
+    setForm({
+      ...initialForm,
+      roleCode: generateRoleTemplateCode(templates), // Keep the role code populated
+    });
     setEditingId(null);
     setOriginalForm(null);
     setError("");
   }
-
   /** --------------------------------------------------------------
    *  Save (create / update) a role template
    * -------------------------------------------------------------- */
@@ -227,7 +229,7 @@ export default function RoleTemplates() {
  
     try {
       const isCreating = editingId === null;
- 
+
       if (editingId !== null) {
         // Updating – keep the existing generated roleCode
         await roleTemplatesApi.update(editingId, {
@@ -240,11 +242,15 @@ export default function RoleTemplates() {
         // Creating – **do NOT** send roleCode; backend generates it
         await roleTemplatesApi.create(values);
       }
- 
-      await loadTemplates();
 
       if (isCreating) setCurrentPage(1);
+      
+      // ✅ FIX: Reset the form FIRST (clears name/description, sets editingId to null)
       resetForm();
+      
+      // ✅ FIX: Load templates SECOND (fetches fresh list and generates the correct NEXT roleCode)
+      await loadTemplates();
+
     } catch (err) {
       setError(err?.message || "Unable to save role template.");
     } finally {

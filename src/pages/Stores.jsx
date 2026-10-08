@@ -388,9 +388,7 @@ useEffect(() => {
                           )
                         }
                       >
-                        <div className="store-avatar purple-bg">
-                          {initials(s.storeName)}
-                        </div>
+                  
                         <div>
                           <strong>{s.storeName}</strong>
                           <small>{displayStoreId(s)}</small>
@@ -436,7 +434,13 @@ useEffect(() => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6}>No stores found.</td>
+                  <td
+                    colSpan="6"
+                    style={{
+                      textAlign: "center",
+                      padding: "40px",
+                    }}
+                  >No stores found.</td>
                 </tr>
               )}
             </tbody>
@@ -451,6 +455,7 @@ useEffect(() => {
   onPageChange={setCurrentPage}
   onPageSizeChange={handlePageSizeChange}
   itemLabel="stores"
+  showWhenEmpty={true}
 />
 
       </div>
