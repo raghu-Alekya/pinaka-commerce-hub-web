@@ -564,16 +564,16 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const merchantId = idOf(routeMerchantId || store.merchantId);
   const merchantOptionValue = (item) =>
     String(item?.id || item?.merchantId || "");
-  const merchantMatches = (item, value) =>
+  const merchantMatches = (item, value) => Boolean(value) &&
     [item?.id, item?.merchantId, item?.merchantCode].some(
-      (candidate) => String(candidate || "") === String(value || ""),
+      (candidate) => candidate && String(candidate) === String(value),
     );
   const selectedMerchant = merchants.find((item) =>
     merchantMatches(item, routeMerchantId || store.merchantId || merchantId),
   );
   const merchantSelectValue = selectedMerchant
     ? merchantOptionValue(selectedMerchant)
-    : String(routeMerchantId || store.merchantId || merchantId || "");
+    : String(routeMerchantId || "");
   const merchant =
     merchantInfo?.owner ||
     selectedMerchant ||
@@ -584,6 +584,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     merchant?.merchantName ||
     merchant?.businessDisplayName ||
     "Selected merchant";
+
+  useEffect(() => {
+    if (!routeMerchantId && !storeId) {
+      setStore((current) => current.merchantId ? blankStore() : current);
+    }
+  }, [routeMerchantId, storeId]);
   const activeStoreTypeId =
     store.storeTypeId ||
     merchantInfo?.typeId ||
@@ -968,7 +974,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               timezone: saved.timezone || "",
               currency: saved.currency || "",
               defaultLanguage: saved.defaultLanguage || "",
-              status: saved.status || "Active",
+              status: String(saved.status || "ACTIVE").toUpperCase() === "INACTIVE"
+                ? "Inactive"
+                : "Active",
               hours: normalizeHours(
                 saved.hours || saved.onboardingSetup?.hours,
               ),
@@ -1294,19 +1302,19 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     listStoreEmployees(merchantId, storeId)
       .then((response) => {
         if (cancelled) return;
-        const rows = response?.employees ?? response?.data?.employees ?? [];
+        const rows = Array.isArray(response) ? response : response?.employees ?? response?.data?.employees ?? [];
         setEmployeeAssignments(
           rows
             .map((item) => ({
-              employeeId: String(item.employeeId || item.id || ""),
-              role: item.roleTemplateId || item.role || "",
+              employeeId: String(item.employeeId || item.employee_id || item.id || ""),
+              role: item.roleTemplateId || item.role_template_id || item.role || "",
               pin: "",
-              savedPin: [item.loginPin, item.employeeLoginPin, item.pin]
+              savedPin: [item.loginPin, item.login_pin, item.employeeLoginPin, item.employee_login_pin, item.pin]
                 .map(value => String(value ?? ""))
                 .find(value => /^\d{6}$/.test(value)) || "",
-              pinSet: [item.pinSet, item.hasLoginPin].some(
+              pinSet: [item.pinSet, item.pin_set, item.hasLoginPin].some(
                 (value) => value === true || value === "t" || value === "true" || value === 1,
-              ) || Boolean(item.loginPinHash),
+              ) || Boolean(item.loginPinHash || item.loginPin || item.login_pin || item.employeeLoginPin || item.employee_login_pin || item.pin),
             }))
             .filter((item) => item.employeeId),
         );
@@ -1672,16 +1680,30 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setPinDraft(assignment?.pin || assignment?.savedPin || "");
     setPinError("");
   };
-  const saveEmployeePin = (employeeId) => {
+  const saveEmployeePin = async (employeeId) => {
     if (!/^[1-9]\d{5}$/.test(pinDraft)) {
       setPinError("Enter a 6-digit PIN that does not start with 0.");
       return;
     }
-    setEmployeeAssignments((current) =>
-      current.map((item) =>
-        item.employeeId === employeeId ? { ...item, pin: pinDraft } : item,
-      ),
+    const updated = employeeAssignments.map((item) =>
+      item.employeeId === employeeId ? { ...item, pin: pinDraft } : item,
     );
+    if (editing && merchantId && storeId) {
+      setSaving(true);
+      try {
+        await saveStoreEmployees(merchantId, storeId, updated.map((item) => ({
+          employeeId: item.employeeId,
+          ...(item.role ? { roleTemplateId: item.role } : {}),
+          ...(item.pin || item.savedPin ? { loginPin: item.pin || item.savedPin } : {}),
+        })));
+      } catch (failure) {
+        setPinError(failure.message || "Unable to save the employee PIN.");
+        setSaving(false);
+        return;
+      }
+      setSaving(false);
+    }
+    setEmployeeAssignments(updated);
     setPinEditorId("");
     setPinDraft("");
     setPinError("");
@@ -2052,7 +2074,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           employeeAssignments.map((item) => ({
             employeeId: item.employeeId,
             ...(item.role ? { roleTemplateId: item.role } : {}),
-            ...(item.pin ? { loginPin: item.pin } : {}),
+            ...(item.pin || item.savedPin ? { loginPin: item.pin || item.savedPin } : {}),
           })),
         );
       }
@@ -3222,7 +3244,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                                 className="sf-pin-save"
                                 onClick={() => saveEmployeePin(employeeId)}
                               >
-                                Save PIN
+                                {saving ? "Saving…" : "Save PIN"}
                               </button>
                               <button
                                 type="button"
@@ -3241,7 +3263,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                         ) : (
                           <div className="sf-pin-action">
                             {(assignment?.pin || assignment?.savedPin || assignment?.pinSet) && (
-                              <span className="sf-pin-set">
+                              <span className="sf-pin-set" title={!assignment.pin && !assignment.savedPin ? "PIN is stored securely and is not returned by the API." : undefined}>
                                 {assignment.pin || assignment.savedPin || "PIN set"}
                               </span>
                             )}
@@ -3543,7 +3565,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     saveLock.current = true; setSaving(true); setError("");
     try {
       if (step === 4) {
-        await saveStoreEmployees(merchantId, storeId, employeeAssignments.map(item => ({employeeId:item.employeeId,...(item.role ? {roleTemplateId:item.role} : {}),...(item.pin ? {loginPin:item.pin} : {})})));
+        await saveStoreEmployees(merchantId, storeId, employeeAssignments.map(item => ({employeeId:item.employeeId,...(item.role ? {roleTemplateId:item.role} : {}),...(item.pin || item.savedPin ? {loginPin:item.pin || item.savedPin} : {})})));
       } else {
         const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
         const saved = response?.store || response?.data?.store || response?.data || response;
