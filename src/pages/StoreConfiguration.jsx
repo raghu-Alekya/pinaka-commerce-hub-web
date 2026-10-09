@@ -22,9 +22,10 @@ import { endpoints } from "../api/endpoints";
 
 
 import {
+  fetchWordpressConnector,
   getWordpressConnector,
   saveWordpressConnector,
-  testWordpressConnection,
+  syncWordpressCatalog,
 } from "../api/storeConnector";
 
 
@@ -115,7 +116,7 @@ function SummaryFields({ title, items }) {
   return <section className="store-overview-card">
     <h2>{title}</h2>
     <dl>{items.map(([label, value]) => <div key={label}>
-      <dt>{label}</dt><dd>{value == null || value === "" ? "—" : String(value)}</dd>
+      <dt>{label}</dt><dd>{value == null || value === "" ? "—" : value}</dd>
     </div>)}</dl>
   </section>;
 }
@@ -220,6 +221,7 @@ export default function StoreConfiguration() {
 
   const [message, setMessage] = useState("");
   const [connected, setConnected] = useState(false);
+  const [jwtConfigured, setJwtConfigured] = useState(false);
 
   /* =======================================================
      SIDEBAR GROUP STATE
@@ -306,21 +308,16 @@ export default function StoreConfiguration() {
 
     async function loadConnector() {
       /*
-       * Load saved connector information.
+       * Load saved connector information from the store record.
        */
       try {
-        const saved = getWordpressConnector(storeId);
+        const saved = await fetchWordpressConnector(storeId, merchantId);
 
         if (saved && !cancelled) {
-          if (saved.siteUrl) {
-            setSiteUrl(saved.siteUrl);
-          }
-
-          if (saved.jwtToken) {
-            setJwtToken(saved.jwtToken);
-          }
-
+          setSiteUrl(saved.siteUrl || "");
+          setJwtToken(saved.jwtToken || "");
           setConnected(Boolean(saved.connected));
+          setJwtConfigured(Boolean(saved.wordpressJwtConfigured || saved.jwtToken));
 
           if (saved.lastTestMessage) {
             setMessage(saved.lastTestMessage);
@@ -341,7 +338,7 @@ export default function StoreConfiguration() {
     return () => {
       cancelled = true;
     };
-  }, [storeId]);
+  }, [merchantId, storeId]);
 
   /* =======================================================
      SET WEBSITE URL FROM STORE
@@ -374,6 +371,7 @@ export default function StoreConfiguration() {
     setSiteUrl(saved?.siteUrl || store?.url || "");
     setJwtToken(saved?.jwtToken || "");
     setConnected(Boolean(saved?.connected));
+    setJwtConfigured(Boolean(saved?.wordpressJwtConfigured || saved?.jwtToken));
     setMessage("");
     setShowToken(false);
   };
@@ -403,10 +401,13 @@ export default function StoreConfiguration() {
         }
       );
 
+      setConnected(Boolean(saved?.connected));
+      setJwtConfigured(Boolean(saved?.wordpressJwtConfigured || saved?.jwtToken));
       setMessage(
-        saved?.syncedToApi
-          ? "WordPress JWT saved for this store."
-          : "WordPress JWT saved for this store on this browser."
+        saved?.lastTestMessage ||
+          (saved?.syncedToApi
+            ? "WordPress JWT saved for this store."
+            : "WordPress JWT saved for this store on this browser.")
       );
       setEditingSection(false);
       setShowToken(false);
@@ -424,11 +425,10 @@ export default function StoreConfiguration() {
      TEST WORDPRESS CONNECTION
      ======================================================= */
 
-  const handleTest = async () => {
+  const handleSyncCatalog = async () => {
+    if (testing || saving) return;
     if (!siteUrl.trim() || !jwtToken.trim()) {
-      setMessage(
-        "Enter the WordPress site URL and JWT token first."
-      );
+      setMessage("Save the WordPress site URL and JWT token before syncing.");
       return;
     }
 
@@ -436,40 +436,18 @@ export default function StoreConfiguration() {
     setMessage("");
 
     try {
-      const result =
-        await testWordpressConnection(
-          siteUrl,
-          jwtToken,
-          storeId,
-          merchantId
-        );
-
-      setConnected(Boolean(result?.ok));
+      const result = await syncWordpressCatalog(storeId, {
+        siteUrl,
+        jwtToken,
+      });
+      const categoryCount = result?.catalog?.categoryCount ?? 0;
+      const productCount = result?.catalog?.productCount ?? 0;
       setMessage(
         result?.message ||
-          "Connection test completed."
-      );
-
-      await saveWordpressConnector(
-        storeId,
-        merchantId,
-        {
-          siteUrl,
-          jwtToken,
-          connected: Boolean(result?.ok),
-          lastTestedAt:
-            new Date().toISOString(),
-          lastTestMessage:
-            result?.message || "",
-        }
+          `Synced ${categoryCount} categories and ${productCount} products.`
       );
     } catch (err) {
-      setConnected(false);
-
-      setMessage(
-        err?.message ||
-          "Connection test failed."
-      );
+      setMessage(err?.message || "Unable to sync categories and products.");
     } finally {
       setTesting(false);
     }
@@ -503,7 +481,7 @@ export default function StoreConfiguration() {
           BREADCRUMB
           =================================================== */}
 
-      <div className="breadcrumb-area">
+      <header className="breadcrumb-area store-workspace-topbar">
 
         <button
           className="link-button"
@@ -515,9 +493,9 @@ export default function StoreConfiguration() {
 
         <span>/</span>
 
-        <span>Store Details & Configuration</span>
+        <strong>Store Details & Configuration</strong>
 
-      </div>
+      </header>
 
       {/* ===================================================
           LOADING
@@ -684,29 +662,31 @@ export default function StoreConfiguration() {
                 <div className="store-panel">
                   <div className="store-panel-heading">
                     <div><h2>Website Connection</h2><p>{editingSection ? "Update the website URL and JWT token for this store." : "View the saved JWT connection status."}</p></div>
-                    {!editingSection && <button type="button" className="store-config-btn" onClick={() => {restoreConnection();setEditingSection(true);}}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
+                    <div className="store-panel-actions">
+                      <button type="button" className="sf-outline" onClick={handleSyncCatalog} disabled={testing || saving}>{testing ? "Syncing…" : "Sync Categories & Products"}</button>
+                      {!editingSection && <button type="button" className="store-config-btn" onClick={() => {restoreConnection();setEditingSection(true);}}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
+                    </div>
                   </div>
                   {!editingSection ? (
                     <SummaryFields title="Website Connection" items={[
-                      ["Connection Status", connected ? "Connected" : "Not connected"],
+                      ["Connection Status", <span className={`connection-pill ${connected ? "connected" : "not-connected"}`}>{connected ? "Connected" : "Not connected"}</span>],
                       ["Website URL", siteUrl],
-                      ["JWT Token", jwtToken],
+                      ["JWT Token", jwtConfigured || jwtToken ? "Configured" : "Not configured"],
                     ]} />
                   ) : (
                     <form className="store-connection-section" onSubmit={handleSave}>
                       <fieldset disabled={saving || testing} style={{border:0,padding:0,margin:0,minWidth:0}}>
                         <label className="store-field">WordPress Site URL
-                          <input type="url" placeholder="https://your-store.com" value={siteUrl} onChange={event => {setSiteUrl(event.target.value);setConnected(false);}} required />
+                          <input type="url" placeholder="https://your-store.com" value={siteUrl} onChange={event => setSiteUrl(event.target.value)} required />
                         </label>
                         <label className="store-field">WordPress JWT Token
                           <div className="token-input">
-                            <textarea rows={5} placeholder="Paste the JWT generated by WordPress" value={jwtToken} onChange={event => {setJwtToken(event.target.value);setConnected(false);}} required spellCheck={false} style={{WebkitTextSecurity:showToken ? "none" : "disc"}} />
+                            <textarea rows={5} placeholder="Paste the JWT generated by WordPress" value={jwtToken} onChange={event => setJwtToken(event.target.value)} required spellCheck={false} style={{WebkitTextSecurity:showToken ? "none" : "disc"}} />
                             <button type="button" className="token-toggle-btn" onClick={() => setShowToken(value => !value)} aria-pressed={showToken}>{showToken ? "Hide Token" : "Show Token"}</button>
                           </div>
                         </label>
                         <div className="store-form-actions">
                           <button type="button" className="sf-outline" onClick={() => {restoreConnection();setEditingSection(false);}}>Cancel</button>
-                          <button type="button" className="sf-outline" onClick={handleTest}>{testing ? "Syncing…" : "Sync Categories & Products"}</button>
                           <button type="submit" className="store-config-btn">{saving ? "Saving…" : "Save Changes"}</button>
                         </div>
                       </fieldset>

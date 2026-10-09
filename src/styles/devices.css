@@ -5,7 +5,7 @@
 .devices-page {
   width: 100%;
   min-height: calc(100vh - 64px);
-  padding: 20px 24px 24px;
+  padding: 24px;
   box-sizing: border-box;
   background: #f5f7fb;
   color: #193354;
@@ -1086,7 +1086,7 @@
    RESPONSIVE - 1300px
 ========================================================= */
 
-@media (max-width: 1300px) {
+@media (max-width: 1200px) {
   .devices-page {
     padding: 16px 18px 20px;
   }

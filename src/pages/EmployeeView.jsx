@@ -109,6 +109,7 @@ export default function EmployeeView() {
         ]} />
         <Section title="Account Settings" icon={Settings} fields={[
           ["Username", employee.username],
+          ["Employee Login PIN", employee.loginPin || employee.employeeLoginPin || employee.login_pin || employee.pin],
         ]} />
       </div>}
     </div>

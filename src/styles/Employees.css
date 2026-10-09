@@ -80,7 +80,7 @@
   padding: 10px;
 
   background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
-  border: 1px solid #edf0f5;
+  border: 1px solid #e4dcf5;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -91,18 +91,22 @@
 
 .employees-stat-card:has(.employees-stat-icon.green) {
   background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+  border-color: #d6ecdf;
 }
 
 .employees-stat-card:has(.employees-stat-icon.orange) {
   background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+  border-color: #f2e3cb;
 }
 
 .employees-stat-card:has(.employees-stat-icon.red) {
   background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+  border-color: #f1dce1;
 }
 
 .employees-stat-card:has(.employees-stat-icon.blue) {
   background: linear-gradient(135deg, #fff 0%, #edf6ff 100%);
+  border-color: #dbe8f4;
 }
 
 .employees-stat-icon {
@@ -386,6 +390,10 @@
   border: 1px solid #dfe9f4;
   border-radius: 8px;
   background: #fff;
+}
+
+.employees-list-card > .pagination-container {
+  border-top: 0;
 }
 
 .employees-list-card > .employees-filter-bar {

@@ -1269,7 +1269,7 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
             <span>Plan Validity</span>
 
-            <strong className="validity-dates">{merchant.start}<br />to {merchant.end}</strong>
+            <strong className="validity-dates">{merchant.start} to {merchant.end}</strong>
 
             <small>{billingLabel === "YEARLY" || billingLabel === "ANNUAL" ? "(1 Year)" : billingLabel}</small>
 

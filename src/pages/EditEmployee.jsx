@@ -218,7 +218,13 @@ export default function EditEmployee() {
     let active = true;
     getEmployeeProfileImage(employeeId)
       .then((response) => {
-        if (active) setProfileImage(response?.employee?.profileImageUrl || null);
+        if (!active) return;
+        const savedEmployee = response?.employee;
+        setProfileImage(savedEmployee?.profileImageUrl || null);
+        const savedPin = savedEmployee?.loginPin || savedEmployee?.employeeLoginPin || savedEmployee?.login_pin || savedEmployee?.pin;
+        if (savedPin) {
+          setFormData((current) => ({ ...current, employeeLoginPin: String(savedPin) }));
+        }
       })
       .catch((error) => {
         if (active) setNotice(error.message || "Unable to load the saved profile photo.");
@@ -251,7 +257,7 @@ export default function EditEmployee() {
 
     merchant: getMerchantName(employee.merchant) || employee.merchantName || "",
 
-    employeeLoginPin: employee.loginPin || employee.employeeLoginPin || "",
+    employeeLoginPin: employee.loginPin || employee.employeeLoginPin || employee.login_pin || employee.pin || "",
     manager: employee.manager || "",
     username: employee.username || employee.employeeCode || employee.id || "",
     status: String(employee.status || "INACTIVE").toUpperCase() === "ACTIVE" ? "Active" : "Inactive",
@@ -271,6 +277,10 @@ export default function EditEmployee() {
     const trimmed = typeof value === "string" ? value.trim() : value;
 
     switch (name) {
+      case "employeeLoginPin":
+        if (!trimmed) return "";
+        return /^\d{6}$/.test(trimmed) ? "" : "Employee Login PIN must be exactly 6 digits.";
+
       case "firstName":
         if (!trimmed) return "First Name is required.";
         if (!/^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/.test(trimmed)) {
@@ -415,6 +425,11 @@ export default function EditEmployee() {
       if (error) nextErrors.address2 = error;
     }
 
+    if (formData.employeeLoginPin) {
+      const error = validateField("employeeLoginPin", formData.employeeLoginPin);
+      if (error) nextErrors.employeeLoginPin = error;
+    }
+
     if (formData.password) {
       const error = validateField("password", formData.password);
       if (error) nextErrors.password = error;
@@ -432,7 +447,9 @@ export default function EditEmployee() {
     const { name, value, type, checked } = e.target;
 
     const nextValue =
-      name === "pinCode"
+      name === "employeeLoginPin"
+        ? value.replace(/\D/g, "").slice(0, 6)
+        : name === "pinCode"
         ? value.replace(/\D/g, "").slice(0, 6)
         : type === "checkbox"
           ? checked
@@ -961,6 +978,22 @@ export default function EditEmployee() {
                   {errors.password && (
                     <span className="field-error">{errors.password}</span>
                   )}
+                </div>
+
+                <div className="employee-login-pin-field">
+                  <label htmlFor="edit-employee-login-pin">Employee Login PIN</label>
+                  <input
+                    id="edit-employee-login-pin"
+                    name="employeeLoginPin"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={formData.employeeLoginPin}
+                    onChange={handleChange}
+                    placeholder="Enter 6-digit PIN"
+                  />
+                  <small className="employee-login-pin-help">PIN is shown openly. Enter 6 digits to update it.</small>
+                  {errors.employeeLoginPin && <span className="field-error">{errors.employeeLoginPin}</span>}
                 </div>
               </div>
             </section>
