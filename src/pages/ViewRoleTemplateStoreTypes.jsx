@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { roleTemplatesApi } from "../api/roleTemplatesApi";
 
@@ -74,7 +74,7 @@ export default function ViewRoleTemplateStoreTypes() {
   );
 
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingStoreTypeIds, setSavingStoreTypeIds] = useState([]);
   const [error, setError] = useState("");
 
   const [showLeavePopup, setShowLeavePopup] = useState(false);
@@ -84,6 +84,11 @@ export default function ViewRoleTemplateStoreTypes() {
   const [savedStoreTypes, setSavedStoreTypes] = useState(
     initialSelectedStoreTypes,
   );
+  const selectedStoreTypesRef = useRef(initialSelectedStoreTypes);
+  const savedStoreTypesRef = useRef(initialSelectedStoreTypes);
+  const saveQueueRef = useRef(Promise.resolve());
+  const queuedSaveCountRef = useRef(0);
+  const saving = savingStoreTypeIds.length > 0;
 
   const tabs = [
     ["overview", "Overview", `/role-templates/${roleId}`],
@@ -117,6 +122,8 @@ export default function ViewRoleTemplateStoreTypes() {
             .map((storeType) => storeType.id);
           setSelectedStoreTypes(savedIds);
           setSavedStoreTypes(savedIds);
+          selectedStoreTypesRef.current = savedIds;
+          savedStoreTypesRef.current = savedIds;
         }
       } catch (requestError) {
         if (!cancelled) {
@@ -145,50 +152,57 @@ export default function ViewRoleTemplateStoreTypes() {
     };
   }, [roleId]);
 
-  async function toggleStoreType(id) {
-    if (saving || !roleId) return;
+  function toggleStoreType(id) {
+    if (!roleId || savingStoreTypeIds.includes(id)) return;
 
-    const nextSelectedStoreTypes = selectedStoreTypes.includes(id)
-      ? selectedStoreTypes.filter((item) => item !== id)
-      : [...selectedStoreTypes, id];
+    const currentSelection = selectedStoreTypesRef.current;
+    const nextSelectedStoreTypes = currentSelection.includes(id)
+      ? currentSelection.filter((item) => item !== id)
+      : [...currentSelection, id];
 
+    selectedStoreTypesRef.current = nextSelectedStoreTypes;
     setSelectedStoreTypes(nextSelectedStoreTypes);
+    setSavingStoreTypeIds((current) => [...current, id]);
     setError("");
-    setSaving(true);
 
-    try {
-      const response = await roleTemplatesApi.bulkUpdateStoreTypes(
-        roleId,
-        nextSelectedStoreTypes,
-      );
-      const savedIds = readSavedStoreTypeIds(response) ?? nextSelectedStoreTypes;
-      setSelectedStoreTypes(savedIds);
-      setSavedStoreTypes(savedIds);
-      setStoreTypesList((items) =>
-        items.map((storeType) => ({
-          ...storeType,
-          checked: savedIds.includes(storeType.id),
-          mapped: savedIds.includes(storeType.id),
-        })),
-      );
-    } catch (requestError) {
-      // Revert the checkbox if the API call fails
-      setSelectedStoreTypes(selectedStoreTypes);
+    queuedSaveCountRef.current += 1;
+    saveQueueRef.current = saveQueueRef.current
+      .catch(() => {})
+      .then(async () => {
+        const requestedSelection = selectedStoreTypesRef.current;
+        let failed = false;
 
-      // Extract detailed error message from backend if available
-      const errorBody = requestError?.body ?? requestError?.response?.data;
-      const rawMessage =
-        errorBody?.message ||
-        errorBody?.errors?.[0]?.message ||
-        errorBody?.error ||
-        requestError?.message;
-      const errorMessage = Array.isArray(rawMessage)
-        ? rawMessage.filter(Boolean).join(", ")
-        : rawMessage || "Unable to save store type selection.";
-      setError(errorMessage);
-    } finally {
-      setSaving(false);
-    }
+        try {
+          const response = await roleTemplatesApi.bulkUpdateStoreTypes(
+            roleId,
+            requestedSelection,
+          );
+          const savedIds = readSavedStoreTypeIds(response) ?? requestedSelection;
+          savedStoreTypesRef.current = savedIds;
+          setSavedStoreTypes(savedIds);
+        } catch (requestError) {
+          failed = true;
+          const errorBody = requestError?.body ?? requestError?.response?.data;
+          const rawMessage =
+            errorBody?.message ||
+            errorBody?.errors?.[0]?.message ||
+            errorBody?.error ||
+            requestError?.message;
+          const errorMessage = Array.isArray(rawMessage)
+            ? rawMessage.filter(Boolean).join(", ")
+            : rawMessage || "Unable to save store type selection.";
+          setError(errorMessage);
+        } finally {
+          queuedSaveCountRef.current -= 1;
+          setSavingStoreTypeIds((current) => current.filter((item) => item !== id));
+
+          if (failed && queuedSaveCountRef.current === 0) {
+            const savedIds = savedStoreTypesRef.current;
+            selectedStoreTypesRef.current = savedIds;
+            setSelectedStoreTypes(savedIds);
+          }
+        }
+      });
   }
 
   function buildNavigationState() {
@@ -207,6 +221,7 @@ export default function ViewRoleTemplateStoreTypes() {
   }
 
   function handleSaveAndContinue() {
+    if (saving) return;
     setError("");
 
     if (selectedStoreTypes.length === 0) {
@@ -214,14 +229,13 @@ export default function ViewRoleTemplateStoreTypes() {
       return;
     }
 
-    setSaving(true);
     setSavedStoreTypes(selectedStoreTypes);
+    savedStoreTypesRef.current = selectedStoreTypes;
 
     navigate(`/role-templates/${roleId || "store-manager"}/access`, {
       state: buildNavigationState(),
     });
 
-    setSaving(false);
   }
 
   function hasUnsavedChanges() {
@@ -260,14 +274,13 @@ export default function ViewRoleTemplateStoreTypes() {
   }
 
   function saveAndExit() {
+    if (saving) return;
     if (selectedStoreTypes.length === 0) {
       setShowLeavePopup(false);
       setPendingNavigation(null);
       setError("Please select at least one store type before saving.");
       return;
     }
-
-    setSaving(true);
 
     // Front-end persistence until the role-configuration save API is connected.
     const configuration = {
@@ -284,7 +297,7 @@ export default function ViewRoleTemplateStoreTypes() {
     );
 
     setSavedStoreTypes(selectedStoreTypes);
-    setSaving(false);
+    savedStoreTypesRef.current = selectedStoreTypes;
     setShowLeavePopup(false);
 
     if (pendingNavigation) {
@@ -396,7 +409,7 @@ export default function ViewRoleTemplateStoreTypes() {
                     <input
                       type="checkbox"
                       checked={isSelected}
-                      disabled={saving}
+                      disabled={savingStoreTypeIds.includes(storeTypeId)}
                       onChange={() => toggleStoreType(storeTypeId)}
                     />
 
