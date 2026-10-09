@@ -191,6 +191,8 @@ export default function ViewRoleTemplateAccess() {
   const [search, setSearch] = useState("");
   const [enabledFeatures, setEnabledFeatures] = useState([]);
   const [selectedPermissions, setSelectedPermissions] = useState([]);
+  const [pendingFeatureChecks, setPendingFeatureChecks] = useState({});
+  const [pendingPermissionChecks, setPendingPermissionChecks] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [savingFeatureId, setSavingFeatureId] = useState(null);
@@ -329,6 +331,8 @@ export default function ViewRoleTemplateAccess() {
         return;
       }
 
+      setPendingFeatureChecks((current) => ({ ...current, [featureId]: true }));
+
       setSavingFeatureId(featureId);
       setError("");
 
@@ -351,6 +355,11 @@ export default function ViewRoleTemplateAccess() {
       } catch (requestError) {
         setError(requestError?.message || "Unable to enable feature access.");
       } finally {
+        setPendingFeatureChecks((current) => {
+          const next = { ...current };
+          delete next[featureId];
+          return next;
+        });
         setSavingFeatureId(null);
       }
       return;
@@ -358,6 +367,7 @@ export default function ViewRoleTemplateAccess() {
 
     setSavingFeatureId(featureId);
     setError("");
+    setPendingFeatureChecks((current) => ({ ...current, [featureId]: false }));
 
     try {
       if (!feature?.backendId) {
@@ -377,6 +387,11 @@ export default function ViewRoleTemplateAccess() {
     } catch (requestError) {
       setError(requestError?.message || "Unable to remove feature access.");
     } finally {
+      setPendingFeatureChecks((current) => {
+        const next = { ...current };
+        delete next[featureId];
+        return next;
+      });
       setSavingFeatureId(null);
     }
   }
@@ -395,6 +410,9 @@ export default function ViewRoleTemplateAccess() {
         setError("This permission has no valid backend ID and cannot be enabled.");
         return;
       }
+
+      setPendingPermissionChecks((current) => ({ ...current, [permissionId]: true }));
+      setPendingFeatureChecks((current) => ({ ...current, [featureId]: true }));
 
       setSavingFeatureId(featureId);
       setError("");
@@ -416,6 +434,16 @@ export default function ViewRoleTemplateAccess() {
       } catch (requestError) {
         setError(requestError?.message || "Unable to enable permission access.");
       } finally {
+        setPendingPermissionChecks((current) => {
+          const next = { ...current };
+          delete next[permissionId];
+          return next;
+        });
+        setPendingFeatureChecks((current) => {
+          const next = { ...current };
+          delete next[featureId];
+          return next;
+        });
         setSavingFeatureId(null);
       }
       return;
@@ -429,6 +457,7 @@ export default function ViewRoleTemplateAccess() {
     );
 
     if (featureHasSelectedPermissions) {
+      setPendingPermissionChecks((current) => ({ ...current, [permissionId]: false }));
       setSavingFeatureId(featureId);
       setError("");
 
@@ -442,6 +471,11 @@ export default function ViewRoleTemplateAccess() {
       } catch (requestError) {
         setError(requestError?.message || "Unable to remove permission access.");
       } finally {
+        setPendingPermissionChecks((current) => {
+          const next = { ...current };
+          delete next[permissionId];
+          return next;
+        });
         setSavingFeatureId(null);
       }
       return;
@@ -449,6 +483,8 @@ export default function ViewRoleTemplateAccess() {
 
     setSavingFeatureId(featureId);
     setError("");
+    setPendingPermissionChecks((current) => ({ ...current, [permissionId]: false }));
+    setPendingFeatureChecks((current) => ({ ...current, [featureId]: false }));
 
     try {
       if (!feature?.backendId) {
@@ -461,6 +497,16 @@ export default function ViewRoleTemplateAccess() {
     } catch (requestError) {
       setError(requestError?.message || "Unable to remove permission access.");
     } finally {
+      setPendingPermissionChecks((current) => {
+        const next = { ...current };
+        delete next[permissionId];
+        return next;
+      });
+      setPendingFeatureChecks((current) => {
+        const next = { ...current };
+        delete next[featureId];
+        return next;
+      });
       setSavingFeatureId(null);
     }
   }
@@ -611,7 +657,12 @@ function saveAndLeave() {
             ) : (
               <div className="role-feature-list">
                 {filteredFeatures.map((feature) => {
-                  const isEnabled = enabledFeatures.includes(feature.id);
+                  const isEnabled = Object.prototype.hasOwnProperty.call(
+                    pendingFeatureChecks,
+                    feature.id,
+                  )
+                    ? pendingFeatureChecks[feature.id]
+                    : enabledFeatures.includes(feature.id);
 
                   return (
                     <section className="role-feature-access-card" key={feature.id}>
@@ -654,14 +705,24 @@ function saveAndLeave() {
                             <label
                               key={permission.key}
                               className={
-                                selectedPermissions.includes(permission.id)
+                                Object.prototype.hasOwnProperty.call(
+                                  pendingPermissionChecks,
+                                  permission.id,
+                                )
+                                  ? pendingPermissionChecks[permission.id]
+                                  : selectedPermissions.includes(permission.id)
                                   ? "selected"
                                   : ""
                               }
                             >
                               <input
                                 type="checkbox"
-                                checked={selectedPermissions.includes(permission.id)}
+                                checked={Object.prototype.hasOwnProperty.call(
+                                  pendingPermissionChecks,
+                                  permission.id,
+                                )
+                                  ? pendingPermissionChecks[permission.id]
+                                  : selectedPermissions.includes(permission.id)}
                                 disabled={savingFeatureId === feature.id || feature.status === "INACTIVE"}
                                 onChange={() => togglePermission(feature.id, permission.id)}
                               />
