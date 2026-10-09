@@ -168,11 +168,11 @@ function getMerchantName(m) {
    EDIT EMPLOYEE COMPONENT
 ========================================================= */
 
-export default function EditEmployee() {
+export default function EditEmployee({ employee: suppliedEmployee, onSave, onBack } = {}) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const employee = location.state?.employee || {};
+  const employee = suppliedEmployee || location.state?.employee || {};
   const employeeId = useMemo(() => getEmployeeId(employee), [employee]);
 
   const [showPassword, setShowPassword] = useState(false);
@@ -624,7 +624,8 @@ export default function EditEmployee() {
       const response = await updateEmployee(employeeId, formData);
       console.log("Employee update response:", response);
 
-      navigate("/employees", { state: { employeeMessage: "Employee updated successfully." } });
+      if (onSave) await onSave(response?.employee || response);
+      else navigate("/employees", { state: { employeeMessage: "Employee updated successfully." } });
     } catch (error) {
       console.error("Update employee failed:", error);
 
@@ -643,11 +644,12 @@ export default function EditEmployee() {
   };
 
   const handleBack = () => {
-    navigate("/employees");
+    if (onBack) onBack();
+    else navigate("/employees");
   };
 
   return (
-    <div className="add-employee-page">
+    <div className={`add-employee-page${suppliedEmployee ? " merchant-employee-edit" : ""}`}>
       <StoreRoleAssignmentStyles />
 
       {/* PAGE HEADER */}

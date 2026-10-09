@@ -1041,3 +1041,38 @@
     width: 100%;
   }
 }
+
+/* Eight-column employee list: keep merchant names and badges readable. */
+.employees-list-card .employees-table th:nth-child(1),
+.employees-list-card .employees-table td:nth-child(1) { width: 20%; }
+.employees-list-card .employees-table th:nth-child(2),
+.employees-list-card .employees-table td:nth-child(2) { width: 20%; }
+.employees-list-card .employees-table th:nth-child(3),
+.employees-list-card .employees-table td:nth-child(3) { width: 7%; }
+.employees-list-card .employees-table th:nth-child(4),
+.employees-list-card .employees-table td:nth-child(4) {
+  width: 16%; padding: 8px 13px; white-space: normal;
+  overflow-wrap: normal; overflow: visible; text-align: left;
+}
+.employees-list-card .employee-merchant-name {
+  display: block; line-height: 1.5; white-space: normal;
+  overflow-wrap: break-word; word-break: normal;
+}
+.employees-list-card .employees-table th:nth-child(5),
+.employees-list-card .employees-table td:nth-child(5) {
+  width: 112px; min-width: 112px; padding-left: 10px; padding-right: 10px;
+  white-space: nowrap; overflow: visible; text-overflow: clip;
+}
+.employees-list-card .employees-table th:nth-child(6),
+.employees-list-card .employees-table td:nth-child(6),
+.employees-list-card .employees-table th:nth-child(7),
+.employees-list-card .employees-table td:nth-child(7) {
+  width: 12%; min-width: 0; text-align: left; white-space: normal;
+}
+.employees-list-card .employees-table th:nth-child(8),
+.employees-list-card .employees-table td:nth-child(8) {
+  width: 140px; min-width: 140px; text-align: center; white-space: nowrap;
+}
+.employees-list-card .employees-table td:nth-child(8) .list-actions {
+  flex-wrap: nowrap; justify-content: center; gap: 6px;
+}
