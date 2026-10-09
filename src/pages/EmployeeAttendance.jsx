@@ -24,6 +24,19 @@ const displayTime = (value) => {
   const suffix = hours >= 12 ? "PM" : "AM";
   return `${String(hours % 12 || 12).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${suffix}`;
 };
+const localIsoDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+function dateBoundsForPreset(preset) {
+  const today = new Date();
+  const end = localIsoDate(today);
+  if (preset === "today") return [end, end];
+  if (preset === "week") {
+    const start = new Date(today);
+    start.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    return [localIsoDate(start), end];
+  }
+  if (preset === "month") return [localIsoDate(new Date(today.getFullYear(), today.getMonth(), 1)), end];
+  return ["", ""];
+}
 
 const EMPLOYEE_PROFILES = {
   EMP001: { phone: "+91 98765 43210", email: "ravi.kumar@pinaka.com", role: "Cashier", employmentType: "Full Time", joiningDate: "2025-08-15" },
@@ -58,8 +71,12 @@ export default function EmployeeAttendance({ store, embedded = false, onViewReco
   const records = INITIAL_RECORDS;
   const [employee, setEmployee] = useState("");
   const [status, setStatus] = useState("");
-  const [startDate, setStartDate] = useState("2026-10-01");
-  const [endDate, setEndDate] = useState("2026-10-31");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [draftStartDate, setDraftStartDate] = useState("");
+  const [draftEndDate, setDraftEndDate] = useState("");
+  const [dateFilter, setDateFilter] = useState("any");
+  const [showDateRange, setShowDateRange] = useState(false);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -91,7 +108,6 @@ export default function EmployeeAttendance({ store, embedded = false, onViewReco
       <header className="ea-header">
         <div><h2>Employee Attendance</h2><p>View and manage employee clock-in and clock-out records.</p></div>
         <div className="ea-header-actions">
-          <label className="ea-range ea-overview-range"><i className="bi bi-calendar3" aria-hidden="true" /><input aria-label="Attendance start date" type="date" value={startDate} onChange={(event) => { setStartDate(event.target.value); setPage(1); }} /><span>–</span><input aria-label="Attendance end date" type="date" value={endDate} onChange={(event) => { setEndDate(event.target.value); setPage(1); }} /></label>
           <button className="ea-export" type="button" onClick={exportCsv}><i className="bi bi-download" aria-hidden="true" /> Export</button>
         </div>
       </header>
@@ -100,10 +116,33 @@ export default function EmployeeAttendance({ store, embedded = false, onViewReco
         <form className="ea-search" onSubmit={(event) => { event.preventDefault(); setPage(1); }}><i className="bi bi-search" aria-hidden="true" /><input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search employees..." aria-label="Search employee attendance" /></form>
         <label className="ea-inline-filter"><span className="sr-only">Employee</span><select value={employee} onChange={(event) => { setEmployee(event.target.value); setPage(1); }}><option value="">All Employees</option>{employees.map(([code, name]) => <option key={code} value={code}>{name} ({code})</option>)}</select></label>
         <label className="ea-inline-filter"><span className="sr-only">Status</span><select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">All Statuses</option><option>Present</option><option>Absent</option></select></label>
-        <button type="button" className="ea-reset" onClick={() => { setEmployee(""); setStatus(""); setQuery(""); setStartDate("2026-10-01"); setEndDate("2026-10-31"); setPage(1); }}><i className="bi bi-arrow-counterclockwise" aria-hidden="true" /> Reset</button>
+        <label className="ea-inline-filter ea-date-filter"><span className="sr-only">Date range</span><select value={dateFilter} onChange={(event) => {
+          const next = event.target.value;
+          setDateFilter(next);
+          setPage(1);
+          if (next === "custom") {
+            setDraftStartDate(startDate);
+            setDraftEndDate(endDate);
+            setShowDateRange(true);
+          } else {
+            const [from, to] = dateBoundsForPreset(next);
+            setStartDate(from);
+            setEndDate(to);
+            setShowDateRange(false);
+          }
+        }}><option value="any">Any Date</option><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option><option value="custom">Custom Range</option></select></label>
+        <button type="button" className="ea-reset" onClick={() => { setEmployee(""); setStatus(""); setQuery(""); setStartDate(""); setEndDate(""); setDraftStartDate(""); setDraftEndDate(""); setDateFilter("any"); setShowDateRange(false); setPage(1); }}><i className="bi bi-arrow-counterclockwise" aria-hidden="true" /> Reset</button>
       </div>
 
-      <div className="ea-table-wrap"><table className="ea-table"><thead><tr><th>Date <i className="bi bi-chevron-expand" /></th><th>Employee Code</th><th>Employee Name</th><th>Clock In <i className="bi bi-chevron-expand" /></th><th>Clock Out <i className="bi bi-chevron-expand" /></th><th>Total Hours <i className="bi bi-chevron-expand" /></th><th>Status <i className="bi bi-chevron-expand" /></th><th>Actions</th></tr></thead>
+      {showDateRange && <div className="ea-date-range-panel">
+        <label>From date<input type="date" value={draftStartDate} onChange={(event) => setDraftStartDate(event.target.value)} /></label>
+        <label>To date<input type="date" value={draftEndDate} onChange={(event) => setDraftEndDate(event.target.value)} /></label>
+        <button className="ea-apply-range" type="button" disabled={!draftStartDate || !draftEndDate || draftStartDate > draftEndDate} onClick={() => { setStartDate(draftStartDate); setEndDate(draftEndDate); setShowDateRange(false); setPage(1); }}>Apply date range</button>
+        <button className="ea-cancel-range" type="button" onClick={() => { setShowDateRange(false); setDateFilter(startDate || endDate ? "custom" : "any"); }}>Cancel</button>
+        <button className="ea-clear-dates" type="button" onClick={() => { setStartDate(""); setEndDate(""); setDraftStartDate(""); setDraftEndDate(""); setDateFilter("any"); setShowDateRange(false); setPage(1); }}>Clear dates</button>
+      </div>}
+
+      <div className="ea-table-wrap"><table className="ea-table"><thead><tr><th>Date</th><th>Employee Code</th><th>Employee Name</th><th>Clock In</th><th>Clock Out</th><th>Total Hours</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>{pageRows.map((row) => <tr key={row.id}><td>{displayDate(row.date)}</td><td>{row.code}</td><td>{row.name}</td><td>{displayTime(row.clockIn)}</td><td>{displayTime(row.clockOut)}</td><td>{row.total}</td><td><span className={`ea-status ${row.status.toLowerCase()}`}>{row.status}</span></td><td><div className="ea-row-actions"><button type="button" title={`View ${row.name} attendance`} aria-label={`View ${row.name} attendance`} onClick={() => onViewRecord?.(row)}><i className="bi bi-eye" /></button></div></td></tr>)}
           {!pageRows.length && <tr><td colSpan={8} className="ea-empty">No attendance records match these filters.</td></tr>}
         </tbody></table></div>
