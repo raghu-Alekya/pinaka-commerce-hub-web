@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { storeTypesApi } from "../api/storeTypes";
 import { tendorsApi } from "../api/tendors";
+import { useNavigate } from "react-router-dom";
 
 const emptyForm = {
   code: "",
@@ -147,6 +148,7 @@ function getTendorData(response) {
 
 export default function Tenders() {
   const [tenders, setTenders] = useState([]);
+  const navigate = useNavigate();
 
   const [form, setForm] = useState(emptyForm);
   const [originalForm, setOriginalForm] = useState(null);
@@ -419,24 +421,27 @@ export default function Tenders() {
         </div>
 
         <div className="tenders-form-grid tender-create-fields-grid">
-          <label>
-            <span>
-              Tender Code <b>*</b>
-            </span>
+         
+<label className="tenders-code-field">
+  <span>
+    Tender Code <b>*</b>
+  </span>
 
-            <input
-              type="text"
-              name="code"
-              value={editingId ? form.code : generatedCode}
-              placeholder="Generated automatically"
-              readOnly
-              aria-describedby="tender-code-help"
-              autoComplete="off"
-            />
-            <small id="tender-code-help" className="tenders-field-help">
-              Automatically assigned in sequence.
-            </small>
-          </label>
+  <input
+    type="text"
+    name="code"
+    value={editingId ? form.code : ""}
+    placeholder="Auto Generated"
+    readOnly
+    disabled
+    aria-describedby="tender-code-help"
+    autoComplete="off"
+    class="tender-placeholder"
+  
+  />
+</label>
+
+
 
           <label>
             <span>
@@ -588,7 +593,16 @@ export default function Tenders() {
                 </tr>
               ) : (
                 filteredTenders.map((tender) => (
-                  <tr key={tender.id}>
+                  
+<tr
+  key={tender.id}
+  className="tender-row-clickable"
+  onClick={() =>
+    navigate(`/tenders/${tender.id}`, {
+      state: { tender },
+    })
+  }
+>
                     <td>{tender.code}</td>
 
                     <td>
@@ -627,10 +641,10 @@ export default function Tenders() {
                     <td className="tenders-actions">
                       <button
                         type="button"
-                        onClick={() => editTender(tender)}
-                        aria-label={`Edit ${tender.name}`}
-                        title="Edit"
-                        disabled={deleting}
+                        onClick={(event) => {
+                         event.stopPropagation();
+                          editTender(tender);
+                        }}
                       >
                         <i className="bi bi-pencil" />
                       </button>
@@ -638,10 +652,10 @@ export default function Tenders() {
                       <button
                         type="button"
                         className="tenders-delete-action"
-                        onClick={() => requestDeleteTender(tender)}
-                        aria-label={`Deactivate ${tender.name}`}
-                        title="Deactivate"
-                        disabled={deleting && deletingId === tender.id}
+                        onClick={(event) => {
+                        event.stopPropagation();
+                        requestDeleteTender(tender);
+                            }}
                       >
                         <i
                           className={

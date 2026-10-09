@@ -193,6 +193,7 @@
   background: #ffffff;
   color: #163762;
   font-size: 12px;
+  font-weight: 500;
   outline: none;
   transition:
     border-color 0.2s ease,
@@ -222,6 +223,14 @@
 .vendors-form textarea:focus {
   border-color: #aeb7ff;
   box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
+}
+
+.vendor-placeholder {
+  text-transform: none;
+  letter-spacing: 0.15px;
+  font-weight: 500;
+  cursor: not-allowed;
+  background-color: #f5f7fa !important;
 }
 
 

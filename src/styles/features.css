@@ -191,6 +191,14 @@
   resize: none;
 }
 
+.feature-placeholder {
+  text-transform: none;
+  letter-spacing: 0.15px;
+  font-weight: 500;
+  cursor: not-allowed;
+  background-color: #f5f7fa !important;
+}
+
 .feature-description-field {
   width: 100%;
   min-width: 0;
@@ -288,6 +296,10 @@
 .feature-error-text {
   color: #d9485f !important;
 }
+
+
+
+
 
 /* =========================================================
    FORM FOOTER / BUTTONS — ROLE TEMPLATES BUTTON SYSTEM
@@ -627,6 +639,22 @@
   max-height: 36px;
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+
+/* Features List - Single-line Description */
+.feature-description-cell {
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.feature-description-text {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .feature-created {
@@ -1202,4 +1230,27 @@
   opacity: 0.45;
   border: 1px solid #dce9f5;
   cursor: not-allowed;
+}
+
+
+
+/* Features table - single-line description */
+.features-table .feature-description {
+  min-width: 0;
+  max-width: 0;
+  overflow: hidden;
+}
+
+.features-table .feature-description-content {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.features-table .feature-description-clamp {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
