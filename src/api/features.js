@@ -6,7 +6,11 @@ const path = (id) => `/features/${encodeURIComponent(id)}`;
 // Normalize either response shape for the existing screens.
 const normalize = (item = {}) => {
   const featureType = item.feature_type ?? item.featureType ?? "";
-  const category = item.category ?? featureType;
+  const category =
+    item.category ??
+    item.feature_category ??
+    item.featureCategory ??
+    featureType;
   const code = item.feature_code ?? item.featureCode ?? item.featureKey ?? "";
   const status = String(item.status || "ACTIVE").toUpperCase();
 
@@ -17,6 +21,7 @@ const normalize = (item = {}) => {
     feature_code: code,
     name: item.name ?? item.feature_name ?? item.featureName ?? "",
     description: item.description || "",
+    category,
     feature_type: featureType || category,
     status: status === "ACTIVE" ? "Active" : "Inactive",
     created_at: item.created_at ?? item.createdAt ?? null,

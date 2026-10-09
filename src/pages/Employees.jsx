@@ -613,7 +613,7 @@ const handlePageSizeChange = (size) => {
                     {/* ROLE */}
 
                     {/* MERCHANT */}
-                    <td>{employee.merchant}</td>
+                    <td className="employee-merchant-cell"><span className="employee-merchant-name">{employee.merchant}</span></td>
                     {/* STORE */}
 
                     {/* STATUS */}

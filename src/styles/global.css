@@ -334,7 +334,7 @@ table thead th {
 
 
 /* Shared status pills for the Employees and Devices list tables. */
-:is(.employees-table, .devices-table) :is(.employee-status, .device-status):is(.active, .inactive) {
+:is(.employees-table, .devices-table, .mel) :is(.employee-status, .device-status):is(.active, .inactive) {
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
@@ -351,15 +351,15 @@ table thead th {
     font-weight: 500;
     white-space: nowrap;
 }
-:is(.employees-table, .devices-table) :is(.employee-status, .device-status).active {
+:is(.employees-table, .devices-table, .mel) :is(.employee-status, .device-status).active {
     color: #319a5b;
     background: #e5f6ea;
 }
-:is(.employees-table, .devices-table) :is(.employee-status, .device-status).inactive {
-    color: #858d9d;
-    background: #eef0f3;
+:is(.employees-table, .devices-table, .mel) :is(.employee-status, .device-status).inactive {
+    color: #e9445b;
+    background: #ffe5ea;
 }
-:is(.employees-table, .devices-table) :is(.employee-status, .device-status):is(.active, .inactive)::before {
+:is(.employees-table, .devices-table, .mel) :is(.employee-status, .device-status):is(.active, .inactive)::before {
     content: "";
     width: 5px;
     height: 5px;
