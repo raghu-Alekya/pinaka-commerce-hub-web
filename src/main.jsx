@@ -44,6 +44,8 @@ import "./styles/Merchant-subscriptions.css";
 import "./styles/ViewRoleTemplateDetails.css";
 import "./styles/PlanDetails.css";
 import './styles/cash-management.css';
+import "./styles/master-filter-toolbar.css";
+import "./styles/step-workspace-scroll.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

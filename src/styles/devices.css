@@ -149,7 +149,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .device-stat-card {
@@ -304,6 +304,10 @@
   margin-bottom: 12px;
 
   box-sizing: border-box;
+}
+
+.devices-list-card > .pagination-container {
+  border-top: 0;
 }
 
 

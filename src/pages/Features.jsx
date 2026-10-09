@@ -438,8 +438,8 @@ export default function Features() {
       <section className="features-list-card">
         <div className="features-list-toolbar">
           <h2>Features</h2>
-          <div className="features-filters">
-            <div className="feature-search">
+          <div className="features-filters pch-master-toolbar pch-master-control">
+            <div className="feature-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
                 type="text"
@@ -479,7 +479,7 @@ export default function Features() {
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
 
-            <button className="reset-filter" type="button" onClick={resetFilters}>
+            <button className="reset-filter pch-master-reset pch-master-control" type="button" onClick={resetFilters}>
               <i className="bi bi-arrow-counterclockwise" />
             
             </button>

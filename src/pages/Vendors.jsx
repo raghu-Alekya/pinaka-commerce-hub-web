@@ -1636,6 +1636,22 @@ export default function Vendors({
                   (vendor) => (
                     <tr
                       key={vendor.id}
+                      tabIndex={saving || deleting ? -1 : 0}
+                      aria-label={`View ${vendor.name}`}
+                      style={{ cursor: saving || deleting ? undefined : "pointer" }}
+                      onClick={(event) => {
+                        if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                          event.stopPropagation();
+                          return;
+                        }
+                        if (!saving && !deleting) viewVendor(vendor);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ") && !saving && !deleting) {
+                          event.preventDefault();
+                          viewVendor(vendor);
+                        }
+                      }}
                     >
                       {/* CODE */}
 

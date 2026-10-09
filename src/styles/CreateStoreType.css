@@ -1145,50 +1145,50 @@
    ========================================================= */
 
 .store-types-filters {
-  display: grid !important;
+  display: grid;
 
   grid-template-columns:
     250px
     150px
     150px
-    38px !important;
+    38px;
 
-  gap: 12px !important;
+  gap: 12px;
 
-  width: auto !important;
-  max-width: none !important;
+  width: auto;
+  max-width: none;
 
-  margin-left: auto !important;
+  margin-left: auto;
 
-  align-items: center !important;
+  align-items: center;
 }
 
 .store-type-search {
-  width: 250px !important;
-  height: 38px !important;
-  margin: 0 !important;
+  width: 250px;
+  height: 38px;
+  margin: 0;
 }
 
 .store-type-search input {
-  width: 100% !important;
-  min-width: 0 !important;
+  width: 100%;
+  min-width: 0;
 }
 
 .store-filter-select {
-  width: 150px !important;
-  height: 38px !important;
+  width: 150px;
+  height: 38px;
 }
 
 .store-filter-select select {
-  width: 100% !important;
-  height: 38px !important;
+  width: 100%;
+  height: 38px;
 }
 
 .store-type-reset-button {
-  width: 38px !important;
-  min-width: 38px !important;
-  height: 38px !important;
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
 
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0;
+  margin: 0;
 }

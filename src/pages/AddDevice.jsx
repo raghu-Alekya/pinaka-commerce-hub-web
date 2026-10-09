@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import DeviceNavigation from "../components/DeviceNavigation";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Settings, ChevronDown } from "lucide-react";
+import { Settings, ChevronDown } from "lucide-react";
 
 import "../styles/add-device.css";
 import { devicesApi } from "../api/devices";
@@ -125,29 +126,15 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
   };
 
   return (
-    <div className="add-device-page">
+    <div className={`add-device-page${embedded ? "" : " add-device-standalone"}`}>
+      {!embedded && <DeviceNavigation title="Add Device" onBack={() => (onCancel ? onCancel() : navigate("/devices"))} />}
       {/* HEADER */}
       {!embedded && <div className="add-device-header">
         <div>
           <h1>Add Device</h1>
 
-          <div className="add-device-breadcrumb">
-            <span>Home</span>
-            <span>›</span>
-            <span>Devices</span>
-            <span>›</span>
-            <strong>Add Device</strong>
-          </div>
+          <p>Enter device information, assignments, and settings.</p>
         </div>
-
-        <button
-          type="button"
-          className="back-devices-btn"
-          onClick={() => (onCancel ? onCancel() : navigate("/devices"))}
-        >
-          <ArrowLeft size={15} />
-          Back to Devices
-        </button>
       </div>}
 
       {/* ERROR */}

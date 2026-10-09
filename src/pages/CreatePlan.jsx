@@ -1283,8 +1283,8 @@ export default function CreatePlan() {
             )}
           </div>
 
-          <div className="plans-filters">
-            <label className="plan-search">
+          <div className="plans-filters pch-master-toolbar pch-master-control">
+            <label className="plan-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
                 value={search}
@@ -1315,7 +1315,7 @@ export default function CreatePlan() {
 
             <button
               type="button"
-              className="plan-reset-button"
+              className="plan-reset-button pch-master-reset pch-master-control"
               onClick={resetFilters}
             >
               <i className="bi bi-arrow-counterclockwise" />

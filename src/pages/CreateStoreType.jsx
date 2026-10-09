@@ -810,8 +810,8 @@ export default function CreateStoreType() {
         <div className="store-types-list-header">
           <h2>Store Types</h2>
 
-          <div className="store-types-filters">
-            <label className="store-type-search">
+          <div className="store-types-filters pch-master-toolbar pch-master-control">
+            <label className="store-type-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
 
@@ -826,7 +826,7 @@ export default function CreateStoreType() {
               />
             </label>
 
-            <div className="store-filter-select">
+            <div className="store-filter-select pch-master-filter pch-master-control">
               <select
 
                 value={statusFilter}
@@ -840,7 +840,7 @@ export default function CreateStoreType() {
               <i className="bi bi-chevron-down" />
             </div>
 
-            <div className="store-filter-select">
+            <div className="store-filter-select pch-master-filter pch-master-control">
               <select
 
                 value={sortBy}
@@ -860,7 +860,7 @@ export default function CreateStoreType() {
 
               type="button"
 
-              className="store-type-reset-button"
+              className="store-type-reset-button pch-master-reset pch-master-control"
 
               onClick={resetFilters}
             >

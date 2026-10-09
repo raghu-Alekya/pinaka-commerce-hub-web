@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import DeviceNavigation from "../components/DeviceNavigation";
 import {
   ArrowLeft,
   Save,
@@ -212,6 +213,7 @@ export default function EditDevice() {
 
   return (
     <div className="device-view-page">
+      <DeviceNavigation title="Edit Device" onBack={() => navigate("/devices")} />
       {/* =====================================================
           HEADER
       ===================================================== */}
@@ -220,23 +222,8 @@ export default function EditDevice() {
         <div>
           <h1>Edit Device</h1>
 
-          <div className="device-view-breadcrumb">
-            <span>Home</span>
-            <span>›</span>
-            <span>Devices</span>
-            <span>›</span>
-            <strong>Edit Device</strong>
-          </div>
+          <p>Update device information, assignments, and settings.</p>
         </div>
-
-        <button
-          type="button"
-          className="device-view-back"
-          onClick={() => navigate("/devices")}
-        >
-          <ArrowLeft size={15} />
-          Back to Devices
-        </button>
       </div>
 
       {/* =====================================================
@@ -254,7 +241,7 @@ export default function EditDevice() {
           FORM
       ===================================================== */}
 
-      <form onSubmit={save} className="device-view-card">
+      <form id="edit-device-form" onSubmit={save} className="device-view-card">
         {/* CARD HEADER */}
 
         <div className="device-card-header">
@@ -378,27 +365,28 @@ export default function EditDevice() {
           </div>
         </div>
 
-        {/* =================================================
-            ACTIONS
-        ================================================= */}
-
-        <div className="device-view-actions">
-          <button
-            type="button"
-            className="device-view-cancel"
-            onClick={() => navigate("/devices")}
-            disabled={saving}
-          >
-            Cancel
-          </button>
-
-          <button type="submit" className="device-view-save" disabled={saving}>
-            <Save size={15} />
-
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
       </form>
+
+      {/* =================================================
+          ACTIONS
+      ================================================= */}
+
+      <div className="device-view-actions">
+        <button
+          type="button"
+          className="device-view-cancel"
+          onClick={() => navigate("/devices")}
+          disabled={saving}
+        >
+          Cancel
+        </button>
+
+        <button type="submit" form="edit-device-form" className="device-view-save" disabled={saving}>
+          <Save size={15} />
+
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
     </div>
   );
 }

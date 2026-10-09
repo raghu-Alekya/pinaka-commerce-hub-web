@@ -234,6 +234,7 @@ function FilterSelect({ value, options, onChange }) {
 export default function Employees() {
   /* SEARCH */
   const navigate = useNavigate();
+  const openView = (employee) => navigate(`/employees/${encodeURIComponent(employee.employeeId || employee.id)}`);
   const location = useLocation();
   const [notice, setNotice] = useState(location.state?.employeeMessage || "");
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -565,7 +566,25 @@ const handlePageSizeChange = (size) => {
                 </tr>
               ) : visibleEmployees.length > 0 ? (
                 visibleEmployees.map((employee) => (
-                  <tr key={employee.id}>
+                  <tr
+                    key={employee.id}
+                    tabIndex={0}
+                    aria-label={`View ${employee.name}`}
+                    style={{ cursor: "pointer" }}
+                    onClick={(event) => {
+                      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                        event.stopPropagation();
+                        return;
+                      }
+                      openView(employee);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+                        event.preventDefault();
+                        openView(employee);
+                      }
+                    }}
+                  >
                     {/* EMPLOYEE */}
                     {/* EMPLOYEE COLUMN */}
                     {/* EMPLOYEE COLUMN */}
@@ -610,7 +629,7 @@ const handlePageSizeChange = (size) => {
                     {/* ACTIONS */}
                     <td>
                       <ListActions
-                          onView={() => navigate(`/employees/${encodeURIComponent(employee.employeeId || employee.id)}`)}
+                          onView={() => openView(employee)}
                           viewLabel={`View ${employee.name}`}
                           onEdit={() =>
                           navigate("/employees/edit", {

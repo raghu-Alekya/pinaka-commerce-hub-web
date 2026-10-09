@@ -463,6 +463,14 @@ export default function StoreConfiguration() {
     }
   };
 
+  const statusClass = useMemo(
+    () =>
+      (store?.status || "active")
+        .toLowerCase()
+        .replace(/\s+/g, "-"),
+    [store]
+  );
+
   const displayStoreCode = store?.storeCode || (String(store?.id || "").startsWith("STR-") ? store.id : "");
   const displayStoreName = store?.name && !isUuid(store.name)
     ? store.name
@@ -508,26 +516,6 @@ export default function StoreConfiguration() {
           {/* ===============================================
               STORE HEADER
               =============================================== */}
-
-          <div className="store-workspace-header">
-
-            <div>
-
-              <h1>
-                {displayStoreName}
-              </h1>
-
-              <p>
-                {displayStoreCode || "Store ID unavailable"}
-
-                {merchant?.name
-                  ? ` • ${merchant.name}`
-                  : ""}
-              </p>
-
-            </div>
-
-          </div>
 
           {/* ===============================================
               WORKSPACE
@@ -631,11 +619,39 @@ export default function StoreConfiguration() {
                 ============================================= */}
 
             <section className="store-workspace-main">
+              <div className="store-workspace-header">
+
+                <div>
+
+                  <h1>
+                    {displayStoreName}
+                  </h1>
+
+                  <p>
+                    {displayStoreCode || "Store ID unavailable"}
+
+                    {merchant?.name
+                      ? ` • ${merchant.name}`
+                      : ""}
+                  </p>
+
+                </div>
+
+                <span
+                  className={`store-status ${statusClass}`}
+                >
+                  {connected
+                    ? "Website Connected"
+                    : store?.status || "Active"}
+                </span>
+
+              </div>
 
               {/* ===========================================
                   STORE OVERVIEW & SETUP
                   =========================================== */}
 
+              <div className="store-workspace-card">
               {section === "attendance" && attendanceDetailRecord ? (
                 <AttendanceDetails record={attendanceDetailRecord} store={store} onBack={() => setAttendanceDetailRecord(null)} />
               ) : section === "details" ? (
@@ -831,6 +847,7 @@ export default function StoreConfiguration() {
 
               )}
 
+              </div>
             </section>
 
           </div>
