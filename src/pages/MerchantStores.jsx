@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getMerchant } from "../api/merchants";
 import { api, ApiError } from "../api/http";
+import { activateStore, deactivateStore } from "../api/stores";
 import { endpoints } from "../api/endpoints";
 
 const isUuid = (value) =>
@@ -14,11 +15,17 @@ function toStoreRow(store) {
   const type = typeof typeValue === "string"
     ? typeValue
     : typeValue?.name || typeValue?.storeTypeName || "Retail";
-  const location = [
+  const locationParts = [
     address?.street || (typeof store.address === "string" ? store.address : store.location),
+    address?.addressLine2 || store.addressLine2,
     address?.city || store.city,
     address?.state || store.state,
-  ].filter(Boolean).join(", ");
+    address?.zipCode || address?.postalCode || store.zip || store.postalCode,
+    address?.country || store.country,
+  ].flatMap((value) => String(value || "").split(",")).map((part) => part.trim()).filter(Boolean);
+  const location = locationParts.filter((part, index) =>
+    locationParts.findIndex((candidate) => candidate.toLowerCase() === part.toLowerCase()) === index,
+  ).join(", ");
   const storeUuid = [store.id, store._id, store.storeUUID, store.storeUuid, store.store_uuid, store.uuid, store.storeId, store.storeID]
     .find(isUuid) || "";
   const storeCode = [store.storeCode, store.store_code, store.code, store.storeId, store.storeID, store.id]
@@ -40,6 +47,11 @@ function toStoreRow(store) {
   };
 }
 
+function shortLocation(value, wordLimit = 8) {
+  const words = String(value || "").trim().split(/\s+/).filter(Boolean);
+  return words.length > wordLimit ? `${words.slice(0, wordLimit).join(" ")}…` : words.join(" ");
+}
+
 export default function MerchantStores({
   merchantId: selectedMerchantId,
   embedded = false,
@@ -53,6 +65,10 @@ export default function MerchantStores({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [activatingStoreId, setActivatingStoreId] = useState("");
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -222,13 +238,13 @@ export default function MerchantStores({
   };
 
   const handleStoreOverview = (store) => {
-    const targetId = merchantId || merchant?.merchantId || merchant?.merchantCode || merchant?.id;
     const storeUuid = getStoreId(store);
     if (!storeUuid) {
       setError("This store record does not include a valid UUID.");
       return;
     }
-    nav(`/merchants/${encodeURIComponent(targetId)}/stores/${storeUuid}`);
+    const targetMerchantId = merchantId || merchant?.merchantId || merchant?.merchantCode || merchant?.id;
+    nav(`/merchants/${encodeURIComponent(targetMerchantId)}/stores/${encodeURIComponent(storeUuid)}`);
   };
 
   const handleEdit = (store) => {
@@ -327,6 +343,8 @@ export default function MerchantStores({
 
           <section className="stores-card store-list-card">
 
+            {error && <p className="store-action-error" role="alert">{error}</p>}
+
             <div className="store-list-heading">
               <h2>Store List</h2>
             </div>
@@ -415,7 +433,7 @@ export default function MerchantStores({
                           {/* STORE */}
 
                           <td>
-                            <div className="store-name-cell">
+                            <button type="button" className="store-name-cell store-name-link" title={`View ${storeName}`} onClick={() => handleStoreOverview(store)}>
 
                               <div className="store-icon">
                                 <i className="bi bi-shop" />
@@ -433,7 +451,7 @@ export default function MerchantStores({
 
                               </div>
 
-                            </div>
+                            </button>
                           </td>
 
                           {/* TYPE */}
@@ -447,8 +465,8 @@ export default function MerchantStores({
                           {/* LOCATION */}
 
                           <td>
-                            <span className="store-location">
-                              {location}
+                            <span className="store-location" title={location} aria-label={`Address: ${location}`}>
+                              {shortLocation(location)}
                             </span>
                           </td>
 
@@ -468,31 +486,32 @@ export default function MerchantStores({
 
                           <td>
                             <div className="store-actions">
-
-                              <button
-                                type="button"
-                                className="store-config-btn"
-                                onClick={() =>
-                                  handleStoreOverview(
-                                    store
-                                  )
-                                }
-                              >
-                                <i className="bi bi-eye" />
-                                Store Overview
-                              </button>
-
                               <button
                                 type="button"
                                 className="store-edit-btn"
-                                onClick={() =>
-                                  handleEdit(store)
-                                }
+                                title={`Edit ${storeName}`}
+                                aria-label={`Edit ${storeName}`}
+                                onClick={() => handleEdit(store)}
                               >
                                 <i className="bi bi-pencil" />
-                                Edit
                               </button>
-
+                              {String(status).toUpperCase() === "INACTIVE" ? (
+                                <button type="button" className="store-icon-btn store-activate-btn" title={`Activate ${storeName}`} aria-label={`Activate ${storeName}`} disabled={Boolean(activatingStoreId)} onClick={async () => {
+                                  const storeUuid = getStoreId(store);
+                                  setActivatingStoreId(storeUuid);
+                                  setError("");
+                                  try {
+                                    await activateStore(store.storeCode || storeUuid, store);
+                                    setStores((current) => current.map((item) => item.uuid === storeUuid ? { ...item, status: "ACTIVE" } : item));
+                                  } catch (failure) {
+                                    setError(failure.message || "Unable to activate store.");
+                                  } finally {
+                                    setActivatingStoreId("");
+                                  }
+                                }}><i className="bi bi-arrow-counterclockwise" /></button>
+                              ) : (
+                                <button type="button" className="store-icon-btn store-delete-btn" title={`Deactivate ${storeName}`} aria-label={`Deactivate ${storeName}`} onClick={() => { setDeleteError(""); setDeleteTarget(store); }}><i className="bi bi-trash" /></button>
+                              )}
                             </div>
                           </td>
 
@@ -568,6 +587,34 @@ export default function MerchantStores({
             </div>
 
           </section>
+        </div>
+      )}
+      {deleteTarget && (
+        <div className="pch-delete-overlay" role="dialog" aria-modal="true" aria-labelledby="merchant-store-delete-title" onClick={(event) => { if (event.target === event.currentTarget && !deleting) setDeleteTarget(null); }}>
+          <div className="pch-delete-modal">
+            <div className="pch-delete-icon" aria-hidden="true"><i className="bi bi-trash3" /></div>
+            <h2 id="merchant-store-delete-title">Deactivate Store?</h2>
+            <p className="pch-delete-message">Are you sure you want to deactivate <strong>{getStoreName(deleteTarget)}</strong>?</p>
+            <p className="pch-delete-warning">The store will remain in the system with inactive status.</p>
+            {deleteError && <p role="alert" className="store-action-error">{deleteError}</p>}
+            <div className="pch-delete-actions">
+              <button type="button" className="pch-delete-cancel" disabled={deleting} onClick={() => setDeleteTarget(null)}>Cancel</button>
+              <button type="button" className="pch-delete-confirm" disabled={deleting} onClick={async () => {
+                setDeleting(true);
+                setDeleteError("");
+                try {
+                  await deactivateStore(deleteTarget.storeCode || getStoreId(deleteTarget), deleteTarget);
+                  const targetUuid = getStoreId(deleteTarget);
+                  setStores((current) => current.map((store) => store.uuid === targetUuid ? { ...store, status: "INACTIVE" } : store));
+                  setDeleteTarget(null);
+                } catch (failure) {
+                  setDeleteError(failure.message || "Unable to deactivate store.");
+                } finally {
+                  setDeleting(false);
+                }
+              }}>{deleting ? "Deactivating…" : "Deactivate Store"}</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

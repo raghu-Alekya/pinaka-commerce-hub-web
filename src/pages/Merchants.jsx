@@ -1,8 +1,18 @@
+function merchantTimestamp(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return <span className="merchant-timestamp">
+    <span>{date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+    <small>{date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</small>
+  </span>;
+}
 import MerchantTenders from "./MerchantTenders";
 import MerchantVendors from "./MerchantVendors";
 import MerchantStores from "./MerchantStores";
 import MerchantRoles from "./MerchantRoles";
 import AddMerchantDevice from "./AddMerchantDevice";
+import EditEmployee from "./EditEmployee";
 import { MerchantEmployeeForm } from "./AddMerchantEmployee";
 import { useReferenceData } from "../api/referenceData";
 import { formatDate, listSubscriptions } from "../api/subscriptions";
@@ -10,7 +20,8 @@ import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { listMerchants, getMerchant, updateMerchantStatus } from "../api/merchants";
-import { listMerchantEmployees } from "../api/employees";
+import { EmployeeToast, EmployeeDeleteDialog } from "../components/EmployeeFeedback";
+import { listMerchantEmployees, deleteEmployee } from "../api/employees";
 import { ApiError } from "../api/http";
 import { devicesApi } from "../api/devices";
 import Pagination from "../components/Pagination";
@@ -35,6 +46,7 @@ function ViewTable({ headings, rows }) {
 }
 function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSaveDevice, masterVendors, vendorAssignments, onSaveVendorAssignments, vendorsLoading, vendorsError, masterTenders, tenderAssignments, onSaveTenderAssignments, tendersLoading, tendersError }) {
   const [addingEmployee, setAddingEmployee] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
   const [createdEmployees, setCreatedEmployees] = useState([]);
   async function saveEmployeeAndRefresh(values) {
     if(typeof onSaveEmployee !== 'function') throw new Error('Connect onSaveEmployee to your employee creation API.');
@@ -309,7 +321,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const stores = list(saved?.stores ?? response.stores ?? raw.stores);
   const employeeRecords = apiEmployees ?? saved?.employees ?? raw.employees ?? response.employees ?? response.data?.employees ?? merchant?.employees;
   const employeeRows = list(employeeRecords).filter(employee=>!createdEmployees.some(item=>String(item.id)===String(employee.id || employee.employeeId) || (item.email && item.email===employee.email)));
-  const employees = [...createdEmployees, ...employeeRows].filter(employee => {
+  const employees = (apiEmployees ?? [...createdEmployees, ...employeeRows]).filter(employee => {
     if (apiEmployees) return true;
     const ownerId = employee.merchantId ?? employee.merchant?.id;
     return ownerId == null || String(ownerId) === String(apiMerchantId);
@@ -447,7 +459,15 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
         {employeesLoading && <p role="status">Loading employees...</p>}
         {addingEmployee ? <ViewSection title="Add Employee" actions={<button type="button" className="merchant-back-employees" onClick={()=>setAddingEmployee(false)}>← Back to Employees</button>}>
           <MerchantEmployeeForm embedded key={apiMerchantId} merchantId={apiMerchantId} initialMerchant={merchant} onSave={saveEmployeeAndRefresh} onBack={()=>setAddingEmployee(false)}/>
-        </ViewSection> : <MerchantEmployeeList employees={employees} merchantName={business} onAdd={()=>setAddingEmployee(true)}/>}
+        </ViewSection> : editingEmployee ? <EditEmployee
+          key={editingEmployee.id || editingEmployee.employeeId}
+          employee={editingEmployee}
+          onBack={()=>setEditingEmployee(null)}
+          onSave={async()=>{
+            setApiEmployees(await listMerchantEmployees(apiMerchantId));
+            setEditingEmployee(null);
+          }}
+        /> : <MerchantEmployeeList onEdit={setEditingEmployee} employees={employees} merchantName={business} onAdd={()=>setAddingEmployee(true)} onRefresh={async()=>setApiEmployees(await listMerchantEmployees(apiMerchantId))}/>}
 
       </div>
       <div role="tabpanel" id="merchant-panel-devices" aria-labelledby="merchant-tab-devices" hidden={activeTab !== 'devices'} tabIndex={0}>
@@ -1070,8 +1090,8 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
                          {m.status || 'Unknown'}
                          </span>
                     </td>
-                    <td>{formatDate(m.createdAt || m.created_at || m.createdDate || m._raw?.merchant?.created_at || m.joined)}</td>
-                    <td>{formatDate(m.updatedAt || m.updated_at || m.updatedDate || m._raw?.merchant?.updated_at)}</td>
+                    <td>{merchantTimestamp(m.createdAt || m.created_at || m.createdDate || m._raw?.merchant?.created_at || m.joined)}</td>
+                    <td>{merchantTimestamp(m.updatedAt || m.updated_at || m.updatedDate || m._raw?.merchant?.updated_at)}</td>
                     <td>
     <ListActions
         onView={() => openView(m)}
@@ -1183,7 +1203,27 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
   );
 }
 
-function MerchantEmployeeList({employees,merchantName,onAdd}) {
+function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const deleteLock = useRef(false);
+  async function confirmDelete() {
+    if (!deleteTarget || deleteLock.current) return;
+    deleteLock.current = true;
+    setDeleteBusy(true);
+    try {
+      await deleteEmployee(deleteTarget.employeeId || deleteTarget.id);
+      setDeleteTarget(null);
+      await onRefresh?.();
+      setNotice("Employee deleted successfully.");
+    } catch (error) {
+      setNotice(error.message || "Unable to delete employee.");
+    } finally {
+      deleteLock.current = false;
+      setDeleteBusy(false);
+    }
+  }
   const blank={query:''};
   const [filters,setFilters]=useState(blank),[page,setPage]=useState(1),[view,setView]=useState(null);
   const dialog=useRef(null),lastFocus=useRef(null);
@@ -1195,9 +1235,12 @@ function MerchantEmployeeList({employees,merchantName,onAdd}) {
   const update=(key,value)=>{setFilters(old=>({...old,[key]:value}));setPage(1);};
   const filtered=employees.filter(e=>[employeeName(e),e.id,e.employeeCode,e.username,e.phone,e.phoneNumber,e.email].join(' ').toLowerCase().includes(filters.query.trim().toLowerCase())).sort((a,b)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0));
   const pages=Math.max(1,Math.ceil(filtered.length/10)),current=Math.min(page,pages);
-  return <div className="mel"><header className="mel-card mel-heading"><div><h2>Employees</h2><p>These are the employees connected to this merchant.</p></div><button className="mel-primary" onClick={onAdd}>＋ Add Employee</button></header>
+  return <div className="mel">
+    <EmployeeToast message={notice} onClose={()=>setNotice("")} />
+    {deleteTarget && <EmployeeDeleteDialog title="Delete Employee?" description={`Are you sure you want to delete ${employeeName(deleteTarget)}?`} busy={deleteBusy} onCancel={()=>{if(!deleteBusy)setDeleteTarget(null);}} onConfirm={confirmDelete} />}
+    <header className="mel-card mel-heading"><div><h2>Employees</h2><p>These are the employees connected to this merchant.</p></div><button className="mel-primary" onClick={onAdd}>＋ Add Employee</button></header>
     <section className="mel-card"><h3>Employee List</h3><div className="mel-search"><input aria-label="Search employees" placeholder="Search employee, ID, username, phone or email…" value={filters.query} onChange={e=>update('query',e.target.value)}/><button onClick={()=>{setFilters(blank);setPage(1);}}>↺ Reset</button></div>
-    <div className="mel-scroll"><table><thead><tr>{['Employee','Email','Phone','Gender','Actions'].map(title=><th key={title}>{title}</th>)}</tr></thead><tbody>
+    <div className="mel-scroll"><table><thead><tr>{['Employee','Email','Phone','Gender','Status','Actions'].map(title=><th key={title}>{title}</th>)}</tr></thead><tbody>
       {filtered.slice((current - 1) * 10, current * 10).map((e, index) => (
     <tr key={e.id || e.employeeCode || index}>
         <td>
@@ -1210,6 +1253,7 @@ function MerchantEmployeeList({employees,merchantName,onAdd}) {
         <td>{e.phone || e.phoneNumber || '—'}</td>
 
         <td>{e.gender || '—'}</td>
+        <td><span className={"employee-status " + (String(e.status || 'INACTIVE').toUpperCase() === 'ACTIVE' ? 'active' : 'inactive')}>{String(e.status || 'INACTIVE').toUpperCase() === 'ACTIVE' ? 'Active' : 'Inactive'}</span></td>
 
         <td>
             <ListActions
@@ -1218,11 +1262,16 @@ function MerchantEmployeeList({employees,merchantName,onAdd}) {
                     setView(e);
                 }}
                 viewLabel={`View ${employeeName(e)}`}
+                onEdit={() => onEdit(e)}
+                editLabel={`Edit ${employeeName(e)}`}
+                onDelete={() => setDeleteTarget(e)}
+                deleteLabel={`Delete ${employeeName(e)}`}
+                deleteDisabled={deleteBusy}
             />
         </td>
     </tr>
 ))}
-{!filtered.length&&<tr><td colSpan={5}>No employees found for this merchant.</td></tr>}</tbody></table></div>
+{!filtered.length&&<tr><td colSpan={6}>No employees found for this merchant.</td></tr>}</tbody></table></div>
       <footer><span>Showing {filtered.length?(current-1)*10+1:0} to {Math.min(current*10,filtered.length)} of {filtered.length} entries</span><div className="mel-pages"><button disabled={current===1} onClick={()=>setPage(current-1)}>‹</button><span>{current} / {pages}</span><button disabled={current===pages} onClick={()=>setPage(current+1)}>›</button></div></footer>
     </section>
     <dialog ref={dialog} className="mel-dialog" aria-labelledby="mel-title" onCancel={event=>{event.preventDefault();setView(null);}}><header className="mel-heading"><h2 id="mel-title">Employee Details</h2><button onClick={()=>setView(null)} aria-label="Close employee details">×</button></header>{view&&<dl>{Object.entries({Name:employeeName(view),Email:view.email,Phone:view.phone || view.phoneNumber,Username:view.username,Gender:view.gender,Status:view.status,'Employee Code':view.employeeCode || view.employee_code}).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value || '—'}</dd></div>)}</dl>}</dialog>
