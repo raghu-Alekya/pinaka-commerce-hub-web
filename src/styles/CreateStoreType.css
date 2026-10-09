@@ -157,7 +157,19 @@
   flex-direction: column;
 }
 
+.store-type-description-cell {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
 
+.store-type-description-text {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
 
 .store-type-status-field {
@@ -1082,14 +1094,17 @@
   font-weight: 400;
 }
 
+
 /* Store Type Code remains code-style. Supports the common field names
    without changing JSX or any data/API behavior. */
 .store-type-form-card input[name="code"],
 .store-type-form-card input[name="storeTypeCode"],
 .store-type-form-card input[name="store_type_code"] {
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.15px;
   font-weight: 500;
+  cursor: not-allowed;
+  background-color: #f5f7fa !important;
 }
 
 /* Description starts compact and is allowed to grow downward as the

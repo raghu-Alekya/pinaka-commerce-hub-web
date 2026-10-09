@@ -639,29 +639,26 @@ export default function CreateStoreType() {
         </div>
 
         <div className="store-type-form-grid">
-          <div className="store-type-field">
-            <label>
 
-              Store Type Code
-            </label>
-            <input
+<div className="store-type-field">
+  <label>Store Type Code</label>
 
-              name="code"
+  <input
+    name="code"
+    value=""
+    placeholder="Auto Generated"
+    readOnly
+    disabled
+    aria-readonly="true"
+  />
 
-              value={form.code}
+  <div className="store-type-field-slot">
+    <small>Generated automatically when saved.</small>
+  </div>
+</div>
 
-              readOnly
 
-              aria-readonly="true"
 
-              placeholder="Loading generated code..."
-
-              maxLength={30}
-
-              className="store-type-readonly-input"
-
-            />
-          </div>
 
           <div className="store-type-field">
             <label>
@@ -925,15 +922,12 @@ export default function CreateStoreType() {
                 >
                   <strong>{item.name}</strong>
                 </button>
-
-                <div
-
-                  className="store-type-description-cell"
-                  data-pch-table-cell
-                >
-
-                  {item.description}
-                </div>
+  
+              <div className="store-type-description-cell">
+                     <span className="store-type-description-text">
+                       {item.description || "—"}
+                     </span>
+                 </div>
 
                 <div>
                   <span

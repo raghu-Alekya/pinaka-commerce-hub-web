@@ -26,7 +26,7 @@ const sections = [
         [
           ["/store-types/new", "bi-shop", "Store Types"],
           ["/features", "bi-grid-1x2", "Features"],
-          ["/permissions", "bi-shield-check", "Feature Permissions"],
+          ["/feature-permissions", "bi-shield-check", "Feature Permissions"],
           ["/role-templates", "bi-person-badge", "Role Templates"],
           ["/plans/new", "bi-credit-card", "Plans"],
           ["/tenders", "bi-cash-coin", "Tenders"],
@@ -151,14 +151,47 @@ export default function Sidebar({
                               key={subTo}
                               to={subTo}
                               onClick={() => setMobileOpen(false)}
-                              className={({ isActive }) => {
-                                const featureChildActive =
-                                  subTo === "/features" &&
-                                  location.pathname.startsWith("/features/");
+                              
+className={() => {
+  const pathname = location.pathname;
 
-                                return `master-setup-submenu-item ${isActive || featureChildActive ? "active" : ""
-                                  }`;
-                              }}
+  const isPermissionOverview =
+    /^\/features\/[^/]+\/permissions\/[^/]+\/?$/.test(pathname);
+
+  const storeTypesChildActive =
+    subTo === "/store-types/new" &&
+    pathname.startsWith("/store-types");
+
+  const featureChildActive =
+    subTo === "/features" &&
+    (pathname === "/features" ||
+      (pathname.startsWith("/features/") &&
+        !isPermissionOverview));
+
+  const featurePermissionsActive =
+    subTo === "/feature-permissions" &&
+    (pathname === "/feature-permissions" ||
+      isPermissionOverview);
+
+  const active =
+    (subTo !== "/features" &&
+      subTo !== "/feature-permissions" &&
+      !storeTypesChildActive &&
+      false) ||
+    storeTypesChildActive ||
+    featureChildActive ||
+    featurePermissionsActive ||
+    (subTo === "/feature-permissions" &&
+      pathname === "/feature-permissions");
+
+  return `master-setup-submenu-item ${
+    active ? "active" : ""
+  }`;
+}}
+
+
+
+
                             >
                               <i className={`bi ${subIcon}`} />
                               <span>{subLabel}</span>

@@ -1027,17 +1027,13 @@ export default function Vendors({
             </span>
 
             <input
-              type="text"
-              name="code"
-              value={
-                editingId !== null || viewingId !== null
-                  ? (form.code || "—")
-                  : nextVendorCode
-              }
-              placeholder="VND_00001"
-              autoComplete="off"
-              disabled
+              data-field="code"
+              value={form.code}
               readOnly
+              disabled
+              autoComplete="off"
+              placeholder="Auto Generated"
+              class="vendor-placeholder "
             />
 
           </label>

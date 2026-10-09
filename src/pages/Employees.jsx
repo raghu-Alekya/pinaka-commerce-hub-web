@@ -24,22 +24,7 @@ function EmployeeAvatar({ src, name, initials, colorClass }) {
   useEffect(() => {
     setImgError(false);
   }, [src]);
-  return (
-    <div className={`employee-avatar ${colorClass || "purple"}`}>
-      {src && !imgError ? (
-        <img
-          src={src}
-          alt={name || "Employee"}
-          className="employee-avatar-img"
-          onError={() => setImgError(true)}
-        />
-      ) : initials ? (
-        <span>{initials}</span>
-      ) : (
-        <User size={18} />
-      )}
-    </div>
-  );
+  
 }
 /* =========================================================
    EMPLOYEE DATA
@@ -586,16 +571,6 @@ const handlePageSizeChange = (size) => {
                     {/* EMPLOYEE COLUMN */}
                     <td>
                       <div className="employee-person">
-                        <div className={`employee-avatar ${employee.avatar}`}>
-                          {employee.profilePhoto ? (
-                            <img
-                              src={employee.profilePhoto}
-                              alt={`${employee.name} profile`}
-                            />
-                          ) : (
-                            employee.initials
-                          )}
-                        </div>
                         <div>
                           <div className="employee-name">{employee.name}</div>
                           <div className="employee-id">{employee.employeeCode || employee.employee_code || employee.id}</div>

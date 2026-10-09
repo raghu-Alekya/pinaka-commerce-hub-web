@@ -880,14 +880,6 @@
   text-overflow: ellipsis;
 }
 
-.role-description-text {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 /* Action colours */
 .role-actions .role-edit-action {
   color: #1677ff;
@@ -1072,14 +1064,6 @@
   color: #65728b !important;
 }
 
-.role-description-text {
-  display: block;
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 /* Dates */
 .role-table td.role-created-cell,
@@ -1285,7 +1269,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 /* Dates */
 .role-created-cell,
 .role-updated-cell {
@@ -1455,6 +1438,15 @@
   color: #25314c;
   font-family: inherit;
   font-size: 14px;
+  font-weight: 500;
+}
+
+.role-placeholder {
+  text-transform: none;
+  letter-spacing: 0.15px;
+  font-weight: 500;
+  cursor: not-allowed;
+  background-color: #f5f7fa !important;
 }
 
 .role-create-fields-grid .role-input-wrap input::placeholder,

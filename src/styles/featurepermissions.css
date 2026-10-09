@@ -418,9 +418,7 @@
 .feature-permissions-page .fp-field textarea:disabled,
 .feature-permissions-page .fp-select-wrap select:disabled {
   cursor: not-allowed;
-
   background: #f5f7fa;
-
   color: #8a98ad;
 }
 
@@ -2966,3 +2964,346 @@ body .feature-permissions-page
 .feature-permissions-page .fp-form-grid .fp-select-wrap:has(select.fp-form-status-select) > i {
   color: #6c7f9d;
 }
+
+
+
+/* =========================================================
+   FEATURE PERMISSIONS — SINGLE-LINE DESCRIPTION
+   Compatible with the shared TableOverflowTooltip component
+========================================================= */
+
+.feature-permissions-page .fp-table td.fp-description-cell {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  vertical-align: middle;
+}
+
+.feature-permissions-page .fp-description-content {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 18px !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+.feature-permissions-page .fp-description-clamp {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 18px !important;
+  max-height: 18px !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
+
+/* =========================================
+   FEATURE PERMISSIONS OVERVIEW
+========================================= */
+
+.fpo-page {
+  flex: 1;
+  min-height: calc(100vh - 72px);
+  padding: 18px 20px 30px;
+  color: #10264d;
+  background: #f6f7fb;
+}
+
+/* Header with back arrow */
+
+.fpo-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.fpo-back-button {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid #dce8f5;
+  border-radius: 8px;
+  color: #684ee3;
+  background: #fff;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.fpo-back-button:hover {
+  border-color: #a9baff;
+  background: #f7f6ff;
+}
+
+.fpo-heading {
+  margin: 1px 0 0;
+  min-width: 0;
+}
+
+.fpo-title-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fpo-title-line h1 {
+  margin: 0;
+  color: #10254a;
+  font-size: 25px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.fpo-heading > p {
+  margin: 5px 0 0;
+  color: #5676aa;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Tabs */
+
+.fpo-tabs {
+  display: flex;
+  gap: 37px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #d9e7f6;
+}
+
+.fpo-tabs button {
+  position: relative;
+  height: 32px;
+  padding: 0 0 9px;
+  border: 0;
+  color: #5878ab;
+  background: transparent;
+  cursor: default;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.fpo-tabs button.active {
+  color: #684ee3;
+  font-weight: 700;
+}
+
+.fpo-tabs button.active::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  content: "";
+  background: #684ee3;
+}
+
+/* Details card */
+
+.fpo-details-card {
+  padding: 17px 16px;
+  margin-bottom: 18px;
+  border: 1px solid #e0eaf5;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(39, 85, 148, 0.03);
+}
+
+.fpo-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.fpo-card-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  color: #684ee3;
+  background: #eff0ff;
+  font-size: 18px;
+}
+
+.fpo-card-heading h2 {
+  margin: 0 0 3px;
+  color: #10254a;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.fpo-card-heading p {
+  margin: 0;
+  color: #5b79ad;
+  font-size: 12px;
+}
+
+/* Fields */
+
+.fpo-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.fpo-field {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  color: #23426e;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.fpo-label {
+  color: #23426e;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fpo-field input,
+.fpo-field select,
+.fpo-field textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid #d8e6f4;
+  border-radius: 7px;
+  outline: 0;
+  color: #173861;
+  background: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.fpo-field input,
+.fpo-field select {
+  height: 34px;
+  padding: 0 10px;
+}
+
+.fpo-field textarea {
+  height: 42px;
+  min-height: 42px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: none;
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* Read-only fields */
+
+.fpo-field input[readonly],
+.fpo-field textarea[readonly] {
+  color: #475569;
+  background: #f8fafc;
+  cursor: default;
+}
+
+.fpo-field input:focus,
+.fpo-field textarea:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Audit card */
+
+.fpo-audit-card .fpo-details-grid {
+  margin-bottom: 0;
+}
+
+/* Loading and error states */
+
+.fpo-message {
+  margin: 16px 0;
+  color: #5676aa;
+  font-size: 13px;
+}
+
+.fpo-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid #ffd5dc;
+  border-radius: 8px;
+  color: #ed304d;
+  background: #fff;
+  font-size: 12px;
+}
+
+.fpo-error span {
+  flex: 1;
+}
+
+.fpo-error button {
+  padding: 7px 12px;
+  border: 1px solid #dce8f4;
+  border-radius: 7px;
+  color: #25466f;
+  background: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Responsive */
+
+@media (max-width: 700px) {
+  .fpo-page {
+    padding: 18px 16px;
+  }
+
+  .fpo-top {
+    gap: 12px;
+  }
+
+  .fpo-title-line h1 {
+    font-size: 22px;
+  }
+
+  .fpo-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fpo-field-full {
+    grid-column: auto;
+  }
+
+  .fpo-tabs {
+    gap: 20px;
+    overflow-x: auto;
+  }
+
+  .fpo-footer {
+    justify-content: stretch;
+  }
+
+  .fpo-back-action {
+    flex: 1;
+  }
+}
+
