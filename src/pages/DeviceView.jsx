@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import DeviceNavigation from "../components/DeviceNavigation";
 import {
   ArrowLeft,
   Pencil,
@@ -94,6 +95,7 @@ export default function DeviceView() {
     status !== "-" ? status.toLowerCase().replace(/\s+/g, "-") : "unknown";
   return (
     <div className="device-view-page">
+      <DeviceNavigation title="View Device" onBack={() => navigate("/devices")} />
       {" "}
       {/* ===================================================== PAGE HEADER ===================================================== */}{" "}
       <div className="device-view-header">
@@ -101,22 +103,10 @@ export default function DeviceView() {
         <div>
           {" "}
           <h1>View Device</h1>{" "}
-          <div className="device-view-breadcrumb">
-            {" "}
-            <span>Home</span> <span>›</span> <span>Devices</span> <span>›</span>{" "}
-            <strong>{deviceName}</strong>{" "}
-          </div>{" "}
+          <p>View device information, assignments, and settings.</p>{" "}
         </div>{" "}
         <div className="device-view-header-actions">
           {" "}
-          <button
-            type="button"
-            className="device-view-back"
-            onClick={() => navigate("/devices")}
-          >
-            {" "}
-            <ArrowLeft size={15} /> Back to Devices{" "}
-          </button>{" "}
           <button
             type="button"
             className="device-view-edit"

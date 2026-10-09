@@ -1418,10 +1418,10 @@ export default function FeaturePermissions() {
             Permissions List
           </h2>
 
-          <div className="fp-list-filters">
+          <div className="fp-list-filters pch-master-toolbar pch-master-control">
             {/* SEARCH */}
 
-            <div className="fp-search">
+            <div className="fp-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
 
               <input
@@ -1506,7 +1506,7 @@ export default function FeaturePermissions() {
 
             <button
               type="button"
-              className="fp-reset-btn"
+              className="fp-reset-btn pch-master-reset pch-master-control"
               title="Reset filters"
               aria-label="Reset filters"
               onClick={

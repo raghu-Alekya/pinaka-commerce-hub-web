@@ -104,6 +104,7 @@ const merchantNameOf = (store, merchants) => {
 
 export default function Stores() {
   const nav = useNavigate();
+  const openView = (store) => nav(`/stores/${encodeURIComponent(store.id)}`);
   const { data: reference, error: referenceError } = useReferenceData();
   const [stores, setStores] = useState([]),
     [merchants, setMerchants] = useState([]);
@@ -399,18 +400,32 @@ useEffect(() => {
                 </tr>
               ) : paginatedRows.length ? (
                 paginatedRows.map((s) => (
-                  <tr key={s.id}>
+                  <tr
+                    key={s.id}
+                    tabIndex={0}
+                    aria-label={`View ${s.storeName}`}
+                    style={{ cursor: "pointer" }}
+                    onClick={(event) => {
+                      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                        event.stopPropagation();
+                        return;
+                      }
+                      openView(s);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+                        event.preventDefault();
+                        openView(s);
+                      }
+                    }}
+                  >
                     <td>
                       <button
                         type="button"
                         className="store-cell stores-name-button"
                         aria-label={`View ${s.storeName}`}
                         title="View store"
-                        onClick={() =>
-                          nav(
-                            `/stores/${encodeURIComponent(s.id)}`,
-                          )
-                        }
+                        onClick={() => openView(s)}
                       >
                   
                         <div>
@@ -462,8 +477,7 @@ useEffect(() => {
                     })}
                     <td>
                       <ListActions
-                         onView={() =>
-                             nav(`/stores/${encodeURIComponent(s.id)}`)}
+                         onView={() => openView(s)}
                          onEdit={() =>
                              nav(`/stores/${encodeURIComponent(s.id)}/edit`)}
                          onActivate={String(s.status).toUpperCase() === "INACTIVE" ? async () => {

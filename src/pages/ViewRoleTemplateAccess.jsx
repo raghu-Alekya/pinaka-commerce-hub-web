@@ -619,7 +619,7 @@ function saveAndLeave() {
           </div>
         </div>
 
-        <label className="role-access-search">
+        <label className="role-access-search pch-master-search pch-master-control">
           <i className="bi bi-search" />
 
           <input

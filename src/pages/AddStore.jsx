@@ -3592,7 +3592,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   }
 
   return (
-    <div className="sf-root">
+    <div className={`sf-root${editing ? "" : " pch-step-scroll"}`}>
       <header className="sf-topbar">
         <button type="button" className="sf-back-link" onClick={backToStores}>
           <i className="bi bi-arrow-left" /> Stores
@@ -3625,9 +3625,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               </button>
             ))}
           </nav>
-          <div className="sf-sidebar-foot">
-            Store setup · {step + 1} of {STEPS.length}
-          </div>
         </aside>
         <main className="sf-main">
           <div className="sf-heading-row">

@@ -513,8 +513,8 @@ export default function Tenders() {
             </p>
           </div>
 
-          <div className="tenders-filters">
-            <div className="tenders-search">
+          <div className="tenders-filters pch-master-toolbar pch-master-control">
+            <div className="tenders-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
 
               <input
@@ -551,7 +551,7 @@ export default function Tenders() {
 
             <button
               type="button"
-              className="tenders-reset-button"
+              className="tenders-reset-button pch-master-reset pch-master-control"
               onClick={() => {
                 setSearch("");
                 setStatusFilter("All Statuses");

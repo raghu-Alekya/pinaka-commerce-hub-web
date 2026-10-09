@@ -874,9 +874,9 @@ const FeatureStoreTypes = () => {
  
           ========================== */}
  
-          <div className="st-toolbar">
+          <div className="st-toolbar pch-master-toolbar pch-master-control">
  
-            <div className="st-search">
+            <div className="st-search pch-master-search pch-master-control">
  
               <Search size={17} />
  
@@ -1259,7 +1259,7 @@ const FeatureStoreTypes = () => {
  
             ========================== */}
  
-            <div className="st-modal-search">
+            <div className="st-modal-search pch-master-search pch-master-control">
  
               <Search size={19} />
  

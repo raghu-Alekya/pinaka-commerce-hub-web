@@ -250,7 +250,7 @@ const FeaturePermissions = () => {
 
           {/* TOOLBAR */}
 
-          <div className="fp-toolbar">
+          <div className="fp-toolbar pch-master-toolbar pch-master-control">
             {/* <button
               type="button"
               className="fp-create-permission-btn"
@@ -262,7 +262,7 @@ const FeaturePermissions = () => {
 
             {/* SEARCH */}
 
-            <div className="fp-search-box">
+            <div className="fp-search-box pch-master-search pch-master-control">
               <Search size={17} strokeWidth={2} />
 
               <input

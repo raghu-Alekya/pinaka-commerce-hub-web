@@ -363,7 +363,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   />;
 
   return (
-    <div id="pch-new"><Header editing={editing} onBack={cancel} />
+    <div id="pch-new" className={editing ? undefined : "pch-step-scroll"}><Header editing={editing} onBack={cancel} />
       <div className="pch-layout">
         <aside><div className="pch-eyebrow pch-aside-note">Add merchant</div><nav className="pch-rail" aria-label="Setup steps">
           {[

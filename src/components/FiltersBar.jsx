@@ -1,3 +1,5 @@
+import "../styles/list-filter-toolbar.css";
+
 export default function FiltersBar({
     searchValue = "",
     onSearchChange,

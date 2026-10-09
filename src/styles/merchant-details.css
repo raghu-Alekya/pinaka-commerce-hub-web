@@ -1,0 +1,153 @@
+/* Merchant Details uses the Add Store sidebar dimensions and breakpoints. */
+.main-content:has(> .merchant-readonly) {
+  height: 100dvh;
+  min-height: 0;
+}
+
+.main-content:has(> .merchant-readonly) > .topbar {
+  flex-shrink: 0;
+}
+
+.page-content.merchant-readonly {
+  padding: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f6f8fc;
+}
+
+.merchant-readonly .merchant-view-topbar {
+  min-height: 64px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  background: #fff;
+  border-bottom: 1px solid #cdccd7;
+  font: 14px/1.45 Inter, "Segoe UI", sans-serif;
+}
+
+.merchant-readonly .merchant-view-layout {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+
+.merchant-readonly .merchant-view-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 23px 16px 15px;
+  background: #fff;
+  border-right: 1px solid #e3e8f1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.merchant-readonly .merchant-view-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex-shrink: 0;
+  min-height: 48px;
+  padding: 10px;
+  border: 0;
+  border-radius: 9px;
+  background: #fff;
+  color: #56627a;
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.merchant-readonly .merchant-view-tabs button i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  flex: 0 0 24px;
+  font-size: 18px;
+}
+
+.merchant-readonly .merchant-view-tabs button:hover {
+  background: #f3f0ff;
+  color: #5937e8;
+}
+
+.merchant-readonly .merchant-view-tabs button[aria-selected="true"] {
+  background: #5937e8;
+  color: #fff;
+  font-weight: 600;
+}
+
+.merchant-readonly .merchant-view-tabs button:focus-visible {
+  outline: 3px solid #b9adff;
+  outline-offset: 2px;
+}
+
+.merchant-readonly .merchant-view-main {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 24px;
+}
+
+.merchant-readonly .merchant-view-main > .page-header {
+  margin-bottom: 20px;
+}
+
+.merchant-readonly .merchant-view-main > [role="tabpanel"] {
+  min-width: 0;
+}
+
+.merchant-readonly .merchant-view-main:only-child {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+}
+
+@media (max-width: 1150px) {
+  .merchant-readonly .merchant-view-layout {
+    grid-template-columns: 225px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 850px) {
+  .merchant-readonly .merchant-view-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .merchant-readonly .merchant-view-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 12px 14px;
+    border-right: 0;
+    border-bottom: 1px solid #e3e8f1;
+    max-height: 40dvh;
+  }
+
+  .merchant-readonly .merchant-view-tabs button {
+    gap: 6px;
+    padding: 5px;
+    font-size: 10px;
+    overflow-wrap: anywhere;
+  }
+
+  .merchant-readonly .merchant-view-tabs button i {
+    width: 20px;
+    flex-basis: 20px;
+    font-size: 16px;
+  }
+
+  .merchant-readonly .merchant-view-main {
+    padding: 16px 12px;
+  }
+}
+
+@media (max-width: 620px) {
+  .merchant-readonly .merchant-view-topbar {
+    min-height: 55px;
+    padding: 0 12px;
+  }
+}

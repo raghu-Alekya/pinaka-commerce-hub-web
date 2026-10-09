@@ -555,8 +555,8 @@ export default function RoleTemplates() {
               <h2>Role Templates</h2>
             </div>
  
-            <div className="role-filters">
-              <div className="role-search">
+            <div className="role-filters pch-master-toolbar pch-master-control">
+              <div className="role-search pch-master-search pch-master-control">
                 <i className="bi bi-search" />
                 <input
                   type="text"
@@ -589,7 +589,7 @@ export default function RoleTemplates() {
  
               <button
                 type="button"
-                className="role-reset-icon-btn"
+                className="role-reset-icon-btn pch-master-reset pch-master-control"
                 title="Reset filters"
                 aria-label="Reset filters"
                 onClick={resetFilters}

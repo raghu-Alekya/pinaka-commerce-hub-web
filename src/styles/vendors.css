@@ -28,9 +28,8 @@
   margin: 0 0 6px;
   color: #10264d;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.1;
-  letter-spacing: -0.7px;
 }
 
 .vendors-header p {
@@ -88,7 +87,7 @@
 
 .vendors-form {
   padding: 17px 22px 18px;
-  margin: 13px 0 20px;
+  margin: 13px 0 16px;
   border: 1px solid #e1ebf5;
   border-radius: 11px;
   background: rgba(255, 255, 255, 0.94);

@@ -12,9 +12,9 @@ const kpis = [
     trend: "+12%",
     detail: (
       <>
-        <b className="is-good">139 active</b>
-        <span>4 onboarding</span>
-        <span>5 inactive</span>
+        <b className="is-good"><strong>139</strong>{" "}<span>active</span></b>
+        <span><strong>4</strong>{" "}<span>onboarding</span></span>
+        <span><strong>5</strong>{" "}<span>inactive</span></span>
       </>
     ),
     icon: "bi-shop",
@@ -26,9 +26,9 @@ const kpis = [
     trend: "+8%",
     detail: (
       <>
-        <b className="is-good">331 active</b>
-        <span>6 pending</span>
-        <span>5 inactive</span>
+        <b className="is-good"><strong>331</strong>{" "}<span>active</span></b>
+        <span><strong>6</strong>{" "}<span>pending</span></span>
+        <span><strong>5</strong>{" "}<span>inactive</span></span>
       </>
     ),
     icon: "bi-buildings",
@@ -40,8 +40,8 @@ const kpis = [
     trend: "+5%",
     detail: (
       <>
-        <b className="is-warning">24 without roles</b>
-        <span>6 locked</span>
+        <b className="is-warning"><strong>24</strong>{" "}<span>without roles</span></b>
+        <span><strong>6</strong>{" "}<span>locked</span></span>
       </>
     ),
     icon: "bi-people",
@@ -53,8 +53,8 @@ const kpis = [
     trend: "+3%",
     detail: (
       <>
-        <b className="is-warning">3 expiring</b>
-        <span>4 payment pending</span>
+        <b className="is-warning"><strong>3</strong>{" "}<span>expiring</span></b>
+        <span><strong>4</strong>{" "}<span>payment pending</span></span>
       </>
     ),
     icon: "bi-credit-card-2-front",
@@ -247,10 +247,6 @@ export default function Dashboard() {
       <div className="super-dashboard-head">
 
         <div>
-          <div className="dashboard-breadcrumb">
-            Dashboard / Overview
-          </div>
-
           <h1>Super Admin Dashboard</h1>
 
           <p>
@@ -490,9 +486,11 @@ export default function Dashboard() {
                 <strong>{item.value}</strong>
 
                 <small>
-                  <i className="bi bi-arrow-up" />
-                  {" "}
-                  {item.trend}
+                  <span className="dashboard-kpi-trend">
+                    <i className="bi bi-arrow-up" />
+                    {" "}
+                    {item.trend}
+                  </span>
                   <span className="trend-period">vs last 30 days</span>
                 </small>
 
@@ -679,11 +677,16 @@ export default function Dashboard() {
           <div className="plan-tier-grid">
 
             {planEntitlements.map(
-              ([label, value]) => (
+              ([label, value], index) => (
                 <div
                   className="plan-tier-card"
                   key={label}
                 >
+
+                  <i
+                    className={`plan-tier-icon bi ${["bi-shop", "bi-buildings", "bi-award"][index]}`}
+                    aria-hidden="true"
+                  />
 
                   <span>{label}</span>
 

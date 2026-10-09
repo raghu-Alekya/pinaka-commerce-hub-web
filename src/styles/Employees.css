@@ -71,7 +71,7 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 .employees-stat-card {
   min-width: 0;
