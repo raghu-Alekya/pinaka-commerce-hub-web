@@ -33,6 +33,10 @@
     align-self: start;
 }
 
+.merchant-view-layout > #merchant-panel-stores .stores-header-card {
+    margin-top: -22px;
+}
+
 
 /* =========================================================
    COMMON CARD
@@ -690,6 +694,12 @@ button:disabled {
     }
 }
 
+
+@media (max-width: 650px) {
+    .merchant-view-layout > #merchant-panel-stores .stores-header-card {
+        margin-top: 0;
+    }
+}
 
 @media (max-width: 600px) {
 
