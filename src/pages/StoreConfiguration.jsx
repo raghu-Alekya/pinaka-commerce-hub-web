@@ -1,6 +1,6 @@
 import { isUuid, normalizeStoreForConfiguration } from "../api/storeDetails";
 import { useEffect, useMemo, useState } from "react";
-import { NavLink, useNavigate, useParams } from "react-router-dom";
+import { NavLink, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { getMerchant } from "../api/merchants";
 import AddStore from "./AddStore";
@@ -129,8 +129,7 @@ function StoreDetailsSummary({ store, merchant }) {
       ["Store Name", store.name], ["Store Code", store.storeCode || store.id],
       ["Merchant", merchant?.name || store.merchantName],
       ["Store Type", typeof store.type === "object" ? store.type.name || store.type.code : store.type],
-      ["Status", store.status], ["Currency", store.currency], ["Timezone", store.timezone],
-      ["Default Language", store.defaultLanguage], ["Tax Region", store.taxRegion],
+      ["Status", store.status], ["Currency", store.currency],
     ]} />
     <SummaryFields title="Contact & Location" items={[
       ["Phone", store.phone], ["Email", store.email || store.storeEmail], ["Website", store.url],
@@ -194,6 +193,7 @@ export default function StoreConfiguration() {
   } = useParams();
 
   const nav = useNavigate();
+  const location = useLocation();
   const [editingSection, setEditingSection] = useState(false);
   const [revision, setRevision] = useState(0);
   useEffect(() => setEditingSection(false), [section, storeId]);
@@ -458,6 +458,10 @@ export default function StoreConfiguration() {
      ======================================================= */
 
   const backToStores = () => {
+    if (location.state?.returnTo) {
+      nav(location.state.returnTo);
+      return;
+    }
     if (merchantId) {
       nav(`/merchants?view=${encodeURIComponent(merchantId)}&tab=stores`);
     } else {

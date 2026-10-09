@@ -10,7 +10,11 @@ import { listPlans } from "../api/plans";
 import { getReferenceData } from "../api/referenceData";
 import { storeTypesApi } from "../api/storeTypes";
 import ReviewSubscribe from "./ReviewSubscribe";
+import PhoneInputModule from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import "../styles/merchant-form.css";
+
+const PhoneInput = PhoneInputModule.default || PhoneInputModule;
 
 const today = () => new Date().toISOString().slice(0, 10);
 const TAX_RATE = 8.6;
@@ -60,7 +64,7 @@ function merchantDetailToDraft(result, fallback = {}) {
       business: raw.legalBusinessName || raw.businessName || fallback.name || "",
       display: raw.businessDisplayName || raw.businessName || raw.name || fallback.name || "",
       email: raw.email || raw.merchantEmail || fallback.email || "",
-      phone: raw.phone || raw.merchantPhoneNumber || fallback.phone || "",
+      phone: normalizePhone(raw.phone || raw.merchantPhoneNumber || fallback.phone || ""),
       addressLine1: raw.addressLine1 || (typeof address === "string" ? address : address.addressLine1 || address.street || ""),
       addressLine2: raw.addressLine2 || address.addressLine2 || address.unit || "",
       city: raw.city || address.city || "",
@@ -70,7 +74,7 @@ function merchantDetailToDraft(result, fallback = {}) {
     },
     planId,
     planName: subscription.planName || subscription.planCode || raw.plan || fallback.plan || "",
-    cycle: subscription.billingCycle || subscription.billing_cycle || raw.billingCycle || raw.billing_cycle || "Monthly",
+    cycle: normalizeCycle(subscription.billingCycle || subscription.billing_cycle || raw.billingCycle || raw.billing_cycle),
     start: String(subscription.startDate || subscription.start || "").slice(0, 10),
     subscriptionId: subscription.id || subscription.subscriptionId || "",
     subscriptionStatus: subscription.status || "Pending activation",
@@ -138,6 +142,18 @@ function renewalDate(start, cycle) {
   return date.toISOString().slice(0, 10);
 }
 
+function normalizeCycle(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized.includes("annual") || normalized.includes("year")) return "Annual";
+  if (normalized.includes("quarter")) return "Quarterly";
+  return "Monthly";
+}
+
+function normalizePhone(value) {
+  const phone = String(value || "").replace(/\D/g, "");
+  return phone.length === 10 ? `91${phone}` : phone;
+}
+
 function Header({ editing, onBack }) {
   return <header><nav className="pch-breadcrumb" aria-label="Breadcrumb"><button type="button" onClick={onBack}>← Merchants</button><span aria-hidden="true">/</span><span>{editing ? "Edit Merchant" : "Add Merchant"}</span></nav></header>;
 }
@@ -179,7 +195,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const [merchant, setMerchant] = useState(selected?._onboarding?.merchant || blankMerchant());
   const [plans, setPlans] = useState([]);
   const [planId, setPlanId] = useState(selected?._onboarding?.planId || "");
-  const [cycle, setCycle] = useState(selected?._onboarding?.cycle || "Monthly");
+  const [cycle, setCycle] = useState(normalizeCycle(selected?._onboarding?.cycle || "Monthly"));
   const [start, setStart] = useState(selected?._onboarding?.start || today());
   const [step, setStep] = useState(0);
   const [countries, setCountries] = useState([]);
@@ -187,6 +203,9 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const [loading, setLoading] = useState(Boolean(merchantId && !selected?._onboarding));
   const [plansLoading, setPlansLoading] = useState(true);
   const [error, setError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState("in");
+  const [phoneDialCode, setPhoneDialCode] = useState("91");
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(null);
   const editing = Boolean(merchantId);
@@ -210,7 +229,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       const draft = merchantDetailToDraft(result, selected || result.merchant);
       setMerchant(draft.merchant);
       setPlanId(draft.planId || "");
-      setCycle(draft.cycle || "Monthly");
+      setCycle(normalizeCycle(draft.cycle));
       setStart(draft.start || today());
     }).catch((failure) => active && setError(failure.message || "Unable to load merchant details."))
       .finally(() => active && setLoading(false));
@@ -235,13 +254,24 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   }, [plans]);
 
   const updateField = (key, value) => setMerchant((previous) => ({ ...previous, [key]: value }));
+  const validatePhone = () => {
+    if (!String(merchant.country || "").trim()) return "Select a country before entering the phone number.";
+    const selectedCountry = String(merchant.country).trim().toLowerCase();
+    const countryMatches = (phoneCountry === "in" && ["in", "india"].includes(selectedCountry))
+      || (phoneCountry === "us" && ["us", "usa", "united states", "united states of america"].includes(selectedCountry));
+    if (!countryMatches) return "Phone country code must match the selected merchant country.";
+    const phoneDigits = String(merchant.phone || "").replace(/\D/g, "");
+    if (!phoneDigits || phoneDigits.length <= phoneDialCode.length) return "Phone Number is required.";
+    const nationalDigits = phoneDigits.startsWith(phoneDialCode) ? phoneDigits.slice(phoneDialCode.length) : phoneDigits;
+    if (nationalDigits.length < 7 || phoneDigits.length > 15) return "Enter a valid phone number.";
+    return "";
+  };
   const validateMerchant = () => {
     for (const [key, label] of [["business", "Legal Business Name"], ["display", "Business Display Name"], ["firstName", "First Name"], ["lastName", "Last Name"], ["addressLine1", "Address Line 1"], ["city", "City"], ["state", "State / Province"], ["postal", "ZIP Code"], ["country", "Country"]]) {
       if (!String(merchant[key] || "").trim()) return `${label} is required.`;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(merchant.email)) return "Enter a valid email address.";
-    if (!/^\d{10}$/.test(String(merchant.phone).replace(/\D/g, ""))) return "Enter a 10-digit mobile number.";
-    return "";
+    return validatePhone();
   };
 
   async function save() {
@@ -357,13 +387,17 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
               <Field label="First Name *" value={merchant.firstName} required onChange={(v) => updateField("firstName", v)} />
               <Field label="Last Name *" value={merchant.lastName} required onChange={(v) => updateField("lastName", v)} />
               <Field label="Email Address *" type="email" value={merchant.email} required onChange={(v) => updateField("email", v)} />
-              <Field label="Phone Number *" type="tel" value={merchant.phone} required maxLength={10} onChange={(v) => updateField("phone", v.replace(/\D/g, "").slice(0, 10))} />
+              <div className="pch-field pch-phone-field">
+                <label htmlFor="merchant-phone">Phone Number *</label>
+                <PhoneInput country="in" enableSearch countryCodeEditable={false} autoFormat value={merchant.phone} onMount={(_value, data) => { if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} onChange={(value, data) => { updateField("phone", value); if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); setPhoneError(""); }} inputProps={{ id: "merchant-phone", name: "phone", required: true, autoComplete: "tel" }} />
+                {phoneError && <span className="pch-phone-error" role="alert">{phoneError}</span>}
+              </div>
               <Field label="Address Line 1 *" value={merchant.addressLine1} required onChange={(v) => updateField("addressLine1", v)} />
               <Field label="Address Line 2" value={merchant.addressLine2} onChange={(v) => updateField("addressLine2", v)} />
               <Field label="City *" value={merchant.city} required onChange={(v) => updateField("city", v)} />
               <Field label="State / Province *" value={merchant.state} required onChange={(v) => updateField("state", v)} />
               <Field label="ZIP / Postal Code *" value={merchant.postal} required onChange={(v) => updateField("postal", v)} />
-              <Select label="Country *" value={merchant.country} options={merchant.country && !countries.some((item) => item.value === merchant.country) ? [...countries, { value: merchant.country, label: merchant.country }] : countries} required onChange={(v) => updateField("country", v)} />
+              <Select label="Country *" value={merchant.country} options={merchant.country && !countries.some((item) => item.value === merchant.country) ? [...countries, { value: merchant.country, label: merchant.country }] : countries} required onChange={(v) => { updateField("country", v); setPhoneError(""); }} />
             </div></Panel>
           </> : <>
             <Panel title="Subscription Plan">
@@ -392,9 +426,9 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
                     </div>}
                   </section>
                   <section className="pch-plan-agreement" aria-label="Billing Details"><h3>Billing Details</h3><div className="pch-grid">
-                    <Select label="Billing cycle" value={cycle} options={["Monthly", "Quarterly", "Annual"]} onChange={setCycle} />
+                    <Select label="Billing cycle" value={cycle} options={["Monthly", "Quarterly", "Annual"]} onChange={(value) => setCycle(normalizeCycle(value))} />
                     <Field label="Start date" type="date" value={start} onChange={setStart} />
-                    <Field label="Renewal date" value={renewalDate(start, cycle)} readOnly />
+                    <Field label="Renewal date" type="date" value={renewalDate(start, cycle)} readOnly />
                     <Field label="Subscription Price" value={`${formatPrice(total, plan?.currency || "USD")} / ${cycleLabel}`} readOnly />
                   </div><p className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</p></section>
                 </div>
@@ -406,14 +440,20 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
             <button type="button" disabled={step === 0 || submitting} onClick={() => setStep(step - 1)}>Back</button>
             <button className="pch-primary" type="button" disabled={submitting} onClick={() => {
               const validation = step === 0 ? validateMerchant() : !plan ? "Choose an active plan." : "";
-              if (validation) return setError(validation);
+              if (validation) {
+                if (step === 0 && validation.toLowerCase().includes("phone")) {
+                  setPhoneError(validation);
+                  setError("");
+                } else setError(validation);
+                return;
+              }
+              setPhoneError("");
               setError("");
               setStep(step + 1);
             }}>{step === 0 ? "Continue" : "Review & Confirm"}</button>
           </div>
         </main>
       </div>
-      <footer>Merchant creation</footer>
     </div>
   );
 }

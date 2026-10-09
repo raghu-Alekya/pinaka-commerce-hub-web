@@ -26,6 +26,17 @@
     margin: 0;
 }
 
+.merchant-view-layout > #merchant-panel-stores,
+.merchant-stores-embedded .merchant-stores-layout {
+    padding-top: 0;
+    margin-top: 0;
+    align-self: start;
+}
+
+.merchant-view-layout > #merchant-panel-stores .stores-header-card {
+    margin-top: -22px;
+}
+
 
 /* =========================================================
    COMMON CARD
@@ -331,6 +342,22 @@
     min-width: 0;
 }
 
+.merchant-stores-embedded .store-name-link {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.merchant-stores-embedded .store-name-link:hover strong {
+    color: #5143bc;
+    text-decoration: underline;
+}
+
 .merchant-stores-embedded .store-icon {
     display: inline-flex;
     align-items: center;
@@ -524,6 +551,29 @@
     background: #f8f7ff;
 }
 
+.merchant-stores-embedded .store-icon-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dfe3eb;
+    border-radius: 5px;
+    background: #fff;
+    color: #64748b;
+    font: inherit;
+    cursor: pointer;
+}
+
+.merchant-stores-embedded .store-icon-btn:hover { background: #f8f7ff; border-color: #5143bc; color: #5143bc; }
+.merchant-stores-embedded .store-delete-btn,
+.merchant-stores-embedded .store-delete-btn:hover { color: #dc2626; }
+.merchant-stores-embedded .store-delete-btn:hover { background: #fff5f5; border-color: #dc2626; color: #dc2626; }
+.merchant-stores-embedded .store-activate-btn { color: #16834b; }
+.merchant-stores-embedded .store-icon-btn:disabled { cursor: wait; opacity: .55; }
+.merchant-stores-embedded .store-action-error { margin: 0 0 12px; color: #b42318; font-size: 13px; }
+
 
 /* =========================================================
    EMPTY STATE
@@ -644,6 +694,12 @@ button:disabled {
     }
 }
 
+
+@media (max-width: 650px) {
+    .merchant-view-layout > #merchant-panel-stores .stores-header-card {
+        margin-top: 0;
+    }
+}
 
 @media (max-width: 600px) {
 
