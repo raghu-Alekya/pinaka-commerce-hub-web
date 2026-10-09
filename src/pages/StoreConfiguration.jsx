@@ -16,6 +16,7 @@ import StoreCategories from "./StoreCategories";
 import StoreShifts from "./StoreShifts";
 import StorePaymentRecords from "./StorePaymentRecords";
 import VendorPayments from "./VendorPayments";
+import EmployeeAttendance, { AttendanceDetails } from "./EmployeeAttendance";
 
 import { api, ApiError } from "../api/http";
 import { endpoints } from "../api/endpoints";
@@ -66,6 +67,7 @@ const navGroups = [
     label: "People",
     items: [
       ["users", "bi-people", "Employees"],
+      ["attendance", "bi-calendar-check", "Employee Attendance"],
       ["customers", "bi-person-lines-fill", "Customers"],
       ["vendors", "bi-truck", "Vendors"],
     ],
@@ -196,7 +198,11 @@ export default function StoreConfiguration() {
   const location = useLocation();
   const [editingSection, setEditingSection] = useState(false);
   const [revision, setRevision] = useState(0);
-  useEffect(() => setEditingSection(false), [section, storeId]);
+  const [attendanceDetailRecord, setAttendanceDetailRecord] = useState(null);
+  useEffect(() => {
+    setEditingSection(false);
+    setAttendanceDetailRecord(null);
+  }, [section, storeId]);
 
   /* =======================================================
      STORE STATE
@@ -351,18 +357,6 @@ export default function StoreConfiguration() {
   }, [store, siteUrl]);
 
   /* =======================================================
-     STORE STATUS
-     ======================================================= */
-
-  const statusClass = useMemo(
-    () =>
-      (store?.status || "active")
-        .toLowerCase()
-        .replace(/\s+/g, "-"),
-    [store]
-  );
-
-  /* =======================================================
      SAVE WORDPRESS CONNECTION
      ======================================================= */
 
@@ -487,17 +481,13 @@ export default function StoreConfiguration() {
 
       <header className="breadcrumb-area store-workspace-topbar">
 
-        <button
-          className="link-button"
-          onClick={backToStores}
-        >
-          <i className="bi bi-arrow-left" />
-          Stores
-        </button>
-
-        <span>/</span>
-
-        <strong>Store Details & Configuration</strong>
+        {section === "attendance" && attendanceDetailRecord ? <>
+          <button className="link-button" onClick={backToStores}><i className="bi bi-arrow-left" />Stores</button>
+          <span>/</span><span>Store Details &amp; Configuration</span><span>/</span><span>Employee Attendance</span><span>/</span><strong>View Details</strong>
+        </> : <>
+          <button className="link-button" onClick={backToStores}><i className="bi bi-arrow-left" />Stores</button>
+          <span>/</span><strong>Store Details &amp; Configuration</strong>
+        </>}
 
       </header>
 
@@ -536,14 +526,6 @@ export default function StoreConfiguration() {
               </p>
 
             </div>
-
-            <span
-              className={`store-status ${statusClass}`}
-            >
-              {connected
-                ? "Website Connected"
-                : store?.status || "Active"}
-            </span>
 
           </div>
 
@@ -654,7 +636,9 @@ export default function StoreConfiguration() {
                   STORE OVERVIEW & SETUP
                   =========================================== */}
 
-              {section === "details" ? (
+              {section === "attendance" && attendanceDetailRecord ? (
+                <AttendanceDetails record={attendanceDetailRecord} store={store} onBack={() => setAttendanceDetailRecord(null)} />
+              ) : section === "details" ? (
                 <StoreDetailsSummary store={store} merchant={merchant} />
               ) : section === "subscription" ? (
                 <StoreSubscriptionSummary merchantId={merchantId || store.merchantId || merchant?.id} />
@@ -795,6 +779,10 @@ export default function StoreConfiguration() {
                   store={store}
                   embedded
                 />
+
+              ) : section === "attendance" ? (
+
+                <EmployeeAttendance store={store} embedded onViewRecord={setAttendanceDetailRecord} />
 
               /* ===========================================
                  PAYMENT RECORDS
