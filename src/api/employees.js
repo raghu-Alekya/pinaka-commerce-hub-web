@@ -254,12 +254,22 @@ export async function listStoreRolePermissions(merchantId, storeId) {
 export async function saveStoreEmployees(merchantId, storeId, employees) {
   return api.put(endpoints.storeEmployees(merchantId, storeId), {
     employees: employees.map((employee) => ({
-      employeeId: employee.employeeId || employee.employee_id,
+      // The deployed store API has existed with both camelCase and snake_case
+      // assignment DTOs. Keep both aliases in sync at this boundary, and always
+      // send IDs as strings so class-validator accepts numeric employee codes.
+      employeeId: String(employee.employeeId ?? employee.employee_id ?? ""),
+      employee_id: String(employee.employeeId ?? employee.employee_id ?? ""),
       ...(employee.roleTemplateId || employee.role_template_id
-        ? { roleTemplateId: employee.roleTemplateId || employee.role_template_id }
+        ? {
+            roleTemplateId: String(employee.roleTemplateId || employee.role_template_id),
+            role_template_id: String(employee.roleTemplateId || employee.role_template_id),
+          }
         : {}),
       ...(employee.loginPin || employee.login_pin
-        ? { login_pin: employee.loginPin || employee.login_pin }
+        ? {
+            loginPin: String(employee.loginPin || employee.login_pin),
+            login_pin: String(employee.loginPin || employee.login_pin),
+          }
         : {}),
     })),
   });

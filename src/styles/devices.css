@@ -695,14 +695,19 @@
    COLUMN WIDTHS
 ========================================================= */
 
+.devices-table th:nth-child(1),
+.devices-table td:nth-child(1) {
+  width: 22%;
+}
+
 .devices-table th:nth-child(2),
 .devices-table td:nth-child(2) {
-  width: 22%;
+  width: 15%;
 }
 
 .devices-table th:nth-child(3),
 .devices-table td:nth-child(3) {
-  width: 15%;
+  width: 17%;
 }
 
 .devices-table th:nth-child(4),
@@ -712,17 +717,12 @@
 
 .devices-table th:nth-child(5),
 .devices-table td:nth-child(5) {
-  width: 17%;
+  width: 15%;
 }
 
 .devices-table th:nth-child(6),
 .devices-table td:nth-child(6) {
-  width: 15%;
-}
-
-.devices-table th:nth-child(7),
-.devices-table td:nth-child(7) {
-  width: 10%;
+  width: 14%;
 }
 
 
