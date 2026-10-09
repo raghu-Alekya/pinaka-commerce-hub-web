@@ -35,11 +35,12 @@ const FeaturePermissions = () => {
         setPermissions(
           (Array.isArray(list) ? list : []).map((p) => ({
             ...p,
-            key: p.permissionKey || p.key || "",
-            name: p.permissionName || p.name || "",
-            feature: f?.name || p.feature?.name || "",
+            id: p.permission_id ?? p.id,
+            key: p.permission_code || p.permission_key || p.permissionKey || "",
+            name: p.permission_name || p.name || "",
+            feature: f?.name || p.feature?.feature_name || "",
             description:
-              p.permissionDescription || p.description || "",
+              p.permission_description || p.description || "",
             active:
               String(p.status || "ACTIVE").toUpperCase() === "ACTIVE",
           }))
@@ -100,10 +101,16 @@ const FeaturePermissions = () => {
       setError("");
 
       await deleteFeaturePermission(featureId, deleteTarget.id);
-
-      setPermissions((current) =>
-        current.filter((permission) => permission.id !== deleteTarget.id),
-      );
+      const latest = await listFeaturePermissions(featureId);
+      setPermissions(latest.map((p) => ({
+        ...p,
+        id: p.permission_id ?? p.id,
+        key: p.permission_code || p.permission_key || p.permissionKey || "",
+        name: p.permission_name || p.name || "",
+        feature: feature?.name || "",
+        description: p.permission_description || p.description || "",
+        active: String(p.status || "ACTIVE").toUpperCase() === "ACTIVE",
+      })));
 
       setDeleteTarget(null);
     } catch (e) {
@@ -132,11 +139,10 @@ const FeaturePermissions = () => {
   const saveNewPermission = async (event) => {
     event.preventDefault();
 
-    const key = form.key.trim();
     const name = form.name.trim();
 
-    if (!key || !name) {
-      setFormError("Permission Key and Permission Name are required.");
+    if (!name) {
+      setFormError("Permission Name is required.");
       return;
     }
 
@@ -144,34 +150,23 @@ const FeaturePermissions = () => {
     setFormError("");
 
     try {
-      const created = await createFeaturePermission(featureId, {
-        permissionKey: key.toUpperCase(),
+      await createFeaturePermission(featureId, {
+        permissionType: "READ",
         name,
         description: form.description.trim(),
         status: form.status.toUpperCase(),
       });
 
-      const item = created?.data || created?.permission || created || {};
-
-      setPermissions((current) => [
-        {
-          ...item,
-
-          id: item.id || `${featureId}-${Date.now()}`,
-
-          key: item.permissionKey || item.key || key,
-
-          name: item.permissionName || item.name || name,
-
-          feature: feature?.name || item.feature?.name || "",
-
-          description: item.description || form.description.trim(),
-
-          active: String(item.status || form.status).toUpperCase() === "ACTIVE",
-        },
-
-        ...current,
-      ]);
+      const latest = await listFeaturePermissions(featureId);
+      setPermissions(latest.map((p) => ({
+        ...p,
+        id: p.permission_id ?? p.id,
+        key: p.permission_code || p.permission_key || p.permissionKey || "",
+        name: p.permission_name || p.name || "",
+        feature: feature?.name || "",
+        description: p.permission_description || p.description || "",
+        active: String(p.status || "ACTIVE").toUpperCase() === "ACTIVE",
+      })));
 
       setIsCreateOpen(false);
     } catch (e) {
@@ -228,7 +223,7 @@ const FeaturePermissions = () => {
           </button>
 
           <button type="button" className="feature-detail-tab active">
-            Feature &amp; Permission Access
+            Permissions
           </button>
         </nav>
       </section>
@@ -247,9 +242,9 @@ const FeaturePermissions = () => {
             </div>
 
             <div className="fp-title-copy">
-              <h2>Permissions List ({permissions.length})</h2>
+              <h2>Feature Permissions</h2>
 
-              <p>Manage and configure permissions for this feature.</p>
+              <p>Manage permissions for this feature.</p>
             </div>
           </div>
 
@@ -311,7 +306,7 @@ const FeaturePermissions = () => {
             <thead>
               <tr>
                 <th>
-                  <div className="fp-table-heading">Permission Key</div>
+                  <div className="fp-table-heading">Permission Code</div>
                 </th>
 
                 <th>
@@ -319,7 +314,7 @@ const FeaturePermissions = () => {
                 </th>
 
                 <th>
-                  <div className="fp-table-heading">Feature</div>
+                  <div className="fp-table-heading">Feature Name</div>
                 </th>
 
                 <th>
@@ -353,6 +348,7 @@ const FeaturePermissions = () => {
                     <button
                       type="button"
                       className="fp-delete"
+                      title="Remove Assignment"
                       onClick={() => setDeleteTarget(permission)}
                       aria-label={`Delete ${permission.name}`}
                     >
@@ -381,8 +377,8 @@ const FeaturePermissions = () => {
 
         <div className="fp-table-footer">
           <p className="fp-results-text">
-            Showing {filteredPermissions.length > 0 ? 1 : 0} to{" "}
-            {filteredPermissions.length} of {filteredPermissions.length} entries
+            Showing {filteredPermissions.length > 0 ? 1 : 0} - {" "}
+            {filteredPermissions.length} - {filteredPermissions.length} Permissions 
           </p>
 
           <div className="fp-pagination">
@@ -443,14 +439,8 @@ const FeaturePermissions = () => {
                   Permission Key <span>*</span>
                   <input
                     value={form.key}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        key: e.target.value,
-                      })
-                    }
-                    placeholder="e.g. refunds.view"
-                    autoFocus
+                    readOnly
+                    placeholder="Generated automatically"
                   />
                 </label>
 

@@ -97,8 +97,9 @@ const initialPayments = [
   },
 ];
 
-export default function VendorPayments() {
-  const [view, setView] = useState("vendors");
+export default function VendorPayments({ viewMode } = {}) {
+  const [selectedView, setView] = useState("vendors");
+  const view = viewMode || selectedView;
 
   const [vendors, setVendors] = useState(initialVendors);
   const [payments, setPayments] = useState(initialPayments);
@@ -190,18 +191,18 @@ export default function VendorPayments() {
       <div className="vendor-title-row">
 
         <h2>
-          {view === "vendors" ? "Vendors" : "Vendor Payments"}
+          {view === "vendors" ? "Vendors" : viewMode ? "Vendor History" : "Vendor Payments"}
         </h2>
 
         <div className="vendor-actions">
 
-          {view === "payments" && (
+          {!viewMode && view === "payments" && (
             <button onClick={() => setView("vendors")}>
               View Vendors
             </button>
           )}
 
-          {view === "vendors" && (
+          {!viewMode && view === "vendors" && (
             <button onClick={() => setView("payments")}>
               View Vendor Payments
             </button>

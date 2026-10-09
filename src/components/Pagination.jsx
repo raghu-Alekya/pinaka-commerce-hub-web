@@ -5,13 +5,16 @@ export default function Pagination({
     pageSize,
     onPageChange,
     onPageSizeChange,
+    itemLabel = "items",
+    showWhenEmpty = false,
 }) {
-    if (!totalItems) {
+    if (!totalItems && !showWhenEmpty) {
         return null;
     }
 
-    const startItem =
-        (currentPage - 1) * pageSize + 1;
+    const startItem = totalItems
+        ? (currentPage - 1) * pageSize + 1
+        : 0;
 
     const endItem = Math.min(
         currentPage * pageSize,
@@ -22,11 +25,7 @@ export default function Pagination({
         const pages = [];
 
         if (totalPages <= 5) {
-            for (
-                let i = 1;
-                i <= totalPages;
-                i++
-            ) {
+            for (let i = 1; i <= totalPages; i++) {
                 pages.push(i);
             }
 
@@ -39,28 +38,18 @@ export default function Pagination({
             pages.push("...");
         }
 
-        const start = Math.max(
-            2,
-            currentPage - 1
-        );
+        const start = Math.max(2, currentPage - 1);
 
         const end = Math.min(
             totalPages - 1,
             currentPage + 1
         );
 
-        for (
-            let i = start;
-            i <= end;
-            i++
-        ) {
+        for (let i = start; i <= end; i++) {
             pages.push(i);
         }
 
-        if (
-            currentPage <
-            totalPages - 2
-        ) {
+        if (currentPage < totalPages - 2) {
             pages.push("...");
         }
 
@@ -76,17 +65,12 @@ export default function Pagination({
 
             <div className="pagination-info">
                 Showing{" "}
-                <strong>
-                    {startItem}
-                </strong>
-                {" – "}
-                <strong>
-                    {endItem}
-                </strong>
+                <strong>{startItem}</strong>
+                {" to "}
+                <strong>{endItem}</strong>
                 {" of "}
-                <strong>
-                    {totalItems}
-                </strong>
+                <strong>{totalItems}</strong>{" "}
+                {itemLabel}
             </div>
 
             {/* RIGHT - CONTROLS */}
@@ -96,52 +80,34 @@ export default function Pagination({
                 {/* ROWS PER PAGE */}
 
                 <div className="pagination-page-size">
+    <span>Rows per page:</span>
 
-                    <span>
-                        Rows per page:
-                    </span>
+    <div className="pagination-select-wrapper">
+        <select
+            value={pageSize}
+            onChange={(e) =>
+                onPageSizeChange(Number(e.target.value))
+            }
+        >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+        </select>
 
-                    <select
-                        value={pageSize}
-                        onChange={(e) =>
-                            onPageSizeChange(
-                                Number(
-                                    e.target.value
-                                )
-                            )
-                        }
-                    >
-                        <option value={10}>
-                            10
-                        </option>
-
-                        <option value={25}>
-                            25
-                        </option>
-
-                        <option value={50}>
-                            50
-                        </option>
-
-                        <option value={100}>
-                            100
-                        </option>
-                    </select>
-
-                </div>
+        <i className="bi bi-chevron-down pagination-select-arrow" />
+    </div>
+</div>
 
                 {/* PREVIOUS */}
 
                 <button
                     type="button"
                     className="pagination-arrow"
-                    disabled={
-                        currentPage === 1
-                    }
+                    disabled={currentPage === 1}
                     onClick={() =>
-                        onPageChange(
-                            currentPage - 1
-                        )
+                        onPageChange(currentPage - 1)
                     }
                     aria-label="Previous page"
                 >
@@ -151,7 +117,6 @@ export default function Pagination({
                 {/* PAGE NUMBERS */}
 
                 <div className="pagination-pages">
-
                     {getPageNumbers().map(
                         (page, index) =>
                             page === "..." ? (
@@ -166,22 +131,18 @@ export default function Pagination({
                                     key={page}
                                     type="button"
                                     className={
-                                        page ===
-                                        currentPage
+                                        page === currentPage
                                             ? "pagination-page active"
                                             : "pagination-page"
                                     }
                                     onClick={() =>
-                                        onPageChange(
-                                            page
-                                        )
+                                        onPageChange(page)
                                     }
                                 >
                                     {page}
                                 </button>
                             )
                     )}
-
                 </div>
 
                 {/* NEXT */}
@@ -190,13 +151,10 @@ export default function Pagination({
                     type="button"
                     className="pagination-arrow"
                     disabled={
-                        currentPage ===
-                        totalPages
+                        currentPage === totalPages
                     }
                     onClick={() =>
-                        onPageChange(
-                            currentPage + 1
-                        )
+                        onPageChange(currentPage + 1)
                     }
                     aria-label="Next page"
                 >
@@ -204,7 +162,6 @@ export default function Pagination({
                 </button>
 
             </div>
-
         </div>
     );
 }

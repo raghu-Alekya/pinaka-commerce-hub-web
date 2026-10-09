@@ -1,34 +1,4 @@
-import { getAccessToken } from "../auth/tokenStore";
-
-/*
-|--------------------------------------------------------------------------
-| API ROOT
-|--------------------------------------------------------------------------
-|
-| Local React:
-|   /connector/api/v1
-|
-| Vite proxy:
-|   https://pch.alektasolutions.com
-|
-|--------------------------------------------------------------------------
-*/
-
-const API_ROOT = import.meta.env.VITE_API_BASE_URL || "/connector/api/v1";
-
-/*
-|--------------------------------------------------------------------------
-| BUILD API URL
-|--------------------------------------------------------------------------
-*/
-
-function buildUrl(path = "") {
-  const root = API_ROOT.replace(/\/+$/, "");
-
-  const cleanPath = String(path).replace(/^\/+/, "");
-
-  return `${root}/${cleanPath}`;
-}
+import { apiRequest } from "./http";
 
 /*
 |--------------------------------------------------------------------------
@@ -64,75 +34,12 @@ function formatDateTime(value) {
 */
 
 async function request(path, { token, signal, ...options } = {}) {
-  const accessToken = token ?? getAccessToken();
-
-  const response = await fetch(buildUrl(path), {
+  const data = await apiRequest(path, {
     ...options,
-
+    body: options.body ? JSON.parse(options.body) : undefined,
     signal,
-
-    /*
-      |--------------------------------------------------------------------------
-      | Authentication
-      |--------------------------------------------------------------------------
-      */
-
-    credentials: "omit",
-
-    headers: {
-      Accept: "application/json",
-
-      ...(options.body
-        ? {
-            "Content-Type": "application/json",
-          }
-        : {}),
-
-      ...(accessToken
-        ? {
-            Authorization: `Bearer ${accessToken}`,
-          }
-        : {}),
-
-      ...(options.headers || {}),
-    },
+    token,
   });
-
-  /*
-  |--------------------------------------------------------------------------
-  | READ RESPONSE
-  |--------------------------------------------------------------------------
-  */
-
-  const raw = await response.text();
-
-  let data = null;
-
-  if (raw) {
-    try {
-      data = JSON.parse(raw);
-    } catch {
-      throw new Error(`API returned a non-JSON response (${response.status}).`);
-    }
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | HTTP ERROR
-  |--------------------------------------------------------------------------
-  */
-
-  if (!response.ok) {
-    throw new Error(
-      data?.message || data?.error || `Request failed (${response.status}).`,
-    );
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | API SUCCESS FALSE
-  |--------------------------------------------------------------------------
-  */
 
   if (data && data.success === false) {
     throw new Error(data.message || data.error || "API request failed.");
@@ -218,7 +125,17 @@ function toApiStatus(status) {
 |--------------------------------------------------------------------------
 */
 
-function toUiStatus(status) {
+function toUiStatus(status, vendor = {}) {
+  if (
+    vendor.is_deleted === true ||
+    vendor.is_deleted === "true" ||
+    vendor.isDeleted === true ||
+    vendor.isDeleted === "true" ||
+    Boolean(vendor.deletedAt)
+  ) {
+    return "Inactive";
+  }
+
   const value = String(status || "").trim();
 
   if (value.toUpperCase() === "ACTIVE") {
@@ -256,13 +173,13 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    name: vendor.name ?? vendor.vendorName ?? "",
+    name: vendor.name ?? vendor.vendorName ?? vendor.vendor_name ?? "",
 
-    code: vendor.code ?? vendor.vendorCode ?? "",
+    code: vendor.code ?? vendor.vendorCode ?? vendor.vendor_code ?? "",
 
-    vendorType: toUiVendorType(vendor.vendorType),
+    vendorType: toUiVendorType(vendor.vendorType ?? vendor.vendor_type),
 
-    contactPerson: vendor.contactPerson ?? "",
+    contactPerson: vendor.contactPerson ?? vendor.contact_person ?? "",
 
     phone:
       vendor.phone ??
@@ -280,7 +197,7 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    category: vendor.category ?? vendor.productCategory ?? "",
+    category: vendor.category ?? vendor.productCategory ?? vendor.product_category ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -288,15 +205,15 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    addressLine1: vendor.addressLine1 ?? "",
+    addressLine1: vendor.addressLine1 ?? vendor.address_line1 ?? "",
 
-    addressLine2: vendor.addressLine2 ?? "",
+    addressLine2: vendor.addressLine2 ?? vendor.address_line2 ?? "",
 
     city: vendor.city ?? "",
 
     state: vendor.state ?? "",
 
-    zipCode: vendor.zipCode ?? "",
+    zipCode: vendor.zipCode ?? vendor.zip_code ?? "",
 
     country: vendor.country ?? "",
 
@@ -306,7 +223,7 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    status: toUiStatus(vendor.status),
+    status: toUiStatus(vendor.status, vendor),
 
     /*
     |--------------------------------------------------------------------------
@@ -314,7 +231,7 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    createdTime: formatDateTime(vendor.createdTime ?? vendor.createdAt),
+    createdTime: formatDateTime(vendor.createdTime ?? vendor.createdAt ?? vendor.created_at),
 
     /*
     |--------------------------------------------------------------------------
@@ -322,7 +239,7 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    updatedTime: formatDateTime(vendor.updatedTime ?? vendor.updatedAt),
+    updatedTime: formatDateTime(vendor.updatedTime ?? vendor.updatedAt ?? vendor.updated_at),
 
     /*
     |--------------------------------------------------------------------------
@@ -330,7 +247,7 @@ function normalizeVendor(vendor = {}) {
     |--------------------------------------------------------------------------
     */
 
-    deletedAt: vendor.deletedAt ?? null,
+    deletedAt: vendor.deletedAt ?? vendor.deleted_at ?? null,
 
     /*
     |--------------------------------------------------------------------------
@@ -382,7 +299,7 @@ function extractVendorList(data) {
 */
 
 function prepareVendorPayload(values = {}) {
-  return {
+  const payload = {
     /*
     |--------------------------------------------------------------------------
     | VENDOR INFORMATION
@@ -392,8 +309,6 @@ function prepareVendorPayload(values = {}) {
     vendorName: values.vendorName ?? values.name ?? "",
 
     vendorType: toApiVendorType(values.vendorType),
-
-    vendorCode: values.vendorCode ?? values.code ?? "",
 
     /*
     |--------------------------------------------------------------------------
@@ -441,6 +356,14 @@ function prepareVendorPayload(values = {}) {
 
     status: toApiStatus(values.status),
   };
+
+  const codeVal = values.vendorCode ?? values.code;
+  if (codeVal) {
+    payload.vendorCode = codeVal;
+    payload.code = codeVal;
+  }
+
+  return payload;
 }
 
 /*
@@ -453,8 +376,26 @@ function prepareVendorPayload(values = {}) {
 |--------------------------------------------------------------------------
 */
 
-export async function getVendors({ token, signal } = {}) {
-  const data = await request("/vendors", {
+export async function getVendors({ is_deleted, isDeleted, status, search, token, signal } = {}) {
+  const params = new URLSearchParams();
+
+  const isDeletedVal = is_deleted ?? isDeleted;
+  if (isDeletedVal !== undefined && isDeletedVal !== null) {
+    params.set("is_deleted", String(isDeletedVal));
+  }
+
+  if (status && String(status).trim()) {
+    params.set("status", String(status).trim());
+  }
+
+  if (search && String(search).trim()) {
+    params.set("search", String(search).trim());
+  }
+
+  const query = params.toString();
+  const path = "/vendors" + (query ? `?${query}` : "");
+
+  const data = await request(path, {
     method: "GET",
     token,
     signal,

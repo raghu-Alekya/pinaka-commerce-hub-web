@@ -168,20 +168,19 @@ export default function ViewPlanPricing() {
               </div>{" "}
               <div>
                 {" "}
-                <h2>Pricing</h2>{" "}
+                <h2>Pricing & Limits</h2>{" "}
                 <p>
                   {" "}
-                  View billing model, pricing, limits, and trial
-                  configuration.{" "}
+                 View pricing, included limits, and trial details.{" "}
                 </p>{" "}
               </div>{" "}
             </div>{" "}
             <div className="plan-pricing-fields">
               {" "}
-              {/* BILLING MODEL */}{" "}
+              {/* PRICING BASIS */}{" "}
               <label className="plan-details-field">
                 {" "}
-                <span> Billing Model </span>{" "}
+                <span> Pricing Basis </span>{" "}
                 <input value={plan.billingModel || "—"} readOnly />{" "}
               </label>{" "}
               {/* CURRENCY */}{" "}
@@ -196,10 +195,10 @@ export default function ViewPlanPricing() {
                 <span> Billing Cycle </span>{" "}
                 <input value={plan.cycle || "—"} readOnly />{" "}
               </label>{" "}
-              {/* BASE PRICE */}{" "}
+              {/* BASE SUBSCRIPTION PRICE */}{" "}
               <label className="plan-details-field">
                 {" "}
-                <span> Base Price </span>{" "}
+                <span> Base Subscription Price </span>{" "}
                 <input
                   value={formatAmount(plan.price, plan.currency)}
                   readOnly
@@ -211,22 +210,22 @@ export default function ViewPlanPricing() {
                 <span> Trial Period </span>{" "}
                 <input value={formatTrial(plan.trialPeriod)} readOnly />{" "}
               </label>{" "}
-              {/* INCLUDED STORES */}{" "}
+              {/* STORES INCLUDED */}{" "}
               <label className="plan-details-field">
                 {" "}
-                <span> Included Stores </span>{" "}
+                <span> Stores Included </span>{" "}
                 <input value={plan.includedStores ?? "—"} readOnly />{" "}
               </label>{" "}
-              {/* INCLUDED TERMINALS */}{" "}
+              {/* POS TERMINALS INCLUDED */}{" "}
               <label className="plan-details-field">
                 {" "}
-                <span> Included Terminals </span>{" "}
+                <span> POS Terminals Included </span>{" "}
                 <input value={plan.includedTerminals ?? "—"} readOnly />{" "}
               </label>{" "}
-              {/* ADDITIONAL TERMINAL PRICE */}{" "}
+              {/* Price per Additional POS Terminal */}{" "}
               <label className="plan-details-field">
                 {" "}
-                <span> Additional Terminal Price </span>{" "}
+                <span> Price per Additional POS Terminal </span>{" "}
                 <input
                   value={formatAmount(
                     plan.additionalTerminalPrice,
@@ -238,24 +237,24 @@ export default function ViewPlanPricing() {
               {/* INCLUDED USERS */}{" "}
               <label className="plan-details-field">
                 {" "}
-                <span> Included Users/Employees </span>{" "}
+                <span> Employee Licenses Included </span>{" "}
                 <input value={plan.includedUsers ?? "—"} readOnly />{" "}
               </label>{" "}
-              {/* ADDITIONAL USER PRICE */}{" "}
+              {/* Price per Additional Employee License */}{" "}
               <label className="plan-details-field">
                 {" "}
-                <span> Additional User Price </span>{" "}
+                <span> Price per Additional Employee License </span>{" "}
                 <input
                   value={formatAmount(plan.additionalUserPrice, plan.currency)}
                   readOnly
                 />{" "}
               </label>{" "}
-              {/* EFFECTIVE FROM */}{" "}
+              {/* EFFECTIVE DATE */}{" "}
               <label className="plan-details-field">
                 {" "}
-                <span> Effective From </span>{" "}
+                <span> Effective Date </span>{" "}
                 <input
-                  value={formatPlanDate(plan.effectiveFrom)}
+                  value={formatPlanDate(plan.effectiveDate)}
                   readOnly
                 />{" "}
               </label>{" "}

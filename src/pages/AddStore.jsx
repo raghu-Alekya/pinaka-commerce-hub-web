@@ -1,3 +1,4 @@
+import { buildStoreSetupPayload } from "../api/storeDetails";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
@@ -315,7 +316,7 @@ const readMerchantSelectedTemplates = (response) => {
         scopeType: String(row.scopeType || "STORE"),
         level: levelForRole(row),
         required: false,
-        defaultEnabled: true,
+        defaultEnabled: false,
       };
     })
     .filter((row) => row.id && row.name);
@@ -365,6 +366,17 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
 };
 const permissionAllowed = (value) =>
   value === true || value === "true" || value === "t" || value === 1;
+const roleTemplateKeys = (role) => [
+  role?.id,
+  role?.roleTemplateId,
+  role?.sourceRoleTemplateId,
+  role?.roleTemplate?.id,
+  role?.template?.id,
+  role?.roleCode,
+  role?.code,
+  role?.name,
+  role?.roleName,
+].filter(Boolean).map((value) => String(value).trim().toLowerCase());
 const applySavedRolePermissions = (
   matrix,
   savedRows,
@@ -477,7 +489,7 @@ const Detail = ({ label, children }) => (
   </div>
 );
 
-export default function AddStore() {
+export default function AddStore({ embeddedStep = null, readOnly = false, onEdit, onDone } = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { merchantId: routeMerchantId, storeId } = useParams();
@@ -501,6 +513,7 @@ export default function AddStore() {
   const saveLock = useRef(false);
   const hoursRef = useRef(blankHours());
   const permissionsRef = useRef({});
+  const editedPermissionRoles = useRef(new Set());
   const featureDefaultsScope = useRef("");
   const loadedFeatureType = useRef("");
   const imageReads = useRef(0);
@@ -512,6 +525,8 @@ export default function AddStore() {
   const [rolesLoading, setRolesLoading] = useState(false);
   const [rolesError, setRolesError] = useState("");
   const [roles, setRoles] = useState([]);
+  const [savedRoleKeys, setSavedRoleKeys] = useState([]);
+  const appliedRoleSnapshot = useRef("");
   const [activeRole, setActiveRole] = useState("");
   const [copyFromRole, setCopyFromRole] = useState("");
   const [permissions, setPermissions] = useState({});
@@ -527,7 +542,7 @@ export default function AddStore() {
   const [pinEditorId, setPinEditorId] = useState("");
   const [pinDraft, setPinDraft] = useState("");
   const [pinError, setPinError] = useState("");
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(embeddedStep ?? 0);
   const [loading, setLoading] = useState(true);
   const [mastersLoading, setMastersLoading] = useState(true);
   const [featuresLoading, setFeaturesLoading] = useState(false);
@@ -549,16 +564,16 @@ export default function AddStore() {
   const merchantId = idOf(routeMerchantId || store.merchantId);
   const merchantOptionValue = (item) =>
     String(item?.id || item?.merchantId || "");
-  const merchantMatches = (item, value) =>
+  const merchantMatches = (item, value) => Boolean(value) &&
     [item?.id, item?.merchantId, item?.merchantCode].some(
-      (candidate) => String(candidate || "") === String(value || ""),
+      (candidate) => candidate && String(candidate) === String(value),
     );
   const selectedMerchant = merchants.find((item) =>
     merchantMatches(item, routeMerchantId || store.merchantId || merchantId),
   );
   const merchantSelectValue = selectedMerchant
     ? merchantOptionValue(selectedMerchant)
-    : String(routeMerchantId || store.merchantId || merchantId || "");
+    : String(routeMerchantId || "");
   const merchant =
     merchantInfo?.owner ||
     selectedMerchant ||
@@ -569,6 +584,12 @@ export default function AddStore() {
     merchant?.merchantName ||
     merchant?.businessDisplayName ||
     "Selected merchant";
+
+  useEffect(() => {
+    if (!routeMerchantId && !storeId) {
+      setStore((current) => current.merchantId ? blankStore() : current);
+    }
+  }, [routeMerchantId, storeId]);
   const activeStoreTypeId =
     store.storeTypeId ||
     merchantInfo?.typeId ||
@@ -745,6 +766,13 @@ export default function AddStore() {
     () => Object.fromEntries(roleDefinitions.map((role) => [role.id, role])),
     [roleDefinitions],
   );
+  const roleIsSelected = (role) => {
+    const keys = roleTemplateKeys(role);
+    return roles.some(
+      (roleId) =>
+        roleId === role.id || keys.includes(String(roleId).toLowerCase()),
+    );
+  };
   const roleName = (id) => roleById[id]?.name || id;
   const categories = [
     "All Features",
@@ -825,6 +853,10 @@ export default function AddStore() {
         .includes(featureSearch.toLowerCase())
     );
   });
+  const selectableFeatureNames = filteredFeatures.filter((row) => entitled(row.name)).map((row) => row.name);
+  const allVisibleFeaturesSelected = selectableFeatureNames.length > 0 && selectableFeatureNames.every((name) => enabledFeatures.includes(name));
+  const roleAvailableForStoreType = (role) => storeTypeRoleIds === null || roleTemplateKeys(role).some((key) => storeTypeRoleIds.has(key));
+  const selectableRoleDefinitions = roleDefinitions.filter(roleAvailableForStoreType);
   const activeEmployees = employees.filter(
     (employee) =>
       String(employee.status || "").toUpperCase() === "ACTIVE" ||
@@ -942,7 +974,9 @@ export default function AddStore() {
               timezone: saved.timezone || "",
               currency: saved.currency || "",
               defaultLanguage: saved.defaultLanguage || "",
-              status: saved.status || "Active",
+              status: String(saved.status || "ACTIVE").toUpperCase() === "INACTIVE"
+                ? "Inactive"
+                : "Active",
               hours: normalizeHours(
                 saved.hours || saved.onboardingSetup?.hours,
               ),
@@ -1147,7 +1181,7 @@ export default function AddStore() {
           templates = readMerchantSelectedTemplates(roleResult);
         }
         setRoleDefinitions(templates);
-        // Inherit operational defaults only. Each new location gets its own name/code/address.
+        // A new store starts with no role assignments; the user selects them explicitly.
         if (!editing) {
           const country =
             info.owner.country || info.owner.address?.country || "";
@@ -1165,14 +1199,8 @@ export default function AddStore() {
             timezone: info.owner.timezone || "",
             defaultLanguage: info.owner.defaultLanguage || "",
           }));
-          const inherited = templates
-            .filter((role) => role.defaultEnabled || role.required)
-            .map((role) => role.id);
-          const nextRoles = inherited.length
-            ? inherited
-            : templates.map((role) => role.id);
-          setRoles(nextRoles);
-          setActiveRole(nextRoles[0] || "");
+          setRoles([]);
+          setActiveRole("");
           loadedRolePermissions.current = new Set();
           setPermissions({});
           setPermissionAvailability({});
@@ -1220,18 +1248,7 @@ export default function AddStore() {
               status === "ACTIVE"
             );
           })
-          .map((row) =>
-            String(
-              row.roleTemplateId ||
-                row.sourceRoleTemplateId ||
-                row.roleTemplate?.id ||
-                row.template?.id ||
-                row.id ||
-                row._id ||
-                "",
-            ),
-          )
-          .filter(Boolean);
+          .flatMap((row) => roleTemplateKeys(row));
         setStoreTypeRoleIds(new Set(ids));
       })
       .catch((err) => {
@@ -1252,54 +1269,31 @@ export default function AddStore() {
   }, [activeStoreTypeId, reload]);
 
   useEffect(() => {
-    if (storeTypeRoleIds === null) return;
-    const allowed = roles.filter((roleId) =>
-      storeTypeRoleIds.has(String(roleId)),
-    );
-    if (allowed.length !== roles.length) setRoles(allowed);
-    setActiveRole((current) =>
-      storeTypeRoleIds.has(String(current)) ? current : allowed[0] || "",
-    );
-  }, [storeTypeRoleIds, roles]);
-
-  // Only offer role templates mapped to this store's selected store type.
-  useEffect(() => {
-    let cancelled = false;
-    setStoreTypeRoleIds(null);
-    setRolesError("");
-    if (!activeStoreTypeId) {
-      setStoreTypeRoleIds(new Set());
-      setStoreTypeRolesLoading(false);
-      return () => { cancelled = true; };
-    }
-    setStoreTypeRolesLoading(true);
-    roleTemplatesApi.getForStoreType(activeStoreTypeId).then(response => {
-      if (cancelled) return;
-      const ids = readRoleTemplatesList(response).filter(row => {
-        const status = String(row.status || row.roleTemplate?.status || "ACTIVE").toUpperCase();
-        return row.enabled !== false && row.active !== false && status === "ACTIVE";
-      }).map(row => String(
-        row.roleTemplateId || row.sourceRoleTemplateId || row.roleTemplate?.id ||
-        row.template?.id || row.id || row._id || "",
-      )).filter(Boolean);
-      setStoreTypeRoleIds(new Set(ids));
-    }).catch(err => {
-      if (!cancelled) {
-        setStoreTypeRoleIds(new Set());
-        setRolesError(err?.message || "Unable to load role templates for this store type.");
+    if (storeTypeRoleIds === null || storeTypeRolesLoading || !activeStoreTypeId) return;
+    setRoles((current) => {
+      const allowed = current.flatMap((roleId) => {
+        const role = roleDefinitions.find(
+          (item) =>
+            item.id === roleId ||
+            roleTemplateKeys(item).includes(String(roleId).toLowerCase()),
+        );
+        if (!role) return [roleId];
+        const keys = roleTemplateKeys(role);
+        const saved = keys.some((key) => savedRoleKeys.includes(key));
+        const allowedForType = keys.some((key) => storeTypeRoleIds.has(key));
+        if (!allowedForType && !saved) return [];
+        return [role.id];
+      });
+      const unique = [...new Set(allowed)];
+      if (
+        unique.length === current.length &&
+        unique.every((id, index) => id === current[index])
+      ) {
+        return current;
       }
-    }).finally(() => {
-      if (!cancelled) setStoreTypeRolesLoading(false);
+      return unique;
     });
-    return () => { cancelled = true; };
-  }, [activeStoreTypeId, reload]);
-
-  useEffect(() => {
-    if (storeTypeRoleIds === null) return;
-    const allowed = roles.filter(roleId => storeTypeRoleIds.has(String(roleId)));
-    if (allowed.length !== roles.length) setRoles(allowed);
-    setActiveRole(current => storeTypeRoleIds.has(String(current)) ? current : allowed[0] || "");
-  }, [storeTypeRoleIds, roles]);
+  }, [storeTypeRoleIds, storeTypeRolesLoading, activeStoreTypeId, roleDefinitions, savedRoleKeys]);
 
   // Load Store-Type Features
   useEffect(() => {
@@ -1308,14 +1302,19 @@ export default function AddStore() {
     listStoreEmployees(merchantId, storeId)
       .then((response) => {
         if (cancelled) return;
-        const rows = response?.employees ?? response?.data?.employees ?? [];
+        const rows = Array.isArray(response) ? response : response?.employees ?? response?.data?.employees ?? [];
         setEmployeeAssignments(
           rows
             .map((item) => ({
-              employeeId: String(item.employeeId || item.id || ""),
-              role: item.roleTemplateId || item.role || "",
+              employeeId: String(item.employeeId || item.employee_id || item.id || ""),
+              role: item.roleTemplateId || item.role_template_id || item.role || "",
               pin: "",
-              pinSet: Boolean(item.pinSet),
+              savedPin: [item.loginPin, item.login_pin, item.employeeLoginPin, item.employee_login_pin, item.pin]
+                .map(value => String(value ?? ""))
+                .find(value => /^\d{6}$/.test(value)) || "",
+              pinSet: [item.pinSet, item.pin_set, item.hasLoginPin].some(
+                (value) => value === true || value === "t" || value === "true" || value === 1,
+              ) || Boolean(item.loginPinHash || item.loginPin || item.login_pin || item.employeeLoginPin || item.employee_login_pin || item.pin),
             }))
             .filter((item) => item.employeeId),
         );
@@ -1358,7 +1357,11 @@ export default function AddStore() {
       .list(merchantId, storeId)
       .then((response) => {
         if (cancelled) return;
-        const assigned = readStoreRoleTemplates(response)
+        const rows = readStoreRoleTemplates(response);
+        const keys = [...new Set(rows.flatMap((row) => roleTemplateKeys(row)))];
+        appliedRoleSnapshot.current = "";
+        setSavedRoleKeys(keys);
+        const assigned = rows
           .map((row) => row.roleTemplateId || row.id)
           .filter(Boolean);
         setRoles(assigned);
@@ -1378,8 +1381,32 @@ export default function AddStore() {
   }, [editing, merchantId, storeId, reload]);
 
   useEffect(() => {
+    if (!editing) return;
+    if (rolesLoading || merchantLoading || storeTypeRolesLoading || storeTypeRoleIds === null) return;
+    if (!roleDefinitions.length) return;
+    const snapshot = savedRoleKeys.join("|");
+    if (appliedRoleSnapshot.current === snapshot) return;
+    const selected = roleDefinitions
+      .filter((role) => roleTemplateKeys(role).some((key) => savedRoleKeys.includes(key)))
+      .map((role) => role.id);
+    appliedRoleSnapshot.current = snapshot;
+    if (savedRoleKeys.length && !selected.length) return;
+    setRoles(selected);
+    setActiveRole((current) => (selected.includes(current) ? current : selected[0] || ""));
+  }, [
+    editing,
+    rolesLoading,
+    merchantLoading,
+    storeTypeRolesLoading,
+    storeTypeRoleIds,
+    roleDefinitions,
+    savedRoleKeys,
+  ]);
+
+  useEffect(() => {
     let cancelled = false;
     if (!activeRole || !roles.includes(activeRole)) return;
+    if (editedPermissionRoles.current.has(activeRole)) return;
     setPermissionsLoading(true);
     roleTemplatesApi
       .getFeatures(activeRole, store.storeTypeId ? [store.storeTypeId] : [])
@@ -1395,7 +1422,10 @@ export default function AddStore() {
           roleName,
         );
         loadedRolePermissions.current.add(activeRole);
-        setPermissions((current) => ({ ...current, [activeRole]: matrix }));
+        setPermissions((current) => {
+          if (current[activeRole]) return current;
+          return { ...current, [activeRole]: matrix };
+        });
         setPermissionAvailability((current) => ({
           ...current,
           [activeRole]: built.availability,
@@ -1497,6 +1527,7 @@ export default function AddStore() {
     setStore(blankStore(id));
     hoursRef.current = blankHours();
     permissionsRef.current = {};
+    editedPermissionRoles.current = new Set();
     setMerchantInfo(null);
     setSubscription(null);
     setEmployees([]);
@@ -1581,9 +1612,17 @@ export default function AddStore() {
         : [...current, name],
     );
   const toggleRole = (roleId) => {
+    const keys = new Set(
+      roleTemplateKeys(roleById[roleId] || { id: roleId }),
+    );
     setRoles((current) => {
-      const next = current.includes(roleId)
-        ? current.filter((item) => item !== roleId)
+      const selected = current.some(
+        (item) => item === roleId || keys.has(String(item).toLowerCase()),
+      );
+      const next = selected
+        ? current.filter(
+            (item) => item !== roleId && !keys.has(String(item).toLowerCase()),
+          )
         : [...current, roleId];
       setActiveRole((active) =>
         next.includes(active) ? active : next[0] || "",
@@ -1592,6 +1631,7 @@ export default function AddStore() {
     });
   };
   const togglePermission = (roleId, feature, action) => {
+    editedPermissionRoles.current.add(roleId);
     setPermissions((current) => {
       const next = {
         ...current,
@@ -1636,19 +1676,34 @@ export default function AddStore() {
         : [...current, { employeeId, role: roles[0] || "", pin: "" }],
     );
     setPinEditorId(employeeId);
-    setPinDraft("");
+    const assignment = employeeAssignments.find(item => item.employeeId === employeeId);
+    setPinDraft(assignment?.pin || assignment?.savedPin || "");
     setPinError("");
   };
-  const saveEmployeePin = (employeeId) => {
+  const saveEmployeePin = async (employeeId) => {
     if (!/^[1-9]\d{5}$/.test(pinDraft)) {
       setPinError("Enter a 6-digit PIN that does not start with 0.");
       return;
     }
-    setEmployeeAssignments((current) =>
-      current.map((item) =>
-        item.employeeId === employeeId ? { ...item, pin: pinDraft } : item,
-      ),
+    const updated = employeeAssignments.map((item) =>
+      item.employeeId === employeeId ? { ...item, pin: pinDraft } : item,
     );
+    if (editing && merchantId && storeId) {
+      setSaving(true);
+      try {
+        await saveStoreEmployees(merchantId, storeId, updated.map((item) => ({
+          employeeId: item.employeeId,
+          ...(item.role ? { roleTemplateId: item.role } : {}),
+          ...(item.pin || item.savedPin ? { loginPin: item.pin || item.savedPin } : {}),
+        })));
+      } catch (failure) {
+        setPinError(failure.message || "Unable to save the employee PIN.");
+        setSaving(false);
+        return;
+      }
+      setSaving(false);
+    }
+    setEmployeeAssignments(updated);
     setPinEditorId("");
     setPinDraft("");
     setPinError("");
@@ -1968,11 +2023,6 @@ export default function AddStore() {
         )
           .trim()
           .slice(0, 50) || generatedStoreId;
-      const addressText = [store.addressLine1, store.addressLine2]
-        .map((part) => String(part || "").trim())
-        .filter(Boolean)
-        .join(", ")
-        .slice(0, 1000);
       const hours = normalizeHours(hoursRef.current).map((row) => ({
         day: row.day,
         status: row.status,
@@ -1983,42 +2033,21 @@ export default function AddStore() {
       const permissionState = Object.keys(permissionsRef.current).length
         ? permissionsRef.current
         : permissions;
-      const storePayload = {
+      const storePayload = buildStoreSetupPayload(store, {
         merchantId,
         storeId: storeCode,
-        name: store.name.trim(),
-        type: String(
-          selectedType?.storeTypeCode ||
-            selectedType?.code ||
-            store.type ||
-            typeName ||
-            "Retail",
-        ).slice(0, 50),
-        phone: store.phone.trim(),
-        email: store.email.trim(),
-        url: store.url.trim(),
+        type: String(selectedType?.storeTypeCode || selectedType?.code || store.type || typeName || "Retail").slice(0, 50),
         currency: currencyCode,
-        status: saveDraft
-          ? "PENDING"
-          : String(store.status || "Active").toUpperCase(),
-        address: addressText,
-        addressLine2: String(store.addressLine2 || "").trim(),
-        city: store.city.trim(),
-        state: store.state.trim(),
-        zip: store.zip.trim(),
-        country: store.country,
-        timezone: store.timezone,
-        defaultLanguage: store.defaultLanguage || "",
-        taxRegion: store.taxRegion || store.state || "",
+        status: saveDraft ? "PENDING" : String(store.status || "Active").toUpperCase(),
         hours,
         logo: await readDataUrl(store.logo),
         features: enabledFeatures,
-        rolePermissions: roles.map((roleId) => ({
+        rolePermissions: roles.map(roleId => ({
           roleTemplateId: roleId,
           name: roleName(roleId),
           permissions: permissionState[roleId] || {},
         })),
-      };
+      });
       const path = editing
         ? endpoints.store(encodeURIComponent(storeCode))
         : merchantId
@@ -2045,7 +2074,7 @@ export default function AddStore() {
           employeeAssignments.map((item) => ({
             employeeId: item.employeeId,
             ...(item.role ? { roleTemplateId: item.role } : {}),
-            ...(item.pin ? { loginPin: item.pin } : {}),
+            ...(item.pin || item.savedPin ? { loginPin: item.pin || item.savedPin } : {}),
           })),
         );
       }
@@ -2217,14 +2246,14 @@ export default function AddStore() {
             <table className="sf-plan-table">
               <thead>
                 <tr>
-                  <th>SELECTED PLAN</th>
-                  <th>PLAN NAME</th>
-                  <th>BILLING TYPE</th>
-                  <th>PRICE</th>
-                  <th>VALIDITY</th>
-                  <th>STORES USED</th>
-                  <th>STORES LIMIT</th>
-                  <th>STATUS</th>
+                  <th>Selected Plan</th>
+                  <th>Plan Name</th>
+                  <th>Billing Type</th>
+                  <th>Price</th>
+                  <th>Validity</th>
+                  <th>Stores Used</th>
+                  <th>Stores Limit</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -2330,16 +2359,19 @@ export default function AddStore() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>STORE NAME</th>
-                  <th>STORE CODE</th>
-                  <th>STORE TYPE</th>
-                  <th>LOCATION</th>
-                  <th>STATUS</th>
+                  <th>Store Name</th>
+                  <th>Store Code</th>
+                  <th>Store Type</th>
+                  <th>Location</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {merchantStores.map((item, index) => (
-                  <tr key={item.storeCode || item.id || item.storeId || index}>
+                {merchantStores.map((item, index) => {
+                  const cityState = [item.city || item.address?.city, item.state || item.address?.state].filter(Boolean);
+                  const locationParts = [...new Map(cityState.map((value) => [String(value).trim().toLowerCase(), String(value).trim()])).values()];
+                  const locationText = locationParts.length ? locationParts.join(", ") : item.address?.street || (typeof item.address === "string" ? item.address : "—");
+                  return <tr key={item.storeCode || item.id || item.storeId || index}>
                     <td>{index + 1}</td>
                     <td>{item.storeName || item.name || "Unnamed store"}</td>
                     <td>{item.storeCode || item.code || "—"}</td>
@@ -2350,19 +2382,10 @@ export default function AddStore() {
                         item.type ||
                         "—"}
                     </td>
-                    <td>
-                      {[
-                        item.city || item.address?.city,
-                        item.state || item.address?.state,
-                      ]
-                        .filter(Boolean)
-                        .join(", ") ||
-                        item.address?.street ||
-                        (typeof item.address === "string" ? item.address : "—")}
-                    </td>
+                    <td>{locationText}</td>
                     <td>{item.status || "—"}</td>
-                  </tr>
-                ))}
+                  </tr>;
+                })}
                 {!used && (
                   <tr>
                     <td colSpan="6" className="sf-empty">
@@ -2442,6 +2465,8 @@ export default function AddStore() {
                   }));
                   setEnabledFeatures([]);
                   setPermissions({});
+                  permissionsRef.current = {};
+                  editedPermissionRoles.current = new Set();
                   setLoadError("");
                 }}
                 options={[
@@ -2600,11 +2625,11 @@ export default function AddStore() {
               <table className="sf-table sf-hours-table">
                 <thead>
                   <tr>
-                    <th>DAY</th>
-                    <th>STATUS</th>
-                    <th>OPENS</th>
-                    <th>CLOSES</th>
-                    <th>SHIFTS</th>
+                    <th>Day</th>
+                    <th>Status</th>
+                    <th>Opens</th>
+                    <th>Closes</th>
+                    <th>Shifts</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2753,7 +2778,8 @@ export default function AddStore() {
         </Panel>
         <Panel
           title="Features"
-          subtitle="Available features are enabled by default for new stores. Disable any you do not need."
+          subtitle={readOnly ? "Features available to this store and their saved selection status." : "Select the features you want to enable for this store."}
+          action={<label className="sf-select-all-label sf-panel-select-all"><input type="checkbox" disabled={readOnly || mastersLoading || !selectableFeatureNames.length} checked={allVisibleFeaturesSelected} onChange={(event) => setEnabledFeatures((current) => event.target.checked ? [...new Set([...current, ...selectableFeatureNames])] : current.filter((name) => !selectableFeatureNames.includes(name)))} />Select all eligible</label>}
         >
           <div className="sf-feature-tools">
             <div className="sf-tabs">
@@ -2789,10 +2815,10 @@ export default function AddStore() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>FEATURE</th>
-                  <th>DESCRIPTION</th>
-                  <th>PLAN ACCESS</th>
-                  <th>ENABLE FOR THIS STORE</th>
+                  <th>Feature</th>
+                  <th>Description</th>
+                  <th>Plan Access</th>
+                  <th>Enable For This Store</th>
                 </tr>
               </thead>
               <tbody>
@@ -2820,7 +2846,7 @@ export default function AddStore() {
                           type="checkbox"
                           aria-label={`Enable ${feature.name} for this store`}
                           checked={checked}
-                          disabled={!hasPlan || mastersLoading}
+                          disabled={readOnly || !hasPlan || mastersLoading}
                           onChange={() => toggleFeature(feature.name)}
                         />
                       </td>
@@ -2858,7 +2884,13 @@ export default function AddStore() {
       <>
         <Panel
           title="Role Templates"
-          subtitle="Choose from merchant-selected role templates for this store."
+          subtitle={readOnly ? "Role templates assigned to this store." : "Choose from merchant-selected role templates for this store."}
+          action={<label className="sf-select-all-label sf-panel-select-all"><input type="checkbox" disabled={readOnly || !selectableRoleDefinitions.length || storeTypeRolesLoading} checked={selectableRoleDefinitions.length > 0 && selectableRoleDefinitions.every((role) => roleIsSelected(role))} onChange={(event) => {
+            const ids = selectableRoleDefinitions.map((role) => role.id);
+            const next = event.target.checked ? [...new Set([...roles, ...ids])] : roles.filter((roleId) => !ids.includes(roleId));
+            setRoles(next);
+            setActiveRole((current) => next.includes(current) ? current : next[0] || "");
+          }} />Select all roles</label>}
         >
           {rolesError && (
             <p className="sf-empty" role="alert">
@@ -2874,15 +2906,18 @@ export default function AddStore() {
               merchant Roles tab first.
             </p>
           )}
+          {!rolesLoading && roleDefinitions.length > 0 && !selectableRoleDefinitions.length && !storeTypeRolesLoading && (
+            <p className="sf-empty">No merchant roles are mapped to this store type yet.</p>
+          )}
           <div className="sf-template-grid">
-            {roleDefinitions.map((role, index) => (
+            {selectableRoleDefinitions.map((role, index) => (
               <label
-                className={`sf-template ${roles.includes(role.id) ? "selected" : ""}`}
+                className={`sf-template ${roleIsSelected(role) ? "selected" : ""}`}
                 key={role.id}
               >
                 <input
-                  type="checkbox"
-                  checked={roles.includes(role.id)}
+                  type="checkbox" disabled={readOnly}
+                  checked={roleIsSelected(role)}
                   onChange={() => toggleRole(role.id)}
                 />
                 <span className={`sf-template-icon icon-${index % 5}`}>
@@ -2903,7 +2938,7 @@ export default function AddStore() {
         <div className="sf-permissions-layout">
           <Panel
             title="Roles for This Store"
-            subtitle="Configure permissions for each selected role."
+            subtitle={readOnly ? "Select a role to view its saved permissions." : "Configure permissions for each selected role."}
           >
             <div className="sf-role-list">
               {roles.map((roleId) => (
@@ -2939,9 +2974,24 @@ export default function AddStore() {
           </Panel>
           <Panel
             title={`Permissions for ${activeName}`}
-            subtitle="Set what this role can view, create, edit or delete."
+            subtitle={readOnly ? "Saved access for the selected role." : "Set what this role can view, create, edit or delete."}
             action={
               <div className="sf-copy-permissions">
+                <label className="sf-select-all-label">
+                  <input type="checkbox" disabled={readOnly || !active || !matrixRows.length} checked={Boolean(active && matrixRows.length && matrixRows.every((item) => STANDARD_ACTIONS.every((action) => Boolean(permissions[active]?.[item.name]?.[action]))))} onChange={(event) => {
+                    if (!active) return;
+                    const checked = event.target.checked;
+                    setPermissions((current) => {
+                      const rolePermissions = { ...(current[active] || {}) };
+                      matrixRows.forEach((item) => { rolePermissions[item.name] = { ...(rolePermissions[item.name] || {}), ...Object.fromEntries(STANDARD_ACTIONS.map((action) => [action, checked])) }; });
+                      const next = { ...current, [active]: rolePermissions };
+                      permissionsRef.current = next;
+                      editedPermissionRoles.current.add(active);
+                      return next;
+                    });
+                  }} />
+                  Select all permissions
+                </label>
                 <label>
                   Copy from
                   <select
@@ -2961,7 +3011,7 @@ export default function AddStore() {
                 <button
                   type="button"
                   className="sf-outline"
-                  disabled={!active || !copyFromRole}
+                  disabled={readOnly || !active || !copyFromRole}
                   onClick={() => {
                     setPermissions((current) => ({
                       ...current,
@@ -2990,9 +3040,9 @@ export default function AddStore() {
                 <table className="sf-table sf-permission-table">
                   <thead>
                     <tr>
-                      <th>MODULE / FEATURE</th>
+                      <th>Module / Feature</th>
                       {STANDARD_ACTIONS.map((action) => (
-                        <th key={action}>{action.toUpperCase()}</th>
+                        <th key={action}>{action}</th>
                       ))}
                     </tr>
                   </thead>
@@ -3009,7 +3059,7 @@ export default function AddStore() {
                           {STANDARD_ACTIONS.map((action) => (
                             <td key={action}>
                               <input
-                                type="checkbox"
+                                type="checkbox" disabled={readOnly}
                                 checked={Boolean(values[action])}
                                 onChange={() =>
                                   togglePermission(active, name, action)
@@ -3110,14 +3160,14 @@ export default function AddStore() {
                     <span className="sr-only">Select</span>
                   </th>
                   <th>#</th>
-                  <th>EMPLOYEE NAME</th>
-                  <th>EMPLOYEE ID</th>
-                  <th>PHONE</th>
-                  <th>EMAIL</th>
-                  <th>CURRENT ROLE (MERCHANT)</th>
-                  <th>STORE ROLE</th>
-                  <th>LOGIN PIN</th>
-                  <th>STATUS</th>
+                  <th>Employee Name</th>
+                  <th>Employee ID</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Current Role (Merchant)</th>
+                  <th>Store Role</th>
+                  <th>Login PIN</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -3134,7 +3184,7 @@ export default function AddStore() {
                     <tr key={employeeId}>
                       <td>
                         <input
-                          type="checkbox"
+                          type="checkbox" disabled={readOnly}
                           checked={isAssigned}
                           onChange={(event) =>
                             setEmployeeSelected(employee, event.target.checked)
@@ -3154,12 +3204,12 @@ export default function AddStore() {
                       <td>
                         <select
                           value={assignment?.role || ""}
-                          disabled={!isAssigned}
+                          disabled={readOnly || !isAssigned}
                           onChange={(event) =>
                             setEmployeeRole(employeeId, event.target.value)
                           }
                         >
-                          <option value="">Select role</option>
+                          <option value="">{isAssigned ? "Select role" : "Select employee first"}</option>
                           {roles.map((roleId) => (
                             <option key={roleId} value={roleId}>
                               {roleName(roleId)}
@@ -3172,9 +3222,9 @@ export default function AddStore() {
                           <div className="sf-pin-editor">
                             <input
                               autoFocus
-                              type="password"
+                              type="text"
                               inputMode="numeric"
-                              autoComplete="new-password"
+                              autoComplete="off"
                               maxLength={6}
                               aria-label={`Six-digit login PIN for ${employee.name}`}
                               placeholder="6-digit PIN"
@@ -3194,7 +3244,7 @@ export default function AddStore() {
                                 className="sf-pin-save"
                                 onClick={() => saveEmployeePin(employeeId)}
                               >
-                                Save PIN
+                                {saving ? "Saving…" : "Save PIN"}
                               </button>
                               <button
                                 type="button"
@@ -3212,17 +3262,18 @@ export default function AddStore() {
                           </div>
                         ) : (
                           <div className="sf-pin-action">
-                            {(assignment?.pin || assignment?.pinSet) && (
-                              <span className="sf-pin-set">
-                                <i className="bi bi-lock-fill" /> PIN set
+                            {(assignment?.pin || assignment?.savedPin || assignment?.pinSet) && (
+                              <span className="sf-pin-set" title={!assignment.pin && !assignment.savedPin ? "PIN is stored securely and is not returned by the API." : undefined}>
+                                {assignment.pin || assignment.savedPin || "PIN set"}
                               </span>
                             )}
                             <button
                               type="button"
                               className="sf-link"
+                              disabled={readOnly}
                               onClick={() => openPinEditor(employee)}
                             >
-                              {assignment?.pin || assignment?.pinSet
+                              {assignment?.pin || assignment?.savedPin || assignment?.pinSet
                                 ? "Change PIN"
                                 : "Assign PIN"}
                             </button>
@@ -3237,7 +3288,7 @@ export default function AddStore() {
                               : "sf-status-available"
                           }
                         >
-                          {isAssigned ? "Will be assigned" : "Available"}
+                          {isAssigned ? "Assigned" : "Available"}
                         </span>
                       </td>
                     </tr>
@@ -3405,9 +3456,9 @@ export default function AddStore() {
             <table className="sf-table sf-review-table">
               <thead>
                 <tr>
-                  <th>ROLE NAME</th>
-                  <th>ACCESS LEVEL</th>
-                  <th>NO. OF PERMISSIONS</th>
+                  <th>Role Name</th>
+                  <th>Access Level</th>
+                  <th>No. Of Permissions</th>
                 </tr>
               </thead>
               <tbody>
@@ -3445,9 +3496,9 @@ export default function AddStore() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>EMPLOYEE NAME</th>
-                  <th>EMPLOYEE ID</th>
-                  <th>ROLE</th>
+                  <th>Employee Name</th>
+                  <th>Employee ID</th>
+                  <th>Role</th>
                 </tr>
               </thead>
               <tbody>
@@ -3506,7 +3557,39 @@ export default function AddStore() {
     employeesScreen,
     reviewScreen,
   ];
+  async function saveSection(event) {
+    event.preventDefault();
+    if (readOnly || saveLock.current) return;
+    const problem = validateStep(step);
+    if (problem) { setError(problem); return; }
+    saveLock.current = true; setSaving(true); setError("");
+    try {
+      if (step === 4) {
+        await saveStoreEmployees(merchantId, storeId, employeeAssignments.map(item => ({employeeId:item.employeeId,...(item.role ? {roleTemplateId:item.role} : {}),...(item.pin || item.savedPin ? {loginPin:item.pin || item.savedPin} : {})})));
+      } else {
+        const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
+        const saved = response?.store || response?.data?.store || response?.data || response;
+        const code = store.storeCode || store.id || storeId;
+        const changes = step === 2 ? {features:enabledFeatures} : {rolePermissions:roles.map(roleId => ({roleTemplateId:roleId,name:roleName(roleId),permissions:permissionsRef.current[roleId] || {}}))};
+        const payload = buildStoreSetupPayload(saved, {merchantId, storeId:code, ...changes});
+        await api.put(endpoints.store(encodeURIComponent(code)), payload);
+        if (step === 3) await storeRoleTemplatesApi.save(merchantId,storeId,roles);
+      }
+      onDone?.();
+    } catch (err) { setError(err.message || "Unable to save changes."); }
+    finally { saveLock.current = false; setSaving(false); }
+  }
   if (loading) return <div className="sf-loading">Loading store setup…</div>;
+  if (embeddedStep !== null) {
+    const pending = saving || mastersLoading || merchantLoading || featuresLoading || subscriptionLoading || rolesLoading || storeTypeRolesLoading || permissionsLoading;
+    const failure = loadError || merchantError || rolesError;
+    return <div className={"sf-root store-section-editor" + (readOnly ? " store-section-readonly" : "")}>
+      <div className="store-panel-heading"><div><h2>{STEPS[step]}</h2><p>{readOnly ? "View saved store information." : STEP_HINTS[step]}</p></div>{readOnly && onEdit && <button type="button" className="store-config-btn" onClick={onEdit}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}</div>
+      {(error || failure) && <div className="alert alert-danger" role="alert">{error || failure}<button type="button" onClick={() => setReload(v => v + 1)}>Retry</button></div>}
+      {pending && <p role="status">Loading store selections…</p>}
+      <form onSubmit={saveSection}><fieldset disabled={pending || Boolean(failure) || (readOnly && step < 2)} style={{border:0,padding:0,minWidth:0}}>{screens[step]()} {!readOnly && <div className="sf-footer"><button type="button" className="sf-outline" onClick={onDone}>Cancel</button><button type="submit" className="sf-primary">{saving ? "Saving…" : "Save Changes"}</button></div>}</fieldset></form>
+    </div>;
+  }
 
   return (
     <div className="sf-root">
@@ -3517,14 +3600,7 @@ export default function AddStore() {
         <span>/</span>
         <strong>{editing ? "Edit store" : "Add store"}</strong>
         <span className="sf-topbar-spacer" />
-        <button
-          type="button"
-          className="sf-outline"
-          disabled={saving || subscriptionLoading}
-          onClick={backToStores}
-        >
-          Cancel
-        </button>
+      
       </header>
       <div className="sf-shell">
         <aside className="sf-sidebar">
@@ -3623,58 +3699,52 @@ export default function AddStore() {
             >
               <div className="sf-screen">{screens[step]()}</div>
               <div className="sf-footer">
-                <button
-                  type="button"
-                  className="sf-outline"
-                  disabled={saving || subscriptionLoading}
-                  onClick={() => (step === 0 ? backToStores() : goTo(step - 1))}
-                >
-                  <i className="bi bi-arrow-left" /> Back
-                </button>
-                <span className="sf-footer-spacer" />
-                {step === 0 && (
-                  <button
-                    type="button"
-                    className="sf-outline sf-save-draft"
-                    disabled={saving || subscriptionLoading}
-                    onClick={(event) => submit(event, true)}
-                  >
-                    Save as Draft
-                  </button>
-                )}
-                {step < STEPS.length - 1 ? (
-                  <button
-                    type="button"
-                    className="sf-primary"
-                    disabled={saving || subscriptionLoading}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      goTo(step + 1);
-                    }}
-                  >
-                    {step === 0 && subscriptionLoading ? (
-                      "Checking Subscription…"
-                    ) : (
-                      <>
-                        Save &amp; Continue <i className="bi bi-arrow-right" />
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    className="sf-primary"
-                    disabled={saving || subscriptionLoading}
-                  >
-                    <i className="bi bi-shop" />{" "}
-                    {saving
-                      ? "Creating…"
-                      : editing
-                        ? "Save Changes"
-                        : "Create Store"}
-                  </button>
-                )}
-              </div>
+  <div className="sf-footer-right">
+    <button
+      type="button"
+      className="sf-outline"
+      disabled={saving || subscriptionLoading}
+      onClick={() => {
+        if (step > 0) {
+          goTo(step - 1);
+        } else {
+          backToStores();
+        }
+      }}
+    >
+      Back
+    </button>
+
+    {step < STEPS.length - 1 ? (
+      <button
+        type="button"
+        className="sf-primary"
+        disabled={saving || subscriptionLoading}
+        onClick={(event) => {
+          event.preventDefault();
+          goTo(step + 1);
+        }}
+      >
+        {step === 0 && subscriptionLoading
+          ? "Checking Subscription…"
+          : "Save & Continue"}
+      </button>
+    ) : (
+      <button
+        type="submit"
+        className="sf-primary"
+        disabled={saving || subscriptionLoading}
+      >
+        <i className="bi bi-shop" />{" "}
+        {saving
+          ? "Creating…"
+          : editing
+            ? "Save Changes"
+            : "Create Store"}
+      </button>
+    )}
+  </div>
+</div>
             </fieldset>
           </form>
         </main>

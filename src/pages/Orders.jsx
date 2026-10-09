@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import Pagination from "../components/Pagination";
+import React, { useEffect, useMemo, useState } from "react";
 import { ordersSeed } from "../data/data";
 import ViewDetailsModal from "../components/ViewDetailsModal";
+import Pagination from "../components/Pagination";
+import FiltersBar from "../components/FiltersBar";
 import "../styles/orders.css";
 
 export default function Orders({
@@ -22,7 +23,12 @@ export default function Orders({
     // =========================================================
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+const [pageSize, setPageSize] = useState(10);
+
+const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setCurrentPage(1);
+};
 
     // =========================================================
     // ORDERS
@@ -138,9 +144,10 @@ export default function Orders({
 
     const totalItems = filteredOrders.length;
 
-    const totalPages = Math.ceil(
-        totalItems / pageSize
-    );
+    const totalPages = Math.max(
+    1,
+    Math.ceil(totalItems / pageSize)
+);
 
     const paginatedOrders = useMemo(() => {
         const startIndex =
@@ -227,13 +234,15 @@ export default function Orders({
             Number(order.totalValue || 0),
         0
     );
+    const orderPercentage = (count) =>
+        orders.length ? ((count / orders.length) * 100).toFixed(1) : "0.0";
 
     // =========================================================
     // RENDER
     // =========================================================
 
     return (
-        <div className="orders-page">
+        <div className="page-content orders-page">
 
             {/* =================================================
                 HEADER
@@ -242,11 +251,6 @@ export default function Orders({
             <div className="orders-header">
 
                 <div className="orders-title-area">
-
-                    <div className="orders-title-icon">
-                        <i className="bi bi-receipt" />
-                    </div>
-
                     <div>
                         <h1>Orders</h1>
 
@@ -295,7 +299,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon purple">
-                        <i className="bi bi-receipt" />
+                        <i className="bi bi-bag-fill" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -304,6 +308,9 @@ export default function Orders({
                         <strong>
                             {orders.length}
                         </strong>
+                        <small className="order-summary-meta positive">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> Live Records
+                        </small>
                     </div>
 
                 </div>
@@ -313,7 +320,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon green">
-                        <i className="bi bi-check-circle" />
+                        <i className="bi bi-check-circle-fill" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -322,6 +329,9 @@ export default function Orders({
                         <strong>
                             {completedCount}
                         </strong>
+                        <small className="order-summary-meta positive">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> {orderPercentage(completedCount)}% of total
+                        </small>
                     </div>
 
                 </div>
@@ -331,7 +341,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon orange">
-                        <i className="bi bi-clock" />
+                        <i className="bi bi-clock-fill" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -340,6 +350,9 @@ export default function Orders({
                         <strong>
                             {pendingCount}
                         </strong>
+                        <small className="order-summary-meta warning">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> {orderPercentage(pendingCount)}% of total
+                        </small>
                     </div>
 
                 </div>
@@ -349,7 +362,7 @@ export default function Orders({
                 <div className="order-summary-card">
 
                     <div className="order-summary-icon blue">
-                        <i className="bi bi-currency-dollar" />
+                        <i className="bi bi-cash-stack" aria-hidden="true" />
                     </div>
 
                     <div>
@@ -358,6 +371,9 @@ export default function Orders({
                         <strong>
                             ${totalAmount.toFixed(2)}
                         </strong>
+                        <small className="order-summary-meta info">
+                            <i className="bi bi-circle-fill" aria-hidden="true" /> Across all orders
+                        </small>
                     </div>
 
                 </div>
@@ -374,180 +390,86 @@ export default function Orders({
                     TOOLBAR
                 ================================================= */}
 
-                <div className="orders-toolbar">
+                <FiltersBar
+    searchValue={search}
+    onSearchChange={(value) => {
+        setSearch(value);
+        setCurrentPage(1);
+    }}
+    searchPlaceholder="Search order ID, offline ID, author..."
+    filters={[
+        {
+            key: "date",
+            label: "Date",
+            value: dateFilter,
+            options: [
+                { label: "All Dates", value: "" },
+                { label: "Today", value: "today" },
+                { label: "Last 7 Days", value: "7days" },
+                { label: "Last 30 Days", value: "30days" },
+            ],
+            onChange: (value) => {
+                setDateFilter(value);
+                setCurrentPage(1);
+            },
+        },
+        {
+            key: "salesChannel",
+            label: "Sales Channel",
+            value: salesChannel,
+            options: [
+                { label: "All Sales Channels", value: "" },
+                { label: "POS", value: "POS" },
+                { label: "Online", value: "Online" },
+                { label: "WooCommerce", value: "WooCommerce" },
+            ],
+            onChange: (value) => {
+                setSalesChannel(value);
+                setCurrentPage(1);
+            },
+        },
+        {
+            key: "author",
+            label: "Author",
+            value: authorFilter,
+            options: [
+                { label: "All Authors", value: "" },
+                ...authors.map((author) => ({
+                    label: author,
+                    value: author,
+                })),
+            ],
+            onChange: (value) => {
+                setAuthorFilter(value);
+                setCurrentPage(1);
+            },
+        },
+        {
+            key: "status",
+            label: "Status",
+            value: statusFilter,
+            options: [
+                { label: "All Status", value: "" },
+                { label: "Completed", value: "Completed" },
+                { label: "Pending Payment", value: "Pending payment" },
+                { label: "Processing", value: "Processing" },
+                { label: "Cancelled", value: "Cancelled" },
+                { label: "Refunded", value: "Refunded" },
+                {
+                    label: "Partially Refunded",
+                    value: "Partially Refunded",
+                },
+            ],
+            onChange: (value) => {
+                setStatusFilter(value);
+                setCurrentPage(1);
+            },
+        },
+    ]}
+    onClear={clearFilters}
+/>
 
-                    {/* SEARCH */}
-
-                    <div className="orders-search">
-
-                        <i className="bi bi-search" />
-
-                        <input
-                            type="text"
-                            placeholder="Search order ID, offline ID, author..."
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(e.target.value)
-                            }
-                        />
-
-                    </div>
-
-                    {/* DATE */}
-
-                    <select
-                        value={dateFilter}
-                        onChange={(e) =>
-                            setDateFilter(e.target.value)
-                        }
-                    >
-
-                        <option value="">
-                            All Dates
-                        </option>
-
-                        <option value="today">
-                            Today
-                        </option>
-
-                        <option value="7days">
-                            Last 7 Days
-                        </option>
-
-                        <option value="30days">
-                            Last 30 Days
-                        </option>
-
-                    </select>
-
-                    {/* SALES CHANNEL */}
-
-                    <select
-                        value={salesChannel}
-                        onChange={(e) =>
-                            setSalesChannel(e.target.value)
-                        }
-                    >
-
-                        <option value="">
-                            All Sales Channels
-                        </option>
-
-                        <option value="POS">
-                            POS
-                        </option>
-
-                        <option value="Online">
-                            Online
-                        </option>
-
-                        <option value="WooCommerce">
-                            WooCommerce
-                        </option>
-
-                    </select>
-
-                    {/* AUTHOR */}
-
-                    <select
-                        value={authorFilter}
-                        onChange={(e) =>
-                            setAuthorFilter(e.target.value)
-                        }
-                    >
-
-                        <option value="">
-                            All Authors
-                        </option>
-
-                        {authors.map((author) => (
-                            <option
-                                key={author}
-                                value={author}
-                            >
-                                {author}
-                            </option>
-                        ))}
-
-                    </select>
-
-                    {/* STATUS */}
-
-                    <select
-                        value={statusFilter}
-                        onChange={(e) =>
-                            setStatusFilter(e.target.value)
-                        }
-                    >
-
-                        <option value="">
-                            All Status
-                        </option>
-
-                        <option value="Completed">
-                            Completed
-                        </option>
-
-                        <option value="Pending payment">
-                            Pending Payment
-                        </option>
-
-                        <option value="Processing">
-                            Processing
-                        </option>
-
-                        <option value="Cancelled">
-                            Cancelled
-                        </option>
-
-                        <option value="Refunded">
-                            Refunded
-                        </option>
-
-                        <option value="Partially Refunded">
-                            Partially Refunded
-                        </option>
-
-                    </select>
-
-                    {/* CLEAR */}
-
-                    <button
-                        type="button"
-                        className="orders-clear-btn"
-                        onClick={clearFilters}
-                    >
-                        <i className="bi bi-arrow-counterclockwise" />
-                        Clear
-                    </button>
-
-                </div>
-
-                {/* =================================================
-                    TABLE HEADING
-                ================================================= */}
-
-                <div className="orders-table-heading">
-
-                    <div>
-
-                        Orders
-
-                        <span>
-                            {filteredOrders.length}
-                        </span>
-
-                    </div>
-
-                    <div className="orders-read-only">
-
-                        <i className="bi bi-lock" />
-
-                        Read Only
-
-                    </div>
-
-                </div>
+    
 
                 {/* =================================================
                     TABLE
@@ -561,12 +483,12 @@ export default function Orders({
 
                             <tr>
 
-                                <th>WOO ORDER ID</th>
-                                <th>OFFLINE ORDER ID</th>
-                                <th>DATE</th>
-                                <th>STATUS</th>
-                                <th>AUTHOR</th>
-                                <th>TOTAL</th>
+                                <th>Woo Order ID</th>
+                                <th>Offline Order ID</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Author</th>
+                                <th>Total</th>
 
                             </tr>
 
@@ -626,20 +548,18 @@ export default function Orders({
                     PAGINATION
                 ================================================= */}
 
-                {filteredOrders.length > 0 && (
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        totalItems={totalItems}
-                        pageSize={pageSize}
-                        onPageChange={setCurrentPage}
-                        onPageSizeChange={(size) => {
-                            setPageSize(size);
-                            setCurrentPage(1);
-                        }}
-                    />
-                )}
-
+               {filteredOrders.length > 0 && (
+    <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+        itemLabel="orders"
+        showWhenEmpty={true}
+    />
+)}
                 {/* =================================================
                     FOOTER
                 ================================================= */}
@@ -788,13 +708,7 @@ function OrderRow({ order, onView }) {
             <td>
 
                 <div className="order-id-cell">
-
-                    <div className="order-icon">
-                        <i className="bi bi-receipt" />
-                    </div>
-
                     <div>
-
                         <strong>
                             {order.wooOrderId}
                         </strong>

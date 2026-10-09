@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { deleteMerchant } from "./api/merchants";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import GuestRoute from "./auth/GuestRoute";
 import AppLayout from "./layouts/AppLayout";
@@ -26,6 +25,7 @@ import Legal from "./pages/Legal";
 import Employees from "./pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
+import EmployeeView from "./pages/EmployeeView";
 import Devices from "./pages/Devices";
 import AddDevice from "./pages/AddDevice";
 import DeviceView from "./pages/DeviceView";
@@ -128,7 +128,6 @@ export default function App() {
           path="/merchants"
           element={
             <Merchants
-              deleteMerchant={deleteMerchant}
               onSaveEmployee={createEmployee}
               localMerchants={localMerchants}
               onLocalDelete={removeLocalMerchant}
@@ -186,6 +185,8 @@ export default function App() {
         {/* Stores */}
         <Route path="/stores" element={<Stores />} />
         <Route path="/stores/new" element={<AddStore />} />
+        <Route path="/stores/:storeId" element={<StoreConfiguration />} />
+        <Route path="/merchants/:merchantId/stores/:storeId" element={<StoreConfiguration />} />
         <Route path="/stores/:storeId/edit" element={<AddStore />} />
         <Route
           path="/stores/:storeId/configuration"
@@ -206,6 +207,7 @@ export default function App() {
         <Route path="/employees" element={<Employees />} />
         <Route path="/employees/add" element={<AddEmployee />} />
         <Route path="/employees/edit" element={<EditEmployee />} />
+        <Route path="/employees/:employeeId" element={<EmployeeView />} />
         <Route path="/editemployee" element={<EditEmployee />} />
         {/* Devices */}
         <Route path="/devices" element={<Devices />} />
@@ -246,6 +248,7 @@ export default function App() {
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/store-types" element={<CreateStoreType />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
         <Route
           path="/store-types/:storeTypeId"
@@ -283,3 +286,4 @@ export default function App() {
     </Routes>
   );
 }
+

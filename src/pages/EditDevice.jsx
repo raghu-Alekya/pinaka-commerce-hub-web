@@ -12,6 +12,8 @@ import { devicesApi } from "../api/devices";
 import { listMerchants } from "../api/merchants";
 import "../styles/device-view.css";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default function EditDevice() {
   const navigate = useNavigate();
   const { deviceId } = useParams();
@@ -19,14 +21,15 @@ export default function EditDevice() {
   const [form, setForm] = useState({
     deviceName: "",
     deviceCode: "",
+    deviceId: "",
     deviceType: "",
     serialNumber: "",
     merchantId: "",
+    merchantName: "",
     status: "Active",
     notes: "",
   });
 
-  const [merchantName, setMerchantName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -54,22 +57,34 @@ export default function EditDevice() {
         devicesApi.get(deviceId),
         listMerchants().catch(() => []),
       ]);
-
+      const merchantOptions = merchants
+        .map((merchant) => ({
+          value: UUID_PATTERN.test(String(merchant.id || "")) ? merchant.id : merchant.uuid,
+          label: merchant.businessDisplayName || merchant.name,
+        }))
+        .filter((merchant) => UUID_PATTERN.test(String(merchant.value || "")) && merchant.label);
       if (!data) {
         throw new Error("Device not found.");
       }
 
-      const assignedMerchant = merchants.find(
-        (merchant) => String(merchant.merchantId || merchant.id) === String(data.merchantId),
+      const assignedMerchant = merchants.find((merchant) =>
+        [merchant.id, merchant.uuid, merchant.merchantId, merchant.merchantCode]
+          .some((value) => String(value || "") === String(data.merchantId || "")),
       );
-      setMerchantName(assignedMerchant?.name || data.merchant || data.merchantName || data.merchantId || "—");
+      const assignedMerchantUuid = [assignedMerchant?.id, assignedMerchant?.uuid, data.merchantId]
+        .find((value) => UUID_PATTERN.test(String(value || "")));
+      const selectedMerchant = merchantOptions.find(
+        (merchant) => String(merchant.value) === String(assignedMerchantUuid || ""),
+      );
       setForm({
         deviceName: data.name || "",
-        deviceCode: data.deviceCode || data.id || "",
+        deviceCode: data.code || "",
+        deviceId: data.deviceId || "",
         deviceType: data.type || "",
         serialNumber: data.serial || "",
-        merchantId: data.merchantId || "",
-        status: data.status || "Active",
+        merchantId: selectedMerchant?.value || data.merchantId || "",
+        merchantName: selectedMerchant?.label || data.merchant || data.merchantName || "",
+        status: String(data.status || "ACTIVE").toUpperCase() === "INACTIVE" ? "Inactive" : "Active",
         notes: data.notes || "",
       });
     } catch (error) {
@@ -110,7 +125,10 @@ export default function EditDevice() {
     setApiError("");
 
     try {
-      const response = await devicesApi.update(deviceId, form);
+      const response = await devicesApi.update(deviceId, {
+        ...form,
+        merchantId: form.merchantId,
+      });
       if (response?.success === false) {
         throw new Error(response.message || "Failed to update device.");
       }
@@ -272,13 +290,21 @@ export default function EditDevice() {
 
           {/* DEVICE CODE */}
 
-          <EditField label="Device Code" required>
+          <EditField label="Device Code">
             <input
               name="deviceCode"
               value={form.deviceCode}
               readOnly
-              placeholder="Enter device code"
-              required
+              placeholder="Generated after saving"
+            />
+          </EditField>
+
+          <EditField label="Device ID">
+            <input
+              name="deviceId"
+              value={form.deviceId}
+              onChange={update}
+              placeholder="Enter device ID (optional)"
             />
           </EditField>
 
@@ -314,7 +340,7 @@ export default function EditDevice() {
           {/* MERCHANT */}
 
           <EditField label="Merchant" required>
-            <input value={merchantName} readOnly aria-readonly="true" />
+            <input value={form.merchantName || "—"} readOnly aria-readonly="true" />
           </EditField>
 
           {/* STATUS */}

@@ -188,8 +188,7 @@ export default function StoreTypeRoleTemplates() {
           .map((role) =>
             roleTemplatesApi.assignToStoreType(storeTypeId, {
               roleTemplateId: role.id,
-              defaultEnabled: true,
-              required: false,
+              status: "ACTIVE",
             })
           )
       );
@@ -262,18 +261,18 @@ export default function StoreTypeRoleTemplates() {
           type="button"
           onClick={() => navigate(`/store-types/${storeTypeId}`)}
         >
-          Overview
+          Store Type Details
         </button>
 
         <button
           type="button"
           onClick={() => navigate(`/store-types/${storeTypeId}/features`)}
         >
-          Features
+          Assigned Features
         </button>
 
         <button type="button" className="active">
-          Role Templates
+          Assigned Role Templates
         </button>
       </nav>
 
@@ -285,11 +284,8 @@ export default function StoreTypeRoleTemplates() {
             </div>
 
             <div>
-              <h2>Role Templates</h2>
-              <p>
-                Role templates mapped to this store type. These are
-                recommendations and do not assign roles to employees.
-              </p>
+              <h2>Assigned Role Templates</h2>
+              <p>Role templates mapped to this store type.</p>
             </div>
           </div>
 
@@ -300,7 +296,7 @@ export default function StoreTypeRoleTemplates() {
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search role templates..."
+                placeholder="Search role templates…"
               />
             </label>
 
@@ -310,16 +306,16 @@ export default function StoreTypeRoleTemplates() {
               onClick={openRoleModal}
             >
               <i className="bi bi-plus-lg" />
-              Add Role Template
+              Assign Role Templates
             </button>
           </div>
         </div>
 
         <div className="role-templates-table">
           <div className="role-template-row role-template-row-head">
-            <div>Role Template</div>
-            <div>Scope</div>
-            <div>Action</div>
+            <div>Role Template Name</div>
+            <div>Access Scope</div>
+            <div>Actions</div>
           </div>
 
           {filteredRoles.map((role) => (
@@ -332,11 +328,11 @@ export default function StoreTypeRoleTemplates() {
                 <button
                   type="button"
                   className="role-template-delete-button"
-                  title={`Delete ${role.name}`}
-                  aria-label={`Delete ${role.name}`}
+                  title={`Remove ${role.name} assignment`}
+                  aria-label={`Remove ${role.name} assignment`}
                   onClick={() => setDeleteTarget(role)}
                 >
-                  <i className="bi bi-trash3" />
+                  <i className="bi bi-trash3" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -376,7 +372,7 @@ export default function StoreTypeRoleTemplates() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="role-template-modal-heading">
-              <h2>Add Role Template</h2>
+              <h2>Assign Role Template</h2>
 
               <button
                 type="button"
@@ -393,7 +389,7 @@ export default function StoreTypeRoleTemplates() {
                 type="search"
                 value={modalSearch}
                 onChange={(event) => setModalSearch(event.target.value)}
-                placeholder="Search roles..."
+                placeholder="Search role templates…"
                 autoFocus
               />
             </label>

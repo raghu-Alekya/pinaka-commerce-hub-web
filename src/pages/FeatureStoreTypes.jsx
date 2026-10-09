@@ -10,8 +10,6 @@ import {
  
   listMappedStoreTypes,
  
-  listAvailableStoreTypes,
- 
   addStoreTypeToFeature,
  
   removeStoreTypeFromFeature,
@@ -171,9 +169,60 @@ const mapStore = (item = {}) => {
       item?._id ||
  
       '',
+
+    isAssigned:
+      item?.is_assigned ??
+      item?.isAssigned ??
+      item?.is_selected ??
+      item?.isSelected ??
+      item?.is_mapped ??
+      item?.isMapped ??
+      nestedStoreType?.is_assigned ??
+      nestedStoreType?.isAssigned ??
+      item?.selected ??
+      item?.assigned ??
+      true,
  
   };
  
+};
+
+const removedStoreTypesKey = (featureId) =>
+  `feature:${featureId}:unassigned-store-types`;
+
+const readRemovedStoreTypes = (featureId) => {
+  try {
+    const items = JSON.parse(localStorage.getItem(removedStoreTypesKey(featureId)) || "[]");
+    return Array.isArray(items) ? items : [];
+  } catch {
+    return [];
+  }
+};
+
+const rememberRemovedStoreType = (featureId, storeType) => {
+  try {
+    const items = readRemovedStoreTypes(featureId).filter(
+      (item) => String(item.id) !== String(storeType.id),
+    );
+    localStorage.setItem(
+      removedStoreTypesKey(featureId),
+      JSON.stringify([{ ...storeType, isAssigned: false }, ...items]),
+    );
+  } catch {
+    // The API operation remains successful if local persistence is unavailable.
+  }
+};
+
+const forgetAssignedStoreTypes = (featureId, storeTypeIds) => {
+  try {
+    const assignedIds = new Set(storeTypeIds.map(String));
+    const remaining = readRemovedStoreTypes(featureId).filter(
+      (item) => !assignedIds.has(String(item.id)),
+    );
+    localStorage.setItem(removedStoreTypesKey(featureId), JSON.stringify(remaining));
+  } catch {
+    // The API operation remains successful if local persistence is unavailable.
+  }
 };
  
 const FeatureStoreTypes = () => {
@@ -223,13 +272,11 @@ const FeatureStoreTypes = () => {
  
       setError('');
  
-      const [f, mapped, all] = await Promise.all([
+      const [f, featureStoreTypes] = await Promise.all([
  
         getFeature(featureId),
  
         listMappedStoreTypes(featureId),
- 
-        listAvailableStoreTypes(featureId),
  
       ]);
  
@@ -241,25 +288,20 @@ const FeatureStoreTypes = () => {
  
        */
  
-      setStoreTypes(
- 
-        Array.isArray(mapped)
- 
-          ? mapped.map(mapStore)
- 
-          : []
- 
+      const scopedStoreTypes = Array.isArray(featureStoreTypes)
+        ? featureStoreTypes.map(mapStore)
+        : [];
+      const availableById = new Map(
+        scopedStoreTypes.map((storeType) => [String(storeType.id), storeType]),
       );
- 
-      setAvailable(
- 
-        Array.isArray(all)
- 
-          ? all.map(mapStore)
- 
-          : []
- 
-      );
+      readRemovedStoreTypes(featureId).forEach((storeType) => {
+        if (!availableById.has(String(storeType.id))) {
+          availableById.set(String(storeType.id), { ...storeType, isAssigned: false });
+        }
+      });
+
+      setStoreTypes(scopedStoreTypes.filter((storeType) => storeType.isAssigned));
+      setAvailable(Array.from(availableById.values()));
  
     } catch (e) {
  
@@ -508,6 +550,8 @@ const FeatureStoreTypes = () => {
         )
  
       );
+
+      forgetAssignedStoreTypes(featureId, selected);
  
       /*
  
@@ -561,11 +605,13 @@ const FeatureStoreTypes = () => {
  
    */
  
-  const remove = async (storeTypeId) => {
+  const remove = async (storeType) => {
+
+    const storeTypeId = typeof storeType === 'object' ? storeType?.id : storeType;
  
     if (!featureId || !storeTypeId || removingId) {
  
-      return;
+      return false;
  
     }
  
@@ -608,6 +654,10 @@ const FeatureStoreTypes = () => {
         String(storeTypeId)
  
       );
+
+      if (typeof storeType === 'object') {
+        rememberRemovedStoreType(featureId, storeType);
+      }
  
       /*
  
@@ -616,6 +666,8 @@ const FeatureStoreTypes = () => {
        */
  
       await load();
+
+      return true;
  
     } catch (e) {
  
@@ -634,6 +686,7 @@ const FeatureStoreTypes = () => {
         'Unable to remove store type.'
  
       );
+      return false;
  
     } finally {
  
@@ -763,7 +816,7 @@ const FeatureStoreTypes = () => {
  
           >
  
-            Feature &amp; Permission Access
+            Permissions
  
           </button>
  
@@ -997,7 +1050,7 @@ const FeatureStoreTypes = () => {
  
                               ? 'Removing...'
  
-                              : `Delete ${s.name}`
+                              :  'Remove Assignment'
  
                           }
  
@@ -1088,14 +1141,14 @@ const FeatureStoreTypes = () => {
               <Trash2 size={23} strokeWidth={2} />
             </div>
  
-            <h2 id="st-delete-title">Delete Store Type?</h2>
+            <h2 id="st-delete-title">Unassign Store Type?</h2>
  
             <p>
               Are you sure you want to delete{" "}
               <strong>{deleteTarget.name || deleteTarget.code}</strong>?
             </p>
  
-            <p className="st-delete-warning">This action cannot be undone.</p>
+            <p className="st-delete-warning">The store type will remain available and can be assigned again.</p>
  
             <div className="st-delete-modal-actions">
               <button
@@ -1111,13 +1164,17 @@ const FeatureStoreTypes = () => {
                 type="button"
                 className="st-delete-confirm-button"
                 onClick={async () => {
-                  const storeTypeId = deleteTarget.id;
-                  await remove(storeTypeId);
-                  setDeleteTarget(null);
+                  const removed = await remove(deleteTarget);
+                  if (removed) {
+                    setDeleteTarget(null);
+                    setSelected([]);
+                    setModalSearch('');
+                    setShowAddModal(true);
+                  }
                 }}
                 disabled={Boolean(removingId)}
               >
-                {removingId ? 'Deleting...' : 'Delete'}
+                {removingId ? 'Unassigning...' : 'Unassign'}
               </button>
             </div>
           </div>
@@ -1170,9 +1227,7 @@ const FeatureStoreTypes = () => {
  
                 <p>
  
-                  Select the store types to make
- 
-                  available for this feature.
+                  Manage store types where this feature is available.
  
                 </p>
  
@@ -1361,5 +1416,3 @@ const FeatureStoreTypes = () => {
 };
  
 export default FeatureStoreTypes;
- 
- 

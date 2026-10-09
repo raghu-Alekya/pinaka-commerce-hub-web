@@ -4,6 +4,10 @@ import { useNavigate } from "react-router-dom";
 
 import { storeTypesApi } from "../api/storeTypes";
 
+function getStoreTypesForScreen() {
+  return storeTypesApi.getAll();
+}
+
 function toRow(item) {
 
   const created = item.createdAt ? new Date(item.createdAt) : null;
@@ -126,6 +130,8 @@ export default function CreateStoreType() {
 
   const [form, setForm] = useState(emptyForm);
 
+  const [nextStoreTypeCode, setNextStoreTypeCode] = useState("");
+
   const [originalForm, setOriginalForm] = useState(emptyForm);
 
   const [search, setSearch] = useState("");
@@ -176,6 +182,26 @@ export default function CreateStoreType() {
 
     setStoreTypes(sorted.map(toRow));
 
+    if (response?.nextStoreTypeCode) {
+
+      setNextStoreTypeCode(response.nextStoreTypeCode);
+
+    }
+
+    if (response?.nextStoreTypeCode && editingId === null) {
+
+      setForm((current) => ({ ...current, code: response.nextStoreTypeCode }));
+
+      setOriginalForm((current) => ({
+
+        ...current,
+
+        code: response.nextStoreTypeCode,
+
+      }));
+
+    }
+
   }
 
   useEffect(() => {
@@ -184,9 +210,7 @@ export default function CreateStoreType() {
 
     setLoading(true);
 
-    storeTypesApi
-
-      .getAll()
+    getStoreTypesForScreen()
 
       .then((response) => {
 
@@ -211,6 +235,28 @@ export default function CreateStoreType() {
         );
 
         setStoreTypes(sorted.map(toRow));
+
+        if (response?.nextStoreTypeCode) {
+
+          setNextStoreTypeCode(response.nextStoreTypeCode);
+
+          setForm((current) => ({
+
+            ...current,
+
+            code: response.nextStoreTypeCode,
+
+          }));
+
+          setOriginalForm((current) => ({
+
+            ...current,
+
+            code: response.nextStoreTypeCode,
+
+          }));
+
+        }
 
       })
 
@@ -321,16 +367,13 @@ export default function CreateStoreType() {
   }, [totalPages, currentPage]);
 
   const hasChanges =
-
-    form.code.trim() !== (originalForm.code || "").trim() ||
-
     form.name.trim() !== (originalForm.name || "").trim() ||
 
     form.description.trim() !== (originalForm.description || "").trim() ||
 
     form.status !== originalForm.status;
 
-  const canSubmitStoreType = !!form.code.trim() && !!form.name.trim();
+  const canSubmitStoreType = !!form.name.trim();
 
   function updateField(event) {
 
@@ -340,7 +383,7 @@ export default function CreateStoreType() {
 
       ...current,
 
-      [name]: name === "code" ? value.toUpperCase() : value,
+      [name]: value,
 
     }));
 
@@ -356,9 +399,9 @@ export default function CreateStoreType() {
 
   function resetForm() {
 
-    setForm(emptyForm);
+    setForm({ ...emptyForm, code: nextStoreTypeCode });
 
-    setOriginalForm(emptyForm);
+    setOriginalForm({ ...emptyForm, code: nextStoreTypeCode });
 
     setEditingId(null);
 
@@ -380,37 +423,7 @@ export default function CreateStoreType() {
 
     const nextErrors = {};
 
-    const code = form.code.trim().toUpperCase();
-
     const name = form.name.trim();
-
-    if (!code) {
-
-      nextErrors.code = "Store type code is required.";
-
-    } else if (!/^[A-Z][A-Z0-9_]{2,29}$/.test(code)) {
-
-      nextErrors.code =
-
-        "Use 3–30 uppercase letters, numbers, or underscores only.";
-
-    } else if (
-
-      storeTypes.some(
-
-        (item) =>
-
-          item.code.toLowerCase() === code.toLowerCase() &&
-
-          item.id !== editingId,
-
-      )
-
-    ) {
-
-      nextErrors.code = "This store type code already exists.";
-
-    }
 
     if (!name) {
 
@@ -451,9 +464,6 @@ export default function CreateStoreType() {
     }
 
     const values = {
-
-      storeTypeCode: form.code.trim().toUpperCase(),
-
       name: form.name.trim(),
 
       description: form.description.trim(),
@@ -596,8 +606,8 @@ export default function CreateStoreType() {
     <section className="store-types-page">
       <div className="store-types-page-heading">
         <div>
-          <h1>Store Type Information</h1>
-          <p>Define a business vertical and its baseline configuration.</p>
+          <h1>Store Types</h1>
+          <p>Manage store types and their basic information.</p>
         </div>
       </div>
 
@@ -623,8 +633,8 @@ export default function CreateStoreType() {
           </div>
 
           <div>
-            <h2>{editingId ? "Edit Store Type" : "Create Store Type"}</h2>
-            <p>Provide the basic details about the store type.</p>
+            <h2>{editingId ? "Edit Store Type" : "Add Store Type"}</h2>
+            <p>Enter the store type details.</p>
           </div>
         </div>
 
@@ -632,7 +642,7 @@ export default function CreateStoreType() {
           <div className="store-type-field">
             <label>
 
-              Store Type Code <span className="required">*</span>
+              Store Type Code
             </label>
             <input
 
@@ -640,29 +650,23 @@ export default function CreateStoreType() {
 
               value={form.code}
 
-              onChange={updateField}
+              readOnly
 
-              placeholder="Enter a unique code, e.g. GROCERY"
+              aria-readonly="true"
+
+              placeholder="Loading generated code..."
 
               maxLength={30}
 
-              className={errors.code ? "store-type-input-error" : ""}
+              className="store-type-readonly-input"
 
             />
-
-            {errors.code ? (
-              <small className="field-error">{errors.code}</small>
-
-            ) : (
-              <small></small>
-
-            )}
           </div>
 
           <div className="store-type-field">
             <label>
 
-              Display Name <span className="required">*</span>
+              Store Type Name <span className="required">*</span>
             </label>
             <input
 
@@ -807,7 +811,7 @@ export default function CreateStoreType() {
 
       <section className="store-types-list-card">
         <div className="store-types-list-header">
-          <h2>Store Types List</h2>
+          <h2>Store Types</h2>
 
           <div className="store-types-filters">
             <label className="store-type-search">
@@ -872,7 +876,7 @@ export default function CreateStoreType() {
           <div className="store-types-table">
             <div className="store-types-row store-types-row-head">
               <div>Store Type Code</div>
-              <div>Name</div>
+              <div>Store Type Name</div>
               <div>Description</div>
               <div>Status</div>
               <div>Created At</div>
@@ -925,8 +929,7 @@ export default function CreateStoreType() {
                 <div
 
                   className="store-type-description-cell"
-
-                  title={item.description}
+                  data-pch-table-cell
                 >
 
                   {item.description}
@@ -1092,11 +1095,11 @@ export default function CreateStoreType() {
               <i className="bi bi-exclamation-triangle" />
             </div>
 
-            <h2>Delete Store Type?</h2>
+            <h2>Deactivate Store Type?</h2>
 
             <p>
 
-              Are you sure you want to delete{" "}
+              Are you sure you want to deactivate{" "}
               <strong>{deleteTarget.name}</strong>?
             </p>
 
@@ -1109,14 +1112,14 @@ export default function CreateStoreType() {
 
                 {deleteTarget.assignedStores === 1 ? "store" : "stores"}.
 
-                Deleting it may affect their configuration.
+                Deactivating it may affect their configuration.
               </div>
 
             )}
 
             <p className="delete-final-warning">
 
-              This action cannot be undone.
+              The record will remain visible and can be activated again later.
             </p>
 
             <div className="delete-storetype-actions">
@@ -1143,7 +1146,7 @@ export default function CreateStoreType() {
                 disabled={saving}
               >
 
-                Yes, Delete
+                Yes, Deactivate
               </button>
             </div>
           </div>

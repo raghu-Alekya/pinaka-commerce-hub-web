@@ -42,7 +42,6 @@ export function normalizeStoreType(item) {
 const path = (id) => `/store-types/${encodeURIComponent(id)}`;
 
 const payload = (form) => ({
-  storeTypeCode: (form.storeTypeCode || form.code || "").trim().toUpperCase(),
   name: (form.name || "").trim(),
   description: (form.description || "").trim(),
   status: (form.status || "Active").toUpperCase(),
@@ -78,9 +77,14 @@ export const storeTypesApi = {
     const storeTypes = (
       res?.storeTypes ||
       res?.data?.storeTypes ||
-      (Array.isArray(res) ? res : [])
+      (Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [])
     ).map(normalizeStoreType);
-    return { success: true, storeTypes, data: storeTypes };
+    return {
+      success: true,
+      storeTypes,
+      nextStoreTypeCode: res?.nextStoreTypeCode || res?.data?.nextStoreTypeCode || "",
+      data: storeTypes,
+    };
   },
   getForMerchant: async (merchantId) => {
     const res = await api.get(
@@ -125,6 +129,12 @@ export const storeTypesApi = {
   getFeatures: async (storeTypeId) => {
     return api.get(`/store-types/${encodeURIComponent(storeTypeId)}/features`);
   },
+  getAvailableFeatures: async (storeTypeId, unmappedOnly = false) => {
+    const query = unmappedOnly ? "?unmappedOnly=true" : "";
+    return api.get(
+      `/store-types/${encodeURIComponent(storeTypeId)}/features/by-category${query}`,
+    );
+  },
   getMerchantFeatures: async (merchantId, storeTypeId) => {
     return api.get(
       `/merchants/${encodeURIComponent(merchantId)}/store-types/${encodeURIComponent(storeTypeId)}/features`,
@@ -134,6 +144,12 @@ export const storeTypesApi = {
     return api.post(
       `/store-types/${encodeURIComponent(storeTypeId)}/features`,
       { featureId },
+    );
+  },
+  addFeaturesBulk: async (storeTypeId, featureIds) => {
+    return api.post(
+      `/store-types/${encodeURIComponent(storeTypeId)}/features/bulk`,
+      { featureIds },
     );
   },
   removeFeature: async (storeTypeId, featureId) => {
@@ -146,10 +162,22 @@ export const storeTypesApi = {
       `/store-types/${encodeURIComponent(storeTypeId)}/role-templates`,
     );
   },
+  getAvailableRoleTemplates: async (storeTypeId, unmappedOnly = false) => {
+    const query = unmappedOnly ? "?unmappedOnly=true" : "";
+    return api.get(
+      `/store-types/${encodeURIComponent(storeTypeId)}/role-templates/available${query}`,
+    );
+  },
   addRoleTemplate: async (storeTypeId, roleTemplateId) => {
     return api.post(
       `/store-types/${encodeURIComponent(storeTypeId)}/role-templates`,
       { roleTemplateId },
+    );
+  },
+  addRoleTemplatesBulk: async (storeTypeId, roleTemplateIds) => {
+    return api.post(
+      `/store-types/${encodeURIComponent(storeTypeId)}/role-templates/bulk`,
+      { roleTemplateIds },
     );
   },
   removeRoleTemplate: async (storeTypeId, roleTemplateId) => {

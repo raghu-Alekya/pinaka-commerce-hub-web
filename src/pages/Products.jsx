@@ -793,15 +793,15 @@ export default function Products({
 
                                 <tr>
 
-                                    <th>PRODUCT</th>
+                                    <th>Product</th>
                                     <th>SKU</th>
-                                    <th>STOCK</th>
-                                    <th>PRICE</th>
-                                    <th>CATEGORY</th>
-                                    <th>TAGS</th>
-                                    <th>BRAND</th>
-                                    <th>UPDATED</th>
-                                    <th>STATUS</th>
+                                    <th>Stock</th>
+                                    <th>Price</th>
+                                    <th>Category</th>
+                                    <th>Tags</th>
+                                    <th>Brand</th>
+                                    <th>Updated</th>
+                                    <th>Status</th>
 
                                 </tr>
 

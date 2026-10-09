@@ -8,6 +8,17 @@ const emptyForm = {
   status: "Active",
 };
 
+function generateNextTendorCode(tendors) {
+  const highestSequence = tendors.reduce((highest, tendor) => {
+    const match = /^TND_(\d+)$/i.exec(String(tendor.code || ""));
+    const sequence = match ? Number(match[1]) : 0;
+
+    return Number.isSafeInteger(sequence) ? Math.max(highest, sequence) : highest;
+  }, 19);
+
+  return `TND_${String(highestSequence + 1).padStart(3, "0")}`;
+}
+
 function parseDate(value) {
   if (!value) {
     return null;
@@ -61,14 +72,25 @@ function formatDate(value) {
 }
 
 function mapTendorToUI(tendor) {
+  const rawStatus = String(tendor.status || "").toUpperCase();
+  const deletionFlag =
+    tendor.isDeleted ?? tendor.is_deleted ?? tendor.deleted ?? false;
+  const isDeleted =
+    Boolean(tendor.deletedAt || tendor.deleted_at) ||
+    deletionFlag === true ||
+    deletionFlag === 1 ||
+    String(deletionFlag).toLowerCase() === "true" ||
+    rawStatus === "DELETED";
+
   return {
     id: tendor.id,
     code: tendor.code || tendor.tendorCode || "",
     name: tendor.tendorName || tendor.name || "",
-    status:
-      tendor.status === "ACTIVE"
+    status: isDeleted
+      ? "Inactive"
+      : rawStatus === "ACTIVE"
         ? "Active"
-        : tendor.status === "INACTIVE"
+        : rawStatus === "INACTIVE"
           ? "Inactive"
           : tendor.status || "Active",
     createdAt: tendor.createdAt || tendor.created_at || null,
@@ -220,7 +242,10 @@ export default function Tenders() {
     }));
   }
 
-  const tenderFormComplete = Boolean(form.code.trim() && form.name.trim());
+  const generatedCode = generateNextTendorCode(tenders);
+  const tenderFormComplete = Boolean(
+    (editingId ? form.code : generatedCode).trim() && form.name.trim(),
+  );
 
   const tenderFormChanged =
     editingId !== null &&
@@ -230,7 +255,8 @@ export default function Tenders() {
       form.status !== originalForm.status);
 
   const tenderCanSave =
-    tenderFormComplete && (editingId === null || tenderFormChanged);
+    tenderFormComplete &&
+    (editingId === null ? !tendersLoading : tenderFormChanged);
 
   function resetForm() {
     setForm(emptyForm);
@@ -249,7 +275,7 @@ export default function Tenders() {
       setSaving(true);
 
       const payload = {
-        tendorCode: form.code.trim(),
+        tendorCode: (editingId ? form.code : generatedCode).trim(),
         tendorName: form.name.trim(),
         status: form.status === "Active" ? "ACTIVE" : "INACTIVE",
       };
@@ -322,9 +348,27 @@ export default function Tenders() {
       setDeleting(true);
       setDeletingId(tender.id);
 
-      await tendorsApi.delete(tender.id);
+      const response = await tendorsApi.update(tender.id, {
+        tendorCode: tender.code,
+        tendorName: tender.name,
+        status: "INACTIVE",
+      });
+      const updatedTendor = getTendorData(response);
 
-      setTenders((current) => current.filter((item) => item.id !== tender.id));
+      setTenders((current) =>
+        current.map((item) =>
+          item.id === tender.id
+            ? {
+                ...item,
+                status: "Inactive",
+                updatedAt:
+                  updatedTendor?.updatedAt ||
+                  updatedTendor?.updated_at ||
+                  new Date().toISOString(),
+              }
+            : item,
+        ),
+      );
 
       if (editingId === tender.id) {
         resetForm();
@@ -332,12 +376,12 @@ export default function Tenders() {
 
       setDeleteConfirmTender(null);
     } catch (error) {
-      console.error("Failed to delete tendor:", error);
+      console.error("Failed to deactivate tendor:", error);
 
       alert(
         error?.response?.data?.message ||
           error?.message ||
-          "Failed to delete tender.",
+          "Failed to deactivate tender.",
       );
     } finally {
       setDeleting(false);
@@ -349,9 +393,9 @@ export default function Tenders() {
     <section className="tenders-page">
       <div className="tenders-header">
         <div>
-          <h1>Create Tender</h1>
+          <h1>Tender</h1>
 
-          <p>Create and manage tenders and their availability.</p>
+          <p>Manage tenders and their availability.</p>
         </div>
       </div>
 
@@ -364,11 +408,11 @@ export default function Tenders() {
 
             <div>
               <h2>
-                {editingId ? "Edit Tender Details" : "Add Tender Details"}
+                {editingId ? "Edit Tender" : "Add Tender"}
               </h2>
 
               <p>
-                Provide the basic details and configuration for this tender.
+                Enter the tender details.
               </p>
             </div>
           </div>
@@ -383,13 +427,15 @@ export default function Tenders() {
             <input
               type="text"
               name="code"
-              value={form.code}
-              onChange={handleChange}
-              placeholder="e.g. TNDCREDIT"
-              // maxLength={30}
-              required
+              value={editingId ? form.code : generatedCode}
+              placeholder="Generated automatically"
+              readOnly
+              aria-describedby="tender-code-help"
               autoComplete="off"
             />
+            <small id="tender-code-help" className="tenders-field-help">
+              Automatically assigned in sequence.
+            </small>
           </label>
 
           <label>
@@ -446,7 +492,7 @@ export default function Tenders() {
               ? "Saving..."
               : editingId
                 ? "Update Tender"
-                : "Create Tender"}
+                : "Add Tender"}
           </button>
         </div>
       </form>
@@ -454,7 +500,7 @@ export default function Tenders() {
       <div className="tenders-list-card">
         <div className="tenders-list-toolbar">
           <div>
-            <h2>Tenders List</h2>
+            <h2>Tenders</h2>
 
             <p>
               {filteredTenders.length} payment method
@@ -489,7 +535,7 @@ export default function Tenders() {
               onChange={(event) => setSortBy(event.target.value)}
               aria-label="Sort tenders"
             >
-              <option value="newest">Newest to Oldest</option>
+              <option value="newest">Recently Added</option>
 
               <option value="oldest">Oldest to Newest</option>
 
@@ -518,7 +564,7 @@ export default function Tenders() {
           <table className="tenders-table">
             <thead>
               <tr>
-                <th>Code</th>
+                <th>Tender Code</th>
                 <th>Tender</th>
                 <th>Status</th>
                 <th>Created At</th>
@@ -593,8 +639,8 @@ export default function Tenders() {
                         type="button"
                         className="tenders-delete-action"
                         onClick={() => requestDeleteTender(tender)}
-                        aria-label={`Delete ${tender.name}`}
-                        title="Delete"
+                        aria-label={`Deactivate ${tender.name}`}
+                        title="Deactivate"
                         disabled={deleting && deletingId === tender.id}
                       >
                         <i
@@ -632,15 +678,15 @@ export default function Tenders() {
             </div>
 
             <div className="tenders-confirm-content">
-              <h2 id="delete-tender-title">Delete Tender?</h2>
+              <h2 id="delete-tender-title">Deactivate Tender?</h2>
 
               <p>
-                Are you sure you want to delete{" "}
+                Are you sure you want to deactivate{" "}
                 <strong>{deleteConfirmTender.name}</strong>?
               </p>
 
               <span className="tenders-confirm-warning">
-                This action cannot be undone.
+                This tender will remain in the list with Inactive status.
               </span>
             </div>
 
@@ -651,7 +697,7 @@ export default function Tenders() {
                 onClick={cancelDeleteTender}
                 disabled={deleting}
               >
-                No, Keep It
+                Cancel
               </button>
 
               <button
@@ -660,7 +706,7 @@ export default function Tenders() {
                 onClick={confirmDeleteTender}
                 disabled={deleting}
               >
-                {deleting ? "Deleting..." : "Yes, Delete"}
+                {deleting ? "Deactivating..." : "Yes, Deactivate"}
               </button>
             </div>
           </div>

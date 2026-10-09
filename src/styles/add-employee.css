@@ -18,7 +18,35 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+}
+
+.add-employee-page > .add-employee-header + form {
+  margin-top: 0;
+}
+
+.add-employee-topbar {
+  margin: -20px -24px 20px;
+  color: #24324d;
+  font: 14px/1.45 Inter, "Segoe UI", sans-serif;
+}
+
+.add-employee-topbar .sf-back-link {
+  font-family: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.add-employee-topbar .sf-back-link:focus-visible {
+  outline: 3px solid #b9adff;
+  outline-offset: 2px;
+}
+
+.add-employee-header p {
+  margin: 6px 0 0;
+  color: #75819a;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .add-employee-header h1 {
@@ -52,17 +80,13 @@
 .back-employees-btn {
   height: 45px;
   padding: 0 17px;
-
   display: flex;
   align-items: center;
   gap: 9px;
-
   border: 1px solid #d8e1ec;
   border-radius: 6px;
-
   background: #fff;
   color: #294363;
-
   font-size: 13px;
   cursor: pointer;
 }
@@ -75,7 +99,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(390px, 0.85fr);
   gap: 14px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .add-employee-left,
@@ -85,6 +109,21 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.add-employee-left > .employee-card,
+.add-employee-right > .employee-card:last-child {
+  flex: 1;
+}
+
+.add-employee-left > .employee-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-employee-left > .employee-card > .employee-form-grid:last-child {
+  flex: 1;
+  align-content: space-between;
 }
 
 /* =========================================================
@@ -104,16 +143,23 @@
 ========================================================= */
 
 .employee-card-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 18px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
+.employee-card-header-blue { --employee-icon-bg: #eaf2fb; --employee-icon-color: #416b99; }
+.employee-card-header-purple { --employee-icon-bg: #f0ecf8; --employee-icon-color: #77609c; }
+.employee-card-header-green { --employee-icon-bg: #eaf4ee; --employee-icon-color: #497b5c; }
+.employee-card-header-amber { --employee-icon-bg: #faf2e5; --employee-icon-color: #98733d; }
+.employee-card-header-teal { --employee-icon-bg: #e8f3f3; --employee-icon-color: #427b7b; }
+
 .employee-card-icon {
-  width: 43px;
-  height: 43px;
-  min-width: 43px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
 
   display: flex;
   align-items: center;
@@ -121,21 +167,26 @@
 
   border-radius: 50%;
 
-  color: #5b3de1;
-  background: #eeeaff;
+  color: var(--employee-icon-color);
+  background: var(--employee-icon-bg);
+}
+
+.employee-card-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .employee-card-header h2 {
   margin: 0;
 
   color: #172d4d;
-  font-size: 17px;
+  font-size: 16px;
   line-height: 21px;
   font-weight: 700;
 }
 
 .employee-card-header p {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
 
   color: #7c8faa;
   font-size: 12px;
@@ -170,7 +221,6 @@
 .employee-field label {
   display: block;
   margin-bottom: 6px;
-
   color: #162d4e;
   font-size: 13px;
   line-height: 17px;
@@ -184,20 +234,14 @@
 .employee-field input {
   width: 100%;
   height: 42px;
-
   padding: 0 12px;
-
   box-sizing: border-box;
-
   border: 1px solid #d7e1ed;
   border-radius: 6px;
-
   background: #fff;
-
   color: #304b6c;
   font-family: inherit;
   font-size: 13px;
-
   outline: none;
 }
 
@@ -339,83 +383,62 @@
    PROFILE PHOTO
 ========================================================= */
 
-.profile-photo-card {
-  min-height: 194px;
-}
-
-
-
-
 /* =========================================================
    ADD EMPLOYEE PROFILE AVATAR
 ========================================================= */
 
 .add-employee-page .profile-avatar {
-  width: 92px;
-  height: 92px;
-
-  min-width: 92px;
-  max-width: 92px;
-
-  min-height: 92px;
-  max-height: 92px;
-
-  flex: 0 0 92px;
-
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  max-width: 72px;
+  min-height: 72px;
+  max-height: 72px;
+  flex: 0 0 72px;
   display: flex;
   align-items: center;
   justify-content: center;
-
   box-sizing: border-box;
-
-  border-radius: 50%;
-
+  border-radius: 10px;
   overflow: hidden;
-
-  background: #eeeaff;
-  color: #5d3ddd;
+  background: #f0ecf8;
+  color: #77609c;
 }
 
 .add-employee-page .profile-avatar-image {
   width: 100%;
   height: 100%;
-
   display: block;
-
   object-fit: cover;
   object-position: center;
-
-  border-radius: 50%;
+  border-radius: 10px;
 }
 .add-employee-page .profile-upload-area {
   display: flex;
   align-items: center;
-  gap: 44px;
-  padding-left: 38px;
+  gap: 16px;
+  padding-left: 0;
+  flex-wrap: wrap;
 }
 
 .upload-photo-btn {
-  width: 175px;
-  height: 50px;
-
+  width: 230px;
+  height: 46px;
+  padding: 0 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
-
   border: 1px solid #d4ddef;
   border-radius: 6px;
-
   background: #fff;
   color: #5c3de0;
-
   font-size: 13px;
   cursor: pointer;
 }
 
 .upload-help {
   margin-top: 8px;
-
   color: #7e8fa8;
   font-size: 11px;
 }
@@ -503,7 +526,7 @@
   padding: 20px 0;
 
   background: transparent;
-  border-top: 1px solid #e5ebf3;
+  border-top: 0;
 }
 
 .employee-success-message {
@@ -576,21 +599,8 @@
 
 
 
-  .add-employee-page .profile-avatar {
-    width: 82px;
-    height: 82px;
-
-    min-width: 82px;
-    max-width: 82px;
-
-    min-height: 82px;
-    max-height: 82px;
-
-    flex: 0 0 82px;
-  }
-
   .upload-photo-btn {
-    width: 155px;
+    width: 175px;
   }
 }
 
@@ -598,10 +608,17 @@
 
   .add-employee-layout {
     grid-template-columns: 1fr;
+    align-items: start;
   }
 
-  .profile-upload-area {
-    padding-left: 0;
+  .add-employee-left > .employee-card,
+  .add-employee-right > .employee-card:last-child {
+    flex: none;
+  }
+
+  .add-employee-left > .employee-card > .employee-form-grid:last-child {
+    flex: none;
+    align-content: start;
   }
 
   .country-field {
@@ -615,6 +632,10 @@
     padding: 14px 12px 75px;
   }
 
+  .add-employee-topbar {
+    margin: -14px -12px 20px;
+  }
+
   .add-employee-header {
     flex-direction: column;
     gap: 14px;
@@ -625,11 +646,13 @@
     grid-template-columns: 1fr;
   }
 
-  .profile-upload-area {
-    gap: 20px;
-  }
-
   .employee-form-actions {
     padding: 0 12px;
   }
+}
+.employee-field .employee-code-help {
+  display: block;
+  margin-top: 6px;
+  color: #7b8da8;
+  font-size: 12px;
 }

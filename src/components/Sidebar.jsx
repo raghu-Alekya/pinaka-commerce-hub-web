@@ -37,11 +37,12 @@ const sections = [
   {
     title: "OPERATIONS",
     items: [
-      ["/pos-configuration", "bi-cpu", "POS Configuration", true],
+
+      ["/pos-configuration", "bi-cpu", "POS Configuration",],
       ["/orders", "bi-receipt", "Orders"],
       ["/cash-management", "bi-wallet2", "Cash Management"],
-      ["/employees", "bi-people", "Employees", true],
-      ["/devices", "bi-display", "Devices", true],
+      ["/employees", "bi-people", "Employees",],
+      ["/devices", "bi-display", "Devices",],
       ["/shifts", "bi-clock", "Shifts"],
       ["/attendance", "bi-person-check", "Attendance"],
     ],
@@ -49,7 +50,7 @@ const sections = [
   {
     title: "INTEGRATIONS",
     items: [
-      ["/integrations", "bi-diagram-3", "Integrations", true],
+      ["/integrations", "bi-diagram-3", "Integrations"],
       ["/synchronization", "bi-arrow-repeat", "Synchronization"],
       ["/reconciliation", "bi-arrow-left-right", "Reconciliation"],
       ["/notifications", "bi-bell", "Notifications"],

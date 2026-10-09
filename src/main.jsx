@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import App from "./App";
 import { AuthProvider } from "./auth/AuthContext";
+import TableOverflowTooltip from "./components/TableOverflowTooltip";
 
 import "./styles/global.css";
 import "./styles/merchants.css";
@@ -50,7 +51,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     >
       <AuthProvider>
         <App />
+        <TableOverflowTooltip />
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
+
+

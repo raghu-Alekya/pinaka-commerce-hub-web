@@ -49,11 +49,12 @@
 .vendors-save-button {
   border: 0;
   border-radius: 8px;
-  background: #684ee3;
+  background: #5143bc;
   color: #ffffff;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
+
   transition:
     background 0.2s ease,
     box-shadow 0.2s ease,
@@ -173,8 +174,8 @@
 
 .vendors-form label span {
   color: #23426e;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 
@@ -428,44 +429,108 @@
    ========================================================= */
 
 .vendors-table-wrap {
-  overflow-x: auto;
+  overflow: hidden;
   border: 1px solid #dfe9f4;
   border-radius: 8px;
   background: #ffffff;
 }
 
+.vendors-table-scroll {
+  overflow-x: auto;
+}
+
 .vendors-table {
   width: 100%;
-  min-width: 1320px;
+  min-width: 1665px;
   table-layout: fixed;
   border-collapse: collapse;
 }
 
 .vendors-table th,
 .vendors-table td {
-  width: 8.333333%;
-  height: 45px;
-  padding: 0 10px;
+  height: 58px;
+  padding: 12px 16px;
   box-sizing: border-box;
-  border-bottom: 1px solid #e3eaf3;
+  border-bottom: 1px solid #e4e8ef;
   text-align: left;
   vertical-align: middle;
   color: #29466f;
-  font-size: 11px;
-  line-height: 1.35;
+  font-size: 14px;
+  line-height: 20px;
   overflow: visible;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
+.vendors-table th:nth-child(1),
+.vendors-table td:nth-child(1) {
+  width: 110px;
+}
+
+.vendors-table th:nth-child(2),
+.vendors-table td:nth-child(2) {
+  width: 130px;
+}
+
+.vendors-table th:nth-child(3),
+.vendors-table td:nth-child(3) {
+  width: 150px;
+}
+
+.vendors-table th:nth-child(4),
+.vendors-table td:nth-child(4) {
+  width: 125px;
+}
+
+.vendors-table th:nth-child(5),
+.vendors-table td:nth-child(5) {
+  width: 150px;
+}
+
+.vendors-table th:nth-child(6),
+.vendors-table td:nth-child(6) {
+  width: 145px;
+}
+
+.vendors-table th:nth-child(7),
+.vendors-table td:nth-child(7) {
+  width: 150px;
+}
+
+.vendors-table th:nth-child(8),
+.vendors-table td:nth-child(8) {
+  width: 170px;
+}
+
+.vendors-table th:nth-child(9),
+.vendors-table td:nth-child(9) {
+  width: 120px;
+}
+
+.vendors-table th:nth-child(10),
+.vendors-table td:nth-child(10) {
+  width: 120px;
+}
+.vendors-table th:nth-child(11),
+.vendors-table td:nth-child(11) {
+  width: 110px;
+}
+
+.vendors-table th:nth-child(12),
+.vendors-table td:nth-child(12) {
+  width: 150px;
+}
+
 .vendors-table th {
-  height: 40px;
-  padding: 0 10px;
+  height: 44px;
+  padding: 0 16px;
   background: #f1f3fd;
   color: #23426e;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 16px;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .vendors-table tbody tr:hover td {
@@ -481,9 +546,9 @@
   width: 100%;
   overflow: hidden;
   color: #172343;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.45;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -492,7 +557,7 @@
   display: block;
   margin-top: 4px;
   color: #8994aa;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .vendors-table td .vendors-cell-value {
@@ -500,8 +565,8 @@
   width: 100%;
   overflow: hidden;
   color: inherit;
-  font-size: 11px;
-  line-height: 1.35;
+  font-size: 14px;
+  line-height: 1.45;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -514,7 +579,7 @@
 
 .vendors-table th:last-child {
   color: #23426e;
-  background: #f2f8ff;
+  background: #f1f3fd;
 }
 
 .vendors-table td:last-child {
@@ -523,6 +588,69 @@
 
 .vendors-table tbody tr:hover td:last-child {
   background: #fbfdff;
+}
+
+.vendors-page > .vendors-list-card > .pagination-container {
+  border-top: 0;
+}
+
+.vendors-pagination {
+  min-height: 50px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #f0f1f4;
+  background: #fff;
+  color: #697285;
+}
+
+.vendors-showing {
+  flex: 1 1 auto;
+  font-size: 14px;
+  color: #697285;
+  white-space: nowrap;
+}
+
+.vendors-pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.vendors-pagination-controls button {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid #e1e4eb;
+  border-radius: 4px;
+  background: #fff;
+  color: #7d8697;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.vendors-pagination-controls button:hover:not(:disabled) {
+  background: #f4f2ff;
+  border-color: #d8d2fa;
+  color: #5143bc;
+}
+
+.vendors-pagination-controls button.active {
+  background: #5143bc;
+  border-color: #5143bc;
+  color: #fff;
+}
+
+.vendors-pagination-controls button:disabled {
+  color: #c0c5cf;
+  background: #fafbfc;
+  cursor: not-allowed;
 }
 
 
@@ -535,11 +663,11 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
-  min-width: 78px;
-  height: 22px;
-  padding: 0 8px;
+  min-width: 86px;
+  height: 26px;
+  padding: 0 10px;
   border-radius: 12px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -1114,53 +1242,6 @@
   white-space: nowrap;
 }
 
-/* Full value tooltip */
-.vendors-table td .vendors-cell-value[data-tooltip] {
-  cursor: default;
-}
-
-.vendors-table td .vendors-cell-value[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%);
-
-  width: max-content;
-  max-width: 320px;
-
-  padding: 8px 10px;
-  border-radius: 6px;
-
-  background: #163762;
-  color: #fff;
-
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.4;
-
-  white-space: normal;
-  word-break: break-word;
-
-  box-shadow: 0 6px 18px rgba(15, 35, 65, 0.18);
-
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-
-  transition:
-    opacity 0.15s ease,
-    visibility 0.15s ease;
-
-  z-index: 1000;
-}
-
-.vendors-table td .vendors-cell-value[data-tooltip]:hover::after {
-  opacity: 1;
-  visibility: visible;
-}
-
-
 /* =========================================================
    TABLE CELL VALUE
    ========================================================= */
@@ -1170,45 +1251,10 @@
   width: 100%;
   overflow: hidden;
   color: inherit;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-
-/* =========================================================
-   HOVER FULL-VALUE TOOLTIP
-   ========================================================= */
-
-.vendors-hover-tooltip {
-  position: fixed;
-
-  transform: translate(-50%, -100%);
-
-  width: max-content;
-  max-width: 320px;
-
-  padding: 8px 10px;
-
-  border-radius: 6px;
-
-  background: #163762;
-  color: #ffffff;
-
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.4;
-
-  text-align: left;
-  white-space: normal;
-  word-break: break-word;
-
-  box-shadow: 0 6px 18px rgba(15, 35, 65, 0.18);
-
-  pointer-events: none;
-
-  z-index: 99999;
 }
 
 
@@ -1226,44 +1272,6 @@
   opacity: 1 !important;
   cursor: not-allowed;
 }
-
-/* The full-value tooltip appears only from the JSX overflow check.
-   Keep it light and simple instead of the dark-blue tooltip. */
-.vendors-hover-tooltip {
-  position: fixed;
-  transform: translate(-50%, -100%);
-  width: max-content;
-  max-width: 320px;
-  padding: 8px 10px;
-  border: 1px solid #dfe6ef;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #263b5a;
-  font-size: 11px;
-  font-weight: 400;
-  line-height: 1.4;
-  text-align: left;
-  white-space: normal;
-  word-break: break-word;
-  box-shadow: 0 3px 12px rgba(31, 55, 87, 0.14);
-  pointer-events: none;
-  z-index: 99999;
-}
-
-/* Small neutral arrow for the light tooltip. */
-.vendors-hover-tooltip::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -5px;
-  width: 8px;
-  height: 8px;
-  border-right: 1px solid #dfe6ef;
-  border-bottom: 1px solid #dfe6ef;
-  background: #ffffff;
-  transform: translateX(-50%) rotate(45deg);
-}
-
 
 /* =========================================================
    ROLE TEMPLATE ACTION STYLE — VENDOR TABLE REFERENCE
@@ -1450,7 +1458,7 @@
 
 .vendors-audit-date {
   color: #29466f;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.15;
   white-space: nowrap;

@@ -160,7 +160,19 @@
   color: #294668;
   outline: none;
   font-family: inherit;
-  font-size: 10px;
+  font-size: 12px;
+}
+
+.device-field input.device-code-readonly {
+  border-color: #d5deea;
+  background: #eef2f7;
+  color: #60728c;
+  cursor: not-allowed;
+}
+
+.device-field input.device-code-readonly::placeholder {
+  color: #60728c;
+  opacity: 1;
 }
 
 .device-field input,
@@ -248,7 +260,7 @@
   right: 7px;
   bottom: 5px;
   color: #91a0b3;
-  font-size: 8px;
+  font-size: 12px;
 }
 
 /* =========================================================
@@ -271,7 +283,7 @@
   padding: 0 19px;
   border-radius: 6px;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 14px;
   cursor: pointer;
 }
 
@@ -312,21 +324,22 @@
   }
 
   .device-card-header h2 {
-    font-size: 13px;
+    font-size: 19px;
+    font-weight: 500;
   }
 
   .device-card-header p {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .device-field label {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .device-field input,
   .device-select-wrapper select {
-    height: 32px;
-    font-size: 9px;
+    height: 44px;
+    font-size: 12px;
   }
 }
 
@@ -352,38 +365,40 @@
   }
 
   .device-card-icon {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
   }
 
   .device-card-header h2 {
     font-size: 12px;
+    font-weight: 500;
   }
 
   .device-card-header p {
-    font-size: 8px;
+    font-size: 14px;
+    font-weight: 400;
   }
 
   .device-field label {
     margin-bottom: 4px;
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .device-field input,
   .device-select-wrapper select {
-    height: 30px;
+    height: 44px;
     padding: 0 8px;
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .device-field textarea {
     min-height: 58px;
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .device-checkbox {
-    font-size: 8px;
+    font-size: 12px;
   }
 }
 
@@ -400,4 +415,21 @@
   .device-form-grid {
     grid-template-columns: 1fr;
   }
+}
+.add-device-page-embedded {
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+}
+
+.add-device-page-embedded .add-device-form {
+  margin: 0;
+}
+
+.add-device-page-embedded .device-card {
+  box-shadow: none;
+}
+
+.add-device-page-embedded .add-device-actions {
+  padding: 14px 0 0;
 }

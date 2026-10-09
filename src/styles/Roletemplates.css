@@ -372,8 +372,9 @@
 .role-table th,
 .role-table td {
   box-sizing: border-box;
-  padding: 15px 16px;
-  border-bottom: 1px solid #e3edf7;
+  height: 52px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e4e8ef;
   color: #23426e;
   font-size: 13px;
   text-align: left;
@@ -381,10 +382,11 @@
 }
 
 .role-table th {
+  height: 44px;
   color: #163762;
-  background: #f1f7ff;
-  font-size: 13px;
-  font-weight: 700;
+  background: #f1f3fd;
+  font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -870,8 +872,7 @@
   max-width: 125px;
 }
 
-/* Keep descriptions to one constant line.
-   The native title tooltip shows the complete description on hover. */
+/* Keep descriptions to one constant line. */
 .role-description-cell {
   max-width: 285px;
   overflow: hidden;
@@ -885,7 +886,6 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  cursor: help;
 }
 
 /* Action colours */
@@ -1654,7 +1654,7 @@
 }
 
 .role-table thead th {
-  border-bottom: 1px solid #dce8f4;
+  border-bottom: 1px solid #dfe5ef;
 }
 
 /* Role code is text-only; no decorative icon. */
@@ -3241,4 +3241,74 @@
   background-position: right 12px center !important;
 
   background-size: 12px !important;
+}
+/* =========================================================
+   ROLE TEMPLATE CODE — MATCH OTHER FORM FIELD HEIGHT
+   Backend-generated / read-only
+   ========================================================= */
+
+.role-create-fields-grid .role-code-field .role-code-readonly {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 13px;
+
+  border: 1px solid #dce3ed;
+  border-radius: 7px;
+  background: #f7f8fa;
+}
+
+/* Same typography/alignment as Role Template Name */
+.role-create-fields-grid .role-code-field .role-code-readonly input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+
+  border: 0;
+  outline: 0;
+  background: transparent;
+
+  color: #25314c;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 44px;
+
+  box-sizing: border-box;
+}
+
+/* Disabled input should still look readable */
+.role-create-fields-grid .role-code-field .role-code-readonly input:disabled {
+  color: #25314c;
+  -webkit-text-fill-color: #25314c;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* Placeholder */
+.role-create-fields-grid .role-code-field .role-code-readonly input::placeholder {
+  color: #9aa8bd;
+  opacity: 1;
+}
+
+/* Validation state */
+.role-create-fields-grid
+.role-code-field
+.role-code-readonly:has(input.role-input-invalid) {
+  border-color: #e5455d;
+  background: #fffafb;
+}
+
+.role-create-fields-grid
+.role-code-field
+.role-code-readonly:has(input.role-input-invalid)
+input {
+  color: #c93443;
+  -webkit-text-fill-color: #c93443;
 }

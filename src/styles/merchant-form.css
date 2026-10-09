@@ -62,21 +62,18 @@
 #pch-new > header {
     height: 62px;
     padding: 0 24px;
-
     background: #fff;
     border-bottom: 1px solid #e7e9ef;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
 #pch-new .pch-brand {
-    color: var(--pch-primary);
+    color: #5143bc;
     font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.4px;
@@ -114,7 +111,7 @@
 
 #pch-new .pch-layout {
     display: grid;
-    grid-template-columns: 245px minmax(0, 1fr);
+    grid-template-columns: 270px minmax(0, 1fr);
 
     min-height: calc(100vh - 62px);
 }
@@ -125,16 +122,16 @@
 
 #pch-new aside {
     background: #fff;
-    border-right: 1px solid #e5e8ee;
+    border-right: 1px solid #e3e8f1;
 
-    padding: 22px 14px;
+    padding: 23px 16px 15px;
 
     display: flex;
     flex-direction: column;
 }
 
 #pch-new .pch-aside-note {
-    padding: 0 8px;
+    padding: 0 10px;
 }
 
 #pch-new .pch-eyebrow {
@@ -147,7 +144,11 @@
 }
 
 #pch-new aside .pch-eyebrow {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
+    color: #919bb0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .13em;
 }
 
 /* =========================================================
@@ -157,80 +158,96 @@
 #pch-new .pch-rail {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 7px;
 }
 
 #pch-new .pch-rail button {
     width: 100%;
-    min-height: 68px;
+    min-height: 59px;
 
     padding: 8px 10px;
 
-    border: 0;
-    border-radius: 7px;
+    border: 1px solid transparent;
+    border-radius: 9px;
 
     background: transparent;
-    color: #596276;
+    color: #56627a;
 
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 11px;
 
     text-align: left;
     transition: 0.2s ease;
 }
 
 #pch-new .pch-rail button strong{
-  font-size:14px;
-  font-weight:600;
-  line-height:20px;
+  display: block;
+  font-size:12px;
+  font-weight:700;
+  line-height:1.45;
+}
+
+#pch-new .pch-rail button:disabled {
+    opacity: 0.48;
 }
 
 #pch-new .pch-rail button:not(:disabled):hover {
     background: #f7f6ff;
-    color: var(--pch-primary);
+    color: #5143bc;
 }
 
 #pch-new .pch-rail button.pch-current {
-    background: #f4f2ff;
-    color: var(--pch-primary);
+    background: #f3f0ff;
+    color: #5143bc;
+    border-color: #e2dcff;
 }
 
 #pch-new .pch-rail .pch-number {
-    border: 1px solid #dce1ea;
+    border: 1px solid #dce2ed;
     border-radius: 50%;
     background: #fff;
-    color: #8791a4;
+    color: #76829a;
     display: flex;
     align-items: center;
     justify-content: center;
-    width:38px;
-    height:38px;
-    min-width:38px;
-    font-size:16px;
+    width:30px;
+    height:30px;
+    min-width:30px;
+    font-size:12px;
     font-weight:700;
+    flex: 0 0 30px;
 }
 
 #pch-new .pch-rail button.pch-current .pch-number {
-    background: var(--pch-primary);
-    border-color: var(--pch-primary);
+    background: #5937e8;
+    border-color: #5937e8 ;
     color: #fff;
 }
 
 #pch-new .pch-rail button:not(.pch-current) .pch-number {
-    color: var(--pch-primary);
+    color: #76829a;
+}
+
+#pch-new .pch-rail button:not(.pch-current) .pch-number.pch-complete {
+    color: #5143bc;
+}
+
+#pch-new .pch-rail button > span:last-child {
+    min-width: 0;
 }
 
 #pch-new .pch-rail-description {
     display: block;
     margin-top: 3px;
-    color: #9aa2b2;
-    font-size:12px;
-    line-height:16px;
+    color: #8994aa;
+    font-size:10px;
+    font-weight:400;
+    line-height:1.25;
 }
 
 #pch-new .pch-rail button.pch-current .pch-rail-description {
-    color: #7770b7;
+    color: #8994aa;
 }
 
 #pch-new aside > .pch-note {
@@ -393,20 +410,18 @@
 ========================================================= */
 
 #pch-new button {
-    min-height: 40px;
-
+    min-height: 36px;
     padding: 0 12px;
-
-    border: 1px solid var(--pch-border);
-    border-radius: 7px;
-
+    border: 1px solid #5143bc;
+    border-radius: 8px;
     background: #fff;
-    color: #475168;
-
+    color: #5143bc;
     font-size: 14px;
     font-weight: 500;
-
     transition: 0.2s ease;
+    align-items: center;
+    gap: 14px;
+
 }
 
 #pch-new button:hover:not(:disabled) {
@@ -464,30 +479,32 @@
 }
 
 #pch-new th {
-    height: 36px;
+    height: 44px;
 
-    padding: 0 10px;
+    padding: 0 14px;
 
-    background: #fafbfc;
-    border-bottom: 1px solid #e5e8ee;
+    background: #f1f3fd;
+    border-bottom: 1px solid #dfe5ef;
 
     color: #697285;
 
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     text-align: left;
     white-space: nowrap;
 }
 
 #pch-new td {
-    min-height: 40px;
+    height: 52px;
 
-    padding: 7px 10px;
+    padding: 10px 14px;
 
-    border-bottom: 1px solid #edf0f4;
+    border-bottom: 1px solid #e4e8ef;
 
     color: #4f596d;
 
+    font-size: 13px;
+    line-height: 18px;
     vertical-align: middle;
 }
 
@@ -1056,7 +1073,7 @@
 @media (max-width: 1200px) {
 
     #pch-new .pch-layout {
-        grid-template-columns: 210px minmax(0, 1fr);
+        grid-template-columns: 270px minmax(0, 1fr);
     }
 
     #pch-new main {
@@ -1170,6 +1187,7 @@
         width: 27px;
         height: 27px;
         min-width: 27px;
+        flex-basis: 27px;
     }
 
     #pch-new .pch-footerbar {
@@ -1229,6 +1247,7 @@
   flex-wrap: wrap;
   gap: 10px;
   font-size:14px;
+  font-weight: 600;
   color: #7c8495;
 }
 #pch-new .pch-breadcrumb button {
@@ -1516,20 +1535,18 @@
 ========================================================= */
 
 /* Main workspace */
-#pch-new .pch-layout,
 .rs-page .rs-workspace {
-  grid-template-columns: 245px minmax(0, 1fr);
+  grid-template-columns: 270px minmax(0, 1fr);
 }
 
 /* Left step panel */
-#pch-new aside,
 .rs-page .rs-step-panel {
-  padding: 28px 16px;
+  padding: 23px 16px 15px;
   background: #fff;
   border-right: 1px solid #dce4f0;
 }
 
-#pch-new .pch-eyebrow,
+#pch-new main > .pch-eyebrow,
 .rs-page .rs-step-eyebrow {
   margin: 0 0 16px;
   color: #8a94a6;
@@ -1539,38 +1556,38 @@
 }
 
 /* Left wizard steps */
-#pch-new .pch-rail button,
 .rs-page .rs-step {
-  min-height: 68px;
-  padding: 12px;
-  margin-bottom: 4px;
-  border-radius: 8px;
+  min-height: 59px;
+  padding: 8px 10px;
+  margin-bottom: 7px;
+  border-radius: 9px;
+  gap: 11px;
+  align-items: center;
 }
 
-#pch-new .pch-rail .pch-number,
 .rs-page .rs-step-circle {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  font-size: 16px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  font-size: 12px;
+  flex: 0 0 30px;
+  box-sizing: border-box;
 }
 
-#pch-new .pch-rail button strong,
 .rs-page .rs-step strong {
   display: block;
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
-#pch-new .pch-rail-description,
 .rs-page .rs-step small {
   display: block;
   margin-top: 3px;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 1.25;
 }
 
 /* Fix title and subtitle appearing on one line in Step 3 */
@@ -1677,9 +1694,8 @@
 
 /* Responsive layout */
 @media (max-width: 980px) {
-  #pch-new .pch-layout,
   .rs-page .rs-workspace {
-    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-columns: 270px minmax(0, 1fr);
   }
 
   #pch-new main,
@@ -1689,7 +1705,6 @@
 }
 
 @media (max-width: 680px) {
-  #pch-new .pch-layout,
   .rs-page .rs-workspace {
     display: block;
   }
@@ -1703,4 +1718,3 @@
     overflow-x: auto;
   }
 }
-
