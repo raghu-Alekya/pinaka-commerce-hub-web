@@ -1968,3 +1968,7 @@ dialog.merchant-delete-dialog::backdrop {
     width: 100%;
   }
 }
+
+.merchant-timestamp { display: inline-flex; flex-direction: column; gap: 3px; line-height: 1.5; white-space: nowrap; }
+.merchant-timestamp > span { font-size: 12px; font-weight: 600; color: #536078; }
+.merchant-timestamp small { font-size: 10px; font-weight: 400; color: #9aa1ae; }
