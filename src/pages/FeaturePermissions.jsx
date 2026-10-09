@@ -1404,7 +1404,7 @@ export default function FeaturePermissions() {
     </button>
   </div>
 </form>
-```
+
 
       </section>
 
