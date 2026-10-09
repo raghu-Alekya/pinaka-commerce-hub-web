@@ -29,9 +29,7 @@ export const roleTemplatesApi = {
       ? storeTypeIds.filter(Boolean).join(",")
       : String(storeTypeIds ?? "");
 
-    const query = ids
-      ? `?storeTypeIds=${encodeURIComponent(ids)}`
-      : "?storeTypeIds=%2C";
+    const query = ids ? `?storeTypeIds=${encodeURIComponent(ids)}` : "";
 
     return api.get(
       `/role-templates/${encodeURIComponent(id)}/features${query}`,
@@ -46,7 +44,7 @@ export const roleTemplatesApi = {
 
   updateFeatureAccess: (id, featureAccess) =>
     api.put(
-      `//role-templates/${encodeURIComponent(id)}/features`,
+      `/role-templates/${encodeURIComponent(id)}/features`,
       featureAccess,
     ),
 

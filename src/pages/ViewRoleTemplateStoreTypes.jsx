@@ -120,11 +120,15 @@ export default function ViewRoleTemplateStoreTypes() {
         }
       } catch (requestError) {
         if (!cancelled) {
-          const errMsg =
-            requestError?.response?.data?.message ||
-            requestError?.response?.data?.error ||
-            requestError?.message ||
-            "Unable to load store types.";
+          const errorBody = requestError?.body ?? requestError?.response?.data;
+          const rawMessage =
+            errorBody?.message ||
+            errorBody?.errors?.[0]?.message ||
+            errorBody?.error ||
+            requestError?.message;
+          const errMsg = Array.isArray(rawMessage)
+            ? rawMessage.filter(Boolean).join(", ")
+            : rawMessage || "Unable to load store types.";
           setError(errMsg);
         }
       } finally {
@@ -172,13 +176,15 @@ export default function ViewRoleTemplateStoreTypes() {
       setSelectedStoreTypes(selectedStoreTypes);
 
       // Extract detailed error message from backend if available
-      const errorMessage =
-        requestError?.response?.data?.message ||
-        requestError?.response?.data?.error ||
-        requestError?.response?.data?.errors?.[0]?.message ||
-        requestError?.message ||
-        "Unable to save store type selection.";
-
+      const errorBody = requestError?.body ?? requestError?.response?.data;
+      const rawMessage =
+        errorBody?.message ||
+        errorBody?.errors?.[0]?.message ||
+        errorBody?.error ||
+        requestError?.message;
+      const errorMessage = Array.isArray(rawMessage)
+        ? rawMessage.filter(Boolean).join(", ")
+        : rawMessage || "Unable to save store type selection.";
       setError(errorMessage);
     } finally {
       setSaving(false);
