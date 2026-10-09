@@ -40,12 +40,14 @@ import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
+import FeaturePermissionsOverview from "./pages/FeaturePermissionsOverview";
 import FeatureOverview from "./pages/FeatureOverview";
 import FeatureStoreTypes from "./pages/FeatureStoreTypes";
 import FeaturePermissionDetails from "./pages/FeaturePermissionDetails";
 import RoleTemplates from "./pages/Roletemplates";
 import Vendors from "./pages/Vendors";
 import Tenders from "./pages/Tenders";
+import TenderDetails from "./pages/TenderDetails";
 import ViewRoleTemplateOverview from "./pages/ViewRoleTemplateDetails";
 import ViewRoleTemplateStoreTypes from "./pages/ViewRoleTemplateStoreTypes";
 import ViewRoleTemplateAccess from "./pages/ViewRoleTemplateAccess";
@@ -236,51 +238,29 @@ export default function App() {
           path="/features/:featureId/permissions"
           element={<FeaturePermissionDetails />}
         />
-        {/* Feature Permissions */}
-        <Route path="/permissions" element={<FeaturePermissions />} />
-        <Route
-          path="/permissions/:featureId"
-          element={<FeaturePermissions />}
-        />
-        //
+      
+        
+      
         {/* Master Setup */}
         <Route path="/vendors" element={<Vendors />} />
         <Route path="/tenders" element={<Tenders />} />
+        <Route path="/tenders/:tenderId" element={<TenderDetails />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
         <Route path="/store-types" element={<CreateStoreType />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
-        <Route
-          path="/store-types/:storeTypeId"
-          element={<StoreTypeDetails />}
-        />
-        <Route
-          path="/store-types/:storeTypeId/features"
-          element={<StoreTypeFeatures />}
-        />
-        <Route
-          path="/store-types/:storeTypeId/role-templates"
-          element={<StoreTypeRoleTemplates />}
-        />
-        <Route
-          path="/role-templates/:roleId"
-          element={<ViewRoleTemplateOverview />}
-        />
-        <Route
-          path="/role-templates/:roleId/store-types"
-          element={<ViewRoleTemplateStoreTypes />}
-        />
-        <Route
-          path="/role-templates/:roleId/access"
-          element={<ViewRoleTemplateAccess />}
-        />
+        <Route path="/store-types/:storeTypeId"  element={<StoreTypeDetails />} />
+        <Route path="/store-types/:storeTypeId/features"element={<StoreTypeFeatures />} />
+        <Route path="/store-types/:storeTypeId/role-templates" element={<StoreTypeRoleTemplates />} />
+        <Route path="/feature-permissions" element={<FeaturePermissions />} />
+        <Route path="/features/:featureId/permissions/:permissionId"element={<FeaturePermissionsOverview />}/>
+        <Route path="/role-templates/:roleId" element={<ViewRoleTemplateOverview />} />
+        <Route path="/role-templates/:roleId/store-types"element={<ViewRoleTemplateStoreTypes />}/>
+        <Route path="/role-templates/:roleId/access" element={<ViewRoleTemplateAccess />} />
         <Route path="/plans/:planId" element={<ViewPlanOverview />} />
         <Route path="/plans/:planId/pricing" element={<ViewPlanPricing />} />
-        <Route
-          path="/plans/:planId/features-limits"
-          element={<ViewPlanFeaturesLimits />}
-        />
-      </Route>
+        <Route path="/plans/:planId/features-limits" element={<ViewPlanFeaturesLimits />} />
+        </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

@@ -26,7 +26,7 @@ const sections = [
         [
           ["/store-types/new", "bi-shop", "Store Types"],
           ["/features", "bi-grid-1x2", "Features"],
-          ["/permissions", "bi-shield-check", "Feature Permissions"],
+          ["/feature-permissions", "bi-shield-check", "Feature Permissions"],
           ["/role-templates", "bi-person-badge", "Role Templates"],
           ["/plans/new", "bi-credit-card", "Plans"],
           ["/tenders", "bi-cash-coin", "Tenders"],
@@ -151,14 +151,63 @@ export default function Sidebar({
                               key={subTo}
                               to={subTo}
                               onClick={() => setMobileOpen(false)}
-                              className={({ isActive }) => {
-                                const featureChildActive =
-                                  subTo === "/features" &&
-                                  location.pathname.startsWith("/features/");
 
-                                return `master-setup-submenu-item ${isActive || featureChildActive ? "active" : ""
-                                  }`;
-                              }}
+className={({ isActive }) => {
+  const pathname = location.pathname;
+
+  const isPermissionOverview =
+    /^\/features\/[^/]+\/permissions\/[^/]+\/?$/.test(
+      pathname
+    );
+
+  let active = isActive;
+
+  // Store Types
+  if (subTo === "/store-types/new") {
+    active = pathname.startsWith("/store-types");
+  }
+
+  // Features
+  if (subTo === "/features") {
+    active =
+      pathname === "/features" ||
+      (pathname.startsWith("/features/") &&
+        !isPermissionOverview);
+  }
+
+  // Feature Permissions
+  if (subTo === "/feature-permissions") {
+    active =
+      pathname === "/feature-permissions" ||
+      isPermissionOverview;
+  }
+
+  // Role Templates
+  if (subTo === "/role-templates") {
+    active =
+      pathname === "/role-templates" ||
+      pathname.startsWith("/role-templates/");
+  }
+
+  // Plans
+  if (subTo === "/plans/new") {
+    active =
+      pathname === "/plans" ||
+      pathname.startsWith("/plans/");
+  }
+
+  // Tenders
+  if (subTo === "/tenders") {
+    active =
+      pathname === "/tenders" ||
+      pathname.startsWith("/tenders/");
+  }
+
+  return `master-setup-submenu-item ${
+    active ? "active" : ""
+  }`;
+}}
+
                             >
                               <i className={`bi ${subIcon}`} />
                               <span>{subLabel}</span>

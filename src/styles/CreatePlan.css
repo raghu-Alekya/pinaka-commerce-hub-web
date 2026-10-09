@@ -162,6 +162,7 @@
   color: #23426e;
   font-size: 12px;
   font-weight: 600;
+  
 }
 
 .plan-field b {
@@ -197,6 +198,15 @@
   color: #6380b0;
 }
 
+
+.plan-placeholder {
+  text-transform: none;
+  letter-spacing: 0.15px;
+  font-weight: 500;
+  cursor: not-allowed;
+  background-color: #f5f7fa !important;
+}
+
 .plan-input-wrap input {
   height: auto;
   padding: 0;
@@ -220,6 +230,15 @@
   width: calc(50% - 9px);
   max-width: calc(50% - 9px);
   margin-top: 14px;
+}
+
+.plan-description-text { 
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+   
 }
 
 .plan-textarea-wrap {
@@ -735,9 +754,9 @@
 }
 
 .plan-description-cell {
-  color: #6380ae;
-  font-size: 13px;
-  line-height: 1.5;
+   min-width: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 .plan-price-cell {
@@ -1489,3 +1508,4 @@
   width: 0 !important;
   height: 0 !important;
 }
+

@@ -1,23 +1,35 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-function findOverflowingText(target) {
+const TABLE_CELL_SELECTOR = [
+  "td",
+  "th",
+  "[data-pch-table-cell]",
+  ".plans-row",
+  ".store-types-row",
+].join(", ");
+
+function getOverflowingText(target) {
   if (!(target instanceof Element)) return null;
 
-  const cell = target.closest("td, th, [data-pch-table-cell]");
+  const cell = target.closest(TABLE_CELL_SELECTOR);
   if (!cell) return null;
 
   let element = target;
 
   while (element && cell.contains(element)) {
-    const text = element.innerText;
+    const text = element.innerText?.trim();
 
     if (
-      text?.trim() &&
+      text &&
       (element.scrollWidth > element.clientWidth + 1 ||
         element.scrollHeight > element.clientHeight + 1)
     ) {
-      return { element, text };
+      return {
+        element,
+        text,
+      };
     }
 
     if (element === cell) break;
@@ -29,116 +41,106 @@ function findOverflowingText(target) {
 
 export default function TableOverflowTooltip() {
   const [tooltip, setTooltip] = useState(null);
+  const hoveredElementRef = useRef(null);
   const tooltipRef = useRef(null);
   const pointerRef = useRef({ x: 0, y: 0 });
-  const activeElementRef = useRef(null);
 
-  useLayoutEffect(() => {
-    const element = tooltipRef.current;
-    if (!element || !tooltip) return;
-
-    const bounds = element.getBoundingClientRect();
-    const margin = 10;
-    const gap = 10;
-    const x = pointerRef.current.x;
-    const y = pointerRef.current.y;
-    const left = Math.min(
-      Math.max(margin, x - bounds.width / 2),
-      window.innerWidth - bounds.width - margin,
-    );
-    const top = y - bounds.height - gap >= margin
-      ? y - bounds.height - gap
-      : Math.min(y + gap, window.innerHeight - bounds.height - margin);
-
-    element.style.left = `${left}px`;
-    element.style.top = `${Math.max(margin, top)}px`;
-  }, [tooltip]);
-
-  useEffect(() => {
-    const hide = () => {
-      activeElementRef.current = null;
-      setTooltip(null);
-    };
-
-    const showAtTarget = (target, event) => {
-      pointerRef.current = { x: event.clientX, y: event.clientY };
-      const overflow = findOverflowingText(target);
-
-      if (!overflow || event.pointerType === "touch") {
-        hide();
-        return;
-      }
-
-      activeElementRef.current = overflow.element;
-      setTooltip((current) =>
-        current?.text === overflow.text ? current : { text: overflow.text },
-      );
-    };
-
-    const handlePointerOver = (event) => {
-      showAtTarget(event.target, event);
-    };
-
-    const handlePointerMove = (event) => {
-      pointerRef.current = { x: event.clientX, y: event.clientY };
-      const activeElement = activeElementRef.current;
-
-      if (activeElement?.contains(event.target)) {
-        const element = tooltipRef.current;
-        if (!element) return;
-
-        const bounds = element.getBoundingClientRect();
-        const margin = 10;
-        const gap = 10;
-        const left = Math.min(
-          Math.max(margin, event.clientX - bounds.width / 2),
-          window.innerWidth - bounds.width - margin,
-        );
-        const top = event.clientY - bounds.height - gap >= margin
-          ? event.clientY - bounds.height - gap
-          : Math.min(
-              event.clientY + gap,
-              window.innerHeight - bounds.height - margin,
-            );
-
-        element.style.left = `${left}px`;
-        element.style.top = `${Math.max(margin, top)}px`;
-      }
-    };
-
-    const handlePointerOut = (event) => {
-      if (
-        activeElementRef.current &&
-        event.relatedTarget &&
-        activeElementRef.current.contains(event.relatedTarget)
-      ) {
-        return;
-      }
-
-      hide();
-    };
-
-    const handleScroll = () => hide();
-
-    document.addEventListener("pointerover", handlePointerOver);
-    document.addEventListener("pointermove", handlePointerMove);
-    document.addEventListener("pointerout", handlePointerOut);
-    window.addEventListener("scroll", handleScroll, true);
-
-    return () => {
-      document.removeEventListener("pointerover", handlePointerOver);
-      document.removeEventListener("pointermove", handlePointerMove);
-      document.removeEventListener("pointerout", handlePointerOut);
-      window.removeEventListener("scroll", handleScroll, true);
-    };
+  const hideTooltip = useCallback(() => {
+    hoveredElementRef.current = null;
+    setTooltip(null);
   }, []);
 
-  if (!tooltip) return null;
+  const updateTooltip = useCallback((x, y) => {
+    pointerRef.current = { x, y };
+
+    const target = document.elementFromPoint(x, y);
+    const overflow = getOverflowingText(target);
+
+    if (!overflow) {
+      hideTooltip();
+      return;
+    }
+
+    hoveredElementRef.current = overflow.element;
+
+    setTooltip({
+      text: overflow.text,
+      x,
+      y,
+    });
+  }, [hideTooltip]);
+
+  useEffect(() => {
+    const handlePointerMove = (event) => {
+      updateTooltip(event.clientX, event.clientY);
+    };
+
+    const handlePointerLeave = () => {
+      hideTooltip();
+    };
+
+    const handleScroll = () => {
+      hideTooltip();
+    };
+
+    const handleResize = () => {
+      hideTooltip();
+    };
+
+    document.addEventListener("pointermove", handlePointerMove);
+    document.addEventListener("pointerleave", handlePointerLeave);
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerleave", handlePointerLeave);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [updateTooltip, hideTooltip]);
+
+  if (!tooltip || typeof document === "undefined") {
+    return null;
+  }
+
+  const tooltipWidth = 360;
+  const tooltipHeight = 100;
+  const gap = 14;
+  const padding = 12;
+
+  const left = Math.max(
+    padding,
+    Math.min(
+      tooltip.x + gap,
+      window.innerWidth - tooltipWidth - padding
+    )
+  );
+
+  const top = Math.max(
+    padding,
+    Math.min(
+      tooltip.y + gap,
+      window.innerHeight - tooltipHeight - padding
+    )
+  );
 
   return createPortal(
-    <div ref={tooltipRef} className="pch-table-overflow-tooltip" role="tooltip">
+    <div
+      ref={tooltipRef}
+      role="tooltip"
+      className="pch-overflow-tooltip"
+      style={{
+        position: "fixed",
+        left,
+        top,
+        zIndex: 99999,
+        maxWidth: `min(${tooltipWidth}px, calc(100vw - 24px))`,
+        pointerEvents: "none",
+      }}
+    >
       {tooltip.text}
     </div>,
-    document.body,
+    document.body
   );
 }

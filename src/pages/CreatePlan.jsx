@@ -641,7 +641,7 @@ export default function CreatePlan() {
           </div>
 
           <div className="plan-create-grid three-columns plan-information-grid">
-            <label className="plan-field">
+            <label className="plan-field ">
               <span>
                 Plan Code
               </span>
@@ -652,15 +652,10 @@ export default function CreatePlan() {
                 onChange={updateField}
                 placeholder="Auto Generated"
                 readOnly
-                className={codeError ? "input-error" : ""}
+                disabled
+                className={codeError ? "input-error" : "plan-placeholder" }
               />
-              <div className="plan-field-slot">
-                {codeError ? (
-                  <small className="plan-field-error">{codeError}</small>
-                ) : (
-                  <small>Generated automatically when saved.</small>
-                )}
-              </div>
+            
             </label>
 
             <label className="plan-field">
@@ -1375,9 +1370,13 @@ export default function CreatePlan() {
                     <strong>{plan.name || "—"}</strong>
                   </div>
 
-                  <div className="plan-description-cell">
-                    {plan.description || "—"}
-                  </div>
+<div className="plan-description-cell">
+  <span className="plan-description-text">
+    {plan.description || "—"}
+  </span>
+</div>
+
+
 
                   <div>
                     <span className="plan-type-badge">
