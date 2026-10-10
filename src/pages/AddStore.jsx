@@ -72,6 +72,37 @@ const COUNTRIES = {
     ],
   },
 };
+const PHONE_RULES = {
+  India: { callingCode: "91", minDigits: 10, maxDigits: 10, trunkPrefix: "0" },
+  "United States": { callingCode: "1", minDigits: 10, maxDigits: 10 },
+  Canada: { callingCode: "1", minDigits: 10, maxDigits: 10 },
+  "United Kingdom": { callingCode: "44", minDigits: 7, maxDigits: 10, trunkPrefix: "0" },
+  Australia: { callingCode: "61", minDigits: 9, maxDigits: 9, trunkPrefix: "0" },
+};
+function validatePhoneForCountry(value, country) {
+  const phone = String(value || "").trim();
+  if (!phone) return "";
+  const rule = PHONE_RULES[country];
+  if (!rule || !/^\+?[\d\s().-]+$/.test(phone))
+    return `Enter a valid ${country || "country"} phone number.`;
+
+  const hasInternationalPrefix = phone.startsWith("+") || phone.startsWith("00");
+  let digits = phone.replace(/\D/g, "");
+  if (phone.startsWith("00")) digits = digits.slice(2);
+  if (hasInternationalPrefix) {
+    if (!digits.startsWith(rule.callingCode))
+      return `The phone number country code does not match ${country}.`;
+    digits = digits.slice(rule.callingCode.length);
+  } else if (digits.length > rule.maxDigits && digits.startsWith(rule.callingCode)) {
+    digits = digits.slice(rule.callingCode.length);
+  }
+
+  if (rule.trunkPrefix && digits.length > rule.maxDigits && digits.startsWith(rule.trunkPrefix))
+    digits = digits.slice(rule.trunkPrefix.length);
+  if (digits.length < rule.minDigits || digits.length > rule.maxDigits)
+    return `Enter a valid ${country} phone number.`;
+  return "";
+}
 const STEPS = [
   "Store Details",
   "Subscription",
@@ -584,6 +615,36 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     merchant?.merchantName ||
     merchant?.businessDisplayName ||
     "Selected merchant";
+  const rawMerchantRecord =
+    merchant?._raw?.merchant ||
+    merchant?._raw?.data?.merchant ||
+    merchant?._raw?.data ||
+    merchant?._raw ||
+    merchantRecord?._raw?.merchant ||
+    merchantRecord?._raw?.data?.merchant ||
+    merchantRecord?._raw?.data ||
+    merchantRecord?._raw ||
+    {};
+  const merchantCode = [
+    merchant?.merchantCode,
+    merchant?.merchant_code,
+    merchant?.code,
+    merchant?.merchantId,
+    merchant?.merchant_id,
+    merchantRecord?.merchantCode,
+    merchantRecord?.merchant_code,
+    merchantRecord?.code,
+    merchantRecord?.merchantId,
+    rawMerchantRecord.merchantCode,
+    rawMerchantRecord.merchant_code,
+    rawMerchantRecord.code,
+  ]
+    .map((value) => String(value || "").trim())
+    .find(
+      (value) =>
+        value &&
+        !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(value),
+    ) || "";
 
   useEffect(() => {
     if (!routeMerchantId && !storeId) {
@@ -885,6 +946,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     (currentEmployeePage - 1) * pageSize,
     currentEmployeePage * pageSize,
   );
+  const allActiveEmployeesSelected =
+    activeEmployees.length > 0 &&
+    activeEmployees.every((employee) => {
+      const employeeId = String(employee.id ?? employee.employeeId ?? "");
+      return employeeAssignments.some((item) => item.employeeId === employeeId);
+    });
 
   const currencyCode =
     store.currency ||
@@ -1662,12 +1729,53 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       setPinError("");
     }
   };
+  const setAllEmployeesSelected = (checked) => {
+    const activeEmployeeIds = new Set(
+      activeEmployees.map((employee) =>
+        String(employee.id ?? employee.employeeId ?? ""),
+      ),
+    );
+
+    setEmployeeAssignments((current) => {
+      if (!checked) {
+        return current.filter((item) => !activeEmployeeIds.has(item.employeeId));
+      }
+
+      const assignedIds = new Set(current.map((item) => item.employeeId));
+      const newAssignments = activeEmployees
+        .map((employee) =>
+          String(employee.id ?? employee.employeeId ?? ""),
+        )
+        .filter((employeeId) => employeeId && !assignedIds.has(employeeId))
+        .map((employeeId) => ({
+          employeeId,
+          role: roles[0] || "",
+          pin: "",
+        }));
+      return [...current, ...newAssignments];
+    });
+
+    if (!checked && activeEmployeeIds.has(pinEditorId)) {
+      setPinEditorId("");
+      setPinDraft("");
+      setPinError("");
+    }
+  };
   const setEmployeeRole = (employeeId, role) =>
     setEmployeeAssignments((current) =>
       current.map((item) =>
         item.employeeId === employeeId ? { ...item, role } : item,
       ),
     );
+  const assignedEmployeePin = (assignment) => {
+    const employee = employees.find((item) =>
+      String(item.id ?? item.employeeId ?? "") === assignment.employeeId,
+    );
+    return String(
+      assignment.pin || assignment.savedPin || employee?.loginPin ||
+      employee?.employeeLoginPin || employee?.login_pin || employee?.pin || "",
+    );
+  };
   const openPinEditor = (employee) => {
     const employeeId = String(employee.id ?? employee.employeeId ?? "");
     setEmployeeAssignments((current) =>
@@ -1685,13 +1793,25 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       setPinError("Enter a 6-digit PIN that does not start with 0.");
       return;
     }
+    const duplicatePin = employeeAssignments.find((item) =>
+      item.employeeId !== employeeId &&
+      assignedEmployeePin(item) === pinDraft,
+    );
+    if (duplicatePin) {
+      setPinError("This PIN is already assigned to another employee in this store.");
+      return;
+    }
     const updated = employeeAssignments.map((item) =>
       item.employeeId === employeeId ? { ...item, pin: pinDraft } : item,
     );
     if (editing && merchantId && storeId) {
+      const orderedForSave = [
+        ...updated.filter((item) => item.employeeId === employeeId),
+        ...updated.filter((item) => item.employeeId !== employeeId),
+      ];
       setSaving(true);
       try {
-        await saveStoreEmployees(merchantId, storeId, updated.map((item) => ({
+        await saveStoreEmployees(merchantId, storeId, orderedForSave.map((item) => ({
           employeeId: item.employeeId,
           ...(item.role ? { roleTemplateId: item.role } : {}),
           ...(item.pin || item.savedPin ? { loginPin: item.pin || item.savedPin } : {}),
@@ -1778,12 +1898,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             return "Enter the store " + label + ".";
         }
       }
-      if (
-        store.phone &&
-        (!/^[+\d\s().-]+$/.test(store.phone) ||
-          !/^\d{7,15}$/.test(store.phone.replace(/\D/g, "")))
-      )
-        return "Enter a valid phone number containing 7–15 digits.";
+      const phoneError = validatePhoneForCountry(store.phone, store.country);
+      if (phoneError) return phoneError;
       if (store.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.email.trim()))
         return "Enter a valid email address.";
       if (store.url) {
@@ -1811,11 +1927,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       }
       if (store.currency && !/^[A-Z]{3}$/.test(store.currency))
         return "Select a valid three-letter currency code.";
-      if (
-        store.zip &&
-        !/^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(store.zip.trim())
-      )
-        return "Enter a valid postal code.";
       // if (!["Active","Inactive","Draft"].includes(store.status)) return "Select a valid store status.";
       for (const row of store.hours) {
         if (!["Open", "Closed"].includes(row.status))
@@ -1904,6 +2015,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         if (assignment.pin && !/^[1-9]\d{5}$/.test(assignment.pin))
           return "Employee PINs must be six digits and cannot start with zero.";
       }
+      const storePins = employeeAssignments
+        .map((assignment) => assignedEmployeePin(assignment))
+        .filter(Boolean);
+      if (new Set(storePins).size !== storePins.length)
+        return "Each employee in this store must have a unique login PIN. Update one of the duplicate PINs.";
       if (
         new Set(employeeAssignments.map((item) => item.employeeId)).size !==
         employeeAssignments.length
@@ -3098,6 +3214,17 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
 
   const employeesScreen = () => {
     const assigned = employeeAssignments.length;
+    const pinOwners = new Map();
+    employeeAssignments.forEach((assignment) => {
+      const pin = assignedEmployeePin(assignment);
+      if (pin) pinOwners.set(pin, [...(pinOwners.get(pin) || []), assignment.employeeId]);
+    });
+    const duplicatePinNames = [...pinOwners.values()]
+      .filter((employeeIds) => employeeIds.length > 1)
+      .flatMap((employeeIds) => employeeIds.map((employeeId) => {
+        const employee = employees.find((item) => String(item.id ?? item.employeeId ?? "") === employeeId);
+        return employee?.name || [employee?.firstName, employee?.lastName].filter(Boolean).join(" ") || employeeId;
+      }));
     return (
       <>
         <Panel className="sf-employee-summary">
@@ -3108,7 +3235,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               {merchantName}
             </strong>
             <small>
-              {merchantId} &nbsp;|&nbsp; {typeName || "Merchant"}
+              {merchantCode || "Merchant code unavailable"} &nbsp;|&nbsp; {typeName || "Merchant"}
             </small>
           </div>
           <div>
@@ -3128,9 +3255,19 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         </Panel>
         <Panel
           title="Assign employees to this store"
-          subtitle="Choose employees from the merchant to assign to this store. You can assign a store role for each employee."
         >
           <div className="sf-employee-tools">
+            <label className="sf-select-all-employees">
+              <input
+                type="checkbox"
+                checked={allActiveEmployeesSelected}
+                disabled={readOnly || activeEmployees.length === 0}
+                onChange={(event) =>
+                  setAllEmployeesSelected(event.target.checked)
+                }
+              />
+              <span>Select all active employees</span>
+            </label>
             <label className="sf-search">
               <i className="bi bi-search" />
               <input
@@ -3152,6 +3289,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               options={["All", "Assigned", "Available"]}
             />
           </div>
+          {duplicatePinNames.length > 0 && (
+            <div className="alert alert-danger" role="alert">
+              Duplicate login PINs are assigned to {duplicatePinNames.join(", ")}. Change one PIN for this store before continuing.
+            </div>
+          )}
           <div className="sf-table-wrap">
             <table className="sf-table sf-employees-table">
               <thead>
@@ -3164,7 +3306,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   <th>Employee ID</th>
                   <th>Phone</th>
                   <th>Email</th>
-                  <th>Current Role (Merchant)</th>
                   <th>Store Role</th>
                   <th>Login PIN</th>
                   <th>Status</th>
@@ -3180,6 +3321,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   );
                   const isAssigned = Boolean(assignment);
                   const editingPin = pinEditorId === employeeId;
+                  const employeePin = employee.loginPin || employee.employeeLoginPin || employee.login_pin || employee.pin || "";
+                  const visiblePin = assignment?.pin || assignment?.savedPin || employeePin;
+                  const hasLoginPin = Boolean(visiblePin || assignment?.pinSet || employee.pinSet);
                   return (
                     <tr key={employeeId}>
                       <td>
@@ -3200,7 +3344,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       <td>{employee.employeeCode || employeeId}</td>
                       <td>{employee.phone || "—"}</td>
                       <td>{employee.email || "—"}</td>
-                      <td>{employee.role || "—"}</td>
                       <td>
                         <select
                           value={assignment?.role || ""}
@@ -3262,9 +3405,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                           </div>
                         ) : (
                           <div className="sf-pin-action">
-                            {(assignment?.pin || assignment?.savedPin || assignment?.pinSet) && (
-                              <span className="sf-pin-set" title={!assignment.pin && !assignment.savedPin ? "PIN is stored securely and is not returned by the API." : undefined}>
-                                {assignment.pin || assignment.savedPin || "PIN set"}
+                            {hasLoginPin && (
+                              <span className="sf-pin-set" title={!visiblePin ? "PIN is stored securely and is not returned by the API." : undefined}>
+                                {visiblePin || "PIN set"}
                               </span>
                             )}
                             <button
@@ -3273,7 +3416,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                               disabled={readOnly}
                               onClick={() => openPinEditor(employee)}
                             >
-                              {assignment?.pin || assignment?.savedPin || assignment?.pinSet
+                              {hasLoginPin
                                 ? "Change PIN"
                                 : "Assign PIN"}
                             </button>
@@ -3296,7 +3439,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 })}
                 {!pagedEmployees.length && (
                   <tr>
-                    <td colSpan="10" className="sf-empty">
+                    <td colSpan="9" className="sf-empty">
                       {employees.length
                         ? "No active employees match this search."
                         : "No employees were returned for this merchant."}
@@ -3592,7 +3735,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   }
 
   return (
-    <div className={`sf-root${editing ? "" : " pch-step-scroll"}`}>
+    <div className="sf-root">
       <header className="sf-topbar">
         <button type="button" className="sf-back-link" onClick={backToStores}>
           <i className="bi bi-arrow-left" /> Stores
@@ -3625,6 +3768,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               </button>
             ))}
           </nav>
+          <div className="sf-sidebar-foot">
+            Store setup · {step + 1} of {STEPS.length}
+          </div>
         </aside>
         <main className="sf-main">
           <div className="sf-heading-row">

@@ -624,7 +624,11 @@ const handlePageSizeChange = (size) => {
 
                     {/* LAST ACTIVE */}
 
-                    <td>{displayTimestamp(employee.updatedAt)}</td>
+                    <td>
+                      {Date.parse(employee.updatedAt || "") > Date.parse(employee.createdAt || "")
+                        ? displayTimestamp(employee.updatedAt)
+                        : "—"}
+                    </td>
 
                     {/* ACTIONS */}
                     <td>

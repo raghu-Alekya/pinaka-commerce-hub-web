@@ -1,6 +1,7 @@
 import { loadLocations } from "../data/locations";
 import { EmployeeToast } from "../components/EmployeeFeedback";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PhoneInputModule from "react-phone-input-2";
 
 const PhoneInput = PhoneInputModule.default || PhoneInputModule;
@@ -399,6 +400,7 @@ function StoreRoleAssignmentStyles() {
 }
 
 export default function AddEmployee() {
+  const navigate = useNavigate();
   const [locations, setLocations] = useState([]);
   const [locationError, setLocationError] = useState("");
   const [locationsLoading, setLocationsLoading] = useState(true);
@@ -438,11 +440,30 @@ export default function AddEmployee() {
     password: "",
     sendCredentials: true,
   });
+  const [phoneCountry, setPhoneCountry] = useState({
+    iso2: "in",
+    name: "India",
+  });
 
   const selectedCountry = locations.find(country => country.name === formData.country);
   const stateOptions = selectedCountry?.states || [];
   const selectedState = stateOptions.find(state => state.name === formData.state);
   const cityOptions = [...new Set((selectedState?.cities || []).map(city => city.name))];
+  const getPhoneCountryMismatchError = (
+    addressCountry = formData.country,
+    selectedPhoneCountry = phoneCountry,
+  ) => {
+    if (!addressCountry || !selectedPhoneCountry?.name) return "";
+    const addressCountryRecord = locations.find(
+      (country) => country.name.toLowerCase() === addressCountry.toLowerCase(),
+    );
+    const countryMatches = addressCountryRecord?.iso2 && selectedPhoneCountry.iso2
+      ? addressCountryRecord.iso2.toLowerCase() === selectedPhoneCountry.iso2.toLowerCase()
+      : addressCountry.toLowerCase() === selectedPhoneCountry.name.toLowerCase();
+    return countryMatches
+      ? ""
+      : `Address country must match the phone number country (${selectedPhoneCountry.name}).`;
+  };
 
   // Store + role assignments.
   // Nothing is pre-populated: the user adds a store and then selects
@@ -563,10 +584,7 @@ export default function AddEmployee() {
         return "";
 
       case "pinCode":
-        if (!/^\d{6}$/.test(trimmed))
-          return "PIN Code must be exactly 6 digits.";
-        if (trimmed.startsWith("0")) return "PIN Code cannot start with 0.";
-        return "";
+        return trimmed ? "" : "PIN Code is required.";
 
       case "country":
         if (!trimmed) return "Country is required.";
@@ -633,6 +651,9 @@ export default function AddEmployee() {
       const error = validateField(name, formData[name]);
       if (error) nextErrors[name] = error;
     });
+
+    const phoneCountryError = getPhoneCountryMismatchError();
+    if (phoneCountryError) nextErrors.country = phoneCountryError;
 
     if (formData.address2) {
       const error = validateField("address2", formData.address2);
@@ -729,11 +750,9 @@ export default function AddEmployee() {
     const nextValue =
       name === "employeeLoginPin"
         ? value.replace(/\D/g, "").slice(0, 6)
-        : name === "pinCode"
-          ? value.replace(/\D/g, "").slice(0, 6)
-          : type === "checkbox"
-            ? checked
-            : value;
+        : type === "checkbox"
+          ? checked
+          : value;
 
     setFormData((prev) => ({
       ...prev,
@@ -741,7 +760,14 @@ export default function AddEmployee() {
       ...(name === "country" ? { state: "", city: "" } : name === "state" ? { city: "" } : {}),
     }));
 
-    if (errors[name]) {
+    if (name === "country") {
+      setErrors((prev) => ({
+        ...prev,
+        country:
+          getPhoneCountryMismatchError(nextValue) ||
+          validateField(name, nextValue),
+      }));
+    } else if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
         [name]: validateField(name, nextValue),
@@ -835,35 +861,10 @@ export default function AddEmployee() {
     try {
       setIsSaving(true);
       await createEmployee(formData, storeAssignments, profileImageFile);
-      setProfileImageFile(null);
-      setProfileImage(null);
-      setFormData({
-        employeeCode: "",
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        dob: "",
-        gender: "",
-        address1: "",
-        address2: "",
-        city: "",
-        state: "",
-        pinCode: "",
-        country: "India",
-        role: "",
-        merchant: "",
-        store: "",
-        employeeLoginPin: "",
-        manager: "",
-        username: "",
-        password: "",
-        sendCredentials: true,
+      navigate("/employees", {
+        replace: true,
+        state: { employeeMessage: "Employee created successfully." },
       });
-      setStoreAssignments([]);
-      setErrors({});
-      setProfileImage(null);
-      setSuccessMessage("Employee created successfully.");
     } catch (error) {
       setSubmitError(error.message || "Unable to save employee.");
     } finally {
@@ -918,7 +919,7 @@ export default function AddEmployee() {
                 PERSONAL INFORMATION
             ================================================= */}
 
-            <section className="employee-card">
+            <section className="employee-card employee-personal-card">
               <CardHeader
                 icon={<User size={21} />}
                 title="Personal Information"
@@ -972,12 +973,27 @@ export default function AddEmployee() {
                     autoFormat
                     placeholder="Enter phone number"
                     value={formData.phone}
-                    onChange={(value) =>
+                    onChange={(value, country) => {
+                      const nextPhoneCountry = {
+                        iso2: country?.countryCode || "",
+                        name: country?.name || "",
+                      };
+                      setPhoneCountry(nextPhoneCountry);
                       setFormData((prev) => ({
                         ...prev,
                         phone: value,
-                      }))
-                    }
+                      }));
+                      setErrors((prev) => {
+                        const countryError =
+                          getPhoneCountryMismatchError(
+                            formData.country,
+                            nextPhoneCountry,
+                          ) || validateField("country", formData.country);
+                        return prev.country === countryError
+                          ? prev
+                          : { ...prev, country: countryError };
+                      });
+                    }}
                     inputProps={{
                       name: "phone",
                       required: true,
@@ -1034,7 +1050,7 @@ export default function AddEmployee() {
                 ADDRESS
             ================================================= */}
 
-            <section className="employee-card">
+            <section className="employee-card employee-address-card">
               <CardHeader
                 icon={<MapPin size={21} />}
                 title="Address"
@@ -1066,6 +1082,21 @@ export default function AddEmployee() {
                 />
               </div>
 
+              <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
+                <SelectField
+                  label="City" required name="city" value={formData.city}
+                  onChange={handleChange} error={errors.city} options={cityOptions}
+                  placeholder={formData.state ? "Select city" : "Select state first"}
+                  disabled={locationsLoading || !formData.state}
+                />
+                <SelectField
+                  label="State" required name="state" value={formData.state}
+                  onChange={handleChange} error={errors.state}
+                  placeholder="Select state" options={stateOptions.map(state => state.name)}
+                  disabled={locationsLoading || !formData.country}
+                />
+              </div>
+
               {locationError && <p role="alert" className="field-error">{locationError}</p>}
               <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
                 <SelectField
@@ -1074,18 +1105,6 @@ export default function AddEmployee() {
                   options={locations.map(country => country.name)}
                   placeholder={locationsLoading ? "Loading countries..." : "Select country"}
                   disabled={locationsLoading}
-                />
-                <SelectField
-                  label="State" required name="state" value={formData.state}
-                  onChange={handleChange} error={errors.state}
-                  placeholder="Select state" options={stateOptions.map(state => state.name)}
-                  disabled={locationsLoading || !formData.country}
-                />
-                <SelectField
-                  label="City" required name="city" value={formData.city}
-                  onChange={handleChange} error={errors.city} options={cityOptions}
-                  placeholder={formData.state ? "Select city" : "Select state first"}
-                  disabled={locationsLoading || !formData.state}
                 />
                 <FormField
                   label="PIN Code" required name="pinCode" placeholder="Enter PIN code"
@@ -1156,69 +1175,10 @@ export default function AddEmployee() {
             </section>
 
             {/* =================================================
-                WORK INFORMATION
-            ================================================= */}
-
-            <section className="employee-card work-information-card">
-              <CardHeader
-                icon={<BriefcaseBusiness size={21} />}
-                title="Work Information"
-                theme="green"
-                description="Assign roles to one or more stores under the selected merchant."
-              />
-
-              {/* MERCHANT */}
-              <div className="employee-field work-merchant-field">
-                <label>
-                  Merchant <span>*</span>
-                </label>
-
-                <div className="employee-select">
-                  <select
-                    name="merchant"
-                    value={formData.merchant}
-                    onChange={handleChange}
-                    className={errors.merchant ? "field-invalid" : ""}
-                  >
-                    <option value="">
-                      {merchantLoadError
-                        ? "Unable to load merchants"
-                        : "Select merchant"}
-                    </option>
-                    {merchantOptions.map((merchant) => (
-                      <option key={merchant.id} value={merchant.id}>
-                        {merchant.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={17} className="employee-select-arrow" />
-                </div>
-                {errors.merchant && (
-                  <span className="field-error">{errors.merchant}</span>
-                )}
-              </div>
-
-              <div className="employee-field" style={{ marginTop: "24px" }}>
-                <label htmlFor="create-employee-code">Employee Code</label>
-                <input
-                  id="create-employee-code"
-                  name="employeeCode"
-                  type="text"
-                  value=""
-                  placeholder="Auto Generated"
-                  readOnly
-                  aria-describedby="create-employee-code-help"
-                />
-                <small id="create-employee-code-help" className="employee-code-help">Generated automatically when saved.</small>
-              </div>
-
-            </section>
-
-            {/* =================================================
                 ACCOUNT SETTINGS
             ================================================= */}
 
-            <section className="employee-card">
+            <section className="employee-card employee-account-card">
               <CardHeader
                 icon={<Settings size={21} />}
                 title="Account Settings"
@@ -1283,7 +1243,66 @@ export default function AddEmployee() {
                   {errors.employeeLoginPin && <span className="field-error">{errors.employeeLoginPin}</span>}
                 </div>
               </div>
+            </section>            {/* =================================================
+                WORK INFORMATION
+            ================================================= */}
+
+            <section className="employee-card work-information-card">
+              <CardHeader
+                icon={<BriefcaseBusiness size={21} />}
+                title="Work Information"
+                theme="green"
+                description="Assign roles to one or more stores under the selected merchant."
+              />
+
+              {/* MERCHANT */}
+              <div className="employee-field work-merchant-field">
+                <label>
+                  Merchant <span>*</span>
+                </label>
+
+                <div className="employee-select">
+                  <select
+                    name="merchant"
+                    value={formData.merchant}
+                    onChange={handleChange}
+                    className={errors.merchant ? "field-invalid" : ""}
+                  >
+                    <option value="">
+                      {merchantLoadError
+                        ? "Unable to load merchants"
+                        : "Select merchant"}
+                    </option>
+                    {merchantOptions.map((merchant) => (
+                      <option key={merchant.id} value={merchant.id}>
+                        {merchant.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={17} className="employee-select-arrow" />
+                </div>
+                {errors.merchant && (
+                  <span className="field-error">{errors.merchant}</span>
+                )}
+              </div>
+
+              <div className="employee-field" style={{ marginTop: "24px" }}>
+                <label htmlFor="create-employee-code">Employee Code</label>
+                <input
+                  id="create-employee-code"
+                  name="employeeCode"
+                  type="text"
+                  value=""
+                  placeholder="Auto Generated"
+                  readOnly
+                  aria-describedby="create-employee-code-help"
+                />
+                <small id="create-employee-code-help" className="employee-code-help">Generated automatically when saved.</small>
+              </div>
+
             </section>
+
+
           </div>
         </div>
 

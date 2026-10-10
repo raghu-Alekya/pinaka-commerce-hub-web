@@ -87,6 +87,7 @@ export function MerchantEmployeeForm({
     manager: "",
     username: "",
     password: "",
+    employeeLoginPin: "",
     sendCredentials: true,
   });
   const locationOptions = useLocationOptions(formData);
@@ -177,10 +178,7 @@ export function MerchantEmployeeForm({
         return "";
 
       case "pinCode":
-        if (!/^\d{6}$/.test(trimmed))
-          return "PIN Code must be exactly 6 digits.";
-        if (trimmed.startsWith("0")) return "PIN Code cannot start with 0.";
-        return "";
+        return trimmed ? "" : "PIN Code is required.";
 
       case "country":
         if (!trimmed) return "Country is required.";
@@ -189,6 +187,12 @@ export function MerchantEmployeeForm({
       case "merchant":
         if (!trimmed) return "Merchant is required.";
         return "";
+
+      case "employeeLoginPin":
+        if (!trimmed) return "";
+        return /^\d{6}$/.test(trimmed)
+          ? ""
+          : "Employee Login PIN must be exactly 6 digits.";
 
       case "username":
         if (!trimmed) return "Username is required.";
@@ -247,6 +251,11 @@ export function MerchantEmployeeForm({
       if (error) nextErrors.address2 = error;
     }
 
+    if (formData.employeeLoginPin) {
+      const error = validateField("employeeLoginPin", formData.employeeLoginPin);
+      if (error) nextErrors.employeeLoginPin = error;
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -264,7 +273,7 @@ export function MerchantEmployeeForm({
     }));
 
     const nextValue =
-      name === "pinCode"
+      name === "employeeLoginPin"
         ? value.replace(/\D/g, "").slice(0, 6)
         : type === "checkbox"
           ? checked
@@ -721,6 +730,26 @@ export function MerchantEmployeeForm({
                     {errors.password && (
                       <span className="field-error">{errors.password}</span>
                     )}
+                  </div>
+                  <div className="employee-login-pin-field">
+                    <label htmlFor="merchant-create-employee-login-pin">Employee Login PIN</label>
+                    <input
+                      id="merchant-create-employee-login-pin"
+                      name="employeeLoginPin"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      maxLength={6}
+                      value={formData.employeeLoginPin}
+                      onChange={handleChange}
+                      className={errors.employeeLoginPin ? "field-invalid" : ""}
+                      aria-describedby="merchant-create-employee-login-pin-help"
+                      placeholder="Enter 6-digit PIN"
+                    />
+                    <small id="merchant-create-employee-login-pin-help" className="employee-login-pin-help">
+                      Optional. Enter 6 digits.
+                    </small>
+                    {errors.employeeLoginPin && <span className="field-error">{errors.employeeLoginPin}</span>}
                   </div>
                 </div>
               </section>
