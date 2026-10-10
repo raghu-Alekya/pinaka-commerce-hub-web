@@ -242,6 +242,7 @@ export default function App() {
         
       
         {/* Master Setup */}
+        <Route path="/vendors/add" element={<Vendors formOnly />} />
         <Route path="/vendors" element={<Vendors />} />
         <Route path="/tenders" element={<Tenders />} />
         <Route path="/tenders/:tenderId" element={<TenderDetails />} />
@@ -266,4 +267,3 @@ export default function App() {
     </Routes>
   );
 }
-
