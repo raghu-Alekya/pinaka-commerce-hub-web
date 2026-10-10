@@ -1508,6 +1508,23 @@
   padding: 12px 14px;
 }
 
+.sf-employee-tools .sf-select-all-employees {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+  color: #2c3a55;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.sf-employee-tools .sf-select-all-employees input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--sf-purple);
+}
+
 .sf-employee-tools .sf-field {
   display: flex;
   grid-template-columns: auto 1fr;

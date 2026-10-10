@@ -2922,13 +2922,13 @@
 }
 
 .role-search {
-  width: 250px !important;
-  min-width: 250px !important;
-  max-width: 250px !important;
-  height: 38px !important;
-  min-height: 38px !important;
-  flex: 0 0 250px !important;
-  padding: 0 12px !important;
+  width: 250px;
+  min-width: 250px;
+  max-width: 250px;
+  height: 38px;
+  min-height: 38px;
+  flex: 0 0 250px;
+  padding: 0 12px;
   box-sizing: border-box;
 }
 
@@ -2937,39 +2937,39 @@
 }
 
 .role-filters > select:first-of-type {
-  width: 150px !important;
-  min-width: 150px !important;
-  max-width: 150px !important;
-  height: 38px !important;
-  min-height: 38px !important;
-  flex: 0 0 150px !important;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  height: 38px;
+  min-height: 38px;
+  flex: 0 0 150px;
   box-sizing: border-box;
 
   /* right spacing */
-  padding-right: 28px !important;
+  padding-right: 28px;
 }
 
 .role-filters > select:last-of-type {
-  width: 150px !important;
-  min-width: 150px !important;
-  max-width: 150px !important;
-  height: 38px !important;
-  min-height: 38px !important;
-  flex: 0 0 150px !important;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  height: 38px;
+  min-height: 38px;
+  flex: 0 0 150px;
   box-sizing: border-box;
 
   /* right spacing */
-  padding-right: 28px !important;
+  padding-right: 28px;
 }
 
 .role-reset-icon-btn {
-  width: 38px !important;
-  min-width: 38px !important;
-  max-width: 38px !important;
-  height: 38px !important;
-  min-height: 38px !important;
-  padding: 0 !important;
-  flex: 0 0 38px !important;
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0;
+  flex: 0 0 38px;
   box-sizing: border-box;
 }
 
@@ -3031,14 +3031,6 @@
 }
 
 @media (max-width: 700px) {
-  .role-search,
-  .role-filters > select:first-of-type,
-  .role-filters > select:last-of-type {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    flex: 1 1 100% !important;
-  }
 }
 
 
@@ -3214,25 +3206,6 @@
     align-items: flex-start;
     flex-direction: column;
   }
-}
-
-/* Role Template List - custom dropdown arrow */
-.role-filters > select:first-of-type,
-.role-filters > select:last-of-type {
-  appearance: none !important;
-  -webkit-appearance: none !important;
-
-  padding-left: 12px !important;
-  padding-right: 30px !important;
-
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23173861' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
-
-  background-repeat: no-repeat !important;
-
-  /* THIS controls arrow right padding */
-  background-position: right 12px center !important;
-
-  background-size: 12px !important;
 }
 /* =========================================================
    ROLE TEMPLATE CODE — MATCH OTHER FORM FIELD HEIGHT

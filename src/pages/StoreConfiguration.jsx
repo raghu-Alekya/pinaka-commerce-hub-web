@@ -16,8 +16,9 @@ import StoreCategories from "./StoreCategories";
 import StoreShifts from "./StoreShifts";
 import StorePaymentRecords from "./StorePaymentRecords";
 import VendorPayments from "./VendorPayments";
+import EmployeeAttendance, { AttendanceDetails } from "./EmployeeAttendance";
 
-import { api, ApiError } from "../api/http";
+import { api, ApiError, pendingStoreRead } from "../api/http";
 import { endpoints } from "../api/endpoints";
 
 
@@ -66,6 +67,7 @@ const navGroups = [
     label: "People",
     items: [
       ["users", "bi-people", "Employees"],
+      ["attendance", "bi-calendar-check", "Employee Attendance"],
       ["customers", "bi-person-lines-fill", "Customers"],
       ["vendors", "bi-truck", "Vendors"],
     ],
@@ -160,7 +162,7 @@ function StoreSubscriptionSummary({ merchantId }) {
     async function load() {
       try {
         if (!merchantId) throw new Error("Merchant information is unavailable for this store.");
-        const result = await getActiveSubscriptions(merchantId);
+        const result = await pendingStoreRead(`subscriptions:${merchantId}`, () => getActiveSubscriptions(merchantId));
         if (active) setSubscription(extractActiveSubscription(result));
       } catch (err) {
         if (active) setError(err.message || "Unable to load subscription.");
@@ -196,7 +198,11 @@ export default function StoreConfiguration() {
   const location = useLocation();
   const [editingSection, setEditingSection] = useState(false);
   const [revision, setRevision] = useState(0);
-  useEffect(() => setEditingSection(false), [section, storeId]);
+  const [attendanceDetailRecord, setAttendanceDetailRecord] = useState(null);
+  useEffect(() => {
+    setEditingSection(false);
+    setAttendanceDetailRecord(null);
+  }, [section, storeId]);
 
   /* =======================================================
      STORE STATE
@@ -268,14 +274,14 @@ export default function StoreConfiguration() {
       setError("");
 
       try {
-        const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
+        const response = await pendingStoreRead(`store:${storeId}`, () => api.get(endpoints.store(encodeURIComponent(storeId))));
         const raw = response?.store || response?.data?.store || response?.data || response;
         if (!raw || typeof raw !== "object" || ![raw.id,raw.storeId,raw.storeID,raw.storeName,raw.name].some(Boolean)) throw new Error("Store not found.");
         const found = normalizeStoreForConfiguration(raw);
         found.uuid = [raw.id, raw._id, raw.storeUUID, raw.storeUuid, raw.store_uuid, raw.uuid, raw.storeId, raw.storeID]
           .find(isUuid) || "";
         const owner = found.merchantId || found.merchant_id || found.merchant?.id || found.merchant_uuid || merchantId;
-        const result = owner ? await getMerchant(owner).catch(() => null) : null;
+        const result = owner ? await pendingStoreRead(`merchant:${owner}`, () => getMerchant(owner)).catch(() => null) : null;
         if (!cancelled) { setStore(found); setMerchant(result?.merchant || {name:found.merchantName || found.merchant?.name || "",id:owner}); }
       } catch (err) {
         if (!cancelled) {
@@ -311,7 +317,7 @@ export default function StoreConfiguration() {
        * Load saved connector information from the store record.
        */
       try {
-        const saved = await fetchWordpressConnector(storeId, merchantId);
+        const saved = await pendingStoreRead(`connector:${storeId}:${merchantId}`, () => fetchWordpressConnector(storeId, merchantId));
 
         if (saved && !cancelled) {
           setSiteUrl(saved.siteUrl || "");
@@ -331,14 +337,14 @@ export default function StoreConfiguration() {
       }
     }
 
-    if (storeId) {
+    if (storeId && section === "overview") {
       loadConnector();
     }
 
     return () => {
       cancelled = true;
     };
-  }, [merchantId, storeId]);
+  }, [merchantId, storeId, section]);
 
   /* =======================================================
      SET WEBSITE URL FROM STORE
@@ -349,18 +355,6 @@ export default function StoreConfiguration() {
       setSiteUrl(store.url);
     }
   }, [store, siteUrl]);
-
-  /* =======================================================
-     STORE STATUS
-     ======================================================= */
-
-  const statusClass = useMemo(
-    () =>
-      (store?.status || "active")
-        .toLowerCase()
-        .replace(/\s+/g, "-"),
-    [store]
-  );
 
   /* =======================================================
      SAVE WORDPRESS CONNECTION
@@ -380,7 +374,7 @@ export default function StoreConfiguration() {
     event.preventDefault();
     if (!editingSection || saving || testing) return;
 
-    if (!siteUrl.trim() || !jwtToken.trim()) {
+    if (!siteUrl.trim() || (!jwtToken.trim() && !jwtConfigured)) {
       setMessage(
         "Enter the WordPress site URL and JWT token."
       );
@@ -427,7 +421,7 @@ export default function StoreConfiguration() {
 
   const handleSyncCatalog = async () => {
     if (testing || saving) return;
-    if (!siteUrl.trim() || !jwtToken.trim()) {
+    if (!siteUrl.trim() || (!jwtToken.trim() && !jwtConfigured)) {
       setMessage("Save the WordPress site URL and JWT token before syncing.");
       return;
     }
@@ -436,10 +430,9 @@ export default function StoreConfiguration() {
     setMessage("");
 
     try {
-      const result = await syncWordpressCatalog(storeId, {
-        siteUrl,
-        jwtToken,
-      });
+      // The API keeps the JWT encrypted and deliberately does not return it.
+      // Catalog sync uses the connector credentials already saved for the store.
+      const result = await syncWordpressCatalog(storeId);
       const categoryCount = result?.catalog?.categoryCount ?? 0;
       const productCount = result?.catalog?.productCount ?? 0;
       setMessage(
@@ -469,6 +462,14 @@ export default function StoreConfiguration() {
     }
   };
 
+  const statusClass = useMemo(
+    () =>
+      (store?.status || "active")
+        .toLowerCase()
+        .replace(/\s+/g, "-"),
+    [store]
+  );
+
   const displayStoreCode = store?.storeCode || (String(store?.id || "").startsWith("STR-") ? store.id : "");
   const displayStoreName = store?.name && !isUuid(store.name)
     ? store.name
@@ -487,17 +488,13 @@ export default function StoreConfiguration() {
 
       <header className="breadcrumb-area store-workspace-topbar">
 
-        <button
-          className="link-button"
-          onClick={backToStores}
-        >
-          <i className="bi bi-arrow-left" />
-          Stores
-        </button>
-
-        <span>/</span>
-
-        <strong>Store Details & Configuration</strong>
+        {section === "attendance" && attendanceDetailRecord ? <>
+          <button className="link-button" onClick={backToStores}><i className="bi bi-arrow-left" />Stores</button>
+          <span>/</span><span>Store Details &amp; Configuration</span><span>/</span><span>Employee Attendance</span><span>/</span><strong>View Details</strong>
+        </> : <>
+          <button className="link-button" onClick={backToStores}><i className="bi bi-arrow-left" />Stores</button>
+          <span>/</span><strong>Store Details &amp; Configuration</strong>
+        </>}
 
       </header>
 
@@ -518,34 +515,6 @@ export default function StoreConfiguration() {
           {/* ===============================================
               STORE HEADER
               =============================================== */}
-
-          <div className="store-workspace-header">
-
-            <div>
-
-              <h1>
-                {displayStoreName}
-              </h1>
-
-              <p>
-                {displayStoreCode || "Store ID unavailable"}
-
-                {merchant?.name
-                  ? ` • ${merchant.name}`
-                  : ""}
-              </p>
-
-            </div>
-
-            <span
-              className={`store-status ${statusClass}`}
-            >
-              {connected
-                ? "Website Connected"
-                : store?.status || "Active"}
-            </span>
-
-          </div>
 
           {/* ===============================================
               WORKSPACE
@@ -649,12 +618,42 @@ export default function StoreConfiguration() {
                 ============================================= */}
 
             <section className="store-workspace-main">
+              <div className="store-workspace-header">
+
+                <div>
+
+                  <h1>
+                    {displayStoreName}
+                  </h1>
+
+                  <p>
+                    {displayStoreCode || "Store ID unavailable"}
+
+                    {merchant?.name
+                      ? ` • ${merchant.name}`
+                      : ""}
+                  </p>
+
+                </div>
+
+                <span
+                  className={`store-status ${statusClass}`}
+                >
+                  {connected
+                    ? "Website Connected"
+                    : store?.status || "Active"}
+                </span>
+
+              </div>
 
               {/* ===========================================
                   STORE OVERVIEW & SETUP
                   =========================================== */}
 
-              {section === "details" ? (
+              <div className="store-workspace-card">
+              {section === "attendance" && attendanceDetailRecord ? (
+                <AttendanceDetails record={attendanceDetailRecord} store={store} onBack={() => setAttendanceDetailRecord(null)} />
+              ) : section === "details" ? (
                 <StoreDetailsSummary store={store} merchant={merchant} />
               ) : section === "subscription" ? (
                 <StoreSubscriptionSummary merchantId={merchantId || store.merchantId || merchant?.id} />
@@ -796,6 +795,10 @@ export default function StoreConfiguration() {
                   embedded
                 />
 
+              ) : section === "attendance" ? (
+
+                <EmployeeAttendance store={store} embedded onViewRecord={setAttendanceDetailRecord} />
+
               /* ===========================================
                  PAYMENT RECORDS
                  =========================================== */
@@ -843,6 +846,7 @@ export default function StoreConfiguration() {
 
               )}
 
+              </div>
             </section>
 
           </div>

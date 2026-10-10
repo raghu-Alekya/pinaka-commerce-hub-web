@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
+import DeviceNavigation from "../components/DeviceNavigation";
 import {
   ArrowLeft,
-  Pencil,
   Monitor,
   Link2,
   FileText,
@@ -80,7 +80,6 @@ export default function DeviceView() {
   }
   /* ========================================================= NORMALIZED VALUES ========================================================= */ const deviceName =
     device.name || "-";
-  const deviceIdValue = device.id || deviceId;
   const deviceCode = device.code || "-";
   const deviceType = device.type || "-";
   const serialNumber = device.serial || "-";
@@ -94,6 +93,7 @@ export default function DeviceView() {
     status !== "-" ? status.toLowerCase().replace(/\s+/g, "-") : "unknown";
   return (
     <div className="device-view-page">
+      <DeviceNavigation title="View Device" onBack={() => navigate("/devices")} />
       {" "}
       {/* ===================================================== PAGE HEADER ===================================================== */}{" "}
       <div className="device-view-header">
@@ -101,30 +101,7 @@ export default function DeviceView() {
         <div>
           {" "}
           <h1>View Device</h1>{" "}
-          <div className="device-view-breadcrumb">
-            {" "}
-            <span>Home</span> <span>›</span> <span>Devices</span> <span>›</span>{" "}
-            <strong>{deviceName}</strong>{" "}
-          </div>{" "}
-        </div>{" "}
-        <div className="device-view-header-actions">
-          {" "}
-          <button
-            type="button"
-            className="device-view-back"
-            onClick={() => navigate("/devices")}
-          >
-            {" "}
-            <ArrowLeft size={15} /> Back to Devices{" "}
-          </button>{" "}
-          <button
-            type="button"
-            className="device-view-edit"
-            onClick={() => navigate(`/devices/${deviceIdValue}/edit`)}
-          >
-            {" "}
-            <Pencil size={15} /> Edit Device{" "}
-          </button>{" "}
+          <p>View device information, assignments, and settings.</p>{" "}
         </div>{" "}
       </div>{" "}
       {/* ===================================================== DEVICE DETAILS ===================================================== */}{" "}

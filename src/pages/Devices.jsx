@@ -738,7 +738,16 @@ function DeviceRow({
     device.status?.toLowerCase().replace(/\s+/g, "-") || "unknown";
 
   return (
-    <tr>
+    <tr className="device-row-clickable" tabIndex={0}
+      onClick={(event) => {
+        if (!event.target.closest("button, a, input, select, textarea, [role='button'], [role='combobox']")) onView();
+      }}
+      onKeyDown={(event) => {
+        if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onView();
+        }
+      }} aria-label={`View ${device.name || "device"}`}>
   
      {/* DEVICE NAME */}
       <td>

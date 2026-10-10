@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../components/Pagination";
@@ -1411,10 +1412,10 @@ const paginatedPermissions = filteredPermissions.slice(
             Permissions List
           </h2>
 
-          <div className="fp-list-filters">
+          <div className="fp-list-filters pch-master-toolbar pch-master-control">
             {/* SEARCH */}
 
-            <div className="fp-search">
+            <div className="fp-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
 
               <input
@@ -1433,7 +1434,7 @@ const paginatedPermissions = filteredPermissions.slice(
             {/* STATUS FILTER */}
 
             <div className="fp-status-filter">
-              <select
+              <FilterDropdown preserveToolbarLayout
                 value={statusFilter}
                 onChange={(event) =>
                   setStatusFilter(
@@ -1453,7 +1454,7 @@ const paginatedPermissions = filteredPermissions.slice(
                 <option value="Inactive">
                   Inactive
                 </option>
-              </select>
+              </FilterDropdown>
 
               <i className="bi bi-chevron-down" />
             </div>
@@ -1461,7 +1462,7 @@ const paginatedPermissions = filteredPermissions.slice(
             {/* SORTING FILTER */}
 
             <div className="fp-sort-filter">
-              <select
+              <FilterDropdown preserveToolbarLayout
                 value={sortBy}
                 onChange={(event) =>
                   setSortBy(
@@ -1490,7 +1491,7 @@ const paginatedPermissions = filteredPermissions.slice(
                 <option value="name-desc">
                   Name Z-A
                 </option>
-              </select>
+              </FilterDropdown>
 
               <i className="bi bi-chevron-down" />
             </div>
@@ -1499,7 +1500,7 @@ const paginatedPermissions = filteredPermissions.slice(
 
             <button
               type="button"
-              className="fp-reset-btn"
+              className="fp-reset-btn pch-master-reset pch-master-control"
               title="Reset filters"
               aria-label="Reset filters"
               onClick={

@@ -168,11 +168,11 @@ function getMerchantName(m) {
    EDIT EMPLOYEE COMPONENT
 ========================================================= */
 
-export default function EditEmployee({ employee: suppliedEmployee, onSave, onBack } = {}) {
+export default function EditEmployee({ employee: employeeProp, onBack: onBackProp, onSave: onSaveProp } = {}) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const employee = suppliedEmployee || location.state?.employee || {};
+  const employee =  employeeProp ||  location.state?.employee || {};
   const employeeId = useMemo(() => getEmployeeId(employee), [employee]);
 
   const [showPassword, setShowPassword] = useState(false);
@@ -358,13 +358,8 @@ export default function EditEmployee({ employee: suppliedEmployee, onSave, onBac
         return "";
 
       case "pinCode":
-        if (!/^\d{6}$/.test(trimmed)) {
-          return "PIN Code must be exactly 6 digits.";
-        }
-        if (trimmed.startsWith("0")) {
-          return "PIN Code cannot start with 0.";
-        }
-        return "";
+        return trimmed ? "" : "PIN Code is required.";
+
 
       case "country":
         if (!trimmed) return "Country is required.";
@@ -448,8 +443,6 @@ export default function EditEmployee({ employee: suppliedEmployee, onSave, onBac
 
     const nextValue =
       name === "employeeLoginPin"
-        ? value.replace(/\D/g, "").slice(0, 6)
-        : name === "pinCode"
         ? value.replace(/\D/g, "").slice(0, 6)
         : type === "checkbox"
           ? checked
@@ -621,11 +614,14 @@ export default function EditEmployee({ employee: suppliedEmployee, onSave, onBac
     setSaving(true);
 
     try {
-      const response = await updateEmployee(employeeId, formData);
+       const response = await updateEmployee(employeeId, formData);
       console.log("Employee update response:", response);
 
-      if (onSave) await onSave(response?.employee || response);
-      else navigate("/employees", { state: { employeeMessage: "Employee updated successfully." } });
+      if (onSaveProp) {
+        await onSaveProp(response);
+      } else {
+        navigate("/employees", { state: { employeeMessage: "Employee updated successfully." } });
+      }
     } catch (error) {
       console.error("Update employee failed:", error);
 
@@ -644,12 +640,13 @@ export default function EditEmployee({ employee: suppliedEmployee, onSave, onBac
   };
 
   const handleBack = () => {
-    if (onBack) onBack();
+    if (onBackProp) onBackProp();
     else navigate("/employees");
   };
 
+
   return (
-    <div className={`add-employee-page${suppliedEmployee ? " merchant-employee-edit" : ""}`}>
+    <div className={`add-employee-page${employeeProp ? " merchant-employee-edit" : ""}`}>
       <StoreRoleAssignmentStyles />
 
       {/* PAGE HEADER */}
@@ -671,8 +668,8 @@ export default function EditEmployee({ employee: suppliedEmployee, onSave, onBac
           className="back-employees-btn"
           onClick={handleBack}
         >
-          <ArrowLeft size={17} />
-          Back to Employees
+           <ArrowLeft size={17} />
+          {onBackProp ? "Back to Merchant Employees" : "Back to Employees"}
         </button>
       </div>
 

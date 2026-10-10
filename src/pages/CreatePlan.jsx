@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../components/Pagination";
@@ -1281,8 +1282,8 @@ useEffect(() => {
             )}
           </div>
 
-          <div className="plans-filters">
-            <label className="plan-search">
+          <div className="plans-filters pch-master-toolbar pch-master-control">
+            <label className="plan-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
                 value={search}
@@ -1291,7 +1292,7 @@ useEffect(() => {
               />
             </label>
 
-            <select
+            <FilterDropdown preserveToolbarLayout
               value={billingFilter}
               onChange={(event) => setBillingFilter(event.target.value)}
             >
@@ -1300,20 +1301,20 @@ useEffect(() => {
               <option value="Per terminal">Per Terminal</option>
               <option value="Flat rate">Flat Rate</option>
                 <option value="Custom">Custom</option>
-            </select>
+            </FilterDropdown>
 
-            <select
+            <FilterDropdown preserveToolbarLayout
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
             >
               <option value="">All Status</option>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
-            </select>
+            </FilterDropdown>
 
             <button
               type="button"
-              className="plan-reset-button"
+              className="plan-reset-button pch-master-reset pch-master-control"
               onClick={resetFilters}
             >
               <i className="bi bi-arrow-counterclockwise" />

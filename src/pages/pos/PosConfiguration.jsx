@@ -8,10 +8,10 @@ import { CashbackSettings } from "./cashback/CashbackSettings";
 import { ServiceChargeSettings } from "./service-charges/ServiceChargeSettings";
 import { DenominationSettings } from "./cash-denominations/DenominationSettings";
 import { PaymentSettings } from "./card-payments/PaymentSettings";
+import { DeviceMapping } from "./device-mapping/DeviceMapping";
 import { RegisterConfiguration, registerRows } from "./cash-registers/RegisterConfiguration";
 import { MappingConfiguration, mappingRows } from "./terminal-mappings/MappingConfiguration";
 import { SafeConfiguration } from "./safe-drop/SafeConfiguration";
-import { DeviceMapping } from "./device-mapping/DeviceMapping";
 import { getPosCashRegisters } from "./cash-registers/api";
 import { getPosTerminalMappings } from "./terminal-mappings/api";
 
@@ -97,7 +97,7 @@ const configurationCards = [
         component: "terminal-mapping",
         enabled: true,
     },
-    {
+        {
         id: "device-mapping",
         icon: "pc-display",
         iconClass: "green",
@@ -125,7 +125,7 @@ const initialSafeSettings = {
     cashierInitiated: true, reasonRequired: true, tubeSize: "", tubes: [], drops: [],
 };
 
-export default function PosConfiguration({ merchantId, storeId, store } = {}) {
+export default function PosConfiguration({ merchantId, storeId, store, embedded = false } = {}) {
     const [registers, setRegisters] = useState(() => (storeId ? [] : initialRegisters));
     const [mappings, setMappings] = useState(() => (storeId ? [] : initialMappings));
     const [safeSettings, setSafeSettings] = useState(initialSafeSettings);
@@ -199,6 +199,7 @@ export default function PosConfiguration({ merchantId, storeId, store } = {}) {
     const settings = { session, currency: storeCurrency, currencySymbol, merchantId, storeId, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) };
 
     const filteredCards = configurationCards.filter((card) => {
+        if (card.component === "device-mapping" && !embedded) return false;
         const search = searchQuery.trim().toLowerCase();
 
         if (!search) {

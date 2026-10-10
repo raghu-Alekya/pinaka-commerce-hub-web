@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Pagination from "../components/Pagination";
@@ -280,7 +281,7 @@ React.useEffect(() => {
 
           {/* TOOLBAR */}
 
-          <div className="fp-toolbar">
+          <div className="fp-toolbar pch-master-toolbar pch-master-control">
             {/* <button
               type="button"
               className="fp-create-permission-btn"
@@ -292,7 +293,7 @@ React.useEffect(() => {
 
             {/* SEARCH */}
 
-            <div className="fp-search-box">
+            <div className="fp-search-box pch-master-search pch-master-control">
               <Search size={17} strokeWidth={2} />
 
               <input
@@ -309,7 +310,7 @@ React.useEffect(() => {
             {/* FILTER */}
 
             <div className="fp-filter-wrapper">
-              <select
+              <FilterDropdown preserveToolbarLayout
                 value={filter}
                 onChange={(event) => {
                    setSearch(event.target.value);
@@ -322,7 +323,7 @@ React.useEffect(() => {
                 <option value="active">Active Permissions</option>
 
                 <option value="inactive">Inactive Permissions</option>
-              </select>
+              </FilterDropdown>
 
               <ChevronDown
                 size={16}

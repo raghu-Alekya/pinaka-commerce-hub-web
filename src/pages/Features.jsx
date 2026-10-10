@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../components/Pagination";
@@ -455,8 +456,8 @@ export default function Features() {
       <section className="features-list-card">
         <div className="features-list-toolbar">
           <h2>Features</h2>
-          <div className="features-filters">
-            <div className="feature-search">
+          <div className="features-filters pch-master-toolbar pch-master-control">
+            <div className="feature-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
                 type="text"
@@ -468,7 +469,7 @@ export default function Features() {
             </div>
 
             <div className="feature-filter-control">
-              <select
+              <FilterDropdown preserveToolbarLayout
                 className="features-filter-select features-status-select"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -476,12 +477,12 @@ export default function Features() {
                 <option value="All Statuses">All Statuses</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
-              </select>
+              </FilterDropdown>
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
 
             <div className="feature-filter-control feature-sort-control">
-              <select
+              <FilterDropdown preserveToolbarLayout
                 className="features-filter-select"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -492,11 +493,11 @@ export default function Features() {
                 <option value="updated">Recently Updated</option>
                 <option value="name-asc">Name A-Z</option>
                 <option value="name-desc">Name Z-A</option>
-              </select>
+              </FilterDropdown>
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
 
-            <button className="reset-filter" type="button" onClick={resetFilters}>
+            <button className="reset-filter pch-master-reset pch-master-control" type="button" onClick={resetFilters}>
               <i className="bi bi-arrow-counterclockwise" />
             
             </button>

@@ -174,7 +174,7 @@ export default function ReviewSubscribe({
   }
 
   return (
-    <div className="rs-page">
+    <div className={`rs-page${isEditing ? "" : " pch-step-scroll"}`}>
       <header className="rs-breadcrumb-bar">
   <nav className="rs-breadcrumb">
     <button type="button" onClick={goBackToMerchants}>

@@ -316,7 +316,7 @@ useEffect(() => {
           </div>
 
           <div className="role-templates-tools">
-            <label className="role-templates-search">
+            <label className="role-templates-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
                 type="search"
@@ -415,7 +415,7 @@ useEffect(() => {
               </button>
             </div>
 
-            <label className="role-template-search">
+            <label className="role-template-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
                 type="search"

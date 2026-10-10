@@ -21,13 +21,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { listMerchants, getMerchant, updateMerchantStatus } from "../api/merchants";
 import { EmployeeToast, EmployeeDeleteDialog } from "../components/EmployeeFeedback";
-import { listMerchantEmployees, deleteEmployee } from "../api/employees";
+import { listMerchantEmployees, getEmployee, deleteEmployee } from "../api/employees";
 import { ApiError } from "../api/http";
 import { devicesApi } from "../api/devices";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
 import FiltersBar from "../components/FiltersBar";
 import "../styles/merchants.css";
+import "../styles/merchant-details.css";
 import "../styles/global.css";
 
 function readValue(value) {
@@ -45,22 +46,26 @@ function ViewTable({ headings, rows }) {
   return rows.length ? <div className="table-wrapper"><table className="merchant-table"><thead><tr>{headings.map(title => <th key={title}>{title}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, column) => <td key={column}>{readValue(cell)}</td>)}</tr>)}</tbody></table></div> : <p className="merchant-view-empty">No records provided.</p>;
 }
 function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSaveDevice, masterVendors, vendorAssignments, onSaveVendorAssignments, vendorsLoading, vendorsError, masterTenders, tenderAssignments, onSaveTenderAssignments, tendersLoading, tendersError }) {
+ const [editingEmployee, setEditingEmployee] = useState(null);
   const [addingEmployee, setAddingEmployee] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [editingEmployeeLoading, setEditingEmployeeLoading] = useState(false);
   const [createdEmployees, setCreatedEmployees] = useState([]);
   async function saveEmployeeAndRefresh(values) {
     if(typeof onSaveEmployee !== 'function') throw new Error('Connect onSaveEmployee to your employee creation API.');
     const result=await onSaveEmployee(values);
     if(result?.success===false)throw new Error(result.message || 'Employee creation failed.');
     const record=result?.employee || result?.data?.employee || result?.data || result;
-    // Never retain password, login PIN, or temporary photo URL in the list.
+    // Retain the requested login PIN for the merchant employee details view,
+    // while keeping passwords and temporary photo URLs out of the list.
     const source=record && typeof record==='object' && !Array.isArray(record) ? record : {};
     const employee={id:source.id || source.employeeId || source.employeeCode || crypto.randomUUID(), employeeCode:source.employeeCode || '', merchantId:apiMerchantId,
       name:source.name || source.employeeName || [values.firstName,values.lastName].filter(Boolean).join(' '),
       email:source.email || values.email,phone:source.phone || source.phoneNumber || values.phone,
       gender:source.gender || values.gender,username:source.username || values.username,
+      loginPin:source.loginPin || source.login_pin || source.employeeLoginPin || values.employeeLoginPin || '',
       status:source.status || 'Not provided',createdAt:source.createdAt || new Date().toISOString()};
     setCreatedEmployees(old=>[employee,...old.filter(item=>String(item.id)!==String(employee.id))]);
+    setApiEmployees(old=>[employee,...(Array.isArray(old)?old:[]).filter(item=>String(item.id || item.employeeId)!==String(employee.id))]);
     return result;
   }
   const [addingDevice, setAddingDevice] = useState(false);
@@ -148,20 +153,27 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const raw = response.merchant || response.data?.merchant || response.data || response;
   const merchantIds = [merchant?.merchantId, result?.merchant?.merchantId, raw.merchantId, raw.id, merchantId].filter(Boolean);
   const apiMerchantId = merchantIds.find(value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value))) || merchantIds[0];
-  useEffect(() => {
-    let active = true;
-    setDevicesLoading(true);
-    setDevicesError('');
-    devicesApi.listAllByMerchantId(apiMerchantId).then(items => {
-      if (active) setApiDevices(items);
-    }).catch(failure => {
-      if (active) {
-        setApiDevices([]);
-        setDevicesError(failure.message || 'Unable to load devices for this merchant.');
+async function openEmployeeEdit(employee) {
+    const employeeId = employee.employeeId || employee.employee_id || employee.id || employee.employeeCode;
+    if (!employeeId) {
+      setEmployeesError('This employee is missing an ID, so their details cannot be loaded.');
+      return;
+    }
+    setEmployeesError('');
+    setEditingEmployeeLoading(true);
+    try {
+      const response = await getEmployee(employeeId);
+      const details = response?.employee || response?.data?.employee || response?.data || response;
+      if (!details || typeof details !== 'object' || Array.isArray(details)) {
+        throw new Error('The employee details response was empty.');
       }
-    }).finally(() => { if (active) setDevicesLoading(false); });
-    return () => { active = false; };
-  }, [apiMerchantId]);
+      setEditingEmployee({ ...employee, ...details });
+    } catch (failure) {
+      setEmployeesError(failure.message || 'Unable to load employee details for editing.');
+    } finally {
+      setEditingEmployeeLoading(false);
+    }
+  }
   useEffect(() => {
     let active = true;
     setEmployeesLoading(true);
@@ -321,7 +333,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const stores = list(saved?.stores ?? response.stores ?? raw.stores);
   const employeeRecords = apiEmployees ?? saved?.employees ?? raw.employees ?? response.employees ?? response.data?.employees ?? merchant?.employees;
   const employeeRows = list(employeeRecords).filter(employee=>!createdEmployees.some(item=>String(item.id)===String(employee.id || employee.employeeId) || (item.email && item.email===employee.email)));
-  const employees = (apiEmployees ?? [...createdEmployees, ...employeeRows]).filter(employee => {
+ const employees = (apiEmployees ??  [...createdEmployees, ...employeeRows]).filter(employee => {
     if (apiEmployees) return true;
     const ownerId = employee.merchantId ?? employee.merchant?.id;
     return ownerId == null || String(ownerId) === String(apiMerchantId);
@@ -387,34 +399,26 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       .merchant-readonly .merchant-view-fields dt{font-weight:500;color:#7c8495;font-size:13px;margin-bottom:5px;}
       .merchant-readonly .merchant-view-fields dd{margin:0;color:#17233e;font-size:15px;overflow-wrap:anywhere;}
       .merchant-readonly .merchant-view-empty{padding:16px 20px;color:#7c8495;margin:0;}
-      .merchant-readonly .merchant-view-topbar{min-height:64px;display:flex;align-items:center;padding:0 28px;margin:-18px -24px 20px;background:#FFFFFF;border-bottom:1px solid #cdccd7;font:14px/1.45 Inter,"Segoe UI",sans-serif;}
       .merchant-readonly .merchant-view-back{display:inline-flex;align-items:center;border:0;background:none;color:#5143bc;padding:0;font:inherit;font-weight:600;cursor:pointer;}
       .merchant-readonly .merchant-view-back:focus-visible{outline:3px solid #b9adff;outline-offset:2px;}
-      @media(max-width:1200px){.merchant-readonly .merchant-view-topbar{margin-left:-16px;margin-right:-16px;}}
-      @media(max-width:620px){.merchant-readonly .merchant-view-topbar{min-height:55px;padding:0 12px;}}
-      @media(max-width:500px){.merchant-readonly .merchant-view-topbar{margin:-10px -10px 20px;}}
       .merchant-readonly .merchant-view-section details{padding:14px 20px;border-top:1px solid #edf0f4;}
       .merchant-readonly .merchant-view-section summary{cursor:pointer;color:#5143bc;}
-      .merchant-readonly .merchant-view-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:start;}
-      .merchant-readonly .merchant-view-layout > [role="tabpanel"]{grid-column:2;grid-row:1;min-width:0;}
-      .merchant-readonly .merchant-view-tabs{display:flex;flex-direction:column;gap:4px;border:1px solid #e1e4eb;border-radius:10px;padding:8px;background:#fff;}
-      .merchant-readonly .merchant-view-tabs button{flex:none;white-space:nowrap;border:0;border-left:3px solid transparent;text-align:left;background:transparent;padding:14px 18px;color:#758096;font-size:14px;cursor:pointer;}
-      .merchant-readonly .merchant-view-tabs button[aria-selected="true"]{color:#5143bc;border-left-color:#5143bc;font-weight:600;background:#f8f7ff;}
-      .merchant-readonly .merchant-view-tabs button:focus-visible{outline:2px solid #5143bc;outline-offset:-4px;}
       .merchant-readonly [role="tabpanel"][hidden]{display:none;}
-      @media(max-width:650px){.merchant-readonly .merchant-view-fields{grid-template-columns:1fr;}.merchant-readonly .merchant-view-layout{grid-template-columns:1fr;}.merchant-readonly .merchant-view-layout > [role="tabpanel"]{grid-column:1;grid-row:2;}}
+      @media(max-width:650px){.merchant-readonly .merchant-view-fields{grid-template-columns:1fr;}}
     `}</style>
     <header className="merchant-view-topbar">
       <button type="button" className="merchant-view-back" onClick={onBack}>← Merchants</button>
     </header>
-    <div className="page-header"><div><h1>Merchant Details</h1><p>{readValue(business)} · {displayMerchantCode}</p></div>
-    </div>
-    {loading ? <p role="status">Loading merchant details…</p> : error ? <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div> : <div className="merchant-view-layout">
-      <div className="merchant-view-tabs" role="tablist" aria-orientation="vertical" aria-label="Merchant details">
+    <div className="merchant-view-layout">
+      {!loading && !error && <div className="merchant-view-tabs" role="tablist" aria-orientation="vertical" aria-label="Merchant details">
         {tabs.map(([id, label], index) => <button key={id} type="button" role="tab" id={'merchant-tab-' + id}
           aria-selected={activeTab === id} aria-controls={'merchant-panel-' + id} tabIndex={activeTab === id ? 0 : -1}
-          onClick={() => changeTab(id)} onKeyDown={event => tabKeyDown(event, index)}>{label}</button>)}
-      </div>
+          onClick={() => changeTab(id)} onKeyDown={event => tabKeyDown(event, index)}><i className={"bi " + ({overview:"bi-grid",subscription:"bi-credit-card",stores:"bi-shop",employees:"bi-people",devices:"bi-display",vendors:"bi-truck",tenders:"bi-wallet2",roles:"bi-shield-check",payments:"bi-receipt"}[id])} aria-hidden="true" /><span>{label}</span></button>)}
+      </div>}
+      <div className="merchant-view-main">
+    <div className="page-header"><div><h1>Merchant Details</h1><p>{readValue(business)} · {displayMerchantCode}</p></div>
+    </div>
+    {loading ? <p role="status">Loading merchant details…</p> : error ? <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div> : <>
       <div role="tabpanel" id="merchant-panel-overview" aria-labelledby="merchant-tab-overview" hidden={activeTab !== 'overview'} tabIndex={0}>
         <ViewSection title="Business Details"><ViewFields items={[
           ['Merchant Code', displayMerchantCode], ['Legal / Business Name', business],
@@ -456,7 +460,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       </div>
       <div role="tabpanel" id="merchant-panel-employees" aria-labelledby="merchant-tab-employees" hidden={activeTab !== 'employees'} tabIndex={0}>
         {employeesError && <div className="alert alert-danger" role="alert">{employeesError}</div>}
-        {employeesLoading && <p role="status">Loading employees...</p>}
+         {editingEmployeeLoading && <p role="status">Loading employee details...</p>}
         {addingEmployee ? <ViewSection title="Add Employee" actions={<button type="button" className="merchant-back-employees" onClick={()=>setAddingEmployee(false)}>← Back to Employees</button>}>
           <MerchantEmployeeForm embedded key={apiMerchantId} merchantId={apiMerchantId} initialMerchant={merchant} onSave={saveEmployeeAndRefresh} onBack={()=>setAddingEmployee(false)}/>
         </ViewSection> : editingEmployee ? <EditEmployee
@@ -464,10 +468,15 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
           employee={editingEmployee}
           onBack={()=>setEditingEmployee(null)}
           onSave={async()=>{
-            setApiEmployees(await listMerchantEmployees(apiMerchantId));
             setEditingEmployee(null);
+            try {
+              setApiEmployees(await listMerchantEmployees(apiMerchantId));
+              setEmployeesError('');
+            } catch (failure) {
+              setEmployeesError(failure.message || 'Employee was updated, but the list could not be refreshed.');
+            }
           }}
-        /> : <MerchantEmployeeList onEdit={setEditingEmployee} employees={employees} merchantName={business} onAdd={()=>setAddingEmployee(true)} onRefresh={async()=>setApiEmployees(await listMerchantEmployees(apiMerchantId))}/>}
+        /> : <MerchantEmployeeList onEdit={openEmployeeEdit} employees={employees} merchantName={business} onAdd={()=>setAddingEmployee(true)} onRefresh={async()=>setApiEmployees(await listMerchantEmployees(apiMerchantId))}/>}
 
       </div>
       <div role="tabpanel" id="merchant-panel-devices" aria-labelledby="merchant-tab-devices" hidden={activeTab !== 'devices'} tabIndex={0}>
@@ -484,7 +493,9 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
           payment.createdAt, payment.plan, [payment.currency, payment.amount].filter(value => value !== undefined && value !== null).join(' '), payment.method, payment.status,
         ])} /></ViewSection>
       </div>
-    </div>}
+    </>}
+      </div>
+    </div>
   </div>;
 }
 
@@ -1042,7 +1053,25 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
                 </tr>
               ) : (
                 visibleRows.map((m, index) => (
-                  <tr key={m.id}>
+                  <tr
+                    key={m.id}
+                    tabIndex={0}
+                    aria-label={`View ${m.name} details`}
+                    style={{ cursor: "pointer" }}
+                    onClick={(event) => {
+                      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                        event.stopPropagation();
+                        return;
+                      }
+                      openView(m);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+                        event.preventDefault();
+                        openView(m);
+                      }
+                    }}
+                  >
                     <td>
                       <div
                         className="merchant-name clickable"
@@ -1240,7 +1269,7 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
     {deleteTarget && <EmployeeDeleteDialog title="Delete Employee?" description={`Are you sure you want to delete ${employeeName(deleteTarget)}?`} busy={deleteBusy} onCancel={()=>{if(!deleteBusy)setDeleteTarget(null);}} onConfirm={confirmDelete} />}
     <header className="mel-card mel-heading"><div><h2>Employees</h2><p>These are the employees connected to this merchant.</p></div><button className="mel-primary" onClick={onAdd}>＋ Add Employee</button></header>
     <section className="mel-card"><h3>Employee List</h3><div className="mel-search"><input aria-label="Search employees" placeholder="Search employee, ID, username, phone or email…" value={filters.query} onChange={e=>update('query',e.target.value)}/><button onClick={()=>{setFilters(blank);setPage(1);}}>↺ Reset</button></div>
-    <div className="mel-scroll"><table><thead><tr>{['Employee','Email','Phone','Gender','Status','Actions'].map(title=><th key={title}>{title}</th>)}</tr></thead><tbody>
+   <div className="mel-scroll"><table><thead><tr>{['Employee','Email','Phone','Login PIN','Gender','Status','Actions'].map(title=><th key={title}>{title}</th>)}</tr></thead><tbody>
       {filtered.slice((current - 1) * 10, current * 10).map((e, index) => (
     <tr key={e.id || e.employeeCode || index}>
         <td>
@@ -1251,6 +1280,8 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
         <td>{e.email || '—'}</td>
 
         <td>{e.phone || e.phoneNumber || '—'}</td>
+
+        <td>{e.loginPin || e.login_pin || e.employeeLoginPin || (e.pinSet ? 'Set' : '—')}</td>
 
         <td>{e.gender || '—'}</td>
         <td><span className={"employee-status " + (String(e.status || 'INACTIVE').toUpperCase() === 'ACTIVE' ? 'active' : 'inactive')}>{String(e.status || 'INACTIVE').toUpperCase() === 'ACTIVE' ? 'Active' : 'Inactive'}</span></td>
@@ -1271,10 +1302,10 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
         </td>
     </tr>
 ))}
-{!filtered.length&&<tr><td colSpan={6}>No employees found for this merchant.</td></tr>}</tbody></table></div>
+{!filtered.length&&<tr><td colSpan={7}>No employees found for this merchant.</td></tr>}</tbody></table></div>
       <footer><span>Showing {filtered.length?(current-1)*10+1:0} to {Math.min(current*10,filtered.length)} of {filtered.length} entries</span><div className="mel-pages"><button disabled={current===1} onClick={()=>setPage(current-1)}>‹</button><span>{current} / {pages}</span><button disabled={current===pages} onClick={()=>setPage(current+1)}>›</button></div></footer>
     </section>
-    <dialog ref={dialog} className="mel-dialog" aria-labelledby="mel-title" onCancel={event=>{event.preventDefault();setView(null);}}><header className="mel-heading"><h2 id="mel-title">Employee Details</h2><button onClick={()=>setView(null)} aria-label="Close employee details">×</button></header>{view&&<dl>{Object.entries({Name:employeeName(view),Email:view.email,Phone:view.phone || view.phoneNumber,Username:view.username,Gender:view.gender,Status:view.status,'Employee Code':view.employeeCode || view.employee_code}).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value || '—'}</dd></div>)}</dl>}</dialog>
+    <dialog ref={dialog} className="mel-dialog" aria-labelledby="mel-title" onCancel={event=>{event.preventDefault();setView(null);}}><header className="mel-heading"><h2 id="mel-title">Employee Details</h2><button onClick={()=>setView(null)} aria-label="Close employee details">×</button></header>{view&&<dl>{Object.entries({Name:employeeName(view),Email:view.email,Phone:view.phone || view.phoneNumber,Username:view.username,Gender:view.gender,'Login PIN':view.loginPin || view.login_pin || view.employeeLoginPin || (view.pinSet ? 'Set' : ''),Status:view.status,'Employee Code':view.employeeCode || view.employee_code}).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value || '—'}</dd></div>)}</dl>}</dialog>
   </div>;
 }
 

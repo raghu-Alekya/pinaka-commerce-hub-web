@@ -137,7 +137,7 @@ input {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 .order-summary-card {
@@ -356,6 +356,15 @@ input {
 
 .orders-table tbody tr:hover {
     background: #fafbfe;
+}
+
+.orders-table tbody tr.orders-clickable-row {
+    cursor: pointer;
+}
+
+.orders-table tbody tr.orders-clickable-row:focus-visible {
+    outline: 2px solid #5143bc;
+    outline-offset: -2px;
 }
 
 .orders-table tbody tr:last-child td {
@@ -590,18 +599,6 @@ input {
     background: #fff;
     color: #5942d6;
     cursor: pointer;
-}
-
-.order-row-clickable {
-    cursor: pointer;
-}
-
-.order-row-clickable:hover {
-    background: #faf9ff;
-}
-
-.order-row-clickable td {
-    transition: background 0.15s ease;
 }
 
 /* =========================================================

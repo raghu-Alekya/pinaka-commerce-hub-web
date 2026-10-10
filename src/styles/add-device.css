@@ -30,18 +30,15 @@
   font-weight: 750;
 }
 
-.add-device-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 5px;
-  color: #8193ad;
-  font-size: 12px;
+.add-device-header p {
+  margin: 6px 0 0;
+  color: #75819a;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
-.add-device-breadcrumb strong {
-  color: #405b7d;
-  font-weight: 500;
+.add-device-standalone > .device-view-topbar {
+  margin: -18px -24px 20px;
 }
 
 .back-devices-btn {
@@ -70,6 +67,7 @@
 
 .add-device-form {
   width: 100%;
+  margin-top: 0;
 }
 
 .device-card {
@@ -274,7 +272,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  border-top: 1px solid #e2e8f0;
 }
 
 .device-cancel-btn,
@@ -305,6 +302,10 @@
 ========================================================= */
 
 @media (max-width: 1300px) {
+  .add-device-standalone > .device-view-topbar {
+    margin: -15px -18px 20px;
+  }
+
   .add-device-page {
     padding: 15px 18px 20px;
   }
@@ -348,6 +349,10 @@
 ========================================================= */
 
 @media (max-width: 1100px) {
+  .add-device-standalone > .device-view-topbar {
+    margin: -13px -14px 20px;
+  }
+
   .add-device-page {
     padding: 13px 14px 18px;
   }

@@ -28,6 +28,11 @@ export const endpoints = {
     `/stores/${encodeURIComponent(storeId)}/pos/card-payments`,
   storeTerminalMappings: (storeId) =>
     `/stores/${encodeURIComponent(storeId)}/pos/terminal-mappings`,
+  storePosConfiguration: "/store/store-pos-configuration",
+  storePosConfigurationItem: (storeId, configurationName) =>
+    `/store/store-pos-configuration/${encodeURIComponent(storeId)}/${encodeURIComponent(configurationName)}`,
+  storePosConfigurations: (storeId) =>
+    `/store/store-pos-configuration/${encodeURIComponent(storeId)}`,
 
   // Merchant Employees (Connector API)
   employees: "/employees",

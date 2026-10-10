@@ -441,7 +441,7 @@ useEffect(() => {
           </div>
 
           <div className="store-features-tools">
-            <label className="store-features-search">
+            <label className="store-features-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
                 type="search"
@@ -538,7 +538,7 @@ useEffect(() => {
               </button>
             </div>
 
-            <label className="add-features-search">
+            <label className="add-features-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
                 type="search"

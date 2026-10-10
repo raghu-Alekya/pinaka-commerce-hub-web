@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
@@ -820,8 +821,8 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
         <div className="store-types-list-header">
           <h2>Store Types</h2>
 
-          <div className="store-types-filters">
-            <label className="store-type-search">
+          <div className="store-types-filters pch-master-toolbar pch-master-control">
+            <label className="store-type-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
 
@@ -836,8 +837,8 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
               />
             </label>
 
-            <div className="store-filter-select">
-              <select
+            <div className="store-filter-select pch-master-filter pch-master-control">
+              <FilterDropdown preserveToolbarLayout
 
                 value={statusFilter}
 
@@ -846,12 +847,12 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
                 <option value="">All Statuses</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
-              </select>
+              </FilterDropdown>
               <i className="bi bi-chevron-down" />
             </div>
 
-            <div className="store-filter-select">
-              <select
+            <div className="store-filter-select pch-master-filter pch-master-control">
+              <FilterDropdown preserveToolbarLayout
 
                 value={sortBy}
 
@@ -862,7 +863,7 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
                 <option value="updated">Recently Updated</option>
                 <option value="name-asc">Name (A–Z)</option>
                 <option value="name-desc">Name (Z–A)</option>
-              </select>
+              </FilterDropdown>
               <i className="bi bi-chevron-down" />
             </div>
 
@@ -870,7 +871,7 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
 
               type="button"
 
-              className="store-type-reset-button"
+              className="store-type-reset-button pch-master-reset pch-master-control"
 
               onClick={resetFilters}
             >

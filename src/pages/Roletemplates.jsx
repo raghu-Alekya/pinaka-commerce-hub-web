@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../components/Pagination";
@@ -570,8 +571,8 @@ const paginatedTemplates = useMemo(() => {
               <h2>Role Templates</h2>
             </div>
  
-            <div className="role-filters">
-              <div className="role-search">
+            <div className="role-filters pch-master-toolbar pch-master-control">
+              <div className="role-search pch-master-search pch-master-control">
                 <i className="bi bi-search" />
                 <input
                   type="text"
@@ -581,7 +582,7 @@ const paginatedTemplates = useMemo(() => {
                 />
               </div>
  
-              <select
+              <FilterDropdown preserveToolbarLayout
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 aria-label="Filter by status"
@@ -589,9 +590,9 @@ const paginatedTemplates = useMemo(() => {
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
-              </select>
+              </FilterDropdown>
  
-              <select
+              <FilterDropdown preserveToolbarLayout
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 aria-label="Sort role templates"
@@ -600,11 +601,11 @@ const paginatedTemplates = useMemo(() => {
                 <option value="OLDEST">Oldest to Newest</option>
                 <option value="A_Z">A to Z</option>
                 <option value="Z_A">Z to A</option>
-              </select>
+              </FilterDropdown>
  
               <button
                 type="button"
-                className="role-reset-icon-btn"
+                className="role-reset-icon-btn pch-master-reset pch-master-control"
                 title="Reset filters"
                 aria-label="Reset filters"
                 onClick={resetFilters}

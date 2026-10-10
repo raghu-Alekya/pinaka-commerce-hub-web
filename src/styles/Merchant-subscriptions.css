@@ -2531,7 +2531,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(430px, .92fr);
   align-items: stretch;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   overflow: hidden;
   border: 1px solid #e1e8f3;
   border-radius: 9px;
@@ -5480,7 +5480,7 @@
 }
 .merchant-subscriptions-page .subscription-overview-refined {
   grid-template-columns: minmax(0, 1fr);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   overflow: visible;
   border: 0;
   background: transparent;

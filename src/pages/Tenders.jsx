@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 import { storeTypesApi } from "../api/storeTypes";
 import Pagination from "../components/Pagination";
@@ -539,8 +540,8 @@ useEffect(() => {
             </p>
           </div>
 
-          <div className="tenders-filters">
-            <div className="tenders-search">
+          <div className="tenders-filters pch-master-toolbar pch-master-control">
+            <div className="tenders-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
 
               <input
@@ -550,7 +551,7 @@ useEffect(() => {
               />
             </div>
 
-            <select
+            <FilterDropdown preserveToolbarLayout
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
             >
@@ -559,8 +560,8 @@ useEffect(() => {
               <option value="Active">Active</option>
 
               <option value="Inactive">Inactive</option>
-            </select>
-            <select
+            </FilterDropdown>
+            <FilterDropdown preserveToolbarLayout
               className="tenders-sort-select"
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
@@ -573,11 +574,11 @@ useEffect(() => {
               <option value="name-asc">Alphabetical A–Z</option>
 
               <option value="name-desc">Alphabetical Z–A</option>
-            </select>
+            </FilterDropdown>
 
             <button
               type="button"
-              className="tenders-reset-button"
+              className="tenders-reset-button pch-master-reset pch-master-control"
               onClick={() => {
                 setSearch("");
                 setStatusFilter("All Statuses");
