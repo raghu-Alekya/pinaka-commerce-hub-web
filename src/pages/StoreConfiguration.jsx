@@ -16,9 +16,10 @@ import StoreCategories from "./StoreCategories";
 import StoreShifts from "./StoreShifts";
 import StorePaymentRecords from "./StorePaymentRecords";
 import VendorPayments from "./VendorPayments";
+import MerchantVendors from "./MerchantVendors";
 import EmployeeAttendance, { AttendanceDetails } from "./EmployeeAttendance";
 
-import { api, ApiError, pendingStoreRead } from "../api/http";
+import { api, ApiError } from "../api/http";
 import { endpoints } from "../api/endpoints";
 
 
@@ -162,7 +163,7 @@ function StoreSubscriptionSummary({ merchantId }) {
     async function load() {
       try {
         if (!merchantId) throw new Error("Merchant information is unavailable for this store.");
-        const result = await pendingStoreRead(`subscriptions:${merchantId}`, () => getActiveSubscriptions(merchantId));
+        const result = await getActiveSubscriptions(merchantId);
         if (active) setSubscription(extractActiveSubscription(result));
       } catch (err) {
         if (active) setError(err.message || "Unable to load subscription.");
@@ -274,14 +275,14 @@ export default function StoreConfiguration() {
       setError("");
 
       try {
-        const response = await pendingStoreRead(`store:${storeId}`, () => api.get(endpoints.store(encodeURIComponent(storeId))));
+        const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
         const raw = response?.store || response?.data?.store || response?.data || response;
         if (!raw || typeof raw !== "object" || ![raw.id,raw.storeId,raw.storeID,raw.storeName,raw.name].some(Boolean)) throw new Error("Store not found.");
         const found = normalizeStoreForConfiguration(raw);
         found.uuid = [raw.id, raw._id, raw.storeUUID, raw.storeUuid, raw.store_uuid, raw.uuid, raw.storeId, raw.storeID]
           .find(isUuid) || "";
         const owner = found.merchantId || found.merchant_id || found.merchant?.id || found.merchant_uuid || merchantId;
-        const result = owner ? await pendingStoreRead(`merchant:${owner}`, () => getMerchant(owner)).catch(() => null) : null;
+        const result = owner ? await getMerchant(owner).catch(() => null) : null;
         if (!cancelled) { setStore(found); setMerchant(result?.merchant || {name:found.merchantName || found.merchant?.name || "",id:owner}); }
       } catch (err) {
         if (!cancelled) {
@@ -317,7 +318,7 @@ export default function StoreConfiguration() {
        * Load saved connector information from the store record.
        */
       try {
-        const saved = await pendingStoreRead(`connector:${storeId}:${merchantId}`, () => fetchWordpressConnector(storeId, merchantId));
+        const saved = await fetchWordpressConnector(storeId, merchantId);
 
         if (saved && !cancelled) {
           setSiteUrl(saved.siteUrl || "");
@@ -337,14 +338,14 @@ export default function StoreConfiguration() {
       }
     }
 
-    if (storeId && section === "overview") {
+    if (storeId) {
       loadConnector();
     }
 
     return () => {
       cancelled = true;
     };
-  }, [merchantId, storeId, section]);
+  }, [merchantId, storeId]);
 
   /* =======================================================
      SET WEBSITE URL FROM STORE
@@ -374,7 +375,7 @@ export default function StoreConfiguration() {
     event.preventDefault();
     if (!editingSection || saving || testing) return;
 
-    if (!siteUrl.trim() || (!jwtToken.trim() && !jwtConfigured)) {
+    if (!siteUrl.trim() || !jwtToken.trim()) {
       setMessage(
         "Enter the WordPress site URL and JWT token."
       );
@@ -421,7 +422,7 @@ export default function StoreConfiguration() {
 
   const handleSyncCatalog = async () => {
     if (testing || saving) return;
-    if (!siteUrl.trim() || (!jwtToken.trim() && !jwtConfigured)) {
+    if (!siteUrl.trim() || !jwtToken.trim()) {
       setMessage("Save the WordPress site URL and JWT token before syncing.");
       return;
     }
@@ -430,9 +431,10 @@ export default function StoreConfiguration() {
     setMessage("");
 
     try {
-      // The API keeps the JWT encrypted and deliberately does not return it.
-      // Catalog sync uses the connector credentials already saved for the store.
-      const result = await syncWordpressCatalog(storeId);
+      const result = await syncWordpressCatalog(storeId, {
+        siteUrl,
+        jwtToken,
+      });
       const categoryCount = result?.catalog?.categoryCount ?? 0;
       const productCount = result?.catalog?.productCount ?? 0;
       setMessage(
@@ -737,11 +739,18 @@ export default function StoreConfiguration() {
                  VENDORS
                  =========================================== */
 
-              ) : section === "vendors" || section === "vendorhistory" ? (
+              ) : section === "vendors" ? (
+
+                <MerchantVendors
+                  storeId={store?.uuid || storeId}
+                  merchantId={merchant?.id || merchant?.merchantId || merchant?.merchant_id || store?.merchantId || store?.merchant_id || store?.merchant?.id || merchantId}
+                />
+
+              ) : section === "vendorhistory" ? (
 
                 <VendorPayments
                   key={section}
-                  viewMode={section === "vendorhistory" ? "payments" : "vendors"}
+                  viewMode="payments"
                   merchantId={merchantId}
                   storeId={storeId}
                   store={store}
