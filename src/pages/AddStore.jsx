@@ -24,8 +24,9 @@ import {
   storeRoleTemplatesApi,
   readStoreRoleTemplates,
 } from "../api/storeRoleTemplatesApi";
-import { api, ApiError } from "../api/http";
+import { api, ApiError, pendingStoreRead } from "../api/http";
 import { endpoints } from "../api/endpoints";
+import Pagination from "../components/Pagination";
 import {
   getActiveSubscriptions,
   extractActiveSubscription,
@@ -592,6 +593,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [employeeFilter, setEmployeeFilter] = useState("All");
   const [employeePage, setEmployeePage] = useState(1);
+  const [employeePageSize, setEmployeePageSize] = useState(10);
   const [featureSearch, setFeatureSearch] = useState("");
   const [featureCategory, setFeatureCategory] = useState("All Features");
 
@@ -949,12 +951,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     );
   });
 
-  const pageSize = 10;
-  const pageCount = Math.max(1, Math.ceil(employeeRows.length / pageSize));
+  const pageCount = Math.max(1, Math.ceil(employeeRows.length / employeePageSize));
   const currentEmployeePage = Math.min(employeePage, pageCount);
   const pagedEmployees = employeeRows.slice(
-    (currentEmployeePage - 1) * pageSize,
-    currentEmployeePage * pageSize,
+    (currentEmployeePage - 1) * employeePageSize,
+    currentEmployeePage * employeePageSize,
   );
   const allActiveEmployeesSelected =
     activeEmployees.length > 0 &&
@@ -986,9 +987,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       setLoadError("");
       try {
         const [result, featuresResult, plansResult] = await Promise.all([
-          listMerchants().catch(() => []),
-          listFeatures().catch(() => []),
-          listPlans().catch(() => []),
+          (embeddedStep === null ? pendingStoreRead("merchants", listMerchants) : Promise.resolve([])).catch(() => []),
+          (embeddedStep === null || embeddedStep === 2 || embeddedStep === 3 ? pendingStoreRead("features", listFeatures) : Promise.resolve([])).catch(() => []),
+          pendingStoreRead("plans", listPlans).catch(() => []),
         ]);
         if (!cancelled) {
           setMerchants(
@@ -1008,9 +1009,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           setMasterPlans(Array.isArray(plansResult) ? plansResult : []);
         }
         if (storeId) {
-          const response = await api.get(
-            endpoints.store(encodeURIComponent(storeId)),
-          );
+          const response = await pendingStoreRead(`store:${storeId}`, () => api.get(endpoints.store(encodeURIComponent(storeId))));
           const saved = response?.store || response;
           if (!cancelled) {
             const address =
@@ -1199,8 +1198,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     async function loadMerchantContext() {
       try {
         const [result, employeeResult, storesResult] = await Promise.all([
-          getMerchant(merchantId),
-          listMerchantEmployees(merchantId),
+          pendingStoreRead(`merchant:${merchantId}`, () => getMerchant(merchantId)),
+          (embeddedStep === null || embeddedStep === 4 ? pendingStoreRead(`employees:${merchantId}`, () => listMerchantEmployees(merchantId)) : Promise.resolve([])),
           api.get(endpoints.merchantStores(merchantId)).catch(() => null),
         ]);
         if (cancelled) return;
@@ -1624,6 +1623,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setEmployeeSearch("");
     setEmployeeFilter("All");
     setEmployeePage(1);
+    setEmployeePageSize(10);
     setFeatureSearch("");
     setFeatureCategory("All Features");
     setCopyFromRole("");
@@ -3348,7 +3348,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                           aria-label={`Assign ${employee.name}`}
                         />
                       </td>
-                      <td>{(employeePage - 1) * pageSize + index + 1}</td>
+                      <td>{(currentEmployeePage - 1) * employeePageSize + index + 1}</td>
                       <td>
                         {employee.name ||
                           `${employee.firstName || ""} ${employee.lastName || ""}`.trim()}
@@ -3461,44 +3461,19 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               </tbody>
             </table>
           </div>
-          <div className="sf-pagination">
-            <span>
-              Showing{" "}
-              {employeeRows.length ? (employeePage - 1) * pageSize + 1 : 0}–
-              {Math.min(employeePage * pageSize, employeeRows.length)} of{" "}
-              {employeeRows.length} employees
-            </span>
-            <div>
-              <button
-                type="button"
-                disabled={employeePage <= 1}
-                onClick={() => setEmployeePage((page) => Math.max(1, page - 1))}
-              >
-                ‹
-              </button>
-              {Array.from({ length: pageCount }, (_, index) => index + 1)
-                .slice(0, 5)
-                .map((page) => (
-                  <button
-                    type="button"
-                    key={page}
-                    className={employeePage === page ? "active" : ""}
-                    onClick={() => setEmployeePage(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
-              <button
-                type="button"
-                disabled={employeePage >= pageCount}
-                onClick={() =>
-                  setEmployeePage((page) => Math.min(pageCount, page + 1))
-                }
-              >
-                ›
-              </button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentEmployeePage}
+            totalPages={pageCount}
+            totalItems={employeeRows.length}
+            pageSize={employeePageSize}
+            onPageChange={setEmployeePage}
+            onPageSizeChange={(size) => {
+              setEmployeePageSize(size);
+              setEmployeePage(1);
+            }}
+            itemLabel="employees"
+            showWhenEmpty
+          />
         </Panel>
       </>
     );
@@ -3722,7 +3697,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       if (step === 4) {
         await saveStoreEmployees(merchantId, storeId, employeeAssignments.map(item => ({employeeId:item.employeeId,...(item.role ? {roleTemplateId:item.role} : {}),...(item.pin || item.savedPin ? {loginPin:item.pin || item.savedPin} : {})})));
       } else {
-        const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
+        const response = await pendingStoreRead(`store:${storeId}`, () => api.get(endpoints.store(encodeURIComponent(storeId))));
         const saved = response?.store || response?.data?.store || response?.data || response;
         const code = store.storeCode || store.id || storeId;
         const changes = step === 2 ? {features:enabledFeatures} : {rolePermissions:roles.map(roleId => ({roleTemplateId:roleId,name:roleName(roleId),permissions:permissionsRef.current[roleId] || {}}))};

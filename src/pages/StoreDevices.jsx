@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "../components/Pagination";
 import { storeDevicesSeed } from "../data/data";
@@ -440,7 +441,7 @@ export default function StoreDevices({
 
           {/* DEVICE TYPE */}
 
-          <select
+          <FilterDropdown
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
           >
@@ -451,11 +452,11 @@ export default function StoreDevices({
                 {type}
               </option>
             ))}
-          </select>
+          </FilterDropdown>
 
           {/* STATUS */}
 
-          <select
+          <FilterDropdown
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -464,7 +465,7 @@ export default function StoreDevices({
             <option value="Active">Active</option>
 
             <option value="Inactive">Inactive</option>
-          </select>
+          </FilterDropdown>
 
           {/* CLEAR */}
 

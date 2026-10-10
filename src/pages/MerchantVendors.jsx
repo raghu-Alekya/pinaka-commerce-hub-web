@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useRef, useState } from "react";
 import { Eye, Trash2 } from "lucide-react";
 import "../styles/merchant-vendors.css";
@@ -666,8 +667,8 @@ export default function MerchantVendors({
                         disabled={busy || masterLoading}
                         onChange={e => { setSearch(e.target.value); setPickerPage(1); }}
                     />
-                    <select aria-label="Filter by country" value={countryFilter} onChange={e => { setCountryFilter(e.target.value); setStateFilter(""); setPickerPage(1); }}><option value="">All countries</option>{countries.map(country => <option key={locationKey(country)} value={locationKey(country)}>{country}</option>)}</select>
-                    <select aria-label="Filter by state" value={stateFilter} onChange={e => { setStateFilter(e.target.value); setPickerPage(1); }}><option value="">All states</option>{states.map(state => <option key={locationKey(state)} value={locationKey(state)}>{state}</option>)}</select>
+                    <FilterDropdown aria-label="Filter by country" value={countryFilter} onChange={e => { setCountryFilter(e.target.value); setStateFilter(""); setPickerPage(1); }}><option value="">All countries</option>{countries.map(country => <option key={locationKey(country)} value={locationKey(country)}>{country}</option>)}</FilterDropdown>
+                    <FilterDropdown aria-label="Filter by state" value={stateFilter} onChange={e => { setStateFilter(e.target.value); setPickerPage(1); }}><option value="">All states</option>{states.map(state => <option key={locationKey(state)} value={locationKey(state)}>{state}</option>)}</FilterDropdown>
                     <button type="button" onClick={() => { setSearch(""); setCountryFilter(""); setStateFilter(""); setPickerPage(1); }}>Clear filters</button>
                 </div>
 
@@ -1087,7 +1088,7 @@ export default function MerchantVendors({
                                 onChange={(e) => { setSearch(e.target.value); setPickerPage(1); }}
                             />
 
-                            <div className="mv-location-filters"><select aria-label="Filter by country" value={countryFilter} onChange={e => { setCountryFilter(e.target.value); setStateFilter(""); setPickerPage(1); }}><option value="">All countries</option>{countries.map(country => <option key={locationKey(country)} value={locationKey(country)}>{country}</option>)}</select><select aria-label="Filter by state" value={stateFilter} onChange={e => { setStateFilter(e.target.value); setPickerPage(1); }}><option value="">All states</option>{states.map(state => <option key={locationKey(state)} value={locationKey(state)}>{state}</option>)}</select><button type="button" onClick={() => { setSearch(""); setCountryFilter(""); setStateFilter(""); setPickerPage(1); }}>Clear filters</button></div>
+                            <div className="mv-location-filters"><FilterDropdown aria-label="Filter by country" value={countryFilter} onChange={e => { setCountryFilter(e.target.value); setStateFilter(""); setPickerPage(1); }}><option value="">All countries</option>{countries.map(country => <option key={locationKey(country)} value={locationKey(country)}>{country}</option>)}</FilterDropdown><FilterDropdown aria-label="Filter by state" value={stateFilter} onChange={e => { setStateFilter(e.target.value); setPickerPage(1); }}><option value="">All states</option>{states.map(state => <option key={locationKey(state)} value={locationKey(state)}>{state}</option>)}</FilterDropdown><button type="button" onClick={() => { setSearch(""); setCountryFilter(""); setStateFilter(""); setPickerPage(1); }}>Clear filters</button></div>
                             <div className="mv-picker-summary"><span>{available.length} matching vendors · {selection.length} selected</span></div>
                             <div className="mv-scroll mv-options">
 

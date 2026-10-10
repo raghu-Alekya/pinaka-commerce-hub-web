@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listFeatures } from "../api/features";
@@ -1440,7 +1441,7 @@ export default function FeaturePermissions() {
             {/* STATUS FILTER */}
 
             <div className="fp-status-filter">
-              <select
+              <FilterDropdown preserveToolbarLayout
                 value={statusFilter}
                 onChange={(event) =>
                   setStatusFilter(
@@ -1460,7 +1461,7 @@ export default function FeaturePermissions() {
                 <option value="Inactive">
                   Inactive
                 </option>
-              </select>
+              </FilterDropdown>
 
               <i className="bi bi-chevron-down" />
             </div>
@@ -1468,7 +1469,7 @@ export default function FeaturePermissions() {
             {/* SORTING FILTER */}
 
             <div className="fp-sort-filter">
-              <select
+              <FilterDropdown preserveToolbarLayout
                 value={sortBy}
                 onChange={(event) =>
                   setSortBy(
@@ -1497,7 +1498,7 @@ export default function FeaturePermissions() {
                 <option value="name-desc">
                   Name Z-A
                 </option>
-              </select>
+              </FilterDropdown>
 
               <i className="bi bi-chevron-down" />
             </div>

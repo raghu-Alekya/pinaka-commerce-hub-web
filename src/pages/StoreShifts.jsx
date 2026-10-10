@@ -109,6 +109,61 @@ export default function StoreShifts({ store }) {
       <select aria-label="Filter by device" value={draft.device} onChange={(event) => updateDraft("device", event.target.value)}><option value="">All Devices</option>{devices.map((device) => <option key={device}>{device}</option>)}</select>
       <button type="button" className="sm-reset-button" onClick={reset}><i className="bi bi-arrow-counterclockwise" aria-hidden="true" /> Reset</button>
     </div>
+  );
+}
+
+function DailyShiftSummary({
+  rows,
+  summary,
+  dateFilter,
+  onDateFilterChange,
+  onClear,
+  onSelectDate,
+  onAddShift,
+}) {
+  return (
+    <>
+      <div className="shifts-page-header">
+        <div className="shifts-title-row">
+          <h1>Shifts</h1>
+          <button type="button" className="shift-add-btn" onClick={onAddShift}>
+            Add New Shift
+          </button>
+        </div>
+      </div>
+
+      <ShiftSummaryCards summary={summary} />
+
+      <div className="shift-filter-bar">
+        <FilterDropdown defaultValue="">
+          <option value="">Bulk actions</option>
+          <option value="export">Export</option>
+        </FilterDropdown>
+
+        <button type="button" className="shift-small-btn">
+          Apply
+        </button>
+
+        <FilterDropdown defaultValue="">
+          <option value="">All dates</option>
+        </FilterDropdown>
+
+        <button type="button" className="shift-small-btn">Today</button>
+        <button type="button" className="shift-small-btn">This Week</button>
+        <button type="button" className="shift-small-btn">This Month</button>
+
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(event) => onDateFilterChange(event.target.value)}
+          aria-label="Filter by date"
+        />
+
+        <button type="button" className="shift-small-btn" onClick={onClear}>
+          Filter
+        </button>
+
+        <div className="shift-list-count">{rows.length || 90} items</div>
 
     {showDateRange && <div className="sm-custom-range" role="group" aria-label="Custom date range">
       <label>From date<input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} /></label>

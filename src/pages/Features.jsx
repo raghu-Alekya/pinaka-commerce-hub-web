@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/features.css";
@@ -451,7 +452,7 @@ export default function Features() {
             </div>
 
             <div className="feature-filter-control">
-              <select
+              <FilterDropdown preserveToolbarLayout
                 className="features-filter-select features-status-select"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -459,12 +460,12 @@ export default function Features() {
                 <option value="All Statuses">All Statuses</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
-              </select>
+              </FilterDropdown>
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
 
             <div className="feature-filter-control feature-sort-control">
-              <select
+              <FilterDropdown preserveToolbarLayout
                 className="features-filter-select"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -475,7 +476,7 @@ export default function Features() {
                 <option value="updated">Recently Updated</option>
                 <option value="name-asc">Name A-Z</option>
                 <option value="name-desc">Name Z-A</option>
-              </select>
+              </FilterDropdown>
               <i className="bi bi-chevron-down feature-filter-chevron" />
             </div>
 

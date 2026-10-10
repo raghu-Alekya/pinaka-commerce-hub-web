@@ -74,11 +74,6 @@
 .ea-row-actions button { display:inline-grid; width:28px; height:28px; place-items:center; padding:0; border:0; border-radius:4px; color:var(--ea-purple); background:transparent; cursor:pointer; }
 .ea-row-actions button:hover { background:#f0edff; }
 .ea-empty { height:90px!important; text-align:center!important; color:var(--ea-muted)!important; }
-.ea-pagination { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:16px; color:var(--ea-muted); font-size:13px; }
-.ea-pagination > div { display:flex; align-items:center; gap:8px; }
-.ea-pagination select { height:36px; margin-right:4px; padding:0 10px; border:1px solid var(--ea-border); border-radius:5px; color:#34425f; background:#fff; }
-.ea-pagination button { width:34px; height:36px; border:1px solid var(--ea-border); border-radius:5px; color:var(--ea-purple); background:#fff; font-size:20px; cursor:pointer; }
-.ea-pagination button:disabled { color:#b4bdd0; cursor:not-allowed; }
 .ea-modal-backdrop { position:fixed; z-index:1200; inset:0; display:grid; place-items:center; padding:20px; background:rgba(14,24,43,.45); }
 .ea-modal { width:min(520px,100%); overflow:hidden; border:1px solid var(--ea-border); border-radius:10px; background:#fff; box-shadow:0 24px 64px rgba(13,24,49,.2); }
 .ea-modal > header { display:flex; align-items:flex-start; justify-content:space-between; padding:18px 20px; border-bottom:1px solid #edf0f5; }
