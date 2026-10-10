@@ -374,7 +374,7 @@ export default function StoreConfiguration() {
     event.preventDefault();
     if (!editingSection || saving || testing) return;
 
-    if (!siteUrl.trim() || !jwtToken.trim()) {
+    if (!siteUrl.trim() || (!jwtToken.trim() && !jwtConfigured)) {
       setMessage(
         "Enter the WordPress site URL and JWT token."
       );
@@ -421,7 +421,7 @@ export default function StoreConfiguration() {
 
   const handleSyncCatalog = async () => {
     if (testing || saving) return;
-    if (!siteUrl.trim() || !jwtToken.trim()) {
+    if (!siteUrl.trim() || (!jwtToken.trim() && !jwtConfigured)) {
       setMessage("Save the WordPress site URL and JWT token before syncing.");
       return;
     }
@@ -430,10 +430,9 @@ export default function StoreConfiguration() {
     setMessage("");
 
     try {
-      const result = await syncWordpressCatalog(storeId, {
-        siteUrl,
-        jwtToken,
-      });
+      // The API keeps the JWT encrypted and deliberately does not return it.
+      // Catalog sync uses the connector credentials already saved for the store.
+      const result = await syncWordpressCatalog(storeId);
       const categoryCount = result?.catalog?.categoryCount ?? 0;
       const productCount = result?.catalog?.productCount ?? 0;
       setMessage(
