@@ -23,7 +23,7 @@ import {
   storeRoleTemplatesApi,
   readStoreRoleTemplates,
 } from "../api/storeRoleTemplatesApi";
-import { api, ApiError } from "../api/http";
+import { api, ApiError, pendingStoreRead } from "../api/http";
 import { endpoints } from "../api/endpoints";
 import {
   getActiveSubscriptions,
@@ -976,9 +976,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       setLoadError("");
       try {
         const [result, featuresResult, plansResult] = await Promise.all([
-          listMerchants().catch(() => []),
-          listFeatures().catch(() => []),
-          listPlans().catch(() => []),
+          (embeddedStep === null ? pendingStoreRead("merchants", listMerchants) : Promise.resolve([])).catch(() => []),
+          (embeddedStep === null || embeddedStep === 2 || embeddedStep === 3 ? pendingStoreRead("features", listFeatures) : Promise.resolve([])).catch(() => []),
+          pendingStoreRead("plans", listPlans).catch(() => []),
         ]);
         if (!cancelled) {
           setMerchants(
@@ -998,9 +998,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           setMasterPlans(Array.isArray(plansResult) ? plansResult : []);
         }
         if (storeId) {
-          const response = await api.get(
-            endpoints.store(encodeURIComponent(storeId)),
-          );
+          const response = await pendingStoreRead(`store:${storeId}`, () => api.get(endpoints.store(encodeURIComponent(storeId))));
           const saved = response?.store || response;
           if (!cancelled) {
             const address =
@@ -1189,8 +1187,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     async function loadMerchantContext() {
       try {
         const [result, employeeResult, storesResult] = await Promise.all([
-          getMerchant(merchantId),
-          listMerchantEmployees(merchantId),
+          pendingStoreRead(`merchant:${merchantId}`, () => getMerchant(merchantId)),
+          (embeddedStep === null || embeddedStep === 4 ? pendingStoreRead(`employees:${merchantId}`, () => listMerchantEmployees(merchantId)) : Promise.resolve([])),
           api.get(endpoints.merchantStores(merchantId)).catch(() => null),
         ]);
         if (cancelled) return;
@@ -3710,7 +3708,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       if (step === 4) {
         await saveStoreEmployees(merchantId, storeId, employeeAssignments.map(item => ({employeeId:item.employeeId,...(item.role ? {roleTemplateId:item.role} : {}),...(item.pin || item.savedPin ? {loginPin:item.pin || item.savedPin} : {})})));
       } else {
-        const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
+        const response = await pendingStoreRead(`store:${storeId}`, () => api.get(endpoints.store(encodeURIComponent(storeId))));
         const saved = response?.store || response?.data?.store || response?.data || response;
         const code = store.storeCode || store.id || storeId;
         const changes = step === 2 ? {features:enabledFeatures} : {rolePermissions:roles.map(roleId => ({roleTemplateId:roleId,name:roleName(roleId),permissions:permissionsRef.current[roleId] || {}}))};
