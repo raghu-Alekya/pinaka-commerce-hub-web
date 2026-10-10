@@ -1,13 +1,14 @@
 import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 import { storeTypesApi } from "../api/storeTypes";
+import Pagination from "../components/Pagination";
 import { tendorsApi } from "../api/tendors";
 import { useNavigate } from "react-router-dom";
 
 const emptyForm = {
   code: "",
   name: "",
-  status: "Active",
+  status: "",
 };
 
 function generateNextTendorCode(tendors) {
@@ -150,6 +151,10 @@ function getTendorData(response) {
 export default function Tenders() {
   const [tenders, setTenders] = useState([]);
   const navigate = useNavigate();
+  
+const ITEMS_PER_PAGE = 5;
+const [currentPage, setCurrentPage] = useState(1);
+
 
   const [form, setForm] = useState(emptyForm);
   const [originalForm, setOriginalForm] = useState(null);
@@ -201,6 +206,7 @@ export default function Tenders() {
 
   const filteredTenders = useMemo(() => {
     const query = search.trim().toLowerCase();
+    
 
     const filtered = tenders.filter((tender) => {
       const matchesSearch =
@@ -236,6 +242,19 @@ export default function Tenders() {
     });
   }, [tenders, search, statusFilter, sortBy]);
 
+const totalPages = Math.ceil(
+  filteredTenders.length / ITEMS_PER_PAGE
+);
+
+const paginatedTenders = filteredTenders.slice(
+  (currentPage - 1) * ITEMS_PER_PAGE,
+  currentPage * ITEMS_PER_PAGE
+);
+
+useEffect(() => {
+  setCurrentPage(1);
+}, [search, statusFilter, sortBy]);
+
   function handleChange(event) {
     const { name, value } = event.target;
 
@@ -247,8 +266,10 @@ export default function Tenders() {
 
   const generatedCode = generateNextTendorCode(tenders);
   const tenderFormComplete = Boolean(
-    (editingId ? form.code : generatedCode).trim() && form.name.trim(),
-  );
+  (editingId ? form.code : generatedCode).trim() &&
+  form.name.trim() &&
+  form.status
+);
 
   const tenderFormChanged =
     editingId !== null &&
@@ -460,23 +481,28 @@ export default function Tenders() {
           </label>
 
           <label>
-            <span>
-              Status <b>*</b>
-            </span>
+  <span>
+    Status <b>*</b>
+  </span>
 
-            <select
-              name="status"
-              value={form.status}
-              onChange={handleChange}
-              className={`tender-status-select ${
-                form.status === "Inactive" ? "status-inactive" : "status-active"
-              }`}
-            >
-              <option value="Active">Active</option>
-
-              <option value="Inactive">Inactive</option>
-            </select>
-          </label>
+  <select
+    name="status"
+    value={form.status}
+    onChange={handleChange}
+    required
+    className={`tender-status-select ${
+      form.status === "Active"
+        ? "status-active"
+        : form.status === "Inactive"
+          ? "status-inactive"
+          : ""
+    }`}
+  >
+    <option value="">Select Status</option>
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
+</label>
         </div>
 
         <div className="tenders-form-actions">
@@ -593,7 +619,7 @@ export default function Tenders() {
                   </td>
                 </tr>
               ) : (
-                filteredTenders.map((tender) => (
+                paginatedTenders.map((tender) => (
                   
 <tr
   key={tender.id}
@@ -677,8 +703,24 @@ export default function Tenders() {
             <div className="tenders-empty">No tenders found.</div>
           )}
         </div>
+            <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  totalItems={filteredTenders.length}
+  pageSize={ITEMS_PER_PAGE}
+  onPageChange={setCurrentPage}
+  onPageSizeChange={(newPageSize) => {
+    // Fixed at 5 items per page
+    setCurrentPage(1);
+  }}
+  itemLabel="tenders"
+  showWhenEmpty={false}
+/>
+
+
       </div>
 
+   
       {deleteConfirmTender && (
         <div className="tenders-confirm-backdrop" onClick={cancelDeleteTender}>
           <div
