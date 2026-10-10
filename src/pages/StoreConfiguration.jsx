@@ -16,7 +16,6 @@ import StoreCategories from "./StoreCategories";
 import StoreShifts from "./StoreShifts";
 import StorePaymentRecords from "./StorePaymentRecords";
 import VendorPayments from "./VendorPayments";
-import MerchantVendors from "./MerchantVendors";
 import EmployeeAttendance, { AttendanceDetails } from "./EmployeeAttendance";
 
 import { api, ApiError, pendingStoreRead } from "../api/http";
@@ -738,18 +737,11 @@ export default function StoreConfiguration() {
                  VENDORS
                  =========================================== */
 
-              ) : section === "vendors" ? (
-
-                <MerchantVendors
-                  storeId={store?.uuid || storeId}
-                  merchantId={merchant?.id || merchant?.merchantId || merchant?.merchant_id || store?.merchantId || store?.merchant_id || store?.merchant?.id || merchantId}
-                />
-
-              ) : section === "vendorhistory" ? (
+              ) : section === "vendors" || section === "vendorhistory" ? (
 
                 <VendorPayments
                   key={section}
-                  viewMode="payments"
+                  viewMode={section === "vendorhistory" ? "payments" : "vendors"}
                   merchantId={merchantId}
                   storeId={storeId}
                   store={store}

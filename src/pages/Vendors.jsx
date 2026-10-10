@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState, } from "react";
 import Pagination from "../components/Pagination";
-import { useLocationOptions } from "../data/useLocationOptions";
+import FiltersBar from "../components/FiltersBar";
 import { getVendors, createVendor, updateVendor, deleteVendor as deleteVendorApi, } from "../api/vendors";
 
 const emptyForm = {
@@ -198,7 +198,6 @@ export default function Vendors({
 
   const [form, setForm] =
     useState(emptyForm);
-  const locationOptions = useLocationOptions(form);
 
   // Keeps the last saved values while editing so the Update button
   // remains disabled until the user actually changes a field.
@@ -433,7 +432,6 @@ export default function Vendors({
         ...current,
         [name]: value,
       };
-      if (name === "country") updated.state = "";
 
       /*
       |--------------------------------------------------------------------------
@@ -1271,16 +1269,16 @@ export default function Vendors({
               State <b>*</b>
             </span>
 
-            <select
+            <input
+              type="text"
               name="state"
               value={form.state}
               onChange={handleChange}
+              placeholder="Enter state"
+              autoComplete="off"
               required
-              disabled={saving || viewingId !== null}
-            >
-              <option value="">{form.country ? "Select state or province" : "Select country first"}</option>
-              {locationOptions.states.map((state) => <option key={state} value={state}>{state}</option>)}
-            </select>
+              disabled={saving}
+            />
 
           </label>
 
@@ -1317,16 +1315,18 @@ export default function Vendors({
               Country <b>*</b>
             </span>
 
-            <select
+            <input
+              type="text"
               name="country"
-              value={form.country}
+              value={
+                form.country
+              }
               onChange={handleChange}
+              placeholder="Enter country"
+              autoComplete="off"
               required
-              disabled={saving || viewingId !== null}
-            >
-              <option value="">Select country</option>
-              {locationOptions.countries.map((country) => <option key={country} value={country}>{country}</option>)}
-            </select>
+              disabled={saving}
+            />
 
           </label>
 

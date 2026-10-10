@@ -10,9 +10,6 @@ import {
     addMerchantVendors,
     createVendor,
     unmapMerchantVendor,
-    getMappedStoreVendors,
-    addStoreVendors,
-    unmapStoreVendor,
 } from "../api/vendors";
 
 /* =========================================================
@@ -127,16 +124,12 @@ const locationOptions = values => [...new Map(values.filter(Boolean).map(value =
 
 export default function MerchantVendors({
     merchantId,
-    storeId,
     masterVendors: initialMasterVendors = [],
     assignedVendorIds = [],
     onSaveAssignments,
     loading = false,
     error = "",
 }) {
-    const storeScope = Boolean(storeId);
-    const mappingId = storeScope ? storeId : merchantId;
-    const entityName = storeScope ? "store" : "merchant";
     const [ids, setIds] = useState(() =>
         assignedVendorIds.map(idOf)
     );
@@ -191,7 +184,7 @@ export default function MerchantVendors({
     ========================================================= */
 
     async function loadMappedVendors(searchValue = "") {
-        if (!mappingId) {
+        if (!merchantId) {
             setIds([]);
             return;
         }
@@ -200,9 +193,10 @@ export default function MerchantVendors({
         setMappedError("");
 
         try {
-            const mapped = storeScope
-                ? await getMappedStoreVendors(mappingId, { search: searchValue })
-                : await getMappedMerchantVendors(mappingId, { search: searchValue });
+            const mapped = await getMappedMerchantVendors(
+                merchantId,
+                { search: searchValue }
+            );
 
             const mappedIds = mapped.map(idOf);
 
@@ -225,7 +219,7 @@ export default function MerchantVendors({
             setPage(1);
         } catch (e) {
             console.error(
-                `Failed to load mapped ${entityName} vendors:`,
+                "Failed to load mapped merchant vendors:",
                 e
             );
 
@@ -250,14 +244,14 @@ export default function MerchantVendors({
         setCountryFilter("");
         setStateFilter("");
 
-        if (mappingId) {
+        if (merchantId) {
             loadMappedVendors();
         } else {
             setIds(assignedVendorIds.map(idOf));
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mappingId, storeScope]);
+    }, [merchantId]);
 
     useEffect(() => {
         if (modal && modal.type !== "create") {
@@ -361,7 +355,7 @@ export default function MerchantVendors({
     ========================================================= */
 
     async function openAddVendorModal() {
-        if (masterLoading || !mappingId) {
+        if (masterLoading || !merchantId) {
             return;
         }
 
@@ -374,9 +368,10 @@ export default function MerchantVendors({
         setSaveError("");
 
         try {
-            const vendors = storeScope
-                ? (await getMappedMerchantVendors(merchantId)).filter(vendor => !ids.includes(idOf(vendor)))
-                : await getAvailableMerchantVendors(mappingId);
+            const vendors =
+                await getAvailableMerchantVendors(
+                    merchantId
+                );
 
             setMasterVendors(
                 Array.isArray(vendors)
@@ -389,7 +384,7 @@ export default function MerchantVendors({
             });
         } catch (e) {
             console.error(
-                `Failed to load available ${storeScope ? "merchant-mapped" : "merchant"} vendors:`,
+                "Failed to load available merchant vendors:",
                 e
             );
 
@@ -425,7 +420,7 @@ export default function MerchantVendors({
     ========================================================= */
 
     async function createAndAssignVendor(payload) {
-        if (lock.current || !mappingId || storeScope) throw new Error(`Select a ${entityName} before adding a vendor.`);
+        if (lock.current || !merchantId) throw new Error("Select a merchant before adding a vendor.");
         lock.current = true;
         setBusy(true);
         try {
@@ -434,7 +429,7 @@ export default function MerchantVendors({
             const vendorId = idOf(vendor);
             if (!vendorId) throw new Error("Vendor was created but its ID was not returned. Close this popup and use Add Existing Vendor to assign it.");
             try {
-                await addMerchantVendors(mappingId, [vendorId]);
+                await addMerchantVendors(merchantId, [vendorId]);
             } catch (error) {
                 throw new Error("Vendor created, but assignment failed. Retry Create Vendor to assign the same vendor, or use Add Existing Vendor. " + (error?.message || ""));
             }
@@ -449,7 +444,7 @@ export default function MerchantVendors({
     }
 
     async function save(next) {
-        if (lock.current || !mappingId) {
+        if (lock.current || !merchantId) {
             return;
         }
 
@@ -463,8 +458,10 @@ export default function MerchantVendors({
             );
 
             if (modal?.type === "remove") {
-                if (storeScope) await unmapStoreVendor(modal.vendor.mappingId);
-                else await unmapMerchantVendor(mappingId, modal.vendor.id);
+                await unmapMerchantVendor(
+                    merchantId,
+                    modal.vendor.id
+                );
             } else if (modal?.type === "select") {
                 if (!addedIds.length) {
                     throw new Error(
@@ -472,8 +469,10 @@ export default function MerchantVendors({
                     );
                 }
 
-                if (storeScope) await addStoreVendors(mappingId, addedIds);
-                else await addMerchantVendors(mappingId, addedIds);
+                await addMerchantVendors(
+                    merchantId,
+                    addedIds
+                );
             }
 
             await loadMappedVendors();
@@ -481,11 +480,9 @@ export default function MerchantVendors({
             setModal(null);
         } catch (e) {
             console.error(
-                `Failed to save ${entityName} vendor mapping:`,
+                "Failed to save merchant vendor mapping:",
                 e
             );
-
-            if (storeScope) await loadMappedVendors();
 
             setSaveError(
                 e?.message ||
@@ -648,7 +645,7 @@ export default function MerchantVendors({
             <header className="mv-card mv-header">
                 <div>
                     <h2>Add Existing Vendor</h2>
-                    <p>Choose one or more vendors to add to this {entityName}.</p>
+                    <p>Choose one or more vendors to add to this merchant.</p>
                 </div>
                 <button type="button" disabled={busy} onClick={close}>← Back to Vendors</button>
             </header>
@@ -702,7 +699,7 @@ export default function MerchantVendors({
                                     </tr>
                                 );
                             })}
-                            {!available.length && <tr><td colSpan={6}>{storeScope ? "No unassigned vendors mapped to this merchant." : "No unassigned vendors found in master data."}</td></tr>}
+                            {!available.length && <tr><td colSpan={6}>No unassigned vendors found in master data.</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -743,12 +740,12 @@ export default function MerchantVendors({
 
                     <p>
                         These are the vendors connected
-                        to this {entityName}.
+                        to this merchant.
                     </p>
                 </div>
 
                 <div className="mv-popup-actions">
-                {!storeScope && <button type="button" className="mv-primary" disabled={!mappingId || busy} onClick={() => { pendingNewVendor.current = null; setSaveError(""); setModal({ type: "create" }); }}>＋ Add New Vendor</button>}
+                <button type="button" className="mv-primary" disabled={!merchantId || busy} onClick={() => { pendingNewVendor.current = null; setSaveError(""); setModal({ type: "create" }); }}>＋ Add New Vendor</button>
                 <button
                     ref={addButton}
                     type="button"
@@ -756,8 +753,7 @@ export default function MerchantVendors({
                     disabled={
                         loading ||
                         !!error ||
-                        masterLoading ||
-                        !mappingId
+                        masterLoading
                     }
                     onClick={openAddVendorModal}
                 >
@@ -1030,7 +1026,7 @@ export default function MerchantVendors({
 
                             <p>
                                 {modal?.type === "create" ? "Create a vendor and connect it to this merchant." : modal?.type === "select"
-                                    ? `Choose one or more vendors to add to this ${entityName}.`
+                                    ? "Choose one or more vendors to add to this merchant."
                                     : modal?.type === "view-existing"
                                     ? "Read-only master vendor details."
                                     : modal?.type === "remove"
@@ -1180,7 +1176,9 @@ export default function MerchantVendors({
                                         {!available.length && (
                                             <tr>
                                                 <td colSpan={6}>
-                                                    {storeScope ? "No unassigned vendors mapped to this merchant." : "No unassigned vendors found in master data."}
+                                                    No unassigned
+                                                    vendors found
+                                                    in master data.
                                                 </td>
                                             </tr>
                                         )}
