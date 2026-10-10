@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { storeTypesApi } from "../api/storeTypes";
@@ -1293,7 +1294,7 @@ export default function CreatePlan() {
               />
             </label>
 
-            <select
+            <FilterDropdown preserveToolbarLayout
               value={billingFilter}
               onChange={(event) => setBillingFilter(event.target.value)}
             >
@@ -1302,16 +1303,16 @@ export default function CreatePlan() {
               <option value="Per terminal">Per Terminal</option>
               <option value="Flat rate">Flat Rate</option>
                 <option value="Custom">Custom</option>
-            </select>
+            </FilterDropdown>
 
-            <select
+            <FilterDropdown preserveToolbarLayout
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
             >
               <option value="">All Status</option>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
-            </select>
+            </FilterDropdown>
 
             <button
               type="button"

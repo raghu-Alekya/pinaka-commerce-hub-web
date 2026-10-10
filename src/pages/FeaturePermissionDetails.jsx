@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -276,7 +277,7 @@ const FeaturePermissions = () => {
             {/* FILTER */}
 
             <div className="fp-filter-wrapper">
-              <select
+              <FilterDropdown preserveToolbarLayout
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
                 className="fp-filter"
@@ -286,7 +287,7 @@ const FeaturePermissions = () => {
                 <option value="active">Active Permissions</option>
 
                 <option value="inactive">Inactive Permissions</option>
-              </select>
+              </FilterDropdown>
 
               <ChevronDown
                 size={16}

@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useMemo, useState } from "react";
 import "../styles/store-shifts.css";
 
@@ -324,18 +325,18 @@ function DailyShiftSummary({
       <ShiftSummaryCards summary={summary} />
 
       <div className="shift-filter-bar">
-        <select defaultValue="">
+        <FilterDropdown defaultValue="">
           <option value="">Bulk actions</option>
           <option value="export">Export</option>
-        </select>
+        </FilterDropdown>
 
         <button type="button" className="shift-small-btn">
           Apply
         </button>
 
-        <select defaultValue="">
+        <FilterDropdown defaultValue="">
           <option value="">All dates</option>
-        </select>
+        </FilterDropdown>
 
         <button type="button" className="shift-small-btn">Today</button>
         <button type="button" className="shift-small-btn">This Week</button>
@@ -529,10 +530,10 @@ function DailyShiftDetails({
       </div>
 
       <div className="shift-filter-bar detail-filter-bar">
-        <select defaultValue="">
+        <FilterDropdown defaultValue="">
           <option value="">Bulk actions</option>
           <option value="export">Export</option>
-        </select>
+        </FilterDropdown>
 
         <button type="button" className="shift-small-btn">Apply</button>
 
@@ -604,9 +605,9 @@ function DailyShiftDetails({
       </div>
 
       <div className="shift-bottom-toolbar">
-        <select defaultValue="">
+        <FilterDropdown defaultValue="">
           <option value="">Bulk actions</option>
-        </select>
+        </FilterDropdown>
         <button type="button" className="shift-small-btn">Apply</button>
         <span>{shifts.length} items</span>
       </div>
