@@ -473,7 +473,7 @@ export default function Devices() {
                 {" "}
 
  
-                <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
+                <th>Device ID</th> <th>Device Code</th> <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
  
                 <th>Merchant Name</th> <th>Connection Status</th>{" "}
  
@@ -493,7 +493,7 @@ export default function Devices() {
  
                   {" "}
  
-                  <td colSpan="9" className="devices-empty">
+                  <td colSpan="8" className="devices-empty">
  
                     {" "}
  
@@ -523,7 +523,7 @@ export default function Devices() {
                   {" "}
  
                  <td
-                    colSpan="9"
+                    colSpan="8"
                     style={{
                       textAlign: "center",
                       padding: "40px",
@@ -738,16 +738,12 @@ function DeviceRow({
     device.status?.toLowerCase().replace(/\s+/g, "-") || "unknown";
 
   return (
-    <tr className="device-row-clickable" tabIndex={0}
-      onClick={(event) => {
-        if (!event.target.closest("button, a, input, select, textarea, [role='button'], [role='combobox']")) onView();
-      }}
-      onKeyDown={(event) => {
-        if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
-          event.preventDefault();
-          onView();
-        }
-      }} aria-label={`View ${device.name || "device"}`}>
+    <tr>
+      {/* DEVICE ID */}
+      <td>{device.deviceId || device.device_id || "-"}</td>
+
+      {/* DEVICE CODE */}
+      <td>{device.code || device.deviceCode || "-"}</td>
   
      {/* DEVICE NAME */}
       <td>
@@ -757,9 +753,6 @@ function DeviceRow({
               {device.name || "-"}
             </div>
 
-            <div className="device-id">
-              {device.id || "-"}
-            </div>
           </div>
         </div>
       </td>
@@ -801,5 +794,3 @@ function DeviceRow({
     </tr>
   );
 }
- 
- 

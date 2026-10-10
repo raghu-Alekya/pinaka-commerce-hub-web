@@ -498,8 +498,9 @@ export default function StoreDevices({
           <table className="store-devices-table">
             <thead>
               <tr>
-                <th>Device</th>
                 <th>Device ID</th>
+                <th>Device Code</th>
+                <th>Device Name</th>
                 <th>Device Type</th>
                 <th>Status</th>
                 <th>Last Updated</th>
@@ -896,7 +897,15 @@ function DeviceRow({ device, onView, onEdit }) {
 
   return (
     <tr>
-      {/* DEVICE */}
+      {/* DEVICE ID */}
+      <td>
+        <span className="store-device-id">{device.deviceId || device.device_id || "—"}</span>
+      </td>
+
+      {/* DEVICE CODE */}
+      <td>{device.code || device.deviceCode || "—"}</td>
+
+      {/* DEVICE NAME */}
 
       <td>
         <div className="store-device-info">
@@ -910,12 +919,6 @@ function DeviceRow({ device, onView, onEdit }) {
             {device.model && <small>{device.model}</small>}
           </div>
         </div>
-      </td>
-
-      {/* DEVICE ID */}
-
-      <td>
-        <span className="store-device-id">{device.deviceId || "—"}</span>
       </td>
 
       {/* DEVICE TYPE */}
