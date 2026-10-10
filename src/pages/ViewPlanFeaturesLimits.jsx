@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getPlan } from "../api/plans";
 function displayText(value, fallback = "—") {
   if (typeof value === "string" || typeof value === "number") {
-    return String(value);
+    return String(value).trim() || fallback;
   }
   if (value && typeof value === "object") {
     return displayText(
