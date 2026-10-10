@@ -646,7 +646,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
 
   return (
-    <div className={`add-employee-page${suppliedEmployee ? " merchant-employee-edit" : ""}`}>
+    <div className={`add-employee-page${employeeProp ? " merchant-employee-edit" : ""}`}>
       <StoreRoleAssignmentStyles />
 
       {/* PAGE HEADER */}
