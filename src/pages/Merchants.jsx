@@ -47,6 +47,7 @@ function ViewTable({ headings, rows }) {
 }
 function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSaveDevice, masterVendors, vendorAssignments, onSaveVendorAssignments, vendorsLoading, vendorsError, masterTenders, tenderAssignments, onSaveTenderAssignments, tendersLoading, tendersError }) {
  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [addingEmployee, setAddingEmployee] = useState(false);
   const [editingEmployeeLoading, setEditingEmployeeLoading] = useState(false);
   const [createdEmployees, setCreatedEmployees] = useState([]);
   async function saveEmployeeAndRefresh(values) {
