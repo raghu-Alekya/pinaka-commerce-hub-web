@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -566,7 +567,7 @@ export default function RoleTemplates() {
                 />
               </div>
  
-              <select
+              <FilterDropdown preserveToolbarLayout
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 aria-label="Filter by status"
@@ -574,9 +575,9 @@ export default function RoleTemplates() {
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
-              </select>
+              </FilterDropdown>
  
-              <select
+              <FilterDropdown preserveToolbarLayout
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 aria-label="Sort role templates"
@@ -585,7 +586,7 @@ export default function RoleTemplates() {
                 <option value="OLDEST">Oldest to Newest</option>
                 <option value="A_Z">A to Z</option>
                 <option value="Z_A">Z to A</option>
-              </select>
+              </FilterDropdown>
  
               <button
                 type="button"

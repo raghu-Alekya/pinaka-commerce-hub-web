@@ -691,7 +691,7 @@
 }
 
 .devices-table tbody tr:hover {
-  background: #fcfcff;
+  background: #fafbfe;
 }
 
 
@@ -1394,3 +1394,6 @@
 /* =========================================================
    END DEVICES CSS
 ========================================================= */
+
+.device-row-clickable { cursor: pointer; }
+.device-row-clickable:focus-visible { outline: 2px solid #6740e5; outline-offset: -2px; }
