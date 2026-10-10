@@ -767,10 +767,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  border-top: 1px solid #e5e9f1;
   background: #f6f8fcf2;
   width: 100%;
   margin-top: 24px;
   padding: 16px 0 0;
+  border-top: 1px solid #e5e7eb;
  
 }
 
@@ -1504,6 +1506,23 @@
   align-items: center;
   gap: 9px;
   padding: 12px 14px;
+}
+
+.sf-employee-tools .sf-select-all-employees {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+  color: #2c3a55;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.sf-employee-tools .sf-select-all-employees input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--sf-purple);
 }
 
 .sf-employee-tools .sf-field {
