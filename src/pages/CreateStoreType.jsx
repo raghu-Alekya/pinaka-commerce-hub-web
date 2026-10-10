@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
@@ -827,7 +828,7 @@ export default function CreateStoreType() {
             </label>
 
             <div className="store-filter-select pch-master-filter pch-master-control">
-              <select
+              <FilterDropdown preserveToolbarLayout
 
                 value={statusFilter}
 
@@ -836,12 +837,12 @@ export default function CreateStoreType() {
                 <option value="">All Statuses</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
-              </select>
+              </FilterDropdown>
               <i className="bi bi-chevron-down" />
             </div>
 
             <div className="store-filter-select pch-master-filter pch-master-control">
-              <select
+              <FilterDropdown preserveToolbarLayout
 
                 value={sortBy}
 
@@ -852,7 +853,7 @@ export default function CreateStoreType() {
                 <option value="updated">Recently Updated</option>
                 <option value="name-asc">Name (A–Z)</option>
                 <option value="name-desc">Name (Z–A)</option>
-              </select>
+              </FilterDropdown>
               <i className="bi bi-chevron-down" />
             </div>
 

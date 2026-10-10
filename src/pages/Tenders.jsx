@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 import { storeTypesApi } from "../api/storeTypes";
 import { tendorsApi } from "../api/tendors";
@@ -524,7 +525,7 @@ export default function Tenders() {
               />
             </div>
 
-            <select
+            <FilterDropdown preserveToolbarLayout
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
             >
@@ -533,8 +534,8 @@ export default function Tenders() {
               <option value="Active">Active</option>
 
               <option value="Inactive">Inactive</option>
-            </select>
-            <select
+            </FilterDropdown>
+            <FilterDropdown preserveToolbarLayout
               className="tenders-sort-select"
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
@@ -547,7 +548,7 @@ export default function Tenders() {
               <option value="name-asc">Alphabetical A–Z</option>
 
               <option value="name-desc">Alphabetical Z–A</option>
-            </select>
+            </FilterDropdown>
 
             <button
               type="button"

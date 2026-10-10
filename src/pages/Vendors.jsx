@@ -1,5 +1,5 @@
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState, } from "react";
-import { useNavigate } from "react-router-dom";
 import Pagination from "../components/Pagination";
 import FiltersBar from "../components/FiltersBar";
 import { getVendors, createVendor, updateVendor, deleteVendor as deleteVendorApi, } from "../api/vendors";
@@ -192,6 +192,7 @@ export default function Vendors({
   onCancel,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [vendors, setVendors] =
     useState([]);
 
@@ -476,7 +477,6 @@ export default function Vendors({
     setForm({
       ...emptyForm,
     });
-    setEditingId(null);
     setEditingId(null);
     setOriginalForm({
       ...emptyForm,
@@ -779,6 +779,19 @@ export default function Vendors({
     } finally {
       setSaving(false);
     }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | VIEW VENDOR
+  |--------------------------------------------------------------------------
+  | Navigate to the dedicated read-only page.
+  */
+
+  function viewVendor(vendor) {
+    navigate(`/vendors/${encodeURIComponent(vendor.id)}`, {
+      state: { vendor, backTo: location.pathname + location.search },
+    });
   }
 
   /*
@@ -1580,6 +1593,10 @@ export default function Vendors({
                 </th>
 
                 <th>
+                  Contact Person
+                </th>
+
+                <th>
                   Phone Number
                 </th>
 
@@ -1615,7 +1632,7 @@ export default function Vendors({
               {loading ? (
                 <tr>
                   <td
-                    colSpan="11"
+                    colSpan="12"
                     className="vendors-loading-cell"
                   >
                     <i className="bi bi-arrow-repeat vendors-loading-icon" />
@@ -1628,6 +1645,22 @@ export default function Vendors({
                   (vendor) => (
                     <tr
                       key={vendor.id}
+                      tabIndex={saving || deleting ? -1 : 0}
+                      aria-label={`View ${vendor.name}`}
+                      style={{ cursor: saving || deleting ? undefined : "pointer" }}
+                      onClick={(event) => {
+                        if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                          event.stopPropagation();
+                          return;
+                        }
+                        if (!saving && !deleting) viewVendor(vendor);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ") && !saving && !deleting) {
+                          event.preventDefault();
+                          viewVendor(vendor);
+                        }
+                      }}
                     >
                       {/* CODE */}
 
@@ -1670,6 +1703,18 @@ export default function Vendors({
                             vendor.vendorType
                           )}
                         </span>
+                      </td>
+
+                      {/* CONTACT PERSON */}
+
+                      <td>
+                        <VendorCell
+                          value={
+                            getVendorTypeLabel(vendor.vendorType) === "Organizer"
+                              ? vendor.contactPerson
+                              : "—"
+                          }
+                        />
                       </td>
 
                       {/* PHONE */}
@@ -1725,6 +1770,19 @@ export default function Vendors({
                       {/* ACTIONS */}
 
                       <td className="vendors-actions">
+
+                        {/* VIEW */}
+
+                        <button
+                          type="button"
+                          className="vendors-view-action"
+                          onClick={() => viewVendor(vendor)}
+                          aria-label={`View ${vendor.name}`}
+                          title="View"
+                          disabled={saving || deleting}
+                        >
+                          <i className="bi bi-eye" />
+                        </button>
 
                         {/* EDIT */}
 
