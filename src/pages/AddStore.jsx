@@ -1,4 +1,5 @@
 import { buildStoreSetupPayload } from "../api/storeDetails";
+import { useLocationOptions } from "../data/useLocationOptions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
@@ -23,9 +24,8 @@ import {
   storeRoleTemplatesApi,
   readStoreRoleTemplates,
 } from "../api/storeRoleTemplatesApi";
-import { api, ApiError, pendingStoreRead } from "../api/http";
+import { api, ApiError } from "../api/http";
 import { endpoints } from "../api/endpoints";
-import Pagination from "../components/Pagination";
 import {
   getActiveSubscriptions,
   extractActiveSubscription,
@@ -84,8 +84,16 @@ function validatePhoneForCountry(value, country) {
   const phone = String(value || "").trim();
   if (!phone) return "";
   const rule = PHONE_RULES[country];
-  if (!rule || !/^\+?[\d\s().-]+$/.test(phone))
+  if (!/^\+?[\d\s().-]+$/.test(phone))
     return `Enter a valid ${country || "country"} phone number.`;
+
+  // Countries without a local rule still accept internationally formatted numbers.
+  if (!rule) {
+    const digits = phone.replace(/\D/g, "");
+    return digits.length >= 7 && digits.length <= 15
+      ? ""
+      : `Enter a valid ${country || "country"} phone number.`;
+  }
 
   const hasInternationalPrefix = phone.startsWith("+") || phone.startsWith("00");
   let digits = phone.replace(/\D/g, "");
@@ -527,6 +535,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const { merchantId: routeMerchantId, storeId } = useParams();
   const editing = Boolean(storeId);
   const [store, setStore] = useState(() => blankStore(routeMerchantId || ""));
+  const locationOptions = useLocationOptions(store);
   const [merchants, setMerchants] = useState([]);
   const [merchantInfo, setMerchantInfo] = useState(null);
   const [subscription, setSubscription] = useState(null);
@@ -583,7 +592,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [employeeFilter, setEmployeeFilter] = useState("All");
   const [employeePage, setEmployeePage] = useState(1);
-  const [employeePageSize, setEmployeePageSize] = useState(10);
   const [featureSearch, setFeatureSearch] = useState("");
   const [featureCategory, setFeatureCategory] = useState("All Features");
 
@@ -941,11 +949,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     );
   });
 
-  const pageCount = Math.max(1, Math.ceil(employeeRows.length / employeePageSize));
+  const pageSize = 10;
+  const pageCount = Math.max(1, Math.ceil(employeeRows.length / pageSize));
   const currentEmployeePage = Math.min(employeePage, pageCount);
   const pagedEmployees = employeeRows.slice(
-    (currentEmployeePage - 1) * employeePageSize,
-    currentEmployeePage * employeePageSize,
+    (currentEmployeePage - 1) * pageSize,
+    currentEmployeePage * pageSize,
   );
   const allActiveEmployeesSelected =
     activeEmployees.length > 0 &&
@@ -977,9 +986,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       setLoadError("");
       try {
         const [result, featuresResult, plansResult] = await Promise.all([
-          (embeddedStep === null ? pendingStoreRead("merchants", listMerchants) : Promise.resolve([])).catch(() => []),
-          (embeddedStep === null || embeddedStep === 2 || embeddedStep === 3 ? pendingStoreRead("features", listFeatures) : Promise.resolve([])).catch(() => []),
-          pendingStoreRead("plans", listPlans).catch(() => []),
+          listMerchants().catch(() => []),
+          listFeatures().catch(() => []),
+          listPlans().catch(() => []),
         ]);
         if (!cancelled) {
           setMerchants(
@@ -999,7 +1008,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           setMasterPlans(Array.isArray(plansResult) ? plansResult : []);
         }
         if (storeId) {
-          const response = await pendingStoreRead(`store:${storeId}`, () => api.get(endpoints.store(encodeURIComponent(storeId))));
+          const response = await api.get(
+            endpoints.store(encodeURIComponent(storeId)),
+          );
           const saved = response?.store || response;
           if (!cancelled) {
             const address =
@@ -1188,8 +1199,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     async function loadMerchantContext() {
       try {
         const [result, employeeResult, storesResult] = await Promise.all([
-          pendingStoreRead(`merchant:${merchantId}`, () => getMerchant(merchantId)),
-          (embeddedStep === null || embeddedStep === 4 ? pendingStoreRead(`employees:${merchantId}`, () => listMerchantEmployees(merchantId)) : Promise.resolve([])),
+          getMerchant(merchantId),
+          listMerchantEmployees(merchantId),
           api.get(endpoints.merchantStores(merchantId)).catch(() => null),
         ]);
         if (cancelled) return;
@@ -1613,7 +1624,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setEmployeeSearch("");
     setEmployeeFilter("All");
     setEmployeePage(1);
-    setEmployeePageSize(10);
     setFeatureSearch("");
     setFeatureCategory("All Features");
     setCopyFromRole("");
@@ -1638,6 +1648,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setStore((current) => ({
       ...current,
       country,
+      state: "",
       currency: COUNTRIES[country]?.currency || "",
       timezone: COUNTRIES[country]?.zones[0] || "",
     }));
@@ -1916,8 +1927,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           return "Enter a valid website URL, including https://.";
         }
       }
-      if (store.country && !COUNTRIES[store.country])
-        return "Select a supported country.";
       if (store.timezone) {
         try {
           new Intl.DateTimeFormat("en", { timeZone: store.timezone });
@@ -2652,11 +2661,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 onChange={(value) => updateStore("city", value)}
                 placeholder="City"
               />
-              <Field
+              <SelectField
                 label="State / Province *"
                 value={store.state}
                 onChange={(value) => updateStore("state", value)}
-                placeholder="State or province"
+                options={[
+                  { value: "", label: store.country ? "Select state or province" : "Select country first" },
+                  ...locationOptions.states.map((value) => ({ value, label: value })),
+                ]}
               />
               <Field
                 label="Zip / Postal Code *"
@@ -2670,7 +2682,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 onChange={changeCountry}
                 options={[
                   { value: "", label: "Select country" },
-                  ...Object.keys(COUNTRIES).map((value) => ({
+                  ...locationOptions.countries.map((value) => ({
                     value,
                     label: value,
                   })),
@@ -3336,7 +3348,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                           aria-label={`Assign ${employee.name}`}
                         />
                       </td>
-                      <td>{(currentEmployeePage - 1) * employeePageSize + index + 1}</td>
+                      <td>{(employeePage - 1) * pageSize + index + 1}</td>
                       <td>
                         {employee.name ||
                           `${employee.firstName || ""} ${employee.lastName || ""}`.trim()}
@@ -3449,19 +3461,44 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               </tbody>
             </table>
           </div>
-          <Pagination
-            currentPage={currentEmployeePage}
-            totalPages={pageCount}
-            totalItems={employeeRows.length}
-            pageSize={employeePageSize}
-            onPageChange={setEmployeePage}
-            onPageSizeChange={(size) => {
-              setEmployeePageSize(size);
-              setEmployeePage(1);
-            }}
-            itemLabel="employees"
-            showWhenEmpty
-          />
+          <div className="sf-pagination">
+            <span>
+              Showing{" "}
+              {employeeRows.length ? (employeePage - 1) * pageSize + 1 : 0}–
+              {Math.min(employeePage * pageSize, employeeRows.length)} of{" "}
+              {employeeRows.length} employees
+            </span>
+            <div>
+              <button
+                type="button"
+                disabled={employeePage <= 1}
+                onClick={() => setEmployeePage((page) => Math.max(1, page - 1))}
+              >
+                ‹
+              </button>
+              {Array.from({ length: pageCount }, (_, index) => index + 1)
+                .slice(0, 5)
+                .map((page) => (
+                  <button
+                    type="button"
+                    key={page}
+                    className={employeePage === page ? "active" : ""}
+                    onClick={() => setEmployeePage(page)}
+                  >
+                    {page}
+                  </button>
+                ))}
+              <button
+                type="button"
+                disabled={employeePage >= pageCount}
+                onClick={() =>
+                  setEmployeePage((page) => Math.min(pageCount, page + 1))
+                }
+              >
+                ›
+              </button>
+            </div>
+          </div>
         </Panel>
       </>
     );
@@ -3685,7 +3722,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       if (step === 4) {
         await saveStoreEmployees(merchantId, storeId, employeeAssignments.map(item => ({employeeId:item.employeeId,...(item.role ? {roleTemplateId:item.role} : {}),...(item.pin || item.savedPin ? {loginPin:item.pin || item.savedPin} : {})})));
       } else {
-        const response = await pendingStoreRead(`store:${storeId}`, () => api.get(endpoints.store(encodeURIComponent(storeId))));
+        const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
         const saved = response?.store || response?.data?.store || response?.data || response;
         const code = store.storeCode || store.id || storeId;
         const changes = step === 2 ? {features:enabledFeatures} : {rolePermissions:roles.map(roleId => ({roleTemplateId:roleId,name:roleName(roleId),permissions:permissionsRef.current[roleId] || {}}))};

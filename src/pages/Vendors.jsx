@@ -1,7 +1,6 @@
-import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState, } from "react";
 import Pagination from "../components/Pagination";
-import FiltersBar from "../components/FiltersBar";
+import { useLocationOptions } from "../data/useLocationOptions";
 import { getVendors, createVendor, updateVendor, deleteVendor as deleteVendorApi, } from "../api/vendors";
 
 const emptyForm = {
@@ -162,20 +161,6 @@ function VendorAuditCell({ value }) {
   );
 }
 
-function VendorStatCard({ icon, title, value, variant }) {
-  return (
-    <div className="vendors-stat-card">
-      <div className={`vendors-stat-icon ${variant}`}>
-        <i className={`bi ${icon}`} aria-hidden="true" />
-      </div>
-      <div className="vendors-stat-content">
-        <div className="vendors-stat-title">{title}</div>
-        <div className="vendors-stat-value">{value}</div>
-      </div>
-    </div>
-  );
-}
-
 /*
 |--------------------------------------------------------------------------
 | COMPONENT
@@ -191,13 +176,12 @@ export default function Vendors({
   onCreate,
   onCancel,
 }) {
-  const navigate = useNavigate();
-  const location = useLocation();
   const [vendors, setVendors] =
     useState([]);
 
   const [form, setForm] =
     useState(emptyForm);
+  const locationOptions = useLocationOptions(form);
 
   // Keeps the last saved values while editing so the Update button
   // remains disabled until the user actually changes a field.
@@ -205,6 +189,10 @@ export default function Vendors({
     useState(emptyForm);
 
   const [editingId, setEditingId] =
+    useState(null);
+
+  // Read-only vendor view mode.
+  const [viewingId, setViewingId] =
     useState(null);
 
   const [deleteTarget, setDeleteTarget] =
@@ -400,15 +388,6 @@ export default function Vendors({
     startIndex,
     startIndex + rowsPerPage,
   );
-  const activeVendorCount = vendors.filter(
-    (vendor) => String(vendor.status || "").toLowerCase() === "active",
-  ).length;
-  const supplierCount = vendors.filter(
-    (vendor) => getVendorTypeLabel(vendor.vendorType) === "Supplier",
-  ).length;
-  const organizerCount = vendors.filter(
-    (vendor) => getVendorTypeLabel(vendor.vendorType) === "Organizer",
-  ).length;
 
   function handleFilterChange(setter, value) {
     setter(value);
@@ -432,6 +411,7 @@ export default function Vendors({
         ...current,
         [name]: value,
       };
+      if (name === "country") updated.state = "";
 
       /*
       |--------------------------------------------------------------------------
@@ -477,7 +457,9 @@ export default function Vendors({
     setForm({
       ...emptyForm,
     });
+
     setEditingId(null);
+    setViewingId(null);
     setOriginalForm({
       ...emptyForm,
     });
@@ -759,10 +741,6 @@ export default function Vendors({
             ...current,
           ]
         );
-
-        if (formOnly) {
-          navigate("/vendors");
-        }
       }
 
       resetForm();
@@ -785,12 +763,40 @@ export default function Vendors({
   |--------------------------------------------------------------------------
   | VIEW VENDOR
   |--------------------------------------------------------------------------
-  | Navigate to the dedicated read-only page.
+  | Populate the same form in read-only mode.
   */
 
-  function viewVendor(vendor) {
-    navigate(`/vendors/${encodeURIComponent(vendor.id)}`, {
-      state: { vendor, backTo: location.pathname + location.search },
+  function viewVendor(
+    vendor
+  ) {
+    const viewForm = {
+      code: vendor.code || "",
+      name: vendor.name || "",
+      vendorType: normalizeVendorType(
+        vendor.vendorType
+      ),
+      contactPerson: vendor.contactPerson || "",
+      phone: vendor.phone || "",
+      email: vendor.email || "",
+      category: vendor.category || "",
+      addressLine1: vendor.addressLine1 || "",
+      addressLine2: vendor.addressLine2 || "",
+      city: vendor.city || "",
+      state: vendor.state || "",
+      zipCode: vendor.zipCode || "",
+      country: vendor.country || "",
+      status: vendor.status || "Active",
+    };
+
+    setViewingId(vendor.id);
+    setEditingId(null);
+    setForm(viewForm);
+    setOriginalForm(viewForm);
+    setError("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
     });
   }
 
@@ -859,6 +865,7 @@ export default function Vendors({
     setEditingId(
       vendor.id
     );
+    setViewingId(null);
 
     setForm(editForm);
     setOriginalForm(editForm);
@@ -965,29 +972,42 @@ export default function Vendors({
 
   const vendorForm = (
       <form
-        className="vendors-form"
+        className={`vendors-form ${
+          viewingId !== null
+            ? "vendors-form-view-mode"
+            : ""
+        }`}
         onSubmit={saveVendor}
         autoComplete="off"
       >
 
-        <div className="vendors-form-card">
         <div className="vendors-form-heading">
 
           <div className="vendors-heading-content">
 
             <div className="vendors-heading-icon">
-              <i className="bi bi-truck" />
+              <i
+                className={
+                  viewingId !== null
+                    ? "bi bi-lock-fill"
+                    : "bi bi-truck"
+                }
+              />
             </div>
 
             <div>
               <h2>
-                {editingId !== null
+                {viewingId !== null
+                  ? `View Vendor - ${form.name || "Vendor"}`
+                  : editingId !== null
                   ? "Edit Vendor"
-                  : "Vendor Details"}
+                  : "Add Vendor"}
               </h2>
 
               <p>
-                Enter the vendor details.
+                {viewingId !== null
+                  ? "View vendor and business details. Editing is disabled."
+                  : "Enter the vendor details."}
               </p>
             </div>
 
@@ -1038,7 +1058,7 @@ export default function Vendors({
               placeholder="Enter vendor name"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
 
           </label>
@@ -1059,7 +1079,7 @@ export default function Vendors({
               }
               onChange={handleChange}
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             >
               <option value="Supplier">
                 Supplier
@@ -1096,7 +1116,7 @@ export default function Vendors({
                 placeholder="Enter contact person name"
                 autoComplete="off"
                 required
-                disabled={saving}
+                disabled={saving || viewingId !== null}
               />
 
             </label>
@@ -1122,7 +1142,7 @@ export default function Vendors({
               maxLength={10}
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
               aria-invalid={
                 Boolean(form.phone) &&
                 !/^\d{10}$/.test(form.phone)
@@ -1152,7 +1172,7 @@ export default function Vendors({
               onChange={handleChange}
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
               aria-invalid={
                 Boolean(form.email) &&
                 !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
@@ -1186,7 +1206,7 @@ export default function Vendors({
               placeholder="Enter products or product categories"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
 
           </label>
@@ -1210,7 +1230,7 @@ export default function Vendors({
               placeholder="Enter street address"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
 
           </label>
@@ -1233,7 +1253,7 @@ export default function Vendors({
               onChange={handleChange}
               placeholder="Apartment, suite, unit"
               autoComplete="off"
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
 
           </label>
@@ -1255,7 +1275,7 @@ export default function Vendors({
               placeholder="Enter city"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
 
           </label>
@@ -1269,16 +1289,16 @@ export default function Vendors({
               State <b>*</b>
             </span>
 
-            <input
-              type="text"
+            <select
               name="state"
               value={form.state}
               onChange={handleChange}
-              placeholder="Enter state"
-              autoComplete="off"
               required
-              disabled={saving}
-            />
+              disabled={saving || viewingId !== null}
+            >
+              <option value="">{form.country ? "Select state or province" : "Select country first"}</option>
+              {locationOptions.states.map((state) => <option key={state} value={state}>{state}</option>)}
+            </select>
 
           </label>
 
@@ -1301,7 +1321,7 @@ export default function Vendors({
               placeholder="Enter ZIP code"
               autoComplete="off"
               required
-              disabled={saving}
+              disabled={saving || viewingId !== null}
             />
 
           </label>
@@ -1315,18 +1335,16 @@ export default function Vendors({
               Country <b>*</b>
             </span>
 
-            <input
-              type="text"
+            <select
               name="country"
-              value={
-                form.country
-              }
+              value={form.country}
               onChange={handleChange}
-              placeholder="Enter country"
-              autoComplete="off"
               required
-              disabled={saving}
-            />
+              disabled={saving || viewingId !== null}
+            >
+              <option value="">Select country</option>
+              {locationOptions.countries.map((country) => <option key={country} value={country}>{country}</option>)}
+            </select>
 
           </label>
 
@@ -1334,7 +1352,8 @@ export default function Vendors({
               STATUS
           ================================================= */}
 
-          {editingId !== null && (
+          {(editingId !== null ||
+            viewingId !== null) && (
             <label>
               <span>
                 Status <b>*</b>
@@ -1350,7 +1369,7 @@ export default function Vendors({
                 }
                 onChange={handleChange}
                 required
-                disabled={saving}
+                disabled={saving || viewingId !== null}
               >
                 <option value="Active">
                   Active
@@ -1366,8 +1385,6 @@ export default function Vendors({
 
         </div>
 
-        </div>
-
         {/* ===================================================
             FORM ACTIONS
         =================================================== */}
@@ -1377,7 +1394,7 @@ export default function Vendors({
           <button
             type="button"
             className="vendors-clear-button"
-            onClick={onCancel || (formOnly ? () => navigate("/vendors") : resetForm)}
+            onClick={onCancel || resetForm}
             disabled={saving}
           >
             Cancel
@@ -1388,6 +1405,7 @@ export default function Vendors({
             className="vendors-save-button"
             disabled={
               saving ||
+              viewingId !== null ||
               !isFormComplete ||
               (editingId !== null && !isEditDirty)
             }
@@ -1404,55 +1422,17 @@ export default function Vendors({
               <>
                 {editingId !== null
                   ? "Save Changes"
-                  : "Add Vendor"}
+                  : "Create Vendor"}
               </>
             )}
           </button>
 
         </div>
+
       </form>
   );
 
-  if (formOnly) {
-    return (
-      <section className="vendors-page vendors-create-page">
-        <nav className="vendors-navigation" aria-label="Vendor navigation">
-          <button
-            type="button"
-            className="vendors-back-link"
-            onClick={onCancel || (() => navigate("/vendors"))}
-          >
-            <i className="bi bi-arrow-left" aria-hidden="true" />
-            Vendors
-          </button>
-          <span aria-hidden="true">/</span>
-          <strong aria-current="page">Add Vendor</strong>
-        </nav>
-
-        <div className="vendors-header">
-          <div>
-            <h1>Add Vendor</h1>
-            <p>Enter vendor details and contact information.</p>
-          </div>
-        </div>
-
-        {error && (
-          <div className="vendors-error" role="alert">
-            <i className="bi bi-exclamation-circle" />
-            <span>{error}</span>
-            <button
-              type="button"
-              onClick={() => setError("")}
-              aria-label="Close error"
-            >
-              <i className="bi bi-x" />
-            </button>
-          </div>
-        )}
-        {vendorForm}
-      </section>
-    );
-  }
+  if (formOnly) return <section className="vendors-page">{error && <div className="vendors-error" role="alert">{error}</div>}{vendorForm}</section>;
 
   return (
     <section className="vendors-page">
@@ -1470,20 +1450,6 @@ export default function Vendors({
           <p>
             Manage vendor details and contact information.
           </p>
-        </div>
-        <div className="vendors-header-actions">
-          <button
-            type="button"
-            className="vendors-primary-button"
-            onClick={() => navigate("/vendors/add")}
-          >
-            <i className="bi bi-plus" aria-hidden="true" />
-            Add Vendor
-          </button>
-          <button type="button" className="vendors-export-button">
-            <span aria-hidden="true">↓</span>
-            Export
-          </button>
         </div>
       </div>
 
@@ -1511,58 +1477,84 @@ export default function Vendors({
         </div>
       )}
 
-      <div className="vendors-stats">
-        <VendorStatCard
-          icon="bi-truck-front-fill"
-          title="Total Vendors"
-          value={vendors.length}
-          variant="purple"
-        />
-        <VendorStatCard
-          icon="bi-check-circle-fill"
-          title="Active Vendors"
-          value={activeVendorCount}
-          variant="green"
-        />
-        <VendorStatCard
-          icon="bi-box-seam-fill"
-          title="Suppliers"
-          value={supplierCount}
-          variant="orange"
-        />
-        <VendorStatCard
-          icon="bi-people-fill"
-          title="Organizers"
-          value={organizerCount}
-          variant="red"
-        />
-      </div>
+      {/* =====================================================
+          VENDOR FORM
+      ===================================================== */}
+
+      {vendorForm}
 
       {/* =====================================================
           VENDORS LIST
       ===================================================== */}
 
       <div className="vendors-list-card">
-        <FiltersBar
-          searchValue={search}
-          onSearchChange={(value) => handleFilterChange(setSearch, value)}
-          searchPlaceholder="Search vendors..."
-          filters={[
-            {
-              key: "vendorType",
-              value: vendorTypeFilter,
-              options: ["All Vendor Types", "Supplier", "Organizer"],
-              onChange: (value) => handleFilterChange(setVendorTypeFilter, value),
-            },
-            {
-              key: "status",
-              value: statusFilter,
-              options: ["All Statuses", "Active", "Inactive"],
-              onChange: (value) => handleFilterChange(setStatusFilter, value),
-            },
-          ]}
-          onClear={clearFilters}
-        />
+
+        <div className="vendors-list-toolbar">
+
+          <div>
+            <h2>
+              Vendors List
+            </h2>
+
+            <p>
+              {filteredVendors.length}{" "}
+              vendor
+              {filteredVendors.length ===
+              1
+                ? ""
+                : "s"}{" "}
+              found
+            </p>
+          </div>
+
+          <div className="vendors-filters">
+  {/* SEARCH */}
+  <div className="vendors-search">
+    <i className="bi bi-search" />
+    <input
+      type="text"
+      value={search}
+      onChange={(event) => handleFilterChange(setSearch, event.target.value)}
+      placeholder="Search vendors..."
+      autoComplete="off"
+      data-lpignore="true"
+      data-1p-ignore="true"
+    />
+  </div>
+
+  {/* Vendor Type */}
+  <select
+    value={vendorTypeFilter}
+    onChange={(event) => handleFilterChange(setVendorTypeFilter, event.target.value)}
+  >
+    <option>All Vendor Types</option>
+    <option value="Supplier">Supplier</option>
+    <option value="Organizer">Organizer</option>
+  </select>
+
+  {/* Status */}
+  <select
+    value={statusFilter}
+    onChange={(event) => handleFilterChange(setStatusFilter, event.target.value)}
+  >
+    <option>All Statuses</option>
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
+
+  {/* Reset Icon */}
+  <button
+    type="button"
+    className="vendors-reset-button"
+    onClick={clearFilters}
+    title="Reset filters"
+    aria-label="Reset filters"
+  >
+    <i className="bi bi-arrow-counterclockwise" />
+  </button>
+</div>
+
+        </div>
 
         {/* ===================================================
             TABLE
@@ -1710,7 +1702,9 @@ export default function Vendors({
                       <td>
                         <VendorCell
                           value={
-                            getVendorTypeLabel(vendor.vendorType) === "Organizer"
+                            getVendorTypeLabel(
+                              vendor.vendorType
+                            ) === "Organizer"
                               ? vendor.contactPerson
                               : "—"
                           }
@@ -1776,10 +1770,17 @@ export default function Vendors({
                         <button
                           type="button"
                           className="vendors-view-action"
-                          onClick={() => viewVendor(vendor)}
+                          onClick={() =>
+                            viewVendor(
+                              vendor
+                            )
+                          }
                           aria-label={`View ${vendor.name}`}
                           title="View"
-                          disabled={saving || deleting}
+                          disabled={
+                            saving ||
+                            deleting
+                          }
                         >
                           <i className="bi bi-eye" />
                         </button>
