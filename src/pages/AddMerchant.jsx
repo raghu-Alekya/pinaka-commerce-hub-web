@@ -7,7 +7,7 @@ import {
   updateMerchant,
 } from "../api/merchants";
 import { listPlans } from "../api/plans";
-import { useLocationOptions } from "../data/useLocationOptions";
+import { getReferenceData } from "../api/referenceData";
 import { storeTypesApi } from "../api/storeTypes";
 import ReviewSubscribe from "./ReviewSubscribe";
 import PhoneInputModule from "react-phone-input-2";
@@ -35,6 +35,16 @@ const blankMerchant = () => ({
   postal: "",
   country: "",
 });
+
+function readCountries(response) {
+  const items = response?.countries || response?.countryList || response?.data?.countries || [];
+  return Array.isArray(items)
+    ? items.map((item) => typeof item === "string"
+      ? { value: item, label: item }
+      : { value: item.name || item.countryName || item.code, label: item.name || item.countryName || item.code }
+    ).filter((item) => item.value)
+    : [];
+}
 
 function merchantDetailToDraft(result, fallback = {}) {
   const response = result?.raw || {};
@@ -82,12 +92,12 @@ function Field({ label, value, onChange, ...props }) {
   );
 }
 
-function Select({ label, value, options, onChange, placeholder, ...props }) {
+function Select({ label, value, options, onChange, ...props }) {
   return (
     <label className="pch-field">
       {label}
       <select {...props} value={value ?? ""} onChange={(event) => onChange(event.target.value)}>
-        <option value="">{placeholder || `Select ${label.replace(/\s*\*$/, "")}`}</option>
+        <option value="">Select {label.replace(/\s*\*$/, "")}</option>
         {options.map((option) => {
           const item = typeof option === "string" ? { value: option, label: option } : option;
           return <option key={item.value} value={item.value}>{item.label}</option>;
@@ -183,12 +193,12 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     ? localMerchants.find((row) => String(row.id) === String(merchantId)) || location.state?.merchant || null
     : null;
   const [merchant, setMerchant] = useState(selected?._onboarding?.merchant || blankMerchant());
-  const locationOptions = useLocationOptions(merchant);
   const [plans, setPlans] = useState([]);
   const [planId, setPlanId] = useState(selected?._onboarding?.planId || "");
   const [cycle, setCycle] = useState(normalizeCycle(selected?._onboarding?.cycle || "Monthly"));
   const [start, setStart] = useState(selected?._onboarding?.start || today());
   const [step, setStep] = useState(0);
+  const [countries, setCountries] = useState([]);
   const [storeTypes, setStoreTypes] = useState([]);
   const [loading, setLoading] = useState(Boolean(merchantId && !selected?._onboarding));
   const [plansLoading, setPlansLoading] = useState(true);
@@ -207,6 +217,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       .catch((failure) => active && setError(failure.message || "Unable to load plans."))
       .finally(() => active && setPlansLoading(false));
     storeTypesApi.getAll().then((response) => active && setStoreTypes(response.storeTypes || [])).catch(() => {});
+    getReferenceData().then((data) => active && setCountries(readCountries(data))).catch(() => {});
     return () => { active = false; };
   }, []);
 
@@ -245,7 +256,9 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const updateField = (key, value) => setMerchant((previous) => ({ ...previous, [key]: value }));
   const validatePhone = () => {
     if (!String(merchant.country || "").trim()) return "Select a country before entering the phone number.";
-    const countryMatches = locationOptions.selectedCountry?.iso2?.toLowerCase() === phoneCountry.toLowerCase();
+    const selectedCountry = String(merchant.country).trim().toLowerCase();
+    const countryMatches = (phoneCountry === "in" && ["in", "india"].includes(selectedCountry))
+      || (phoneCountry === "us" && ["us", "usa", "united states", "united states of america"].includes(selectedCountry));
     if (!countryMatches) return "Phone country code must match the selected merchant country.";
     const phoneDigits = String(merchant.phone || "").replace(/\D/g, "");
     if (!phoneDigits || phoneDigits.length <= phoneDialCode.length) return "Phone Number is required.";
@@ -343,7 +356,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   );
 
   if (step === 2) return <ReviewSubscribe
-    merchantDetails={{ businessName: merchant.business || merchant.display, merchantCode: merchant.code || "Auto Generated", ein: merchant.ein, contactName: [merchant.firstName, merchant.lastName].filter(Boolean).join(" "), email: merchant.email, phone: merchant.phone, address }}
+    merchantDetails={{ businessName: merchant.business || merchant.display, merchantCode: merchant.code || "Generated after merchant creation", ein: merchant.ein, contactName: [merchant.firstName, merchant.lastName].filter(Boolean).join(" "), email: merchant.email, phone: merchant.phone, address }}
     selectedPlan={{ name: plan?.name, price: total, currency: plan?.currency || "USD", stores: plan?.includedStores || "Custom", devices: plan?.includedTerminals || "Custom", employees: plan?.includedUsers || "Custom", billingFrequency: `${cycle} billing`, startDate: start, renewalDate: renewalDate(start, cycle), taxRate: TAX_RATE }}
     onEditMerchant={() => setStep(0)} onEditPlan={() => setStep(1)} onBack={() => setStep(1)} onBackToMerchants={cancel}
     onSubscribe={save} isSubmitting={submitting} isEditing={editing} externalError={error}
@@ -367,7 +380,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
             <Panel title="Business Information"><div className="pch-grid">
               <Field label="Legal Business Name *" value={merchant.business} required onChange={(v) => updateField("business", v)} />
               <Field label="Business Display Name *" value={merchant.display} required onChange={(v) => updateField("display", v)} />
-              <Field label="Merchant Code" value={merchant.code} readOnly placeholder=" Auto Generated" />
+              <Field label="Merchant Code" value={merchant.code} readOnly placeholder="Generated after merchant creation" />
               <Field label="EIN" value={merchant.ein} onChange={(v) => updateField("ein", v)} />
             </div></Panel>
             <Panel title="Primary Contact"><div className="pch-grid">
@@ -382,9 +395,9 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
               <Field label="Address Line 1 *" value={merchant.addressLine1} required onChange={(v) => updateField("addressLine1", v)} />
               <Field label="Address Line 2" value={merchant.addressLine2} onChange={(v) => updateField("addressLine2", v)} />
               <Field label="City *" value={merchant.city} required onChange={(v) => updateField("city", v)} />
-              <Select label="State / Province *" value={merchant.state} placeholder={merchant.country ? "Select state or province" : "Select country first"} options={locationOptions.states.map((value) => ({ value, label: value }))} required onChange={(v) => updateField("state", v)} />
+              <Field label="State / Province *" value={merchant.state} required onChange={(v) => updateField("state", v)} />
               <Field label="ZIP / Postal Code *" value={merchant.postal} required onChange={(v) => updateField("postal", v)} />
-              <Select label="Country *" value={merchant.country} options={locationOptions.countries.map((value) => ({ value, label: value }))} required onChange={(v) => { updateField("country", v); updateField("state", ""); setPhoneError(""); }} />
+              <Select label="Country *" value={merchant.country} options={merchant.country && !countries.some((item) => item.value === merchant.country) ? [...countries, { value: merchant.country, label: merchant.country }] : countries} required onChange={(v) => { updateField("country", v); setPhoneError(""); }} />
             </div></Panel>
           </> : <>
             <Panel title="Subscription Plan">
