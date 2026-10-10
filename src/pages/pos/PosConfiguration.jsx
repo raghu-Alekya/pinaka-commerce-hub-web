@@ -8,6 +8,7 @@ import { CashbackSettings } from "./cashback/CashbackSettings";
 import { ServiceChargeSettings } from "./service-charges/ServiceChargeSettings";
 import { DenominationSettings } from "./cash-denominations/DenominationSettings";
 import { PaymentSettings } from "./card-payments/PaymentSettings";
+import { DeviceMapping } from "./device-mapping/DeviceMapping";
 import { RegisterConfiguration, registerRows } from "./cash-registers/RegisterConfiguration";
 import { MappingConfiguration, mappingRows } from "./terminal-mappings/MappingConfiguration";
 import { SafeConfiguration } from "./safe-drop/SafeConfiguration";
@@ -96,6 +97,15 @@ const configurationCards = [
         component: "terminal-mapping",
         enabled: true,
     },
+        {
+        id: "device-mapping",
+        icon: "pc-display",
+        iconClass: "green",
+        title: "Store Device Mapping",
+        description: "Assign merchant devices to this store.",
+        component: "device-mapping",
+        enabled: true,
+    },
 ];
 
 const initialRegisters = [
@@ -115,7 +125,7 @@ const initialSafeSettings = {
     cashierInitiated: true, reasonRequired: true, tubeSize: "", tubes: [], drops: [],
 };
 
-export default function PosConfiguration({ merchantId, storeId, store } = {}) {
+export default function PosConfiguration({ merchantId, storeId, store, embedded = false } = {}) {
     const [registers, setRegisters] = useState(() => (storeId ? [] : initialRegisters));
     const [mappings, setMappings] = useState(() => (storeId ? [] : initialMappings));
     const [safeSettings, setSafeSettings] = useState(initialSafeSettings);
@@ -189,6 +199,7 @@ export default function PosConfiguration({ merchantId, storeId, store } = {}) {
     const settings = { session, currency: storeCurrency, currencySymbol, merchantId, storeId, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) };
 
     const filteredCards = configurationCards.filter((card) => {
+        if (card.component === "device-mapping" && !embedded) return false;
         const search = searchQuery.trim().toLowerCase();
 
         if (!search) {
@@ -229,6 +240,9 @@ export default function PosConfiguration({ merchantId, storeId, store } = {}) {
 
             case "terminal-mapping":
                 return <MappingConfiguration value={mappings} registers={registers} onSave={setMappings} onBack={() => requestLeave(null)} onManageRegisters={() => requestLeave("cash-register")} />;
+
+            case "device-mapping":
+                return <DeviceMapping />;
 
             default:
                 return null;
