@@ -759,15 +759,6 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
             />
 
             <div className="store-type-description-meta">
-
-              {errors.description ? (
-                <small className="field-error">{errors.description}</small>
-
-              ) : (
-                <small></small>
-
-              )}
-              <span>{form.description.length}/500</span>
             </div>
           </div>
         </div>

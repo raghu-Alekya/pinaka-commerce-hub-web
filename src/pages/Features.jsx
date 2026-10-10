@@ -375,8 +375,6 @@ export default function Features() {
               maxLength={500}
             />
             <div className="feature-description-meta">
-              <small></small>
-              <span>{form.description.length}/500</span>
             </div>
           </div>
 
@@ -398,7 +396,6 @@ export default function Features() {
                   </option>
                 ))}
               </select>
-              <i className="bi bi-chevron-down" />
             </div>
             {formErrors.category ? (
               <small className="feature-error-text">{formErrors.category}</small>
@@ -428,8 +425,6 @@ export default function Features() {
       <option value="Active">Active</option>
       <option value="Inactive">Inactive</option>
     </select>
-
-    <i className="bi bi-chevron-down" />
   </div>
 
   <small></small>

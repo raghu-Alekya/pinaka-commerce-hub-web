@@ -740,13 +740,13 @@
    ========================================================= */
 
 .feature-permissions-page .fp-table {
-  width: 100%;
-  min-width: 1080px;
-
-  border-collapse: collapse;
-  table-layout: fixed;
-
-  background: #ffffff;
+  .feature-permissions-page .fp-table {
+  width: 100% !important;
+  min-width: 1250px !important;
+  max-width: none !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
 }
 
 
@@ -1561,7 +1561,7 @@
 
 /* Description should use only its actual compact column */
 .feature-permissions-page .fp-description-cell {
-  width: auto !important;
+  width: 25% !important;
   max-width: none !important;
 }
 
@@ -1569,6 +1569,8 @@
 .feature-permissions-page .fp-table th:nth-child(5),
 .feature-permissions-page .fp-table td:nth-child(5) {
   padding-left: 6px !important;
+   width: 15%;
+
 }
 
 /* Give timestamps the room that was previously wasted in Description */
