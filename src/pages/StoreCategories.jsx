@@ -1,11 +1,8 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import ViewDetailsModal from "../components/ViewDetailsModal";
-import {
-  categoriesSeed,
-  tagsSeed,
-  attributesSeed,
-} from "../data/data";
+import { getStoreCatalogTaxonomies } from "../api/storeConnector";
 import "../styles/store-categories.css";
 
 
@@ -53,6 +50,7 @@ export default function StoreCategories({
 
   const [search, setSearch] =
     useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
 
   /* =======================================================
@@ -99,6 +97,79 @@ export default function StoreCategories({
   const [attributePageSize, setAttributePageSize] =
     useState(10);
 
+  const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [attributes, setAttributes] = useState([]);
+  const [taxonomyLoading, setTaxonomyLoading] = useState(Boolean(storeId));
+  const [taxonomyError, setTaxonomyError] = useState("");
+
+  const applyTaxonomies = useCallback((response) => {
+    const data = response?.taxonomies || response?.data?.taxonomies || response?.data || response || {};
+    const categoryRows = Array.isArray(data.categories) ? data.categories : [];
+    const categoryNames = new Map(categoryRows.map((item) => [String(item.id), item.name || ""]));
+
+    setCategories(categoryRows.map((item) => ({
+      ...item,
+      id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+      name: item.name || item.title || "Unnamed category",
+      slug: item.slug || "—",
+      parent: categoryNames.get(String(item.parent)) || item.parent_name || item.parent?.name || "",
+      productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+      status: item.status || "Active",
+    })));
+    setTags((Array.isArray(data.tags) ? data.tags : []).map((item) => ({
+      ...item,
+      id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+      name: item.name || item.title || "Unnamed tag",
+      slug: item.slug || "—",
+      productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+      status: item.status || "Active",
+    })));
+    setAttributes((Array.isArray(data.attributes) ? data.attributes : []).map((item) => ({
+      ...item,
+      id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+      name: item.name || item.title || "Unnamed attribute",
+      slug: item.slug || "—",
+      productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+      terms: Array.isArray(item.terms) ? item.terms.map((term) => typeof term === "object" ? term.name || term.slug : String(term)) : [],
+      status: item.status || "Active",
+    })));
+  }, []);
+
+  const refreshTaxonomies = useCallback(async (signal) => {
+    const response = await getStoreCatalogTaxonomies(storeId, { signal });
+    applyTaxonomies(response);
+    return response;
+  }, [applyTaxonomies, storeId]);
+
+  useEffect(() => {
+    if (!storeId) {
+      setCategories([]);
+      setTags([]);
+      setAttributes([]);
+      setTaxonomyLoading(false);
+      setTaxonomyError("Select a store to view its catalog data.");
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    setTaxonomyLoading(true);
+    setTaxonomyError("");
+    refreshTaxonomies(controller.signal)
+      .catch((error) => {
+        if (error?.name !== "AbortError") {
+          setTaxonomyError(error?.message || "Could not load this store’s categories, tags, and attributes.");
+          setCategories([]);
+          setTags([]);
+          setAttributes([]);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setTaxonomyLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [refreshTaxonomies, storeId]);
 
   /* =========================================================
      FILTER CATEGORIES
@@ -109,13 +180,9 @@ export default function StoreCategories({
     const value =
       search.trim().toLowerCase();
 
-    if (!value) {
-      return categoriesSeed;
-    }
-
-    return categoriesSeed.filter(
-      (item) =>
-        [
+    return categories.filter(
+      (item) => {
+        const matchesSearch = !value || [
           item.name,
           item.slug,
           item.parent,
@@ -124,10 +191,13 @@ export default function StoreCategories({
           String(field || "")
             .toLowerCase()
             .includes(value)
-        )
+        );
+        const matchesStatus = !statusFilter || String(item.status || "Active").toLowerCase() === statusFilter.toLowerCase();
+        return matchesSearch && matchesStatus;
+      }
     );
 
-  }, [search]);
+  }, [categories, search, statusFilter]);
 
 
   /* =========================================================
@@ -139,13 +209,9 @@ export default function StoreCategories({
     const value =
       search.trim().toLowerCase();
 
-    if (!value) {
-      return tagsSeed;
-    }
-
-    return tagsSeed.filter(
-      (item) =>
-        [
+    return tags.filter(
+      (item) => {
+        const matchesSearch = !value || [
           item.name,
           item.slug,
           item.status,
@@ -153,10 +219,13 @@ export default function StoreCategories({
           String(field || "")
             .toLowerCase()
             .includes(value)
-        )
+        );
+        const matchesStatus = !statusFilter || String(item.status || "Active").toLowerCase() === statusFilter.toLowerCase();
+        return matchesSearch && matchesStatus;
+      }
     );
 
-  }, [search]);
+  }, [search, tags, statusFilter]);
 
 
   /* =========================================================
@@ -168,13 +237,9 @@ export default function StoreCategories({
     const value =
       search.trim().toLowerCase();
 
-    if (!value) {
-      return attributesSeed;
-    }
-
-    return attributesSeed.filter(
-      (item) =>
-        [
+    return attributes.filter(
+      (item) => {
+        const matchesSearch = !value || [
           item.name,
           item.slug,
           item.status,
@@ -182,10 +247,13 @@ export default function StoreCategories({
           String(field || "")
             .toLowerCase()
             .includes(value)
-        )
+        );
+        const matchesStatus = !statusFilter || String(item.status || "Active").toLowerCase() === statusFilter.toLowerCase();
+        return matchesSearch && matchesStatus;
+      }
     );
 
-  }, [search]);
+  }, [attributes, search, statusFilter]);
 
 
   /* =========================================================
@@ -259,6 +327,7 @@ export default function StoreCategories({
     setActiveTab(tab);
 
     setSearch("");
+    setStatusFilter("");
 
     setSelectedItem(null);
     setSelectedItemType("");
@@ -281,6 +350,21 @@ export default function StoreCategories({
       event.target.value
     );
 
+    setCategoryPage(1);
+    setTagPage(1);
+    setAttributePage(1);
+  };
+
+  const handleStatusFilterChange = (event) => {
+    setStatusFilter(event.target.value);
+    setCategoryPage(1);
+    setTagPage(1);
+    setAttributePage(1);
+  };
+
+  const resetFilters = () => {
+    setSearch("");
+    setStatusFilter("");
     setCategoryPage(1);
     setTagPage(1);
     setAttributePage(1);
@@ -550,27 +634,27 @@ export default function StoreCategories({
             <tr>
 
               <th>
-                CATEGORY
+                Category
               </th>
 
               <th>
-                SLUG
+                Slug
               </th>
 
               <th>
-                PARENT CATEGORY
+                Parent Category
               </th>
 
               <th>
-                PRODUCTS
+                Products
               </th>
 
               <th>
-                STATUS
+                Status
               </th>
 
               <th>
-                ACTION
+                Action
               </th>
 
             </tr>
@@ -700,13 +784,6 @@ export default function StoreCategories({
                 <td colSpan="6">
 
                   <div className="categories-empty-state">
-
-                    <div className="categories-empty-icon">
-
-                      <i className="bi bi-folder2-open" />
-
-                    </div>
-
                     <h3>
                       No categories found
                     </h3>
@@ -740,6 +817,8 @@ export default function StoreCategories({
         totalItems={
           filteredCategories.length
         }
+        itemLabel="categories"
+        showWhenEmpty
         pageSize={
           categoryPageSize
         }
@@ -759,6 +838,7 @@ export default function StoreCategories({
           );
 
         }}
+        
       />
 
     </>
@@ -783,23 +863,23 @@ export default function StoreCategories({
             <tr>
 
               <th>
-                TAG
+                Tag
               </th>
 
               <th>
-                SLUG
+                Slug
               </th>
 
               <th>
-                PRODUCTS
+                Products
               </th>
 
               <th>
-                STATUS
+                Status
               </th>
 
               <th>
-                ACTION
+                Action
               </th>
 
             </tr>
@@ -915,13 +995,6 @@ export default function StoreCategories({
                 <td colSpan="5">
 
                   <div className="categories-empty-state">
-
-                    <div className="categories-empty-icon">
-
-                      <i className="bi bi-tags" />
-
-                    </div>
-
                     <h3>
                       No tags found
                     </h3>
@@ -955,6 +1028,8 @@ export default function StoreCategories({
         totalItems={
           filteredTags.length
         }
+        itemLabel="tags"
+        showWhenEmpty
         pageSize={
           tagPageSize
         }
@@ -974,6 +1049,7 @@ export default function StoreCategories({
           );
 
         }}
+      
       />
 
     </>
@@ -998,27 +1074,27 @@ export default function StoreCategories({
             <tr>
 
               <th>
-                ATTRIBUTE
+                Attribute
               </th>
 
               <th>
-                SLUG
+                Slug
               </th>
 
               <th>
-                TERMS / VALUES
+                Terms / Values
               </th>
 
               <th>
-                PRODUCTS
+                Products
               </th>
 
               <th>
-                STATUS
+                Status
               </th>
 
               <th>
-                ACTION
+                Action
               </th>
 
             </tr>
@@ -1184,13 +1260,6 @@ export default function StoreCategories({
                 <td colSpan="6">
 
                   <div className="categories-empty-state">
-
-                    <div className="categories-empty-icon">
-
-                      <i className="bi bi-sliders" />
-
-                    </div>
-
                     <h3>
                       No attributes found
                     </h3>
@@ -1224,6 +1293,8 @@ export default function StoreCategories({
         totalItems={
           filteredAttributes.length
         }
+        itemLabel="attributes"
+        showWhenEmpty
         pageSize={
           attributePageSize
         }
@@ -1243,6 +1314,7 @@ export default function StoreCategories({
           );
 
         }}
+       
       />
 
     </>
@@ -1280,28 +1352,6 @@ export default function StoreCategories({
             Manage store categories, tags and product attributes.
           </p>
 
-
-          {store ? (
-
-            <div className="categories-store-context">
-
-              <i className="bi bi-shop" />
-
-              <span>
-                {store.name}
-              </span>
-
-              <span className="context-separator">
-                •
-              </span>
-
-              <span>
-                {store.id}
-              </span>
-
-            </div>
-
-          ) : null}
 
         </div>
 
@@ -1377,12 +1427,39 @@ export default function StoreCategories({
 
           </div>
 
+          <FilterDropdown
+            aria-label={`Filter ${activeTab} by status`}
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+          >
+            <option value="">All Statuses</option>
+            {[...new Set((activeTab === "categories" ? categories : activeTab === "tags" ? tags : attributes)
+              .map((item) => item.status || "Active"))].map((status) => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </FilterDropdown>
+
+          <button type="button" className="categories-clear-btn" onClick={resetFilters}>
+            <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
+            Reset
+          </button>
+
         </div>
 
 
         {/* ===================================================
            CONTENT
         =================================================== */}
+
+        {taxonomyLoading ? (
+          <div className="categories-empty-state" role="status">
+            Loading categories, tags, and attributes…
+          </div>
+        ) : taxonomyError ? (
+          <div className="categories-empty-state" role="alert">
+            {taxonomyError}
+          </div>
+        ) : null}
 
         {activeTab ===
           "categories" &&
@@ -1397,24 +1474,6 @@ export default function StoreCategories({
           renderAttributes()}
 
       </div>
-
-
-      {/* =====================================================
-         FOOTER
-      ===================================================== */}
-
-      <div className="categories-footer">
-
-        <span>
-
-          <i className="bi bi-cloud-check" />
-
-          Catalog data synced from WooCommerce
-
-        </span>
-
-      </div>
-
 
       {/* =====================================================
          VIEW DETAILS MODAL
