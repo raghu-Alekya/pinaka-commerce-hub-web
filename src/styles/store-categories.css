@@ -126,19 +126,53 @@
 ========================================================= */
 
 .categories-toolbar {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 14px 18px;
-  border-bottom: 1px solid #e8ebf0;
-  background: #fafbfc;
+  gap: 8px;
+  width: calc(100% - 24px);
+  margin: 0 12px;
+  padding: 12px 0 16px;
 }
 
 .categories-search {
   position: relative;
-  width: 320px;
+  flex: 1 1 360px;
+  width: auto;
   max-width: 100%;
+}
+
+.categories-toolbar > .pch-filter-dropdown {
+  flex: 0 0 160px;
+}
+
+.categories-clear-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #d9dee8;
+  border-radius: 6px;
+  background: #fff;
+  color: #5143bc;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.categories-clear-btn:hover {
+  border-color: #c8c1f2;
+  background: #f8f7ff;
+}
+
+.categories-clear-btn:focus-visible {
+  outline: 2px solid rgba(81, 67, 188, 0.2);
+  outline-offset: 2px;
 }
 
 .categories-search i {
@@ -176,9 +210,34 @@
    TABLE
 ========================================================= */
 
+.categories-list-block {
+  box-sizing: border-box;
+  width: calc(100% - 24px);
+  max-width: calc(100% - 24px);
+  margin: 0 12px;
+  overflow: hidden;
+  border: 1px solid #dfe9f4;
+  border-radius: 8px;
+  background: #fff;
+}
+
 .categories-table-wrap {
+  box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
+  margin: 0;
   overflow-x: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.categories-list-block > .pagination-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border-top: 1px solid #e4e8f0;
 }
 
 .categories-table {
@@ -188,24 +247,24 @@
 }
 
 .categories-table thead th {
-  height: 42px;
-  padding: 0 18px;
-  border-bottom: 1px solid #e5e8ef;
-  background: #fafbfc;
+  height: 44px;
+  padding: 0 14px;
+  border-bottom: 1px solid #dfe5ef;
+  background: #f1f3fd;
   color: #8a94a6;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
   letter-spacing: 0.05em;
   text-align: left;
   white-space: nowrap;
 }
 
 .categories-table tbody td {
-  height: 64px;
-  padding: 10px 18px;
-  border-bottom: 1px solid #edf0f4;
+  height: 52px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e4e8ef;
   color: #536077;
-  font-size: 12px;
+  font-size: 14px;
   vertical-align: middle;
 }
 
@@ -257,7 +316,7 @@
 .category-name-cell strong {
   display: block;
   color: #354159;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -265,7 +324,7 @@
   display: block;
   margin-top: 3px;
   color: #929caf;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* =========================================================
@@ -275,7 +334,7 @@
 .slug-text {
   color: #69758a;
   font-family: monospace;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* =========================================================
@@ -284,7 +343,7 @@
 
 .count-value {
   color: #44516a;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -300,7 +359,7 @@
   border-radius: 12px;
   background: #eef1f5;
   color: #68758a;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -335,7 +394,7 @@
   border-radius: 5px;
   background: #f8f9fb;
   color: #657187;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .attribute-terms .more-terms {
@@ -405,7 +464,7 @@
     width: 34px;
     height: 34px;
     padding: 0;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #e5e7eb !important;
     border-radius: 7px;
     background: #ffffff;
     color: #6b7280;
@@ -460,11 +519,16 @@
   }
 
   .categories-toolbar {
-    padding: 12px;
+    padding: 12px 0 16px;
   }
 
   .categories-search {
-    width: 100%;
+    width: auto;
+    flex: 1 1 auto;
+  }
+
+  .categories-toolbar > .pch-filter-dropdown {
+    flex: 0 0 140px;
   }
 
   .categories-table thead th,
@@ -494,5 +558,22 @@
   .categories-tab {
     height: 48px;
     font-size: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .categories-list-block {
+    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+
+  .categories-table-wrap,
+  .categories-list-block > .pagination-container {
+    width: 100%;
+    max-width: 100%;
+    margin-right: 0;
+    margin-left: 0;
   }
 }
