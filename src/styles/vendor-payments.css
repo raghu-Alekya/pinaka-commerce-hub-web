@@ -20,8 +20,9 @@
 
 .vendor-title-row h2 {
   margin: 0;
-  font-size: 26px;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .vendor-actions {
@@ -39,6 +40,28 @@
   border-radius: 2px;
   font-size: 14px;
   cursor: pointer;
+}
+
+.vendor-actions .vendor-primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-color: #5143bc;
+  border-radius: 6px;
+  background: #5143bc;
+  color: #fff;
+}
+
+.vendor-actions .vendor-primary-action:hover {
+  border-color: #4638ad;
+  background: #4638ad;
+}
+
+.vendor-primary-action:focus-visible,
+.vendor-secondary-action:focus-visible {
+  outline: 2px solid #c4bdf2;
+  outline-offset: 2px;
 }
 
 /* Toolbar */
@@ -73,31 +96,63 @@
 /* Single Search Box */
 
 .vendor-search {
+  position: relative;
   display: flex;
   align-items: center;
   margin-left: auto;
 }
 
+.vendor-search > i {
+  position: absolute;
+  left: 13px;
+  color: #71809a;
+  font-size: 14px;
+  pointer-events: none;
+}
+
 .vendor-search input {
-  width: 280px;
-  height: 42px;
-  padding: 0 18px;
-  border: 1px solid #aaa;
-  border-radius: 0;
-  font-size: 16px;
-  color: #333;
+  width: 300px;
+  height: 40px;
+  padding: 0 14px 0 36px;
+  border: 1px solid #d7dfef;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #172640;
   background: #fff;
   box-sizing: border-box;
 }
 
 .vendor-search input::placeholder {
-  color: #2271b1;
+  color: #8492aa;
   opacity: 1;
 }
 
 .vendor-search input:focus {
   outline: none;
-  border-color: #2271b1;
+  border-color: #6547e8;
+  box-shadow: 0 0 0 3px rgba(101, 71, 232, .1);
+}
+
+.vendor-filter-reset {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #d9e1f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #5143bc;
+  font: inherit;
+  cursor: pointer;
+}
+
+.vendor-filter-reset:hover {
+  border-color: #5143bc;
+  background: #f7f5ff;
+}
+
+.vendor-empty-row {
+  padding: 24px !important;
+  color: #73809a;
+  text-align: center;
 }
 
 /* Table */
@@ -107,25 +162,54 @@
   border-collapse: collapse;
   table-layout: auto;
   font-size: 14px;
+  border-radius: 8px;
+  overflow: hidden;
 }
+
+.vendor-table thead tr:first-child th:first-child { border-top-left-radius: 8px; }
+.vendor-table thead tr:first-child th:last-child { border-top-right-radius: 8px; }
+.vendor-table tbody tr:last-child td:first-child { border-bottom-left-radius: 8px; }
+.vendor-table tbody tr:last-child td:last-child { border-bottom-right-radius: 8px; }
 
 .vendor-table th,
 .vendor-table td {
-  border: 1px solid #d7d7d7;
-  padding: 14px 12px;
+  border: 1px solid #e4e8ef;
+    border-left: 0;
+    border-right: 0;
+  height: 52px;
+  padding: 10px 14px;
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.vendor-table th:first-child,
+.vendor-table td:first-child {
+    border-left: 1px solid #e4e8ef;
+}
+
+.vendor-table th:last-child,
+.vendor-table td:last-child {
+    border-right: 1px solid #e4e8ef;
 }
 
 .vendor-table th {
-  background: #f1f1f1;
+  height: 44px;
+  background: #f1f3fd;
   color: #1d5d91;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .vendor-table td strong {
-  color: #0073aa;
+  color: #17233e;
   font-weight: 600;
+}
+
+.vendor-screen > .pagination-container {
+  margin-top: 0;
+  padding: 16px 0;
+  border-top: 1px solid #e4e8ef;
 }
 
 /* Modal */
@@ -181,6 +265,30 @@
   cursor: pointer;
 }
 
+.vendor-modal .vendor-secondary-action {
+  border-color: #dce8f4;
+  border-radius: 6px;
+  background: #fff;
+  color: #25466f;
+}
+
+.vendor-modal .vendor-secondary-action:hover {
+  border-color: #c8d8eb;
+  background: #f8fbff;
+}
+
+.vendor-modal .vendor-primary-action {
+  border-color: #5143bc;
+  border-radius: 6px;
+  background: #5143bc;
+  color: #fff;
+}
+
+.vendor-modal .vendor-primary-action:hover {
+  border-color: #4638ad;
+  background: #4638ad;
+}
+
 /* Responsive */
 
 @media (max-width: 900px) {
@@ -215,3 +323,5 @@
     width: 100%;
   }
 }
+
+.vendor-modal .has-error input,.vendor-modal .has-error select{border-color:#ff4055;background:#fffafa}.vendor-field-error{display:block;margin-top:5px;color:#e3344b;font-size:12px;line-height:1.35}

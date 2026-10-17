@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import DeviceNavigation from "../components/DeviceNavigation";
 import {
   ArrowLeft,
   Save,
@@ -9,8 +10,9 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 
 import { devicesApi } from "../api/devices";
-import { listMerchants } from "../api/merchants";
 import "../styles/device-view.css";
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default function EditDevice() {
   const navigate = useNavigate();
@@ -19,17 +21,19 @@ export default function EditDevice() {
   const [form, setForm] = useState({
     deviceName: "",
     deviceCode: "",
+    deviceId: "",
     deviceType: "",
     serialNumber: "",
     merchantId: "",
+    merchantName: "",
     status: "Active",
     notes: "",
   });
 
-  const [merchantName, setMerchantName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [validationErrors, setValidationErrors] = useState({});
 
   /* =========================================================
      LOAD DEVICE
@@ -50,26 +54,20 @@ export default function EditDevice() {
     setApiError("");
 
     try {
-      const [data, merchants] = await Promise.all([
-        devicesApi.get(deviceId),
-        listMerchants().catch(() => []),
-      ]);
-
+      const data = await devicesApi.get(deviceId);
       if (!data) {
         throw new Error("Device not found.");
       }
 
-      const assignedMerchant = merchants.find(
-        (merchant) => String(merchant.merchantId || merchant.id) === String(data.merchantId),
-      );
-      setMerchantName(assignedMerchant?.name || data.merchant || data.merchantName || data.merchantId || "—");
       setForm({
         deviceName: data.name || "",
-        deviceCode: data.deviceCode || data.id || "",
+        deviceCode: data.code || "",
+        deviceId: data.deviceId || "",
         deviceType: data.type || "",
         serialNumber: data.serial || "",
         merchantId: data.merchantId || "",
-        status: data.status || "Active",
+        merchantName: data.merchantName || (typeof data.merchant === "string" ? data.merchant : data.merchant?.name) || "",
+        status: String(data.status || "ACTIVE").toUpperCase() === "INACTIVE" ? "Inactive" : "Active",
         notes: data.notes || "",
       });
     } catch (error) {
@@ -92,6 +90,16 @@ export default function EditDevice() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    setValidationErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!form.deviceName.trim()) errors.deviceName = "Device Name is required.";
+    if (!form.deviceType) errors.deviceType = "Device Type is required.";
+    if (!form.serialNumber.trim()) errors.serialNumber = "Serial Number is required.";
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   /* =========================================================
@@ -100,6 +108,8 @@ export default function EditDevice() {
 
   const save = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
 
     if (!deviceId) {
       setApiError("Device ID is missing.");
@@ -110,7 +120,10 @@ export default function EditDevice() {
     setApiError("");
 
     try {
-      const response = await devicesApi.update(deviceId, form);
+      const response = await devicesApi.update(deviceId, {
+        ...form,
+        merchantId: form.merchantId,
+      });
       if (response?.success === false) {
         throw new Error(response.message || "Failed to update device.");
       }
@@ -132,8 +145,8 @@ export default function EditDevice() {
   ========================================================= */
 
   const select = (name, value, options, placeholder) => (
-    <div className="device-edit-select">
-      <select name={name} value={value} onChange={update} required>
+    <div className={`device-edit-select${validationErrors[name] ? " field-invalid" : ""}`}>
+      <select name={name} value={value} onChange={update} required aria-invalid={Boolean(validationErrors[name])}>
         <option value="">{placeholder}</option>
 
         {options.map((option) => (
@@ -144,6 +157,7 @@ export default function EditDevice() {
       </select>
 
       <ChevronDown size={15} />
+      {validationErrors[name] && <small className="device-field-error" role="alert">{validationErrors[name]}</small>}
     </div>
   );
 
@@ -194,6 +208,7 @@ export default function EditDevice() {
 
   return (
     <div className="device-view-page">
+      <DeviceNavigation title="Edit Device" onBack={() => navigate("/devices")} />
       {/* =====================================================
           HEADER
       ===================================================== */}
@@ -202,23 +217,8 @@ export default function EditDevice() {
         <div>
           <h1>Edit Device</h1>
 
-          <div className="device-view-breadcrumb">
-            <span>Home</span>
-            <span>›</span>
-            <span>Devices</span>
-            <span>›</span>
-            <strong>Edit Device</strong>
-          </div>
+          <p>Update device information, assignments, and settings.</p>
         </div>
-
-        <button
-          type="button"
-          className="device-view-back"
-          onClick={() => navigate("/devices")}
-        >
-          <ArrowLeft size={15} />
-          Back to Devices
-        </button>
       </div>
 
       {/* =====================================================
@@ -236,7 +236,7 @@ export default function EditDevice() {
           FORM
       ===================================================== */}
 
-      <form onSubmit={save} className="device-view-card">
+      <form id="edit-device-form" onSubmit={save} className="device-view-card" noValidate>
         {/* CARD HEADER */}
 
         <div className="device-card-header">
@@ -260,31 +260,40 @@ export default function EditDevice() {
         <div className="device-view-grid">
           {/* DEVICE NAME */}
 
-          <EditField label="Device Name" required>
+          <EditField label="Device Name" required error={validationErrors.deviceName}>
             <input
               name="deviceName"
               value={form.deviceName}
               onChange={update}
               placeholder="Enter device name"
               required
+              aria-invalid={Boolean(validationErrors.deviceName)}
             />
           </EditField>
 
           {/* DEVICE CODE */}
 
-          <EditField label="Device Code" required>
+          <EditField label="Device Code">
             <input
               name="deviceCode"
               value={form.deviceCode}
               readOnly
-              placeholder="Enter device code"
-              required
+              placeholder="Generated after saving"
+            />
+          </EditField>
+
+          <EditField label="Device ID">
+            <input
+              name="deviceId"
+              value={form.deviceId}
+              onChange={update}
+              placeholder="Enter device ID (optional)"
             />
           </EditField>
 
           {/* DEVICE TYPE */}
 
-          <EditField label="Device Type" required>
+          <EditField label="Device Type" required error={validationErrors.deviceType}>
             {select(
               "deviceType",
               form.deviceType,
@@ -301,20 +310,21 @@ export default function EditDevice() {
 
           {/* SERIAL NUMBER */}
 
-          <EditField label="Serial Number" required>
+          <EditField label="Serial Number" required error={validationErrors.serialNumber}>
             <input
               name="serialNumber"
               value={form.serialNumber}
               readOnly
               placeholder="Enter serial number"
               required
+              aria-invalid={Boolean(validationErrors.serialNumber)}
             />
           </EditField>
 
           {/* MERCHANT */}
 
           <EditField label="Merchant" required>
-            <input value={merchantName} readOnly aria-readonly="true" />
+            <input value={form.merchantName || "—"} readOnly aria-readonly="true" />
           </EditField>
 
           {/* STATUS */}
@@ -352,27 +362,28 @@ export default function EditDevice() {
           </div>
         </div>
 
-        {/* =================================================
-            ACTIONS
-        ================================================= */}
-
-        <div className="device-view-actions">
-          <button
-            type="button"
-            className="device-view-cancel"
-            onClick={() => navigate("/devices")}
-            disabled={saving}
-          >
-            Cancel
-          </button>
-
-          <button type="submit" className="device-view-save" disabled={saving}>
-            <Save size={15} />
-
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
       </form>
+
+      {/* =================================================
+          ACTIONS
+      ================================================= */}
+
+      <div className="device-view-actions">
+        <button
+          type="button"
+          className="device-view-cancel"
+          onClick={() => navigate("/devices")}
+          disabled={saving}
+        >
+          Cancel
+        </button>
+
+        <button type="submit" form="edit-device-form" className="device-view-save" disabled={saving}>
+          <Save size={15} />
+
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -381,9 +392,9 @@ export default function EditDevice() {
    EDIT FIELD
 ========================================================= */
 
-function EditField({ label, required, children }) {
+function EditField({ label, required, error, children }) {
   return (
-    <div className="device-view-field edit-field">
+    <div className={`device-view-field edit-field${error ? " field-invalid" : ""}`}>
       <label>
         {label}
 
@@ -391,6 +402,7 @@ function EditField({ label, required, children }) {
       </label>
 
       {children}
+      {error && <small className="device-field-error" role="alert">{error}</small>}
     </div>
   );
 }
