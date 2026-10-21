@@ -1,6 +1,19 @@
 /* Reuse the existing employee page base styles. */
 @import "./add-employee.css";
 
+/* Keep empty sample text readable in the merchant-embedded employee form. */
+.merchant-employee-embedded .employee-field input::placeholder,
+.merchant-employee-embedded .employee-login-pin-field input::placeholder,
+.merchant-employee-embedded .employee-phone-field .form-control::placeholder {
+  color: #8b9bb2;
+  opacity: 1;
+}
+
+.merchant-employee-embedded .employee-select select.employee-select-placeholder {
+  color: #8b9bb2;
+  opacity: 1;
+}
+
 .field-error {
     display: block;
     margin-top: 5px;
@@ -371,6 +384,20 @@
         .merchant-employee-embedded .add-employee-header{display:none;}
         .merchant-employee-embedded .add-employee-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;}
         .merchant-employee-embedded .add-employee-layout > *{min-width:0;}
+
+.merchant-employee-create-page .mv-create-content{padding:24px;}
+.merchant-employee-create-page .merchant-employee-embedded.add-employee-page{padding:0;}
+
+/* Keep the merchant employee save action visually primary within the tab. */
+.merchant-employee-create-page .save-employee-btn {
+  background: #5143bc;
+  border: 1px solid #5143bc;
+  color: #fff;
+}
+.merchant-employee-create-page .save-employee-btn:hover:not(:disabled) {
+  background: #4335a8;
+  border-color: #4335a8;
+}
 
 .add-employee-page .merchant-employee-fieldset {
   border: 0;

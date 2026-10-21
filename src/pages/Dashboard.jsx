@@ -1,167 +1,268 @@
-import { useState, useEffect, useRef } from "react";
+import FilterDropdown from "../components/FilterDropdown";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+    getAdministrationOverview,
+  getDashboardFeatures,
+  getDashboardPlatformHealth,
+  getDashboardSharedMetrics,
+} from "../api/dashboard";
 
 /* =========================================================
    KPI DATA
 ========================================================= */
 
-const kpis = [
-  {
-    label: "Merchants",
-    value: "148",
-    trend: "+12%",
-    detail: (
-      <>
-        <b className="is-good">139 active</b>
-        <span>4 onboarding</span>
-        <span>5 inactive</span>
-      </>
-    ),
-    icon: "bi-shop",
-    tone: "blue",
-  },
-  {
-    label: "Stores",
-    value: "342",
-    trend: "+8%",
-    detail: (
-      <>
-        <b className="is-good">331 active</b>
-        <span>6 pending</span>
-        <span>5 inactive</span>
-      </>
-    ),
-    icon: "bi-buildings",
-    tone: "green",
-  },
-  {
-    label: "Employees",
-    value: "2,486",
-    trend: "+5%",
-    detail: (
-      <>
-        <b className="is-warning">24 without roles</b>
-        <span>6 locked</span>
-      </>
-    ),
-    icon: "bi-people",
-    tone: "orange",
-  },
-  {
-    label: "Active subscriptions",
-    value: "136",
-    trend: "+3%",
-    detail: (
-      <>
-        <b className="is-warning">3 expiring</b>
-        <span>4 payment pending</span>
-      </>
-    ),
-    icon: "bi-credit-card-2-front",
-    tone: "purple",
-  },
-];
+const defaultAdministrationOverview = {
+  merchants: {},
+  stores: {},
+  employees: {},
+  subscriptions: {},
+  features: {},
+};
+
+const displayNumber = (value) =>
+  value == null ? "—" : Number(value).toLocaleString();
+
+const displayGrowth = (value) => {
+  if (value == null || value === "") return "—";
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return "—";
+  return `${numericValue > 0 ? "+" : ""}${numericValue}%`;
+};
+
+function buildKpis(overview) {
+  return [
+    {
+      label: "Merchants",
+      value: overview.merchants.total_count,
+      trend: overview.merchants.growth_percentage,
+      details: [
+        ["active", overview.merchants.active_count, "is-good"],
+        ["onboarding", overview.merchants.onboarding_count],
+        ["inactive", overview.merchants.inactive_count],
+      ],
+      icon: "bi-shop",
+      tone: "blue",
+    },
+    {
+      label: "Stores",
+      value: overview.stores.total_count,
+      trend: overview.stores.growth_percentage,
+      details: [
+        ["active", overview.stores.active_count, "is-good"],
+        ["pending", overview.stores.pending_count],
+        ["inactive", overview.stores.inactive_count],
+      ],
+      icon: "bi-buildings",
+      tone: "green",
+    },
+    {
+      label: "Employees",
+      value: overview.employees.total_count,
+      trend: overview.employees.growth_percentage,
+      details: [
+        ["without roles", overview.employees.without_roles_count, "is-warning"],
+        ["locked", overview.employees.locked_count],
+      ],
+      icon: "bi-people",
+      tone: "orange",
+    },
+    {
+      label: "Active subscriptions",
+      value: overview.subscriptions.active_count,
+      trend: overview.subscriptions.growth_percentage,
+      details: [
+        ["expiring", overview.subscriptions.expiring_count, "is-warning"],
+        ["payment pending", overview.subscriptions.payment_pending_count],
+      ],
+      icon: "bi-credit-card-2-front",
+      tone: "purple",
+    },
+  ];
+}
 
 /* =========================================================
    PLATFORM HEALTH
 ========================================================= */
 
-const healthRows = [
-  ["Devices online", "974 / 982", "99%", "good"],
-  ["Stores synchronized", "337 / 342", "98%", "warn"],
-  ["POS configuration complete", "336 / 342", "98%", "warn"],
-  ["Integrations connected", "144 / 148", "97%", "warn"],
-];
+const defaultHealth = {
+  score: null,
+  rows: [
+    ["Devices active", "—", "—", "good", "0%"],
+    ["Stores synchronized", "—", "—", "warn", "0%"],
+    ["POS configuration complete", "—", "—", "warn", "0%"],
+  ],
+};
+
+const defaultFeatures = { total: null, active: null, inactive: null, included: null, excluded: null };
+
+const unwrapDashboardData = (response) => response?.data?.data ?? response?.data ?? response ?? {};
+const firstValue = (source, keys, fallback) => {
+  for (const key of keys) if (source?.[key] != null) return source[key];
+  return fallback;
+};
+const asPercent = (value) => `${String(value).replace(/%$/, "")}%`;
+
+function normalizeHealth(response) {
+  const data = unwrapDashboardData(response);
+  const health = data.platformHealth ?? data.platform_health ?? data.health ?? data;
+  const metricRow = (label, metric, valueKey, totalKey, percentKey, tone) => {
+    const value = metric?.[valueKey];
+    const total = metric?.[totalKey];
+    const numericPercent = metric?.[percentKey] ?? (Number(total) > 0 ? Math.round((Number(value) / Number(total)) * 100) : null);
+    return [
+      label,
+      value != null && total != null ? `${value} / ${total}` : "—",
+      numericPercent == null ? "—" : asPercent(numericPercent),
+      tone,
+      `${numericPercent ?? 0}%`,
+    ];
+  };
+  const apiScore = Object.prototype.hasOwnProperty.call(health, "platform_health_score_pct")
+    ? health.platform_health_score_pct
+    : firstValue(health, ["healthScore", "health_score", "score", "overallHealth"], null);
+  const rows = [
+    metricRow("Devices active", health.devices, "active_count", "total_count", "active_pct", "good"),
+    metricRow("Stores synchronized", health.stores_synchronized, "synchronized_count", "eligible_count", "synchronized_pct", "warn"),
+    metricRow("POS configuration complete", health.pos_configuration, "completed_count", "eligible_count", "completed_pct", "warn"),
+  ];
+  const availablePercentages = rows
+    .map(([, , percent]) => percent === "—" ? null : Number(String(percent).replace(/%$/, "")))
+    .filter(value => Number.isFinite(value));
+  const score = apiScore == null
+    ? (availablePercentages.length
+      ? Math.round(availablePercentages.reduce((sum, value) => sum + value, 0) / availablePercentages.length)
+      : null)
+    : Number(String(apiScore).replace(/%$/, ""));
+  return {
+    score: Number.isFinite(score) ? score : null,
+    rows,
+  };
+}
+
+function normalizeFeatures(response) {
+  const data = unwrapDashboardData(response);
+  const features = data.featureSummary ?? data.feature_summary ?? data.summary ?? data;
+  const totalValue = firstValue(features, ["totalFeatures", "total_features", "total_features_count", "total"], null);
+  const activeValue = firstValue(features, ["activeFeatures", "active_features", "active_features_count", "active"], null);
+  const total = totalValue == null ? null : Number(totalValue);
+  const active = activeValue == null ? null : Number(activeValue);
+  const inactiveValue = firstValue(features, ["inactiveFeatures", "inactive_features", "inactive_features_count", "inactive"], null);
+  const inactive = inactiveValue == null
+    ? (total != null && active != null ? total - active : null)
+    : Number(inactiveValue);
+  return {
+    total, active, inactive,
+    included: firstValue(features, ["includedInPlans", "included_in_plans", "included_in_plans_count", "includedFeatures", "included_features"], null) == null
+      ? null
+      : Number(firstValue(features, ["includedInPlans", "included_in_plans", "included_in_plans_count", "includedFeatures", "included_features"], null)),
+    excluded: firstValue(features, ["notIncludedInAnyPlan", "not_included_in_any_plan", "not_included_in_any_plan_count", "notIncludedFeatures", "not_included_features"], null) == null
+      ? null
+      : Number(firstValue(features, ["notIncludedInAnyPlan", "not_included_in_any_plan", "not_included_in_any_plan_count", "notIncludedFeatures", "not_included_features"], null)),
+  };
+}
+
+function normalizeAdministrationOverview(response) {
+  const data = unwrapDashboardData(response);
+  return {
+    merchants: data.merchants ?? {},
+    stores: data.stores ?? {},
+    employees: data.employees ?? {},
+    subscriptions: data.subscriptions ?? {},
+    features: data.features ?? {},
+  };
+}
 
 /* =========================================================
    ADMINISTRATION MODULES
 ========================================================= */
 
-const adminModules = [
-  {
-    title: "Merchants",
-    icon: "bi-shop",
-    rows: [
-      ["Pending onboarding", "10"],
-      ["Suspended accounts", "4"],
-      ["Setup completion", "96%"],
-    ],
-    path: "/merchants",
-  },
-  {
-    title: "Users & Access",
-    icon: "bi-people",
-    rows: [
-      ["Total employees", "14"],
-      ["Employees without roles", "126"],
-      ["inactive", "30"],
-    ],
-    path: "/employees",
-  },
-  {
-    title: "Stores",
-    icon: "bi-buildings",
-    rows: [
-      ["Active stores", "331"],
-      ["Pending stores", "6"],
-      ["Inactive stores", "5"],
-    ],
-    path: "/stores",
-  },
-  {
-    title: "Subscriptions",
-    icon: "bi-credit-card",
-    rows: [
-      ["Trial", "5"],
-      ["Expiring soon", "3"],
-      ["Expired", "2"],
-    ],
-    path: "/subscriptions",
-  },
-];
+function buildAdminModules(overview) {
+  return [
+    {
+      title: "Merchants",
+      icon: "bi-shop",
+      rows: [
+        ["Active merchants", overview.merchants.active_count],
+        ["Pending onboarding", overview.merchants.onboarding_count],
+        ["Inactive merchants", overview.merchants.inactive_count],
+      ],
+      path: "/merchants",
+    },
+    {
+      title: "Users & Access",
+      icon: "bi-people",
+      rows: [
+        ["Total employees", overview.employees.total_count],
+        ["Employees without roles", overview.employees.without_roles_count],
+        ["Locked employees", overview.employees.locked_count],
+      ],
+      path: "/employees",
+    },
+    {
+      title: "Stores",
+      icon: "bi-buildings",
+      rows: [
+        ["Active stores", overview.stores.active_count],
+        ["Pending stores", overview.stores.pending_count],
+        ["Inactive stores", overview.stores.inactive_count],
+      ],
+      path: "/stores",
+    },
+    {
+      title: "Subscriptions",
+      icon: "bi-credit-card",
+      rows: [
+        ["Active subscriptions", overview.subscriptions.active_count],
+        ["Expiring soon", overview.subscriptions.expiring_count],
+        ["Payment pending", overview.subscriptions.payment_pending_count],
+      ],
+      path: "/subscriptions",
+    },
+  ];
+}
 
 /* =========================================================
    PLANS & ENTITLEMENTS
 ========================================================= */
 
-const planEntitlements = [
-  ["Basic · 1 store", "48"],
-  ["Pro · 3 stores", "46"],
-  ["Executive · 5 stores", "18"],
-];
-
-/* =========================================================
-   ROLE & PERMISSION METRICS
-   KEEP AS-IS
-========================================================= */
-
-const roleMetrics = [
-  ["System Roles", "8", "bi-shield-check", "blue"],
-  ["Custom Roles", "6", "bi-person-badge", "purple"],
-  ["Active role templates", "126", "bi-key", "purple"],
-  ["Total permissions", "24", "bi-exclamation-circle", "orange"],
-  ["Employees Assigned", "2,456", "bi-person-check", "blue"],
-  
-];
-
 /* =========================================================
    DONUT
 ========================================================= */
 
-function Donut({ value, className = "" }) {
+function Donut({ value, className = "", percent = 91, style = {}, status = "Healthy" }) {
   return (
-    <div className={`dashboard-donut ${className}`}>
+    <div className={`dashboard-donut ${className}`} style={{ "--donut-percent": `${percent}%`, ...style }}>
       <div className="dashboard-donut-hole">
         <strong>{value}</strong>
 
         <span>
-          {className.includes("coverage")
-            ? "Active features"
-            : "Healthy"}
+          {className.includes("coverage") ? "Active features" : status}
         </span>
       </div>
     </div>
   );
+}
+
+function getFeatureDonutStyle(features) {
+  const values = [features.total, features.active, features.inactive, features.included, features.excluded]
+    .map(value => Math.max(0, Number(value) || 0));
+  const total = values.reduce((sum, value) => sum + value, 0);
+  if (!total) return {};
+
+  const zeroSlice = 1.5;
+  const zeroCount = values.filter(value => value === 0).length;
+  const visibleSpace = 100 - zeroCount * zeroSlice;
+  const slices = values.map(value => value === 0 ? zeroSlice : (value / total) * visibleSpace);
+  let edge = 0;
+  const ends = slices.map(slice => (edge += slice));
+
+  return {
+    "--feature-total-end": `${ends[0]}%`,
+    "--feature-active-end": `${ends[1]}%`,
+    "--feature-inactive-end": `${ends[2]}%`,
+    "--feature-included-end": `${ends[3]}%`,
+  };
 }
 
 /* =========================================================
@@ -205,37 +306,78 @@ function SectionHeader({
 export default function Dashboard() {
   const nav = useNavigate();
 
+  const [health, setHealth] = useState(defaultHealth);
+  const [features, setFeatures] = useState(defaultFeatures);
+  const [administrationOverview, setAdministrationOverview] = useState(defaultAdministrationOverview);
+  const [sharedMetrics, setSharedMetrics] = useState({ plans: null, entitlements: null, roles: null });
+  const [healthLoadError, setHealthLoadError] = useState("");
+  const [featuresLoadError, setFeaturesLoadError] = useState("");
+  const [administrationLoadError, setAdministrationLoadError] = useState("");
+
+  const loadDashboard = useCallback(async () => {
+    const [healthResult, featuresResult, sharedMetricsResult, administrationResult] = await Promise.allSettled([
+      getDashboardPlatformHealth(),
+      getDashboardFeatures(),
+      getDashboardSharedMetrics(),
+      getAdministrationOverview(),
+    ]);
+
+    if (healthResult.status === "fulfilled") {
+      setHealth(normalizeHealth(healthResult.value));
+      setHealthLoadError("");
+    } else {
+      setHealthLoadError(healthResult.reason?.message || "Could not load Platform Health.");
+    }
+
+    if (featuresResult.status === "fulfilled") {
+      setFeatures(normalizeFeatures(featuresResult.value));
+      setFeaturesLoadError("");
+    } else {
+      setFeaturesLoadError(featuresResult.reason?.message || "Could not load Features.");
+    }
+
+    if (sharedMetricsResult.status === "fulfilled") setSharedMetrics(sharedMetricsResult.value);
+
+    if (administrationResult.status === "fulfilled") {
+      const overview = normalizeAdministrationOverview(administrationResult.value);
+      setAdministrationOverview(overview);
+      setFeatures((currentFeatures) => ({
+        ...currentFeatures,
+        total: overview.features.total_count ?? currentFeatures.total,
+        active: overview.features.active_count ?? currentFeatures.active,
+        inactive: overview.features.inactive_count ?? currentFeatures.inactive,
+      }));
+      setAdministrationLoadError("");
+    } else {
+      setAdministrationLoadError(
+        administrationResult.reason?.message || "Could not load Administration Overview."
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDashboard().catch(() => {
+      // Individual source failures are handled above with Promise.allSettled.
+    });
+  }, [loadDashboard]);
+
   const [refreshing, setRefreshing] = useState(false);
   const [dateFilter, setDateFilter] = useState("Today");
-  const [showDateFilter, setShowDateFilter] = useState(false);
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [planFilter, setPlanFilter] = useState("All plans");
-  const [showPlanFilter, setShowPlanFilter] = useState(false);
-  const dropdownsRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownsRef.current && !dropdownsRef.current.contains(event.target)) {
-        setShowDateFilter(false);
-        setShowPlanFilter(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const refresh = () => {
+  const refresh = async () => {
     setRefreshing(true);
-
-    window.setTimeout(() => {
+    try {
+      await loadDashboard();
+    } finally {
       setRefreshing(false);
-    }, 700);
+    }
   };
+
+  const kpis = buildKpis(administrationOverview);
+  const adminModules = buildAdminModules(administrationOverview);
 
   return (
     <div className="page-content super-admin-dashboard">
@@ -247,10 +389,6 @@ export default function Dashboard() {
       <div className="super-dashboard-head">
 
         <div>
-          <div className="dashboard-breadcrumb">
-            Dashboard / Overview
-          </div>
-
           <h1>Super Admin Dashboard</h1>
 
           <p>
@@ -266,105 +404,26 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <div className="dashboard-toolbar" ref={dropdownsRef}>
+        <div className="dashboard-toolbar">
 
          {/* DATE RANGE FILTER */}
-<div className="dashboard-date-filter-wrapper">
-  <button
-    type="button"
-    className="dashboard-filter dashboard-date-filter"
-    onClick={() => {
-      setShowDateFilter((prev) => !prev);
-      setShowPlanFilter(false);
-    }}
-  >
-    <i className="bi bi-calendar3" />
-
-    <span>{dateFilter}</span>
-
-    <i
-      className={`bi ${
-        showDateFilter
-          ? "bi-chevron-up"
-          : "bi-chevron-down"
-      }`}
-    />
-  </button>
-
-  {showDateFilter && (
-    <div className="dashboard-date-dropdown">
-
-      <button
-        type="button"
-        className={dateFilter === "Today" ? "active" : ""}
-        onClick={() => {
-          setDateFilter("Today");
-          setShowDateFilter(false);
-        }}
-      >
-        Today
-      </button>
-
-      <button
-        type="button"
-        className={dateFilter === "Last 7 days" ? "active" : ""}
-        onClick={() => {
-          setDateFilter("Last 7 days");
-          setShowDateFilter(false);
-        }}
-      >
-        Last 7 days
-      </button>
-
-      <button
-        type="button"
-        className={dateFilter === "Last 30 days" ? "active" : ""}
-        onClick={() => {
-          setDateFilter("Last 30 days");
-          setShowDateFilter(false);
-        }}
-      >
-        Last 30 days
-      </button>
-
-      <div className="dashboard-custom-date">
-        <span>Custom</span>
-
-        <div className="dashboard-date-inputs">
-          <input
-            type="date"
-            value={customStartDate}
-            onChange={(e) => setCustomStartDate(e.target.value)}
-          />
-
-          <span>to</span>
-
-          <input
-            type="date"
-            value={customEndDate}
-            onChange={(e) => setCustomEndDate(e.target.value)}
-          />
-        </div>
-
-        <button
-          type="button"
-          className="dashboard-custom-apply"
-          disabled={!customStartDate || !customEndDate}
-          onClick={() => {
-            setDateFilter(
-              `${customStartDate} - ${customEndDate}`
-            );
-            setShowDateFilter(false);
-          }}
-        >
-          Apply
-        </button>
-      </div>
-
+<FilterDropdown className="dashboard-filter dashboard-date-filter" aria-label="Date range" value={dateFilter}
+  triggerIcon={<i className="bi bi-calendar3" aria-hidden="true" />}
+  onChange={(event) => setDateFilter(event.target.value)}
+  renderFooter={(close) => <div className="dashboard-custom-date">
+    <span>Custom</span>
+    <div className="dashboard-date-inputs">
+      <input type="date" aria-label="Custom start date" value={customStartDate} onChange={(event) => setCustomStartDate(event.target.value)} />
+      <span>to</span>
+      <input type="date" aria-label="Custom end date" value={customEndDate} onChange={(event) => setCustomEndDate(event.target.value)} />
     </div>
-  )}
-</div>
-    
+    <button type="button" className="dashboard-custom-apply" disabled={!customStartDate || !customEndDate}
+      onClick={() => { setDateFilter(`${customStartDate} - ${customEndDate}`); close(); }}>Apply</button>
+  </div>}>
+  <option>Today</option><option>Last 7 days</option><option>Last 30 days</option>
+  {!["Today", "Last 7 days", "Last 30 days"].includes(dateFilter) && <option hidden disabled>{dateFilter}</option>}
+</FilterDropdown>
+
       {/* MERCHANT FILTER */}
       <button className="dashboard-filter">
         All merchants
@@ -372,78 +431,10 @@ export default function Dashboard() {
       </button>
 
       {/* PLAN FILTER */}
-      <div
-          className="dashboard-plan-filter-wrapper"
-        >
-        <button
-          type="button"
-          className="dashboard-filter dashboard-plan-filter"
-          onClick={() => {
-            setShowPlanFilter((prev) => !prev);
-            setShowDateFilter(false);
-          }}
-        >
-          <span>{planFilter}</span>
-
-          <i
-            className={`bi ${
-              showPlanFilter
-                ? "bi-chevron-up"
-                : "bi-chevron-down"
-            }`}
-          />
-        </button>
-
-        {showPlanFilter && (
-          <div className="dashboard-plan-dropdown">
-
-            <button
-              type="button"
-              className={planFilter === "All plans" ? "active" : ""}
-              onClick={() => {
-                setPlanFilter("All plans");
-                setShowPlanFilter(false);
-              }}
-            >
-              All plans
-            </button>
-
-            <button
-              type="button"
-              className={planFilter === "Basic" ? "active" : ""}
-              onClick={() => {
-                setPlanFilter("Basic");
-                setShowPlanFilter(false);
-              }}
-            >
-              Basic
-            </button>
-
-            <button
-              type="button"
-              className={planFilter === "Pro" ? "active" : ""}
-              onClick={() => {
-                setPlanFilter("Pro");
-                setShowPlanFilter(false);
-              }}
-            >
-              Pro
-            </button>
-
-            <button
-              type="button"
-              className={planFilter === "Enterprise" ? "active" : ""}
-              onClick={() => {
-                setPlanFilter("Enterprise");
-                setShowPlanFilter(false);
-              }}
-            >
-              Enterprise
-            </button>
-
-          </div>
-        )}
-      </div>
+      <FilterDropdown className="dashboard-filter dashboard-plan-filter" aria-label="Plan" value={planFilter}
+        onChange={(event) => setPlanFilter(event.target.value)}>
+        <option>All plans</option><option>Basic</option><option>Pro</option><option>Enterprise</option>
+      </FilterDropdown>
 
       {/* STORE FILTER */}
       <button className="dashboard-filter">
@@ -487,19 +478,26 @@ export default function Dashboard() {
 
               <div className="dashboard-kpi-value-row">
 
-                <strong>{item.value}</strong>
+                <strong>{displayNumber(item.value)}</strong>
 
                 <small>
-                  <i className="bi bi-arrow-up" />
-                  {" "}
-                  {item.trend}
+                  <span className="dashboard-kpi-trend">
+                    <i className={`bi ${Number(item.trend) < 0 ? "bi-arrow-down" : "bi-arrow-up"}`} />
+                    {" "}
+                    {displayGrowth(item.trend)}
+                  </span>
                   <span className="trend-period">vs last 30 days</span>
                 </small>
 
               </div>
 
               <div className="dashboard-kpi-details">
-                {item.detail}
+                {item.details.map(([label, value, className]) => {
+                  const detail = <><strong>{displayNumber(value)}</strong>{" "}<span>{label}</span></>;
+                  return className
+                    ? <b className={className} key={label}>{detail}</b>
+                    : <span key={label}>{detail}</span>;
+                })}
               </div>
 
             </div>
@@ -527,19 +525,27 @@ export default function Dashboard() {
             onAction={() => nav("/reports")}
           />
 
+          {healthLoadError && <p className="dashboard-data-error">Platform Health: {healthLoadError}</p>}
+
           <div className="health-content">
 
             <div className="health-summary">
 
-              <Donut value="91%" />
+              <Donut
+                value={health.score == null ? "—" : `${health.score}%`}
+                percent={health.score ?? 0}
+                status={health.score == null ? "Unavailable" : "Platform health"}
+                className={health.score == null ? "unavailable" : ""}
+                style={{ "--health-percent": `${health.score ?? 0}%` }}
+              />
 
 
             </div>
 
             <div className="health-metrics">
 
-              {healthRows.map(
-                ([label, count, percent, tone]) => (
+              {health.rows.map(
+                ([label, count, percent, tone, widthPercent = percent]) => (
                   <div
                     className="health-row"
                     key={label}
@@ -553,7 +559,7 @@ export default function Dashboard() {
                     <div className="health-progress-line">
                       <span
                         className={tone}
-                        style={{ width: percent }}
+                        style={{ width: widthPercent }}
                       />
                     </div>
 
@@ -584,13 +590,17 @@ export default function Dashboard() {
             onAction={() => nav("/features")}
           />
 
+          {featuresLoadError && <p className="dashboard-data-error">Features: {featuresLoadError}</p>}
+
           <div className="coverage-content">
 
             <div className="coverage-visual">
 
               <Donut
-                value="44"
+                value={features.active ?? "—"}
                 className="coverage"
+                percent={features.total ? (features.active / features.total) * 100 : 0}
+                style={getFeatureDonutStyle(features)}
               />
 
             </div>
@@ -601,35 +611,35 @@ export default function Dashboard() {
             <div className="feature-metric">
               <span className="legend-dot blue" />
               <span>Total Features</span>
-              <b>48</b>
+              <b>{features.total ?? "—"}</b>
             </div>
 
             {/* Active Features */}
             <div className="feature-metric">
               <span className="legend-dot green" />
               <span>Active Features</span>
-              <b>44</b>
+              <b>{features.active ?? "—"}</b>
             </div>
 
             {/* Inactive Features */}
             <div className="feature-metric">
               <span className="legend-dot slate" />
               <span>Inactive Features</span>
-              <b>4</b>
+              <b>{features.inactive ?? "—"}</b>
             </div>
 
             {/* Included in Plans */}
             <div className="feature-metric">
               <span className="legend-dot teal" />
               <span>Included in Plans</span>
-              <b>41</b>
+              <b>{features.included ?? "—"}</b>
             </div>
 
             {/* Not Included in Any Plan */}
             <div className="feature-metric">
               <span className="legend-dot orange" />
               <span>Not Included in Any Plan</span>
-              <b>3</b>
+              <b>{features.excluded ?? "—"}</b>
             </div>
 
          
@@ -678,12 +688,21 @@ export default function Dashboard() {
 
           <div className="plan-tier-grid">
 
-            {planEntitlements.map(
-              ([label, value]) => (
+            {(sharedMetrics.plans || [
+              { label: "Basic · 1 store", value: "—" },
+              { label: "Pro · 3 stores", value: "—" },
+              { label: "Executive · 5 stores", value: "—" },
+            ]).map(
+              ({ label, value }, index) => (
                 <div
                   className="plan-tier-card"
                   key={label}
                 >
+
+                  <i
+                    className={`plan-tier-icon bi ${["bi-shop", "bi-buildings", "bi-award"][index]}`}
+                    aria-hidden="true"
+                  />
 
                   <span>{label}</span>
 
@@ -709,7 +728,7 @@ export default function Dashboard() {
                 </span>
               </div>
 
-              <b>21</b>
+              <b>{sharedMetrics.entitlements?.storeCapacityReached ?? "—"}</b>
 
             </div>
 
@@ -725,7 +744,7 @@ export default function Dashboard() {
                 </span>
               </div>
 
-              <b>5</b>
+              <b>{sharedMetrics.entitlements?.terminalLimitReached ?? "—"}</b>
 
             </div>
 
@@ -742,7 +761,7 @@ export default function Dashboard() {
               </div>
 
               <b className="expired-value">
-                3
+                {sharedMetrics.entitlements?.expiredSubscriptions ?? "—"}
               </b>
 
             </div>
@@ -763,6 +782,10 @@ export default function Dashboard() {
             action="View all modules"
             onAction={() => nav("/merchants")}
           />
+
+          {administrationLoadError && (
+            <p className="dashboard-data-error">Administration Overview: {administrationLoadError}</p>
+          )}
 
           <div className="admin-grid">
 
@@ -801,7 +824,7 @@ export default function Dashboard() {
 
                         <span>{label}</span>
 
-                        <b>{value}</b>
+                        <b>{displayNumber(value)}</b>
 
                       </div>
 
@@ -837,21 +860,21 @@ export default function Dashboard() {
         <div className="roles-summary">
 
           <div>
-            <strong>14</strong>
+            <strong>{sharedMetrics.roles?.activeTemplateCount ?? "—"}</strong>
             <span>active role templates</span>
           </div>
-
-          <span className="attention-text">
-            <i className="bi bi-exclamation-circle" />
-            {" "}
-            3 require attention
-          </span>
 
         </div>
 
         <div className="roles-grid">
 
-          {roleMetrics.map(
+          {(sharedMetrics.roles?.metrics || [
+            ["System Roles", null, "bi-shield-check", "blue"],
+            ["Custom Roles", null, "bi-person-badge", "purple"],
+            ["Active role templates", null, "bi-key", "purple"],
+            ["Total permissions", null, "bi-exclamation-circle", "orange"],
+            ["Employees Assigned", null, "bi-person-check", "blue"],
+          ]).map(
             ([label, value, icon, tone]) => (
 
               <div

@@ -1,6 +1,8 @@
+import { pendingStoreRead } from "../api/http";
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "../components/Pagination";
-import ViewDetailsModal from "../components/ViewDetailsModal";
+import BentoDetailModal from "../components/BentoDetailModal";
 import {
     productsApi,
     normalizeCatalog,
@@ -69,7 +71,7 @@ export default function Products({
             }
 
             const response =
-                await productsApi.getCatalog(storeId);
+                await pendingStoreRead(`store-products:${storeId}`, () => productsApi.getCatalog(storeId));
 
             const catalog =
                 normalizeCatalog(response);
@@ -411,10 +413,6 @@ export default function Products({
                 <div>
                     <div className="products-title-row">
 
-                        <div className="products-title-icon">
-                            <i className="bi bi-box-seam" />
-                        </div>
-
                         <div>
                             <h1>Products</h1>
 
@@ -451,24 +449,6 @@ export default function Products({
                             </>
                         )}
                     </button>
-
-                    {/* STORE CONTEXT */}
-
-                    {store && (
-                        <div className="products-store-context">
-
-                            <i className="bi bi-shop" />
-
-                            <div>
-                                <span>STORE</span>
-
-                                <strong>
-                                    {store.name}
-                                </strong>
-                            </div>
-
-                        </div>
-                    )}
 
                 </div>
             </div>
@@ -624,13 +604,11 @@ export default function Products({
                 PRODUCTS CARD
             ================================================= */}
 
-            <div className="products-card">
+            {/* =================================================
+                TOOLBAR
+            ================================================= */}
 
-                {/* =================================================
-                    TOOLBAR
-                ================================================= */}
-
-                <div className="products-toolbar">
+            <div className="products-toolbar">
 
                     {/* SEARCH */}
 
@@ -653,7 +631,7 @@ export default function Products({
 
                     {/* CATEGORY */}
 
-                    <select
+                    <FilterDropdown
                         value={category}
                         onChange={(e) =>
                             setCategory(
@@ -675,11 +653,11 @@ export default function Products({
                                 </option>
                             )
                         )}
-                    </select>
+                    </FilterDropdown>
 
                     {/* TYPE */}
 
-                    <select
+                    <FilterDropdown
                         value={type}
                         onChange={(e) =>
                             setType(
@@ -701,11 +679,11 @@ export default function Products({
                                 </option>
                             )
                         )}
-                    </select>
+                    </FilterDropdown>
 
                     {/* STOCK */}
 
-                    <select
+                    <FilterDropdown
                         value={stockStatus}
                         onChange={(e) =>
                             setStockStatus(
@@ -728,7 +706,7 @@ export default function Products({
                         <option value="Out of stock">
                             Out of Stock
                         </option>
-                    </select>
+                    </FilterDropdown>
 
                     {/* CLEAR */}
 
@@ -740,34 +718,12 @@ export default function Products({
                         }
                     >
                         <i className="bi bi-arrow-counterclockwise" />
-                        Clear
+                        Reset
                     </button>
 
-                </div>
+            </div>
 
-                {/* =================================================
-                    TABLE HEADER
-                ================================================= */}
-
-                <div className="products-table-header">
-
-                    <div>
-                        Products
-
-                        <span>
-                            {filteredProducts.length}
-                        </span>
-                    </div>
-
-                    <div className="read-only-badge">
-
-                        <i className="bi bi-lock" />
-
-                        Read Only
-
-                    </div>
-
-                </div>
+            <div className="products-card">
 
                 {/* =================================================
                     LOADING
@@ -793,15 +749,15 @@ export default function Products({
 
                                 <tr>
 
-                                    <th>PRODUCT</th>
+                                    <th>Product</th>
                                     <th>SKU</th>
-                                    <th>STOCK</th>
-                                    <th>PRICE</th>
-                                    <th>CATEGORY</th>
-                                    <th>TAGS</th>
-                                    <th>BRAND</th>
-                                    <th>UPDATED</th>
-                                    <th>STATUS</th>
+                                    <th>Stock</th>
+                                    <th>Price</th>
+                                    <th>Category</th>
+                                    <th>Tags</th>
+                                    <th>Brand</th>
+                                    <th>Updated</th>
+                                    <th>Status</th>
 
                                 </tr>
 
@@ -809,7 +765,7 @@ export default function Products({
 
                             <tbody>
 
-                                {paginatedProducts.map(
+                                {paginatedProducts.length ? paginatedProducts.map(
                                     (product) => (
                                         <ProductRow
                                             key={
@@ -825,6 +781,21 @@ export default function Products({
                                             }
                                         />
                                     )
+                                ) : (
+                                    <tr>
+                                        <td className="products-table-empty-cell" colSpan="9">
+                                            <div className="products-table-empty-state">
+                                            
+                                                <strong>No products found</strong>
+                                                <span>
+                                                    {products.length === 0
+                                                        ? "No products are available for this store."
+                                                        : "Try changing your search or filters."}
+                                                </span>
+                                               
+                                            </div>
+                                        </td>
+                                    </tr>
                                 )}
 
                             </tbody>
@@ -835,75 +806,26 @@ export default function Products({
                 )}
 
                 {/* =================================================
-                    EMPTY STATE
-                ================================================= */}
-
-                {!loading &&
-                    filteredProducts.length ===
-                        0 && (
-                        <div className="products-empty">
-
-                            <div>
-                                <i className="bi bi-box-seam" />
-                            </div>
-
-                            <h3>
-                                No products found
-                            </h3>
-
-                            <p>
-                                {products.length ===
-                                0
-                                    ? "No products are available for this store."
-                                    : "Try changing your search or filters."}
-                            </p>
-
-                            <button
-                                type="button"
-                                onClick={
-                                    clearFilters
-                                }
-                            >
-                                Clear Filters
-                            </button>
-
-                        </div>
-                    )}
-
-                {/* =================================================
                     PAGINATION
                 ================================================= */}
 
-                {!loading &&
-                    filteredProducts.length >
-                        0 && (
-                        <Pagination
-                            currentPage={
-                                currentPage
-                            }
-                            totalPages={
-                                totalPages
-                            }
-                            totalItems={
-                                totalItems
-                            }
-                            pageSize={
-                                pageSize
-                            }
-                            onPageChange={
-                                setCurrentPage
-                            }
-                            onPageSizeChange={(
-                                size
-                            ) => {
-                                setPageSize(
-                                    size
-                                );
-                                setCurrentPage(
-                                    1
-                                );
-                            }}
-                        />
+                {!loading && (
+                        <div className="products-pagination">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                totalItems={totalItems}
+                                pageSize={pageSize}
+                                itemLabel="products"
+                                showWhenEmpty
+                                onPageChange={setCurrentPage}
+                                onPageSizeChange={(size) => {
+                                    setPageSize(size);
+                                    setCurrentPage(1);
+                                }}
+                                
+                            />
+                        </div>
                     )}
 
                 {/* =================================================
@@ -929,27 +851,93 @@ export default function Products({
             </div>
 
             {/* =================================================
-                VIEW PRODUCT DETAILS
+                UNIFIED MODERN PRODUCT MODAL
             ================================================= */}
 
-            <ViewDetailsModal
-                open={Boolean(
-                    selectedProduct
-                )}
+            <BentoDetailModal
+                open={Boolean(selectedProduct)}
+                onClose={() => setSelectedProduct(null)}
+                headerIcon="bi-box-seam"
                 title="Product Details"
-                subtitle={
+                code={
                     selectedProduct?.sku
                         ? `SKU: ${selectedProduct.sku}`
+                        : selectedProduct?.id
+                        ? `ID: ${selectedProduct.id}`
                         : ""
                 }
-                data={selectedProduct}
-                fields={
-                    productDetailsFields
+                size="compact"
+                hero={
+                    selectedProduct
+                        ? {
+                              icon: "bi-box-seam",
+                              image: selectedProduct.image,
+                              title: selectedProduct.name || "Product",
+                              status: selectedProduct.stockStatus || "In Stock",
+                              metricLabel: "PRICE",
+                              metricValue:
+                                  selectedProduct.price !== undefined &&
+                                  selectedProduct.price !== null &&
+                                  selectedProduct.price !== ""
+                                      ? String(selectedProduct.price).startsWith("$")
+                                          ? selectedProduct.price
+                                          : `$${Number(selectedProduct.price).toFixed(2)}`
+                                      : "$0.00",
+                          }
+                        : null
                 }
-                onClose={() =>
-                    setSelectedProduct(
-                        null
-                    )
+                fields={
+                    selectedProduct
+                        ? [
+                              {
+                                  label: "CATEGORY",
+                                  value: selectedProduct.category || "Uncategorized",
+                              },
+                              {
+                                  label: "BRAND",
+                                  value: selectedProduct.brand || "—",
+                              },
+                              {
+                                  label: "PRODUCT TYPE",
+                                  value: selectedProduct.type || "Simple Product",
+                              },
+                              {
+                                  label: "QUANTITY / UNITS",
+                                  value:
+                                      selectedProduct.quantity !== undefined &&
+                                      selectedProduct.quantity !== null &&
+                                      selectedProduct.quantity !== ""
+                                          ? `${selectedProduct.quantity} units`
+                                          : "—",
+                              },
+                              {
+                                  label: "TAGS",
+                                  value: selectedProduct.tags,
+                                  fullWidth: true,
+                                  render: (tags) => {
+                                      if (Array.isArray(tags) && tags.length > 0) {
+                                          return (
+                                              <div className="bento-chips-wrap">
+                                                  {tags.map((tag) => (
+                                                      <span key={tag} className="bento-chip">
+                                                          {tag}
+                                                      </span>
+                                                  ))}
+                                              </div>
+                                          );
+                                      }
+                                      if (typeof tags === "string" && tags.trim()) {
+                                          return <span className="bento-field-value">{tags}</span>;
+                                      }
+                                      return (
+                                          <span className="bento-field-value empty-state">
+                                              No tags assigned
+                                          </span>
+                                      );
+                                  },
+                              },
+                          ]
+                        : []
                 }
             />
 
@@ -969,17 +957,17 @@ function ProductRow({
     const normalizedStockStatus =
         String(
             product.stockStatus || ""
-        ).toLowerCase();
+        ).toLowerCase().replace(/[\s_-]+/g, "");
 
     const stockClass =
         normalizedStockStatus ===
-        "in stock"
+        "instock"
             ? "in-stock"
             : normalizedStockStatus ===
-              "low stock"
+              "lowstock"
             ? "low-stock"
             : normalizedStockStatus ===
-              "out of stock"
+              "outofstock"
             ? "out-stock"
             : "out-stock";
 
@@ -997,24 +985,6 @@ function ProductRow({
             <td>
 
                 <div className="product-info">
-
-                    <div className="product-image">
-
-                        {product.image ? (
-                            <img
-                                src={
-                                    product.image
-                                }
-                                alt={
-                                    product.name
-                                }
-                            />
-                        ) : (
-                            <i className="bi bi-image" />
-                        )}
-
-                    </div>
-
                     <div>
 
                         <strong>

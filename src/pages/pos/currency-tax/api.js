@@ -1,18 +1,31 @@
 import { api } from "../../../api/http";
-import { endpoints } from "../../../api/endpoints";
+import { loadStorePosConfiguration, saveStorePosConfiguration } from "../storePosConfiguration";
 
-const path = (storeId) => endpoints.storeCurrencyTax(storeId);
-
-const record = (response) => response?.currencyTax || response?.data || response;
+const NAME = "currency_taxes";
 
 export function getPosCurrencyTax(storeId) {
-  return api.get(path(storeId)).then(record);
+  return loadStorePosConfiguration(storeId, NAME);
 }
 
 export function createPosCurrencyTax(storeId, payload) {
-  return api.post(path(storeId), payload).then(record);
+  return saveStorePosConfiguration(storeId, NAME, payload);
 }
 
 export function updatePosCurrencyTax(storeId, payload) {
-  return api.put(path(storeId), payload).then(record);
+  return saveStorePosConfiguration(storeId, NAME, payload);
+}
+
+const taxClassPath = (storeId, slug) => `/stores/${encodeURIComponent(storeId)}/tax-classes${slug === undefined ? "" : `/${encodeURIComponent(slug)}`}`;
+export function createStoreTaxClass(storeId, payload) {
+  return api.post(taxClassPath(storeId), payload);
+}
+export function updateStoreTaxClass(storeId, slug, payload) {
+  return api.put(taxClassPath(storeId, slug), payload);
+}
+export function deleteStoreTaxClass(storeId, slug) {
+  return api.delete(taxClassPath(storeId, slug));
+}
+
+export function updateStoreTaxSettings(storeId, taxEnabled) {
+  return api.put(`/stores/${encodeURIComponent(storeId)}/tax-classes/settings`, { taxEnabled });
 }

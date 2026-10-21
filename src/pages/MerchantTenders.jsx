@@ -1,5 +1,11 @@
+import { pendingStoreRead } from "../api/http";
 import { useEffect, useRef, useState } from "react";
+import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
+import BentoDetailModal from "../components/BentoDetailModal";
+import ListActions from "../components/ListActions";
 import "../styles/merchant-tenders.css";
+import Pagination from "../components/Pagination";
+import FiltersBar from "../components/FiltersBar";
 import { tendorsApi } from "../api/tendors";
 
 const idOf = (value) =>
@@ -15,6 +21,37 @@ const idOf = (value) =>
       : (value ?? ""),
   );
 
+const tendorsFrom = (response) => {
+  const candidates = [
+    response?.tendors,
+    response?.data?.tendors,
+    response?.data?.items,
+    response?.items,
+    response?.data,
+    response,
+  ];
+
+  return candidates.find(Array.isArray) || [];
+};
+
+const assignedIdsFrom = (response) => {
+  const candidates = [
+    response?.tendorIds,
+    response?.tenderIds,
+    response?.data?.tendorIds,
+    response?.data?.tenderIds,
+    response?.tendors,
+    response?.data?.tendors,
+    response?.items,
+    response?.data?.items,
+    response?.data,
+    response,
+  ];
+  const assigned = candidates.find(Array.isArray);
+
+  return assigned ? assigned.map(idOf).filter(Boolean) : [];
+};
+
 function formatDate(value) {
   if (!value) return "—";
 
@@ -22,6 +59,13 @@ function formatDate(value) {
 
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
 }
+
+// Status ni Title Case ("Active", "Inactive") loki marchadaniki helper
+const formatStatus = (status) => {
+  if (!status) return "Active";
+  const str = String(status).trim();
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
 
 const normalize = (value = {}) => ({
   ...value,
@@ -46,7 +90,7 @@ const normalize = (value = {}) => ({
 
   updatedAt: formatDate(value.updatedAt ?? value.updated_at),
 
-  status: String(value.status ?? "ACTIVE"),
+  status: formatStatus(value.status ?? "ACTIVE"),
 });
 
 const active = (tender) =>
@@ -58,14 +102,14 @@ const matches = (tender, query) =>
     .toLowerCase()
     .includes(query.trim().toLowerCase());
 
-// onSaveAssignments({ merchantId, tenderIds })
-// must resolve only after saving succeeds.
 export default function MerchantTenders({
   merchantId,
   masterTenders: initialMasterTenders = [],
   assignedTenderIds = [],
   loading = false,
   error = "",
+  onNavigationChange,
+  navigationBackRef,
 }) {
   const [ids, setIds] = useState(() => assignedTenderIds.map(idOf));
 
@@ -77,6 +121,9 @@ export default function MerchantTenders({
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [pickerPage, setPickerPage] = useState(1);
+  const [pickerPageSize, setPickerPageSize] = useState(25);
 
   const [sort, setSort] = useState({
     key: "name",
@@ -89,6 +136,8 @@ export default function MerchantTenders({
 
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [assignmentsLoading, setAssignmentsLoading] = useState(true);
+  const [assignmentError, setAssignmentError] = useState("");
 
   const lock = useRef(false);
   const dialog = useRef(null);
@@ -103,13 +152,90 @@ export default function MerchantTenders({
   }, [merchantId, signature]);
 
   useEffect(() => {
-    if (modal) {
-      dialog.current?.showModal();
-    } else if (dialog.current?.open) {
+    let cancelled = false;
+
+    async function loadMasterTenders() {
+      setMasterLoading(true);
+      setMasterError("");
+
+      try {
+        const response = await pendingStoreRead("tendors", () => tendorsApi.getAll());
+
+        if (!cancelled) {
+          setMasterTenders(tendorsFrom(response));
+        }
+      } catch (loadError) {
+        console.error("Failed to load master tenders:", loadError);
+
+        if (!cancelled) {
+          setMasterError(
+            loadError?.message || "Unable to load master tenders.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setMasterLoading(false);
+        }
+      }
+    }
+
+    loadMasterTenders();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAssignments() {
+      setAssignmentsLoading(true);
+      setAssignmentError("");
+
+      try {
+        const response = await pendingStoreRead(`merchant-tendors:${merchantId}`, () => tendorsApi.getMerchantTendors(merchantId));
+
+        if (!cancelled) {
+          setIds(assignedIdsFrom(response));
+        }
+      } catch (loadError) {
+        console.error("Failed to load merchant tender assignments:", loadError);
+
+        if (!cancelled) {
+          setAssignmentError(
+            loadError?.message || "Unable to load merchant tender assignments.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setAssignmentsLoading(false);
+        }
+      }
+    }
+
+    loadAssignments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [merchantId]);
+
+  useEffect(() => {
+    if (dialog.current?.open) {
       dialog.current.close();
       addButton.current?.focus();
     }
   }, [modal]);
+
+  useEffect(() => {
+    if (modal?.type === "select") {
+      onNavigationChange?.("select");
+      if (navigationBackRef) navigationBackRef.current = close;
+    } else {
+      onNavigationChange?.(null);
+    }
+  }, [modal?.type, onNavigationChange, navigationBackRef]);
 
   const tenders = Array.from(
     new Map(
@@ -136,18 +262,33 @@ export default function MerchantTenders({
     .filter((value) => matches(value, query))
     .sort(
       (a, b) =>
-        String(a[sort.key]).localeCompare(String(b[sort.key])) * sort.direction,
+        String(a[sort.key]).localeCompare(String(b[sort.key])) *
+        sort.direction
     );
 
-  const pages = Math.max(1, Math.ceil(rows.length / 10));
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedRows = rows.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
-  const current = Math.min(page, pages);
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  useEffect(() => {
+    setPage((previous) => Math.min(previous, totalPages));
+  }, [totalPages]);
 
   const available = tenders.filter(
     (value) => !ids.includes(value.id) && matches(value, search),
   );
 
   const selectable = available.filter(active);
+  const pickerPages = Math.max(1, Math.ceil(available.length / pickerPageSize));
+  const currentPickerPage = Math.min(pickerPage, pickerPages);
+  const pickerRows = available.slice((currentPickerPage - 1) * pickerPageSize, currentPickerPage * pickerPageSize);
 
   const close = () => {
     if (!lock.current) {
@@ -164,28 +305,15 @@ export default function MerchantTenders({
     setMasterError("");
     setSelection([]);
     setSearch("");
+    setPickerPage(1);
     setSaveError("");
 
     try {
-      const response = await tendorsApi.getAll();
+      const response = await pendingStoreRead("tendors", () => tendorsApi.getAll());
 
       console.log("TENDORS API RESPONSE:", response);
 
-      const list = Array.isArray(response)
-        ? response
-        : Array.isArray(response?.tendors)
-          ? response.tendors
-          : Array.isArray(response?.data?.tendors)
-            ? response.data.tendors
-            : Array.isArray(response?.data)
-              ? response.data
-              : Array.isArray(response?.items)
-                ? response.items
-                : [];
-
-      console.log("TENDORS LIST:", list);
-
-      setMasterTenders(Array.isArray(list) ? list : []);
+      setMasterTenders(tendorsFrom(response));
 
       setModal({
         type: "select",
@@ -204,6 +332,7 @@ export default function MerchantTenders({
       setMasterLoading(false);
     }
   }
+
   async function save(next) {
     if (lock.current) return;
 
@@ -230,7 +359,7 @@ export default function MerchantTenders({
     <span
       className={`mt-badge ${active(tender) ? "mt-active" : "mt-inactive"}`}
     >
-      ● {tender.status}
+      {formatStatus(tender.status)}
     </span>
   );
 
@@ -292,7 +421,6 @@ export default function MerchantTenders({
                 {key === "name"
                   ? "Tender"
                   : key[0].toUpperCase() + key.slice(1)}{" "}
-                {sort.key === key ? (sort.direction === 1 ? "↑" : "↓") : "↕"}
               </button>
             )}
           </th>
@@ -302,6 +430,7 @@ export default function MerchantTenders({
       </tr>
     );
   }
+
   async function removeTender(tendorId) {
     if (lock.current) return;
 
@@ -324,145 +453,212 @@ export default function MerchantTenders({
       setBusy(false);
     }
   }
+
   return (
     <div className="merchant-tenders">
-      <header className="mt-card mt-header">
-        <div>
-          <h2>Tenders</h2>
-          <p>These are the tenders connected to this merchant.</p>
-        </div>
+      {modal?.type === "select" ? (
+        <section className="mt-card mt-existing-page">
+          <header className="mt-existing-heading">
+            <div>
+              <h2>Add Tender</h2>
+              <p>Choose one or more tenders to add to this merchant.</p>
+            </div>
+            <button type="button" disabled={busy} onClick={close}>
+              <i className="bi bi-arrow-left" /> Back to Tenders
+            </button>
+          </header>
+          {masterLoading && <p role="status">Loading master tenders…</p>}
+          {masterError && <p role="alert" className="mt-error">{masterError}</p>}
+          <FiltersBar
+            className="mt-picker-toolbar"
+            searchValue={search}
+            onSearchChange={(value) => {
+              setSearch(value);
+              setPickerPage(1);
+            }}
+            searchPlaceholder="Search tenders by name or code"
+            searchAriaLabel="Search master tenders"
+            searchDisabled={busy || masterLoading}
+            searchAutoFocus
+            onClear={() => {
+              setSearch("");
+              setPickerPage(1);
+            }}
+            clearLabel="Reset"
+          />
+          <div className="mt-scroll mt-options">
+            <table>
+              <thead>
+                <tr>
+                  <th>Select</th>
+                  <th>Tender Code</th>
+                  <th>Tender Name</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pickerRows.map((tender) => (
+                  <tr key={tender.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${tender.name}`}
+                        disabled={busy || !active(tender)}
+                        checked={selection.includes(tender.id)}
+                        onChange={(event) =>
+                          setSelection((old) =>
+                            event.target.checked
+                              ? [...old, tender.id]
+                              : old.filter((id) => id !== tender.id)
+                          )
+                        }
+                      />
+                    </td>
+                    <td>{tender.code}</td>
+                    <td>
+                      <strong>{tender.name}</strong>
+                    </td>
+                    <td>{badge(tender)}</td>
+                  </tr>
+                ))}
+                {!available.length && !masterLoading && (
+                  <tr>
+                    <td colSpan={4}>No unassigned tenders found in master data.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <Pagination
+            currentPage={currentPickerPage}
+            totalPages={pickerPages}
+            totalItems={available.length}
+            pageSize={pickerPageSize}
+            onPageChange={setPickerPage}
+            onPageSizeChange={(size) => {
+              setPickerPageSize(size);
+              setPickerPage(1);
+            }}
+            itemLabel="tenders"
+            showWhenEmpty={true}
+          />
+          {saveError && <p role="alert" className="mt-error">{saveError}</p>}
+          <footer className="mt-existing-footer">
+            <button type="button" disabled={busy} onClick={close}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="mt-primary"
+              disabled={busy || !selection.length || masterLoading}
+              onClick={() =>
+                save([
+                  ...new Set([
+                    ...ids,
+                    ...selection.filter((id) =>
+                      tenders.some((value) => value.id === id && active(value))
+                    ),
+                  ]),
+                ])
+              }
+            >
+              {busy ? "Saving…" : "Add Selected"}
+            </button>
+          </footer>
+        </section>
+      ) : (
+        <section className="mt-card">
+          <div className="mt-header">
+            <div>
+              <h3>Tender List</h3>
+              <p>These are the tenders connected to this merchant.</p>
+            </div>
 
-        <button
-          ref={addButton}
-          className="mt-primary"
-          disabled={loading || !!error || masterLoading}
-          onClick={openAddTenderModal}
-        >
-          {masterLoading ? "Loading Tenders…" : "＋ Add Tender"}
-        </button>
-      </header>
+            <button
+              ref={addButton}
+              className="mt-primary"
+              disabled={loading || !!error || masterLoading}
+              onClick={openAddTenderModal}
+            >
+              {masterLoading ? "Loading Tenders…" : "＋ Add Tender"}
+            </button>
+          </div>
 
-      <section className="mt-card">
-        <h3>Tender List</h3>
-
-        <div className="mt-toolbar">
-          <input
-            aria-label="Search assigned tenders"
-            placeholder="Search tenders by name or code…"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
+          <FiltersBar
+            searchValue={query}
+            onSearchChange={(value) => {
+              setQuery(value);
               setPage(1);
             }}
-          />
-
-          <button
-            onClick={() => {
+            searchPlaceholder="Search tenders by name or code…"
+            onClear={() => {
               setQuery("");
               setPage(1);
-              setSort({
-                key: "name",
-                direction: 1,
-              });
+              setSort({ key: "name", direction: 1 });
             }}
-          >
-            ↺ Reset
-          </button>
-        </div>
+            showClear={true}
+          />
 
-        {loading ? (
-          <p role="status">Loading tenders…</p>
-        ) : error ? (
-          <p role="alert">{error}</p>
-        ) : (
-          <>
-            <div className="mt-scroll">
-              <table>
-                <thead>{headings()}</thead>
+          {loading || assignmentsLoading ? (
+            <p role="status">Loading tenders…</p>
+          ) : error || assignmentError || masterError ? (
+            <p role="alert">{error || assignmentError || masterError}</p>
+          ) : (
+            <>
+              <div className="mt-scroll">
+                <table>
+                  <thead>{headings()}</thead>
 
-                <tbody>
-                  {rows
-                    .slice((current - 1) * 10, current * 10)
-                    .map((tender) => (
+                  <tbody>
+                    {paginatedRows.map((tender) => (
                       <tr key={tender.id}>
                         <td>{name(tender)}</td>
                         <td>{tender.code}</td>
                         <td>{badge(tender)}</td>
 
                         <td>
-                          <div className="mt-actions">
-                            <button
-                              aria-label={`View ${tender.name}`}
-                              onClick={() =>
-                                setModal({
-                                  type: "view",
-                                  tender,
-                                })
-                              }
-                            >
-                              View
-                            </button>
-
-                            <button
-                              aria-label={`Remove ${tender.name} assignment`}
-                              onClick={() => {
-                                setSaveError("");
-                                setModal({
-                                  type: "remove",
-                                  tender,
-                                });
-                              }}
-                            >
-                              Remove
-                            </button>
-                          </div>
+                          <ListActions
+                            onView={() => setModal({ type: "view", tender })}
+                            viewLabel={`View ${tender.name}`}
+                            onDelete={() => {
+                              setSaveError("");
+                              setModal({ type: "remove", tender });
+                            }}
+                            deleteLabel={`Remove ${tender.name} assignment`}
+                          />
                         </td>
                       </tr>
                     ))}
 
-                  {!rows.length && (
-                    <tr>
-                      <td colSpan={4}>
-                        No assigned tenders match. Use Add Tender to select from
-                        master data.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <footer className="mt-footer">
-              <span>
-                Showing {rows.length ? (current - 1) * 10 + 1 : 0} to{" "}
-                {Math.min(current * 10, rows.length)} of {rows.length} entries
-              </span>
-
-              <div>
-                <button
-                  disabled={current === 1}
-                  onClick={() => setPage(current - 1)}
-                  aria-label="Previous page"
-                >
-                  ‹
-                </button>
-
-                <span className="mt-page">
-                  {current} / {pages}
-                </span>
-
-                <button
-                  disabled={current === pages}
-                  onClick={() => setPage(current + 1)}
-                  aria-label="Next page"
-                >
-                  ›
-                </button>
+                    {!rows.length && (
+                      <tr>
+                        <td colSpan={4}>
+                          No assigned tenders match. Use Add Tender to select from
+                          master data.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            </footer>
-          </>
-        )}
-      </section>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={rows.length}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setPage(1);
+                }}
+                itemLabel="tenders"
+                showWhenEmpty={true}
+              />
+            </>
+          )}
+        </section>
+      )}
 
       <dialog
         className="mt-dialog"
@@ -493,7 +689,7 @@ export default function MerchantTenders({
               </p>
             </div>
 
-            <button aria-label="Close" disabled={busy} onClick={close}>
+            <button aria-label="Close" disabled={busy} onClick={close} className="close-button">
               ×
             </button>
           </header>
@@ -508,14 +704,22 @@ export default function MerchantTenders({
                 </p>
               )}
 
-              <input
-                className="mt-search"
-                autoFocus
-                aria-label="Search master tenders"
-                placeholder="Search tenders by name or code…"
-                value={search}
-                disabled={busy || masterLoading}
-                onChange={(event) => setSearch(event.target.value)}
+              <FiltersBar
+                className="mt-picker-toolbar"
+                searchValue={search}
+                onSearchChange={(value) => {
+                  setSearch(value);
+                  setPickerPage(1);
+                }}
+                searchPlaceholder="Search tenders by name or code"
+                searchAriaLabel="Search master tenders"
+                searchDisabled={busy || masterLoading}
+                searchAutoFocus
+                onClear={() => {
+                  setSearch("");
+                  setPickerPage(1);
+                }}
+                clearLabel="Clear filters"
               />
 
               <div className="mt-scroll mt-options">
@@ -535,7 +739,7 @@ export default function MerchantTenders({
                               setSelection((old) =>
                                 event.target.checked
                                   ? [...old, tender.id]
-                                  : old.filter((id) => id !== tender.id),
+                                  : old.filter((id) => id !== tender.id)
                               )
                             }
                           />
@@ -564,7 +768,7 @@ export default function MerchantTenders({
                 {Object.entries({
                   Tender: modal.tender.name,
                   Code: modal.tender.code,
-                  Status: modal.tender.status,
+                  Status: formatStatus(modal.tender.status),
                   Created: modal.tender.createdAt,
                   Updated: modal.tender.updatedAt,
                 }).map(([label, value]) => (
@@ -584,11 +788,7 @@ export default function MerchantTenders({
           )}
 
           <footer className="mt-footer">
-            <span>
-              {modal?.type === "select"
-                ? `${selection.length} tenders selected`
-                : ""}
-            </span>
+            <span />
 
             <div>
               <button disabled={busy} onClick={close}>
@@ -615,20 +815,101 @@ export default function MerchantTenders({
                   {busy ? "Saving…" : "Add Selected"}
                 </button>
               )}
-
-              {modal?.type === "remove" && (
-                <button
-                  className="mt-primary"
-                  disabled={busy}
-                  onClick={() => removeTender(modal.tender.id)}
-                >
-                  {busy ? "Saving…" : "Remove Assignment"}
-                </button>
-              )}
             </div>
           </footer>
         </div>
       </dialog>
+
+      <DeleteConfirmationDialog
+        isOpen={modal?.type === "remove"}
+        title="Remove Tender Assignment?"
+        message={`Are you sure you want to remove ${
+          modal?.tender?.name || "this tender"
+        } from this merchant? The tender will remain available in Master Data.`}
+        cancelLabel="Cancel"
+        confirmLabel="Remove"
+        busyLabel="Removing..."
+        busy={busy}
+        error={saveError}
+        iconClassName="bi bi-trash3"
+        onCancel={close}
+        onConfirm={() => {
+          if (modal?.tender?.id) {
+            removeTender(modal.tender.id);
+          }
+        }}
+      />
+
+      <BentoDetailModal
+        open={Boolean(modal?.tender && modal?.type === "view")}
+        onClose={close}
+        headerIcon="bi-credit-card-2-front"
+        title="Tender Details"
+        code={modal?.tender?.code ? `Code: ${modal.tender.code}` : ""}
+        size="compact"
+        hero={
+          modal?.tender
+            ? {
+                icon: "bi-credit-card",
+                title: modal.tender.name || "Tender",
+                status: formatStatus(modal.tender.status),
+                metricLabel: "TENDER TYPE",
+                metricValue: modal.tender.type || modal.tender.code || "Payment Method",
+              }
+            : null
+        }
+        layout="bento-2"
+        sections={
+          modal?.tender
+            ? [
+                {
+                  title: "TENDER SPECIFICATIONS",
+                  fields: [
+                    {
+                      label: "TENDER NAME",
+                      value: modal.tender.name,
+                    },
+                    {
+                      label: "TENDER CODE",
+                      value: modal.tender.code,
+                      mono: true,
+                    },
+                    {
+                      label: "STATUS",
+                      value: formatStatus(modal.tender.status),
+                      render: (val) => (
+                        <span
+                          className={`bento-status-pill ${
+                            String(val).toLowerCase() === "active" ? "active" : "inactive"
+                          }`}
+                        >
+                          {formatStatus(val)}
+                        </span>
+                      ),
+                    },
+                  ],
+                },
+                {
+                  title: "SYSTEM AUDIT",
+                  fields: [
+                    {
+                      label: "CREATED AT",
+                      value: modal.tender.createdAt ? new Date(modal.tender.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Not specified",
+                    },
+                    {
+                      label: "LAST UPDATED",
+                      value: modal.tender.updatedAt ? new Date(modal.tender.updatedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Recently",
+                    },
+                    {
+                      label: "CONFIGURATION",
+                      value: modal.tender.isDefault ? "Default Method" : "Standard Method",
+                    },
+                  ],
+                },
+              ]
+            : []
+        }
+      />
     </div>
   );
 }
