@@ -1,3 +1,4 @@
+import { useLocationOptions } from "../data/useLocationOptions";
 import {
   useLocation,
   useNavigate,
@@ -15,11 +16,9 @@ import {
   MapPin,
   Settings,
   Upload,
-  CalendarDays,
   ChevronDown,
   Eye,
   EyeOff,
-  ArrowLeft,
 } from "lucide-react";
 
 import "../styles/add-merchant-employee.css";
@@ -81,13 +80,16 @@ export function MerchantEmployeeForm({
     city: "",
     state: "",
     pinCode: "",
-    country: "India",
+    country: "",
     merchant: merchantId,
     manager: "",
     username: "",
     password: "",
+    employeeLoginPin: "",
     sendCredentials: true,
   });
+  const locationOptions = useLocationOptions(formData);
+
 
   const [errors, setErrors] = useState({});
 
@@ -166,11 +168,7 @@ export function MerchantEmployeeForm({
 
       case "city":
         if (!trimmed) return "City is required.";
-        if (!/^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/.test(trimmed)) {
-          return "City can contain letters, spaces, apostrophes and hyphens only.";
-        }
-        if (trimmed.length < 2 || trimmed.length > 50)
-          return "City must be between 2 and 50 characters.";
+        if (trimmed.length > 50) return "City cannot exceed 50 characters.";
         return "";
 
       case "state":
@@ -178,10 +176,7 @@ export function MerchantEmployeeForm({
         return "";
 
       case "pinCode":
-        if (!/^\d{6}$/.test(trimmed))
-          return "PIN Code must be exactly 6 digits.";
-        if (trimmed.startsWith("0")) return "PIN Code cannot start with 0.";
-        return "";
+        return trimmed ? "" : "PIN Code is required.";
 
       case "country":
         if (!trimmed) return "Country is required.";
@@ -190,6 +185,12 @@ export function MerchantEmployeeForm({
       case "merchant":
         if (!trimmed) return "Merchant is required.";
         return "";
+
+      case "employeeLoginPin":
+        if (!trimmed) return "";
+        return /^\d{6}$/.test(trimmed)
+          ? ""
+          : "Employee Login PIN must be exactly 6 digits.";
 
       case "username":
         if (!trimmed) return "Username is required.";
@@ -248,6 +249,11 @@ export function MerchantEmployeeForm({
       if (error) nextErrors.address2 = error;
     }
 
+    if (formData.employeeLoginPin) {
+      const error = validateField("employeeLoginPin", formData.employeeLoginPin);
+      if (error) nextErrors.employeeLoginPin = error;
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -265,7 +271,7 @@ export function MerchantEmployeeForm({
     }));
 
     const nextValue =
-      name === "pinCode"
+      name === "employeeLoginPin"
         ? value.replace(/\D/g, "").slice(0, 6)
         : type === "checkbox"
           ? checked
@@ -274,6 +280,7 @@ export function MerchantEmployeeForm({
     setFormData((prev) => ({
       ...prev,
       [name]: nextValue,
+      ...(name === "country" ? { state: "", city: "" } : name === "state" ? { city: "" } : {}),
     }));
 
     if (errors[name]) {
@@ -391,28 +398,17 @@ export function MerchantEmployeeForm({
       <div className="add-employee-header">
         <div>
           <h1>Add Employee</h1>
-
-          <div className="add-employee-breadcrumb">
-            <span>Home</span>
-
-            <span className="breadcrumb-arrow">›</span>
-
-            <span>Employees</span>
-
-            <span className="breadcrumb-arrow">›</span>
-
-            <strong>Add Employee</strong>
-          </div>
         </div>
-
-        <button
-          type="button"
-          className="back-employees-btn"
-          onClick={handleBack}
-        >
-          <ArrowLeft size={17} />
-          Back to Employees
-        </button>
+        {!embedded && (
+          <button
+            type="button"
+            className="add-employee-back-button"
+            disabled={saving}
+            onClick={handleBack}
+          >
+            ← Back to Employees
+          </button>
+        )}
       </div>
 
       {/* =====================================================
@@ -429,7 +425,7 @@ export function MerchantEmployeeForm({
           {saveError}
         </p>
       )}
-      <form onSubmit={handleSave} autoComplete="off">
+      <form onSubmit={handleSave} autoComplete="off" noValidate>
         <fieldset
           disabled={saving || Boolean(contextError)}
           className="merchant-employee-fieldset"
@@ -488,7 +484,7 @@ export function MerchantEmployeeForm({
                     className={`employee-field employee-phone-field${errors.phone ? " employee-phone-invalid" : ""}`}
                   >
                     <label>
-                      Phone Number <span>*</span>
+                      Phone Number <span className="text-red-500">*</span>
                     </label>
 
                     <PhoneInput
@@ -519,7 +515,7 @@ export function MerchantEmployeeForm({
 
                   <div className="employee-field">
                     <label>
-                      Date of Birth <span>*</span>
+                      Date of Birth <span className="text-red-500">*</span>
                     </label>
 
                     <div className="input-with-icon">
@@ -531,7 +527,6 @@ export function MerchantEmployeeForm({
                         className={errors.dob ? "field-invalid" : ""}
                       />
 
-                      <CalendarDays size={17} />
                     </div>
                     {errors.dob && (
                       <span className="field-error">{errors.dob}</span>
@@ -543,7 +538,7 @@ export function MerchantEmployeeForm({
                   <SelectField
                     label={
                       <>
-                        Gender <span>*</span>
+                        Gender <span className="text-red-500">*</span>
                       </>
                     }
                     name="gender"
@@ -571,7 +566,7 @@ export function MerchantEmployeeForm({
                   <FormField
                     label={
                       <>
-                        Address Line 1 <span>*</span>
+                        Address Line 1 <span className="text-red-500">*</span>
                       </>
                     }
                     name="address1"
@@ -591,69 +586,21 @@ export function MerchantEmployeeForm({
                   />
                 </div>
 
-                <div className="employee-form-grid two-columns">
-                  <FormField
-                    label={
-                      <>
-                        City <span>*</span>
-                      </>
-                    }
-                    name="city"
-                    placeholder="Enter city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    error={errors.city}
-                  />
-
-                  <SelectField
-                    label={
-                      <>
-                        State <span>*</span>
-                      </>
-                    }
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    error={errors.state}
-                    placeholder="Select state"
-                    options={[
-                      "Telangana",
-                      "Andhra Pradesh",
-                      "Karnataka",
-                      "Tamil Nadu",
-                      "Maharashtra",
-                      "Kerala",
-                    ]}
-                  />
-                </div>
-                <div className="employee-form-grid two-columns">
-                  <FormField
-                    label={
-                      <>
-                        PIN Code <span>*</span>
-                      </>
-                    }
-                    name="pinCode"
-                    placeholder="Enter PIN code"
-                    value={formData.pinCode}
-                    onChange={handleChange}
-                    error={errors.pinCode}
-                  />
-                  <SelectField
-                    label="Country"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleChange}
-                    error={errors.country}
-                    options={[
-                      "India",
-                      "United States",
-                      "United Kingdom",
-                      "Australia",
-                    ]}
-                  />
-                </div>
-              </section>
+                {locationOptions.error && <p role="alert" className="field-error">{locationOptions.error}</p>}
+              <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
+                <SelectField label="Country" required name="country" value={formData.country}
+                  onChange={handleChange} error={errors.country} options={locationOptions.countries}
+                  placeholder={locationOptions.loading ? "Loading countries..." : "Select country"} disabled={locationOptions.loading} />
+                <SelectField label="State" required name="state" value={formData.state}
+                  onChange={handleChange} error={errors.state} options={locationOptions.states}
+                  placeholder={formData.country ? "Select state" : "Select country first"} disabled={locationOptions.loading || !formData.country} />
+                <SelectField label="City" required name="city" value={formData.city}
+                  onChange={handleChange} error={errors.city} options={locationOptions.cities}
+                  placeholder={formData.state ? "Select city" : "Select state first"} disabled={locationOptions.loading || !formData.state} />
+                <FormField label="PIN Code" required name="pinCode" placeholder="Enter PIN code"
+                  value={formData.pinCode} onChange={handleChange} error={errors.pinCode} />
+              </div>
+            </section>
             </div>
 
             {/* =================================================
@@ -741,7 +688,7 @@ export function MerchantEmployeeForm({
 
                   <div className="employee-field">
                     <label>
-                      Temporary Password <span>*</span>
+                      Temporary Password <span className="text-red-500">*</span>
                     </label>
 
                     <div className="password-input">
@@ -769,6 +716,26 @@ export function MerchantEmployeeForm({
                     {errors.password && (
                       <span className="field-error">{errors.password}</span>
                     )}
+                  </div>
+                  <div className="employee-login-pin-field">
+                    <label htmlFor="merchant-create-employee-login-pin">Employee Login PIN</label>
+                    <input
+                      id="merchant-create-employee-login-pin"
+                      name="employeeLoginPin"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      maxLength={6}
+                      value={formData.employeeLoginPin}
+                      onChange={handleChange}
+                      className={errors.employeeLoginPin ? "field-invalid" : ""}
+                      aria-describedby="merchant-create-employee-login-pin-help"
+                      placeholder="Enter 6-digit PIN"
+                    />
+                    <small id="merchant-create-employee-login-pin-help" className="employee-login-pin-help">
+                      Optional. Enter 6 digits.
+                    </small>
+                    {errors.employeeLoginPin && <span className="field-error">{errors.employeeLoginPin}</span>}
                   </div>
                 </div>
               </section>
@@ -829,7 +796,7 @@ function FormField({
   return (
     <div className="employee-field">
       <label>
-        {label} {required && <span>*</span>}
+        {label} {required && <span className="text-red-500">*</span>}
       </label>
 
       <input
@@ -859,19 +826,21 @@ function SelectField({
   options,
   placeholder,
   error,
+  disabled = false,
 }) {
   return (
     <div className="employee-field">
       <label>
-        {label} {required && <span>*</span>}
+        {label} {required && <span className="text-red-500">*</span>}
       </label>
 
       <div className="employee-select">
         <select
           name={name}
+          disabled={disabled}
           value={value}
           onChange={onChange}
-          className={error ? "field-invalid" : ""}
+          className={`${error ? "field-invalid" : ""}${!value ? " employee-select-placeholder" : ""}`}
         >
           <option value="">{placeholder}</option>
 

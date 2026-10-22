@@ -1,6 +1,8 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "../components/Pagination";
 import { storeDevicesSeed } from "../data/data";
+import BentoDetailModal from "../components/BentoDetailModal";
 import "../styles/store-devices.css";
 
 export default function StoreDevices({
@@ -440,7 +442,7 @@ export default function StoreDevices({
 
           {/* DEVICE TYPE */}
 
-          <select
+          <FilterDropdown
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
           >
@@ -451,11 +453,11 @@ export default function StoreDevices({
                 {type}
               </option>
             ))}
-          </select>
+          </FilterDropdown>
 
           {/* STATUS */}
 
-          <select
+          <FilterDropdown
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -464,7 +466,7 @@ export default function StoreDevices({
             <option value="Active">Active</option>
 
             <option value="Inactive">Inactive</option>
-          </select>
+          </FilterDropdown>
 
           {/* CLEAR */}
 
@@ -497,12 +499,13 @@ export default function StoreDevices({
           <table className="store-devices-table">
             <thead>
               <tr>
-                <th>DEVICE</th>
-                <th>DEVICE ID</th>
-                <th>DEVICE TYPE</th>
-                <th>STATUS</th>
-                <th>LAST UPDATED</th>
-                <th>ACTIONS</th>
+                <th>Device ID</th>
+                <th>Device Code</th>
+                <th>Device Name</th>
+                <th>Device Type</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
@@ -543,19 +546,19 @@ export default function StoreDevices({
                     PAGINATION
                 ================================================= */}
 
-        {filteredDevices.length > 0 && (
-          <Pagination
+        <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}
             pageSize={pageSize}
             onPageChange={setCurrentPage}
+            itemLabel="devices"
+            showWhenEmpty
             onPageSizeChange={(size) => {
               setPageSize(size);
               setCurrentPage(1);
             }}
           />
-        )}
       </div>
 
       {/* =====================================================
@@ -790,98 +793,54 @@ export default function StoreDevices({
         </div>
       )}
 
-      {viewingDevice && (
-        <div
-          className="store-device-modal-overlay"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setViewingDevice(null);
-            }
-          }}
-        >
-          <div
-            className="store-device-modal store-device-view-modal"
-            role="dialog"
-            aria-modal="true"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <div className="store-device-modal-header">
-              <div>
-                <h2>Device Details</h2>
-                <p>
-                  View device information for{" "}
-                  <strong>{viewingDevice.name}</strong>.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="store-device-modal-close"
-                onClick={() => setViewingDevice(null)}
-                aria-label="Close"
-              >
-                <i className="bi bi-x-lg" />
-              </button>
-            </div>
-
-            <div className="store-device-view-body">
-              <div className="store-device-view-identity">
-                <div className="store-device-view-icon">
-                  <i className="bi bi-pc-display" />
-                </div>
-
-                <div>
-                  <strong>{viewingDevice.name}</strong>
-                  <span>{viewingDevice.deviceId || viewingDevice.id}</span>
-                </div>
-              </div>
-
-              <div className="store-device-view-grid">
-                <div className="store-device-view-field">
-                  <span>Device Name</span>
-                  <strong>{viewingDevice.name || "—"}</strong>
-                </div>
-
-                <div className="store-device-view-field">
-                  <span>Device ID</span>
-                  <strong>{viewingDevice.deviceId || "—"}</strong>
-                </div>
-
-                <div className="store-device-view-field">
-                  <span>Device Type</span>
-                  <strong>{viewingDevice.type || "—"}</strong>
-                </div>
-
-                <div className="store-device-view-field">
-                  <span>Status</span>
-                  <strong
-                    className={`store-device-view-status ${
-                      viewingDevice.status === "Active" ? "active" : "inactive"
-                    }`}
-                  >
-                    {viewingDevice.status || "—"}
-                  </strong>
-                </div>
-
-                <div className="store-device-view-field full">
-                  <span>Last Updated</span>
-                  <strong>{viewingDevice.updatedAt || "Recently"}</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className="store-device-modal-footer">
-              <button
-                type="button"
-                className="store-device-cancel-btn"
-                onClick={() => setViewingDevice(null)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <BentoDetailModal
+        open={Boolean(viewingDevice)}
+        onClose={() => setViewingDevice(null)}
+        headerIcon="bi-hdd-network"
+        title="Device Details"
+        code={viewingDevice?.deviceId ? `ID: ${viewingDevice.deviceId}` : ""}
+        size="compact"
+        hero={
+          viewingDevice
+            ? {
+                icon: "bi-tablet",
+                title: viewingDevice.name,
+                status: viewingDevice.status || "Active",
+                metricLabel: "DEVICE TYPE",
+                metricValue: viewingDevice.type || "POS Terminal",
+              }
+            : null
+        }
+        layout="borderless-2"
+        fields={
+          viewingDevice
+            ? [
+                {
+                  label: "ASSIGNED STORE",
+                  value: viewingDevice.storeName || store?.name || "Current Store",
+                },
+                {
+                  label: "DEVICE ID",
+                  value: viewingDevice.deviceId || viewingDevice.id,
+                  mono: true,
+                },
+                {
+                  label: "STATUS",
+                  value: viewingDevice.status || "Operational",
+                  render: (val) => (
+                    <span className="bento-field-value status-text-success">
+                      {val || "Operational"}
+                    </span>
+                  ),
+                },
+                {
+                  label: "LAST UPDATED",
+                  value: viewingDevice.updatedAt || "Recently",
+                },
+              ]
+            : []
+        }
+      />
     </div>
   );
 }
@@ -895,7 +854,15 @@ function DeviceRow({ device, onView, onEdit }) {
 
   return (
     <tr>
-      {/* DEVICE */}
+      {/* DEVICE ID */}
+      <td>
+        <span className="store-device-id">{device.deviceId || device.device_id || "—"}</span>
+      </td>
+
+      {/* DEVICE CODE */}
+      <td>{device.code || device.deviceCode || "—"}</td>
+
+      {/* DEVICE NAME */}
 
       <td>
         <div className="store-device-info">
@@ -909,12 +876,6 @@ function DeviceRow({ device, onView, onEdit }) {
             {device.model && <small>{device.model}</small>}
           </div>
         </div>
-      </td>
-
-      {/* DEVICE ID */}
-
-      <td>
-        <span className="store-device-id">{device.deviceId || "—"}</span>
       </td>
 
       {/* DEVICE TYPE */}

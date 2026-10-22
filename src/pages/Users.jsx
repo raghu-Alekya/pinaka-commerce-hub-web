@@ -1,3 +1,4 @@
+import FilterDropdown from "../components/FilterDropdown";
 import {
     useEffect,
     useMemo,
@@ -218,8 +219,7 @@ export default function Users({
        PIN VISIBILITY
     ===================================================== */
 
-    const [showPin, setShowPin] =
-        useState(false);
+
 
 
     /* =====================================================
@@ -481,8 +481,6 @@ export default function Users({
                 user.profilePhoto ||
                 "",
         });
-
-        setShowPin(false);
     };
 
 
@@ -497,8 +495,6 @@ export default function Users({
         setForm(
             EMPTY_FORM
         );
-
-        setShowPin(false);
     };
 
 
@@ -849,8 +845,6 @@ export default function Users({
             EMPTY_FORM
         );
 
-        setShowPin(false);
-
         alert(
             "User updated successfully."
         );
@@ -1123,12 +1117,6 @@ export default function Users({
                 onPhotoChange={
                     handlePhotoChange
                 }
-                showPin={
-                    showPin
-                }
-                setShowPin={
-                    setShowPin
-                }
                 currentStore={
                     currentStore
                 }
@@ -1319,7 +1307,7 @@ export default function Users({
 
                     </div>
 
-                    <select
+                    <FilterDropdown
                         className="role-filter"
                         value={
                             roleFilter
@@ -1358,7 +1346,7 @@ export default function Users({
                             )
                         )}
 
-                    </select>
+                    </FilterDropdown>
 
                 </div>
 
@@ -1435,6 +1423,13 @@ export default function Users({
                                                 key={
                                                     user.id
                                                 }
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(event) => {
+                                                    if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                                                        return;
+                                                    }
+                                                    setSelectedUser(user);
+                                                }}
                                             >
 
                                                 {/* USER */}
@@ -1536,7 +1531,7 @@ export default function Users({
 
                                                 <td>
 
-                                                    <div className="table-actions">
+                                                    <div className="table-actions" onClick={(e) => e.stopPropagation()}>
 
                                                         {/* VIEW */}
 
@@ -1544,11 +1539,12 @@ export default function Users({
                                                             type="button"
                                                             className="table-action"
                                                             title="View User"
-                                                            onClick={() =>
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 setSelectedUser(
                                                                     user
-                                                                )
-                                                            }
+                                                                );
+                                                            }}
                                                         >
                                                             <i className="bi bi-eye" />
                                                         </button>
@@ -1560,11 +1556,12 @@ export default function Users({
                                                             type="button"
                                                             className="table-action"
                                                             title="Edit User"
-                                                            onClick={() =>
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 startEdit(
                                                                     user
-                                                                )
-                                                            }
+                                                                );
+                                                            }}
                                                         >
                                                             <i className="bi bi-pencil" />
                                                         </button>
@@ -1699,8 +1696,6 @@ function UserEditForm({
     onCancel,
     photo,
     onPhotoChange,
-    showPin,
-    setShowPin,
     currentStore,
 }) {
 
@@ -1960,11 +1955,7 @@ function UserEditForm({
                             <div className="input-with-action">
 
                                 <input
-                                    type={
-                                        showPin
-                                            ? "text"
-                                            : "password"
-                                    }
+                                    type="text"
                                     value={
                                         form.loginPin
                                     }
@@ -1990,26 +1981,7 @@ function UserEditForm({
                                     }
                                 />
 
-                                <button
-                                    type="button"
-                                    className="input-action"
-                                    onClick={() =>
-                                        setShowPin(
-                                            (
-                                                previous
-                                            ) =>
-                                                !previous
-                                        )
-                                    }
-                                >
-                                    <i
-                                        className={`bi ${
-                                            showPin
-                                                ? "bi-eye-slash"
-                                                : "bi-eye"
-                                        }`}
-                                    />
-                                </button>
+                                
 
                             </div>
 
@@ -2143,11 +2115,12 @@ function Field({
     readOnly = false,
     onChange,
 }) {
+    const fieldId = `user-field-${String(label).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
     return (
         <div className="field">
 
-            <label>
+            <label htmlFor={fieldId}>
 
                 {label}
 
@@ -2160,6 +2133,7 @@ function Field({
             </label>
 
             <input
+                id={fieldId}
                 type={type}
                 value={
                     value || ""

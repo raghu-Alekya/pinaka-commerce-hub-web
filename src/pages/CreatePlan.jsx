@@ -1,5 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import FilterDropdown from "../components/FilterDropdown";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Pagination from "../components/Pagination";
+import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
+import ListActions from "../components/ListActions";
 import { storeTypesApi } from "../api/storeTypes";
 import { createPlan, deletePlan, listPlans, updatePlan } from "../api/plans";
 
@@ -8,7 +12,7 @@ const emptyForm = {
   name: "",
   description: "",
   applicableStoreType: "",
-  status: "Active",
+  status: "Select Status",
   billingModel: "",
   currency: "",
   billingCycle: "",
@@ -21,6 +25,7 @@ const emptyForm = {
   trialPeriod: "",
   effectiveFrom: "",
 };
+
 function normalizeStoreTypeFeatures(response) {
   const source =
     response?.features ??
@@ -138,16 +143,19 @@ function storeTypeDisplayName(value, storeTypes) {
 const planRowStyle = {
   display: "grid",
   gridTemplateColumns:
-    "100px 100px minmax(100px, 1fr) 130px 120px 100px 90px 110px 110px 80px",
+    "120px 140px minmax(160px, 1.4fr) 140px 130px 100px 135px 140px 140px 120px",
   gap: "10px",
   alignItems: "center",
-  minWidth: "1150px",
+  minWidth: "1350px",
+  width: "100%",
+  boxSizing: "border-box",
 };
 
 export default function CreatePlan() {
   const navigate = useNavigate();
 
   const [storeTypes, setStoreTypes] = useState([]);
+  const storeTypesRequest = useRef(false);
   const [storeTypesLoading, setStoreTypesLoading] = useState(false);
   const [storeTypesError, setStoreTypesError] = useState("");
 
@@ -174,16 +182,15 @@ export default function CreatePlan() {
   const [billingFilter, setBillingFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
   const [message, setMessage] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
   // FIELD VALIDATIONS
-  // FIELD VALIDATIONS
   const codeError = useMemo(() => {
     if (!form.code) return "";
-    // Allows letters, numbers, underscores (_), and hyphens (-)
     if (!/^[a-zA-Z0-9_-]+$/.test(form.code)) {
       return "Plan Code can only contain letters, numbers, underscores (_), and hyphens (-).";
     }
@@ -192,7 +199,6 @@ export default function CreatePlan() {
 
   const nameError = useMemo(() => {
     if (!form.name) return "";
-    // Allows letters, numbers, underscores (_), hyphens (-), and spaces
     if (!/^[a-zA-Z0-9_\- ]+$/.test(form.name)) {
       return "Plan Name can only contain letters, numbers, underscores (_), hyphens (-), and spaces.";
     }
@@ -200,6 +206,8 @@ export default function CreatePlan() {
   }, [form.name]);
 
   async function fetchStoreTypes() {
+    if (storeTypesRequest.current) return;
+    storeTypesRequest.current = true;
     try {
       setStoreTypesLoading(true);
       setStoreTypesError("");
@@ -216,11 +224,12 @@ export default function CreatePlan() {
       setStoreTypes(normalized);
     } catch (error) {
       setStoreTypesError(error?.message || "Failed to load store types.");
-      setStoreTypes([]);
     } finally {
+      storeTypesRequest.current = false;
       setStoreTypesLoading(false);
     }
   }
+
   function formatDateParts(value) {
     if (!value) return { date: "—", time: "" };
 
@@ -242,6 +251,7 @@ export default function CreatePlan() {
       }),
     };
   }
+
   async function fetchPlans() {
     try {
       setPlansLoading(true);
@@ -300,7 +310,6 @@ export default function CreatePlan() {
         const features = normalizeStoreTypeFeatures(response);
         setStoreTypeFeatures(features);
 
-        // Keep any existing feature IDs that still belong to this store type.
         setIncludedFeatures((current) => {
           if (!Array.isArray(current) || current.length === 0) return [];
 
@@ -340,8 +349,6 @@ export default function CreatePlan() {
     };
   }, [form.applicableStoreType, storeTypes]);
 
-  // The plan API returns includedFeatures as names, while the checkbox UI
-  // uses feature IDs. Convert saved names to IDs after features are loaded.
   useEffect(() => {
     if (
       pendingIncludedFeatureNames.length === 0 ||
@@ -355,9 +362,9 @@ export default function CreatePlan() {
         const savedValue =
           typeof savedFeature === "string"
             ? savedFeature
-            : (savedFeature?.name ??
+            : (savedFeature?.featureId ??
+              savedFeature?.name ??
               savedFeature?.featureName ??
-              savedFeature?.featureId ??
               "");
 
         const byId = storeTypeFeatures.find(
@@ -373,12 +380,9 @@ export default function CreatePlan() {
             String(savedValue).trim().toLowerCase(),
         );
 
-        return byName?.featureId;
+        return byName?.featureId || savedValue;
       })
       .filter(Boolean);
-
-    console.log("Saved feature names from API:", pendingIncludedFeatureNames);
-    console.log("Converted saved feature IDs:", selectedFeatureIds);
 
     setIncludedFeatures(selectedFeatureIds);
     setPendingIncludedFeatureNames([]);
@@ -411,17 +415,23 @@ export default function CreatePlan() {
   }, [search, billingFilter, statusFilter]);
 
   const totalPlans = filteredPlans.length;
-  const totalPages = Math.ceil(totalPlans / itemsPerPage) || 1;
+  const totalPages = Math.max(1, Math.ceil(totalPlans / itemsPerPage));
 
   const paginatedPlans = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredPlans.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredPlans, currentPage]);
+  }, [filteredPlans, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const canContinueStepOne =
-    form.code.trim() &&
     form.name.trim() &&
     form.applicableStoreType &&
+    form.status &&
     !codeError &&
     !nameError;
 
@@ -459,6 +469,7 @@ export default function CreatePlan() {
       [name]: name === "code" ? value.toUpperCase() : value,
     }));
   }
+
   function getFeatureDisplayName(id) {
     const match = storeTypeFeatures.find(
       (f) =>
@@ -504,23 +515,11 @@ export default function CreatePlan() {
       setSavingPlan(true);
       setMessage("");
 
-      let savedPlan;
-
-      // Keep feature IDs for the API payload.
-      // The checkbox state already contains the selected feature IDs,
-      // so do not convert them to feature names before create/update.
-      const selectedFeatureIds = includedFeatures.filter(Boolean);
-
-      console.log("Selected Feature IDs:", selectedFeatureIds);
-      console.log("Feature IDs sent to API:", selectedFeatureIds);
-
       if (editingId) {
-        savedPlan = await updatePlan(editingId, planData, selectedFeatureIds);
-
+        await updatePlan(editingId, planData, includedFeatures.filter(Boolean));
         setMessage("Plan updated successfully.");
       } else {
-        savedPlan = await createPlan(planData, selectedFeatureIds);
-
+        await createPlan(planData, includedFeatures.filter(Boolean));
         setMessage("Plan created successfully.");
       }
 
@@ -542,10 +541,7 @@ export default function CreatePlan() {
       code: plan.code || "",
       name: plan.name || "",
       description: plan.description || "",
-      applicableStoreType: storeTypeDisplayName(
-        plan.applicableStoreType || plan.storeType || "",
-        storeTypes,
-      ),
+      applicableStoreType: plan.applicableStoreType || plan.storeType || "",
       billingModel: plan.billingModel || "",
       currency: plan.currency || "",
       billingCycle: plan.billingCycle || plan.cycle || "",
@@ -556,6 +552,7 @@ export default function CreatePlan() {
       includedUsers: String(plan.includedUsers ?? 0),
       additionalUserPrice: String(plan.additionalUserPrice ?? ""),
       trialPeriod: plan.trialPeriod || "",
+      planEndDate: plan.planEndDate,
       effectiveFrom: plan.effectiveFrom
         ? String(plan.effectiveFrom).slice(0, 10)
         : "",
@@ -566,29 +563,50 @@ export default function CreatePlan() {
       ? plan.includedFeatures
       : [];
 
-    // The store-type features may load after the plan data. Keep the saved
-    // names temporarily and convert them to checkbox IDs in the effect above.
     setIncludedFeatures([]);
     setPendingIncludedFeatureNames(savedFeatureNames);
     setPlanStep(1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function openDeleteConfirmation(plan) {
+    setDeleteTarget(plan);
+    setDeleteError("");
+  }
+
+  function closeDeleteConfirmation() {
+    if (deletingPlan) return;
+    setDeleteTarget(null);
+    setDeleteError("");
+  }
+
   async function confirmDelete() {
-    if (!deleteTarget?.id || deletingPlan) return;
+    const planId = deleteTarget?.id ?? deleteTarget?._id;
+
+    if (
+      planId === undefined ||
+      planId === null ||
+      String(planId).trim() === "" ||
+      deletingPlan
+    ) {
+      return;
+    }
 
     try {
       setDeletingPlan(true);
+      setDeleteError("");
       setMessage("");
 
-      await deletePlan(deleteTarget.id);
+      await deletePlan(planId);
 
       const refreshedPlans = await listPlans();
       setPlans(Array.isArray(refreshedPlans) ? refreshedPlans : []);
-      setMessage(`${deleteTarget.name} deleted successfully.`);
+
+      setMessage(`${deleteTarget.name} deactivated successfully.`);
       setDeleteTarget(null);
+      setDeleteError("");
     } catch (error) {
-      setMessage(error?.message || "Failed to delete plan.");
+      setDeleteError(error?.message || "Failed to deactivate plan.");
     } finally {
       setDeletingPlan(false);
     }
@@ -597,7 +615,7 @@ export default function CreatePlan() {
   return (
     <section className="plans-page">
       <div className="plans-page-heading">
-        <h1>{editingId ? "Edit Plan" : "Create Plan"}</h1>
+        <h1>Plan Details</h1>
         <p>
           Create a commercial package. Entitlements and limits are configured
           after saving.
@@ -606,10 +624,10 @@ export default function CreatePlan() {
 
       <div className="plan-stepper">
         {[
-          ["Plan Information", 1],
-          ["Pricing", 2],
-          ["Features", 3],
-          ["Review and Create", 4],
+          ["Plan Details", 1],
+          ["Pricing & Limits", 2],
+          ["Included Features", 3],
+          ["Review & Confirm", 4],
         ].map(([label, step], index) => (
           <div className="plan-stepper-item" key={step}>
             <button
@@ -635,36 +653,29 @@ export default function CreatePlan() {
               <i className="bi bi-file-earmark-text" />
             </div>
             <div>
-              <h2>{editingId ? "Edit Plan" : "Plan Information"}</h2>
-              <p>Provide the basic details for the subscription plan.</p>
+              <h2>{editingId ? "Edit Plan" : "Create Plan"}</h2>
+              <p>Enter the subscription plan details.</p>
             </div>
           </div>
 
           <div className="plan-create-grid three-columns plan-information-grid">
-            <label className="plan-field">
-              <span>
-                Plan Code <b>*</b>
-              </span>
+            <label className="plan-field ">
+              <span>Plan Code</span>
               <input
                 {...textInputProps}
                 name="code"
                 value={form.code}
                 onChange={updateField}
-                placeholder="e.g. ENTER_PLAN_CODE"
-                className={codeError ? "input-error" : ""}
+                placeholder="Auto Generated"
+                readOnly
+                disabled
+                className={codeError ? "input-error" : "plan-placeholder"}
               />
-              <div className="plan-field-slot">
-                {codeError ? (
-                  <small className="plan-field-error">{codeError}</small>
-                ) : (
-                  <small />
-                )}
-              </div>
             </label>
 
             <label className="plan-field">
               <span>
-                Plan Name <b>*</b>
+                Plan Name <span className="text-red-500">*</span>
               </span>
               <input
                 {...textInputProps}
@@ -674,37 +685,28 @@ export default function CreatePlan() {
                 placeholder="e.g. Enter plan name"
                 className={nameError ? "input-error" : ""}
               />
-              <div className="plan-field-slot">
-                {nameError ? (
-                  <small className="plan-field-error">{nameError}</small>
-                ) : (
-                  <small />
-                )}
-              </div>
             </label>
 
             <label className="plan-field">
               <span>
-                Applicable Business/Store Type <b>*</b>
+                Applicable Store Type <span className="text-red-500">*</span>
               </span>
               <select
                 name="applicableStoreType"
                 value={form.applicableStoreType}
                 onChange={updateField}
-                disabled={storeTypesLoading}
+                aria-busy={storeTypesLoading}
               >
                 <option value="">
                   {storeTypesLoading
                     ? "Loading store types..."
-                    : "Select store type"}
+                    : "Select a store type"}
                 </option>
                 {storeTypes.map((storeType) => (
                   <option
                     key={storeType.id ?? storeType._id ?? storeType.code}
                     value={
-                      storeType.name ??
-                      storeType.storeTypeName ??
-                      storeType.code
+                      storeType.id ?? storeType._id ?? storeType.storeTypeId
                     }
                   >
                     {storeType.name ??
@@ -713,13 +715,6 @@ export default function CreatePlan() {
                   </option>
                 ))}
               </select>
-              <div className="plan-field-slot">
-                {storeTypesError ? (
-                  <small className="plan-field-error">{storeTypesError}</small>
-                ) : (
-                  <small className="plan-field-hint"></small>
-                )}
-              </div>
             </label>
 
             <label className="plan-field plan-description-field">
@@ -729,7 +724,7 @@ export default function CreatePlan() {
                 value={form.description}
                 onChange={updateField}
                 maxLength={500}
-                placeholder="Describe the plan, its features and target audience..."
+                placeholder="Describe the plan, features & audience"
               />
               <div className="plan-description-meta">
                 <small />
@@ -739,21 +734,25 @@ export default function CreatePlan() {
 
             <label className="plan-field plan-information-status-field">
               <span>
-                Status <b>*</b>
+                Status <span className="text-red-500">*</span>
               </span>
+
               <select
-                autoComplete="off"
                 name="status"
                 value={form.status}
                 onChange={updateField}
-                className={`plan-status-select ${form.status === "Inactive" ? "inactive" : "active"}`}
+                className={`plan-status-select ${
+                  form.status === "Active"
+                    ? "active"
+                    : form.status === "Inactive"
+                    ? "inactive"
+                    : ""
+                }`}
               >
+                <option value="">Select Status</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
-              <div className="plan-field-slot">
-                <small />
-              </div>
             </label>
           </div>
 
@@ -784,15 +783,15 @@ export default function CreatePlan() {
               <i className="bi bi-currency-rupee" />
             </div>
             <div>
-              <h2>Pricing</h2>
-              <p>Configure pricing, included resources, and trial period.</p>
+              <h2>Pricing & Limits</h2>
+              <p>Set pricing, included limits, and the trial period.</p>
             </div>
           </div>
 
           <div className="plan-pricing-grid three-columns">
             <label className="plan-field">
               <span>
-                Billing Model <b>*</b>
+                Pricing Basis <span className="text-red-500">*</span>
               </span>
               <select
                 autoComplete="off"
@@ -804,12 +803,13 @@ export default function CreatePlan() {
                 <option value="Per store">Per Store</option>
                 <option value="Per terminal">Per Terminal</option>
                 <option value="Flat rate">Flat Rate</option>
+                <option value="Custom">Custom</option>
               </select>
             </label>
 
             <label className="plan-field">
               <span>
-                Currency <b>*</b>
+                Currency <span className="text-red-500">*</span>
               </span>
               <select
                 autoComplete="off"
@@ -826,7 +826,7 @@ export default function CreatePlan() {
 
             <label className="plan-field">
               <span>
-                Billing Cycle <b>*</b>
+                Billing Frequency <span className="text-red-500">*</span>
               </span>
               <select
                 autoComplete="off"
@@ -834,7 +834,7 @@ export default function CreatePlan() {
                 value={form.billingCycle}
                 onChange={updateField}
               >
-                <option value="">Select billing cycle</option>
+                <option value="">Select Billing Frequency</option>
                 <option value="Monthly">Monthly</option>
                 <option value="Quarterly">Quarterly</option>
                 <option value="Yearly">Yearly</option>
@@ -845,7 +845,7 @@ export default function CreatePlan() {
           <div className="plan-pricing-grid three-columns">
             <label className="plan-field">
               <span>
-                Base Price <b>*</b>
+                Base Subscription Price <span className="text-red-500">*</span>
               </span>
               <div className="plan-price-input">
                 <input
@@ -863,7 +863,7 @@ export default function CreatePlan() {
 
             <label className="plan-field">
               <span>
-                Included Stores <b>*</b>
+                Stores Included <span className="text-red-500">*</span>
               </span>
               <input
                 {...textInputProps}
@@ -877,7 +877,7 @@ export default function CreatePlan() {
 
             <label className="plan-field">
               <span>
-                Included Terminals <b>*</b>
+                POS Terminals Included <span className="text-red-500">*</span>
               </span>
               <input
                 {...textInputProps}
@@ -892,7 +892,7 @@ export default function CreatePlan() {
 
           <div className="plan-pricing-grid three-columns">
             <label className="plan-field">
-              <span>Additional Terminal Price</span>
+              <span>Price per Additional POS Terminal</span>
               <div className="plan-price-input">
                 <input
                   {...textInputProps}
@@ -908,7 +908,7 @@ export default function CreatePlan() {
             </label>
 
             <label className="plan-field">
-              <span>Additional User Price</span>
+              <span>Price per Additional Employee License</span>
               <div className="plan-price-input">
                 <input
                   {...textInputProps}
@@ -925,7 +925,7 @@ export default function CreatePlan() {
 
             <label className="plan-field">
               <span>
-                Included Users/Employees <b>*</b>
+                Employee Licenses Included <span className="text-red-500">*</span>
               </span>
               <input
                 {...textInputProps}
@@ -956,7 +956,7 @@ export default function CreatePlan() {
             </label>
 
             <label className="plan-field">
-              <span>Effective From</span>
+              <span>Effective Date</span>
               <input
                 {...textInputProps}
                 name="effectiveFrom"
@@ -997,7 +997,7 @@ export default function CreatePlan() {
               <i className="bi bi-boxes" />
             </div>
             <div>
-              <h2>Features</h2>
+              <h2>Included Features</h2>
               <p>Select the features included in this plan.</p>
             </div>
           </div>
@@ -1005,7 +1005,7 @@ export default function CreatePlan() {
           <div className="plan-features-limits-grid">
             <section className="plan-feature-panel">
               <h3>
-                Included Features <b>*</b>
+                Available Features <span className="text-red-500">*</span>
               </h3>
 
               {storeTypeFeaturesLoading && (
@@ -1031,7 +1031,7 @@ export default function CreatePlan() {
                 form.applicableStoreType &&
                 storeTypeFeatures.length === 0 && (
                   <p className="plan-review-empty">
-                    No active features are assigned to this store type.
+                    No active features are available for the selected store type.
                   </p>
                 )}
 
@@ -1109,8 +1109,8 @@ export default function CreatePlan() {
             </div>
 
             <div>
-              <h2>Review and Create</h2>
-              <p>Please review the details before creating the plan.</p>
+              <h2>Review & Confirm</h2>
+              <p>Review the plan details before saving.</p>
             </div>
           </div>
 
@@ -1118,13 +1118,13 @@ export default function CreatePlan() {
             <section className="plan-review-section">
               <h3>
                 <i className="bi bi-file-earmark-text" />
-                Plan Information
+                Plan Details
               </h3>
 
               <dl>
                 <div>
                   <dt>Plan Code</dt>
-                  <dd>{form.code}</dd>
+                  <dd>{form.code || "Generated when saved"}</dd>
                 </div>
                 <div>
                   <dt>Plan Name</dt>
@@ -1135,7 +1135,7 @@ export default function CreatePlan() {
                   <dd>{form.description}</dd>
                 </div>
                 <div>
-                  <dt>Business/Store Type</dt>
+                  <dt>Applicable Store Type</dt>
                   <dd>{form.applicableStoreType}</dd>
                 </div>
                 <div>
@@ -1168,21 +1168,21 @@ export default function CreatePlan() {
                   <dd>{form.billingCycle}</dd>
                 </div>
                 <div>
-                  <dt>Base Price</dt>
+                  <dt>Base Subscription Price</dt>
                   <dd>
                     {form.currency} {form.basePrice}
                   </dd>
                 </div>
                 <div>
-                  <dt>Included Stores</dt>
+                  <dt>Stores Included</dt>
                   <dd>{form.includedStores}</dd>
                 </div>
                 <div>
-                  <dt>Included Terminals</dt>
+                  <dt>POS Terminals Included</dt>
                   <dd>{form.includedTerminals}</dd>
                 </div>
                 <div>
-                  <dt>Additional Terminal Price</dt>
+                  <dt>Price per Additional POS Terminal</dt>
                   <dd>
                     {form.currency} {form.additionalTerminalPrice}
                   </dd>
@@ -1192,7 +1192,7 @@ export default function CreatePlan() {
                   <dd>{form.includedUsers}</dd>
                 </div>
                 <div>
-                  <dt>Additional User Price</dt>
+                  <dt>Price per Additional Employee License</dt>
                   <dd>
                     {form.currency} {form.additionalUserPrice}
                   </dd>
@@ -1202,7 +1202,7 @@ export default function CreatePlan() {
                   <dd>{form.trialPeriod}</dd>
                 </div>
                 <div>
-                  <dt>Effective From</dt>
+                  <dt>Effective Date</dt>
                   <dd>{form.effectiveFrom}</dd>
                 </div>
               </dl>
@@ -1211,7 +1211,7 @@ export default function CreatePlan() {
             <section className="plan-review-section">
               <h3>
                 <i className="bi bi-boxes" />
-                Features
+                Included Features
               </h3>
 
               <dl>
@@ -1239,8 +1239,8 @@ export default function CreatePlan() {
 
             <aside className="plan-review-note">
               <i className="bi bi-info-circle-fill" />
-              Once created, the plan will be available for assignment to
-              merchants and stores.
+              Once saved, the plan will be available for assignment
+              to merchants and stores.
             </aside>
           </div>
 
@@ -1264,7 +1264,7 @@ export default function CreatePlan() {
                   ? "Updating..."
                   : "Creating..."
                 : editingId
-                  ? "Update Plan"
+                  ? "Save Changes"
                   : "Create Plan"}
             </button>
           </div>
@@ -1282,8 +1282,8 @@ export default function CreatePlan() {
             )}
           </div>
 
-          <div className="plans-filters">
-            <label className="plan-search">
+          <div className="plans-filters pch-master-toolbar pch-master-control">
+            <label className="plan-search pch-master-search pch-master-control">
               <i className="bi bi-search" />
               <input
                 value={search}
@@ -1292,7 +1292,8 @@ export default function CreatePlan() {
               />
             </label>
 
-            <select
+            <FilterDropdown
+              preserveToolbarLayout
               value={billingFilter}
               onChange={(event) => setBillingFilter(event.target.value)}
             >
@@ -1300,20 +1301,22 @@ export default function CreatePlan() {
               <option value="Per store">Per Store</option>
               <option value="Per terminal">Per Terminal</option>
               <option value="Flat rate">Flat Rate</option>
-            </select>
+              <option value="Custom">Custom</option>
+            </FilterDropdown>
 
-            <select
+            <FilterDropdown
+              preserveToolbarLayout
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
             >
               <option value="">All Status</option>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
-            </select>
+            </FilterDropdown>
 
             <button
               type="button"
-              className="plan-reset-button"
+              className="plan-reset-button pch-master-reset pch-master-control"
               onClick={resetFilters}
             >
               <i className="bi bi-arrow-counterclockwise" />
@@ -1325,7 +1328,7 @@ export default function CreatePlan() {
           className="plans-table-wrap"
           style={{ overflowX: "auto", width: "100%" }}
         >
-          <div className="plans-table" style={{ minWidth: "1150px" }}>
+          <div className="plans-table" style={{ minWidth: "1350px", width: "100%" }}>
             {/* HEADER ROW */}
             <div className="plans-row plans-row-head" style={planRowStyle}>
               <div>Plan Code</div>
@@ -1337,18 +1340,22 @@ export default function CreatePlan() {
               <div>Status</div>
               <div>Created At</div>
               <div>Updated At</div>
-              <div>Actions</div>
+              <div className="plan-actions-header">Actions</div>
             </div>
 
             {/* DATA ROWS */}
-            {/* DATA ROWS */}
             {paginatedPlans.map((plan) => {
               const planId = plan.id ?? plan._id;
-              // FIXED ORDER: Check createdAt / updatedAt first
               const createdAt =
                 plan.createdAt || plan.created_at || plan.createdOn;
               const updatedAt =
                 plan.updatedAt || plan.updated_at || plan.updatedOn;
+              const hasDescription =
+                plan.description &&
+                plan.description.trim() !== "" &&
+                plan.description !== "—" &&
+                plan.description !== "-";
+
               return (
                 <div
                   className="plans-row"
@@ -1360,32 +1367,45 @@ export default function CreatePlan() {
                     })
                   }
                 >
-                  <div className="plan-code-cell">
+                  <div className="plan-code-cell" data-no-tooltip="true">
                     <strong>{plan.code || "—"}</strong>
                   </div>
 
-                  <div className="plan-name-cell">
+                  <div
+                    className="plan-name-cell"
+                    data-pch-table-cell="true"
+                    data-truncate="true"
+                  >
                     <strong>{plan.name || "—"}</strong>
                   </div>
 
-                  <div className="plan-description-cell">
-                    {plan.description || "—"}
+                  <div
+                    className="plan-description-cell"
+                    data-pch-table-cell={hasDescription ? "true" : undefined}
+                    data-truncate={hasDescription ? "true" : undefined}
+                    data-no-tooltip={!hasDescription ? "true" : undefined}
+                  >
+                    <span className="plan-description-text">
+                      {plan.description || "—"}
+                    </span>
                   </div>
 
-                  <div>
+                  <div className="plan-type-cell" data-no-tooltip="true">
                     <span className="plan-type-badge">
                       {storeTypeDisplayName(plan.storeType, storeTypes) || "—"}
                     </span>
                   </div>
 
-                  <div>{plan.billingModel || "—"}</div>
+                  <div className="plan-billing-cell" data-no-tooltip="true">
+                    {plan.billingModel || "—"}
+                  </div>
 
-                  <div className="plan-price-cell">
+                  <div className="plan-price-cell" data-no-tooltip="true">
                     {plan.currency} {plan.price}
                     <small>/{plan.cycle ? plan.cycle.toLowerCase() : ""}</small>
                   </div>
 
-                  <div>
+                  <div className="plan-status-cell" data-no-tooltip="true">
                     <span
                       className={`plan-status ${
                         plan.status === "Inactive" ? "inactive" : ""
@@ -1399,7 +1419,7 @@ export default function CreatePlan() {
                   {(() => {
                     const parts = formatDateParts(createdAt);
                     return (
-                      <div className="plan-date-cell">
+                      <div className="plan-date-cell" data-no-tooltip="true">
                         <strong>{parts.date}</strong>
                         {parts.time && <span>{parts.time}</span>}
                       </div>
@@ -1409,36 +1429,28 @@ export default function CreatePlan() {
                   {(() => {
                     const parts = formatDateParts(updatedAt);
                     return (
-                      <div className="plan-date-cell">
+                      <div className="plan-date-cell" data-no-tooltip="true">
                         <strong>{parts.date}</strong>
                         {parts.time && <span>{parts.time}</span>}
                       </div>
                     );
                   })()}
 
-                  <div className="plan-table-actions">
-                    <button
-                      type="button"
-                      title="Edit plan"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                  <div className="plan-actions-cell" data-no-tooltip="true">
+                    <ListActions
+                      onEdit={(event) => {
+                        event.stopPropagation();
                         editPlan(plan);
                       }}
-                    >
-                      <i className="bi bi-pencil" />
-                    </button>
-
-                    <button
-                      type="button"
-                      className="plan-delete-icon"
-                      title="Delete plan"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteTarget(plan);
+                      onDelete={(event) => {
+                        event.stopPropagation();
+                        openDeleteConfirmation(plan);
                       }}
-                    >
-                      <i className="bi bi-trash3" />
-                    </button>
+                      editLabel={`Edit ${plan.name}`}
+                      deleteLabel={`Deactivate ${plan.name}`}
+                      editButtonClassName="plan-edit-icon"
+                      deleteButtonClassName="plan-delete-icon"
+                    />
                   </div>
                 </div>
               );
@@ -1448,92 +1460,35 @@ export default function CreatePlan() {
 
         {/* PAGINATION UI (5 PER PAGE) */}
         <div className="plans-pagination">
-          <span>
-            Showing{" "}
-            {totalPlans === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to{" "}
-            {Math.min(currentPage * itemsPerPage, totalPlans)} of {totalPlans}{" "}
-            entries
-          </span>
-
-          <div>
-            <button
-              type="button"
-              aria-label="Previous page"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            >
-              <i className="bi bi-chevron-left" />
-            </button>
-
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-              (page) => (
-                <button
-                  key={page}
-                  type="button"
-                  className={currentPage === page ? "active" : ""}
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </button>
-              ),
-            )}
-
-            <button
-              type="button"
-              aria-label="Next page"
-              disabled={currentPage >= totalPages}
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-            >
-              <i className="bi bi-chevron-right" />
-            </button>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalPlans}
+            pageSize={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={() => {}}
+            itemLabel="plans"
+          />
         </div>
       </section>
 
-      {deleteTarget && (
-        <div
-          className="delete-plan-overlay"
-          onClick={() => setDeleteTarget(null)}
-        >
-          <div
-            className="delete-plan-modal"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="delete-plan-icon">
-              <i className="bi bi-trash3" />
-            </div>
-
-            <h2>Delete Plan?</h2>
-
-            <p>
-              Are you sure you want to delete{" "}
-              <strong>{deleteTarget.name}</strong>? This action cannot be
-              undone.
-            </p>
-
-            <div className="delete-plan-actions">
-              <button
-                type="button"
-                className="delete-plan-keep-button"
-                onClick={() => setDeleteTarget(null)}
-              >
-                No, Keep It
-              </button>
-
-              <button
-                type="button"
-                className="delete-plan-confirm-button"
-                disabled={deletingPlan}
-                onClick={confirmDelete}
-              >
-                {deletingPlan ? "Deleting..." : "Yes, Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmationDialog
+        isOpen={Boolean(deleteTarget)}
+        title="Deactivate Plan?"
+        message={
+          deleteTarget
+            ? `Are you sure you want to deactivate "${deleteTarget.name || "this plan"}"?`
+            : ""
+        }
+        cancelLabel="Cancel"
+        confirmLabel="Deactivate"
+        busyLabel="Deactivating..."
+        busy={deletingPlan}
+        error={deleteError}
+        iconClassName="bi bi-trash3"
+        onCancel={closeDeleteConfirmation}
+        onConfirm={confirmDelete}
+      />
 
       {message && (
         <div className="plan-toast">
