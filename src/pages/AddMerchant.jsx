@@ -189,7 +189,10 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const selected = merchantId
     ? localMerchants.find((row) => String(row.id) === String(merchantId)) || location.state?.merchant || null
     : null;
-  const [merchant, setMerchant] = useState(selected?._onboarding?.merchant || blankMerchant());
+  const [merchant, setMerchant] = useState(
+    selected?._onboarding?.merchant ||
+    (selected ? merchantDetailToDraft({ raw: selected, merchant: selected }, selected).merchant : blankMerchant())
+  );
   const locationOptions = useLocationOptions(merchant);
   const [plans, setPlans] = useState([]);
   const [planId, setPlanId] = useState(selected?._onboarding?.planId || "");
@@ -278,8 +281,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     const nationalDigits = phoneDigits.startsWith(phoneDialCode) ? phoneDigits.slice(phoneDialCode.length) : phoneDigits;
     if (nationalDigits.length < 7 || phoneDigits.length > 15) return "Enter a valid phone number.";
     if (!String(merchant.country || "").trim()) return "Select a country before entering the phone number.";
-    const countryMatches = locationOptions.selectedCountry?.iso2?.toLowerCase() === phoneCountry.toLowerCase();
-    if (!countryMatches) return "Phone country code must match the selected merchant country.";
+    const countryMatches =
+      !locationOptions.selectedCountry?.iso2 ||
+      !phoneCountry ||
+      locationOptions.selectedCountry?.iso2?.toLowerCase() === phoneCountry.toLowerCase();
+    if (!countryMatches && !editing) return "Phone country code must match the selected merchant country.";
     return "";
   };
   const validateMerchant = () => {
@@ -430,12 +436,12 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
                 <PhoneInput country={locationOptions.selectedCountry?.iso2?.toLowerCase() || phoneCountry} enableSearch countryCodeEditable={false} autoFormat value={merchant.phone} onMount={(_value, data) => { if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} onChange={(value, data) => { updateField("phone", value); if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} inputProps={{ id: "merchant-phone", name: "phone", required: true, autoComplete: "tel", "aria-invalid": Boolean(fieldErrors.phone) }} />
                 {fieldErrors.phone && <span className="pch-field-error" role="alert">{fieldErrors.phone}</span>}
               </div>
+              <Select label="Country *" value={merchant.country} options={locationOptions.countries.map((value) => ({ value, label: value }))} required error={fieldErrors.country} onChange={(v) => { updateField("country", v); updateField("state", ""); }} />
+              <Select label="State / Province *" value={merchant.state} placeholder={merchant.country ? "Select state or province" : "Select country first"} options={locationOptions.states.map((value) => ({ value, label: value }))} required error={fieldErrors.state} onChange={(v) => updateField("state", v)} />
+              <Field label="City *" placeholder="Enter city" value={merchant.city} required error={fieldErrors.city} onChange={(v) => updateField("city", v)} />
               <Field label="Address Line 1 *" placeholder="Enter street address" value={merchant.addressLine1} required error={fieldErrors.addressLine1} onChange={(v) => updateField("addressLine1", v)} />
               <Field label="Address Line 2" placeholder="Apartment, suite, etc. (optional)" value={merchant.addressLine2} onChange={(v) => updateField("addressLine2", v)} />
-              <Field label="City *" placeholder="Enter city" value={merchant.city} required error={fieldErrors.city} onChange={(v) => updateField("city", v)} />
-              <Select label="State / Province *" value={merchant.state} placeholder={merchant.country ? "Select state or province" : "Select country first"} options={locationOptions.states.map((value) => ({ value, label: value }))} required error={fieldErrors.state} onChange={(v) => updateField("state", v)} />
               <Field label="ZIP / Postal Code *" placeholder="Enter ZIP or postal code" value={merchant.postal} required error={fieldErrors.postal} onChange={(v) => updateField("postal", v)} />
-              <Select label="Country *" value={merchant.country} options={locationOptions.countries.map((value) => ({ value, label: value }))} required error={fieldErrors.country} onChange={(v) => { updateField("country", v); updateField("state", ""); }} />
             </div></Panel>
             {error && <div className="pch-error" role="alert">{error}</div>}
             <div className="pch-footerbar"><button type="button" disabled={submitting} onClick={cancel}>Back</button><button className="pch-primary" type="button" disabled={submitting} onClick={continueStep}>Continue</button></div>
