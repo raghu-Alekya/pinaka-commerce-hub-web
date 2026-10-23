@@ -304,7 +304,7 @@ export default function BentoDetailModal({
           {hero && (
             <div className="bento-hero-card flex items-center justify-between py-3 px-4 bg-slate-50/80 rounded-xl border border-slate-200/70">
               <div className="bento-hero-entity flex items-center gap-3.5">
-                <div className="bento-hero-icon-box w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 overflow-hidden">
+                <div className="bento-hero-icon-box w-16 h-16 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 overflow-hidden">
                   {hero.image ? (
                     <img
                       src={hero.image}

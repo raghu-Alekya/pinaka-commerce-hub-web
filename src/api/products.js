@@ -320,6 +320,27 @@ export function normalizeProduct(
             rawPayload?.id ??
             "",
 
+        parentId:
+            product?.parentId ??
+            product?.parent_id ??
+            product?.parentProductId ??
+            product?.parent_product_id ??
+            rawPayload?.parentId ??
+            rawPayload?.parent_id ??
+            rawPayload?.parentProductId ??
+            rawPayload?.parent_product_id ??
+            "",
+
+        attributes:
+            product?.attributes ??
+            rawPayload?.attributes ??
+            [],
+
+        variations:
+            product?.variations ??
+            rawPayload?.variations ??
+            [],
+
         wordpressCategoryId:
             product?.wordpressCategoryId ??
             "",
@@ -362,6 +383,16 @@ export function normalizeProduct(
         updatedAt:
             product?.updatedAt ??
             product?.updated_at ??
+            product?.dateModified ??
+            product?.date_modified ??
+            product?.dateModifiedGmt ??
+            product?.date_modified_gmt ??
+            rawPayload?.updatedAt ??
+            rawPayload?.updated_at ??
+            rawPayload?.dateModified ??
+            rawPayload?.date_modified ??
+            rawPayload?.dateModifiedGmt ??
+            rawPayload?.date_modified_gmt ??
             "",
     };
 }
