@@ -19,18 +19,6 @@
     box-sizing: border-box;
 }
 
-.merchant-vendors .mv-snackbar {
-    width: 100%;
-    margin: 0 0 20px;
-    padding: 12px 16px;
-    border: 1px solid #fca5a5;
-    border-radius: 6px;
-    background: #fee2e2;
-    color: #b91c1c;
-    font-size: 14px;
-    font-weight: 400;
-}
-
 /* =========================================================
    COMMON CARD
 ========================================================= */
@@ -84,7 +72,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    padding: 10px 0px 10px;
+    padding: 18px 18px 10px;
   
 }
 
@@ -1341,10 +1329,8 @@
 .mv-existing-content .mv-picker-summary { margin-top: 14px; }
 .mv-existing-table-wrap { width: 100%; margin-top: 4px; overflow-x: auto; border: 1px solid #dfe4ee; border-radius: 8px; }
 .mv-existing-page .mv-existing-table-wrap { overflow-x: auto; }
-.mv-existing-page .mv-existing-table-wrap table { width: 100%; min-width: 860px; border-collapse: collapse; table-layout: fixed; }
+.mv-existing-page .mv-existing-table-wrap table { width: 100%; min-width: 860px; border-collapse: collapse; table-layout: auto; }
 .mv-existing-page .mv-existing-table-wrap th, .mv-existing-page .mv-existing-table-wrap td { padding: 10px 14px; border-bottom: 1px solid #e8ecf3; text-align: left; vertical-align: middle; }
-.mv-existing-page .mv-existing-table-wrap td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mv-existing-page .mv-existing-table-wrap .mv-cell-ellipsis { display: block; width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mv-existing-page .mv-existing-table-wrap th { white-space: nowrap; }
 .mv-existing-table-wrap th { position: sticky; top: 0; z-index: 1; background: #f5f7fb; color: #17233e; white-space: nowrap; }
 .mv-existing-table-wrap th:nth-child(1), .mv-existing-table-wrap td:nth-child(1) { width: 48px; min-width: 48px; text-align: center; }

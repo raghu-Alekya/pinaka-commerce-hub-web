@@ -5188,7 +5188,7 @@
 
 .page-actions .btn-secondary {
   border: 1px solid #5143bc;
-  background: transparent;
+  background: #ffffff;
   color: #5143bc;
 }
 
@@ -5612,7 +5612,7 @@
 }
 
 
-.merchant-subscriptions-page .subscription-overview-refined .overview-card  {
+.merchant-subscriptions-page .subscription-overview-refined .overview-card {
   align-items: center;
   height: 95px;
   min-height: 95px;

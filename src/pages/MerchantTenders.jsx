@@ -96,14 +96,6 @@ const normalize = (value = {}) => ({
 const active = (tender) =>
   String(tender?.status || "").toLowerCase() === "active";
 
-const toggleSelection = (setSelection, tenderId) => {
-  setSelection((current) =>
-    current.includes(tenderId)
-      ? current.filter((id) => id !== tenderId)
-      : [...current, tenderId],
-  );
-};
-
 const matches = (tender, query) =>
   [tender?.name, tender?.code]
     .join(" ")
@@ -144,16 +136,12 @@ export default function MerchantTenders({
 
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [snackbar, setSnackbar] = useState("");
-  const snackbarTimer = useRef(null);
   const [assignmentsLoading, setAssignmentsLoading] = useState(true);
   const [assignmentError, setAssignmentError] = useState("");
 
   const lock = useRef(false);
   const dialog = useRef(null);
   const addButton = useRef(null);
-
-  useEffect(() => () => window.clearTimeout(snackbarTimer.current), []);
 
   const signature = JSON.stringify(assignedTenderIds.map(idOf));
 
@@ -455,11 +443,7 @@ export default function MerchantTenders({
 
       setIds((current) => current.filter((id) => id !== tendorId));
 
-      const removedTender = assigned.find((tender) => tender.id === tendorId);
       setModal(null);
-      setSnackbar(`${removedTender?.name || "Tender"} was Inactive.`);
-      window.clearTimeout(snackbarTimer.current);
-      snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 3000);
     } catch (e) {
       console.error("Failed to remove merchant tendor:", e);
 
@@ -472,7 +456,6 @@ export default function MerchantTenders({
 
   return (
     <div className="merchant-tenders">
-      {snackbar && <div className="mt-snackbar" role="status" aria-live="polite">{snackbar}</div>}
       {modal?.type === "select" ? (
         <section className="mt-card mt-existing-page">
           <header className="mt-existing-heading">
@@ -484,7 +467,6 @@ export default function MerchantTenders({
               <i className="bi bi-arrow-left" /> Back to Tenders
             </button>
           </header>
-          <div className="mt-existing-content">
           {masterLoading && <p role="status">Loading master tenders…</p>}
           {masterError && <p role="alert" className="mt-error">{masterError}</p>}
           <FiltersBar
@@ -516,21 +498,20 @@ export default function MerchantTenders({
               </thead>
               <tbody>
                 {pickerRows.map((tender) => (
-                  <tr
-                    key={tender.id}
-                    className={active(tender) ? "mt-selectable-row" : ""}
-                    onClick={(event) => {
-                      if (event.target.closest("input,button,a,select")) return;
-                      if (!busy && active(tender)) toggleSelection(setSelection, tender.id);
-                    }}
-                  >
+                  <tr key={tender.id}>
                     <td>
                       <input
                         type="checkbox"
                         aria-label={`Select ${tender.name}`}
                         disabled={busy || !active(tender)}
                         checked={selection.includes(tender.id)}
-                        onChange={() => toggleSelection(setSelection, tender.id)}
+                        onChange={(event) =>
+                          setSelection((old) =>
+                            event.target.checked
+                              ? [...old, tender.id]
+                              : old.filter((id) => id !== tender.id)
+                          )
+                        }
                       />
                     </td>
                     <td>{tender.code}</td>
@@ -562,7 +543,6 @@ export default function MerchantTenders({
             showWhenEmpty={true}
           />
           {saveError && <p role="alert" className="mt-error">{saveError}</p>}
-          </div>
           <footer className="mt-existing-footer">
             <button type="button" disabled={busy} onClick={close}>
               Cancel
@@ -757,21 +737,20 @@ export default function MerchantTenders({
 
                   <tbody>
                     {available.map((tender) => (
-                      <tr
-                        key={tender.id}
-                        className={active(tender) ? "mt-selectable-row" : ""}
-                        onClick={(event) => {
-                          if (event.target.closest("input,button,a,select")) return;
-                          if (!busy && active(tender)) toggleSelection(setSelection, tender.id);
-                        }}
-                      >
+                      <tr key={tender.id}>
                         <td>
                           <input
                             type="checkbox"
                             aria-label={`Select ${tender.name}`}
                             disabled={busy || !active(tender)}
                             checked={selection.includes(tender.id)}
-                            onChange={() => toggleSelection(setSelection, tender.id)}
+                            onChange={(event) =>
+                              setSelection((old) =>
+                                event.target.checked
+                                  ? [...old, tender.id]
+                                  : old.filter((id) => id !== tender.id)
+                              )
+                            }
                           />
                         </td>
 

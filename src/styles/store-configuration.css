@@ -5196,16 +5196,3 @@
   width: 100% !important;
   box-sizing: border-box !important;
 }
-
-/* Restore the white surface around the Features toolbar and table after the
-   generic nested-panel reset used by store detail tabs. */
-.store-workspace-page .store-workspace-card .store-section-editor.sf-root .sf-feature-list-panel {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 20px !important;
-  border: 1px solid var(--store-border, #e2e8f0) !important;
-  border-radius: 10px !important;
-  background: #fff !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .04) !important;
-}

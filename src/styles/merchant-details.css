@@ -152,9 +152,7 @@
   .mdl-card,
   .mv-card,
   .mv-list-card
-) 
-
-:is(.pagination-container, .table-pagination-footer),
+) :is(.pagination-container, .table-pagination-footer),
 .merchant-readonly .merchant-view-main .store-pagination,
 .merchant-readonly .merchant-view-main .mel footer,
 .merchant-readonly .merchant-view-main .mdl footer,
@@ -175,9 +173,9 @@
   border-top: 0 !important;
   background: transparent !important;
   box-sizing: border-box !important;
-} */
+}
 
-/* .merchant-readonly .merchant-view-main :is(
+.merchant-readonly .merchant-view-main :is(
   .store-list-card,
   .stores-card,
   .mt-card,
@@ -188,9 +186,9 @@
 ) :is(.pagination-container, .table-pagination-footer) :is(.pagination-info, span:first-child) {
   margin-left: 0 !important;
   padding-left: 0 !important;
-} */
+}
 
-/* .merchant-readonly .merchant-view-main :is(
+.merchant-readonly .merchant-view-main :is(
   .store-list-card,
   .stores-card,
   .mt-card,
@@ -216,12 +214,7 @@
   box-sizing: border-box;
 }
 
-.merchant-readonly .merchant-view-main .merchant-tenders .mt-existing-page {
-  padding: 0 !important;
-  background: #f6f8fc !important;
-}
-
-/* .merchant-readonly .merchant-view-main :is(
+.merchant-readonly .merchant-view-main :is(
   .store-table-wrapper,
   .mt-scroll,
   .mel-scroll,
@@ -234,7 +227,7 @@
   margin-bottom: 0 !important;
   box-sizing: border-box !important;
   overflow-x: auto !important;
-} */
+}
 
 .merchant-readonly .merchant-view-main table tbody td[colspan],
 .merchant-readonly .merchant-view-main .store-empty-row {

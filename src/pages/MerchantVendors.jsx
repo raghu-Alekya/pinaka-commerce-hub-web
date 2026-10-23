@@ -172,8 +172,6 @@ export default function MerchantVendors({
     const [busy, setBusy] = useState(false);
 
     const [saveError, setSaveError] = useState("");
-    const [snackbar, setSnackbar] = useState("");
-    const snackbarTimer = useRef(null);
 
     const [masterVendors, setMasterVendors] =
         useState(initialMasterVendors);
@@ -196,8 +194,6 @@ export default function MerchantVendors({
     const dialog = useRef(null);
 
     const addButton = useRef(null);
-
-    useEffect(() => () => window.clearTimeout(snackbarTimer.current), []);
 
     /* =========================================================
        LOAD MAPPED VENDORS
@@ -529,7 +525,6 @@ useEffect(() => {
             return;
         }
 
-        const removingVendor = modal?.type === "remove" ? modal.vendor : null;
         lock.current = true;
         setBusy(true);
         setSaveError("");
@@ -584,11 +579,6 @@ useEffect(() => {
             await loadMappedVendors("", { preserveIdsWhenEmpty: storeScope });
 
             setModal(null);
-            if (removingVendor) {
-                setSnackbar(`${removingVendor.name} was Inactive.`);
-                window.clearTimeout(snackbarTimer.current);
-                snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 3000);
-            }
         } catch (e) {
             console.error(
                 `Failed to save ${entityName} vendor mapping:`,
@@ -803,11 +793,11 @@ useEffect(() => {
                                         }}
                                     >
                                         <td><input type="checkbox" aria-label={`Select ${vendor.name}`} disabled={busy || !active(vendor)} checked={selected} onChange={() => toggleVendorSelection(vendor)} /></td>
-                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.code)}>{displayValue(vendor.code)}</span></td>
-                                        <td><strong className="mv-cell-ellipsis" title={vendor.name}>{vendor.name}</strong></td>
-                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.type)}>{displayValue(vendor.type)}</span></td>
-                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.products)}>{displayValue(vendor.products)}</span></td>
-                                        <td><span className="mv-cell-ellipsis" title={vendor.phone || vendor.contact || "—"}>{vendor.phone || vendor.contact || "—"}</span></td>
+                                        <td>{displayValue(vendor.code)}</td>
+                                        <td><strong>{vendor.name}</strong></td>
+                                        <td>{displayValue(vendor.type)}</td>
+                                        <td>{displayValue(vendor.products)}</td>
+                                        <td>{vendor.phone || vendor.contact || "—"}</td>
                                     </tr>
                                 );
                             })}
@@ -846,7 +836,6 @@ useEffect(() => {
 
     return (
         <div className="merchant-vendors">
-            {snackbar && <div className="mv-snackbar" role="status" aria-live="polite">{snackbar}</div>}
             {storeScope && (
                 <header className="mv-card mv-header">
                     <div>
