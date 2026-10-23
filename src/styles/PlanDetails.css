@@ -335,6 +335,19 @@
   font-size: 12px;
 }
 
+.plan-view-features-footer {
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+  margin-top: 12px;
+}
+
+.plan-view-features-footer .pagination-container {
+  height: auto;
+  padding: 0;
+  
+}
+
 @media (max-width: 1000px) {
   .plan-pricing-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -1,8 +1,10 @@
 import FilterDropdown from "../components/FilterDropdown";
+import FiltersBar from "../components/FiltersBar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
+import ListActions from "../components/ListActions";
 import { api, pendingStoreRead } from "../api/http";
 import { normalizeCatalog } from "../api/products";
 import { catalogProductId } from "./discountForm";
@@ -293,17 +295,16 @@ export default function Coupons({
     // SUMMARY
     // =========================================================
 
-    const activeCount = coupons.filter(
-        (coupon) => coupon.status === "Active"
+    const fixedCartCount = filteredCoupons.filter(
+        (coupon) => coupon.type === "Fixed cart discount"
     ).length;
 
     const expiredCount = coupons.filter(
         (coupon) => coupon.status === "Expired"
     ).length;
 
-    const usedCount = coupons.filter(
-        (coupon) =>
-            Number(coupon.usedCount || 0) > 0
+    const percentageCount = filteredCoupons.filter(
+        (coupon) => coupon.type === "Percentage discount"
     ).length;
 
     // =========================================================
@@ -545,37 +546,37 @@ export default function Coupons({
 
                 </div>
 
-                {/* ACTIVE */}
+                {/* FIXED CART DISCOUNT */}
 
                 <div className="coupon-summary-card">
 
                     <div className="coupon-summary-icon green">
-                        <i className="bi bi-check-circle" />
+                        <i className="bi bi-cart" />
                     </div>
 
                     <div>
-                        <span>Active</span>
+                        <span>Fixed cart discount</span>
 
                         <strong>
-                            {activeCount}
+                            {fixedCartCount}
                         </strong>
                     </div>
 
                 </div>
 
-                {/* USED */}
+                {/* PERCENTAGE DISCOUNT */}
 
                 <div className="coupon-summary-card">
 
                     <div className="coupon-summary-icon orange">
-                        <i className="bi bi-clock-history" />
+                        <i className="bi bi-percent" />
                     </div>
 
                     <div>
-                        <span>Used</span>
+                        <span>Percentage discount</span>
 
                         <strong>
-                            {usedCount}
+                            {percentageCount}
                         </strong>
                     </div>
 
@@ -605,86 +606,39 @@ export default function Coupons({
                 TOOLBAR
             ================================================= */}
 
-            <div className="coupons-toolbar">
-
-                    {/* SEARCH */}
-
-                    <div className="coupons-search">
-
-                        <i className="bi bi-search" />
-
-                        <input
-                            type="text"
-                            placeholder="Search coupon code, order ID..."
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(e.target.value)
-                            }
-                        />
-
-                    </div>
-
-                    {/* TYPE */}
-
-                    <FilterDropdown
-                        value={typeFilter}
-                        onChange={(e) =>
-                            setTypeFilter(e.target.value)
-                        }
-                    >
-                        <option value="">
-                            All Types
-                        </option>
-
-                        {couponTypes.map((type) => (
-                            <option
-                                key={type}
-                                value={type}
-                            >
-                                {type}
-                            </option>
-                        ))}
-
-                    </FilterDropdown>
-
-                    {/* STATUS */}
-
-                    <FilterDropdown
-                        value={statusFilter}
-                        onChange={(e) =>
-                            setStatusFilter(e.target.value)
-                        }
-                    >
-                        <option value="">
-                            All Status
-                        </option>
-
-                        <option value="Active">
-                            Active
-                        </option>
-
-                        <option value="Expired">
-                            Expired
-                        </option>
-
-                        <option value="Used">
-                            Used
-                        </option>
-
-                    </FilterDropdown>
-
-                    {/* CLEAR */}
-
-                    <button
-                        type="button"
-                        className="coupons-clear-btn"
-                        onClick={clearFilters}
-                    >
-                        <i className="bi bi-arrow-counterclockwise" />
-                        Reset
-                    </button>
-
-            </div>
+            <FiltersBar
+                className="coupons-toolbar coupons-filter-bar"
+                searchValue={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="Search coupon code, order ID..."
+                searchAriaLabel="Search coupons"
+                filters={[
+                    {
+                        key: "coupon-type",
+                        label: "Coupon type",
+                        value: typeFilter,
+                        options: [
+                            { value: "", label: "All Types" },
+                            ...couponTypes.map((type) => ({ value: type, label: type })),
+                        ],
+                        onChange: setTypeFilter,
+                    },
+                    {
+                        key: "coupon-status",
+                        label: "Coupon status",
+                        value: statusFilter,
+                        options: [
+                            { value: "", label: "All Status" },
+                            { value: "Active", label: "Active" },
+                            { value: "Expired", label: "Expired" },
+                            { value: "Used", label: "Used" },
+                        ],
+                        onChange: setStatusFilter,
+                    },
+                ]}
+                onClear={clearFilters}
+                clearLabel="Reset"
+            />
 
             {/* =================================================
                 MAIN CARD
@@ -708,8 +662,8 @@ export default function Coupons({
                             <tr>
 
                                 <th>Code</th>
-                                <th>Issued Order ID</th>
-                                <th>Used Order ID</th>
+                                {/* <th>Issued Order ID</th> */}
+                                {/* <th>Used Order ID</th> */}
                                 <th>Coupon Type</th>
                                 <th>Coupon Amount</th>
                                 <th>Usage / Limit</th>
@@ -737,7 +691,7 @@ export default function Coupons({
                                 )
                             ) : (
                                 <tr>
-                                    <td className="coupons-table-empty" colSpan="9">
+                                    <td className="coupons-table-empty" colSpan="7">
                                         <div className="products-table-empty-state">
                                 
                                             <strong>
@@ -995,7 +949,7 @@ function CouponEditor({ mode, form, setForm, error, busy, products = [], catalog
     };
     const field = (label, name, options = {}) => (
         <label className="coupon-form-field" key={name}>
-            <span>{label}{options.required ? " *" : ""}</span>
+            <span>{label}{options.required ? <> <span className="text-red-500">*</span></> : ""}</span>
             {options.textarea ? (
                 <textarea name={name} value={form[name] || ""} onChange={change} rows={3} />
             ) : options.select ? (
@@ -1159,6 +1113,7 @@ function CouponRow({ coupon, onView, onEdit, onDelete }) {
                 ISSUED ORDER ID
             ================================================= */}
 
+            {/*
             <td>
 
                 <OrderList
@@ -1166,11 +1121,13 @@ function CouponRow({ coupon, onView, onEdit, onDelete }) {
                 />
 
             </td>
+            */}
 
             {/* =================================================
                 USED ORDER ID
             ================================================= */}
 
+            {/*
             <td>
 
                 <OrderList
@@ -1178,6 +1135,7 @@ function CouponRow({ coupon, onView, onEdit, onDelete }) {
                 />
 
             </td>
+            */}
 
             {/* =================================================
                 COUPON TYPE
@@ -1250,8 +1208,14 @@ function CouponRow({ coupon, onView, onEdit, onDelete }) {
             </td>
 
             <td className="coupon-row-actions" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
-                <button type="button" aria-label={`Edit ${coupon.code}`} title="Edit coupon" onClick={onEdit}><i className="bi bi-pencil" /></button>
-                <button type="button" aria-label={`Delete ${coupon.code}`} title="Delete coupon" onClick={onDelete}><i className="bi bi-trash3" /></button>
+                <ListActions
+                    onView={onView}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    viewLabel={`View ${coupon.code}`}
+                    editLabel={`Edit ${coupon.code}`}
+                    deleteLabel={`Delete ${coupon.code}`}
+                />
             </td>
 
         </tr>

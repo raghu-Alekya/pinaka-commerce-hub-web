@@ -319,7 +319,7 @@ async function confirmDeleteTemplate() {
     String(targetId).trim() === ""
   ) {
     setDeleteError(
-      "Role Template ID is missing. Cannot deactivate."
+      "Role Template ID is missing. Cannot Inactive."
     );
     return;
   }
@@ -348,14 +348,14 @@ async function confirmDeleteTemplate() {
     setTemplateToDelete(null);
     setDeleteError("");
   } catch (err) {
-    console.error("Role Template deactivate failed:", err);
+    console.error("Role Template Inactive failed:", err);
 
     const errorMsg =
       err?.response?.data?.message ||
       err?.response?.data?.error ||
       err?.response?.data?.errors?.[0]?.message ||
       err?.message ||
-      "Unable to deactivate role template.";
+      "Unable to Inactive role template.";
 
     setDeleteError(errorMsg);
   } finally {
@@ -436,7 +436,7 @@ async function confirmDeleteTemplate() {
 
 <label className="role-field role-code-field">
   <span>
-    Role Template Code <b>*</b>
+    Role Template Code <span className="text-red-500">*</span>
   </span>
 
   <div className="role-input-wrap role-placeholder">
@@ -466,7 +466,7 @@ async function confirmDeleteTemplate() {
 <label className="role-field role-name-field">
 <span>
 
-                Role Template Name <b>*</b>
+                Role Template Name <span className="text-red-500">*</span>
 </span>
 <div className="role-input-wrap">
 <input
@@ -487,7 +487,7 @@ async function confirmDeleteTemplate() {
             {/* ------------------ STATUS ------------------ */}
 <label className="role-field role-status-field">
   <span>
-    Status <b>*</b>
+    Status <span className="text-red-500">*</span>
   </span>
 
   <div
@@ -572,7 +572,7 @@ async function confirmDeleteTemplate() {
         </div>
 
         {/* ------------------ LIST & FILTERS ------------------ */}
-        <div className="role-list-card">
+        <section className="features-list-card role-list-card">
           <div className="role-list-header">
             <div>
               <h2>Role Templates</h2>
@@ -622,8 +622,8 @@ async function confirmDeleteTemplate() {
             </div>
           </div>
  
-          <div className="role-table-wrap">
-            <table className="role-table">
+          <div className="features-table-wrap role-table-wrap">
+            <table className="features-table role-table">
               <colgroup>
                 <col className="role-code-col role-equal-col" />
                 <col className="role-name-col role-equal-col" />
@@ -766,7 +766,7 @@ async function confirmDeleteTemplate() {
           </div>
 
           {/* ------------------ PAGINATION ------------------ */}
-<div className="role-pagination">
+<div className="feature-pagination-row role-pagination">
   <Pagination
     currentPage={currentPage}
     totalPages={totalPages}
@@ -780,7 +780,7 @@ async function confirmDeleteTemplate() {
     itemLabel="role templates"
   />
 </div>
-        </div>
+        </section>
       </section>
 
       {/* ------------------ DELETE (Deactivate) MODAL ------------------ */}
@@ -789,10 +789,10 @@ async function confirmDeleteTemplate() {
 
 <DeleteConfirmationDialog
   isOpen={deletePopup && Boolean(templateToDelete)}
-  title="Deactivate Role Template?"
+  title="Inactive Role Template?"
   message={
     templateToDelete
-      ? `Are you sure you want to deactivate "${
+      ? `Are you sure you want to Inactive "${
           templateToDelete.name ||
           templateToDelete.roleCode ||
           "this role template"
@@ -800,8 +800,8 @@ async function confirmDeleteTemplate() {
       : ""
   }
   cancelLabel="Cancel"
-  confirmLabel="Deactivate"
-  busyLabel="Deactivating..."
+  confirmLabel="Inactive"
+  busyLabel="Inactivating..."
   busy={saving}
   error={deleteError}
   iconClassName="bi bi-trash"

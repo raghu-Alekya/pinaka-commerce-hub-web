@@ -234,7 +234,7 @@ const confirmDeleteFeature = async () => {
     setDeleteTarget(null);
   } catch (e) {
     setDeleteError(
-      e.message || "Unable to deactivate feature. Please try again."
+      e.message || "Unable to Inactive feature. Please try again."
     );
   } finally {
     setDeleting(false);
@@ -339,7 +339,7 @@ const confirmDeleteFeature = async () => {
 
         <div className="feature-form-grid">
           <div className="feature-field ">
-            <label>Feature Code<span>*</span></label>
+            <label>Feature Code<span className="text-red-500">*</span></label>
             <input
               data-field="code"
               value={form.code}
@@ -358,7 +358,7 @@ const confirmDeleteFeature = async () => {
           </div>
 
           <div className="feature-field">
-            <label>Feature Name<span>*</span></label>
+            <label>Feature Name<span className="text-red-500">*</span></label>
             <input
               data-field="name"
               value={form.name}
@@ -393,7 +393,7 @@ const confirmDeleteFeature = async () => {
           </div>
 
           <div className="feature-field">
-            <label>Feature Category<span>*</span></label>
+            <label>Feature Category<span className="text-red-500">*</span></label>
             <div className="select-shell">
               <select
                 name="category"
@@ -636,15 +636,15 @@ const confirmDeleteFeature = async () => {
       
 <DeleteConfirmationDialog
   isOpen={Boolean(deleteTarget)}
-  title="Deactivate Feature?"
+  title="Inactive Feature?"
   message={
     deleteTarget
-      ? `Are you sure you want to deactivate "${deleteTarget.name}"?`
+      ? `Are you sure you want to Inactive "${deleteTarget.name}"?`
       : ""
   }
   cancelLabel="Cancel"
-  confirmLabel="Deactivate"
-  busyLabel="Deactivating..."
+  confirmLabel="Inactive"
+  busyLabel="Inactivating..."
   busy={deleting}
   error={deleteError}
   iconClassName="bi bi-trash"

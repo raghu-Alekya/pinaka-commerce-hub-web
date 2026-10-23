@@ -2,6 +2,8 @@ import { buildStoreSetupPayload } from "../api/storeDetails";
 import { useLocationOptions } from "../data/useLocationOptions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import PhoneInputModule from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import {
   listMerchantEmployees,
   listStoreEmployees,
@@ -34,6 +36,8 @@ import {
   extractActiveSubscription,
 } from "../api/subscriptions_stores";
 import "../styles/add-store.css";
+
+const PhoneInput = PhoneInputModule.default || PhoneInputModule;
 
 const DAYS = [
   "Monday",
@@ -471,6 +475,8 @@ const applySavedRolePermissions = (
   }
   return next;
 };
+const renderFieldLabel = (label) => { if (label == null || typeof label !== "string") return label; if (!label.includes("*")) return label; const parts = label.split("*"); return (<>{parts.map((part, index) => (<span key={index}>{part}{index < parts.length - 1 && (<span className="text-red-500" style={{ color: "#dc2626" }}>*</span>)}</span>))}</>); };
+
 const Field = ({
   label,
   value,
@@ -483,7 +489,7 @@ const Field = ({
 }) => (
   <label className={`sf-field${invalid ? " sf-field-invalid" : ""}`}>
     <span>
-      {label}
+      {renderFieldLabel(label)}
       {optional && <small> (Optional)</small>}
     </span>
     <input
@@ -509,7 +515,7 @@ const SelectField = ({
 }) => (
   <label className={`sf-field${invalid ? " sf-field-invalid" : ""}`}>
     <span>
-      {label}
+      {renderFieldLabel(label)}
       {optional && <small> (Optional)</small>}
     </span>
     <FilterDropdown
@@ -623,6 +629,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const [loadError, setLoadError] = useState("");
   const [reload, setReload] = useState(0);
   const saveLock = useRef(false);
+  const requestedPlanCatalog = useRef("");
   const hoursRef = useRef(blankHours());
   const permissionsRef = useRef({});
   const editedPermissionRoles = useRef(new Set());
@@ -639,6 +646,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const [roles, setRoles] = useState([]);
   const [savedRoleKeys, setSavedRoleKeys] = useState([]);
   const appliedRoleSnapshot = useRef("");
+  const lastLoadedStoreTypeRolesRef = useRef("");
   const [activeRole, setActiveRole] = useState("");
   const [copyFromRole, setCopyFromRole] = useState("");
   const [permissions, setPermissions] = useState({});
@@ -655,9 +663,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const [pinDraft, setPinDraft] = useState("");
   const [pinError, setPinError] = useState("");
   const [step, setStep] = useState(embeddedStep ?? 0);
-  const needsEmployees = step === 4;
-  const needsRoles = step === 3 || step === 4;
-  const needsFeatures = step === 2 || step === 3;
+  const needsEmployees = step >= 4;
+  const needsRoles = step >= 3;
+  const needsFeatures = step >= 2;
   const [loading, setLoading] = useState(true);
   const [mastersLoading, setMastersLoading] = useState(true);
   const [featuresLoading, setFeaturesLoading] = useState(false);
@@ -830,29 +838,21 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     );
   }, [masterPlans, subscription, plan, merchant]);
 
+  // Prefer the selected master plan. Subscription entitlements can be stale,
+  // and store-type feature flags describe availability rather than plan access.
   const planFeatureList =
-    subscription?.includedFeatures ??
-    subscription?.included_features ??
-    plan?.includedFeatures ??
+    matchedPlan?.includedFeatures ??
+    matchedPlan?.included_features ??
+    matchedPlan?.features ??
     plan?.included_features ??
-    plan?.features ??
-    matchedPlan?.includedFeatures;
+    plan?.includedFeatures ??
+    plan?.entitlements ??
+    subscription?.included_features ??
+    subscription?.includedFeatures ??
+    subscription?.entitlements;
 
   const includedFeatures = useMemo(() => {
-    const raw = [
-      ...listFrom(subscription?.entitlements),
-      ...listFrom(
-        subscription?.includedFeatures ?? subscription?.included_features,
-      ),
-      ...listFrom(
-        plan?.included_features ?? plan?.includedFeatures ?? plan?.features,
-      ),
-      ...listFrom(
-        matchedPlan?.included_features ??
-          matchedPlan?.includedFeatures ??
-          matchedPlan?.features,
-      ),
-    ];
+    const raw = listFrom(planFeatureList);
     const knownFeatures = [...catalog, ...typeFeatures]
       .map(
         (item) =>
@@ -889,6 +889,32 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     const unique = [];
     const seen = new Set();
     for (const entry of raw) {
+      const featureData =
+        entry?.feature ||
+        entry?.featureDetails ||
+        entry?.featureDefinition ||
+        entry;
+      const flags = [
+        entry?.included,
+        entry?.isIncluded,
+        entry?.is_included,
+        entry?.planIncluded,
+        entry?.plan_included,
+        featureData?.included,
+        featureData?.isIncluded,
+        featureData?.is_included,
+        featureData?.planIncluded,
+        featureData?.plan_included,
+      ];
+      if (flags.some((value) => value === false)) continue;
+      const access = String(
+        entry?.planAccess ?? entry?.plan_access ??
+        featureData?.planAccess ?? featureData?.plan_access ?? "",
+      )
+        .trim()
+        .toUpperCase()
+        .replace(/[\s-]+/g, "_");
+      if (["NOT_INCLUDED", "EXCLUDED", "UNAVAILABLE"].includes(access)) continue;
       const identities = new Set(identityValues(entry));
       const match = knownFeatures.find(feature =>
         identityValues(feature).some(value => identities.has(value)),
@@ -901,7 +927,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       }
     }
     return unique;
-  }, [subscription, plan, matchedPlan, catalog, typeFeatures]);
+  }, [planFeatureList, catalog, typeFeatures]);
 
   const featureRows = useMemo(() => {
     const source = activeStoreTypeId ? typeFeatures : catalog;
@@ -996,21 +1022,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       )
     )
       return true;
-    if (feature && typeof feature.included === "boolean" && feature.included)
-      return true;
-    if (
-      feature?.planAccess &&
-      String(feature.planAccess).toUpperCase() === "INCLUDED"
-    )
-      return true;
-    if (includedFeatures.length > 0) return false;
-    if (
-      planFeatureList != null &&
-      Array.isArray(planFeatureList) &&
-      planFeatureList.length > 0
-    )
-      return false;
-    return Boolean(activeStoreTypeId) && Boolean(feature);
+    return false;
   };
   const filteredFeatures = featureRows.filter((row) => {
     const matchesCategory =
@@ -1030,7 +1042,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   );
   const selectableFeatureNames = filteredFeatures.filter((row) => entitled(row.name)).map((row) => row.name);
   const allVisibleFeaturesSelected = selectableFeatureNames.length > 0 && selectableFeatureNames.every((name) => enabledFeatures.includes(name));
-  const roleAvailableForStoreType = (role) => storeTypeRoleIds === null || roleTemplateKeys(role).some((key) => storeTypeRoleIds.has(key));
+  const roleAvailableForStoreType = (role) =>
+    storeTypeRoleIds === null ||
+    storeTypeRoleIds.size === 0 ||
+    roleTemplateKeys(role).some((key) => storeTypeRoleIds.has(key));
   const selectableRoleDefinitions = roleDefinitions.filter(roleAvailableForStoreType);
   const activeEmployees = employees.filter(
     (employee) =>
@@ -1304,9 +1319,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     async function loadMerchantContext() {
       try {
         const [result, employeeResult, storesResult] = await Promise.all([
-          embeddedAccess && merchantContext
-            ? Promise.resolve({ merchant: merchantContext, subscription: existingStore?.subscription })
-            : pendingStoreRead(`merchant:${merchantId}`, () => getMerchant(merchantId)),
+          pendingStoreRead(`merchant:${merchantId}`, () => getMerchant(merchantId)).catch(() => ({
+            merchant: merchantContext,
+            subscription: existingStore?.subscription,
+          })),
           Promise.resolve([]),
           editing || !embeddedAccess
             ? pendingStoreRead(`merchant-stores:${merchantId}`, () => api.get(endpoints.merchantStores(encodeURIComponent(merchantId)))).catch(() => null)
@@ -1410,19 +1426,24 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   // Only offer role templates mapped to this store's selected store type.
   useEffect(() => {
     let cancelled = false;
-    setStoreTypeRoleIds(null);
-    setRolesError("");
-    if (!needsRoles || !activeStoreTypeId) {
-      setStoreTypeRoleIds(new Set());
+    if (!activeStoreTypeId) {
+      lastLoadedStoreTypeRolesRef.current = "";
+      setStoreTypeRoleIds(null);
       setStoreTypeRolesLoading(false);
-      return () => {
-        cancelled = true;
-      };
+      setRolesError("");
+      return;
+    }
+    if (!needsRoles) return;
+    const cacheKey = `${activeStoreTypeId}:${reload}`;
+    if (lastLoadedStoreTypeRolesRef.current === cacheKey && storeTypeRoleIds !== null) {
+      return;
     }
     setStoreTypeRolesLoading(true);
+    setRolesError("");
     pendingStoreRead(`store-type-roles:${activeStoreTypeId}`, () => roleTemplatesApi.getForStoreType(activeStoreTypeId))
       .then((response) => {
         if (cancelled) return;
+        lastLoadedStoreTypeRolesRef.current = cacheKey;
         const ids = readRoleTemplatesList(response)
           .filter((row) => {
             const status = String(
@@ -1439,7 +1460,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       })
       .catch((err) => {
         if (!cancelled) {
-          setStoreTypeRoleIds(new Set());
           setRolesError(
             err?.message ||
               "Unable to load role templates for this store type.",
@@ -1455,8 +1475,17 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   }, [activeStoreTypeId, reload, needsRoles]);
 
   useEffect(() => {
-    if (storeTypeRoleIds === null || storeTypeRolesLoading || !activeStoreTypeId) return;
+    if (storeTypeRoleIds === null || storeTypeRolesLoading || !activeStoreTypeId || storeTypeRoleIds.size === 0) return;
     setRoles((current) => {
+      if (!editing && current.length === 0 && roleDefinitions.length > 0) {
+        const defaultRoles = roleDefinitions
+          .filter((role) => roleTemplateKeys(role).some((key) => storeTypeRoleIds.has(key)))
+          .map((role) => role.id);
+        if (defaultRoles.length > 0) {
+          setActiveRole((act) => act || defaultRoles[0]);
+          return defaultRoles;
+        }
+      }
       const allowed = current.flatMap((roleId) => {
         const role = roleDefinitions.find(
           (item) =>
@@ -1479,7 +1508,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       }
       return unique;
     });
-  }, [storeTypeRoleIds, storeTypeRolesLoading, activeStoreTypeId, roleDefinitions, savedRoleKeys]);
+  }, [storeTypeRoleIds, storeTypeRolesLoading, activeStoreTypeId, roleDefinitions, savedRoleKeys, editing]);
 
   // Load Store-Type Features
   useEffect(() => {
@@ -1681,16 +1710,20 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   // Embedded Features only needs the plan catalog when entitlement data is absent.
   useEffect(() => {
     if ((!embeddedAccess && !editing) || !needsFeatures || loading || merchantLoading || !merchantInfo) return;
-    const hasEntitlements = subscription?.entitlements != null ||
-      subscription?.includedFeatures != null || subscription?.included_features != null ||
-      plan?.includedFeatures != null || plan?.included_features != null || plan?.features != null;
-    if (hasEntitlements) return;
-    let active = true;
+    const selectedPlanKey = String(
+      subscription?.planId || subscription?.plan_id || subscription?.planCode ||
+      subscription?.plan_code || subscription?.planName || subscription?.plan_name ||
+      plan?.id || plan?.planId || plan?.code || plan?.planCode || plan?.name ||
+      merchant?.planId || merchant?.plan_id || merchant?.plan || "",
+    ).trim().toLowerCase();
+    if (!selectedPlanKey || matchedPlan || masterPlans.length > 0) return;
+    const requestScope = `${merchantId}:${selectedPlanKey}`;
+    if (requestedPlanCatalog.current === requestScope) return;
+    requestedPlanCatalog.current = requestScope;
     pendingStoreRead("store-setup-plans", () => listPlans())
-      .then(rows => { if (active) setMasterPlans(Array.isArray(rows) ? rows : []); })
-      .catch(error => { if (active) setLoadError(error.message || "Unable to load plan entitlements."); });
-    return () => { active = false; };
-  }, [featuresOnly, needsFeatures, loading, merchantLoading, merchantInfo, subscription, plan]);
+      .then(rows => setMasterPlans(Array.isArray(rows) ? rows : []))
+      .catch(error => setLoadError(error.message || "Unable to load plan entitlements."));
+  }, [featuresOnly, needsFeatures, loading, merchantLoading, merchantInfo, subscription, plan, merchant, matchedPlan, masterPlans.length, merchantId]);
   // Default Enable Entitled Features
   useEffect(() => {
     if (
@@ -1735,6 +1768,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setEmployees([]);
     setTypeFeatures([]);
     setEnabledFeatures([]);
+    lastLoadedStoreTypeRolesRef.current = "";
+    setStoreTypeRoleIds(null);
     setRoleDefinitions([]);
     setRoles([]);
     setActiveRole("");
@@ -2538,55 +2573,23 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           </div>
         </Panel>
         <Panel title="Plan Details" className="sf-plan-details-card">
-          <div className="sf-plan-details">
-            <div className="sf-plan-title">
-              <span className="sf-icon-square bi bi-file-earmark-text" />
-              <div>
-                <strong>{planName}</strong>
-              </div>
-            </div>
-            <div className="sf-plan-metrics">
-              <div>
-                <strong>
-                  {planPrice == null
-                    ? "—"
-                    : `${subscription?.currency || currencyCode} ${planPrice}`}
-                </strong>
-                <small>Price</small>
-              </div>
-              <div>
-                <strong>{billing}</strong>
-                <small>Billing Type</small>
-              </div>
-              <div>
-                <strong>
-                  {used} / {limit}
-                </strong>
-                <small>Stores Used</small>
-              </div>
-              <div>
-                <strong>
-                  {Number.isFinite(storeLimit)
-                    ? Math.max(0, storeLimit - used)
-                    : "—"}
-                </strong>
-                <small>Remaining to map</small>
-              </div>
-              <div>
-                <strong>{subscription?.status || "Not provided"}</strong>
-                <small>Status</small>
-              </div>
-            </div>
-            <div className="sf-key-features">
-              <strong>Key Features</strong>
-              <div className="sf-key-feature-count">
-                <strong>{includedFeatures.length}</strong>
-                <small>included features</small>
-              </div>
-            </div>
+          <div className="sf-plan-details-table-wrap">
+            <table className="sf-plan-details-table">
+              <thead><tr><th>Plan</th><th>Price</th><th>Billing Type</th><th>Stores Used</th><th>Remaining to Map</th><th>Status</th><th>Key Features</th></tr></thead>
+              <tbody><tr>
+                <td><span className="sf-plan-details-name"><span className="sf-icon-square bi bi-file-earmark-text" /><strong>{planName}</strong></span></td>
+                <td>{planPrice == null ? "—" : `${subscription?.currency || currencyCode} ${planPrice}`}</td>
+                <td>{billing}</td>
+                <td>{used} / {limit}</td>
+                <td>{Number.isFinite(storeLimit) ? Math.max(0, storeLimit - used) : "—"}</td>
+                <td><span className={`sf-status-pill ${String(subscription?.status || "").trim().toLowerCase() === "inactive" ? "inactive" : "active"}`}>{subscription?.status || "Not provided"}</span></td>
+                <td><strong className="sf-plan-details-feature-count">{includedFeatures.length}</strong><small> included features</small></td>
+              </tr></tbody>
+            </table>
           </div>
         </Panel>
         <Panel
+          className="sf-existing-stores-panel"
           title="Existing stores mapped to this merchant"
           subtitle={
             Number.isFinite(storeLimit)
@@ -2659,7 +2662,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           >
             <div className="sf-form-grid sf-basic-grid">
               <div className="sf-field sf-merchant-field">
-                <label htmlFor="sf-merchant">Merchant *</label>
+                <label htmlFor="sf-merchant">Merchant <span className="text-red-500" style={{ color: "#dc2626" }}>*</span></label>
                 <FilterDropdown
                   id="sf-merchant"
                   aria-required="true"
@@ -2784,6 +2787,25 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   })),
                 ]}
               />
+              <SelectField
+                label="State / Province *"
+                invalid={invalidStoreFields.has("State / Province")}
+                error={getFieldValidationMessage(error, "State / Province")}
+                value={store.state}
+                onChange={(value) => updateStore("state", value)}
+                options={[
+                  { value: "", label: store.country ? "Select state or province" : "Select country first" },
+                  ...locationOptions.states.map((value) => ({ value, label: value })),
+                ]}
+              />
+              <Field
+                label="City *"
+                invalid={invalidStoreFields.has("City")}
+                error={getFieldValidationMessage(error, "City")}
+                value={store.city}
+                onChange={(value) => updateStore("city", value)}
+                placeholder="City"
+              />
               <Field
                 label="Address Line 1 *"
                 invalid={invalidStoreFields.has("Address Line 1")}
@@ -2798,25 +2820,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 value={store.addressLine2}
                 onChange={(value) => updateStore("addressLine2", value)}
                 placeholder="Apartment, suite, etc."
-              />
-              <Field
-                label="City *"
-                invalid={invalidStoreFields.has("City")}
-                error={getFieldValidationMessage(error, "City")}
-                value={store.city}
-                onChange={(value) => updateStore("city", value)}
-                placeholder="City"
-              />
-              <SelectField
-                label="State / Province *"
-                invalid={invalidStoreFields.has("State / Province")}
-                error={getFieldValidationMessage(error, "State / Province")}
-                value={store.state}
-                onChange={(value) => updateStore("state", value)}
-                options={[
-                  { value: "", label: store.country ? "Select state or province" : "Select country first" },
-                  ...locationOptions.states.map((value) => ({ value, label: value })),
-                ]}
               />
               <Field
                 label="Zip / Postal Code *"
@@ -2999,18 +3002,24 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             title="Contact Information"
             subtitle="Provide the primary contact details for this store."
           >
-            <Field
-              label="Store Phone *"
-              invalid={invalidStoreFields.has("Store Phone")}
-              error={getFieldValidationMessage(error, "Store Phone")}
-              value={store.phone}
-              onChange={(value) => updateStore("phone", value.replace(/\D/g, ""))}
-              type="tel"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={15}
-              placeholder="Enter phone number"
-            />
+            <div className={`sf-field sf-phone-field${invalidStoreFields.has("Store Phone") ? " sf-field-invalid" : ""}`}>
+              <label htmlFor="store-phone">Store Phone <span style={{ color: "#ef3340" }}>*</span></label>
+              <PhoneInput
+                country={locationOptions.selectedCountry?.iso2?.toLowerCase() || "in"}
+                enableSearch
+                countryCodeEditable={false}
+                value={store.phone}
+                onChange={(value, countryData) => {
+                  updateStore("phone", value.replace(/\D/g, ""));
+                  if (countryData?.name && countryData.name !== store.country) {
+                    changeCountry(countryData.name);
+                  }
+                }}
+                inputProps={{ id: "store-phone", name: "phone", type: "tel", autoComplete: "tel", "aria-invalid": invalidStoreFields.has("Store Phone") }}
+                placeholder="Enter phone number"
+              />
+              {getFieldValidationMessage(error, "Store Phone") && <small className="sf-field-error" role="alert">{getFieldValidationMessage(error, "Store Phone")}</small>}
+            </div>
             <Field
               label="Store Email"
               invalid={invalidStoreFields.has("Store Email")}

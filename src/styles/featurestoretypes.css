@@ -473,7 +473,7 @@
 /* =========================================================
    DELETE ACTION
 ========================================================= */
-.st-action-cell {
+/* .st-action-cell {
   text-align: center;
 }
 .st-delete-button {
@@ -498,7 +498,7 @@
 }
 .st-delete-button:active {
   transform: scale(0.96);
-}
+} */
 /* =========================================================
    TABLE FOOTER
 ========================================================= */
@@ -518,9 +518,9 @@
    PAGINATION
 ========================================================= */
 .st-main-card > .pagination-container {
-  width: 100%;
-  padding: 16px 0;
-  background: transparent;
+  height: auto;
+  margin-top: 12px;
+  padding: 0;
 }
 
 .st-pagination {

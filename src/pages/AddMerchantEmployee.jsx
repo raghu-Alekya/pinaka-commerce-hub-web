@@ -16,11 +16,11 @@ import {
   MapPin,
   Settings,
   Upload,
-  ChevronDown,
   Eye,
   EyeOff,
 } from "lucide-react";
 
+import FilterDropdown from "../components/FilterDropdown";
 import "../styles/add-merchant-employee.css";
 import "../styles/merchant-form-shared.css";
 
@@ -406,7 +406,7 @@ export function MerchantEmployeeForm({
             disabled={saving}
             onClick={handleBack}
           >
-            ← Back to Employees
+            <i className="bi bi-arrow-left" aria-hidden="true" /> Back to Employees
           </button>
         )}
       </div>
@@ -484,7 +484,7 @@ export function MerchantEmployeeForm({
                     className={`employee-field employee-phone-field${errors.phone ? " employee-phone-invalid" : ""}`}
                   >
                     <label>
-                      Phone Number <span>*</span>
+                      Phone Number <span className="text-red-500">*</span>
                     </label>
 
                     <PhoneInput
@@ -515,7 +515,7 @@ export function MerchantEmployeeForm({
 
                   <div className="employee-field">
                     <label>
-                      Date of Birth <span>*</span>
+                      Date of Birth <span className="text-red-500">*</span>
                     </label>
 
                     <div className="input-with-icon">
@@ -538,7 +538,7 @@ export function MerchantEmployeeForm({
                   <SelectField
                     label={
                       <>
-                        Gender <span>*</span>
+                        Gender <span className="text-red-500">*</span>
                       </>
                     }
                     name="gender"
@@ -566,7 +566,7 @@ export function MerchantEmployeeForm({
                   <FormField
                     label={
                       <>
-                        Address Line 1 <span>*</span>
+                        Address Line 1 <span className="text-red-500">*</span>
                       </>
                     }
                     name="address1"
@@ -688,7 +688,7 @@ export function MerchantEmployeeForm({
 
                   <div className="employee-field">
                     <label>
-                      Temporary Password <span>*</span>
+                      Temporary Password <span className="text-red-500">*</span>
                     </label>
 
                     <div className="password-input">
@@ -796,7 +796,7 @@ function FormField({
   return (
     <div className="employee-field">
       <label>
-        {label} {required && <span>*</span>}
+        {label} {required && <span className="text-red-500">*</span>}
       </label>
 
       <input
@@ -823,35 +823,44 @@ function SelectField({
   name,
   value,
   onChange,
-  options,
+  options = [],
   placeholder,
   error,
   disabled = false,
 }) {
+  const safeOptions = Array.isArray(options) ? options : [];
   return (
     <div className="employee-field">
       <label>
-        {label} {required && <span>*</span>}
+        {label} {required && <span className="text-red-500">*</span>}
       </label>
 
       <div className="employee-select">
-        <select
+        <FilterDropdown
           name={name}
           disabled={disabled}
-          value={value}
+          value={value || ""}
           onChange={onChange}
           className={`${error ? "field-invalid" : ""}${!value ? " employee-select-placeholder" : ""}`}
         >
           <option value="">{placeholder}</option>
 
-          {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-
-        <ChevronDown size={17} className="employee-select-arrow" />
+          {safeOptions.map((opt) => {
+            const optVal =
+              typeof opt === "object" && opt !== null
+                ? (opt.value ?? opt.name ?? opt.id)
+                : opt;
+            const optLabel =
+              typeof opt === "object" && opt !== null
+                ? (opt.label ?? opt.name ?? opt.value)
+                : opt;
+            return (
+              <option key={optVal} value={optVal}>
+                {optLabel}
+              </option>
+            );
+          })}
+        </FilterDropdown>
       </div>
 
       {error && <span className="field-error">{error}</span>}

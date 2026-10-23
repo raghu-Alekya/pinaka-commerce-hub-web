@@ -18,9 +18,8 @@ import { formatDate, listSubscriptions } from "../api/subscriptions";
 import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { listMerchants, getMerchant, updateMerchantStatus } from "../api/merchants";
-import { EmployeeToast, EmployeeDeleteDialog } from "../components/EmployeeFeedback";
-import { listMerchantEmployees, getEmployee, deleteEmployee } from "../api/employees";
+import { listMerchants, getMerchant, updateMerchantStatus, deleteMerchant } from "../api/merchants";
+import { listMerchantEmployees, getEmployee, updateEmployee } from "../api/employees";
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { devicesApi } from "../api/devices";
 import { storeListFromResponse, normalizeStore } from "../api/stores";
@@ -213,7 +212,13 @@ async function openEmployeeEdit(employee) {
       if (!details || typeof details !== 'object' || Array.isArray(details)) {
         throw new Error('The employee details response was empty.');
       }
-      setEditingEmployee({ ...employee, ...details });
+      const detailPhone = [details.phone, details.phoneNumber, details.phone_number, details.contactNo, details.contact_no, details.contactNumber]
+        .map((value) => String(value ?? "").trim())
+        .find((value) => value && !["—", "-", "n/a", "null", "undefined"].includes(value.toLowerCase()));
+      const listPhone = [employee.phone, employee.phoneNumber, employee.phone_number, employee.contactNo, employee.contact_no, employee.contactNumber]
+        .map((value) => String(value ?? "").trim())
+        .find((value) => value && !["—", "-", "n/a", "null", "undefined"].includes(value.toLowerCase()));
+      setEditingEmployee({ ...employee, ...details, phone: listPhone || detailPhone || "" });
     } catch (failure) {
       setEmployeesError(failure.message || 'Unable to load employee details for editing.');
     } finally {
@@ -603,7 +608,7 @@ async function openEmployeeEdit(employee) {
   aria-labelledby="merchant-tab-employees"
   hidden={activeTab !== "employees"}
   tabIndex={0}
-  className="merchant-panel-content flex-1 min-w-0 w-full max-w-full overflow-hidden"
+  className="merchant-panel-content min-w-0 w-full max-w-full overflow-hidden"
 >
   {employeesError && (
     <div className="alert alert-danger" role="alert">
@@ -847,36 +852,47 @@ export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEm
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [notice, setNotice] = useState('');
+  const [noticeType, setNoticeType] = useState('success');
+  const noticeTimeout = useRef(null);
   const deleteInFlight = useRef(false);
   const mounted = useRef(false);
   const [search, setSearch] = useState("");
 const [statusFilter, setStatusFilter] = useState("");
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    if (!notice) return undefined;
+    noticeTimeout.current = window.setTimeout(() => setNotice(''), 1800);
+    return () => window.clearTimeout(noticeTimeout.current);
+  }, [notice]);
   async function confirmDelete() {
     if (deleteInFlight.current || !deleteTarget) return;
     deleteInFlight.current = true; setDeleting(true); setDeleteError('');
     const target = deleteTarget;
     try {
-      const targetId = target.merchantId || target.id;
-      const res = await updateMerchantStatus(targetId, 'INACTIVE');
-      console.log("[DEACTIVATE MERCHANT API RESPONSE]", res);
+      const targetId = [target.uuid, target.id, target.merchantId].find(value =>
+        typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value));
+      if (!targetId) throw new Error('Merchant UUID is unavailable. Refresh the merchant list and try again.');
+      await deleteMerchant(targetId);
       onLocalDelete?.(target.id);
       if (!mounted.current) return;
       setMerchants(previous => previous.map(item => item.id === target.id
         ? { ...item, status: 'Inactive', isDeleted: true }
         : item));
-      setNotice(target.name + ' was deactivated.'); setDeleteTarget(null);
+      setNoticeType('Inactive'); setNotice(target.name + ' was Inactive.'); setDeleteTarget(null);
     } catch (error) { if (mounted.current) setDeleteError(error.message || 'Unable to delete merchant. Please try again.'); }
     finally { deleteInFlight.current = false; if (mounted.current) setDeleting(false); }
   }
   async function activateMerchant(merchant) {
     setDeleteError('');
     try {
-      await updateMerchantStatus(merchant.merchantId || merchant.id, 'ACTIVE');
+      const merchantUuid = [merchant.uuid, merchant.id, merchant.merchantId].find(value =>
+        typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value));
+      if (!merchantUuid) throw new Error('Merchant UUID is unavailable. Refresh the merchant list and try again.');
+      await updateMerchantStatus(merchantUuid, 'ACTIVE');
       setMerchants(previous => previous.map(item => item.id === merchant.id
         ? { ...item, status: 'Active', isDeleted: false }
         : item));
-      setNotice(merchant.name + ' was activated.');
+      setNoticeType('success'); setNotice(merchant.name + ' was activated.');
     } catch (error) {
       setError(error.message || 'Unable to activate merchant.');
     }
@@ -1043,7 +1059,9 @@ const [statusFilter, setStatusFilter] = useState("");
 
   return (
     <div className="page-content">
-      {notice && <div className="alert alert-success" role="status">{notice}</div>}
+      {notice && <div className={`alert merchant-notice ${noticeType === 'Inactive' ? 'merchant-notice-deactivated' : 'alert-success'}`} role="status">
+        <span>{notice}</span>
+      </div>}
       <div className="page-header">
         <div>
           <h1>Merchants</h1>
@@ -1346,8 +1364,8 @@ const [statusFilter, setStatusFilter] = useState("");
         }
         viewLabel={`View ${m.name} details`}
         editLabel={`Edit ${m.name}`}
-        activateLabel={`Activate ${m.name}`}
-        deleteLabel={`Deactivate ${m.name}`}
+        activateLabel={`Active ${m.name}`}
+        deleteLabel={`Inactive ${m.name}`}
     />
 </td>
                   </tr>
@@ -1370,11 +1388,11 @@ const [statusFilter, setStatusFilter] = useState("");
 {deleteTarget && (
   <DeleteConfirmationDialog
     isOpen={!!deleteTarget}
-    title="Deactivate Merchant?"
-    message={`Are you sure you want to deactivate ${deleteTarget.name}?`}
+    title="Inactive Merchant?"
+    message={`Are you sure you want to Inactive ${deleteTarget.name}?`}
     cancelLabel="Cancel"
-    confirmLabel="Deactivate"
-    busyLabel="Deactivating..."
+    confirmLabel="Inactive"
+    busyLabel="Inactivating..."
     busy={deleting}
     error={deleteError}
     iconClassName="bi bi-trash3"
@@ -1395,21 +1413,64 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [noticeType, setNoticeType] = useState("success");
   const deleteLock = useRef(false);
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timeout = window.setTimeout(() => setNotice(""), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
   async function confirmDelete() {
     if (!deleteTarget || deleteLock.current) return;
     deleteLock.current = true;
     setDeleteBusy(true);
     try {
-      await deleteEmployee(deleteTarget.employeeId || deleteTarget.id);
+      const fullName = String(deleteTarget.name || deleteTarget.employeeName || "").trim().split(/\s+/);
+      const firstName = String(deleteTarget.firstName || deleteTarget.first_name || fullName[0] || "").trim();
+      const lastName = String(deleteTarget.lastName || deleteTarget.last_name || fullName.slice(1).join(" ") || "").trim();
+      await updateEmployee(deleteTarget.employeeId || deleteTarget.employee_id || deleteTarget.id, {
+        firstName,
+        lastName,
+        email: String(deleteTarget.email || "").trim(),
+        status: "INACTIVE",
+      });
       setDeleteTarget(null);
       await onRefresh?.();
-      setNotice("Employee deleted successfully.");
+      setNoticeType("inactive");
+      setNotice(`${employeeName(deleteTarget)} was Inactive.`);
     } catch (error) {
-      setNotice(error.message || "Unable to delete employee.");
+      setNoticeType("inactive");
+      setNotice(error.message || "Unable to Inactive employee.");
     } finally {
       deleteLock.current = false;
       setDeleteBusy(false);
+    }
+  }
+  async function activateEmployee(employee) {
+    const employeeId = employee.employeeId || employee.employee_id || employee.id;
+    if (!employeeId) return;
+    const fullName = String(employee.name || employee.employeeName || "").trim().split(/\s+/);
+    const firstName = String(employee.firstName || employee.first_name || fullName[0] || "").trim();
+    const lastName = String(employee.lastName || employee.last_name || fullName.slice(1).join(" ") || "").trim();
+    const email = String(employee.email || "").trim();
+    if (!firstName) {
+      setNoticeType("inactive");
+      setNotice("Employee first name is required before this employee can be restored.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setNoticeType("inactive");
+      setNotice("A valid employee email is required before this employee can be restored.");
+      return;
+    }
+    try {
+      await updateEmployee(employeeId, { firstName, lastName, email, status: "ACTIVE" });
+      await onRefresh?.();
+      setNoticeType("success");
+      setNotice(`${employeeName(employee)} was activated.`);
+    } catch (error) {
+      setNoticeType("inactive");
+      setNotice(error.message || "Unable to activate employee.");
     }
   }
   const blank={query:''};
@@ -1428,19 +1489,26 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const current = Math.min(page, pages);
   return <div className="mel w-full max-w-full min-w-0 overflow-hidden">
-    <EmployeeToast message={notice} onClose={()=>setNotice("")} />
+    {notice && (
+      <div
+        className={`merchant-stores-toast ${noticeType === "inactive" ? "is-inactive" : "is-success"}`}
+        role="status"
+      >
+        {notice}
+      </div>
+    )}
 
 {deleteTarget && (
   <DeleteConfirmationDialog
     isOpen={!!deleteTarget}
-    title="Delete Employee?"
-    message={`Are you sure you want to delete ${employeeName(deleteTarget)}? This action cannot be undone.`}
+    title="Inactive Employee?"
+    message={`Are you sure you want to Inactive ${employeeName(deleteTarget)}?`}
     cancelLabel="Cancel"
-    confirmLabel="Delete"
-    busyLabel="Deleting..."
+    confirmLabel="Inactive"
+    busyLabel="Inactivating..."
     busy={deleteBusy}
     error=""
-    iconClassName="bi bi-trash3"
+    iconClassName="bi bi-person-x"
     onCancel={() => {
       if (!deleteBusy) {
         setDeleteTarget(null);
@@ -1478,7 +1546,16 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
 />
    <div className="mel-scroll w-full overflow-x-auto"><table className="w-full min-w-[800px] text-left"><thead><tr>{['Employee','Email','Phone','Login PIN','Gender','Status','Actions'].map(title=><th key={title}>{title}</th>)}</tr></thead><tbody>
       {filtered.slice((current - 1) * pageSize, current * pageSize).map((e, index) => (
-    <tr key={e.id || e.employeeCode || index}>
+    <tr
+        key={e.id || e.employeeCode || index}
+        style={{ cursor: "pointer" }}
+        onClick={(event) => {
+            if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                return;
+            }
+            setView(e);
+        }}
+    >
         <td>
             <strong>{employeeName(e)}</strong>
             {e.employeeCode && <small>{e.employeeCode}</small>}
@@ -1502,7 +1579,9 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
                 viewLabel={`View ${employeeName(e)}`}
                 onEdit={() => onEdit(e)}
                 editLabel={`Edit ${employeeName(e)}`}
-                onDelete={() => setDeleteTarget(e)}
+                onActivate={String(e.status || "").toUpperCase() !== "ACTIVE" ? () => activateEmployee(e) : undefined}
+                activateLabel={`Activate ${employeeName(e)}`}
+                onDelete={String(e.status || "").toUpperCase() === "ACTIVE" ? () => setDeleteTarget(e) : undefined}
                 deleteLabel={`Delete ${employeeName(e)}`}
                 deleteDisabled={deleteBusy}
             />
@@ -1794,7 +1873,16 @@ return (
 
             {!loading &&
               paginatedRows.map((d, index) => (
-                  <tr key={d.id || d.deviceId || index}>
+                  <tr
+                    key={d.id || d.deviceId || index}
+                    style={{ cursor: "pointer" }}
+                    onClick={(event) => {
+                      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                        return;
+                      }
+                      setView(d);
+                    }}
+                  >
                     <td>{d.deviceIdentifier}</td>
                     <td>{d.deviceCode}</td>
                     <td>

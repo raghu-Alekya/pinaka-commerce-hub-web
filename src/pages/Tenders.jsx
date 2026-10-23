@@ -378,7 +378,7 @@ async function confirmDeleteTender() {
     tender.id === null ||
     String(tender.id).trim() === ""
   ) {
-    setDeleteError("Tender ID is missing. Cannot deactivate.");
+    setDeleteError("Tender ID is missing. Cannot Inactive.");
     return;
   }
 
@@ -417,13 +417,13 @@ async function confirmDeleteTender() {
     setDeleteConfirmTender(null);
     setDeleteError("");
   } catch (error) {
-    console.error("Failed to deactivate tendor:", error);
+    console.error("Failed to Inactive tendor:", error);
 
     setDeleteError(
       error?.response?.data?.message ||
         error?.response?.data?.error ||
         error?.message ||
-        "Failed to deactivate tender.",
+        "Failed to Inactive tender.",
     );
   } finally {
     setDeleting(false);
@@ -465,7 +465,7 @@ async function confirmDeleteTender() {
          
 <label className="tenders-code-field">
   <span>
-    Tender Code <b>*</b>
+    Tender Code <span className="text-red-500">*</span>
   </span>
 
   <input
@@ -486,7 +486,7 @@ async function confirmDeleteTender() {
 
           <label className={fieldErrors.name ? "has-error" : ""}>
             <span>
-              Tender Name <b>*</b>
+              Tender Name <span className="text-red-500">*</span>
             </span>
 
             <input
@@ -503,7 +503,7 @@ async function confirmDeleteTender() {
 
 <label className={fieldErrors.status ? "has-error" : ""}>
   <span>
-    Status <b>*</b>
+    Status <span className="text-red-500">*</span>
   </span>
 
   <select
@@ -552,7 +552,7 @@ async function confirmDeleteTender() {
         </div>
       </form>
 
-      <div className="tenders-list-card">
+      <section className="features-list-card tenders-list-card">
         <div className="tenders-list-toolbar">
           <div>
             <h2>Tenders</h2>
@@ -612,8 +612,8 @@ async function confirmDeleteTender() {
           </div>
         </div>
 
-        <div className="tenders-table-wrap">
-          <table className="tenders-table">
+        <div className="features-table-wrap tenders-table-wrap">
+          <table className="features-table tenders-table">
             <thead>
               <tr>
                 <th>Tender Code</th>
@@ -706,34 +706,36 @@ async function confirmDeleteTender() {
             <div className="tenders-empty">No tenders found.</div>
           )}
         </div>
-            <Pagination
-  currentPage={currentPage}
-  totalPages={totalPages}
-  totalItems={filteredTenders.length}
-  pageSize={ITEMS_PER_PAGE}
-  onPageChange={setCurrentPage}
-  onPageSizeChange={(newPageSize) => {
-    // Fixed at 5 items per page
-    setCurrentPage(1);
-  }}
-  itemLabel="tenders"
-  showWhenEmpty={false}
-/>
-      </div>
+        <div className="feature-pagination-row tenders-pagination">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredTenders.length}
+            pageSize={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(newPageSize) => {
+              // Fixed at 5 items per page
+              setCurrentPage(1);
+            }}
+            itemLabel="tenders"
+            showWhenEmpty={true}
+          />
+        </div>
+      </section>
 
 <DeleteConfirmationDialog
   isOpen={Boolean(deleteConfirmTender)}
-  title="Deactivate Tender?"
+  title="Inactive Tender?"
   message={
     deleteConfirmTender
-      ? `Are you sure you want to deactivate "${
+      ? `Are you sure you want to Inactive "${
           deleteConfirmTender.name || "this tender"
         }"?`
       : ""
   }
   cancelLabel="Cancel"
-  confirmLabel="Deactivate"
-  busyLabel="Deactivating..."
+  confirmLabel="Inactive"
+  busyLabel="Inactivating..."
   busy={deleting}
   error={deleteError}
   iconClassName="bi bi-exclamation-triangle"

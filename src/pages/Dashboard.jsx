@@ -11,7 +11,17 @@ import {
 /* =========================================================
    KPI DATA
 ========================================================= */
-
+// ──────────────────────────────────────────────────────────────
+// Inside the Dashboard component, **right after** you create the
+// `adminModules` constant (or wherever you keep other constants)
+// ──────────────────────────────────────────────────────────────
+const kpiPathMap = {
+  Merchants: "/merchants",
+  Stores: "/stores",
+  Employees: "/employees",
+  Subscriptions: "/subscriptions",
+  "Active subscriptions": "/subscriptions",
+};
 const defaultAdministrationOverview = {
   merchants: {},
   stores: {},
@@ -38,7 +48,7 @@ function buildKpis(overview) {
       trend: overview.merchants.growth_percentage,
       details: [
         ["active", overview.merchants.active_count, "is-good"],
-        ["onboarding", overview.merchants.onboarding_count],
+        // ["onboarding", overview.merchants.onboarding_count],
         ["inactive", overview.merchants.inactive_count],
       ],
       icon: "bi-shop",
@@ -50,7 +60,7 @@ function buildKpis(overview) {
       trend: overview.stores.growth_percentage,
       details: [
         ["active", overview.stores.active_count, "is-good"],
-        ["pending", overview.stores.pending_count],
+        // ["pending", overview.stores.pending_count],
         ["inactive", overview.stores.inactive_count],
       ],
       icon: "bi-buildings",
@@ -61,19 +71,19 @@ function buildKpis(overview) {
       value: overview.employees.total_count,
       trend: overview.employees.growth_percentage,
       details: [
-        ["without roles", overview.employees.without_roles_count, "is-warning"],
-        ["locked", overview.employees.locked_count],
+        ["active", overview.employees.active_count, "is-good"],
+        ["inactive", overview.employees.inactive_count],
       ],
       icon: "bi-people",
       tone: "orange",
     },
     {
-      label: "Active subscriptions",
-      value: overview.subscriptions.active_count,
+      label: "Subscriptions",
+      value: overview.subscriptions.total_count ?? overview.subscriptions.active_count,
       trend: overview.subscriptions.growth_percentage,
       details: [
-        ["expiring", overview.subscriptions.expiring_count, "is-warning"],
-        ["payment pending", overview.subscriptions.payment_pending_count],
+        ["active", overview.subscriptions.active_count, "is-good"],
+        ["inactive", overview.subscriptions.inactive_count],
       ],
       icon: "bi-credit-card-2-front",
       tone: "purple",
@@ -183,8 +193,8 @@ function buildAdminModules(overview) {
       title: "Merchants",
       icon: "bi-shop",
       rows: [
+        ["Total merchants", overview.merchants.total_count],
         ["Active merchants", overview.merchants.active_count],
-        ["Pending onboarding", overview.merchants.onboarding_count],
         ["Inactive merchants", overview.merchants.inactive_count],
       ],
       path: "/merchants",
@@ -194,8 +204,8 @@ function buildAdminModules(overview) {
       icon: "bi-people",
       rows: [
         ["Total employees", overview.employees.total_count],
-        ["Employees without roles", overview.employees.without_roles_count],
-        ["Locked employees", overview.employees.locked_count],
+        ["Active employees", overview.employees.active_count],
+        ["Inactive employees", overview.employees.inactive_count],
       ],
       path: "/employees",
     },
@@ -203,8 +213,8 @@ function buildAdminModules(overview) {
       title: "Stores",
       icon: "bi-buildings",
       rows: [
+        ["Total stores", overview.stores.total_count],
         ["Active stores", overview.stores.active_count],
-        ["Pending stores", overview.stores.pending_count],
         ["Inactive stores", overview.stores.inactive_count],
       ],
       path: "/stores",
@@ -213,9 +223,9 @@ function buildAdminModules(overview) {
       title: "Subscriptions",
       icon: "bi-credit-card",
       rows: [
+        ["Total subscriptions", overview.subscriptions.total_count],
         ["Active subscriptions", overview.subscriptions.active_count],
-        ["Expiring soon", overview.subscriptions.expiring_count],
-        ["Payment pending", overview.subscriptions.payment_pending_count],
+        ["Inactive subscriptions", overview.subscriptions.inactive_count],
       ],
       path: "/subscriptions",
     },
@@ -404,107 +414,71 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <div className="dashboard-toolbar">
-
-         {/* DATE RANGE FILTER */}
-<FilterDropdown className="dashboard-filter dashboard-date-filter" aria-label="Date range" value={dateFilter}
-  triggerIcon={<i className="bi bi-calendar3" aria-hidden="true" />}
-  onChange={(event) => setDateFilter(event.target.value)}
-  renderFooter={(close) => <div className="dashboard-custom-date">
-    <span>Custom</span>
-    <div className="dashboard-date-inputs">
-      <input type="date" aria-label="Custom start date" value={customStartDate} onChange={(event) => setCustomStartDate(event.target.value)} />
-      <span>to</span>
-      <input type="date" aria-label="Custom end date" value={customEndDate} onChange={(event) => setCustomEndDate(event.target.value)} />
-    </div>
-    <button type="button" className="dashboard-custom-apply" disabled={!customStartDate || !customEndDate}
-      onClick={() => { setDateFilter(`${customStartDate} - ${customEndDate}`); close(); }}>Apply</button>
-  </div>}>
-  <option>Today</option><option>Last 7 days</option><option>Last 30 days</option>
-  {!["Today", "Last 7 days", "Last 30 days"].includes(dateFilter) && <option hidden disabled>{dateFilter}</option>}
-</FilterDropdown>
-
-      {/* MERCHANT FILTER */}
-      <button className="dashboard-filter">
-        All merchants
-        <i className="bi bi-chevron-down" />
-      </button>
-
-      {/* PLAN FILTER */}
-      <FilterDropdown className="dashboard-filter dashboard-plan-filter" aria-label="Plan" value={planFilter}
-        onChange={(event) => setPlanFilter(event.target.value)}>
-        <option>All plans</option><option>Basic</option><option>Pro</option><option>Enterprise</option>
-      </FilterDropdown>
-
-      {/* STORE FILTER */}
-      <button className="dashboard-filter">
-        All stores
-        <i className="bi bi-chevron-down" />
-      </button>
-
-          <button
-            className="dashboard-icon-btn"
-            onClick={refresh}
-            aria-label="Refresh"
-          >
-            <i
-              className={`bi bi-arrow-clockwise ${
-                refreshing ? "spin" : ""
-              }`}
-            />
-          </button>
-
-        </div>
+      
       </div>
 
       {/* =====================================================
           KPI CARDS
       ===================================================== */}
 
-      <section className="dashboard-kpis">
+    <section className="dashboard-kpis">
+  {kpis.map((item) => {
+    // Resolve the destination URL – fall back to “#” if we don’t recognise the label
+    const destination = kpiPathMap[item.label] ?? "#";
 
-        {kpis.map((item) => (
-          <article
-            className={`dashboard-kpi ${item.tone}`}
-            key={item.label}
-          >
-            <div className="dashboard-kpi-icon">
-              <i className={`bi ${item.icon}`} />
-            </div>
+    return (
+      <article
+        className={`dashboard-kpi ${item.tone}`}
+        key={item.label}
+        // Click → navigate
+        onClick={() => nav(destination)}
+        // Show the pointer cursor so the UI looks clickable
+        style={{ cursor: "pointer" }}
+        // Optional – improve accessibility
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && nav(destination)}
+      >
+        <div className="dashboard-kpi-icon">
+          <i className={`bi ${item.icon}`} />
+        </div>
 
-            <div className="dashboard-kpi-body">
+        <div className="dashboard-kpi-body">
+          <span>{item.label}</span>
 
-              <span>{item.label}</span>
+          <div className="dashboard-kpi-value-row">
+            <strong>{displayNumber(item.value)}</strong>
 
-              <div className="dashboard-kpi-value-row">
+            <small>
+              <span className="dashboard-kpi-trend">
+                <i className={`bi ${Number(item.trend) < 0 ? "bi-arrow-down" : "bi-arrow-up"}`} />
+                {" "}
+                {displayGrowth(item.trend)}
+              </span>
+              <span className="trend-period">vs last 30 days</span>
+            </small>
+          </div>
 
-                <strong>{displayNumber(item.value)}</strong>
-
-                <small>
-                  <span className="dashboard-kpi-trend">
-                    <i className={`bi ${Number(item.trend) < 0 ? "bi-arrow-down" : "bi-arrow-up"}`} />
-                    {" "}
-                    {displayGrowth(item.trend)}
-                  </span>
-                  <span className="trend-period">vs last 30 days</span>
-                </small>
-
-              </div>
-
-              <div className="dashboard-kpi-details">
-                {item.details.map(([label, value, className]) => {
-                  const detail = <><strong>{displayNumber(value)}</strong>{" "}<span>{label}</span></>;
-                  return className
-                    ? <b className={className} key={label}>{detail}</b>
-                    : <span key={label}>{detail}</span>;
-                })}
-              </div>
-
-            </div>
-          </article>
-        ))}
-
-      </section>
+          <div className="dashboard-kpi-details">
+            {item.details.map(([label, value, className]) => {
+              const detail = (
+                <>
+                  <strong>{displayNumber(value)}</strong>{" "}
+                  <span>{label}</span>
+                </>
+              );
+              return className ? (
+                <b className={className} key={label}>{detail}</b>
+              ) : (
+                <span key={label}>{detail}</span>
+              );
+            })}
+          </div>
+        </div>
+      </article>
+    );
+  })}
+</section>
 
       {/* =====================================================
           PLATFORM HEALTH + FEATURES
@@ -683,7 +657,7 @@ export default function Dashboard() {
             icon="bi-boxes"
             title="Plans & Entitlements"
             action="Manage plans"
-            onAction={() => nav("/subscriptions")}
+            onAction={() => nav("/plans/new")}
           />
 
           <div className="plan-tier-grid">

@@ -82,11 +82,8 @@
 .vendors-primary-button,
 .vendors-save-button {
   border: 0;
-  border-radius: 8px;
   background: #5143bc;
   color: #ffffff;
-  cursor: pointer;
-  font-size: 14px;
   font-weight: 500;
 
   transition:
@@ -305,17 +302,6 @@
   margin-top: 10px;
 }
 
-.vendors-clear-button,
-.vendors-save-button {
-  width: 180px;
-  height: 42px;
-  padding: 0 21px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
 .vendors-clear-button {
   border: 1px solid #dce8f4;
   background: #ffffff;
@@ -327,12 +313,6 @@
   background: #f8fbff;
 }
 
-.vendors-save-button {
-  border: 0;
-  background: #684ee3;
-  color: #ffffff;
-  box-shadow: 0 4px 10px rgba(8, 115, 249, 0.2);
-}
 
 
 /* =========================================================
@@ -637,8 +617,10 @@
 }
 
 .vendors-page > .vendors-list-card > .pagination-container {
-   width: calc(100% - 24px);
+  width: calc(100% - 24px);
   max-width: calc(100% - 24px);
+  height: auto;
+  min-height: auto;
   margin: 0 12px;
   padding: 16px 0;
   box-sizing: border-box;
@@ -1785,11 +1767,6 @@
   color: #334e70;
 }
 
-.vendors-create-page .vendors-save-button {
-  background: linear-gradient(90deg, #5d3ddd, #6740e5);
-  box-shadow: 0 4px 10px rgba(93, 61, 221, 0.18);
-}
-
 .vendors-create-page .vendors-form-actions button:focus-visible,
 .vendors-header-actions button:focus-visible {
   outline: 2px solid #5143bc;
@@ -1807,26 +1784,29 @@
 .vendors-stat-card {
   min-width: 0;
   height: 95px;
-  min-height: 112px;
+  min-height: 95px;
   padding: 10px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  border: 1px solid #edf0f5;
+  border: 1px solid  #e4dcf5;;
   border-radius: 8px;
   background: linear-gradient(135deg, #fff 0%, #f3efff 100%);
 }
 
 .vendors-stat-card:has(.vendors-stat-icon.green) {
   background: linear-gradient(135deg, #fff 0%, #eafaf2 100%);
+  border-color: #d6ecdf;
 }
 
 .vendors-stat-card:has(.vendors-stat-icon.orange) {
   background: linear-gradient(135deg, #fff 0%, #fff5e5 100%);
+  border-color: #f2e3cb;
 }
 
 .vendors-stat-card:has(.vendors-stat-icon.red) {
   background: linear-gradient(135deg, #fff 0%, #fff0f2 100%);
+  border-color: #f1dce1;
 }
 
 .vendors-stat-icon {

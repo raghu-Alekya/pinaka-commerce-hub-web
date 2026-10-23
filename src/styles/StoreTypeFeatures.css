@@ -248,7 +248,7 @@
   font-weight: 600;
 }
 
-.feature-delete-button {
+/* .feature-delete-button {
   display: grid;
   width: 30px;
   height: 30px;
@@ -259,19 +259,18 @@
   background: #fff5f7;
   cursor: pointer;
   font-size: 14px;
-}
+} */
 
 .store-features-footer {
   width: 100%;
   display: block;
   box-sizing: border-box;
+  margin-top: 12px;
 }
 
 .store-features-footer .pagination-container {
-  width: 100%;
-  padding: 16px 0;
-  background: transparent;
-  box-sizing: border-box;
+  height: auto;
+  padding: 0;
 }
 
 

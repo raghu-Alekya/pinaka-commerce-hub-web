@@ -6,6 +6,7 @@ import ListActions from "../components/ListActions";
 import FiltersBar from "../components/FiltersBar";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import { getStoreDeviceMappings } from "../api/storeDeviceMappings";
+import { listMerchants } from "../api/merchants";
 
 const title = (value) =>
   String(value || "")
@@ -128,16 +129,23 @@ const handlePageSizeChange = (size) => {
   const [deleting, setDeleting] = useState(false);
   const [activatingStoreId, setActivatingStoreId] = useState("");
   const [statusActionError, setStatusActionError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [noticeType, setNoticeType] = useState("success");
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timeout = window.setTimeout(() => setNotice(""), 1800);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError("");
-    listStores()
-      .then((data) => {
+    Promise.all([listStores(), listMerchants()])
+      .then(([data, merchantRows]) => {
         if (active) {
           const storeRows = Array.isArray(data.stores) ? data.stores : [];
           setStores(storeRows);
-          setMerchants([...new Map((data.stores || []).filter(store => store.merchantId).map(store => [String(store.merchantId), { id: store.merchantId, name: store.merchantName || String(store.merchantId) }])).values()]);
+          setMerchants(Array.isArray(merchantRows) ? merchantRows : []);
           Promise.all(storeRows.map(async (store) => {
             const storeId = store.id || store.storeId || store.store_id;
             if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(storeId || ""))) return null;
@@ -205,16 +213,12 @@ useEffect(() => {
   );
 }, [totalPages]);
   const activeCount = stores.filter((s) => String(s.status).toUpperCase() === "ACTIVE").length;
+  const inactiveCount = stores.filter((s) => String(s.status).toUpperCase() === "INACTIVE").length;
   const recent = stores.filter(
     (s) => new Date(s.createdAt).getTime() >= Date.now() - 7 * 86400000,
   ).length;
-  const hasConnectivity =
-    stores.length > 0 && stores.every((s) => s.connectionStatus != null);
   const hasSync =
     stores.length > 0 && stores.every((s) => s.syncStatus != null);
-  const offline = hasConnectivity
-    ? stores.filter((s) => s.connectionStatus === "OFFLINE").length
-    : null;
   const syncIssues = hasSync
     ? stores.filter((s) => ["ERROR", "FAILED"].includes(s.syncStatus)).length
     : null;
@@ -236,13 +240,9 @@ useEffect(() => {
     [
       "red",
       "bi-x-circle-fill",
-      "Offline Stores",
-      offline ?? "—",
-      offline === null
-        ? "Not available"
-        : offline
-          ? "Needs attention"
-          : "All connected",
+      "Inactive Stores",
+      inactiveCount,
+      `${stores.length ? ((inactiveCount / stores.length) * 100).toFixed(1) : "0.0"}% of total`,
     ],
     [
       "orange",
@@ -262,6 +262,7 @@ useEffect(() => {
   ];
   return (
     <div className="page-content stores-page">
+      {notice && <div className={`alert stores-notice ${noticeType === "Inactive" ? "stores-notice-deactivated" : "alert-success"}`} role="status">{notice}</div>}
       <div className="page-header">
         <div>
           <h1>Stores</h1>
@@ -502,6 +503,15 @@ useEffect(() => {
                          onEdit={() =>
                              nav(`/stores/${encodeURIComponent(s.id)}/edit`)}
                          onActivate={String(s.status).toUpperCase() === "INACTIVE" ? async () => {
+                           const owner = merchants.find((item) =>
+                             [item.id, item.merchantId, item.merchantCode].some((id) => String(id || "") === String(s.merchantId || "")),
+                           );
+                           if (String(owner?.status || "").trim().toUpperCase() !== "ACTIVE") {
+                             setNoticeType("Inactive");
+                             setNotice("Merchant is inactive");
+                             return;
+                           }
+                           setNotice("");
                            const rowId = String(s.id);
                            const key = s.storeCode || s.code || s.id;
                            setActivatingStoreId(rowId);
@@ -517,6 +527,8 @@ useEffect(() => {
                              if (String(updated?.status).toUpperCase() !== "ACTIVE") {
                                throw new Error("The API did not confirm that the store is active. Please try again or check the store API.");
                              }
+                            setNoticeType("success");
+                            setNotice(`${s.storeName || "Store"} was activated.`);
                            } catch (failure) {
                              setStatusActionError(failure.message || "Unable to activate store.");
                            } finally {
@@ -529,7 +541,7 @@ useEffect(() => {
                              setDeleteTarget(s); }}
                          viewLabel={`View ${s.storeName}`}
                          editLabel={`Edit ${s.storeName}`}
-                         deleteLabel={`Deactivate ${s.storeName}`}
+                         deleteLabel={`Inactive ${s.storeName}`}
                          activateLabel={activatingStoreId === String(s.id) ? "Activating…" : `Activate ${s.storeName}`}
                            />
                     </td>
@@ -565,15 +577,15 @@ useEffect(() => {
 
             <DeleteConfirmationDialog
         isOpen={Boolean(deleteTarget)}
-        title="Deactivate Store?"
-        message={`Are you sure you want to deactivate ${
+        title="Inactive Store?"
+        message={`Are you sure you want to Inactive ${
           deleteTarget?.storeName ||
           deleteTarget?.name ||
           "this store"
         }?`}
         cancelLabel="Cancel"
-        confirmLabel="Deactivate"
-        busyLabel="Deactivating..."
+        confirmLabel="Inactive"
+        busyLabel="Inactivating..."
         busy={deleting}
         error={deleteError}
         iconClassName="bi bi-trash3"
@@ -603,10 +615,12 @@ useEffect(() => {
               )
             );
 
+            setNoticeType("Inactive");
+            setNotice(`${deleteTarget.storeName || deleteTarget.name || "Store"} was Inactive.`);
             setDeleteTarget(null);
           } catch (failure) {
             setDeleteError(
-              failure.message || "Unable to deactivate store."
+              failure.message || "Unable to Inactive store."
             );
           } finally {
             setDeleting(false);

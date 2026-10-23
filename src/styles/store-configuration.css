@@ -30,12 +30,17 @@
    STORE HEADER
    ========================================================= */
 
-.store-workspace-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
+.store-workspace-header,
+.store-workspace-page .store-workspace-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  margin: 0 0 18px 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .store-workspace-header h1 {
@@ -48,6 +53,32 @@
   margin: 6px 0 0;
   color: #7c8799;
   font-size: 13px;
+}
+
+.store-workspace-header .store-status,
+.store-workspace-page .store-workspace-header .store-status {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: auto !important;
+  min-width: auto !important;
+  max-width: none !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 16px !important;
+  border-radius: 9999px !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.01em !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
 }
 
 
@@ -233,7 +264,13 @@
    MAIN WORKSPACE
    ========================================================= */
 
-.store-workspace-card {
+.store-workspace-card,
+.store-workspace-page .store-workspace-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
   border: 1px solid #e4e8f0;
   border-radius: 12px;
   background: #fff;
@@ -868,38 +905,64 @@
 
 .fast-key-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
+.fast-key-actions .list-action-btn,
 .fast-key-actions button {
-  width: 35px;
-  height: 35px;
-  min-width: 35px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #edf0f5;
-  border-radius: 7px;
-  background: #fcfdff;
-  color: #5367f0;
-  box-shadow: none;
-  cursor: pointer;
+  width: 35px !important;
+  height: 35px !important;
+  min-width: 35px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1.5px solid #dce9f5 !important;
+  border-radius: 7px !important;
+  background: #fcfdff !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
 }
 
-.fast-key-actions button.delete-button {
-  color: #d9485f;
+.fast-key-actions .list-action-btn:has(.list-action-edit-icon),
+.fast-key-actions button:has(.bi-pencil),
+.fast-key-actions .edit-button {
+  color: #5367f0 !important;
+  border: 1.5px solid #dce9f5 !important;
+  background: #fcfdff !important;
 }
 
-.fast-key-actions button:hover {
-  background: #f0f3fb;
+.fast-key-actions .list-action-btn:has(.list-action-edit-icon):hover,
+.fast-key-actions button:has(.bi-pencil):hover,
+.fast-key-actions .edit-button:hover {
+  color: #5367f0 !important;
+  border-color: #bcd9ff !important;
+  background: #e8f2ff !important;
 }
 
-.fast-key-actions button i {
-  font-size: 14px;
-  line-height: 1;
+.fast-key-actions .list-action-btn:has(.list-action-delete-icon),
+.fast-key-actions button:has(.bi-trash, .bi-trash3),
+.fast-key-actions .delete-button {
+  color: #d9485f !important;
+  border: 1.5px solid #dce9f5 !important;
+  background: #fcfdff !important;
+}
+
+.fast-key-actions .list-action-btn:has(.list-action-delete-icon):hover,
+.fast-key-actions button:has(.bi-trash, .bi-trash3):hover,
+.fast-key-actions .delete-button:hover {
+  color: #c5304b !important;
+  border-color: #ffd8e1 !important;
+  background: #fff0f3 !important;
+}
+
+.fast-key-actions button i,
+.fast-key-actions .list-action-btn i {
+  font-size: 16px !important;
+  line-height: 1 !important;
 }
 
 .fast-key-empty {
@@ -2168,7 +2231,7 @@
   border-radius: 9px;
 }
 
-.store-section-editor .sf-panel:not(.sf-employee-assignment-panel):not(.sf-employee-summary) { border: 1px solid var(--store-border); border-radius: 10px; box-shadow: none; }
+.store-section-editor .sf-panel:not(.sf-employee-assignment-panel):not(.sf-employee-summary) {  border-radius: 10px; box-shadow: none; }
 .store-section-editor .sf-employee-summary { border: 0; }
 .store-section-editor .sf-panel-head { padding: 16px 20px; min-height: 64px; }
 .store-section-editor .sf-panel-head h2 { font-size: 16px; font-weight: 600; color: var(--store-heading); }
@@ -2248,12 +2311,12 @@
   width: calc(100% - 24px);
   margin: 0 12px;
 }
-.store-section-editor .sf-feature-pagination {
+/* .store-section-editor .sf-feature-pagination {
   box-sizing: border-box;
   width: 100%;
   margin: 0;
   padding: 16px 14px;
-}
+} */
 .store-section-editor .sf-table th { height: 44px; padding: 0 14px; font-size: 12px; font-weight: 600; line-height: 18px; color: #58677e; background: #f1f3fd; }
 .store-section-editor .sf-table td { height: 52px; padding: 10px 14px; font-size: 13px; line-height: 18px; color: var(--store-text); }
 .store-section-editor .sf-feature-table td:nth-child(3) { color: var(--store-muted); }
@@ -2530,7 +2593,7 @@
   }
 }
 
-/* Store list controls follow the Merchants toolbar without changing page layouts. */
+/* Store list controls follow the Merchants toolbar without changing page layouts.
 .store-workspace-page .store-workspace-card :is(
   .filters-bar,
   .products-toolbar,
@@ -2551,7 +2614,7 @@
   gap: 8px;
   min-width: 0;
   flex-wrap: wrap;
-}
+} */
 
 .store-workspace-page .store-workspace-card :is(
   .filter-search,
@@ -2651,8 +2714,7 @@
   .ea-inline-filter select,
   .sm-filter-card select,
   .shift-filter-bar select,
-  .shift-bottom-toolbar select,
-  .pch-master-toolbar.pch-master-control select
+  .shift-bottom-toolbar select
 ) {
   box-sizing: border-box;
   height: 40px;
@@ -3505,22 +3567,27 @@
   text-decoration: none;
 }
 .store-workspace-page .store-workspace-card .sm-view-button {
-  display: inline-grid;
-  width: 28px;
-  min-width: 28px;
-  height: 28px;
-  min-height: 28px;
-  place-items: center;
-  padding: 0;
-  border-color: transparent;
-  border-radius: 4px;
-  background: transparent;
-  color: #5143bc;
-  font-size: 17px;
+  width: 35px !important;
+  height: 35px !important;
+  min-width: 35px !important;
+  min-height: 35px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1.5px solid #dce9f5 !important;
+  border-radius: 7px !important;
+  background: #fcfdff !important;
+  color: #416499 !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
 }
 .store-workspace-page .store-workspace-card .sm-view-button:hover {
-  border-color: #e2def8;
-  background: #f5f3ff;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+  background: #eff6ff !important;
 }
 
 .store-workspace-page .store-workspace-card .store-payment-records-toolbar > :is(button, .pch-filter-dropdown) {
@@ -3750,6 +3817,40 @@
   color: #465573;
   font-size: 13px;
 }
+
+/* Products table Status Column (last column) & Status badge pill */
+.store-workspace-card .products-table th:last-child,
+.store-workspace-card .products-table td:last-child,
+.store-workspace-page .store-workspace-card .products-table th:last-child,
+.store-workspace-page .store-workspace-card .products-table td:last-child {
+  width: 140px !important;
+  min-width: 140px !important;
+  padding-right: 20px !important;
+  box-sizing: border-box !important;
+}
+
+.store-workspace-card .products-table .products-col-status,
+.store-workspace-page .store-workspace-card .products-table .products-col-status {
+  width: 140px !important;
+  min-width: 140px !important;
+}
+
+.store-workspace-card .products-table td:last-child,
+.store-workspace-page .store-workspace-card .products-table td:last-child {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+}
+
+.store-workspace-card .products-table td:last-child :is(.product-status, .status-badge, [class*="status"]),
+.store-workspace-page .store-workspace-card .products-table td:last-child :is(.product-status, .status-badge, [class*="status"]) {
+  width: auto !important;
+  min-width: 105px !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
 .store-workspace-page .store-workspace-card .products-pagination {
   width: 100%;
   margin: 0;
@@ -3892,6 +3993,10 @@
   color: #465573;
   font-size: 13px;
   line-height: 18px;
+  height: auto !important;          
+  min-height: 48px !important;                 
+  padding: 6px 12px !important;      
+  vertical-align: middle !important;
 }
 .store-workspace-page .store-workspace-card .fast-key-table td.fast-key-table-empty-cell {
   height: 180px;
@@ -4000,8 +4105,8 @@
 .fast-key-timestamp { display: flex; flex-direction: column; gap: 3px; white-space: nowrap; }
 .fast-keys-panel .fast-key-timestamp strong { font-size: 12px; font-weight: 500; color: #465573; }
 .fast-key-timestamp small { font-size: 11px; color: #7c8799; }
-.fast-key-actions .edit-button { background: #f0edff; color: #6544cf; border: 0; }
-.fast-key-actions .delete-button { background: #fff0f1; color: #dc3545; border: 0; }
+.fast-key-actions .edit-button { color: #5367f0 !important; border: 1.5px solid #dce9f5 !important; background: #fcfdff !important; }
+.fast-key-actions .delete-button { color: #d9485f !important; border: 1.5px solid #dce9f5 !important; background: #fcfdff !important; }
 .fast-keys-heading > button { flex-shrink: 0; }
 .fast-key-toolbar input { min-width: 0; }
 .fast-key-modal-backdrop { overflow-y: auto; padding: 20px; z-index: 2000; }
@@ -4048,10 +4153,33 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   margin: 0;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid #e6ebf3;
   border-radius: 6px;
   background: #fff;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f3f9;
+}
+.store-workspace-page .store-workspace-card :is(.coupons-table-wrapper, .orders-table-wrapper)::-webkit-scrollbar {
+  height: 6px;
+}
+.store-workspace-page .store-workspace-card :is(.coupons-table-wrapper, .orders-table-wrapper)::-webkit-scrollbar-track {
+  background: #f1f3f9;
+  border-radius: 4px;
+}
+.store-workspace-page .store-workspace-card :is(.coupons-table-wrapper, .orders-table-wrapper)::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.store-workspace-page .store-workspace-card :is(.coupons-table-wrapper, .orders-table-wrapper)::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+.store-workspace-page .orders-card .orders-table {
+  min-width: 880px;
 }
 .store-workspace-page .store-workspace-card :is(.coupons-table-wrapper, .orders-table-wrapper) + .pagination-container,
 .store-workspace-page .store-workspace-card .orders-card > .pagination-container {
@@ -4222,8 +4350,10 @@
   color: #674ed9;
   font-size: 16px;
 }
-.store-workspace-page .store-section-editor .sf-plan-summary > div:nth-child(2) .sf-feature-summary-icon { background: #e4f7eb; color: #2eaa62; }
-.store-workspace-page .store-section-editor .sf-plan-summary > div:nth-child(3) .sf-feature-summary-icon { background: #e4f7eb; color: #2eaa62; }
+.store-workspace-page .store-section-editor .sf-plan-summary > div:nth-child(2) { border-color: #d6ecdf; background: linear-gradient(135deg, #fff 0%, #eafaf2 100%); }
+.store-workspace-page .store-section-editor .sf-plan-summary > div:nth-child(2) .sf-feature-summary-icon { background: #dcf4e6; color: #20a861; }
+.store-workspace-page .store-section-editor .sf-plan-summary > div:nth-child(3) { border-color: #d8e7fb; background: linear-gradient(135deg, #fff 0%, #edf5ff 100%); }
+.store-workspace-page .store-section-editor .sf-plan-summary > div:nth-child(3) .sf-feature-summary-icon { background: #deebff; color: #3978d4; }
 .store-workspace-page .store-section-editor .sf-plan-summary > div:nth-child(4) .sf-feature-summary-icon { background: #ffe9ea; color: #df5c66; }
 .store-workspace-page .store-section-editor .sf-plan-summary small {
   margin: 0;
@@ -4251,10 +4381,12 @@
   border-bottom: 0;
 }
 .store-workspace-page .store-section-editor .sf-feature-list-panel {
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  overflow: hidden !important;
+  border: 1px solid var(--store-border, #e2e8f0) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  padding: 20px !important;
 }
 .store-workspace-page .store-section-editor .sf-feature-list-panel > .sf-panel-head {
   min-height: 0;
@@ -4621,4 +4753,459 @@
     min-width: 0;
     flex-basis: auto;
   }
+}
+
+/* =========================================================
+   STORE WORKSPACE HEADER & CARD FLUSH ALIGNMENT
+   ========================================================= */
+
+.store-workspace-page .store-workspace-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 0 18px 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.store-workspace-page .store-workspace-header .store-status {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: auto !important;
+  min-width: auto !important;
+  max-width: none !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 16px !important;
+  margin: 0 !important;
+  border-radius: 9999px !important;
+  box-sizing: border-box !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.01em !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  overflow: visible !important;
+}
+
+/* =========================================================
+   STORE MODULE SUBSCREENS - UNIFIED LAYOUT OVERRIDES
+   Applies strictly across all store detail tabs/subscreens
+   ========================================================= */
+
+.store-workspace-page .store-workspace-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* 1. Standardize Root Container Padding for ALL Store Subscreens (Strict pb-4 16px below pagination, natural height) */
+.store-workspace-page .store-workspace-card > :is(
+  .store-section-editor,
+  .employee-attendance,
+  .orders-page,
+  .products-page,
+  .store-customers-page,
+  .sm-screen,
+  .sd-screen,
+  .store-payment-records-page,
+  .merchant-vendors,
+  .vendor-screen,
+  .fast-keys-panel,
+  .store-panel,
+  .coupons-page,
+  .discounts-page,
+  .pos-page-content,
+  .store-categories-page,
+  .store-devices-page
+),
+.store-workspace-page .store-workspace-card > div > .store-section-editor {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 24px 24px 16px 24px !important; /* Strict pb-4 (16px) below pagination */
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 2. Strip Nested Card / Panel Wrappers Inside Store Subscreens */
+.store-workspace-page .store-workspace-card :is(
+  .orders-card,
+  .products-card,
+  .store-customers-card,
+  .store-payment-records-card,
+  .coupons-card,
+  .discounts-card,
+  .categories-panel,
+  .mv-card,
+  .mv-list-card,
+  .sf-employee-assignment-panel,
+  .sf-feature-list-panel,
+  .sm-records-card,
+  .sd-card,
+  .store-devices-card
+) {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 3. Horizontal Alignment: Subscreen Header Row (Flush 0 to 100%) */
+.store-workspace-page .store-workspace-card :is(
+  .store-panel-heading,
+  .ea-header,
+  .orders-header,
+  .products-header,
+  .store-customers-header,
+  .sm-page-heading,
+  .store-payment-records-header,
+  .mv-header,
+  .vendor-title-row,
+  .coupons-header,
+  .fast-keys-heading,
+  .store-categories-header,
+  .pos-config-page-header
+) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 0 20px 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.store-workspace-page .store-workspace-card :is(
+  .store-panel-heading,
+  .ea-header,
+  .orders-header,
+  .products-header,
+  .store-customers-header,
+  .sm-page-heading,
+  .store-payment-records-header,
+  .mv-header,
+  .vendor-title-row,
+  .coupons-header,
+  .fast-keys-heading,
+  .store-categories-header,
+  .pos-config-page-header
+) :is(h1, h2) {
+  margin: 0 0 4px 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+.store-workspace-page .store-workspace-card :is(
+  .store-panel-heading,
+  .ea-header,
+  .orders-header,
+  .products-header,
+  .store-customers-header,
+  .sm-page-heading,
+  .store-payment-records-header,
+  .mv-header,
+  .vendor-title-row,
+  .coupons-header,
+  .fast-keys-heading,
+  .store-categories-header,
+  .pos-config-page-header
+) p {
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+.store-workspace-page .store-workspace-card :is(
+  .store-panel-heading,
+  .ea-header,
+  .orders-header,
+  .products-header,
+  .store-customers-header,
+  .sm-page-heading,
+  .store-payment-records-header,
+  .mv-header,
+  .vendor-title-row,
+  .coupons-header,
+  .fast-keys-heading,
+  .store-categories-header,
+  .pos-config-page-header
+) :is(.store-panel-actions, .ea-header-actions, .products-header-actions, .mv-popup-actions, .vendor-actions, .coupons-header-actions, .store-config-btn, .ea-export, .mv-primary, .coupon-create-btn) {
+  margin-right: 0 !important;
+}
+
+/* 4. Horizontal Alignment: Summary & Metric Cards (Flush 0 to 100%) */
+.store-workspace-page .store-workspace-card :is(
+  .sf-employee-summary,
+  .sf-plan-summary,
+  .orders-summary,
+  .products-summary,
+  .store-customers-summary,
+  .coupons-summary,
+  .discounts-summary
+) {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 0 20px 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 5. Horizontal Alignment: Filter & Search Toolbars (Flush 0 to 100%) */
+.store-workspace-page .store-workspace-card :is(
+  .sf-employee-tools,
+  .sf-feature-tools,
+  .filters-bar,
+  .products-toolbar,
+  .coupons-toolbar,
+  .store-customers-toolbar,
+  .store-payment-records-toolbar,
+  .ea-toolbar,
+  .sm-filter-card,
+  .vendor-toolbar,
+  .categories-toolbar,
+  .fast-key-toolbar
+) {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 0 16px 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 6. Horizontal Alignment & Cadence: Table Wrappers (Flush 0 to 100%, 0 Bottom Margin) */
+.store-workspace-page .store-workspace-card :is(
+  .sf-employees-table-wrap,
+  .sf-feature-table-wrap,
+  .orders-table-wrapper,
+  .products-table-wrapper,
+  .store-customers-table-wrapper,
+  .store-payment-records-table-wrapper,
+  .coupons-table-wrapper,
+  .categories-table-wrap,
+  .vendor-table-wrapper,
+  .vendor-history-table-scroll,
+  .mv-scroll,
+  .ea-table-wrap,
+  .sm-table-wrap,
+  .sd-table-wrap,
+  .fast-key-table-wrap,
+  .store-devices-table-wrapper
+) {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 0 0 0 !important;
+  padding: 0 !important;
+  border: 1px solid #dfe9f4 !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  overflow-x: auto !important;
+}
+
+/* 7. Horizontal Alignment & Cadence: Pagination Footer (Flush 0 to 100%, Strict 16px Top Spacing) */
+.store-workspace-page .store-workspace-card :is(
+  .pagination-container,
+  .table-pagination-footer,
+  .sm-pagination-wrapper,
+  .sd-pagination-wrapper,
+  .employee-pagination-container,
+  .sf-feature-pagination,
+  .products-pagination,
+  .mv-footer,
+  .fast-key-footer
+) {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 40px !important;
+  margin-top: 16px !important;
+  margin-bottom: 0 !important;
+  margin-inline: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-top: 0 !important;
+  background: transparent !important;
+}
+
+.store-workspace-page .store-workspace-card :is(
+  .sm-pagination-wrapper,
+  .sd-pagination-wrapper,
+  .products-pagination,
+  .fast-key-footer
+) > :is(.pagination-container, .table-pagination-footer) {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border-top: 0 !important;
+}
+
+.store-workspace-page .store-workspace-card :is(
+  .pagination-container,
+  .table-pagination-footer,
+  .employee-pagination-container,
+  .mv-footer
+) :is(.pagination-info, span:first-child) {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.store-workspace-page .store-workspace-card :is(
+  .pagination-container,
+  .table-pagination-footer,
+  .employee-pagination-container,
+  .mv-footer
+) :is(.pagination-controls, .pagination-actions, .mv-pagination) {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 8. Natural Empty Table Row Heights (Eliminate artificial vertical whitespace voids) */
+.store-workspace-page .store-workspace-card :is(
+  .discount-table-empty,
+  .coupons-table-empty,
+  .orders-table-empty,
+  .products-table-empty-cell,
+  .store-empty-row,
+  .fast-key-table-empty-cell,
+  .ea-empty,
+  .sf-empty
+) {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 32px 16px !important;
+  text-align: center !important;
+}
+
+.store-workspace-page .store-workspace-card .products-table-empty-state {
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+/* 9. Mobile Responsiveness */
+@media (max-width: 600px) {
+  .store-workspace-page .store-workspace-card > :is(
+    .store-section-editor,
+    .employee-attendance,
+    .orders-page,
+    .products-page,
+    .store-customers-page,
+    .sm-screen,
+    .sd-screen,
+    .store-payment-records-page,
+    .merchant-vendors,
+    .vendor-screen,
+    .fast-keys-panel,
+    .store-panel,
+    .coupons-page,
+    .discounts-page,
+    .pos-page-content,
+    .store-categories-page,
+    .store-devices-page
+  ),
+  .store-workspace-page .store-workspace-card > div > .store-section-editor {
+    padding: 16px 16px 12px 16px !important;
+  }
+}
+
+
+
+/* =========================================================
+   STORE DETAILS > ACCESS & PERMISSIONS > FEATURES & ROLES
+   Footer action buttons outside white card/panel
+========================================================= */
+.store-workspace-page .store-workspace-card.store-features-card-wrap,
+.store-workspace-page .store-workspace-card.store-roles-card-wrap,
+.store-workspace-page .store-workspace-card:has(.store-section-editor) {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.store-workspace-page .store-workspace-card.store-features-card-wrap > div,
+.store-workspace-page .store-workspace-card.store-roles-card-wrap > div,
+.store-workspace-page .store-workspace-card > div:has(.store-section-editor) {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.store-workspace-page .store-workspace-card > div > .store-section-editor,
+.store-workspace-page .store-section-editor.sf-root {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.store-section-editor .sf-permissions-panel + .sf-footer,
+.store-section-editor .sf-permissions-layout + .sf-footer,
+.store-workspace-page .store-workspace-card.store-roles-card-wrap .sf-footer,
+.store-section-editor .sf-footer {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 20px 0 0 0 !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Restore the white surface around the Features toolbar and table after the
+   generic nested-panel reset used by store detail tabs. */
+.store-workspace-page .store-workspace-card .store-section-editor.sf-root .sf-feature-list-panel {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 20px !important;
+  border: 1px solid var(--store-border, #e2e8f0) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .04) !important;
 }

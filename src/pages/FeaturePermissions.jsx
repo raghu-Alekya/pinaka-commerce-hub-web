@@ -865,7 +865,7 @@ const [deleteError, setDeleteError] = useState("");
     console.error("Delete permission failed:", error);
 
     setDeleteError(
-      error?.message || "Unable to deactivate permission."
+      error?.message || "Unable to Inactive permission."
     );
   } finally {
     setIsDeleting(false);
@@ -1208,7 +1208,7 @@ const paginatedPermissions = filteredPermissions.slice(
     >
       <label htmlFor="permission-feature">
         Feature
-        <span>*</span>
+        <span className="text-red-500">*</span>
       </label>
 
       <div className="fp-select-wrap">
@@ -1253,7 +1253,7 @@ const paginatedPermissions = filteredPermissions.slice(
 >
   <label htmlFor="permission-name">
     Permission Name
-    <span>*</span>
+    <span className="text-red-500">*</span>
   </label>
 
   <input
@@ -1309,7 +1309,7 @@ const paginatedPermissions = filteredPermissions.slice(
 <div className="fp-field">
   <label htmlFor="permission-status">
     Status
-    <span>*</span>
+    <span className="text-red-500">*</span>
   </label>
 
   <div className="fp-select-wrap">
@@ -1383,7 +1383,7 @@ const paginatedPermissions = filteredPermissions.slice(
           PERMISSIONS LIST
           ===================================================== */}
 
-      <section className="fp-list-card">
+      <section className="features-list-card fp-list-card">
         <div className="fp-list-toolbar">
           <h2>
             Permissions List
@@ -1493,8 +1493,8 @@ const paginatedPermissions = filteredPermissions.slice(
             TABLE
             =================================================== */}
 
-        <div className="fp-table-wrap">
-          <table className="fp-table">
+        <div className="features-table-wrap fp-table-wrap">
+          <table className="features-table fp-table">
             <colgroup>
               <col className="fp-col-key" />
               <col className="fp-col-name" />
@@ -1668,7 +1668,7 @@ const paginatedPermissions = filteredPermissions.slice(
                           onEdit={(event) => { event.stopPropagation(); editPermission(permission); }}
                           onDelete={(event) => { event.stopPropagation(); openDeleteConfirmation(permission); }}
                           editLabel={`Edit ${permission.name}`}
-                          deleteLabel={`Deactivate ${permission.name}`}
+                          deleteLabel={`Inactive ${permission.name}`}
                           deleteDisabled={permission.status === "Inactive"}
                           deleteButtonClassName="delete delete-button"
                           editButtonClassName="edit edit-button"
@@ -1700,9 +1700,8 @@ const paginatedPermissions = filteredPermissions.slice(
             TABLE FOOTER
             =================================================== */}
 
-        
-<div className="fp-list-footer">
-  <Pagination
+        <div className="feature-pagination-row fp-pagination-row fp-list-footer">
+          <Pagination
     currentPage={currentPage}
     totalPages={totalPages}
     totalItems={totalEntries}
@@ -1713,6 +1712,7 @@ const paginatedPermissions = filteredPermissions.slice(
       setCurrentPage(1);
     }}
     itemLabel="permissions"
+    showWhenEmpty="true"
   />
 </div>
 
@@ -1727,7 +1727,7 @@ const paginatedPermissions = filteredPermissions.slice(
 
 <DeleteConfirmationDialog
   isOpen={Boolean(permissionToDelete)}
-  title="Deactivate Permission?"
+  title="Inactive Permission?"
   message={
     permissionToDelete
       ? `Are you sure you want to mark "${
@@ -1738,8 +1738,8 @@ const paginatedPermissions = filteredPermissions.slice(
       : ""
   }
   cancelLabel="Cancel"
-  confirmLabel="Deactivate"
-  busyLabel="Deactivating..."
+  confirmLabel="Inactive"
+  busyLabel="Inactivating..."
   busy={isDeleting}
   error={deleteError}
   iconClassName="bi bi-trash3"

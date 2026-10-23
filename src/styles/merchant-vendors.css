@@ -19,6 +19,18 @@
     box-sizing: border-box;
 }
 
+.merchant-vendors .mv-snackbar {
+    width: 100%;
+    margin: 0 0 20px;
+    padding: 12px 16px;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 14px;
+    font-weight: 400;
+}
+
 /* =========================================================
    COMMON CARD
 ========================================================= */
@@ -72,7 +84,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    padding: 18px 18px 10px;
+    padding: 10px 0px 10px;
   
 }
 
@@ -84,11 +96,106 @@
     min-width: 0;
 }
 
+/* Shared back action used by merchant detail and create screens. */
+.merchant-vendors .store-config-back-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid #5838f3;
+    border-radius: 6px;
+    background: #fff;
+    color: #4c35e8;
+    font: 600 14px/1.2 Inter, "Segoe UI", Arial, sans-serif;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.merchant-vendors .store-config-back-button:hover:not(:disabled) {
+    border-color: #4c35e8;
+    background: #f5f3ff;
+}
+
+.merchant-vendors .store-config-back-button:focus-visible {
+    outline: 3px solid #b9adff;
+    outline-offset: 2px;
+}
+
+.merchant-vendors .store-config-back-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* Match the add-vendor page frame for the existing-vendor picker. */
+.merchant-vendors.mv-existing-page {
+    padding: 0;
+    background: #f6f8fc;
+    border: 1px solid #dfe4ee;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.merchant-vendors.mv-existing-page > .mv-header {
+    min-height: 88px;
+    padding: 18px 24px;
+    background: #fff;
+}
+
+.merchant-vendors.mv-existing-page > .mv-header h2 {
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.merchant-vendors.mv-existing-page > .mv-header p {
+    margin: 6px 0 0;
+    color: #75819a;
+    font-size: 14px;
+}
+
+.merchant-vendors.mv-existing-page > .mv-existing-content {
+    margin: 24px 30px 0;
+    padding: 24px 30px 12px;
+    border: 1px solid #e1e8f1;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.merchant-vendors.mv-existing-page > .mv-existing-footer {
+    margin-right:10px;
+    padding-top: 10px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+@media (max-width: 600px) {
+    .merchant-vendors.mv-existing-page > .mv-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px 16px;
+    }
+
+    .merchant-vendors.mv-existing-page > .mv-existing-content {
+        margin: 16px 12px 0;
+        padding: 16px 12px 8px;
+    }
+
+    .merchant-vendors.mv-existing-page > .mv-existing-footer {
+        margin: 0 12px 16px;
+        padding: 12px 0;
+    }
+}
+
 /* =========================================================
    BUTTONS
 ========================================================= */
 
-.merchant-vendors button {
+/* .merchant-vendors button {
     font-family: "Inter", sans-serif;
     font-size: 14px;
     line-height: 20px;
@@ -103,7 +210,7 @@
         background-color 0.15s ease,
         border-color 0.15s ease,
         color 0.15s ease;
-}
+} */
 
 .merchant-vendors button .primary {
     background: #5143bc;
@@ -190,9 +297,6 @@
 }
 
 .merchant-vendors .mv-list-card > .pagination-container {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
     height: auto;
     margin: 0;
     padding: 16px 24px 12px;
@@ -257,15 +361,14 @@
 ========================================================= */
 
 .merchant-vendors .mv-scroll {
-    width: auto;
-    margin: 0 24px;
-
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    box-sizing: border-box;
     overflow-x: auto;
     overflow-y: hidden;
-
     border: 1px solid #e1e6ef;
     border-radius: 8px;
-
     background: #ffffff;
 }
 
@@ -287,42 +390,133 @@
 
 .merchant-vendors th:nth-child(1),
 .merchant-vendors td:nth-child(1) {
-    width: 10%;
+    width: 11%;
 }
 
 .merchant-vendors th:nth-child(2),
 .merchant-vendors td:nth-child(2) {
-    width: 12%;
+    width: auto;
 }
 
 .merchant-vendors th:nth-child(3),
 .merchant-vendors td:nth-child(3) {
-    width: 10%;
+    width: 12%;
 }
 
 .merchant-vendors th:nth-child(4),
 .merchant-vendors td:nth-child(4) {
-    width: 12%;
+    width: 14%;
 }
 
 .merchant-vendors th:nth-child(5),
 .merchant-vendors td:nth-child(5) {
-    width: 10%;
+    width: 12%;
 }
 
 .merchant-vendors th:nth-child(6),
 .merchant-vendors td:nth-child(6) {
-    width: 10%;
+    width: 14%;
 }
 
-.merchant-vendors th:nth-child(7),
-.merchant-vendors td:nth-child(7) {
-    width: 8%;
+.merchant-vendors th.mv-status-th,
+.merchant-vendors td.mv-status-cell {
+    width: 110px;
+    min-width: 110px;
+    max-width: 115px;
+    padding-right: 8px;
+    overflow: visible !important;
+    text-overflow: clip !important;
 }
 
+.merchant-vendors th:last-child,
+.merchant-vendors td:last-child,
 .merchant-vendors th:nth-child(8),
 .merchant-vendors td:nth-child(8) {
-    width: 8%;
+    width: 90px;
+    min-width: 90px;
+    max-width: 95px;
+    padding-left: 4px;
+    padding-right: 12px;
+}
+
+/* =========================================================
+   VENDORS TABLE: STATUS & ACTIONS COLUMN SPACING
+   Scoped strictly under .merchant-vendors table, .vendor-screen table, .vendor-history-screen table
+   ========================================================= */
+
+/* Let the preceding vendor details/name column take up remaining auto / 1fr width */
+.merchant-vendors table th:nth-child(2),
+.merchant-vendors table td:nth-child(2),
+.vendor-screen table th:nth-child(2),
+.vendor-screen table td:nth-child(2),
+.vendor-history-screen table th:nth-child(2),
+.vendor-history-screen table td:nth-child(2) {
+    width: auto !important;
+}
+
+/* 1. Status Column: fixed 110px width based on 96px badge + 8px to 12px padding, padding-right: 8px */
+.merchant-vendors table th.mv-status-th,
+.merchant-vendors table td.mv-status-cell,
+.vendor-screen table th.mv-status-th,
+.vendor-screen table td.mv-status-cell,
+.vendor-history-screen table th.mv-status-th,
+.vendor-history-screen table td.mv-status-cell,
+.merchant-vendors table th:nth-last-child(2),
+.merchant-vendors table td:nth-last-child(2),
+.vendor-screen table th:nth-last-child(2),
+.vendor-screen table td:nth-last-child(2),
+.vendor-history-screen table th:nth-last-child(2),
+.vendor-history-screen table td:nth-last-child(2) {
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+    padding-right: 8px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+}
+
+/* Keep Active / Inactive status badge intact without wrapping or clipping */
+.merchant-vendors table td.mv-status-cell .mv-badge,
+.vendor-screen table td.mv-status-cell .mv-badge,
+.vendor-history-screen table td.mv-status-cell .mv-badge,
+.merchant-vendors table td:nth-last-child(2) .mv-badge,
+.vendor-screen table td:nth-last-child(2) .mv-badge,
+.vendor-history-screen table td:nth-last-child(2) .mv-badge {
+    width: 96px !important;
+    min-width: 96px !important;
+    max-width: 96px !important;
+    height: 32px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+/* 2. Actions Column: fixed 90px width based on two 35px action buttons + 6px gap (~76px) + extra space */
+.merchant-vendors table th:last-child,
+.merchant-vendors table td:last-child,
+.vendor-screen table th:last-child,
+.vendor-screen table td:last-child,
+.vendor-history-screen table th:last-child,
+.vendor-history-screen table td:last-child {
+    width: 120px !important;
+    min-width: 120px!important;
+    max-width: 120px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+}
+
+/* Align actions container left towards Status */
+.merchant-vendors table td:last-child .list-actions,
+.vendor-screen table td:last-child .list-actions,
+.vendor-history-screen table td:last-child .list-actions {
+    display: inline-flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: auto !important;
 }
 
 /* =========================================================
@@ -1010,9 +1204,20 @@
 .mv-dialog-create .vendors-form-actions { margin-top: 28px; gap: 12px; }
 .mv-create-content .vendors-form-actions .vendors-clear-button,
 .mv-dialog-create .vendors-form-actions .vendors-clear-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88px;
+    min-height: 40px;
+    padding: 0 16px;
     border: 1px solid #dce8f4;
+    border-radius: 7px;
     background: #fff;
     color: #25466f;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
 }
 .mv-create-content .vendors-form-actions .vendors-clear-button:hover:not(:disabled),
 .mv-dialog-create .vendors-form-actions .vendors-clear-button:hover:not(:disabled) {
@@ -1021,10 +1226,21 @@
 }
 .mv-create-content .vendors-form-actions .vendors-save-button,
 .mv-dialog-create .vendors-form-actions .vendors-save-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 132px;
+    min-height: 40px;
+    padding: 0 16px;
     border: 1px solid #5143bc;
+    border-radius: 7px;
     background: #5143bc;
     color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
     box-shadow: none;
+    cursor: pointer;
 }
 .mv-create-content .vendors-form-actions .vendors-save-button:hover:not(:disabled),
 .mv-dialog-create .vendors-form-actions .vendors-save-button:hover:not(:disabled) {
@@ -1035,6 +1251,35 @@
 .mv-dialog-create .vendors-form-actions :is(.vendors-clear-button, .vendors-save-button):focus-visible {
     outline: 2px solid #c4bdf2;
     outline-offset: 2px;
+}
+
+.merchant-vendors .mv-existing-footer .mv-popup-actions > button:not(.mv-primary) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88px;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid #dce8f4;
+    border-radius: 7px;
+    background: #fff;
+    color: #25466f;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.merchant-vendors .mv-existing-footer .mv-popup-actions > button:not(.mv-primary):hover:not(:disabled) {
+    border-color: #c8d8eb;
+    background: #f8fbff;
+}
+
+.merchant-vendors .mv-existing-footer .mv-popup-actions > .mv-primary {
+    min-width: 144px;
+    padding: 0 16px;
+    border-radius: 7px;
+    font-weight: 600;
 }
 .mv-dialog-select {
     width: min(1180px, calc(100vw - 32px));
@@ -1096,8 +1341,10 @@
 .mv-existing-content .mv-picker-summary { margin-top: 14px; }
 .mv-existing-table-wrap { width: 100%; margin-top: 4px; overflow-x: auto; border: 1px solid #dfe4ee; border-radius: 8px; }
 .mv-existing-page .mv-existing-table-wrap { overflow-x: auto; }
-.mv-existing-page .mv-existing-table-wrap table { width: 100%; min-width: 860px; border-collapse: collapse; table-layout: auto; }
+.mv-existing-page .mv-existing-table-wrap table { width: 100%; min-width: 860px; border-collapse: collapse; table-layout: fixed; }
 .mv-existing-page .mv-existing-table-wrap th, .mv-existing-page .mv-existing-table-wrap td { padding: 10px 14px; border-bottom: 1px solid #e8ecf3; text-align: left; vertical-align: middle; }
+.mv-existing-page .mv-existing-table-wrap td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mv-existing-page .mv-existing-table-wrap .mv-cell-ellipsis { display: block; width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mv-existing-page .mv-existing-table-wrap th { white-space: nowrap; }
 .mv-existing-table-wrap th { position: sticky; top: 0; z-index: 1; background: #f5f7fb; color: #17233e; white-space: nowrap; }
 .mv-existing-table-wrap th:nth-child(1), .mv-existing-table-wrap td:nth-child(1) { width: 48px; min-width: 48px; text-align: center; }
@@ -1160,7 +1407,6 @@
 .mv-device-picker .mv-device-mapped .pc-footer { margin-top: 18px; }
 .mv-device-mapped-page { display: flex; flex-direction: column; gap: 18px; }
 .mv-device-mapped-page > .mv-header { margin: 0; }
-.mv-device-mapped-page .mv-device-header-actions { display: flex; align-items: center; gap: 10px; }
 .mv-device-mapped-page .mv-device-list-card { padding: 24px; }
 .mv-device-mapped-page .mv-device-list-card h3 { margin: 0; }
 .mv-device-mapped-page .mv-device-list-card > .mv-toolbar { padding: 16px 0; }
@@ -1188,7 +1434,7 @@
 }
 .mv-device-mapped-page .pagination-container .pagination-page.active,
 .mv-device-picker .pagination-container .pagination-page.active { background: #5143bc; color: #fff; }
-.mv-device-mapped-page .mv-device-list-card .mv-scroll table { width: 100%; min-width: 0; table-layout: fixed; }
+.mv-device-mapped-page .mv-device-list-card .mv-scroll table { width: 100%; min-width: 1200px; }
 .mv-device-mapped-page .mv-device-list-card .mv-scroll th:nth-child(1),
 .mv-device-mapped-page .mv-device-list-card .mv-scroll td:nth-child(1) { width: 14%; }
 .mv-device-mapped-page .mv-device-list-card .mv-scroll th:nth-child(2),
@@ -1202,9 +1448,9 @@
 .mv-device-mapped-page .mv-device-list-card .mv-scroll th:nth-child(6),
 .mv-device-mapped-page .mv-device-list-card .mv-scroll td:nth-child(6) { width: 13%; }
 .mv-device-mapped-page .mv-device-remove { border: 0; background: transparent; color: #b42318; cursor: pointer; }
-.mv-device-mapped-page .mv-device-list-card .mv-scroll table { min-width: 0; }
+.mv-device-mapped-page .mv-device-list-card .mv-scroll table { min-width: 900px; }
 .mv-device-mapped-page .mv-device-list-card .mv-scroll th,
-.mv-device-mapped-page .mv-device-list-card .mv-scroll td { padding: 8px 10px; overflow: hidden; text-overflow: ellipsis; }
+.mv-device-mapped-page .mv-device-list-card .mv-scroll td { padding: 8px 10px; }
 .mv-device-mapped-page .mv-device-save-note {
   margin: 16px 0 0;
   padding-top: 16px;

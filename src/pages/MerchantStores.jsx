@@ -76,15 +76,24 @@ export default function MerchantStores({
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [activatingStoreId, setActivatingStoreId] = useState("");
+  const [statusNotice, setStatusNotice] = useState("");
+  const [statusNoticeType, setStatusNoticeType] = useState("success");
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+
+  useEffect(() => {
+    if (!statusNotice) return undefined;
+    const timeout = window.setTimeout(() => setStatusNotice(""), 1800);
+    return () => window.clearTimeout(timeout);
+  }, [statusNotice]);
 
   useEffect(() => {
     let cancelled = false;
@@ -320,12 +329,20 @@ export default function MerchantStores({
         </section>
       ) : (
         <div className="merchant-stores-layout">
+          {statusNotice && (
+            <div
+              className={`merchant-stores-toast ${statusNoticeType === "inactive" ? "is-inactive" : "is-success"}`}
+              role="status"
+            >
+              {statusNotice}
+            </div>
+          )}
           {/* =====================================
               STORE LIST
           ====================================== */}
 
           <section className="stores-card store-list-card">
-            {error && <p className="store-action-error" role="alert">{error}</p>}
+            {actionError && <p className="store-action-error" role="alert">{actionError}</p>}
 
             <div className="store-list-heading">
               <div className="store-list-heading-content">
@@ -389,6 +406,13 @@ export default function MerchantStores({
 
                       return (
                         <tr
+                          style={{ cursor: "pointer" }}
+                          onClick={(event) => {
+                            if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                              return;
+                            }
+                            handleStoreOverview(store);
+                          }}
                           key={
                             store.id ??
                             store.storeId ??
@@ -401,7 +425,10 @@ export default function MerchantStores({
                               type="button"
                               className="store-name-cell store-name-link"
                               title={`View ${storeName}`}
-                              onClick={() => handleStoreOverview(store)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStoreOverview(store);
+                              }}
                             >
                               <div className="store-name-info">
                                 <strong>{storeName}</strong>
@@ -447,7 +474,8 @@ export default function MerchantStores({
                                   ? async () => {
                                       const storeUuid = getStoreId(store);
                                       setActivatingStoreId(storeUuid);
-                                      setError("");
+                                      setActionError("");
+                                      setStatusNotice("");
                                       try {
                                         await activateStore(
                                           store.storeCode || storeUuid,
@@ -460,10 +488,16 @@ export default function MerchantStores({
                                               : item
                                           )
                                         );
+                                        setStatusNoticeType("success");
+                                        setStatusNotice(`${storeName} was activated.`);
                                       } catch (failure) {
-                                        setError(
-                                          failure.message || "Unable to activate store."
-                                        );
+                                        const message = failure.message || "Unable to activate store.";
+                                        if (/merchant\s+is\s+inactive/i.test(message)) {
+                                          setStatusNoticeType("inactive");
+                                          setStatusNotice("Merchant is inactive");
+                                        } else {
+                                          setActionError(message);
+                                        }
                                       } finally {
                                         setActivatingStoreId("");
                                       }
@@ -480,7 +514,7 @@ export default function MerchantStores({
                                       setDeleteTarget(store);
                                     }
                               }
-                              deleteLabel={`Deactivate ${storeName}`}
+                              deleteLabel={`Inactive ${storeName}`}
                             />
                           </td>
                         </tr>
@@ -513,12 +547,12 @@ export default function MerchantStores({
 
       <DeleteConfirmationDialog
         isOpen={Boolean(deleteTarget)}
-        title="Deactivate Store?"
-        message={`Are you sure you want to deactivate ${
+        title="Inactive Store?"
+        message={`Are you sure you want to Inactive ${
           getStoreName(deleteTarget || {})
         }? The store will remain in the system with inactive status.`}
         cancelLabel="Cancel"
-        confirmLabel="Deactivate"
+        confirmLabel="Inactive"
         busyLabel="Deactivating..."
         busy={deleting}
         error={deleteError}
@@ -551,10 +585,12 @@ export default function MerchantStores({
               )
             );
 
+            setStatusNoticeType("inactive");
+            setStatusNotice(`${getStoreName(deleteTarget)} was Inactive.`);
             setDeleteTarget(null);
           } catch (failure) {
             setDeleteError(
-              failure.message || "Unable to deactivate store."
+              failure.message || "Unable to Inactive store."
             );
           } finally {
             setDeleting(false);

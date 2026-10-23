@@ -253,7 +253,7 @@
   font-weight: 600;
 }
 
-.role-template-delete-button {
+/* .role-template-delete-button {
   display: grid;
   width: 30px;
   height: 30px;
@@ -264,19 +264,18 @@
   background: #fff5f7;
   cursor: pointer;
   font-size: 14px;
-}
+} */
 
 .role-templates-footer {
   width: 100%;
   display: block;
   box-sizing: border-box;
+  margin-top: 12px;
 }
 
 .role-templates-footer .pagination-container {
-  width: 100%;
-  padding: 16px 0;
-  background: transparent;
-  box-sizing: border-box;
+  height: auto;
+  padding: 0;
 }
 
 .role-templates-info {
@@ -303,14 +302,7 @@
   border-top: 1px solid #e3e8f1;
 }
 
-.role-templates-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  width: 100%;
-  min-height: 60px;
-  box-sizing: border-box;
-}
+
 
 
 

@@ -172,6 +172,8 @@ export default function MerchantVendors({
     const [busy, setBusy] = useState(false);
 
     const [saveError, setSaveError] = useState("");
+    const [snackbar, setSnackbar] = useState("");
+    const snackbarTimer = useRef(null);
 
     const [masterVendors, setMasterVendors] =
         useState(initialMasterVendors);
@@ -194,6 +196,8 @@ export default function MerchantVendors({
     const dialog = useRef(null);
 
     const addButton = useRef(null);
+
+    useEffect(() => () => window.clearTimeout(snackbarTimer.current), []);
 
     /* =========================================================
        LOAD MAPPED VENDORS
@@ -525,6 +529,7 @@ useEffect(() => {
             return;
         }
 
+        const removingVendor = modal?.type === "remove" ? modal.vendor : null;
         lock.current = true;
         setBusy(true);
         setSaveError("");
@@ -579,6 +584,11 @@ useEffect(() => {
             await loadMappedVendors("", { preserveIdsWhenEmpty: storeScope });
 
             setModal(null);
+            if (removingVendor) {
+                setSnackbar(`${removingVendor.name} was Inactive.`);
+                window.clearTimeout(snackbarTimer.current);
+                snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 3000);
+            }
         } catch (e) {
             console.error(
                 `Failed to save ${entityName} vendor mapping:`,
@@ -609,7 +619,7 @@ useEffect(() => {
                     : "mv-inactive"
             }`}
         >
-             {vendor.status}
+            {vendor.status}
         </span>
     );
 
@@ -692,7 +702,7 @@ useEffect(() => {
                           "status",
                       ]
                 ).map((key) => (
-                    <th key={key}>
+                    <th key={key} className={key === "status" ? "mv-status-th" : undefined}>
                         {select ? (
                             {
                                 code: "Vendor Code",
@@ -793,11 +803,11 @@ useEffect(() => {
                                         }}
                                     >
                                         <td><input type="checkbox" aria-label={`Select ${vendor.name}`} disabled={busy || !active(vendor)} checked={selected} onChange={() => toggleVendorSelection(vendor)} /></td>
-                                        <td>{displayValue(vendor.code)}</td>
-                                        <td><strong>{vendor.name}</strong></td>
-                                        <td>{displayValue(vendor.type)}</td>
-                                        <td>{displayValue(vendor.products)}</td>
-                                        <td>{vendor.phone || vendor.contact || "—"}</td>
+                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.code)}>{displayValue(vendor.code)}</span></td>
+                                        <td><strong className="mv-cell-ellipsis" title={vendor.name}>{vendor.name}</strong></td>
+                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.type)}>{displayValue(vendor.type)}</span></td>
+                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.products)}>{displayValue(vendor.products)}</span></td>
+                                        <td><span className="mv-cell-ellipsis" title={vendor.phone || vendor.contact || "—"}>{vendor.phone || vendor.contact || "—"}</span></td>
                                     </tr>
                                 );
                             })}
@@ -836,6 +846,7 @@ useEffect(() => {
 
     return (
         <div className="merchant-vendors">
+            {snackbar && <div className="mv-snackbar" role="status" aria-live="polite">{snackbar}</div>}
             {storeScope && (
                 <header className="mv-card mv-header">
                     <div>
@@ -877,32 +888,17 @@ useEffect(() => {
                         </div>
                     </header>
                 )}
-                {storeScope ? (
-                    <div className="mv-toolbar">
-                        <input aria-label="Search assigned vendors"
-                            placeholder="Search vendors by code, name, type or phone…"
-                            value={query}
-                            onChange={(event) => { setQuery(event.target.value); setPage(1); }} />
-                        <button type="button" onClick={() => {
-                            setQuery("");
-                            setPage(1);
-                            setSort({ key: "name", direction: 1 });
-                        }}>
-                            <i className="bi bi-arrow-counterclockwise" aria-hidden="true" /> Clear
-                        </button>
-                    </div>
-                ) : (
-                    <FiltersBar
-                        searchValue={query}
-                        onSearchChange={(value) => { setQuery(value); setPage(1); }}
-                        searchPlaceholder={"Search vendors by code, name, type or phone\u2026"}
-                        onClear={() => {
-                            setQuery("");
-                            setPage(1);
-                            setSort({ key: "name", direction: 1 });
-                        }}
-                    />
-                )}
+                <FiltersBar
+                    searchValue={query}
+                    onSearchChange={(value) => { setQuery(value); setPage(1); }}
+                    searchPlaceholder="Search vendors by code, name, type or phone..."
+                    searchAriaLabel={storeScope ? "Search assigned vendors" : "Search vendors"}
+                    onClear={() => {
+                        setQuery("");
+                        setPage(1);
+                        setSort({ key: "name", direction: 1 });
+                    }}
+                />
 
                 {(loading || mappedLoading) && !rows.length ? (
                     <p role="status">
@@ -932,6 +928,13 @@ useEffect(() => {
                                         .map((vendor) => (
                                             <tr
                                                 key={vendor.id}
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(event) => {
+                                                    if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                                                        return;
+                                                    }
+                                                    setModal({ type: "view", vendor });
+                                                }}
                                             >
 
                                                 <td>
@@ -962,7 +965,7 @@ useEffect(() => {
                                                     </td>
                                                 )}
 
-                                                <td>
+                                                <td className="mv-status-cell">
                                                     {badge(vendor)}
                                                 </td>
 
@@ -1436,12 +1439,12 @@ useEffect(() => {
 <DeleteConfirmationDialog
     isOpen={modal?.type === "remove"}
     title="Remove Vendor Assignment?"
-    message={`Are you sure you want to remove ${
+    message={`Are you sure you want to Inactive ${
         modal?.vendor?.name || "this vendor"
     } from this ${entityName}? The vendor will remain available in Master Data.`}
     cancelLabel="Cancel"
-    confirmLabel="Remove"
-    busyLabel="Removing..."
+    confirmLabel="Inactive"
+    busyLabel="Inactivating..."
     busy={busy}
     error={saveError}
     iconClassName="bi bi-trash3"

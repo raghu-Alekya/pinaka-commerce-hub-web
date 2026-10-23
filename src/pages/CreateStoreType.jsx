@@ -653,7 +653,7 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
           <div className="store-type-field">
             <label>
 
-              Store Type Name <span className="required">*</span>
+              Store Type Name <span className="required text-red-500">*</span>
             </label>
             <input
 
@@ -683,7 +683,7 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
           
 <div className="store-type-field">
   <label>
-    Status <span className="required">*</span>
+    Status <span className="required text-red-500">*</span>
   </label>
 
   <div className="select-shell">
@@ -995,23 +995,23 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
       
 <DeleteConfirmationDialog
   isOpen={Boolean(deleteTarget)}
-  title="Deactivate Store Type?"
+  title="Inactive Store Type?"
   message={
     deleteTarget
-      ? `Are you sure you want to deactivate "${deleteTarget.name}"?${
+      ? `Are you sure you want to Inactive "${deleteTarget.name}"?${
           Number(deleteTarget.assignedStores) > 0
             ? ` This store type is assigned to ${deleteTarget.assignedStores} ${
                 Number(deleteTarget.assignedStores) === 1
                   ? "store"
                   : "stores"
-              }, and deactivating it may affect their configuration.`
+              }, and Inactivating it may affect their configuration.`
             : ""
         } The record will remain visible and can be activated again later.`
       : ""
   }
   cancelLabel="Cancel"
-  confirmLabel="Deactivate"
-  busyLabel="Deactivating..."
+  confirmLabel="Inactive"
+  busyLabel="Inactivating..."
   busy={deleting}
   error={deleteError}
   iconClassName="bi bi-exclamation-triangle"

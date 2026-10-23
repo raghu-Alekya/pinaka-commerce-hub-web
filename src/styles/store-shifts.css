@@ -1,10 +1,16 @@
 .sm-screen {
   width: 100%;
   min-width: 0;
-  padding: 24px;
+  padding: 24px 24px 16px;
   color: #142347;
   font-family: Inter, Arial, sans-serif;
   font-size: 14px;
+  height: auto;
+  min-height: 0;
+}
+.sm-screen.pb-4,
+.sm-screen.pb-5 {
+  padding-bottom: 16px !important;
 }
 .sm-screen * { box-sizing: border-box; }
 .sm-breadcrumb { display:flex; align-items:center; gap:9px; margin:0 0 14px; color:#617999; font-size:12px; }
@@ -30,6 +36,7 @@
 .sm-search-control { display:flex!important; flex:1 1 250px; min-width:190px; height:40px; align-items:center; gap:10px!important; padding:0 12px; border:1px solid #d7dce6; border-radius:7px; background:#fff; color:#9aa4b5!important; }
 .sm-search-control i { flex:0 0 auto; color:#9aa4b5; font-size:15px; }
 .sm-search-control input { flex:1 1 auto; width:0; min-width:0; height:100%; padding:0; border:0; outline:0; background:transparent; color:#34425d; font:13px Inter,Arial,sans-serif; box-shadow:none; }
+.store-workspace-page .store-workspace-card .sm-search-control input:focus-visible { outline:none; outline-offset:0; box-shadow:none; }
 .sm-search-control input::placeholder { color:#8797b0; }
 .sm-search-control:focus-within, .sm-filter-card select:focus { border-color:#6953d8; box-shadow:0 0 0 3px rgba(105,83,216,.08); }
 .sm-reset-button { display:flex; height:40px; align-items:center; justify-content:center; gap:7px; padding:0 13px; border:1px solid #d7dce6; border-radius:7px; background:#fff; color:#59667d; font:500 13px Inter,Arial,sans-serif; cursor:pointer; white-space:nowrap; }
@@ -47,19 +54,25 @@
 .sm-button-primary { background:#5635ef; color:#fff; }
 .sm-button-primary:hover { background:#4325dc; }
 .sm-button-outline:hover { background:#f5f3ff; }
-.sm-records-card { overflow:hidden; padding:20px 18px 0; }
-.sm-records-card > .pagination-container { width: 100%; padding: 16px 0; background: transparent; box-sizing: border-box; }
+.sm-records-card { overflow:hidden; padding:20px 18px 16px; height:auto; min-height:0; }
+.sm-records-card > .pagination-container { width: 100%; padding: 0; margin-top: 16px; margin-bottom: 0; background: transparent; box-sizing: border-box; }
 .sm-filter-card + .sm-records-card { border-top:1px solid #e1e8f2; border-radius:10px; box-shadow:0 1px 2px #19305a08; }
 .sm-records-card h2 { display:flex; align-items:center; gap:10px; margin:0 0 24px; color:#152448; font-size:19px; }
 .sm-records-card h2 > i { color:#5140ec; font-size:19px; }
 .sm-records-card h2 span { font-weight:600; }
-.sm-table-wrap { width:100%; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:#3c465a #f1f4f9; }
+.sm-table-wrap { width:100%; margin-bottom:0 !important; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:#3c465a #f1f4f9; }
+.sm-pagination-wrapper { width:100%; box-sizing:border-box; margin-top:16px !important; margin-bottom:0 !important; padding:0 !important; }
+.sm-pagination-wrapper.mt-4 { margin-top:16px !important; }
+.sm-pagination-wrapper.mb-0 { margin-bottom:0 !important; }
+.sm-screen .pagination-container,
+.sm-pagination-wrapper .pagination-container { width:100% !important; max-width:100% !important; margin:0 !important; padding:0 !important; height:auto !important; min-height:40px !important; background:transparent !important; border-top:0 !important; }
 .sm-table-wrap::-webkit-scrollbar { height:10px; }
 .sm-table-wrap::-webkit-scrollbar-track { border-radius:8px; background:#f1f4f9; }
 .sm-table-wrap::-webkit-scrollbar-thumb { border:2px solid #f1f4f9; border-radius:8px; background:#3c465a; }
 .sm-table-wrap::-webkit-scrollbar-thumb:hover { background:#3c465a; }
 .sm-table { width:100%; min-width:1650px; border-collapse:separate; border-spacing:0; }
 .sm-table th, .sm-table td { padding:13px 12px; border-right:1px solid #e2eaf4; border-bottom:1px solid #e2eaf4; text-align:left; vertical-align:middle; white-space:nowrap; }
+.sm-table th:nth-child(2), .sm-table td:nth-child(2) { width:120px; min-width:120px; max-width:120px; overflow:hidden; text-overflow:ellipsis; }
 .sm-table th:nth-child(4), .sm-table td:nth-child(4),
 .sm-table th:nth-child(7), .sm-table td:nth-child(7) { min-width:150px; }
 .sm-table th:nth-child(5), .sm-table td:nth-child(5),
@@ -73,11 +86,33 @@
 .sm-table td { height:68px; color:#18294c; font-size:14px; }
 .sm-table td small { display:block; margin-top:3px; color:#4b5d7d; font-size:13px; }
 .sm-table tbody tr:hover { background:#f9fbff; }
-.sm-link { padding:0; border:0; background:none; color:#2262d5; font:600 12px Inter, Arial, sans-serif; text-decoration:underline; cursor:pointer; }
+.sm-link { padding:0; border:0; background:none; color:#465573; font:600 12px Inter, Arial, sans-serif; text-decoration:underline; cursor:pointer; }
 .sm-status { display:inline-flex; min-width:62px; justify-content:center; padding:6px 10px; border-radius:6px; background:#e0f8e9; color:#17813b; font-size:13px; font-weight:650; }
 .sm-status.open { background:#e0f8e9; color:#17813b; }
 .sm-status.closed { background:#fee2e2; color:#b91c1c; }
-.sm-view-button { min-height:34px; padding:0 14px; }
+.sm-view-button {
+  width: 35px !important;
+  height: 35px !important;
+  min-width: 35px !important;
+  min-height: 35px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1.5px solid #dce9f5 !important;
+  border-radius: 7px !important;
+  background: #fcfdff !important;
+  color: #416499 !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
+}
+.sm-view-button:hover {
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+  background: #eff6ff !important;
+}
 .sm-empty { height:80px!important; color:#77849a!important; text-align:center!important; }
 .sm-pagination { display:flex; min-height:72px; align-items:center; justify-content:flex-end; gap:12px; color:#52617d; font-size:12px; }
 .sm-pagination select, .sm-pagination button { height:38px; min-width:38px; border:1px solid #d9e2ef; border-radius:6px; background:#fff; color:#344764; font:inherit; }

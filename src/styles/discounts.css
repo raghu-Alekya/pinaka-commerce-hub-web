@@ -24,6 +24,12 @@
   white-space: nowrap;
 }
 
+.discounts-table td {
+  height: 64px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
 .discount-name-cell strong {
   white-space: nowrap;
 }
@@ -53,6 +59,12 @@
 
 .discount-type-pill {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 110px;
+  min-width: 110px;
+  text-align: center;
+  box-sizing: border-box;
   white-space: nowrap;
   padding: 6px 9px;
   border-radius: 6px;
