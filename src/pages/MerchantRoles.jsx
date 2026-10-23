@@ -188,14 +188,14 @@ export default function MerchantRoles({ merchantId }) {
             })}
           </ul>
         )}
-        <div className="mr-footer-actions">
-          <button type="button" onClick={cancel} disabled={loading || saving || !dirty}>
-            Cancel
-          </button>
-          <button type="button" className="mr-primary" onClick={save} disabled={loading || saving || !dirty}>
-            {saving ? "Saving..." : "Save roles"}
-          </button>
-        </div>
+      </div>
+      <div className="mr-footer-actions">
+        <button type="button" onClick={cancel} disabled={loading || saving || !dirty}>
+          Cancel
+        </button>
+        <button type="button" className="mr-primary" onClick={save} disabled={loading || saving || !dirty}>
+          {saving ? "Saving..." : "Save roles"}
+        </button>
       </div>
     </section>
   );
