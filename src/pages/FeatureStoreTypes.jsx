@@ -4,8 +4,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Pagination from '../components/Pagination';
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
+import ListActions from "../components/ListActions";
  
-import { Store, Search, Plus, X, Trash2 } from 'lucide-react';
+import { Store, Search, Plus, X } from 'lucide-react';
  
 import { getFeature } from '../api/features';
  
@@ -1052,52 +1053,15 @@ useEffect(() => {
  
                       <td className="st-action-cell">
  
-                        <button
- 
-                          type="button"
- 
-                          className="st-delete-button"
-                           onClick={() => {setDeleteError(""); setDeleteTarget(s);}}
- 
-                          disabled={isRemoving}
- 
-                          aria-label={`Delete ${s.name}`}
- 
-                          title={
- 
-                            isRemoving
- 
-                              ? 'Removing...'
- 
-                              :  'Remove Assignment'
- 
-                          }
- 
-                        >
- 
-                          {isRemoving ? (
- 
-                            <span
- 
-                              style={{
- 
-                                fontSize: '12px',
- 
-                              }}
- 
-                            >
- 
-                              ...
- 
-                            </span>
- 
-                          ) : (
- 
-                            <Trash2 size={16} />
- 
-                          )}
- 
-                        </button>
+                        <ListActions
+                          onDelete={() => {
+                            setDeleteError("");
+                            setDeleteTarget(s);
+                          }}
+                          deleteLabel={isRemoving ? "Removing..." : `Remove ${s.name}`}
+                          deleteDisabled={isRemoving}
+                          deleteButtonClassName="st-delete-button"
+                        />
  
                       </td>
  
