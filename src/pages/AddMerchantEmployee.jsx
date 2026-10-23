@@ -16,11 +16,11 @@ import {
   MapPin,
   Settings,
   Upload,
-  ChevronDown,
   Eye,
   EyeOff,
 } from "lucide-react";
 
+import FilterDropdown from "../components/FilterDropdown";
 import "../styles/add-merchant-employee.css";
 import "../styles/merchant-form-shared.css";
 
@@ -406,7 +406,7 @@ export function MerchantEmployeeForm({
             disabled={saving}
             onClick={handleBack}
           >
-            ← Back to Employees
+            <i className="bi bi-arrow-left" aria-hidden="true" /> Back to Employees
           </button>
         )}
       </div>
@@ -823,11 +823,12 @@ function SelectField({
   name,
   value,
   onChange,
-  options,
+  options = [],
   placeholder,
   error,
   disabled = false,
 }) {
+  const safeOptions = Array.isArray(options) ? options : [];
   return (
     <div className="employee-field">
       <label>
@@ -835,23 +836,31 @@ function SelectField({
       </label>
 
       <div className="employee-select">
-        <select
+        <FilterDropdown
           name={name}
           disabled={disabled}
-          value={value}
+          value={value || ""}
           onChange={onChange}
           className={`${error ? "field-invalid" : ""}${!value ? " employee-select-placeholder" : ""}`}
         >
           <option value="">{placeholder}</option>
 
-          {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-
-        <ChevronDown size={17} className="employee-select-arrow" />
+          {safeOptions.map((opt) => {
+            const optVal =
+              typeof opt === "object" && opt !== null
+                ? (opt.value ?? opt.name ?? opt.id)
+                : opt;
+            const optLabel =
+              typeof opt === "object" && opt !== null
+                ? (opt.label ?? opt.name ?? opt.value)
+                : opt;
+            return (
+              <option key={optVal} value={optVal}>
+                {optLabel}
+              </option>
+            );
+          })}
+        </FilterDropdown>
       </div>
 
       {error && <span className="field-error">{error}</span>}

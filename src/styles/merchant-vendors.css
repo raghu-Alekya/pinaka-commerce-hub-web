@@ -383,7 +383,7 @@
 
 .merchant-vendors th:nth-child(2),
 .merchant-vendors td:nth-child(2) {
-    width: 14%;
+    width: auto;
 }
 
 .merchant-vendors th:nth-child(3),
@@ -406,20 +406,105 @@
     width: 14%;
 }
 
-.merchant-vendors th:nth-child(7),
-.merchant-vendors td:nth-child(7),
 .merchant-vendors th.mv-status-th,
 .merchant-vendors td.mv-status-cell {
-    width: 130px;
-    min-width: 125px;
+    width: 110px;
+    min-width: 110px;
+    max-width: 115px;
+    padding-right: 8px;
     overflow: visible !important;
     text-overflow: clip !important;
 }
 
+.merchant-vendors th:last-child,
+.merchant-vendors td:last-child,
 .merchant-vendors th:nth-child(8),
 .merchant-vendors td:nth-child(8) {
     width: 90px;
-    min-width: 80px;
+    min-width: 90px;
+    max-width: 95px;
+    padding-left: 4px;
+    padding-right: 12px;
+}
+
+/* =========================================================
+   VENDORS TABLE: STATUS & ACTIONS COLUMN SPACING
+   Scoped strictly under .merchant-vendors table, .vendor-screen table, .vendor-history-screen table
+   ========================================================= */
+
+/* Let the preceding vendor details/name column take up remaining auto / 1fr width */
+.merchant-vendors table th:nth-child(2),
+.merchant-vendors table td:nth-child(2),
+.vendor-screen table th:nth-child(2),
+.vendor-screen table td:nth-child(2),
+.vendor-history-screen table th:nth-child(2),
+.vendor-history-screen table td:nth-child(2) {
+    width: auto !important;
+}
+
+/* 1. Status Column: fixed 110px width based on 96px badge + 8px to 12px padding, padding-right: 8px */
+.merchant-vendors table th.mv-status-th,
+.merchant-vendors table td.mv-status-cell,
+.vendor-screen table th.mv-status-th,
+.vendor-screen table td.mv-status-cell,
+.vendor-history-screen table th.mv-status-th,
+.vendor-history-screen table td.mv-status-cell,
+.merchant-vendors table th:nth-last-child(2),
+.merchant-vendors table td:nth-last-child(2),
+.vendor-screen table th:nth-last-child(2),
+.vendor-screen table td:nth-last-child(2),
+.vendor-history-screen table th:nth-last-child(2),
+.vendor-history-screen table td:nth-last-child(2) {
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+    padding-right: 8px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+}
+
+/* Keep Active / Inactive status badge intact without wrapping or clipping */
+.merchant-vendors table td.mv-status-cell .mv-badge,
+.vendor-screen table td.mv-status-cell .mv-badge,
+.vendor-history-screen table td.mv-status-cell .mv-badge,
+.merchant-vendors table td:nth-last-child(2) .mv-badge,
+.vendor-screen table td:nth-last-child(2) .mv-badge,
+.vendor-history-screen table td:nth-last-child(2) .mv-badge {
+    width: 96px !important;
+    min-width: 96px !important;
+    max-width: 96px !important;
+    height: 32px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+/* 2. Actions Column: fixed 90px width based on two 35px action buttons + 6px gap (~76px) + extra space */
+.merchant-vendors table th:last-child,
+.merchant-vendors table td:last-child,
+.vendor-screen table th:last-child,
+.vendor-screen table td:last-child,
+.vendor-history-screen table th:last-child,
+.vendor-history-screen table td:last-child {
+    width: 120px !important;
+    min-width: 120px!important;
+    max-width: 120px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+}
+
+/* Align actions container left towards Status */
+.merchant-vendors table td:last-child .list-actions,
+.vendor-screen table td:last-child .list-actions,
+.vendor-history-screen table td:last-child .list-actions {
+    display: inline-flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: auto !important;
 }
 
 /* =========================================================
