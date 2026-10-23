@@ -1,4 +1,5 @@
 import FilterDropdown from "../components/FilterDropdown";
+import FiltersBar from "../components/FiltersBar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
@@ -605,86 +606,39 @@ export default function Coupons({
                 TOOLBAR
             ================================================= */}
 
-            <div className="coupons-toolbar">
-
-                    {/* SEARCH */}
-
-                    <div className="coupons-search">
-
-                        <i className="bi bi-search" />
-
-                        <input
-                            type="text"
-                            placeholder="Search coupon code, order ID..."
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(e.target.value)
-                            }
-                        />
-
-                    </div>
-
-                    {/* TYPE */}
-
-                    <FilterDropdown
-                        value={typeFilter}
-                        onChange={(e) =>
-                            setTypeFilter(e.target.value)
-                        }
-                    >
-                        <option value="">
-                            All Types
-                        </option>
-
-                        {couponTypes.map((type) => (
-                            <option
-                                key={type}
-                                value={type}
-                            >
-                                {type}
-                            </option>
-                        ))}
-
-                    </FilterDropdown>
-
-                    {/* STATUS */}
-
-                    <FilterDropdown
-                        value={statusFilter}
-                        onChange={(e) =>
-                            setStatusFilter(e.target.value)
-                        }
-                    >
-                        <option value="">
-                            All Status
-                        </option>
-
-                        <option value="Active">
-                            Active
-                        </option>
-
-                        <option value="Expired">
-                            Expired
-                        </option>
-
-                        <option value="Used">
-                            Used
-                        </option>
-
-                    </FilterDropdown>
-
-                    {/* CLEAR */}
-
-                    <button
-                        type="button"
-                        className="coupons-clear-btn"
-                        onClick={clearFilters}
-                    >
-                        <i className="bi bi-arrow-counterclockwise" />
-                        Reset
-                    </button>
-
-            </div>
+            <FiltersBar
+                className="coupons-toolbar coupons-filter-bar"
+                searchValue={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="Search coupon code, order ID..."
+                searchAriaLabel="Search coupons"
+                filters={[
+                    {
+                        key: "coupon-type",
+                        label: "Coupon type",
+                        value: typeFilter,
+                        options: [
+                            { value: "", label: "All Types" },
+                            ...couponTypes.map((type) => ({ value: type, label: type })),
+                        ],
+                        onChange: setTypeFilter,
+                    },
+                    {
+                        key: "coupon-status",
+                        label: "Coupon status",
+                        value: statusFilter,
+                        options: [
+                            { value: "", label: "All Status" },
+                            { value: "Active", label: "Active" },
+                            { value: "Expired", label: "Expired" },
+                            { value: "Used", label: "Used" },
+                        ],
+                        onChange: setStatusFilter,
+                    },
+                ]}
+                onClear={clearFilters}
+                clearLabel="Reset"
+            />
 
             {/* =================================================
                 MAIN CARD
