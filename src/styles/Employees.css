@@ -1142,7 +1142,7 @@
 .employees-list-card .employees-table td:nth-child(6),
 .employees-list-card .employees-table th:nth-child(7),
 .employees-list-card .employees-table td:nth-child(7) {
-  width: 155px; min-width: 140px; text-align: left; white-space: nowrap;
+  width: 130px; min-width: 120px; text-align: left; white-space: nowrap;
 }
 .employees-list-card .employees-table th:nth-child(8),
 .employees-list-card .employees-table td:nth-child(8) {

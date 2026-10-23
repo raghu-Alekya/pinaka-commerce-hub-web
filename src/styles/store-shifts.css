@@ -89,7 +89,29 @@
 .sm-status { display:inline-flex; min-width:62px; justify-content:center; padding:6px 10px; border-radius:6px; background:#e0f8e9; color:#17813b; font-size:13px; font-weight:650; }
 .sm-status.open { background:#e0f8e9; color:#17813b; }
 .sm-status.closed { background:#fee2e2; color:#b91c1c; }
-.sm-view-button { min-height:34px; padding:0 14px; }
+.sm-view-button {
+  width: 35px !important;
+  height: 35px !important;
+  min-width: 35px !important;
+  min-height: 35px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1.5px solid #dce9f5 !important;
+  border-radius: 7px !important;
+  background: #fcfdff !important;
+  color: #416499 !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
+}
+.sm-view-button:hover {
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+  background: #eff6ff !important;
+}
 .sm-empty { height:80px!important; color:#77849a!important; text-align:center!important; }
 .sm-pagination { display:flex; min-height:72px; align-items:center; justify-content:flex-end; gap:12px; color:#52617d; font-size:12px; }
 .sm-pagination select, .sm-pagination button { height:38px; min-width:38px; border:1px solid #d9e2ef; border-radius:6px; background:#fff; color:#344764; font:inherit; }

@@ -409,3 +409,172 @@
   width: 100%;
 }
 
+
+
+/* =========================================================
+   BACK TO EMPLOYEES BUTTON
+========================================================= */
+.add-employee-back-button,
+.merchant-employee-create-page .store-config-back-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  border-radius: 6px !important;
+  border: 1px solid #d9dee8 !important;
+  background: #fff !important;
+  color: #5143bc !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+.add-employee-back-button:hover:not(:disabled),
+.merchant-employee-create-page .store-config-back-button:hover:not(:disabled) {
+  border-color: #c8c1f2 !important;
+  background-color: #f8f7ff !important;
+  color: #5143bc !important;
+}
+
+.add-employee-back-button:focus-visible,
+.merchant-employee-create-page .store-config-back-button:focus-visible {
+  outline: none !important;
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.15) !important;
+}
+
+.add-employee-back-button:disabled,
+.merchant-employee-create-page .store-config-back-button:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+.add-employee-back-button i,
+.merchant-employee-create-page .store-config-back-button i {
+  font-size: 14px !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* =========================================================
+   STANDARD DROPDOWN STYLING (.employee-select)
+========================================================= */
+.employee-select {
+  position: relative !important;
+  width: 100% !important;
+  height: 42px !important;
+}
+
+.employee-select > .pch-filter-dropdown {
+  display: grid !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+}
+
+.employee-select .pch-filter-sizing {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 42px !important;
+  box-sizing: border-box !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  padding: 0 35px 0 12px !important;
+  font-size: 13px !important;
+}
+
+.employee-select .pch-filter-trigger {
+  width: 100% !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+  padding: 0 35px 0 12px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  color: #304b6c !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease !important;
+}
+
+.employee-select .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c4cede !important;
+}
+
+.employee-select .pch-filter-trigger:focus,
+.employee-select .pch-filter-trigger:focus-visible,
+.employee-select .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.15) !important;
+  outline: none !important;
+}
+
+.employee-select .field-invalid + .pch-filter-trigger,
+.employee-select:has(.field-invalid) .pch-filter-trigger,
+.employee-select .pch-filter-trigger.field-invalid {
+  border-color: #dc2626 !important;
+}
+
+.employee-select .field-invalid + .pch-filter-trigger:focus,
+.employee-select .field-invalid + .pch-filter-trigger:focus-visible,
+.employee-select .field-invalid + .pch-filter-trigger[aria-expanded="true"],
+.employee-select:has(.field-invalid) .pch-filter-trigger:focus,
+.employee-select:has(.field-invalid) .pch-filter-trigger:focus-visible,
+.employee-select:has(.field-invalid) .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
+}
+
+.employee-select .pch-filter-trigger:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background-color: #f7fafc !important;
+}
+
+.employee-select .pch-filter-trigger > span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
+
+.employee-select .employee-select-placeholder + .pch-filter-trigger > span,
+.employee-select:has(.employee-select-placeholder) .pch-filter-trigger > span,
+.employee-select .pch-filter-trigger.employee-select-placeholder > span {
+  color: #8b9bb2 !important;
+}
+
+.employee-select .pch-filter-trigger > i.bi-chevron-down {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 12px !important;
+  color: #7187a5 !important;
+  pointer-events: none !important;
+  transition: transform 0.15s ease, color 0.15s ease !important;
+}
+
+.employee-select .pch-filter-trigger[aria-expanded="true"] > i.bi-chevron-down {
+  transform: translateY(-50%) rotate(180deg) !important;
+  color: #5143bc !important;
+}
+
+.employee-select .employee-select-arrow {
+  display: none !important;
+}

@@ -905,38 +905,64 @@
 
 .fast-key-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
+.fast-key-actions .list-action-btn,
 .fast-key-actions button {
-  width: 35px;
-  height: 35px;
-  min-width: 35px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #edf0f5;
-  border-radius: 7px;
-  background: #fcfdff;
-  color: #5367f0;
-  box-shadow: none;
-  cursor: pointer;
+  width: 35px !important;
+  height: 35px !important;
+  min-width: 35px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1.5px solid #dce9f5 !important;
+  border-radius: 7px !important;
+  background: #fcfdff !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
 }
 
-.fast-key-actions button.delete-button {
-  color: #d9485f;
+.fast-key-actions .list-action-btn:has(.list-action-edit-icon),
+.fast-key-actions button:has(.bi-pencil),
+.fast-key-actions .edit-button {
+  color: #5367f0 !important;
+  border: 1.5px solid #dce9f5 !important;
+  background: #fcfdff !important;
 }
 
-.fast-key-actions button:hover {
-  background: #f0f3fb;
+.fast-key-actions .list-action-btn:has(.list-action-edit-icon):hover,
+.fast-key-actions button:has(.bi-pencil):hover,
+.fast-key-actions .edit-button:hover {
+  color: #5367f0 !important;
+  border-color: #bcd9ff !important;
+  background: #e8f2ff !important;
 }
 
-.fast-key-actions button i {
-  font-size: 14px;
-  line-height: 1;
+.fast-key-actions .list-action-btn:has(.list-action-delete-icon),
+.fast-key-actions button:has(.bi-trash, .bi-trash3),
+.fast-key-actions .delete-button {
+  color: #d9485f !important;
+  border: 1.5px solid #dce9f5 !important;
+  background: #fcfdff !important;
+}
+
+.fast-key-actions .list-action-btn:has(.list-action-delete-icon):hover,
+.fast-key-actions button:has(.bi-trash, .bi-trash3):hover,
+.fast-key-actions .delete-button:hover {
+  color: #c5304b !important;
+  border-color: #ffd8e1 !important;
+  background: #fff0f3 !important;
+}
+
+.fast-key-actions button i,
+.fast-key-actions .list-action-btn i {
+  font-size: 16px !important;
+  line-height: 1 !important;
 }
 
 .fast-key-empty {
@@ -3541,22 +3567,27 @@
   text-decoration: none;
 }
 .store-workspace-page .store-workspace-card .sm-view-button {
-  display: inline-grid;
-  width: 28px;
-  min-width: 28px;
-  height: 28px;
-  min-height: 28px;
-  place-items: center;
-  padding: 0;
-  border-color: transparent;
-  border-radius: 4px;
-  background: transparent;
-  color: #5143bc;
-  font-size: 17px;
+  width: 35px !important;
+  height: 35px !important;
+  min-width: 35px !important;
+  min-height: 35px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1.5px solid #dce9f5 !important;
+  border-radius: 7px !important;
+  background: #fcfdff !important;
+  color: #416499 !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
 }
 .store-workspace-page .store-workspace-card .sm-view-button:hover {
-  border-color: #e2def8;
-  background: #f5f3ff;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+  background: #eff6ff !important;
 }
 
 .store-workspace-page .store-workspace-card .store-payment-records-toolbar > :is(button, .pch-filter-dropdown) {
@@ -3786,6 +3817,40 @@
   color: #465573;
   font-size: 13px;
 }
+
+/* Products table Status Column (last column) & Status badge pill */
+.store-workspace-card .products-table th:last-child,
+.store-workspace-card .products-table td:last-child,
+.store-workspace-page .store-workspace-card .products-table th:last-child,
+.store-workspace-page .store-workspace-card .products-table td:last-child {
+  width: 140px !important;
+  min-width: 140px !important;
+  padding-right: 20px !important;
+  box-sizing: border-box !important;
+}
+
+.store-workspace-card .products-table .products-col-status,
+.store-workspace-page .store-workspace-card .products-table .products-col-status {
+  width: 140px !important;
+  min-width: 140px !important;
+}
+
+.store-workspace-card .products-table td:last-child,
+.store-workspace-page .store-workspace-card .products-table td:last-child {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+}
+
+.store-workspace-card .products-table td:last-child :is(.product-status, .status-badge, [class*="status"]),
+.store-workspace-page .store-workspace-card .products-table td:last-child :is(.product-status, .status-badge, [class*="status"]) {
+  width: auto !important;
+  min-width: 105px !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
 .store-workspace-page .store-workspace-card .products-pagination {
   width: 100%;
   margin: 0;
@@ -3928,6 +3993,10 @@
   color: #465573;
   font-size: 13px;
   line-height: 18px;
+  height: auto !important;          
+  min-height: 48px !important;                 
+  padding: 6px 12px !important;      
+  vertical-align: middle !important;
 }
 .store-workspace-page .store-workspace-card .fast-key-table td.fast-key-table-empty-cell {
   height: 180px;
@@ -4036,8 +4105,8 @@
 .fast-key-timestamp { display: flex; flex-direction: column; gap: 3px; white-space: nowrap; }
 .fast-keys-panel .fast-key-timestamp strong { font-size: 12px; font-weight: 500; color: #465573; }
 .fast-key-timestamp small { font-size: 11px; color: #7c8799; }
-.fast-key-actions .edit-button { background: #f0edff; color: #6544cf; border: 0; }
-.fast-key-actions .delete-button { background: #fff0f1; color: #dc3545; border: 0; }
+.fast-key-actions .edit-button { color: #5367f0 !important; border: 1.5px solid #dce9f5 !important; background: #fcfdff !important; }
+.fast-key-actions .delete-button { color: #d9485f !important; border: 1.5px solid #dce9f5 !important; background: #fcfdff !important; }
 .fast-keys-heading > button { flex-shrink: 0; }
 .fast-key-toolbar input { min-width: 0; }
 .fast-key-modal-backdrop { overflow-y: auto; padding: 20px; z-index: 2000; }
@@ -4312,10 +4381,12 @@
   border-bottom: 0;
 }
 .store-workspace-page .store-section-editor .sf-feature-list-panel {
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  overflow: hidden !important;
+  border: 1px solid var(--store-border, #e2e8f0) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  padding: 20px !important;
 }
 .store-workspace-page .store-section-editor .sf-feature-list-panel > .sf-panel-head {
   min-height: 0;
@@ -5072,4 +5143,56 @@
   .store-workspace-page .store-workspace-card > div > .store-section-editor {
     padding: 16px 16px 12px 16px !important;
   }
+}
+
+
+
+/* =========================================================
+   STORE DETAILS > ACCESS & PERMISSIONS > FEATURES & ROLES
+   Footer action buttons outside white card/panel
+========================================================= */
+.store-workspace-page .store-workspace-card.store-features-card-wrap,
+.store-workspace-page .store-workspace-card.store-roles-card-wrap,
+.store-workspace-page .store-workspace-card:has(.store-section-editor) {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.store-workspace-page .store-workspace-card.store-features-card-wrap > div,
+.store-workspace-page .store-workspace-card.store-roles-card-wrap > div,
+.store-workspace-page .store-workspace-card > div:has(.store-section-editor) {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.store-workspace-page .store-workspace-card > div > .store-section-editor,
+.store-workspace-page .store-section-editor.sf-root {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.store-section-editor .sf-permissions-panel + .sf-footer,
+.store-section-editor .sf-permissions-layout + .sf-footer,
+.store-workspace-page .store-workspace-card.store-roles-card-wrap .sf-footer,
+.store-section-editor .sf-footer {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 20px 0 0 0 !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }

@@ -414,7 +414,16 @@ export default function FastKeys() {
                 <td><div className="fast-key-products"><small>{item.products.length} products</small>{item.products.slice(0,3).map((name,index) => <span key={index}>{name}</span>)}{item.products.length > 3 && <b>+{item.products.length - 3} more</b>}</div></td>
                 <td><span className="fast-key-employee" title={item.employeeId}>{item.employeeId}</span></td>
                 <td>{formatTimestamp(item.date)}</td><td>{formatTimestamp(item.updatedAt)}</td>
-                <td><ListActions onEdit={() => openForm(item)} onDelete={() => remove(item)} editLabel={`Edit ${item.title}`} deleteLabel={`Delete ${item.title}`} deleteIconClassName="bi bi-trash" /></td>
+                <td>
+                <div className="fast-key-actions">
+                  <ListActions 
+                 onEdit={() => openForm(item)} 
+                 onDelete={() => remove(item)} 
+                 editLabel={`Edit ${item.title}`} 
+                 deleteLabel={`Delete ${item.title}`} 
+                />
+                 </div>
+                </td>
               </tr>
             )) : (
               <tr>
