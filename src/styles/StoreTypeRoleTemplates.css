@@ -253,7 +253,7 @@
   font-weight: 600;
 }
 
-.role-template-delete-button {
+/* .role-template-delete-button {
   display: grid;
   width: 30px;
   height: 30px;
@@ -264,7 +264,7 @@
   background: #fff5f7;
   cursor: pointer;
   font-size: 14px;
-}
+} */
 
 .role-templates-footer {
   width: 100%;

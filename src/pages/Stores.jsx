@@ -6,6 +6,7 @@ import ListActions from "../components/ListActions";
 import FiltersBar from "../components/FiltersBar";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import { getStoreDeviceMappings } from "../api/storeDeviceMappings";
+import { listMerchants } from "../api/merchants";
 
 const title = (value) =>
   String(value || "")
@@ -139,12 +140,12 @@ const handlePageSizeChange = (size) => {
     let active = true;
     setLoading(true);
     setError("");
-    listStores()
-      .then((data) => {
+    Promise.all([listStores(), listMerchants()])
+      .then(([data, merchantRows]) => {
         if (active) {
           const storeRows = Array.isArray(data.stores) ? data.stores : [];
           setStores(storeRows);
-          setMerchants([...new Map((data.stores || []).filter(store => store.merchantId).map(store => [String(store.merchantId), { id: store.merchantId, name: store.merchantName || String(store.merchantId) }])).values()]);
+          setMerchants(Array.isArray(merchantRows) ? merchantRows : []);
           Promise.all(storeRows.map(async (store) => {
             const storeId = store.id || store.storeId || store.store_id;
             if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(storeId || ""))) return null;
@@ -261,7 +262,7 @@ useEffect(() => {
   ];
   return (
     <div className="page-content stores-page">
-      {notice && <div className={`alert stores-notice ${noticeType === "Inactive" ? "stores-notice-Inactive" : "alert-success"}`} role="status">{notice}</div>}
+      {notice && <div className={`alert stores-notice ${noticeType === "Inactive" ? "stores-notice-deactivated" : "alert-success"}`} role="status">{notice}</div>}
       <div className="page-header">
         <div>
           <h1>Stores</h1>
@@ -502,6 +503,15 @@ useEffect(() => {
                          onEdit={() =>
                              nav(`/stores/${encodeURIComponent(s.id)}/edit`)}
                          onActivate={String(s.status).toUpperCase() === "INACTIVE" ? async () => {
+                           const owner = merchants.find((item) =>
+                             [item.id, item.merchantId, item.merchantCode].some((id) => String(id || "") === String(s.merchantId || "")),
+                           );
+                           if (String(owner?.status || "").trim().toUpperCase() !== "ACTIVE") {
+                             setNoticeType("Inactive");
+                             setNotice("Merchant is inactive");
+                             return;
+                           }
+                           setNotice("");
                            const rowId = String(s.id);
                            const key = s.storeCode || s.code || s.id;
                            setActivatingStoreId(rowId);

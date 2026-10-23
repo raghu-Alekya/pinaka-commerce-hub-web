@@ -4,9 +4,9 @@ import React, { useMemo, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import Pagination from "../components/Pagination";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
+import ListActions from "../components/ListActions";
 import {
   Search,
-  Trash2,
   ShieldCheck,
   ChevronDown,
   ChevronLeft,
@@ -393,15 +393,11 @@ const confirmDeletePermission = async () => {
                   <td className="fp-description">{permission.description}</td>
 
                   <td className="fp-action-cell">
-                    <button
-                      type="button"
-                      className="fp-delete"
-                      title="Remove Assignment"
-                      onClick={() => { setDeleteError(""); setDeleteTarget(permission);}}
-                      aria-label={`Delete ${permission.name}`}
-                    >
-                      <Trash2 size={15} strokeWidth={2} />
-                    </button>
+                    <ListActions
+                      onDelete={() => { setDeleteError(""); setDeleteTarget(permission); }}
+                      deleteLabel={`Remove ${permission.name}`}
+                      deleteButtonClassName="fp-delete"
+                    />
                   </td>
                 </tr>
               ))}

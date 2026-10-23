@@ -76,15 +76,24 @@ export default function MerchantStores({
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [activatingStoreId, setActivatingStoreId] = useState("");
+  const [statusNotice, setStatusNotice] = useState("");
+  const [statusNoticeType, setStatusNoticeType] = useState("success");
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+
+  useEffect(() => {
+    if (!statusNotice) return undefined;
+    const timeout = window.setTimeout(() => setStatusNotice(""), 1800);
+    return () => window.clearTimeout(timeout);
+  }, [statusNotice]);
 
   useEffect(() => {
     let cancelled = false;
@@ -320,12 +329,20 @@ export default function MerchantStores({
         </section>
       ) : (
         <div className="merchant-stores-layout">
+          {statusNotice && (
+            <div
+              className={`merchant-stores-toast ${statusNoticeType === "inactive" ? "is-inactive" : "is-success"}`}
+              role="status"
+            >
+              {statusNotice}
+            </div>
+          )}
           {/* =====================================
               STORE LIST
           ====================================== */}
 
           <section className="stores-card store-list-card">
-            {error && <p className="store-action-error" role="alert">{error}</p>}
+            {actionError && <p className="store-action-error" role="alert">{actionError}</p>}
 
             <div className="store-list-heading">
               <div className="store-list-heading-content">
@@ -457,7 +474,8 @@ export default function MerchantStores({
                                   ? async () => {
                                       const storeUuid = getStoreId(store);
                                       setActivatingStoreId(storeUuid);
-                                      setError("");
+                                      setActionError("");
+                                      setStatusNotice("");
                                       try {
                                         await activateStore(
                                           store.storeCode || storeUuid,
@@ -470,10 +488,16 @@ export default function MerchantStores({
                                               : item
                                           )
                                         );
+                                        setStatusNoticeType("success");
+                                        setStatusNotice(`${storeName} was activated.`);
                                       } catch (failure) {
-                                        setError(
-                                          failure.message || "Unable to activate store."
-                                        );
+                                        const message = failure.message || "Unable to activate store.";
+                                        if (/merchant\s+is\s+inactive/i.test(message)) {
+                                          setStatusNoticeType("inactive");
+                                          setStatusNotice("Merchant is inactive");
+                                        } else {
+                                          setActionError(message);
+                                        }
                                       } finally {
                                         setActivatingStoreId("");
                                       }
@@ -561,6 +585,8 @@ export default function MerchantStores({
               )
             );
 
+            setStatusNoticeType("inactive");
+            setStatusNotice(`${getStoreName(deleteTarget)} was Inactive.`);
             setDeleteTarget(null);
           } catch (failure) {
             setDeleteError(

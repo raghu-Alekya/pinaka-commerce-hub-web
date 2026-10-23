@@ -237,11 +237,7 @@
   text-align: center !important;
 }
 
-.merchant-readonly .merchant-view-main .merchant-vendors .mv-scroll {
-  width: calc(100% - 48px);
-  max-width: calc(100% - 48px);
-  margin-inline: 24px;
-}
+
 
 /* This tab's legacy layout padded the whole component in addition to its
    card and toolbar/table insets. The card already supplies the content inset. */

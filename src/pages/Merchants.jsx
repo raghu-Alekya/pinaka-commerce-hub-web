@@ -19,7 +19,6 @@ import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { listMerchants, getMerchant, updateMerchantStatus, deleteMerchant } from "../api/merchants";
-import { EmployeeToast, EmployeeDeleteDialog } from "../components/EmployeeFeedback";
 import { listMerchantEmployees, getEmployee, updateEmployee } from "../api/employees";
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { devicesApi } from "../api/devices";
@@ -1060,7 +1059,7 @@ const [statusFilter, setStatusFilter] = useState("");
 
   return (
     <div className="page-content">
-      {notice && <div className={`alert merchant-notice ${noticeType === 'Inactive' ? 'merchant-notice-Inactive' : 'alert-success'}`} role="status">
+      {notice && <div className={`alert merchant-notice ${noticeType === 'Inactive' ? 'merchant-notice-deactivated' : 'alert-success'}`} role="status">
         <span>{notice}</span>
       </div>}
       <div className="page-header">
@@ -1414,7 +1413,13 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [noticeType, setNoticeType] = useState("success");
   const deleteLock = useRef(false);
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timeout = window.setTimeout(() => setNotice(""), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
   async function confirmDelete() {
     if (!deleteTarget || deleteLock.current) return;
     deleteLock.current = true;
@@ -1431,8 +1436,10 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
       });
       setDeleteTarget(null);
       await onRefresh?.();
-      setNotice("Employee Inactivae successfully.");
+      setNoticeType("inactive");
+      setNotice(`${employeeName(deleteTarget)} was Inactive.`);
     } catch (error) {
+      setNoticeType("inactive");
       setNotice(error.message || "Unable to Inactive employee.");
     } finally {
       deleteLock.current = false;
@@ -1447,18 +1454,22 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
     const lastName = String(employee.lastName || employee.last_name || fullName.slice(1).join(" ") || "").trim();
     const email = String(employee.email || "").trim();
     if (!firstName) {
+      setNoticeType("inactive");
       setNotice("Employee first name is required before this employee can be restored.");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setNoticeType("inactive");
       setNotice("A valid employee email is required before this employee can be restored.");
       return;
     }
     try {
       await updateEmployee(employeeId, { firstName, lastName, email, status: "ACTIVE" });
       await onRefresh?.();
-      setNotice(`${employeeName(employee)} activated successfully.`);
+      setNoticeType("success");
+      setNotice(`${employeeName(employee)} was activated.`);
     } catch (error) {
+      setNoticeType("inactive");
       setNotice(error.message || "Unable to activate employee.");
     }
   }
@@ -1478,7 +1489,14 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const current = Math.min(page, pages);
   return <div className="mel w-full max-w-full min-w-0 overflow-hidden">
-    <EmployeeToast message={notice} onClose={()=>setNotice("")} />
+    {notice && (
+      <div
+        className={`merchant-stores-toast ${noticeType === "inactive" ? "is-inactive" : "is-success"}`}
+        role="status"
+      >
+        {notice}
+      </div>
+    )}
 
 {deleteTarget && (
   <DeleteConfirmationDialog

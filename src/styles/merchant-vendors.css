@@ -84,6 +84,101 @@
     min-width: 0;
 }
 
+/* Shared back action used by merchant detail and create screens. */
+.merchant-vendors .store-config-back-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid #5838f3;
+    border-radius: 6px;
+    background: #fff;
+    color: #4c35e8;
+    font: 600 14px/1.2 Inter, "Segoe UI", Arial, sans-serif;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.merchant-vendors .store-config-back-button:hover:not(:disabled) {
+    border-color: #4c35e8;
+    background: #f5f3ff;
+}
+
+.merchant-vendors .store-config-back-button:focus-visible {
+    outline: 3px solid #b9adff;
+    outline-offset: 2px;
+}
+
+.merchant-vendors .store-config-back-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* Match the add-vendor page frame for the existing-vendor picker. */
+.merchant-vendors.mv-existing-page {
+    padding: 0;
+    background: #f6f8fc;
+    border: 1px solid #dfe4ee;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.merchant-vendors.mv-existing-page > .mv-header {
+    min-height: 88px;
+    padding: 18px 24px;
+    background: #fff;
+}
+
+.merchant-vendors.mv-existing-page > .mv-header h2 {
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.merchant-vendors.mv-existing-page > .mv-header p {
+    margin: 6px 0 0;
+    color: #75819a;
+    font-size: 14px;
+}
+
+.merchant-vendors.mv-existing-page > .mv-existing-content {
+    margin: 24px 30px 0;
+    padding: 24px 30px 12px;
+    border: 1px solid #e1e8f1;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.merchant-vendors.mv-existing-page > .mv-existing-footer {
+    margin-right:10px;
+    padding-top: 10px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+@media (max-width: 600px) {
+    .merchant-vendors.mv-existing-page > .mv-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px 16px;
+    }
+
+    .merchant-vendors.mv-existing-page > .mv-existing-content {
+        margin: 16px 12px 0;
+        padding: 16px 12px 8px;
+    }
+
+    .merchant-vendors.mv-existing-page > .mv-existing-footer {
+        margin: 0 12px 16px;
+        padding: 12px 0;
+    }
+}
+
 /* =========================================================
    BUTTONS
 ========================================================= */
@@ -1012,9 +1107,20 @@
 .mv-dialog-create .vendors-form-actions { margin-top: 28px; gap: 12px; }
 .mv-create-content .vendors-form-actions .vendors-clear-button,
 .mv-dialog-create .vendors-form-actions .vendors-clear-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88px;
+    min-height: 40px;
+    padding: 0 16px;
     border: 1px solid #dce8f4;
+    border-radius: 7px;
     background: #fff;
     color: #25466f;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
 }
 .mv-create-content .vendors-form-actions .vendors-clear-button:hover:not(:disabled),
 .mv-dialog-create .vendors-form-actions .vendors-clear-button:hover:not(:disabled) {
@@ -1023,10 +1129,21 @@
 }
 .mv-create-content .vendors-form-actions .vendors-save-button,
 .mv-dialog-create .vendors-form-actions .vendors-save-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 132px;
+    min-height: 40px;
+    padding: 0 16px;
     border: 1px solid #5143bc;
+    border-radius: 7px;
     background: #5143bc;
     color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
     box-shadow: none;
+    cursor: pointer;
 }
 .mv-create-content .vendors-form-actions .vendors-save-button:hover:not(:disabled),
 .mv-dialog-create .vendors-form-actions .vendors-save-button:hover:not(:disabled) {
@@ -1037,6 +1154,35 @@
 .mv-dialog-create .vendors-form-actions :is(.vendors-clear-button, .vendors-save-button):focus-visible {
     outline: 2px solid #c4bdf2;
     outline-offset: 2px;
+}
+
+.merchant-vendors .mv-existing-footer .mv-popup-actions > button:not(.mv-primary) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88px;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid #dce8f4;
+    border-radius: 7px;
+    background: #fff;
+    color: #25466f;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.merchant-vendors .mv-existing-footer .mv-popup-actions > button:not(.mv-primary):hover:not(:disabled) {
+    border-color: #c8d8eb;
+    background: #f8fbff;
+}
+
+.merchant-vendors .mv-existing-footer .mv-popup-actions > .mv-primary {
+    min-width: 144px;
+    padding: 0 16px;
+    border-radius: 7px;
+    font-weight: 600;
 }
 .mv-dialog-select {
     width: min(1180px, calc(100vw - 32px));

@@ -37,6 +37,26 @@
     align-self: start;
 }
 
+.merchant-stores-toast {
+    padding: 12px 16px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.merchant-stores-toast.is-success {
+    color: #087443;
+    background: #d1fae5;
+    border-color: #a7f3d0;
+}
+
+.merchant-stores-toast.is-inactive {
+    color: #b91c1c;
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
 /* =========================================================
    COMMON CARD
 ========================================================= */
