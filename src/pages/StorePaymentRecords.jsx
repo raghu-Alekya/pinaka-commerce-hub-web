@@ -41,12 +41,12 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
         const names = {};
         const employees = Array.isArray(response)
           ? response
-          : response?.employees ?? response?.data?.employees ?? response?.data ?? [];
+          : response?.employees ?? response?.data?.employees ?? response?.data?.data ?? response?.data ?? [];
         for (const employee of Array.isArray(employees) ? employees : []) {
-          const name = employee.name || employee.fullName ||
+          const name = employee.name || employee.fullName || employee.full_name ||
             [employee.firstName ?? employee.first_name, employee.lastName ?? employee.last_name].filter(Boolean).join(" ");
           if (!name) continue;
-          for (const id of [employee.id, employee.employeeId, employee.employeeCode, employee.userId, employee.user_id]) {
+          for (const id of [employee.id, employee.employeeId, employee.employeeCode, employee.userId, employee.user_id, employee.uuid]) {
             for (const key of employeeIdKeys(id)) names[key] = name;
           }
         }
@@ -195,7 +195,6 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                 <th>Tender Amount</th>
                 <th>Balance Amount</th>
                 <th>Change Amount</th>
-                <th>Transaction Id</th>
                 <th>Payment Accepted By</th>
                 <th>Date</th>
               </tr>
@@ -203,9 +202,9 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
  
             <tbody>
               {loading ? (
-                <tr><td colSpan="11" className="store-payment-records-empty">Loading payment records…</td></tr>
+                <tr><td colSpan="10" className="store-payment-records-empty">Loading payment records…</td></tr>
               ) : error ? (
-                <tr><td colSpan="11" className="store-payment-records-empty">{error}</td></tr>
+                <tr><td colSpan="10" className="store-payment-records-empty">{error}</td></tr>
               ) : filteredPayments.length ? (
                 paginatedPayments.map((payment) => (
                   <PaymentRecordRow
@@ -344,7 +343,8 @@ function mapPaymentRecord(payment, employeeNames = {}) {
     balanceAmount: Number(payment.remaining || 0),
     changeAmount: Number(payment.change_amount || 0),
     transactionId: payment.provider_transaction_id || payment.local_id || "—",
-    paymentAcceptedBy: findEmployeeName(employeeNames, payment.user_id) || payment.user_id || "—",
+    paymentAcceptedBy: payment.user?.name || payment.user?.full_name || payment.user_name || payment.accepted_by_name ||
+      findEmployeeName(employeeNames, payment.user_id ?? payment.userId ?? payment.accepted_by) || "—",
     status: payment.status || "—",
     date: formatPaymentDate(payment.payment_at),
     paymentMethod: method,
@@ -414,7 +414,6 @@ function PaymentRecordRow({ payment, onView }) {
       <td className={payment.changeAmount > 0 ? "change-positive" : ""}>
         {money(payment.changeAmount)}
       </td>
-      <td>{payment.transactionId}</td>
       <td>{payment.paymentAcceptedBy}</td>
       <td>
         <span className="payment-status">{payment.status}</span>

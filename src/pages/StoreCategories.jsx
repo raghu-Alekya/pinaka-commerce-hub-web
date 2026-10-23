@@ -2,7 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
-import { getStoreCatalogTaxonomies } from "../api/storeConnector";
+import {
+  fetchWordpressAttributes,
+  getStoreCatalogTaxonomies,
+  syncWordpressAttributes,
+} from "../api/storeConnector";
 import "../styles/store-categories.css";
 
 
@@ -102,6 +106,9 @@ export default function StoreCategories({
   const [attributes, setAttributes] = useState([]);
   const [taxonomyLoading, setTaxonomyLoading] = useState(Boolean(storeId));
   const [taxonomyError, setTaxonomyError] = useState("");
+  const [attributeAction, setAttributeAction] = useState("");
+  const [attributeActionMessage, setAttributeActionMessage] = useState("");
+  const [attributeActionError, setAttributeActionError] = useState("");
 
   const applyTaxonomies = useCallback((response) => {
     const data = response?.taxonomies || response?.data?.taxonomies || response?.data || response || {};
@@ -142,6 +149,51 @@ export default function StoreCategories({
     return response;
   }, [applyTaxonomies, storeId]);
 
+  const handleFetchAttributes = useCallback(async () => {
+    if (!storeId) return;
+    setAttributeAction("fetch");
+    setAttributeActionError("");
+    setAttributeActionMessage("");
+    try {
+      const response = await fetchWordpressAttributes(storeId);
+      const data = response?.data || response || {};
+      const rows = Array.isArray(data) ? data : Array.isArray(data.attributes) ? data.attributes : [];
+      setAttributes(rows.map((item) => ({
+        ...item,
+        id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+        name: item.name || item.title || "Unnamed attribute",
+        slug: item.slug || "—",
+        productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+        terms: Array.isArray(item.terms) ? item.terms.map((term) => typeof term === "object" ? term.name || term.slug : String(term)) : [],
+        status: item.status || "Active",
+      })));
+      setAttributePage(1);
+      setAttributeActionMessage(`Fetch succeeded: WooCommerce returned ${rows.length} attributes.`);
+    } catch (error) {
+      setAttributeActionError(error?.message || "Could not fetch attributes from WooCommerce.");
+    } finally {
+      setAttributeAction("");
+    }
+  }, [storeId]);
+
+  const handleSyncAttributes = async () => {
+    if (!storeId) return;
+    setAttributeAction("sync");
+    setAttributeActionError("");
+    setAttributeActionMessage("");
+    try {
+      const response = await syncWordpressAttributes(storeId);
+      const data = response?.data || response || {};
+      const count = Number(data.attributeCount ?? data.count ?? 0);
+      await refreshTaxonomies();
+      setAttributeActionMessage(`Sync succeeded: ${count} attributes saved for this store.`);
+    } catch (error) {
+      setAttributeActionError(error?.message || "Could not sync attributes for this store.");
+    } finally {
+      setAttributeAction("");
+    }
+  };
+
   useEffect(() => {
     if (!storeId) {
       setCategories([]);
@@ -170,6 +222,11 @@ export default function StoreCategories({
 
     return () => controller.abort();
   }, [refreshTaxonomies, storeId]);
+
+  useEffect(() => {
+    if (activeTab !== "attributes" || !storeId) return;
+    handleFetchAttributes();
+  }, [activeTab, handleFetchAttributes, storeId]);
 
   /* =========================================================
      FILTER CATEGORIES
@@ -1525,7 +1582,41 @@ export default function StoreCategories({
             Reset
           </button>
 
+          {activeTab === "attributes" && (
+            <>
+              <button
+                type="button"
+                className="categories-clear-btn"
+                onClick={handleFetchAttributes}
+                disabled={!storeId || Boolean(attributeAction)}
+              >
+                <i className="bi bi-cloud-download" aria-hidden="true" />
+                {attributeAction === "fetch" ? "Fetching…" : "Fetch from WooCommerce"}
+              </button>
+              <button
+                type="button"
+                className="categories-clear-btn"
+                onClick={handleSyncAttributes}
+                disabled={!storeId || Boolean(attributeAction)}
+              >
+                <i className="bi bi-arrow-repeat" aria-hidden="true" />
+                {attributeAction === "sync" ? "Syncing…" : "Sync Attributes"}
+              </button>
+            </>
+          )}
+
         </div>
+
+        {activeTab === "attributes" && attributeActionError && (
+          <div className="store-attribute-sync-message error" role="alert">
+            {attributeActionError}
+          </div>
+        )}
+        {activeTab === "attributes" && attributeActionMessage && (
+          <div className="store-attribute-sync-message success" role="status" aria-live="polite">
+            {attributeActionMessage}
+          </div>
+        )}
 
 
         {/* ===================================================

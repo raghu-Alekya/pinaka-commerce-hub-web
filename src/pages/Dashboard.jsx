@@ -414,57 +414,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <div className="dashboard-toolbar">
-
-         {/* DATE RANGE FILTER */}
-<FilterDropdown className="dashboard-filter dashboard-date-filter" aria-label="Date range" value={dateFilter}
-  triggerIcon={<i className="bi bi-calendar3" aria-hidden="true" />}
-  onChange={(event) => setDateFilter(event.target.value)}
-  renderFooter={(close) => <div className="dashboard-custom-date">
-    <span>Custom</span>
-    <div className="dashboard-date-inputs">
-      <input type="date" aria-label="Custom start date" value={customStartDate} onChange={(event) => setCustomStartDate(event.target.value)} />
-      <span>to</span>
-      <input type="date" aria-label="Custom end date" value={customEndDate} onChange={(event) => setCustomEndDate(event.target.value)} />
-    </div>
-    <button type="button" className="dashboard-custom-apply" disabled={!customStartDate || !customEndDate}
-      onClick={() => { setDateFilter(`${customStartDate} - ${customEndDate}`); close(); }}>Apply</button>
-  </div>}>
-  <option>Today</option><option>Last 7 days</option><option>Last 30 days</option>
-  {!["Today", "Last 7 days", "Last 30 days"].includes(dateFilter) && <option hidden disabled>{dateFilter}</option>}
-</FilterDropdown>
-
-      {/* MERCHANT FILTER */}
-      <button className="dashboard-filter">
-        All merchants
-        <i className="bi bi-chevron-down" />
-      </button>
-
-      {/* PLAN FILTER */}
-      <FilterDropdown className="dashboard-filter dashboard-plan-filter" aria-label="Plan" value={planFilter}
-        onChange={(event) => setPlanFilter(event.target.value)}>
-        <option>All plans</option><option>Basic</option><option>Pro</option><option>Enterprise</option>
-      </FilterDropdown>
-
-      {/* STORE FILTER */}
-      <button className="dashboard-filter">
-        All stores
-        <i className="bi bi-chevron-down" />
-      </button>
-
-          <button
-            className="dashboard-icon-btn"
-            onClick={refresh}
-            aria-label="Refresh"
-          >
-            <i
-              className={`bi bi-arrow-clockwise ${
-                refreshing ? "spin" : ""
-              }`}
-            />
-          </button>
-
-        </div>
+      
       </div>
 
       {/* =====================================================

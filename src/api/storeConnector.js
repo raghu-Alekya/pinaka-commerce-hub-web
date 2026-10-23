@@ -128,6 +128,18 @@ export async function getStoreCatalogTaxonomies(storeId, { signal } = {}) {
   );
 }
 
+export async function fetchWordpressAttributes(storeId) {
+  if (!storeId) throw new Error("Store ID is required.");
+  return api.get(
+    `/api/v1/woocommerce/attributes?storeId=${encodeURIComponent(storeId)}`,
+  );
+}
+
+export function syncWordpressAttributes(storeId) {
+  if (!storeId) throw new Error("Store ID is required.");
+  return api.post(`/api/v1/stores/${encodeURIComponent(storeId)}/catalog/sync/attributes`);
+}
+
 async function postStoreSync(storeId, step) {
   if (!storeId) throw new Error("Store ID is required.");
   const path = `/stores/${encodeURIComponent(storeId)}/catalog/sync/${step}`;
@@ -148,10 +160,6 @@ export function syncWordpressProducts(storeId) {
 
 export function syncWordpressCategories(storeId) {
   return postStoreSync(storeId, "categories");
-}
-
-export function syncWordpressAttributes(storeId) {
-  return postStoreSync(storeId, "attributes");
 }
 
 export function syncWordpressTags(storeId) {
