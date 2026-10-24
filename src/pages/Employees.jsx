@@ -242,6 +242,11 @@ export default function Employees() {
   const [notice, setNotice] = useState(location.state?.employeeMessage || "");
   const [deleteTarget, setDeleteTarget] = useState(null);
   useEffect(() => {
+    if (!notice) return undefined;
+    const timeout = window.setTimeout(() => setNotice(""), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
+  useEffect(() => {
     if (location.state?.employeeMessage) navigate(location.pathname, { replace: true, state: null });
   }, [location.state, location.pathname, navigate]);
   const [employeeRows, setEmployeeRows] = useState([]);
@@ -295,7 +300,7 @@ async function handleDelete(employee) {
     setStatistics(result.statistics);
 
     setDeleteTarget(null);
-    setNotice("Employee Inactive successfully.");
+    setNotice(`${employee.name || "Employee"} was Inactive.`);
   } catch (error) {
     setDeleteError(
       error?.response?.data?.message ||
@@ -329,7 +334,7 @@ async function handleActivate(employee) {
     const result = await getEmployeeList();
     setEmployeeRows(result.employees);
     setStatistics(result.statistics);
-    setNotice(`${employee.name || "Employee"} activated successfully.`);
+    setNotice(`${employee.name || "Employee"} was Active.`);
   } catch (error) {
     setDeleteError(error?.response?.data?.message || error?.message || "Unable to activate employee.");
   } finally {
@@ -449,6 +454,9 @@ const handlePageSizeChange = (size) => {
   ===================================================== */
   return (
     <div className="employees-page">
+      {(notice.endsWith(" was Inactive.") || notice.endsWith(" was Active.")) && (
+        <div className={`employees-status-notice ${notice.endsWith(" was Inactive.") ? "is-inactive" : "is-active"}`} role="status" aria-live="polite">{notice}</div>
+      )}
       {/* =================================================
           PAGE HEADER
       ================================================= */}
@@ -580,7 +588,7 @@ const handlePageSizeChange = (size) => {
             TABLE
         ================================================= */}
 
-        <EmployeeToast message={deleteError || notice} onClose={() => { setDeleteError(""); setNotice(""); }} />
+        <EmployeeToast message={deleteError || (notice.endsWith(" was Inactive.") || notice.endsWith(" was Active.") ? "" : notice)} onClose={() => { setDeleteError(""); setNotice(""); }} />
         
 <DeleteConfirmationDialog
   isOpen={Boolean(deleteTarget)}

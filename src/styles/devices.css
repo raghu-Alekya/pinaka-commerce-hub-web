@@ -11,6 +11,31 @@
   color: #193354;
 }
 
+.devices-status-notice {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  border: 1px solid;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.devices-status-notice.is-inactive {
+  border-color: #fca5a5;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.devices-status-notice.is-active {
+  border-color: #86efac;
+  background: #dcfce7;
+  color: #15803d;
+}
+
 
 /* =========================================================
    PAGE HEADER

@@ -1152,3 +1152,16 @@
   flex-wrap: nowrap; justify-content: flex-start; gap: 6px;
 }
 .employees-table tbody tr:hover { background: #fafbfe; }
+.employees-status-notice {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 16px;
+  padding: 16px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.employees-status-notice.is-inactive { border: 1px solid #fca5a5; background: #fee2e2; color: #b91c1c; }
+.employees-status-notice.is-active { border: 1px solid #86efac; background: #dcfce7; color: #15803d; }
+

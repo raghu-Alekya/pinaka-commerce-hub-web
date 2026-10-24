@@ -5,7 +5,7 @@ import { Download } from "lucide-react";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
 import { useLocationOptions } from "../data/useLocationOptions";
-import { getVendor, getVendors, createVendor, updateVendor, deleteVendor as deleteVendorApi, } from "../api/vendors";
+import { getVendor, getVendors, createVendor, updateVendor, updateVendorStatus, deleteVendor as deleteVendorApi, } from "../api/vendors";
 
 const emptyForm = {
   code: "",
@@ -50,6 +50,17 @@ function getVendorTypeLabel(vendorType) {
   }
 
   return vendorType || "—";
+}
+
+function isVendorInactive(vendor) {
+  return (
+    String(vendor?.status || "").trim().toLowerCase() === "inactive" ||
+    vendor?.is_deleted === true ||
+    vendor?.is_deleted === "true" ||
+    vendor?.isDeleted === true ||
+    vendor?.isDeleted === "true" ||
+    Boolean(vendor?.deletedAt)
+  );
 }
 
 function getVendorTypeApiValue(
@@ -241,10 +252,18 @@ export default function Vendors({
 
   const [deleting, setDeleting] =
     useState(false);
+  const [restoringVendorId, setRestoringVendorId] = useState(null);
 
   const [error, setError] =
     useState("");
+  const [statusNotice, setStatusNotice] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+
+  useEffect(() => {
+    if (!statusNotice) return undefined;
+    const timeout = window.setTimeout(() => setStatusNotice(null), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [statusNotice]);
 
   const nextVendorCode = useMemo(
     () => generateNextVendorCode(vendors),
@@ -606,6 +625,8 @@ export default function Vendors({
       if (
         editingId !== null
       ) {
+        const previousStatus = String(originalForm.status || "").trim().toLowerCase();
+        const nextStatus = String(payload.status || "").trim().toLowerCase();
         const updatedVendor =
           await updateVendor(
             editingId,
@@ -626,6 +647,18 @@ export default function Vendors({
                   : vendor
             )
         );
+
+        if (previousStatus !== nextStatus && nextStatus === "inactive") {
+          setStatusNotice({
+            message: `${updatedVendor?.name || form.name || "Vendor"} was Inactive.`,
+            type: "inactive",
+          });
+        } else if (previousStatus !== nextStatus && nextStatus === "active") {
+          setStatusNotice({
+            message: `${updatedVendor?.name || form.name || "Vendor"} was activated.`,
+            type: "active",
+          });
+        }
       }
 
       /*
@@ -814,6 +847,41 @@ export default function Vendors({
   |--------------------------------------------------------------------------
   */
 
+  async function restoreVendor(vendor) {
+    if (!vendor?.id || restoringVendorId !== null) return;
+
+    try {
+      setRestoringVendorId(vendor.id);
+      setError("");
+
+      const restoredVendor = await updateVendorStatus(vendor.id, "ACTIVE");
+
+      setVendors((current) =>
+        current.map((item) =>
+          String(item.id) === String(vendor.id)
+            ? {
+                ...item,
+                ...restoredVendor,
+                status: "Active",
+                is_deleted: false,
+                isDeleted: false,
+                deletedAt: null,
+              }
+            : item
+        )
+      );
+      setStatusNotice({
+        message: `${vendor.name || "Vendor"} was activated.`,
+        type: "active",
+      });
+    } catch (err) {
+      console.error("Failed to restore vendor:", err);
+      setError(err?.message || "Failed to restore vendor.");
+    } finally {
+      setRestoringVendorId(null);
+    }
+  }
+
   async function handleDeleteVendor() {
     if (!deleteTarget) {
       return;
@@ -826,6 +894,11 @@ export default function Vendors({
       await deleteVendorApi(
         deleteTarget.id
       );
+
+      setStatusNotice({
+        message: `${deleteTarget.name || "Vendor"} was Inactive.`,
+        type: "inactive",
+      });
 
       setVendors(
         (current) =>
@@ -1392,6 +1465,16 @@ export default function Vendors({
   return (
     <section className="vendors-page">
 
+      {statusNotice && (
+        <div
+          className={`vendors-status-notice is-${statusNotice.type}`}
+          role="status"
+          aria-live="polite"
+        >
+          {statusNotice.message}
+        </div>
+      )}
+
       {/* =====================================================
           HEADER
       ===================================================== */}
@@ -1677,14 +1760,17 @@ export default function Vendors({
                         <ListActions
                           onView={() => viewVendor(vendor)}
                           onEdit={() => editVendor(vendor)}
-                          onDelete={() => confirmDelete(vendor)}
+                          onDelete={isVendorInactive(vendor) ? undefined : () => confirmDelete(vendor)}
+                          onActivate={isVendorInactive(vendor) ? () => restoreVendor(vendor) : undefined}
                           deleteButtonClassName="vendors-delete-action"
                           viewLabel={`View ${vendor.name}`}
                           editLabel={`Edit ${vendor.name}`}
+                          activateLabel={`Restore ${vendor.name}`}
                           deleteLabel={`Delete ${vendor.name}`}
                           viewDisabled={saving || deleting}
                           editDisabled={saving || deleting}
                           deleteDisabled={saving || deleting}
+                          activateDisabled={saving || deleting || restoringVendorId === vendor.id}
                         />
                       </td>
 

@@ -2517,6 +2517,7 @@
   background: transparent;
   border-radius: 0;
 }
+
 .store-workspace-page .store-workspace-card > .pos-page-content .pos-config-detail-card,
 .store-workspace-page .store-workspace-card > .pos-page-content .pos-config-cards-container {
   background-color: #fff;
@@ -4365,7 +4366,7 @@
   margin: 0;
   color: #152d4e !important;
   font-size: 22px;
-  font-weight: 750;
+  font-weight: 600;
   line-height: 25px;
 }
 .store-workspace-page .store-section-editor .sf-plan-summary > div > div { min-width: 0; }
@@ -4838,7 +4839,6 @@
   height: auto !important;
   min-height: 0 !important;
   margin: 0 !important;
-  padding: 24px 24px 16px 24px !important; /* Strict pb-4 (16px) below pagination */
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
@@ -5208,4 +5208,9 @@
   border-radius: 10px !important;
   background: #fff !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .04) !important;
+}
+
+/* Keep a little breathing room between the Categories tabs and filters. */
+.store-workspace-page .store-workspace-card .store-categories-embedded .categories-toolbar {
+  margin-top: 12px !important;
 }
