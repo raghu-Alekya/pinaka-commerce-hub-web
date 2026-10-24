@@ -31,7 +31,7 @@
   padding: 0;
   border: 1px solid #dce8f5;
   border-radius: 8px;
-  color: #076cf0;
+  color: #5143bc;
   background: #fff;
   cursor: pointer;
   font-size: 16px;
@@ -75,27 +75,6 @@
   line-height: 1.4;
 }
 
-
-/* =========================================================
-   ACTIVE STATUS
-   ========================================================= */
-
-.role-details-active {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 12px;
-  border: 1px solid #9debc3;
-  border-radius: 16px;
-  color: #00a762;
-  background: #edfff5;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.role-details-active i,
 .role-overview-active i {
   font-size: 6px;
 }
@@ -194,10 +173,6 @@
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
-}
-
-.role-details-tabs button:hover {
-  color: #0873f9;
 }
 
 .role-details-tabs button.active {
@@ -421,7 +396,7 @@
    ========================================================= */
 
 .role-store-type-option.selected strong {
-  color: #4f45c7;
+  color: #5143bc;
 }
 
 
@@ -445,37 +420,52 @@
   min-width: 0;
 }
 
+.role-access-title > span {
+  background: #f3f0ff;
+  color: #5143bc;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 0;
+  line-height: 1;
+  box-sizing: border-box;
+}
+  
+.role-access-title > span i {
+  display: block;
+  font-size: 20px;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+}
+
 
 /* =========================================================
    ACCESS ACTIONS
    ========================================================= */
 
-.role-access-actions {
+.role-access-select-all {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   margin-left: auto;
-}
-
-.role-access-actions button {
-  height: 34px;
-  padding: 0 13px;
-  border: 1px solid #dce8f5;
-  border-radius: 7px;
   color: #684ee3;
-  background: #fff;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
 }
 
-.role-access-actions button:hover {
-  border-color: #c2c9ee;
-  background: #f8f7ff;
+.role-access-select-all input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #5143bc;
 }
 
 
@@ -818,12 +808,12 @@
 .role-details-primary-btn {
   border: 0;
   color: #fff;
-  background: #684ee3;
+  background: #5143bc;
   box-shadow: 0 4px 10px rgba(104, 78, 227, 0.16);
 }
 
 .role-details-primary-btn:hover {
-  background: #5b43d1;
+  background: #5143bc;
 }
 
 .role-details-primary-btn:disabled,
@@ -1109,7 +1099,7 @@
     flex-wrap: wrap;
   }
 
-  .role-access-actions {
+  .role-access-select-all {
     margin-left: auto;
   }
 }
@@ -1137,10 +1127,6 @@
 
   .role-details-heading p {
     font-size: 11px;
-  }
-
-  .role-details-active {
-    align-self: flex-start;
   }
 
   .role-details-summary {
@@ -1194,13 +1180,9 @@
     flex-direction: column;
   }
 
-  .role-access-actions {
-    width: 100%;
+  .role-access-select-all {
+    align-self: flex-start;
     margin-left: 0;
-  }
-
-  .role-access-actions button {
-    flex: 1;
   }
 
   .role-feature-access-top {

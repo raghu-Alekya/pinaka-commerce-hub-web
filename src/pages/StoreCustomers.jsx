@@ -1,7 +1,8 @@
+import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "../components/Pagination";
 import { customersSeed } from "../data/data";
-import ViewDetailsModal from "../components/ViewDetailsModal";
+import BentoDetailModal from "../components/BentoDetailModal";
 import "../styles/store-customers.css";
 
 export default function StoreCustomers({
@@ -190,7 +191,7 @@ export default function StoreCustomers({
         <div className="store-customers-title-area">
 
           <div className="store-customers-title-icon">
-            <i className="bi bi-people" />
+      
           </div>
 
           <div>
@@ -202,28 +203,6 @@ export default function StoreCustomers({
           </div>
 
         </div>
-
-        {/* STORE CONTEXT */}
-
-        {store && (
-          <div className="store-customers-context">
-
-            <i className="bi bi-shop" />
-
-            <div>
-              <span>STORE</span>
-
-              <strong>
-                {store.name}
-              </strong>
-
-              <small>
-                {store.id}
-              </small>
-            </div>
-
-          </div>
-        )}
 
       </div>
 
@@ -311,106 +290,48 @@ export default function StoreCustomers({
           MAIN CARD
       ===================================================== */}
 
-      <div className="store-customers-card">
+      {/* ===================================================
+          TOOLBAR
+      =================================================== */}
 
-        {/* ===================================================
-            TOOLBAR
-        =================================================== */}
-
-        <div className="store-customers-toolbar">
-
-          {/* SEARCH */}
-
+      <div className="store-customers-toolbar">
           <div className="store-customers-search">
-
             <i className="bi bi-search" />
-
             <input
               type="text"
               placeholder="Search customer name, email or phone..."
               value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
+              onChange={(event) => setSearch(event.target.value)}
             />
-
           </div>
-
-          {/* CUSTOMER TYPE */}
-
-          <select
+          <FilterDropdown
             value={customerTypeFilter}
-            onChange={(event) =>
-              setCustomerTypeFilter(
-                event.target.value
-              )
-            }
+            onChange={(event) => setCustomerTypeFilter(event.target.value)}
           >
-            <option value="">
-              All Customer Types
-            </option>
-
+            <option value="">All Customer Types</option>
             {customerTypes.map((type) => (
-              <option
-                key={type}
-                value={type}
-              >
-                {type}
-              </option>
+              <option key={type} value={type}>{type}</option>
             ))}
-          </select>
-
-          {/* STATUS */}
-
-          <select
+          </FilterDropdown>
+          <FilterDropdown
             value={statusFilter}
-            onChange={(event) =>
-              setStatusFilter(
-                event.target.value
-              )
-            }
+            onChange={(event) => setStatusFilter(event.target.value)}
           >
-            <option value="">
-              All Status
-            </option>
-
-            <option value="Active">
-              Active
-            </option>
-
-            <option value="Inactive">
-              Inactive
-            </option>
-          </select>
-
-          {/* CLEAR */}
-
+            <option value="">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </FilterDropdown>
           <button
             type="button"
             className="store-customers-clear-btn"
             onClick={clearFilters}
           >
             <i className="bi bi-arrow-counterclockwise" />
-            Clear
+            Reset
           </button>
+      </div>
 
-        </div>
-
-        {/* ===================================================
-            TABLE HEADER
-        =================================================== */}
-
-        <div className="store-customers-table-heading">
-
-          <div>
-            Customers
-
-            <span>
-              {filteredCustomers.length}
-            </span>
-          </div>
-
-        </div>
+      <div className="store-customers-card">
 
         {/* ===================================================
             TABLE
@@ -423,14 +344,14 @@ export default function StoreCustomers({
 
               <thead>
                 <tr>
-                  <th>CUSTOMER</th>
-                  <th>EMAIL</th>
-                  <th>PHONE</th>
-                  <th>TYPE</th>
-                  <th>ORDERS</th>
-                  <th>TOTAL SPENT</th>
-                  <th>STATUS</th>
-                  <th>LAST UPDATED</th>
+                  <th>Customer</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Type</th>
+                  <th>Orders</th>
+                  <th>Total Spent</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
                 </tr>
               </thead>
 
@@ -485,87 +406,118 @@ export default function StoreCustomers({
             PAGINATION
         =================================================== */}
 
-        {filteredCustomers.length > 0 && (
-          <Pagination
+        <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}
             pageSize={pageSize}
             onPageChange={setCurrentPage}
+            itemLabel="customers"
+            showWhenEmpty
             onPageSizeChange={(size) => {
               setPageSize(size);
               setCurrentPage(1);
             }}
           />
-        )}
-
-        {/* ===================================================
-            SOURCE FOOTER
-        =================================================== */}
-
-        <div className="store-customers-footer">
-
-          <div>
-            <i className="bi bi-wordpress" />
-
-            <span>
-              Customer data synced from WooCommerce
-            </span>
-          </div>
-
-          <span className="store-customers-readonly">
-            Read Only
-          </span>
-
-        </div>
 
       </div>
 
-      <ViewDetailsModal
+      <BentoDetailModal
         open={Boolean(selectedCustomer)}
-        title="Customer Details"
-        subtitle={
-          selectedCustomer
-            ? selectedCustomer.name ||
-              `${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}`.trim()
-            : ""
-        }
-        data={selectedCustomer}
         onClose={() => setSelectedCustomer(null)}
-        fields={[
-          {
-            key: "customerId",
-            label: "Customer ID",
-            value: (customer) =>
-              customer.customerId || customer.id || "",
-          },
-          {
-            key: "name",
-            label: "Customer Name",
-            value: (customer) =>
-              customer.name ||
-              `${customer.firstName || ""} ${customer.lastName || ""}`.trim(),
-          },
-          { key: "email", label: "Email" },
-          { key: "phone", label: "Phone" },
-          { key: "type", label: "Customer Type" },
-          {
-            key: "status",
-            label: "Status",
-            render: (value) => (
-              <span
-                className={`detail-status ${
-                  value === "Active" ? "active" : "inactive"
-                }`}
-              >
-                {value || "—"}
-              </span>
-            ),
-          },
-          { key: "ordersCount", label: "Total Orders" },
-          { key: "totalSpent", label: "Total Spent" },
-          { key: "updatedAt", label: "Last Updated" },
-        ]}
+        headerIcon="bi-person"
+        title="Customer Details"
+        code={selectedCustomer?.customerId || selectedCustomer?.id ? `ID: ${selectedCustomer.customerId || selectedCustomer.id}` : ""}
+        hero={
+          selectedCustomer
+            ? {
+                icon: "bi-person-circle",
+                title:
+                  selectedCustomer.name ||
+                  `${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}`.trim() ||
+                  "Customer",
+                subtitle: selectedCustomer.type || "Retail Customer",
+                status: selectedCustomer.status || "Active",
+                metricLabel: "TOTAL SPENT",
+                metricValue:
+                  typeof selectedCustomer.totalSpent === "number"
+                    ? `$${selectedCustomer.totalSpent.toFixed(2)}`
+                    : selectedCustomer.totalSpent || "$0.00",
+              }
+            : null
+        }
+        layout="bento-3"
+        maxWidth="max-w-4xl"
+        sections={
+          selectedCustomer
+            ? [
+                {
+                  title: "ACCOUNT IDENTITY",
+                  fields: [
+                    {
+                      label: "CUSTOMER ID",
+                      value: selectedCustomer.customerId || selectedCustomer.id,
+                      mono: true,
+                    },
+                    {
+                      label: "CUSTOMER TYPE",
+                      value: selectedCustomer.type || "Retail Customer",
+                    },
+                    {
+                      label: "STATUS",
+                      value: selectedCustomer.status || "Active",
+                      render: (val) => (
+                        <span
+                          className={`bento-status-pill ${
+                            String(val).toLowerCase() === "active" ? "active" : "inactive"
+                          }`}
+                        >
+                          {val || "Active"}
+                        </span>
+                      ),
+                    },
+                  ],
+                },
+                {
+                  title: "COMMUNICATION",
+                  fields: [
+                    {
+                      label: "EMAIL ADDRESS",
+                      value: selectedCustomer.email,
+                    },
+                    {
+                      label: "PHONE NUMBER",
+                      value: selectedCustomer.phone,
+                    },
+                    {
+                      label: "STORE SCOPE",
+                      value: store?.name || "Current Store",
+                    },
+                  ],
+                },
+                {
+                  title: "ORDER ACTIVITY",
+                  fields: [
+                    {
+                      label: "TOTAL ORDERS",
+                      value: `${selectedCustomer.ordersCount ?? 0} Orders`,
+                    },
+                    {
+                      label: "LIFETIME VALUE",
+                      value:
+                        typeof selectedCustomer.totalSpent === "number"
+                          ? `$${selectedCustomer.totalSpent.toFixed(2)}`
+                          : selectedCustomer.totalSpent || "$0.00",
+                    },
+                    {
+                      label: "LAST UPDATED",
+                      value: selectedCustomer.updatedAt || "Recently",
+                    },
+                  ],
+                },
+              ]
+            : []
+        }
       />
     </div>
   );
@@ -610,18 +562,6 @@ function CustomerRow({ customer, onView }) {
       <td>
 
         <div className="store-customer-info">
-
-          <div className="store-customer-avatar">
-            {customer.profilePhoto ? (
-              <img
-                src={customer.profilePhoto}
-                alt={displayName}
-              />
-            ) : (
-              initials
-            )}
-          </div>
-
           <div>
             <strong>
               {displayName}

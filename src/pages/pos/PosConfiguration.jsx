@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../../styles/pos-configuration.css";
-import { ApiError } from "../../api/http";
+import { ApiError, pendingStoreRead } from "../../api/http";
 import { CashRegisterIcon, PosSettingsContext, SettingsChangeDialog, snapshotKey } from "./shared";
 import { OpeningBalanceSettings } from "./opening-balance/OpeningBalanceSettings";
 import { TaxConfiguration } from "./currency-tax/TaxConfiguration";
@@ -8,9 +8,11 @@ import { CashbackSettings } from "./cashback/CashbackSettings";
 import { ServiceChargeSettings } from "./service-charges/ServiceChargeSettings";
 import { DenominationSettings } from "./cash-denominations/DenominationSettings";
 import { PaymentSettings } from "./card-payments/PaymentSettings";
+import { DeviceMapping } from "./device-mapping/DeviceMapping";
 import { RegisterConfiguration, registerRows } from "./cash-registers/RegisterConfiguration";
 import { MappingConfiguration, mappingRows } from "./terminal-mappings/MappingConfiguration";
 import { SafeConfiguration } from "./safe-drop/SafeConfiguration";
+import { PrinterSettings } from "./printer-settings/PrinterSettings";
 import { getPosCashRegisters } from "./cash-registers/api";
 import { getPosTerminalMappings } from "./terminal-mappings/api";
 
@@ -96,6 +98,24 @@ const configurationCards = [
         component: "terminal-mapping",
         enabled: true,
     },
+        {
+        id: "device-mapping",
+        icon: "pc-display",
+        iconClass: "green",
+        title: "Store Device Mapping",
+        description: "Assign merchant devices to this store.",
+        component: "device-mapping",
+        enabled: true,
+    },
+    {
+        id: "printer-settings",
+        icon: "printer",
+        iconClass: "blue",
+        title: "Printer Settings",
+        description: "Add a receipt logo, header, and footer for this store.",
+        component: "printer-settings",
+        enabled: true,
+    },
 ];
 
 const initialRegisters = [
@@ -115,7 +135,7 @@ const initialSafeSettings = {
     cashierInitiated: true, reasonRequired: true, tubeSize: "", tubes: [], drops: [],
 };
 
-export default function PosConfiguration({ merchantId, storeId, store } = {}) {
+export default function PosConfiguration({ merchantId, storeId, store, embedded = false } = {}) {
     const [registers, setRegisters] = useState(() => (storeId ? [] : initialRegisters));
     const [mappings, setMappings] = useState(() => (storeId ? [] : initialMappings));
     const [safeSettings, setSafeSettings] = useState(initialSafeSettings);
@@ -125,14 +145,14 @@ export default function PosConfiguration({ merchantId, storeId, store } = {}) {
     useEffect(() => {
         if (!storeId) return undefined;
         let active = true;
-        getPosCashRegisters(storeId)
+        pendingStoreRead(`pos-cash-registers:${storeId}`, () => getPosCashRegisters(storeId))
             .then((record) => {
                 if (active && record?.registers) setRegisters(registerRows(record.registers));
             })
             .catch((error) => {
                 if (error instanceof ApiError && error.status === 404) return;
             });
-        getPosTerminalMappings(storeId)
+        pendingStoreRead(`pos-terminal-mappings:${storeId}`, () => getPosTerminalMappings(storeId))
             .then((record) => {
                 if (active && record?.mappings) setMappings(mappingRows(record.mappings));
             })
@@ -149,6 +169,11 @@ export default function PosConfiguration({ merchantId, storeId, store } = {}) {
     const [busy, setBusy] = useState(false);
     const [notice, setNotice] = useState("");
     const saveLock = useRef(false);
+    useEffect(() => {
+        if (!notice) return undefined;
+        const timeout = window.setTimeout(() => setNotice(""), 3000);
+        return () => window.clearTimeout(timeout);
+    }, [notice]);
     const session = useMemo(() => ({ saved: savedScreens.current[selectedConfig] || {}, baseline: {}, draft: {}, resets: {}, save: null, editorDirty: null, resetEditor: null }), [selectedConfig]);
     const isDirty = () => snapshotKey(session.draft) !== snapshotKey(session.baseline) || !!session.editorDirty?.();
     const leave = (target) => { setPendingLeave(null); setNotice(""); setSelectedConfig(target); };
@@ -189,6 +214,7 @@ export default function PosConfiguration({ merchantId, storeId, store } = {}) {
     const settings = { session, currency: storeCurrency, currencySymbol, merchantId, storeId, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) };
 
     const filteredCards = configurationCards.filter((card) => {
+        if (card.component === "device-mapping" && !embedded) return false;
         const search = searchQuery.trim().toLowerCase();
 
         if (!search) {
@@ -230,6 +256,12 @@ export default function PosConfiguration({ merchantId, storeId, store } = {}) {
             case "terminal-mapping":
                 return <MappingConfiguration value={mappings} registers={registers} onSave={setMappings} onBack={() => requestLeave(null)} onManageRegisters={() => requestLeave("cash-register")} />;
 
+            case "device-mapping":
+                return <DeviceMapping onBack={() => requestLeave(null)} />;
+
+            case "printer-settings":
+                return <PrinterSettings onBack={() => requestLeave(null)} />;
+
             default:
                 return null;
         }
@@ -239,19 +271,6 @@ export default function PosConfiguration({ merchantId, storeId, store } = {}) {
     return (
         <PosSettingsContext.Provider value={settings}>
         <div className="page-content pos-page-content">
-
-            <div className="pos-config-detail-header">
-
-                <button
-                    type="button"
-                    className="pos-back-button"
-                    onClick={() => requestLeave(null)}
-                >
-                    <i className="bi bi-arrow-left" />
-                    <span>Back to POS Configuration</span>
-                </button>
-
-            </div>
 
             <div className="pos-config-detail-card">
                 <fieldset className="pos-screen-lock" disabled={busy} aria-busy={busy}>{renderSelectedContent()}</fieldset>

@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { deleteMerchant } from "./api/merchants";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import GuestRoute from "./auth/GuestRoute";
 import AppLayout from "./layouts/AppLayout";
@@ -26,6 +25,7 @@ import Legal from "./pages/Legal";
 import Employees from "./pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
+import EmployeeView from "./pages/EmployeeView";
 import Devices from "./pages/Devices";
 import AddDevice from "./pages/AddDevice";
 import DeviceView from "./pages/DeviceView";
@@ -33,6 +33,9 @@ import EditDevice from "./pages/EditDevice";
 import Products from "./pages/Products";
 import Coupons from "./pages/Coupons";
 import Orders from "./pages/Orders";
+import OrderDetail from "./pages/OrderDetail";
+import OrderView from "./pages/OrderView";
+import VendorView from "./pages/VendorView";
 import CreateStoreType from "./pages/CreateStoreType";
 import CreatePlan from "./pages/CreatePlan";
 import StoreTypeDetails from "./pages/StoreTypeDetails";
@@ -40,12 +43,14 @@ import StoreTypeFeatures from "./pages/StoreTypeFeatures";
 import StoreTypeRoleTemplates from "./pages/StoreTypeRoleTemplates";
 import Features from "./pages/Features";
 import FeaturePermissions from "./pages/FeaturePermissions";
+import FeaturePermissionsOverview from "./pages/FeaturePermissionsOverview";
 import FeatureOverview from "./pages/FeatureOverview";
 import FeatureStoreTypes from "./pages/FeatureStoreTypes";
 import FeaturePermissionDetails from "./pages/FeaturePermissionDetails";
 import RoleTemplates from "./pages/Roletemplates";
 import Vendors from "./pages/Vendors";
 import Tenders from "./pages/Tenders";
+import TenderDetails from "./pages/TenderDetails";
 import ViewRoleTemplateOverview from "./pages/ViewRoleTemplateDetails";
 import ViewRoleTemplateStoreTypes from "./pages/ViewRoleTemplateStoreTypes";
 import ViewRoleTemplateAccess from "./pages/ViewRoleTemplateAccess";
@@ -71,6 +76,75 @@ const placeholders = [
 
 export default function App() {
   const [localMerchants, setLocalMerchants] = useState([]);
+
+  useEffect(() => {
+    const messageFor = (input) => {
+      const validity = input.validity;
+      const labelNode = input.labels?.[0]?.cloneNode(true);
+      labelNode?.querySelectorAll(".inline-validation-error").forEach((node) => node.remove());
+      const label = labelNode?.textContent
+        ?.replace(/\s+/g, " ")
+        .replace(/\*|required/gi, "")
+        .trim();
+      const field = label || String(input.name || input.id || "This field")
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .replace(/^./, (character) => character.toUpperCase());
+      if (validity.valueMissing) return `${field} is required.`;
+      if (validity.typeMismatch && input.type === "email") return "Enter a valid email address.";
+      if (validity.typeMismatch && input.type === "url") return "Enter a valid URL.";
+      if (validity.rangeUnderflow) return `Enter a value of at least ${input.min}.`;
+      if (validity.rangeOverflow) return `Enter a value no greater than ${input.max}.`;
+      if (validity.stepMismatch) return "Enter a valid value.";
+      if (validity.tooShort) return `Enter at least ${input.minLength} characters.`;
+      if (validity.tooLong) return `Enter no more than ${input.maxLength} characters.`;
+      return input.validationMessage || "Check this field.";
+    };
+    const onInvalid = (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLElement) || input.dataset.noInlineValidation === "true") return;
+      event.preventDefault();
+      const field = input.closest("label") || input.closest(".form-group, .field, .form-field, .coupon-form-field") || input.parentElement;
+      if (!field) return;
+      field.classList.add("has-inline-validation-error");
+      input.setAttribute("aria-invalid", "true");
+      let message = field.querySelector(":scope > .inline-validation-error");
+      if (!message) {
+        message = document.createElement("small");
+        message.className = "inline-validation-error";
+        message.setAttribute("role", "alert");
+        field.append(message);
+      }
+      message.textContent = messageFor(input);
+      if (!input.id) input.id = `inline-validation-${Math.random().toString(36).slice(2)}`;
+      const describedBy = new Set((input.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean));
+      describedBy.add(message.id || (message.id = `${input.id}-error`));
+      input.setAttribute("aria-describedby", [...describedBy].join(" "));
+    };
+    const onInput = (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLElement) || !input.checkValidity()) return;
+      const field = input.closest("label") || input.closest(".form-group, .field, .form-field, .coupon-form-field") || input.parentElement;
+      field?.classList.remove("has-inline-validation-error");
+      const message = field?.querySelector(":scope > .inline-validation-error");
+      if (message?.id) {
+        const describedBy = new Set((input.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean));
+        describedBy.delete(message.id);
+        if (describedBy.size) input.setAttribute("aria-describedby", [...describedBy].join(" "));
+        else input.removeAttribute("aria-describedby");
+      }
+      message?.remove();
+      input.removeAttribute("aria-invalid");
+    };
+    document.addEventListener("invalid", onInvalid, true);
+    document.addEventListener("input", onInput, true);
+    document.addEventListener("change", onInput, true);
+    return () => {
+      document.removeEventListener("invalid", onInvalid, true);
+      document.removeEventListener("input", onInput, true);
+      document.removeEventListener("change", onInput, true);
+    };
+  }, []);
 
   function saveLocalMerchant(merchant) {
     if (!merchant?.id) {
@@ -128,7 +202,6 @@ export default function App() {
           path="/merchants"
           element={
             <Merchants
-              deleteMerchant={deleteMerchant}
               onSaveEmployee={createEmployee}
               localMerchants={localMerchants}
               onLocalDelete={removeLocalMerchant}
@@ -186,6 +259,8 @@ export default function App() {
         {/* Stores */}
         <Route path="/stores" element={<Stores />} />
         <Route path="/stores/new" element={<AddStore />} />
+        <Route path="/stores/:storeId" element={<StoreConfiguration />} />
+        <Route path="/merchants/:merchantId/stores/:storeId" element={<StoreConfiguration />} />
         <Route path="/stores/:storeId/edit" element={<AddStore />} />
         <Route
           path="/stores/:storeId/configuration"
@@ -199,6 +274,7 @@ export default function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/coupons" element={<Coupons />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/orders/:orderId" element={<OrderDetail />} />
         {/* Users and POS */}
         <Route path="/users" element={<Users />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
@@ -206,6 +282,7 @@ export default function App() {
         <Route path="/employees" element={<Employees />} />
         <Route path="/employees/add" element={<AddEmployee />} />
         <Route path="/employees/edit" element={<EditEmployee />} />
+        <Route path="/employees/:employeeId" element={<EmployeeView />} />
         <Route path="/editemployee" element={<EditEmployee />} />
         {/* Devices */}
         <Route path="/devices" element={<Devices />} />
@@ -234,50 +311,31 @@ export default function App() {
           path="/features/:featureId/permissions"
           element={<FeaturePermissionDetails />}
         />
-        {/* Feature Permissions */}
-        <Route path="/permissions" element={<FeaturePermissions />} />
-        <Route
-          path="/permissions/:featureId"
-          element={<FeaturePermissions />}
-        />
-        //
+      
+        
+      
         {/* Master Setup */}
+        <Route path="/vendors/add" element={<Vendors formOnly />} />
         <Route path="/vendors" element={<Vendors />} />
+        <Route path="/vendors/:vendorId" element={<VendorView />} />
         <Route path="/tenders" element={<Tenders />} />
+        <Route path="/tenders/:tenderId" element={<TenderDetails />} />
         <Route path="/role-templates" element={<RoleTemplates />} />
         <Route path="/plans/new" element={<CreatePlan />} />
+        <Route path="/store-types" element={<CreateStoreType />} />
         <Route path="/store-types/new" element={<CreateStoreType />} />
-        <Route
-          path="/store-types/:storeTypeId"
-          element={<StoreTypeDetails />}
-        />
-        <Route
-          path="/store-types/:storeTypeId/features"
-          element={<StoreTypeFeatures />}
-        />
-        <Route
-          path="/store-types/:storeTypeId/role-templates"
-          element={<StoreTypeRoleTemplates />}
-        />
-        <Route
-          path="/role-templates/:roleId"
-          element={<ViewRoleTemplateOverview />}
-        />
-        <Route
-          path="/role-templates/:roleId/store-types"
-          element={<ViewRoleTemplateStoreTypes />}
-        />
-        <Route
-          path="/role-templates/:roleId/access"
-          element={<ViewRoleTemplateAccess />}
-        />
+        <Route path="/store-types/:storeTypeId"  element={<StoreTypeDetails />} />
+        <Route path="/store-types/:storeTypeId/features"element={<StoreTypeFeatures />} />
+        <Route path="/store-types/:storeTypeId/role-templates" element={<StoreTypeRoleTemplates />} />
+        <Route path="/feature-permissions" element={<FeaturePermissions />} />
+        <Route path="/features/:featureId/permissions/:permissionId"element={<FeaturePermissionsOverview />}/>
+        <Route path="/role-templates/:roleId" element={<ViewRoleTemplateOverview />} />
+        <Route path="/role-templates/:roleId/store-types"element={<ViewRoleTemplateStoreTypes />}/>
+        <Route path="/role-templates/:roleId/access" element={<ViewRoleTemplateAccess />} />
         <Route path="/plans/:planId" element={<ViewPlanOverview />} />
         <Route path="/plans/:planId/pricing" element={<ViewPlanPricing />} />
-        <Route
-          path="/plans/:planId/features-limits"
-          element={<ViewPlanFeaturesLimits />}
-        />
-      </Route>
+        <Route path="/plans/:planId/features-limits" element={<ViewPlanFeaturesLimits />} />
+        </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

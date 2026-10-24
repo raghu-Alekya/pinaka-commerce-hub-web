@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
-import ViewDetailsModal from "../components/ViewDetailsModal";
+import BentoDetailModal from "../components/BentoDetailModal";
 import {
-  categoriesSeed,
-  tagsSeed,
-  attributesSeed,
-} from "../data/data";
+  fetchWordpressAttributes,
+  getStoreCatalogTaxonomies,
+  syncWordpressAttributes,
+} from "../api/storeConnector";
 import "../styles/store-categories.css";
 
 
@@ -53,6 +54,7 @@ export default function StoreCategories({
 
   const [search, setSearch] =
     useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
 
   /* =======================================================
@@ -99,6 +101,132 @@ export default function StoreCategories({
   const [attributePageSize, setAttributePageSize] =
     useState(10);
 
+  const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [attributes, setAttributes] = useState([]);
+  const [taxonomyLoading, setTaxonomyLoading] = useState(Boolean(storeId));
+  const [taxonomyError, setTaxonomyError] = useState("");
+  const [attributeAction, setAttributeAction] = useState("");
+  const [attributeActionMessage, setAttributeActionMessage] = useState("");
+  const [attributeActionError, setAttributeActionError] = useState("");
+
+  const applyTaxonomies = useCallback((response) => {
+    const data = response?.taxonomies || response?.data?.taxonomies || response?.data || response || {};
+    const categoryRows = Array.isArray(data.categories) ? data.categories : [];
+    const categoryNames = new Map(categoryRows.map((item) => [String(item.id), item.name || ""]));
+
+    setCategories(categoryRows.map((item) => ({
+      ...item,
+      id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+      name: item.name || item.title || "Unnamed category",
+      slug: item.slug || "—",
+      parent: categoryNames.get(String(item.parent)) || item.parent_name || item.parent?.name || "",
+      productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+      status: item.status || "Active",
+    })));
+    setTags((Array.isArray(data.tags) ? data.tags : []).map((item) => ({
+      ...item,
+      id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+      name: item.name || item.title || "Unnamed tag",
+      slug: item.slug || "—",
+      productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+      status: item.status || "Active",
+    })));
+    setAttributes((Array.isArray(data.attributes) ? data.attributes : []).map((item) => ({
+      ...item,
+      id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+      name: item.name || item.title || "Unnamed attribute",
+      slug: item.slug || "—",
+      productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+      terms: Array.isArray(item.terms) ? item.terms.map((term) => typeof term === "object" ? term.name || term.slug : String(term)) : [],
+      status: item.status || "Active",
+    })));
+  }, []);
+
+  const refreshTaxonomies = useCallback(async (signal) => {
+    const response = await getStoreCatalogTaxonomies(storeId, { signal });
+    applyTaxonomies(response);
+    return response;
+  }, [applyTaxonomies, storeId]);
+
+  const handleFetchAttributes = useCallback(async () => {
+    if (!storeId) return;
+    setAttributeAction("fetch");
+    setAttributeActionError("");
+    setAttributeActionMessage("");
+    try {
+      const response = await fetchWordpressAttributes(storeId);
+      const data = response?.data || response || {};
+      const rows = Array.isArray(data) ? data : Array.isArray(data.attributes) ? data.attributes : [];
+      setAttributes(rows.map((item) => ({
+        ...item,
+        id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+        name: item.name || item.title || "Unnamed attribute",
+        slug: item.slug || "—",
+        productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+        terms: Array.isArray(item.terms) ? item.terms.map((term) => typeof term === "object" ? term.name || term.slug : String(term)) : [],
+        status: item.status || "Active",
+      })));
+      setAttributePage(1);
+      setAttributeActionMessage(`Fetch succeeded: WooCommerce returned ${rows.length} attributes.`);
+    } catch (error) {
+      setAttributeActionError(error?.message || "Could not fetch attributes from WooCommerce.");
+    } finally {
+      setAttributeAction("");
+    }
+  }, [storeId]);
+
+  const handleSyncAttributes = async () => {
+    if (!storeId) return;
+    setAttributeAction("sync");
+    setAttributeActionError("");
+    setAttributeActionMessage("");
+    try {
+      const response = await syncWordpressAttributes(storeId);
+      const data = response?.data || response || {};
+      const count = Number(data.attributeCount ?? data.count ?? 0);
+      await refreshTaxonomies();
+      setAttributeActionMessage(`Sync succeeded: ${count} attributes saved for this store.`);
+    } catch (error) {
+      setAttributeActionError(error?.message || "Could not sync attributes for this store.");
+    } finally {
+      setAttributeAction("");
+    }
+  };
+
+  useEffect(() => {
+    if (!storeId) {
+      setCategories([]);
+      setTags([]);
+      setAttributes([]);
+      setTaxonomyLoading(false);
+      setTaxonomyError("Select a store to view its catalog data.");
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    setTaxonomyLoading(true);
+    setTaxonomyError("");
+    refreshTaxonomies(controller.signal)
+      .catch((error) => {
+        if (error?.name !== "AbortError") {
+          setTaxonomyError(error?.message || "Could not load this store’s categories, tags, and attributes.");
+          setCategories([]);
+          setTags([]);
+          setAttributes([]);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setTaxonomyLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [refreshTaxonomies, storeId]);
+
+  useEffect(() => {
+    if (activeTab !== "attributes" || !storeId) return;
+    handleFetchAttributes();
+  }, [activeTab, handleFetchAttributes, storeId]);
 
   /* =========================================================
      FILTER CATEGORIES
@@ -109,13 +237,9 @@ export default function StoreCategories({
     const value =
       search.trim().toLowerCase();
 
-    if (!value) {
-      return categoriesSeed;
-    }
-
-    return categoriesSeed.filter(
-      (item) =>
-        [
+    return categories.filter(
+      (item) => {
+        const matchesSearch = !value || [
           item.name,
           item.slug,
           item.parent,
@@ -124,10 +248,13 @@ export default function StoreCategories({
           String(field || "")
             .toLowerCase()
             .includes(value)
-        )
+        );
+        const matchesStatus = !statusFilter || String(item.status || "Active").toLowerCase() === statusFilter.toLowerCase();
+        return matchesSearch && matchesStatus;
+      }
     );
 
-  }, [search]);
+  }, [categories, search, statusFilter]);
 
 
   /* =========================================================
@@ -139,13 +266,9 @@ export default function StoreCategories({
     const value =
       search.trim().toLowerCase();
 
-    if (!value) {
-      return tagsSeed;
-    }
-
-    return tagsSeed.filter(
-      (item) =>
-        [
+    return tags.filter(
+      (item) => {
+        const matchesSearch = !value || [
           item.name,
           item.slug,
           item.status,
@@ -153,10 +276,13 @@ export default function StoreCategories({
           String(field || "")
             .toLowerCase()
             .includes(value)
-        )
+        );
+        const matchesStatus = !statusFilter || String(item.status || "Active").toLowerCase() === statusFilter.toLowerCase();
+        return matchesSearch && matchesStatus;
+      }
     );
 
-  }, [search]);
+  }, [search, tags, statusFilter]);
 
 
   /* =========================================================
@@ -168,13 +294,9 @@ export default function StoreCategories({
     const value =
       search.trim().toLowerCase();
 
-    if (!value) {
-      return attributesSeed;
-    }
-
-    return attributesSeed.filter(
-      (item) =>
-        [
+    return attributes.filter(
+      (item) => {
+        const matchesSearch = !value || [
           item.name,
           item.slug,
           item.status,
@@ -182,10 +304,13 @@ export default function StoreCategories({
           String(field || "")
             .toLowerCase()
             .includes(value)
-        )
+        );
+        const matchesStatus = !statusFilter || String(item.status || "Active").toLowerCase() === statusFilter.toLowerCase();
+        return matchesSearch && matchesStatus;
+      }
     );
 
-  }, [search]);
+  }, [attributes, search, statusFilter]);
 
 
   /* =========================================================
@@ -259,6 +384,7 @@ export default function StoreCategories({
     setActiveTab(tab);
 
     setSearch("");
+    setStatusFilter("");
 
     setSelectedItem(null);
     setSelectedItemType("");
@@ -281,6 +407,21 @@ export default function StoreCategories({
       event.target.value
     );
 
+    setCategoryPage(1);
+    setTagPage(1);
+    setAttributePage(1);
+  };
+
+  const handleStatusFilterChange = (event) => {
+    setStatusFilter(event.target.value);
+    setCategoryPage(1);
+    setTagPage(1);
+    setAttributePage(1);
+  };
+
+  const resetFilters = () => {
+    setSearch("");
+    setStatusFilter("");
     setCategoryPage(1);
     setTagPage(1);
     setAttributePage(1);
@@ -486,46 +627,117 @@ export default function StoreCategories({
 
 
   /* =========================================================
-     SELECT MODAL FIELDS
+     MODAL HERO & ATTRIBUTES
   ========================================================= */
 
-  const getModalFields = () => {
-
-    if (
-      selectedItemType ===
-      "category"
-    ) {
-      return categoryDetailsFields;
-    }
-
-    if (
-      selectedItemType ===
-      "tag"
-    ) {
-      return tagDetailsFields;
-    }
-
-    return attributeDetailsFields;
+  const getCategoryHero = () => {
+    if (!selectedItem) return null;
+    const isCat = selectedItemType === "category";
+    const isTag = selectedItemType === "tag";
+    return {
+      icon: isCat ? "bi-folder2-open" : isTag ? "bi-tag" : "bi-sliders",
+      title: selectedItem.name || (isCat ? "Category" : isTag ? "Tag" : "Attribute"),
+      status: selectedItem.status || "Active",
+      metricLabel: "TOTAL PRODUCTS",
+      metricValue: String(selectedItem.productCount ?? 0),
+    };
   };
 
+  const getCategoryFields = () => {
+    if (!selectedItem) return [];
+    if (selectedItemType === "category") {
+      return [
+        {
+          label: "PARENT CATEGORY",
+          value: selectedItem.parent || "None (Root Category)",
+        },
+        {
+          label: "VISIBILITY",
+          value:
+            selectedItem.visibility ||
+            (String(selectedItem.status || "").toLowerCase() === "inactive"
+              ? "Hidden"
+              : "Visible"),
+        },
+        {
+          label: "DISPLAY ORDER",
+          value: String(
+            selectedItem.displayOrder ??
+              selectedItem.menu_order ??
+              selectedItem.order ??
+              0
+          ),
+        },
+        {
+          label: "SLUG",
+          value:
+            selectedItem.slug && selectedItem.slug !== "—"
+              ? selectedItem.slug
+              : selectedItem.id
+              ? String(selectedItem.id)
+              : "—",
+          mono: true,
+        },
+        {
+          label: "DESCRIPTION",
+          value: selectedItem.description || "No description provided",
+          fullWidth: true,
+        },
+      ];
+    }
+
+    if (selectedItemType === "tag") {
+      return [
+        { label: "TAG NAME", value: selectedItem.name },
+        { label: "STATUS", value: selectedItem.status || "Active", isStatus: true },
+        { label: "SLUG", value: selectedItem.slug || "—", mono: true },
+        { label: "PRODUCT COUNT", value: `${selectedItem.productCount ?? 0} products` },
+        {
+          label: "DESCRIPTION",
+          value: selectedItem.description || "No description provided",
+          fullWidth: true,
+        },
+      ];
+    }
+
+    return [
+      { label: "ATTRIBUTE NAME", value: selectedItem.name },
+      { label: "STATUS", value: selectedItem.status || "Active", isStatus: true },
+      { label: "SLUG", value: selectedItem.slug || "—", mono: true },
+      { label: "PRODUCT COUNT", value: `${selectedItem.productCount ?? 0} products` },
+      {
+        label: "TERMS / VALUES",
+        value:
+          Array.isArray(selectedItem.terms) && selectedItem.terms.length
+            ? selectedItem.terms
+            : null,
+        fullWidth: true,
+        render: (terms) =>
+          Array.isArray(terms) && terms.length ? (
+            <div className="bento-chips-wrap">
+              {terms.map((term) => (
+                <span key={term} className="bento-chip">
+                  {term}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span className="bento-field-value empty-state">No terms defined</span>
+          ),
+      },
+    ];
+  };
 
   /* =========================================================
      MODAL TITLE
   ========================================================= */
 
   const getModalTitle = () => {
-
-    if (
-      selectedItemType ===
-      "category"
-    ) {
+    if (selectedItemType === "category") {
       return "Category Details";
     }
 
-    if (
-      selectedItemType ===
-      "tag"
-    ) {
+    if (selectedItemType === "tag") {
       return "Tag Details";
     }
 
@@ -550,27 +762,27 @@ export default function StoreCategories({
             <tr>
 
               <th>
-                CATEGORY
+                Category
               </th>
 
               <th>
-                SLUG
+                Slug
               </th>
 
               <th>
-                PARENT CATEGORY
+                Parent Category
               </th>
 
               <th>
-                PRODUCTS
+                Products
               </th>
 
               <th>
-                STATUS
+                Status
               </th>
 
               <th>
-                ACTION
+                Action
               </th>
 
             </tr>
@@ -588,18 +800,18 @@ export default function StoreCategories({
 
                   <tr
                     key={item.id}
+                    style={{ cursor: "pointer" }}
+                    onClick={(event) => {
+                      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                        return;
+                      }
+                      openView(item, "category");
+                    }}
                   >
 
                     <td>
 
                       <div className="category-name-cell">
-
-                        <div className="category-icon">
-
-                          <i className="bi bi-folder" />
-
-                        </div>
-
                         <div>
 
                           <strong>
@@ -676,12 +888,13 @@ export default function StoreCategories({
                         type="button"
                         className="table-action"
                         title="View Category"
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           openView(
                             item,
                             "category"
-                          )
-                        }
+                          );
+                        }}
                       >
                         <i className="bi bi-eye" />
                       </button>
@@ -700,13 +913,6 @@ export default function StoreCategories({
                 <td colSpan="6">
 
                   <div className="categories-empty-state">
-
-                    <div className="categories-empty-icon">
-
-                      <i className="bi bi-folder2-open" />
-
-                    </div>
-
                     <h3>
                       No categories found
                     </h3>
@@ -740,6 +946,8 @@ export default function StoreCategories({
         totalItems={
           filteredCategories.length
         }
+        itemLabel="categories"
+        showWhenEmpty
         pageSize={
           categoryPageSize
         }
@@ -759,6 +967,7 @@ export default function StoreCategories({
           );
 
         }}
+        
       />
 
     </>
@@ -783,23 +992,23 @@ export default function StoreCategories({
             <tr>
 
               <th>
-                TAG
+                Tag
               </th>
 
               <th>
-                SLUG
+                Slug
               </th>
 
               <th>
-                PRODUCTS
+                Products
               </th>
 
               <th>
-                STATUS
+                Status
               </th>
 
               <th>
-                ACTION
+                Action
               </th>
 
             </tr>
@@ -817,6 +1026,13 @@ export default function StoreCategories({
 
                   <tr
                     key={item.id}
+                    style={{ cursor: "pointer" }}
+                    onClick={(event) => {
+                      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                        return;
+                      }
+                      openView(item, "tag");
+                    }}
                   >
 
                     <td>
@@ -891,12 +1107,13 @@ export default function StoreCategories({
                         type="button"
                         className="table-action"
                         title="View Tag"
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           openView(
                             item,
                             "tag"
-                          )
-                        }
+                          );
+                        }}
                       >
                         <i className="bi bi-eye" />
                       </button>
@@ -915,13 +1132,6 @@ export default function StoreCategories({
                 <td colSpan="5">
 
                   <div className="categories-empty-state">
-
-                    <div className="categories-empty-icon">
-
-                      <i className="bi bi-tags" />
-
-                    </div>
-
                     <h3>
                       No tags found
                     </h3>
@@ -955,6 +1165,8 @@ export default function StoreCategories({
         totalItems={
           filteredTags.length
         }
+        itemLabel="tags"
+        showWhenEmpty
         pageSize={
           tagPageSize
         }
@@ -974,6 +1186,7 @@ export default function StoreCategories({
           );
 
         }}
+      
       />
 
     </>
@@ -998,27 +1211,27 @@ export default function StoreCategories({
             <tr>
 
               <th>
-                ATTRIBUTE
+                Attribute
               </th>
 
               <th>
-                SLUG
+                Slug
               </th>
 
               <th>
-                TERMS / VALUES
+                Terms / Values
               </th>
 
               <th>
-                PRODUCTS
+                Products
               </th>
 
               <th>
-                STATUS
+                Status
               </th>
 
               <th>
-                ACTION
+                Action
               </th>
 
             </tr>
@@ -1036,18 +1249,18 @@ export default function StoreCategories({
 
                   <tr
                     key={item.id}
+                    style={{ cursor: "pointer" }}
+                    onClick={(event) => {
+                      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                        return;
+                      }
+                      openView(item, "attribute");
+                    }}
                   >
 
                     <td>
 
                       <div className="category-name-cell">
-
-                        <div className="category-icon attribute-icon">
-
-                          <i className="bi bi-sliders" />
-
-                        </div>
-
                         <div>
 
                           <strong>
@@ -1160,12 +1373,13 @@ export default function StoreCategories({
                         type="button"
                         className="table-action"
                         title="View Attribute"
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           openView(
                             item,
                             "attribute"
-                          )
-                        }
+                          );
+                        }}
                       >
                         <i className="bi bi-eye" />
                       </button>
@@ -1184,13 +1398,6 @@ export default function StoreCategories({
                 <td colSpan="6">
 
                   <div className="categories-empty-state">
-
-                    <div className="categories-empty-icon">
-
-                      <i className="bi bi-sliders" />
-
-                    </div>
-
                     <h3>
                       No attributes found
                     </h3>
@@ -1224,6 +1431,8 @@ export default function StoreCategories({
         totalItems={
           filteredAttributes.length
         }
+        itemLabel="attributes"
+        showWhenEmpty
         pageSize={
           attributePageSize
         }
@@ -1243,6 +1452,7 @@ export default function StoreCategories({
           );
 
         }}
+       
       />
 
     </>
@@ -1280,28 +1490,6 @@ export default function StoreCategories({
             Manage store categories, tags and product attributes.
           </p>
 
-
-          {store ? (
-
-            <div className="categories-store-context">
-
-              <i className="bi bi-shop" />
-
-              <span>
-                {store.name}
-              </span>
-
-              <span className="context-separator">
-                •
-              </span>
-
-              <span>
-                {store.id}
-              </span>
-
-            </div>
-
-          ) : null}
 
         </div>
 
@@ -1377,12 +1565,73 @@ export default function StoreCategories({
 
           </div>
 
+          <FilterDropdown
+            aria-label={`Filter ${activeTab} by status`}
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+          >
+            <option value="">All Statuses</option>
+            {[...new Set((activeTab === "categories" ? categories : activeTab === "tags" ? tags : attributes)
+              .map((item) => item.status || "Active"))].map((status) => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </FilterDropdown>
+
+          <button type="button" className="categories-clear-btn" onClick={resetFilters}>
+            <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
+            Reset
+          </button>
+
+          {activeTab === "attributes" && (
+            <>
+              <button
+                type="button"
+                className="categories-clear-btn"
+                onClick={handleFetchAttributes}
+                disabled={!storeId || Boolean(attributeAction)}
+              >
+                <i className="bi bi-cloud-download" aria-hidden="true" />
+                {attributeAction === "fetch" ? "Fetching…" : "Fetch from WooCommerce"}
+              </button>
+              <button
+                type="button"
+                className="categories-clear-btn"
+                onClick={handleSyncAttributes}
+                disabled={!storeId || Boolean(attributeAction)}
+              >
+                <i className="bi bi-arrow-repeat" aria-hidden="true" />
+                {attributeAction === "sync" ? "Syncing…" : "Sync Attributes"}
+              </button>
+            </>
+          )}
+
         </div>
+
+        {activeTab === "attributes" && attributeActionError && (
+          <div className="store-attribute-sync-message error" role="alert">
+            {attributeActionError}
+          </div>
+        )}
+        {activeTab === "attributes" && attributeActionMessage && (
+          <div className="store-attribute-sync-message success" role="status" aria-live="polite">
+            {attributeActionMessage}
+          </div>
+        )}
 
 
         {/* ===================================================
            CONTENT
         =================================================== */}
+
+        {taxonomyLoading ? (
+          <div className="categories-empty-state" role="status">
+            Loading categories, tags, and attributes…
+          </div>
+        ) : taxonomyError ? (
+          <div className="categories-empty-state" role="alert">
+            {taxonomyError}
+          </div>
+        ) : null}
 
         {activeTab ===
           "categories" &&
@@ -1398,51 +1647,31 @@ export default function StoreCategories({
 
       </div>
 
-
       {/* =====================================================
-         FOOTER
+         UNIFIED MODERN MODAL
       ===================================================== */}
 
-      <div className="categories-footer">
-
-        <span>
-
-          <i className="bi bi-cloud-check" />
-
-          Catalog data synced from WooCommerce
-
-        </span>
-
-      </div>
-
-
-      {/* =====================================================
-         VIEW DETAILS MODAL
-      ===================================================== */}
-
-      <ViewDetailsModal
-        open={
-          Boolean(
-            selectedItem
-          )
+      <BentoDetailModal
+        open={Boolean(selectedItem)}
+        onClose={closeView}
+        headerIcon={
+          selectedItemType === "category"
+            ? "bi-folder"
+            : selectedItemType === "tag"
+            ? "bi-tags"
+            : "bi-sliders"
         }
-        title={
-          getModalTitle()
-        }
-        subtitle={
-          selectedItem?.id
+        title={getModalTitle()}
+        code={
+          selectedItem?.slug && selectedItem.slug !== "—"
+            ? `Slug: ${selectedItem.slug}`
+            : selectedItem?.id
             ? `ID: ${selectedItem.id}`
             : ""
         }
-        data={
-          selectedItem
-        }
-        fields={
-          getModalFields()
-        }
-        onClose={
-          closeView
-        }
+        size="compact"
+        hero={getCategoryHero()}
+        fields={getCategoryFields()}
       />
 
     </div>

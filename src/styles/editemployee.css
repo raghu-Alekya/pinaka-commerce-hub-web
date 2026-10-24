@@ -81,6 +81,14 @@
   font-size: 12px;
 }
 
+.employee-password-help {
+  display: block;
+  margin-top: 6px;
+  color: #7b8da8;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 /* =========================================================
    STORE ROLE ASSIGNMENT
 ========================================================= */
@@ -397,11 +405,11 @@
 
 .employee-field .react-tel-input .form-control {
   width: 100% !important;
-  height: 46px !important;
+  height: 42px !important;
   box-sizing: border-box;
   padding-left: 48px !important;
   border: 1px solid #d4dfed !important;
-  border-radius: 8px !important;
+  border-radius: 5px !important;
   background: #fff;
   color: #1c3154;
   font-size: 15px;
@@ -416,15 +424,103 @@
 .employee-field .react-tel-input .flag-dropdown {
   height: 46px !important;
   border: 1px solid #d4dfed !important;
-  border-radius: 8px 0 0 8px !important;
+  border-radius: 6px 0 0 6px!important ;
   background: #fff !important;
 }
 
 .employee-field .react-tel-input .selected-flag {
-  height: 44px !important;
+  height: 42px !important;
   padding: 0 8px !important;
   display: flex;
   align-items: center;
+  width:40px;
+  outline: none;
+  position: relative;
+  
+}
+
+.employee-phone-control {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 46px;
+  overflow: hidden;
+  border: 1px solid #d4dfed;
+  border-radius: 8px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.employee-phone-control:focus-within {
+  border-color: #8172ef;
+  box-shadow: 0 0 0 3px rgba(129, 114, 239, 0.1);
+}
+
+.employee-phone-country,
+.employee-phone-country .react-tel-input {
+  position: relative;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 46px;
+}
+
+.employee-phone-country .react-tel-input .form-control {
+  display: none !important;
+}
+
+.employee-phone-country .react-tel-input .flag-dropdown {
+  width: 48px;
+  height: 46px !important;
+  border: 0 !important;
+  border-right: 1px solid #d4dfed !important;
+  border-radius: 8px 0 0 8px !important;
+  background: #fff !important;
+}
+
+.employee-phone-country .react-tel-input .selected-flag {
+  width: 46px;
+  height: 44px !important;
+  padding: 0 8px !important;
+}
+
+.employee-phone-code {
+  flex: 0 0 auto;
+  padding: 0 9px;
+  color: #1c3154;
+  font-size: 15px;
+}
+
+#employee-phone {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto !important;
+  height: 44px !important;
+  padding: 0 10px 0 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent;
+  color: #1c3154;
+  font-family: inherit;
+  font-size: 15px;
+  box-shadow: none !important;
+}
+
+#employee-phone:focus {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+#employee-phone::placeholder {
+  color: #91a3bd;
+}
+
+.employee-phone-control-invalid {
+  border-color: #dc2626;
+}
+
+.employee-phone-control-invalid .employee-phone-country .flag-dropdown {
+  border-right-color: #dc2626 !important;
 }
 
 /* Keep error border consistent */
@@ -432,3 +528,14 @@
 .employee-phone-invalid .react-tel-input .flag-dropdown {
   border-color: #dc2626 !important;
 }
+
+/* Embedded merchant editor: size cards to their fields instead of stretching rows. */
+.edit-employee-page .add-employee-layout { align-items: start; }
+.edit-employee-page .add-employee-left > .employee-card,
+.edit-employee-page .add-employee-right > .employee-card:last-child { flex: none; }
+.edit-employee-page .add-employee-left > .employee-card > .employee-form-grid:last-child {
+  flex: none;
+  align-content: start;
+}
+.edit-employee-page .employee-form-grid { row-gap: 18px; align-items: start; }
+.edit-employee-page .employee-form-actions { margin-top: 20px; }

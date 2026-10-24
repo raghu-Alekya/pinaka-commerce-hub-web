@@ -18,6 +18,8 @@
   font-size: 14px;
 }
 
+
+
 .view-plan-heading {
   margin: 8px 0 16px;
 }
@@ -337,6 +339,14 @@
   margin: 0;
   color: #6380ae;
   font-size: 13px;
+}
+
+
+.plan-view-features-footer {
+  width: 100%;
+  margin-top: 18px;
+  display: block;
+  box-sizing: border-box;
 }
 
 @media (max-width: 1150px) {
