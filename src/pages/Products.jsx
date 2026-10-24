@@ -6,6 +6,7 @@ import BentoDetailModal from "../components/BentoDetailModal";
 import {
     productsApi,
     normalizeCatalog,
+    normalizeProduct,
 } from "../api/products";
 import "../styles/products.css";
 
@@ -88,8 +89,7 @@ export default function Products({
 
     const [selectedProduct, setSelectedProduct] = useState(null);
 
-    const getStockStatus = (product) =>
-        getProductStockStatus(product);
+    const productGroups = useMemo(() => groupProductVariants(products), [products]);
 
     // =========================================================
     // LOAD PRODUCTS FROM API
@@ -194,13 +194,15 @@ export default function Products({
     // =========================================================
 
     const filteredProducts = useMemo(() => {
-        return products.filter((product) => {
-            const text = `
-                ${product.name || ""}
-                ${product.sku || ""}
-                ${product.category || ""}
-                ${product.brand || ""}
-            `.toLowerCase();
+        return productGroups.filter(({ product, variants }) => {
+            const searchableProducts = [product, ...variants];
+            const text = searchableProducts.map((item) => `
+                ${item.name || ""}
+                ${item.sku || ""}
+                ${item.category || ""}
+                ${item.brand || ""}
+                ${formatVariantAttributes(item.attributes)}
+            `).join(" ").toLowerCase();
 
             const matchesSearch =
                 !search ||
@@ -209,23 +211,18 @@ export default function Products({
                 );
 
             const matchesCategory =
-                !category ||
-                product.category === category;
+                !category || searchableProducts.some((item) => item.category === category);
 
             const matchesType =
                 !type ||
-                product.type === type;
+                searchableProducts.some((item) => item.type === type);
 
             const selectedStock =
                 normalizeStock(stockStatus);
 
             const matchesStock =
-                !selectedStock ||
-                (selectedStock === "instock"
-                    ? getProductStockStatus(product) === "instock"
-                    : selectedStock === "outofstock"
-                    ? getProductStockStatus(product) === "outofstock"
-                    : getProductStockStatus(product) === selectedStock);
+                !stockStatus ||
+                getGroupStockStatus(product, variants) === stockStatus;
 
             return (
                 matchesSearch &&
@@ -235,7 +232,7 @@ export default function Products({
             );
         });
     }, [
-        products,
+        productGroups,
         search,
         category,
         type,
@@ -560,7 +557,7 @@ export default function Products({
                         </span>
 
                         <strong>
-                            {products.length}
+                            {productGroups.length}
                         </strong>
                     </div>
 
@@ -581,8 +578,8 @@ export default function Products({
 
                         <strong>
                             {
-                                products.filter((product) =>
-                                    getStockStatus(product) === "instock"
+                                productGroups.filter(({ product, variants }) =>
+                                    getGroupStockStatus(product, variants) === "instock"
                                 ).length
                             }
                         </strong>
@@ -605,8 +602,8 @@ export default function Products({
 
                         <strong>
                             {
-                                products.filter((product) =>
-                                    getStockStatus(product) === "outofstock"
+                                productGroups.filter(({ product, variants }) =>
+                                    getGroupStockStatus(product, variants) === "outofstock"
                                 ).length
                             }
                         </strong>
@@ -711,11 +708,11 @@ export default function Products({
                             All Stock
                         </option>
 
-                        <option value="In stock">
+                        <option value="instock">
                             In Stock
                         </option>
 
-                        <option value="Out of stock">
+                        <option value="outofstock">
                             Out of Stock
                         </option>
                     </FilterDropdown>
@@ -788,19 +785,12 @@ export default function Products({
                             <tbody>
 
                                 {paginatedProducts.length ? paginatedProducts.map(
-                                    (product) => (
-                                        <ProductRow
-                                            key={
-                                                product.id
-                                            }
-                                            product={
-                                                product
-                                            }
-                                            onClick={() =>
-                                                setSelectedProduct(
-                                                    product
-                                                )
-                                            }
+                                    ({ product, variants }) => (
+                                        <ProductGroupRows
+                                            key={product.id}
+                                            product={product}
+                                            variants={variants}
+                                            onSelect={setSelectedProduct}
                                         />
                                     )
                                 ) : (
@@ -972,10 +962,132 @@ export default function Products({
 // PRODUCT ROW
 // =========================================================
 
+function formatVariantAttributes(attributes) {
+    if (!Array.isArray(attributes)) return "";
+    return attributes.map((attribute) => {
+        if (typeof attribute === "string") return attribute;
+        const name = attribute?.name ?? attribute?.key ?? "";
+        let value = attribute?.option ?? attribute?.value ?? attribute?.options?.join?.(", ") ?? "";
+        if (name && typeof value === "string" && value.toLowerCase().startsWith(`${name.toLowerCase()} `)) {
+            value = value.slice(name.length).trim();
+        }
+        return [name, value].filter(Boolean).join(": ");
+    }).filter(Boolean).join(" · ");
+}
+
+function formatUpdatedAt(value) {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+        ? value
+        : date.toLocaleString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+        });
+}
+
+function hasVariantDetails(variant) {
+    return Boolean(
+        variant.name ||
+        variant.sku ||
+        formatVariantAttributes(variant.attributes)
+    );
+}
+
+function normalizeStockStatus(value) {
+    const status = String(value || "").toLowerCase().replace(/[\s_-]+/g, "");
+    if (["instock", "available", "in-stock"].includes(status)) return "instock";
+    if (["outofstock", "unavailable", "out-of-stock"].includes(status)) return "outofstock";
+    return status;
+}
+
+function getGroupStockStatus(product, variants = []) {
+    const productsInGroup = variants.length ? variants : [product];
+    const statuses = productsInGroup.map((item) => normalizeStockStatus(item.stockStatus)).filter(Boolean);
+    if (!statuses.length) return "";
+    if (statuses.some((status) => status === "instock")) return "instock";
+    if (statuses.every((status) => status === "outofstock")) return "outofstock";
+    return "";
+}
+
+function groupProductVariants(products) {
+    const parents = products.filter((product) => !product.parentId && hasVariantDetails(product));
+    const variantsByParent = new Map();
+    const productsById = new Map();
+
+    products.forEach((product) => {
+        [product.id, product.wordpressId].filter(Boolean).forEach((id) => productsById.set(String(id), product));
+    });
+
+    const attach = (parentId, variant) => {
+        const parent = productsById.get(String(parentId));
+        if (!parent) return false;
+        const key = String(parent.id);
+        const list = variantsByParent.get(key) || [];
+        if (!list.some((item) => String(item.id) === String(variant.id))) list.push(variant);
+        variantsByParent.set(key, list);
+        return true;
+    };
+
+    products.filter((product) => product.parentId && hasVariantDetails(product)).forEach((variant) => attach(variant.parentId, variant));
+    parents.forEach((parent) => {
+        (Array.isArray(parent.variations) ? parent.variations : []).forEach((variant) => {
+            const normalized = normalizeProduct(variant);
+            if (!normalized.id) normalized.id = `${parent.id}-variant-${formatVariantAttributes(normalized.attributes)}`;
+            if (hasVariantDetails(normalized)) attach(parent.id, normalized);
+        });
+    });
+
+    return parents.map((product) => ({
+        product,
+        variants: variantsByParent.get(String(product.id)) || [],
+    }));
+}
+
+function ProductGroupRows({ product, variants, onSelect }) {
+    return <>
+        <ProductRow product={product} onClick={() => onSelect(product)} />
+        {variants.map((variant) => {
+            const childName = getChildProductName(product.name, variant.name);
+            const childProduct = { ...variant, name: childName };
+            return (
+                <ProductRow
+                    key={variant.id}
+                    product={childProduct}
+                    variant
+                    onClick={() => onSelect(childProduct)}
+                />
+            );
+        })}
+    </>;
+}
+
+function getChildProductName(parentName, variantName) {
+    const parent = String(parentName || "").trim();
+    const child = String(variantName || "").trim();
+    if (!parent || !child) return child;
+    if (!child.toLowerCase().startsWith(parent.toLowerCase())) return child;
+    const suffix = child.slice(parent.length).replace(/^\s*[-–—:]?\s*/, "").trim();
+    return suffix || child;
+}
+
 function ProductRow({
     product,
     onClick,
+    variant = false,
 }) {
+    const variantAttributes = variant ? formatVariantAttributes(product.attributes) : "";
+    const normalizeLabel = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const childNameKey = normalizeLabel(product.name);
+    const variantAttributesKey = normalizeLabel(variantAttributes);
+    const showProductSubtitle = variant
+        ? Boolean(variantAttributesKey && !childNameKey.includes(variantAttributesKey) && !variantAttributesKey.includes(childNameKey))
+        : Boolean(product.type);
+
     const normalizedStockStatus =
         getProductStockStatus(product);
 
@@ -993,9 +1105,8 @@ function ProductRow({
 
     return (
         <tr
-            className="product-row-clickable"
+            className={`product-row-clickable${variant ? " product-variant-row" : ""}`}
             onClick={onClick}
-            title="Click to view product details"
         >
 
             {/* =================================================
@@ -1012,11 +1123,9 @@ function ProductRow({
                                 "—"}
                         </strong>
 
-                        {product.type && (
+                        {showProductSubtitle && (
                             <small>
-                                {
-                                    product.type
-                                }
+                                {variant ? variantAttributes : product.type}
                             </small>
                         )}
 
@@ -1154,8 +1263,7 @@ function ProductRow({
             <td>
 
                 <span className="product-date">
-                    {product.updatedAt ||
-                        "Recently"}
+                    {formatUpdatedAt(product.updatedAt)}
                 </span>
 
             </td>

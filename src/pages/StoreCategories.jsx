@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
-import { getStoreCatalogTaxonomies } from "../api/storeConnector";
+import {
+  getStoreCatalogTaxonomies,
+  syncWordpressAttributes,
+} from "../api/storeConnector";
 import "../styles/store-categories.css";
 
 
@@ -27,6 +30,34 @@ const tabs = [
     icon: "bi-sliders",
   },
 ];
+
+function normalizeAttributeTerms(attribute) {
+  const rawTerms = attribute?.terms ?? attribute?.options ?? attribute?.values ?? [];
+  const terms = Array.isArray(rawTerms)
+    ? rawTerms
+    : Array.isArray(rawTerms?.data)
+      ? rawTerms.data
+      : [];
+
+  return terms
+    .map((term) => {
+      if (typeof term === "string" || typeof term === "number") return String(term);
+      return term?.name ?? term?.value ?? term?.slug ?? "";
+    })
+    .filter(Boolean);
+}
+
+function normalizeAttribute(item) {
+  return {
+    ...item,
+    id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+    name: item.name || item.title || "Unnamed attribute",
+    slug: item.slug || "—",
+    productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+    terms: normalizeAttributeTerms(item),
+    status: item.status || "Active",
+  };
+}
 
 
 export default function StoreCategories({
@@ -102,6 +133,9 @@ export default function StoreCategories({
   const [attributes, setAttributes] = useState([]);
   const [taxonomyLoading, setTaxonomyLoading] = useState(Boolean(storeId));
   const [taxonomyError, setTaxonomyError] = useState("");
+  const [attributeAction, setAttributeAction] = useState("");
+  const [attributeActionMessage, setAttributeActionMessage] = useState("");
+  const [attributeActionError, setAttributeActionError] = useState("");
 
   const applyTaxonomies = useCallback((response) => {
     const data = response?.taxonomies || response?.data?.taxonomies || response?.data || response || {};
@@ -125,15 +159,7 @@ export default function StoreCategories({
       productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
       status: item.status || "Active",
     })));
-    setAttributes((Array.isArray(data.attributes) ? data.attributes : []).map((item) => ({
-      ...item,
-      id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
-      name: item.name || item.title || "Unnamed attribute",
-      slug: item.slug || "—",
-      productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
-      terms: Array.isArray(item.terms) ? item.terms.map((term) => typeof term === "object" ? term.name || term.slug : String(term)) : [],
-      status: item.status || "Active",
-    })));
+    setAttributes((Array.isArray(data.attributes) ? data.attributes : []).map(normalizeAttribute));
   }, []);
 
   const refreshTaxonomies = useCallback(async (signal) => {
@@ -141,6 +167,42 @@ export default function StoreCategories({
     applyTaxonomies(response);
     return response;
   }, [applyTaxonomies, storeId]);
+
+  const handleFetchAttributes = useCallback(async () => {
+    if (!storeId) return;
+    setAttributeAction("fetch");
+    setAttributeActionError("");
+    setAttributeActionMessage("");
+    try {
+      const response = await refreshTaxonomies();
+      const data = response?.taxonomies || response?.data?.taxonomies || response?.data || response || {};
+      const rows = Array.isArray(data.attributes) ? data.attributes : [];
+      setAttributePage(1);
+      setAttributeActionMessage(`Attributes refreshed: ${rows.length} saved for this store.`);
+    } catch (error) {
+      setAttributeActionError(error?.message || "Could not refresh this store’s attributes.");
+    } finally {
+      setAttributeAction("");
+    }
+  }, [refreshTaxonomies, storeId]);
+
+  const handleSyncAttributes = async () => {
+    if (!storeId) return;
+    setAttributeAction("sync");
+    setAttributeActionError("");
+    setAttributeActionMessage("");
+    try {
+      const response = await syncWordpressAttributes(storeId);
+      const data = response?.data || response || {};
+      const count = Number(data.attributeCount ?? data.count ?? 0);
+      await refreshTaxonomies();
+      setAttributeActionMessage(`Sync succeeded: ${count} attributes saved for this store.`);
+    } catch (error) {
+      setAttributeActionError(error?.message || "Could not sync attributes for this store.");
+    } finally {
+      setAttributeAction("");
+    }
+  };
 
   useEffect(() => {
     if (!storeId) {
@@ -1525,7 +1587,41 @@ export default function StoreCategories({
             Reset
           </button>
 
+          {activeTab === "attributes" && (
+            <>
+              <button
+                type="button"
+                className="categories-clear-btn"
+                onClick={handleFetchAttributes}
+                disabled={!storeId || Boolean(attributeAction)}
+              >
+                <i className="bi bi-cloud-download" aria-hidden="true" />
+                {attributeAction === "fetch" ? "Refreshing…" : "Reload Attributes"}
+              </button>
+              <button
+                type="button"
+                className="categories-clear-btn"
+                onClick={handleSyncAttributes}
+                disabled={!storeId || Boolean(attributeAction)}
+              >
+                <i className="bi bi-arrow-repeat" aria-hidden="true" />
+                {attributeAction === "sync" ? "Syncing…" : "Sync Attributes"}
+              </button>
+            </>
+          )}
+
         </div>
+
+        {activeTab === "attributes" && attributeActionError && (
+          <div className="store-attribute-sync-message error" role="alert">
+            {attributeActionError}
+          </div>
+        )}
+        {activeTab === "attributes" && attributeActionMessage && (
+          <div className="store-attribute-sync-message success" role="status" aria-live="polite">
+            {attributeActionMessage}
+          </div>
+        )}
 
 
         {/* ===================================================

@@ -466,9 +466,9 @@
 
 .product-info strong {
     display: block;
-    color: #1c6fae;
+    color: #111827;
     font-size: 13px;
-    font-weight: 650;
+    font-weight: 600;
 }
 
 .product-info small {
@@ -589,6 +589,25 @@
 
 .product-row-clickable td {
     transition: background 0.15s ease;
+}
+
+.products-table .product-variant-row {
+    background: #fafbff;
+}
+
+.products-table .product-variant-row td:first-child {
+    padding-left: 34px;
+}
+
+.products-table .product-variant-row .product-info strong {
+    color: #5142c7;
+    font-weight: 600;
+}
+
+.products-table .product-variant-row .product-info > div::before {
+    content: "↳";
+    color: #929bb0;
+    margin-right: 7px;
 }
 
 /* =========================================================
