@@ -3,7 +3,6 @@ import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
 import {
-  fetchWordpressAttributes,
   getStoreCatalogTaxonomies,
   syncWordpressAttributes,
 } from "../api/storeConnector";
@@ -31,6 +30,34 @@ const tabs = [
     icon: "bi-sliders",
   },
 ];
+
+function normalizeAttributeTerms(attribute) {
+  const rawTerms = attribute?.terms ?? attribute?.options ?? attribute?.values ?? [];
+  const terms = Array.isArray(rawTerms)
+    ? rawTerms
+    : Array.isArray(rawTerms?.data)
+      ? rawTerms.data
+      : [];
+
+  return terms
+    .map((term) => {
+      if (typeof term === "string" || typeof term === "number") return String(term);
+      return term?.name ?? term?.value ?? term?.slug ?? "";
+    })
+    .filter(Boolean);
+}
+
+function normalizeAttribute(item) {
+  return {
+    ...item,
+    id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+    name: item.name || item.title || "Unnamed attribute",
+    slug: item.slug || "—",
+    productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+    terms: normalizeAttributeTerms(item),
+    status: item.status || "Active",
+  };
+}
 
 
 export default function StoreCategories({
@@ -132,15 +159,7 @@ export default function StoreCategories({
       productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
       status: item.status || "Active",
     })));
-    setAttributes((Array.isArray(data.attributes) ? data.attributes : []).map((item) => ({
-      ...item,
-      id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
-      name: item.name || item.title || "Unnamed attribute",
-      slug: item.slug || "—",
-      productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
-      terms: Array.isArray(item.terms) ? item.terms.map((term) => typeof term === "object" ? term.name || term.slug : String(term)) : [],
-      status: item.status || "Active",
-    })));
+    setAttributes((Array.isArray(data.attributes) ? data.attributes : []).map(normalizeAttribute));
   }, []);
 
   const refreshTaxonomies = useCallback(async (signal) => {
@@ -155,26 +174,17 @@ export default function StoreCategories({
     setAttributeActionError("");
     setAttributeActionMessage("");
     try {
-      const response = await fetchWordpressAttributes(storeId);
-      const data = response?.data || response || {};
-      const rows = Array.isArray(data) ? data : Array.isArray(data.attributes) ? data.attributes : [];
-      setAttributes(rows.map((item) => ({
-        ...item,
-        id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
-        name: item.name || item.title || "Unnamed attribute",
-        slug: item.slug || "—",
-        productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
-        terms: Array.isArray(item.terms) ? item.terms.map((term) => typeof term === "object" ? term.name || term.slug : String(term)) : [],
-        status: item.status || "Active",
-      })));
+      const response = await refreshTaxonomies();
+      const data = response?.taxonomies || response?.data?.taxonomies || response?.data || response || {};
+      const rows = Array.isArray(data.attributes) ? data.attributes : [];
       setAttributePage(1);
-      setAttributeActionMessage(`Fetch succeeded: WooCommerce returned ${rows.length} attributes.`);
+      setAttributeActionMessage(`Attributes refreshed: ${rows.length} saved for this store.`);
     } catch (error) {
-      setAttributeActionError(error?.message || "Could not fetch attributes from WooCommerce.");
+      setAttributeActionError(error?.message || "Could not refresh this store’s attributes.");
     } finally {
       setAttributeAction("");
     }
-  }, [storeId]);
+  }, [refreshTaxonomies, storeId]);
 
   const handleSyncAttributes = async () => {
     if (!storeId) return;
@@ -222,11 +232,6 @@ export default function StoreCategories({
 
     return () => controller.abort();
   }, [refreshTaxonomies, storeId]);
-
-  useEffect(() => {
-    if (activeTab !== "attributes" || !storeId) return;
-    handleFetchAttributes();
-  }, [activeTab, handleFetchAttributes, storeId]);
 
   /* =========================================================
      FILTER CATEGORIES
@@ -1591,7 +1596,7 @@ export default function StoreCategories({
                 disabled={!storeId || Boolean(attributeAction)}
               >
                 <i className="bi bi-cloud-download" aria-hidden="true" />
-                {attributeAction === "fetch" ? "Fetching…" : "Fetch from WooCommerce"}
+                {attributeAction === "fetch" ? "Refreshing…" : "Reload Attributes"}
               </button>
               <button
                 type="button"

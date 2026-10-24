@@ -39,14 +39,14 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
       .then((response) => {
         if (cancelled) return;
         const names = {};
-        const employees = Array.isArray(response)
-          ? response
-          : response?.employees ?? response?.data?.employees ?? response?.data?.data ?? response?.data ?? [];
+        const employees = findEmployeeRows(response);
         for (const employee of Array.isArray(employees) ? employees : []) {
-          const name = employee.name || employee.fullName || employee.full_name ||
-            [employee.firstName ?? employee.first_name, employee.lastName ?? employee.last_name].filter(Boolean).join(" ");
+          const person = employee.employee || employee.user || employee;
+          const name = person.name || person.fullName || person.full_name || person.displayName || person.display_name ||
+            [person.firstName ?? person.first_name, person.lastName ?? person.last_name].filter(Boolean).join(" ");
           if (!name) continue;
-          for (const id of [employee.id, employee.employeeId, employee.employeeCode, employee.userId, employee.user_id, employee.uuid]) {
+          for (const id of [person.id, person.employeeId, person.employeeCode, person.userId, person.user_id, person.uuid,
+            employee.id, employee.employeeId, employee.employeeCode, employee.userId, employee.user_id, employee.uuid]) {
             for (const key of employeeIdKeys(id)) names[key] = name;
           }
         }
@@ -342,9 +342,11 @@ function mapPaymentRecord(payment, employeeNames = {}) {
     tenderAmount: Number(payment.amount || 0),
     balanceAmount: Number(payment.remaining || 0),
     changeAmount: Number(payment.change_amount || 0),
-    transactionId: payment.provider_transaction_id || payment.local_id || "—",
-    paymentAcceptedBy: payment.user?.name || payment.user?.full_name || payment.user_name || payment.accepted_by_name ||
-      findEmployeeName(employeeNames, payment.user_id ?? payment.userId ?? payment.accepted_by) || "—",
+    transactionId: payment.providerTransactionId || payment.provider_transaction_id || payment.transactionId || payment.transaction_id ||
+      payment.transactionNumber || payment.transaction_number || payment.txnId || payment.txn_id ||
+      payment.transactionReference || payment.transaction_reference || payment.paymentReference || payment.payment_reference ||
+      payment.reference || payment.transaction?.id || payment.provider_transaction?.id || payment.localId || payment.local_id || "—",
+    paymentAcceptedBy: acceptedByName(payment, employeeNames),
     status: payment.status || "—",
     date: formatPaymentDate(payment.payment_at),
     paymentMethod: method,
@@ -352,6 +354,32 @@ function mapPaymentRecord(payment, employeeNames = {}) {
     shiftId: payment.shift_id || "—",
     notes: payment.notes || "",
   };
+}
+
+function acceptedByName(payment, employeeNames) {
+  const acceptedBy = payment.accepted_by;
+  const candidates = [
+    payment.user?.name, payment.user?.full_name, payment.user?.fullName,
+    payment.employee?.name, payment.employee?.full_name,
+    payment.user_name, payment.user_full_name, payment.accepted_by_name,
+    typeof acceptedBy === "object" ? acceptedBy.name || acceptedBy.full_name || acceptedBy.fullName : null,
+  ];
+  const directName = candidates.find((value) => typeof value === "string" && value.trim());
+  if (directName) return directName.trim();
+  const ids = [payment.user_id, payment.userId, payment.employee_id, payment.employeeId,
+    payment.accepted_by_id, payment.acceptedById, typeof acceptedBy === "object" ? acceptedBy.id : acceptedBy,
+    payment.user?.id, payment.employee?.id];
+  return ids.map((id) => findEmployeeName(employeeNames, id)).find(Boolean) || "—";
+}
+
+function findEmployeeRows(value, depth = 0) {
+  if (Array.isArray(value)) return value;
+  if (!value || typeof value !== "object" || depth > 5) return [];
+  for (const key of ["employees", "items", "results", "records", "data"]) {
+    const rows = findEmployeeRows(value[key], depth + 1);
+    if (rows.length) return rows;
+  }
+  return [];
 }
  
 function employeeIdKeys(value) {
