@@ -45,6 +45,16 @@ export default function Devices() {
   const [deleteDevice, setDeleteDevice] = useState(null);
  
   const [deleting, setDeleting] = useState(false);
+
+  const [restoringDeviceId, setRestoringDeviceId] = useState(null);
+
+  const [statusNotice, setStatusNotice] = useState(null);
+
+  useEffect(() => {
+    if (!statusNotice) return undefined;
+    const timeout = window.setTimeout(() => setStatusNotice(null), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [statusNotice]);
  
   const navigate = useNavigate();
  
@@ -225,6 +235,11 @@ export default function Devices() {
         setDevices((current) => current.map((item) =>
           item.id === deleteDevice.id ? { ...item, status: "Inactive" } : item,
         ));
+
+        setStatusNotice({
+          message: `${deleteDevice.name || "Device"} was Inactive.`,
+          type: "inactive",
+        });
  
         setDeleteDevice(null);
  
@@ -247,12 +262,42 @@ export default function Devices() {
       }
  
     };
- 
+
+  const handleRestoreDevice = async (device) => {
+    if (!device?.id || restoringDeviceId) return;
+    setRestoringDeviceId(device.id);
+    setApiError("");
+    try {
+      await devicesApi.update(device.id, { status: "Active" });
+      setDevices((current) => current.map((item) =>
+        item.id === device.id ? { ...item, status: "Active" } : item,
+      ));
+      setStatusNotice({
+        message: `${device.name || "Device"} was activated.`,
+        type: "active",
+      });
+    } catch (error) {
+      console.error("Failed to restore device:", error);
+      setApiError(error?.message || "Failed to restore device. Please try again.");
+    } finally {
+      setRestoringDeviceId(null);
+    }
+  };
   /* ========================================================= RENDER ========================================================= */ return (
  
     <div className="devices-page">
  
       {" "}
+
+      {statusNotice && (
+        <div
+          className={`devices-status-notice is-${statusNotice.type}`}
+          role="status"
+          aria-live="polite"
+        >
+          {statusNotice.message}
+        </div>
+      )}
  
       {/* ===================================================== PAGE HEADER ===================================================== */}{" "}
  
@@ -523,7 +568,12 @@ export default function Devices() {
       event?.stopPropagation();
       setDeleteDevice(device);
     }}
+    onActivate={(event) => {
+      event?.stopPropagation();
+      handleRestoreDevice(device);
+    }}
     deleting={deleting}
+    restoring={restoringDeviceId === device.id}
   />
 ))
  
@@ -677,7 +727,9 @@ function DeviceRow({
   onView,
   onEdit,
   onDelete,
+  onActivate,
   deleting,
+  restoring,
 }) {
   const normalizedStatus =
     device.status?.toLowerCase().replace(/\s+/g, "-") || "unknown";
@@ -744,11 +796,14 @@ function DeviceRow({
         <ListActions
           onView={onView}
           onEdit={onEdit}
-          onDelete={onDelete}
+          onDelete={device.status === "Inactive" ? undefined : onDelete}
+          onActivate={device.status === "Inactive" ? onActivate : undefined}
           viewLabel={`View ${device.name || "device"}`}
           editLabel={`Edit ${device.name || "device"}`}
+          activateLabel={`Restore ${device.name || "device"}`}
           deleteLabel={`Inactive ${device.name || "device"}`}
           deleteDisabled={deleting}
+          activateDisabled={restoring}
         />
       </td>
     </tr>

@@ -50,6 +50,13 @@ export default function StoreDevices({
   // =========================================================
 
   const [devices, setDevices] = useState(storeDevicesSeed || []);
+  const [inactiveNotice, setInactiveNotice] = useState("");
+
+  useEffect(() => {
+    if (!inactiveNotice) return undefined;
+    const timeout = window.setTimeout(() => setInactiveNotice(""), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [inactiveNotice]);
 
   // =========================================================
   // DEVICE TYPES
@@ -254,6 +261,8 @@ export default function StoreDevices({
     // =====================================================
 
     if (editingDevice) {
+      const becameInactive = editingDevice.status !== "Inactive" && formData.status === "Inactive";
+      const becameActive = editingDevice.status !== "Active" && formData.status === "Active";
       setDevices((previous) =>
         previous.map((device) =>
           device.id === editingDevice.id
@@ -270,6 +279,8 @@ export default function StoreDevices({
             : device,
         ),
       );
+      if (becameInactive) setInactiveNotice(`${formData.name.trim() || "Device"} was Inactive.`);
+      else if (becameActive) setInactiveNotice(`${formData.name.trim() || "Device"} was Active.`);
 
       /*
        * API WILL BE CONNECTED HERE
@@ -326,6 +337,9 @@ export default function StoreDevices({
 
   return (
     <div className="store-devices-page">
+      {inactiveNotice && (
+        <div className={`store-devices-status-notice ${inactiveNotice.endsWith(" was Inactive.") ? "is-inactive" : "is-active"}`} role="status" aria-live="polite">{inactiveNotice}</div>
+      )}
       {/* =================================================
                 HEADER
             ================================================= */}
