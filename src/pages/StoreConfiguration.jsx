@@ -847,7 +847,7 @@ export default function StoreConfiguration() {
               ) : section === "orders" ? (
 
                 <Orders
-                  merchantId={merchantId}
+                  merchantId={merchantId || merchant?.id || store?.merchantId || store?.merchant_id || store?.merchant?.id}
                   storeId={storeId}
                   store={store}
                   embedded
@@ -893,7 +893,7 @@ export default function StoreConfiguration() {
               ) : section === "paymentrecords" ? (
 
                 <StorePaymentRecords
-                  merchantId={merchantId}
+                  merchantId={merchantId || merchant?.id || store?.merchantId || store?.merchant_id || store?.merchant?.id}
                   storeId={storeId}
                   store={store}
                   embedded

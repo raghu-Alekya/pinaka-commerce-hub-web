@@ -128,13 +128,6 @@ export async function getStoreCatalogTaxonomies(storeId, { signal } = {}) {
   );
 }
 
-export async function fetchWordpressAttributes(storeId) {
-  if (!storeId) throw new Error("Store ID is required.");
-  return api.get(
-    `/api/v1/woocommerce/attributes?storeId=${encodeURIComponent(storeId)}`,
-  );
-}
-
 export function syncWordpressAttributes(storeId) {
   if (!storeId) throw new Error("Store ID is required.");
   return api.post(`/api/v1/stores/${encodeURIComponent(storeId)}/catalog/sync/attributes`);

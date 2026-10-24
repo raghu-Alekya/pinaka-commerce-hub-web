@@ -289,6 +289,7 @@ export default function Orders({
       orderId={viewedOrder.id}
       orderNumber={viewedOrder.wooOrderId}
       storeId={selectedStore}
+      merchantId={selectedMerchant}
       onBack={() => setViewedOrder(null)}
     />;
   }

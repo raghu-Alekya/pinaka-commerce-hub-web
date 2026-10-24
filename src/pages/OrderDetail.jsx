@@ -3,6 +3,7 @@ import { Link, useLocation, useParams, useSearchParams } from "react-router-dom"
 import { ArrowLeft, ShoppingBag, CreditCard, CircleDollarSign, Package, ReceiptText } from "lucide-react";
 import { formatMoney, getOrder, normalizeOrderStatus } from "../api/orders";
 import { listStorePosPayments } from "../api/storePosPayments";
+import { listStoreEmployees } from "../api/employees";
 import { extractProducts, normalizeProduct, productsApi } from "../api/products";
 import "../styles/orders.css";
 import "../styles/employee-view.css";
@@ -65,6 +66,22 @@ function titleCase(value) {
   return text.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function paymentTransactionId(payment = {}) {
+  const candidates = [
+    payment.providerTransactionId, payment.provider_transaction_id,
+    payment.transactionId, payment.transaction_id,
+    payment.transactionNumber, payment.transaction_number,
+    payment.txnId, payment.txn_id,
+    payment.transactionReference, payment.transaction_reference,
+    payment.paymentReference, payment.payment_reference,
+    payment.reference,
+    payment.transaction?.id, payment.provider_transaction?.id,
+    payment.localId, payment.local_id,
+  ];
+  const value = candidates.find((candidate) => candidate !== undefined && candidate !== null && String(candidate).trim() !== "");
+  return value === undefined ? "—" : String(value);
+}
+
 function statusClass(status) {
   const value = String(status || "").toLowerCase();
   if (value.includes("create")) return "created";
@@ -103,6 +120,29 @@ function productSkuMap(response) {
     });
   });
   return skuById;
+}
+
+function employeeNameMap(response) {
+  const rows = Array.isArray(response) ? response : response?.employees || response?.data?.employees || response?.data?.data || response?.data || [];
+  const names = {};
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const person = row?.employee || row?.user || row;
+    const name = person?.name || person?.fullName || person?.full_name || person?.displayName || person?.display_name ||
+      [person?.firstName ?? person?.first_name, person?.lastName ?? person?.last_name].filter(Boolean).join(" ");
+    if (!name) continue;
+    for (const id of [person.id, person.employeeId, person.employeeCode, person.userId, person.user_id, person.uuid,
+      row.id, row.employeeId, row.employeeCode, row.userId, row.user_id, row.uuid]) {
+      if (id !== undefined && id !== null && id !== "") names[String(id).trim().toLowerCase()] = name;
+    }
+  }
+  return names;
+}
+
+function displayPlacedBy(value, names) {
+  if (!value || value === "—") return "—";
+  if (typeof value === "object") return value.name || value.fullName || value.full_name || "—";
+  const text = String(value).trim();
+  return names[text.toLowerCase()] || names[text.replace(/\D/g, "").replace(/^0+/, "").toLowerCase()] || text;
 }
 
 function catalogSkuForLineItem(item, skuById) {
@@ -254,7 +294,7 @@ function buildView(payload) {
         || payments.find((payment) => payment.payment_status)?.payment_status
         || inferredPaymentStatus,
     ),
-    deviceId: storeOrder.deviceId || metaValue(metadata, "pos_device_id") || "—",
+    deviceId: storeOrder.deviceId || storeOrder.device_id || order.deviceId || order.device_id || metaValue(metadata, "pos_device_id") || "—",
     placedBy: storeOrder.placedBy || metaValue(metadata, "pos_placed_by") || "—",
     shiftId: storeOrder.shiftId || order.shiftId || metaValue(metadata, "shift_id") || "—",
     payLater: storeOrder.payLater ? "Yes" : "No",
@@ -273,7 +313,7 @@ function buildView(payload) {
   };
 }
 
-export default function OrderDetail({ embedded = false, orderId: providedOrderId, storeId: providedStoreId, orderNumber: providedOrderNumber, onBack }) {
+export default function OrderDetail({ embedded = false, orderId: providedOrderId, storeId: providedStoreId, merchantId, orderNumber: providedOrderNumber, onBack }) {
   const { orderId: routeOrderId } = useParams();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -281,6 +321,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
   const storeId = providedStoreId || searchParams.get("store") || "";
   const orderNumber = providedOrderNumber || searchParams.get("number") || "";
   const [view, setView] = useState(null);
+  const [employeeNames, setEmployeeNames] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -288,6 +329,15 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
   if (searchParams.get("merchant")) listQuery.set("merchant", searchParams.get("merchant"));
   if (searchParams.get("store")) listQuery.set("store", searchParams.get("store"));
   const backTo = location.state?.from || `/orders${listQuery.toString() ? `?${listQuery}` : ""}`;
+
+  useEffect(() => {
+    let active = true;
+    if (!merchantId || !storeId) { setEmployeeNames({}); return undefined; }
+    listStoreEmployees(merchantId, storeId)
+      .then((response) => { if (active) setEmployeeNames(employeeNameMap(response)); })
+      .catch(() => { if (active) setEmployeeNames({}); });
+    return () => { active = false; };
+  }, [merchantId, storeId]);
 
   useEffect(() => {
     let active = true;
@@ -376,7 +426,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
           </DetailBlock>
 
           <DetailBlock title="Payment and device">
-            <Fields items={[["Payment", view.paymentMethod], ["Pay later", view.payLater], ["Device", view.deviceId], ["Placed by", view.placedBy], ["Shift", view.shiftId]]} />
+            <Fields items={[["Payment", view.paymentMethod], ["Pay later", view.payLater], ["Device ID", view.deviceId], ["Placed by", displayPlacedBy(view.placedBy, employeeNames)], ["Shift", view.shiftId]]} />
           </DetailBlock>
 
           <DetailBlock title="Totals">
@@ -421,9 +471,10 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
 
           <DetailBlock title="Payments">
             <Lines
-              columns={["Method", "Amount", "Status", "Created"]}
+              columns={["Method", "Transaction ID", "Amount", "Status", "Created"]}
               rows={view.payments.map((payment) => [
                 payment.method || payment.paymentMethod || payment.payment_method || payment.paymentMethodTitle || payment.payment_method_title || payment.payment_type || "—",
+                paymentTransactionId(payment),
                 formatMoney(payment.amount ?? payment.tenderAmount ?? payment.tender_amount, view.currency),
                 titleCase(payment.status || payment.paymentStatus || payment.payment_status),
                 displayDate(payment.created_at || payment.createdAt || payment.payment_at || payment.paymentAt),
