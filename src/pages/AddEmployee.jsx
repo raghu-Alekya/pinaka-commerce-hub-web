@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import "../styles/add-employee.css";
+import FilterDropdown from "../components/FilterDropdown";
 import { createEmployee } from "../api/employees";
 import { listMerchants } from "../api/merchants";
 
@@ -969,11 +970,11 @@ export default function AddEmployee() {
                 </label>
 
                 <div className="employee-select">
-                  <select
+                  <FilterDropdown
                     name="merchant"
-                    value={formData.merchant}
+                    value={formData.merchant || ""}
                     onChange={handleChange}
-                    className={errors.merchant ? "field-invalid" : ""}
+                    className={`${errors.merchant ? "field-invalid" : ""}${!formData.merchant ? " employee-select-placeholder" : ""}`}
                   >
                     <option value="">
                       {merchantLoadError
@@ -985,8 +986,7 @@ export default function AddEmployee() {
                         {merchant.name}
                       </option>
                     ))}
-                  </select>
-                  <ChevronDown size={17} className="employee-select-arrow" />
+                  </FilterDropdown>
                 </div>
                 {errors.merchant && (
                   <span className="field-error">{errors.merchant}</span>
@@ -1077,13 +1077,13 @@ function StoreRoleAssignment({
           <strong>Store</strong>
 
           <div className="store-select-inline">
-            <select
-              value={assignment.store}
+            <FilterDropdown
+              value={assignment.store || ""}
               onChange={(event) =>
                 onStoreChange(assignment.id, event.target.value)
               }
               aria-label="Select store"
-              className={storeError ? "field-invalid" : ""}
+              className={`${storeError ? "field-invalid" : ""}${!assignment.store ? " employee-select-placeholder" : ""}`}
             >
               <option value="">Select store</option>
 
@@ -1092,9 +1092,7 @@ function StoreRoleAssignment({
                   {store.name}
                 </option>
               ))}
-            </select>
-
-            <ChevronDown size={15} />
+            </FilterDropdown>
           </div>
         </div>
       </div>
@@ -1223,35 +1221,45 @@ function SelectField({
   name,
   value,
   onChange,
-  options,
+  options = [],
   placeholder,
   error,
   disabled = false,
+  className = "",
 }) {
+  const safeOptions = Array.isArray(options) ? options : [];
   return (
-    <div className="employee-field">
+    <div className={`employee-field ${className}`.trim()}>
       <label>
         {label} {required && <span className="text-red-500">*</span>}
       </label>
 
       <div className="employee-select">
-        <select
+        <FilterDropdown
           name={name}
           disabled={disabled}
-          value={value}
+          value={value || ""}
           onChange={onChange}
-          className={error ? "field-invalid" : ""}
+          className={`${error ? "field-invalid" : ""}${!value ? " employee-select-placeholder" : ""}`}
         >
           <option value="">{placeholder}</option>
 
-          {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-
-        <ChevronDown size={17} className="employee-select-arrow" />
+          {safeOptions.map((opt) => {
+            const optVal =
+              typeof opt === "object" && opt !== null
+                ? (opt.value ?? opt.name ?? opt.id)
+                : opt;
+            const optLabel =
+              typeof opt === "object" && opt !== null
+                ? (opt.label ?? opt.name ?? opt.value)
+                : opt;
+            return (
+              <option key={optVal} value={optVal}>
+                {optLabel}
+              </option>
+            );
+          })}
+        </FilterDropdown>
       </div>
 
       {error && <span className="field-error">{error}</span>}

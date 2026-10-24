@@ -1,20 +1,13 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-
+ 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const proxyTarget = env.VITE_API_PROXY_TARGET?.replace(
-    "http://localhost:",
-    "http://127.0.0.1:",
-  );
-  const authProxyTarget =
-    env.VITE_AUTH_PROXY_TARGET?.replace(
-      "http://localhost:",
-      "http://127.0.0.1:",
-    ) || proxyTarget;
-
+  const proxyTarget = env.VITE_API_PROXY_TARGET || "https://pch.alektasolutions.com";
+  const authProxyTarget = env.VITE_AUTH_PROXY_TARGET || proxyTarget;
+ 
   const proxy = {};
-
+ 
   if (authProxyTarget) {
     proxy["/api/v1/auth"] = {
       target: authProxyTarget,
@@ -27,8 +20,9 @@ export default defineConfig(({ mode }) => {
       secure: false,
     };
   }
-
+ 
   if (proxyTarget) {
+    proxy["/uploads/employees"] = { target: proxyTarget, changeOrigin: true, secure: false };
     proxy["/api"] = {
       target: proxyTarget,
       changeOrigin: true,
@@ -40,7 +34,7 @@ export default defineConfig(({ mode }) => {
       secure: false,
     };
   }
-
+ 
   return {
     plugins: [react()],
     build: {
@@ -49,11 +43,7 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks(id) {
             if (id.includes("node_modules")) {
-              if (
-                id.includes("react") ||
-                id.includes("react-dom") ||
-                id.includes("react-router")
-              ) {
+              if (id.includes("react") || id.includes("react-dom") || id.includes("react-router")) {
                 return "vendor-react";
               }
               return "vendor";
@@ -70,3 +60,4 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
+ 

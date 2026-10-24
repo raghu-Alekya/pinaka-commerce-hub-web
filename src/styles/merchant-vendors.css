@@ -296,7 +296,7 @@
     flex: 1 1 0;
 }
 
-.merchant-vendors .mv-list-card > .pagination-container {
+.merchant-vendors :is(.mv-card, .mv-list-card) > .pagination-container {
     height: auto;
     margin: 0;
     padding: 16px 24px 12px;
@@ -1135,7 +1135,7 @@
         flex-basis: 100%;
     }
 
-    .merchant-vendors .mv-list-card > .pagination-container {
+    .merchant-vendors :is(.mv-card, .mv-list-card) > .pagination-container {
         padding: 14px;
     }
 
@@ -1493,4 +1493,145 @@
     min-width: 40px;
     height: 40px;
     padding: 0;
+}
+
+
+/* =========================================================
+   MERCHANT VENDORS DROPDOWNS (MODERN PCH UI)
+   ========================================================= */
+
+.mv-location-filters .pch-filter-dropdown {
+  flex: 1 1 180px;
+  min-width: 180px;
+  height: 40px;
+  position: relative;
+}
+
+.mv-location-filters .pch-filter-sizing {
+  width: 100%;
+  height: 40px;
+  padding: 0 35px 0 12px;
+  border: 1px solid #d9e1f0;
+  border-radius: 7px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.mv-location-filters .pch-filter-trigger {
+  width: 100% !important;
+  height: 40px !important;
+  box-sizing: border-box !important;
+  padding: 0 35px 0 12px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  color: #24314a !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease !important;
+}
+
+.mv-location-filters .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c8c1f2 !important;
+}
+
+.mv-location-filters .pch-filter-trigger:focus,
+.mv-location-filters .pch-filter-trigger:focus-visible,
+.mv-location-filters .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.08) !important;
+  outline: none !important;
+}
+
+.mv-location-filters .pch-filter-trigger:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background: #fbfcfe !important;
+}
+
+.mv-location-filters .pch-filter-trigger > span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 13px !important;
+  color: #24314a !important;
+}
+
+.mv-location-filters .pch-filter-trigger > i.bi-chevron-down {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 12px !important;
+  color: #7187a5 !important;
+  pointer-events: none !important;
+  transition: transform 0.15s ease, color 0.15s ease !important;
+}
+
+.mv-location-filters .pch-filter-trigger[aria-expanded="true"] > i.bi-chevron-down {
+  transform: translateY(-50%) rotate(180deg) !important;
+  color: #5143bc !important;
+}
+
+.mv-location-filters button {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid #d9e1f0;
+  border-radius: 7px;
+  background: #fff;
+  color: #5143bc;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.mv-location-filters button:hover {
+  border-color: #c8c1f2;
+  background: #f8f7ff;
+}
+
+.merchant-vendors .mv-existing-toolbar .filter-select-wrapper > .pch-filter-dropdown {
+  width: 100% !important;
+}
+
+.merchant-vendors .mv-existing-toolbar .pch-filter-sizing {
+  height: 40px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 7px !important;
+  font-size: 13px !important;
+  padding: 0 34px 0 12px !important;
+}
+
+.merchant-vendors .mv-existing-toolbar .pch-filter-trigger {
+  height: 40px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  color: #24314a !important;
+  font-size: 13px !important;
+  font-family: inherit !important;
+  padding: 0 34px 0 12px !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+.merchant-vendors .mv-existing-toolbar .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c8c1f2 !important;
+}
+
+.merchant-vendors .mv-existing-toolbar .pch-filter-trigger:focus,
+.merchant-vendors .mv-existing-toolbar .pch-filter-trigger:focus-visible,
+.merchant-vendors .mv-existing-toolbar .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.08) !important;
 }

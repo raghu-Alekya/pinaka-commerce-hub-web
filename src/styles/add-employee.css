@@ -327,53 +327,203 @@
 }
 
 /* =========================================================
-   SELECT
+   SELECT & FILTER DROPDOWN STYLING
 ========================================================= */
 
 .employee-select {
-  position: relative;
-  width: 100%;
-  height: 42px;
+  position: relative !important;
+  width: 100% !important;
+  height: 42px !important;
+}
+
+.employee-select > .pch-filter-dropdown {
+  display: grid !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+}
+
+.employee-select .pch-filter-sizing {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 42px !important;
+  box-sizing: border-box !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  padding: 0 35px 0 12px !important;
+  font-size: 13px !important;
+}
+
+.employee-select .pch-filter-trigger {
+  width: 100% !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+  padding: 0 35px 0 12px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  color: #304b6c !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease !important;
+}
+
+.employee-select .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c4cede !important;
+}
+
+.employee-select .pch-filter-trigger:focus,
+.employee-select .pch-filter-trigger:focus-visible,
+.employee-select .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.15) !important;
+  outline: none !important;
+}
+
+.employee-select .field-invalid + .pch-filter-trigger,
+.employee-select:has(.field-invalid) .pch-filter-trigger,
+.employee-select .pch-filter-trigger.field-invalid {
+  border-color: #dc2626 !important;
+}
+
+.employee-select .field-invalid + .pch-filter-trigger:focus,
+.employee-select .field-invalid + .pch-filter-trigger:focus-visible,
+.employee-select .field-invalid + .pch-filter-trigger[aria-expanded="true"],
+.employee-select:has(.field-invalid) .pch-filter-trigger:focus,
+.employee-select:has(.field-invalid) .pch-filter-trigger:focus-visible,
+.employee-select:has(.field-invalid) .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
+}
+
+.employee-select .pch-filter-trigger:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background-color: #f7fafc !important;
+}
+
+.employee-select .pch-filter-trigger > span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
+
+.employee-select .employee-select-placeholder + .pch-filter-trigger > span,
+.employee-select:has(.employee-select-placeholder) .pch-filter-trigger > span,
+.employee-select .pch-filter-trigger.employee-select-placeholder > span {
+  color: #8b9bb2 !important;
+}
+
+.employee-select .pch-filter-trigger > i.bi-chevron-down {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 12px !important;
+  color: #7187a5 !important;
+  pointer-events: none !important;
+  transition: transform 0.15s ease, color 0.15s ease !important;
+}
+
+.employee-select .pch-filter-trigger[aria-expanded="true"] > i.bi-chevron-down {
+  transform: translateY(-50%) rotate(180deg) !important;
+  color: #5143bc !important;
+}
+
+.employee-select .employee-select-arrow {
+  display: none !important;
 }
 
 .employee-select select {
   width: 100%;
   height: 100%;
-
   padding: 0 35px 0 12px;
-
   box-sizing: border-box;
-
   border: 1px solid #d7e1ed;
   border-radius: 6px;
-
   appearance: none;
   -webkit-appearance: none;
-
   outline: none;
-
   background: #fff;
-
   color: #304b6c;
   font-family: inherit;
   font-size: 13px;
-
   cursor: pointer;
 }
 
 .employee-select select:focus {
-  border-color: #7256df;
+  border-color: #5143bc;
 }
 
-.employee-select-arrow {
-  position: absolute;
-  top: 50%;
-  right: 10px;
+/* Store select inline */
+.store-select-inline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
 
-  transform: translateY(-50%);
+.store-select-inline > .pch-filter-dropdown {
+  display: grid !important;
+  width: 100% !important;
+  position: relative !important;
+}
 
-  color: #304b6c;
-  pointer-events: none;
+.store-select-inline .pch-filter-sizing {
+  width: 100% !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  padding: 0 28px 0 10px !important;
+  font-size: 13px !important;
+}
+
+.store-select-inline .pch-filter-trigger {
+  width: 100% !important;
+  height: 36px !important;
+  padding: 0 28px 0 10px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  color: #17233d !important;
+  font-size: 13px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+}
+
+.store-select-inline .pch-filter-trigger:focus,
+.store-select-inline .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.15) !important;
+}
+
+.store-select-inline .pch-filter-trigger > i.bi-chevron-down {
+  position: absolute !important;
+  right: 10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 12px !important;
+  color: #7187a5 !important;
+}
+
+.store-select-inline .pch-filter-trigger[aria-expanded="true"] > i.bi-chevron-down {
+  transform: translateY(-50%) rotate(180deg) !important;
+  color: #5143bc !important;
+}
+
+.store-select-inline > svg {
+  display: none !important;
 }
 
 /* =========================================================

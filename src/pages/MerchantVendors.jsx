@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import BentoDetailModal from "../components/BentoDetailModal";
 import FiltersBar from "../components/FiltersBar";
+import FilterDropdown from "../components/FilterDropdown";
 import ListActions from "../components/ListActions";
 import Pagination from "../components/Pagination";
 import "../styles/merchant-vendors.css";
@@ -1005,39 +1006,16 @@ useEffect(() => {
 
                         </div>
 
-                        {storeScope ? (
-                            <footer className="mv-footer">
-                                <span>
-                                    Showing {rows.length ? (current - 1) * pageSize + 1 : 0} to {Math.min(current * pageSize, rows.length)} of {rows.length} entries
-                                </span>
-                                <div className="mv-pagination">
-                                    <button type="button" className="pagination-arrow" disabled={current === 1}
-                                        onClick={() => setPage(current - 1)} aria-label="Previous page">
-                                        <i className="bi bi-chevron-left" aria-hidden="true" />
-                                    </button>
-                                    <div className="pagination-pages">
-                                        <button type="button" className="pagination-page active" aria-current="page" onClick={() => setPage(current)}>
-                                            {current}
-                                        </button>
-                                    </div>
-                                    <button type="button" className="pagination-arrow" disabled={current === pages}
-                                        onClick={() => setPage(current + 1)} aria-label="Next page">
-                                        <i className="bi bi-chevron-right" aria-hidden="true" />
-                                    </button>
-                                </div>
-                            </footer>
-                        ) : (
-                            <Pagination
-                                currentPage={current}
-                                totalPages={pages}
-                                totalItems={rows.length}
-                                pageSize={pageSize}
-                                onPageChange={setPage}
-                                onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-                                itemLabel="vendors"
-                                showWhenEmpty={true}
-                            />
-                        )}
+                        <Pagination
+                            currentPage={current}
+                            totalPages={pages}
+                            totalItems={rows.length}
+                            pageSize={pageSize}
+                            onPageChange={setPage}
+                            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+                            itemLabel="vendors"
+                            showWhenEmpty={true}
+                        />
 
                     </>
                 )}
@@ -1135,7 +1113,56 @@ useEffect(() => {
                                 onChange={(e) => { setSearch(e.target.value); setPickerPage(1); }}
                             />
 
-                            <div className="mv-location-filters"><select aria-label="Filter by country" value={countryFilter} onChange={e => { setCountryFilter(e.target.value); setStateFilter(""); setPickerPage(1); }}><option value="">All countries</option>{countries.map(country => <option key={locationKey(country)} value={locationKey(country)}>{country}</option>)}</select><select aria-label="Filter by state" value={stateFilter} onChange={e => { setStateFilter(e.target.value); setPickerPage(1); }}><option value="">All states</option>{states.map(state => <option key={locationKey(state)} value={locationKey(state)}>{state}</option>)}</select><button type="button" onClick={() => { setSearch(""); setCountryFilter(""); setStateFilter(""); setPickerPage(1); }}><i className="bi bi-arrow-counterclockwise" aria-hidden="true" /> Clear</button></div>
+                            <div className="mv-location-filters">
+                                <FilterDropdown
+                                    aria-label="Filter by country"
+                                    value={countryFilter}
+                                    onChange={(e) => {
+                                        setCountryFilter(e.target.value);
+                                        setStateFilter("");
+                                        setPickerPage(1);
+                                    }}
+                                >
+                                    <option value="">All countries</option>
+                                    {countries.map((country) => (
+                                        <option
+                                            key={locationKey(country)}
+                                            value={locationKey(country)}
+                                        >
+                                            {country}
+                                        </option>
+                                    ))}
+                                </FilterDropdown>
+                                <FilterDropdown
+                                    aria-label="Filter by state"
+                                    value={stateFilter}
+                                    onChange={(e) => {
+                                        setStateFilter(e.target.value);
+                                        setPickerPage(1);
+                                    }}
+                                >
+                                    <option value="">All states</option>
+                                    {states.map((state) => (
+                                        <option
+                                            key={locationKey(state)}
+                                            value={locationKey(state)}
+                                        >
+                                            {state}
+                                        </option>
+                                    ))}
+                                </FilterDropdown>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch("");
+                                        setCountryFilter("");
+                                        setStateFilter("");
+                                        setPickerPage(1);
+                                    }}
+                                >
+                                    <i className="bi bi-arrow-counterclockwise" aria-hidden="true" /> Clear
+                                </button>
+                            </div>
                             <div className="mv-scroll mv-options">
 
                                 <table>

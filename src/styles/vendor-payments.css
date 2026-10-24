@@ -257,7 +257,7 @@
   gap: 10px;
 }
 
-.vendor-modal button {
+.vendor-modal form > div button {
   padding: 10px 14px;
   border: 1px solid #8aa8c5;
   background: #fff;
@@ -325,3 +325,163 @@
 }
 
 .vendor-modal .has-error input,.vendor-modal .has-error select{border-color:#ff4055;background:#fffafa}.vendor-field-error{display:block;margin-top:5px;color:#e3344b;font-size:12px;line-height:1.35}
+
+
+/* =========================================================
+   VENDOR PAYMENTS DROPDOWNS (MODERN PCH UI)
+   ========================================================= */
+
+/* Modal dropdowns - 40px height, 8px border-radius, clean #d9e1f0 border */
+.vendor-modal .pch-filter-dropdown {
+  display: grid !important;
+  width: 100% !important;
+  height: 40px !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+.vendor-modal .pch-filter-sizing {
+  width: 100% !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  box-sizing: border-box !important;
+  padding: 0 35px 0 12px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  line-height: 38px !important;
+  background-color: #fff !important;
+  color: #24314a !important;
+}
+
+.vendor-modal .pch-filter-trigger {
+  width: 100% !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  box-sizing: border-box !important;
+  padding: 0 35px 0 12px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: #24314a !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  line-height: normal !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+}
+
+.vendor-modal .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c8c1f2 !important;
+}
+
+.vendor-modal .pch-filter-trigger:focus,
+.vendor-modal .pch-filter-trigger:focus-visible,
+.vendor-modal .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.15) !important;
+  outline: none !important;
+}
+
+.vendor-modal .has-error .pch-filter-trigger,
+.vendor-modal .has-error + .pch-filter-trigger,
+.vendor-modal [aria-invalid="true"] + .pch-filter-trigger,
+.vendor-modal .pch-filter-dropdown:has([aria-invalid="true"]) .pch-filter-trigger,
+.vendor-modal .pch-filter-dropdown:has(.has-error) .pch-filter-trigger,
+.vendor-modal .pch-filter-trigger.has-error {
+  border-color: #ff4055 !important;
+  background: #fffafa !important;
+}
+
+.vendor-modal .has-error .pch-filter-trigger:focus,
+.vendor-modal .has-error .pch-filter-trigger:focus-visible,
+.vendor-modal .has-error .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #ff4055 !important;
+  box-shadow: 0 0 0 2px rgba(255, 64, 85, 0.15) !important;
+}
+
+.vendor-modal .pch-filter-trigger:disabled {
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+  background-color: #fbfcfe !important;
+}
+
+.vendor-modal .pch-filter-trigger > span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #24314a !important;
+  line-height: normal !important;
+}
+
+.vendor-modal .vendor-placeholder + .pch-filter-trigger > span,
+.vendor-modal .pch-filter-dropdown:has(.vendor-placeholder) .pch-filter-trigger > span,
+.vendor-modal .pch-filter-trigger.vendor-placeholder > span {
+  color: #8492aa !important;
+}
+
+.vendor-modal .pch-filter-trigger > i.bi-chevron-down {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 12px !important;
+  color: #7187a5 !important;
+  pointer-events: none !important;
+  transition: transform 0.2s ease, color 0.2s ease !important;
+}
+
+.vendor-modal .pch-filter-trigger[aria-expanded="true"] > i.bi-chevron-down {
+  transform: translateY(-50%) rotate(180deg) !important;
+  color: #5143bc !important;
+}
+
+/* Vendor payments toolbar filter */
+.vendor-table-controls .pch-filter-sizing {
+  height: 40px !important;
+  min-width: 170px !important;
+  padding: 0 35px 0 12px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+}
+
+.vendor-table-controls .pch-filter-trigger {
+  height: 40px !important;
+  min-width: 170px !important;
+  box-sizing: border-box !important;
+  padding: 0 35px 0 12px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  color: #24314a !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+.vendor-table-controls .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c8c1f2 !important;
+}
+
+.vendor-table-controls .pch-filter-trigger:focus,
+.vendor-table-controls .pch-filter-trigger:focus-visible,
+.vendor-table-controls .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.08) !important;
+  outline: none !important;
+}

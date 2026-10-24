@@ -5153,7 +5153,10 @@
 ========================================================= */
 .store-workspace-page .store-workspace-card.store-features-card-wrap,
 .store-workspace-page .store-workspace-card.store-roles-card-wrap,
-.store-workspace-page .store-workspace-card:has(.store-section-editor) {
+.store-workspace-page .store-workspace-card:has(.sf-feature-list-panel),
+.store-workspace-page .store-workspace-card:has(.sf-permissions-panel),
+.store-workspace-page .store-workspace-card:has(.sf-permissions-layout),
+.store-workspace-page .store-workspace-card:has(.store-section-editor):not(:has(.sf-employee-assignment-panel)):not(:has(.sf-employee-summary)):not(:has(.sf-employee-tools)):not(:has(.sf-employees-table-wrap)) {
   background: transparent !important;
   border: 0 !important;
   border-radius: 0 !important;
@@ -5163,7 +5166,10 @@
 
 .store-workspace-page .store-workspace-card.store-features-card-wrap > div,
 .store-workspace-page .store-workspace-card.store-roles-card-wrap > div,
-.store-workspace-page .store-workspace-card > div:has(.store-section-editor) {
+.store-workspace-page .store-workspace-card > div:has(.sf-feature-list-panel),
+.store-workspace-page .store-workspace-card > div:has(.sf-permissions-panel),
+.store-workspace-page .store-workspace-card > div:has(.sf-permissions-layout),
+.store-workspace-page .store-workspace-card > div:has(.store-section-editor):not(:has(.sf-employee-assignment-panel)):not(:has(.sf-employee-summary)):not(:has(.sf-employee-tools)):not(:has(.sf-employees-table-wrap)) {
   background: transparent !important;
   border: 0 !important;
   border-radius: 0 !important;
@@ -5171,13 +5177,65 @@
   padding: 0 !important;
 }
 
-.store-workspace-page .store-workspace-card > div > .store-section-editor,
-.store-workspace-page .store-section-editor.sf-root {
+.store-workspace-page .store-workspace-card > div > .store-section-editor:not(:has(.sf-employee-assignment-panel)):not(:has(.sf-employee-summary)):not(:has(.sf-employee-tools)):not(:has(.sf-employees-table-wrap)),
+.store-workspace-page .store-section-editor.sf-root:not(:has(.sf-employee-assignment-panel)):not(:has(.sf-employee-summary)):not(:has(.sf-employee-tools)):not(:has(.sf-employees-table-wrap)) {
   background: transparent !important;
   border: 0 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   padding: 0 !important;
+}
+
+/* =========================================================
+   STORE > PEOPLE > EMPLOYEES (STORE EMPLOYEE ASSIGNMENT)
+   Restore outer white card container matching Employee Attendance
+========================================================= */
+
+/* Ensure the outer wrapper elements do not create duplicate card borders */
+.store-workspace-page .store-workspace-card:has(.sf-employee-assignment-panel),
+.store-workspace-page .store-workspace-card:has(.sf-employee-summary),
+.store-workspace-page .store-workspace-card:has(.sf-employee-tools),
+.store-workspace-page .store-workspace-card:has(.sf-employees-table-wrap) {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.store-workspace-page .store-workspace-card:has(.sf-employee-assignment-panel) > div,
+.store-workspace-page .store-workspace-card:has(.sf-employee-summary) > div,
+.store-workspace-page .store-workspace-card:has(.sf-employee-tools) > div,
+.store-workspace-page .store-workspace-card:has(.sf-employees-table-wrap) > div {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Root container of the Store Employees subscreen matching standard .store-workspace-card presentation */
+.store-workspace-page .store-workspace-card > div > .store-section-editor:has(.sf-employee-assignment-panel),
+.store-workspace-page .store-workspace-card > div > .store-section-editor:has(.sf-employee-summary),
+.store-workspace-page .store-workspace-card > div > .store-section-editor:has(.sf-employee-tools),
+.store-workspace-page .store-workspace-card > div > .store-section-editor:has(.sf-employees-table-wrap),
+.store-workspace-page .store-section-editor.sf-root:has(.sf-employee-assignment-panel),
+.store-workspace-page .store-section-editor.sf-root:has(.sf-employee-summary),
+.store-workspace-page .store-section-editor.sf-root:has(.sf-employee-tools),
+.store-workspace-page .store-section-editor.sf-root:has(.sf-employees-table-wrap) {
+  background: #ffffff !important;
+  border: 1px solid #e1e4eb !important;
+  border-radius: 12px !important;
+  padding: 24px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  box-shadow: none !important;
+  margin: 0 !important;
 }
 
 .store-section-editor .sf-permissions-panel + .sf-footer,
