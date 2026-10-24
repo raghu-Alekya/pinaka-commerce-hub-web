@@ -2663,3 +2663,162 @@
     margin: 0 8px;
   }
 }
+
+
+/* =========================================================
+   VENDORS FORM & TOOLBAR DROPDOWNS (MODERN PCH UI)
+   ========================================================= */
+
+.vendors-form .pch-filter-dropdown {
+  display: grid !important;
+  width: 100% !important;
+  position: relative !important;
+}
+
+.vendors-form .pch-filter-sizing {
+  width: 100% !important;
+  height: 40px !important;
+  box-sizing: border-box !important;
+  padding: 0 35px 0 12px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+}
+
+.vendors-form .pch-filter-trigger {
+  width: 100% !important;
+  height: 40px !important;
+  box-sizing: border-box !important;
+  padding: 0 35px 0 12px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  color: #24314a !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease !important;
+}
+
+.vendors-form .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c8c1f2 !important;
+}
+
+.vendors-form .pch-filter-trigger:focus,
+.vendors-form .pch-filter-trigger:focus-visible,
+.vendors-form .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.08) !important;
+  outline: none !important;
+}
+
+.vendors-form .field-invalid + .pch-filter-trigger,
+.vendors-form [aria-invalid="true"] + .pch-filter-trigger,
+.vendors-form .pch-filter-dropdown:has([aria-invalid="true"]) .pch-filter-trigger,
+.vendors-form .pch-filter-dropdown:has(.field-invalid) .pch-filter-trigger,
+.vendors-form .pch-filter-trigger.field-invalid {
+  border-color: #ef4456 !important;
+  background: #fffafb !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 86, 0.08) !important;
+}
+
+.vendors-form .field-invalid + .pch-filter-trigger:focus,
+.vendors-form [aria-invalid="true"] + .pch-filter-trigger:focus,
+.vendors-form .field-invalid + .pch-filter-trigger:focus-visible,
+.vendors-form [aria-invalid="true"] + .pch-filter-trigger:focus-visible,
+.vendors-form .field-invalid + .pch-filter-trigger[aria-expanded="true"],
+.vendors-form [aria-invalid="true"] + .pch-filter-trigger[aria-expanded="true"],
+.vendors-form .pch-filter-dropdown:has([aria-invalid="true"]) .pch-filter-trigger:focus,
+.vendors-form .pch-filter-dropdown:has([aria-invalid="true"]) .pch-filter-trigger:focus-visible,
+.vendors-form .pch-filter-dropdown:has([aria-invalid="true"]) .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #ef4456 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 86, 0.15) !important;
+  outline: none !important;
+}
+
+.vendors-form .pch-filter-trigger:disabled {
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+  background-color: #fbfcfe !important;
+}
+
+.vendors-form .pch-filter-trigger > span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #24314a !important;
+}
+
+.vendors-form .pch-filter-trigger > i.bi-chevron-down {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 12px !important;
+  color: #7187a5 !important;
+  pointer-events: none !important;
+  transition: transform 0.15s ease, color 0.15s ease !important;
+}
+
+.vendors-form .pch-filter-trigger[aria-expanded="true"] > i.bi-chevron-down {
+  transform: translateY(-50%) rotate(180deg) !important;
+  color: #5143bc !important;
+}
+
+/* Status dropdown styles inside .vendors-form */
+.vendors-form .vendors-status-select.active + .pch-filter-trigger,
+.vendors-form .pch-filter-dropdown:has(.vendors-status-select.active) .pch-filter-trigger {
+  border-color: #b9ead2 !important;
+  background: #f7fffb !important;
+  color: #08a961 !important;
+  font-weight: 600 !important;
+}
+
+.vendors-form .vendors-status-select.inactive + .pch-filter-trigger,
+.vendors-form .pch-filter-dropdown:has(.vendors-status-select.inactive) .pch-filter-trigger {
+  border-color: #f3c0c8 !important;
+  background: #fff8f9 !important;
+  color: #ed304d !important;
+  font-weight: 600 !important;
+}
+
+/* Toolbar filters in Vendors list */
+.vendors-list-card > .filters-bar .filter-select-wrapper > .pch-filter-dropdown {
+  width: 100%;
+}
+
+.vendors-list-card > .filters-bar .pch-filter-sizing {
+  height: 40px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+}
+
+.vendors-list-card > .filters-bar .pch-filter-trigger {
+  height: 40px !important;
+  border: 1px solid #d9e1f0 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  color: #24314a !important;
+  font-size: 13px !important;
+  font-family: inherit !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+.vendors-list-card > .filters-bar .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c8c1f2 !important;
+}
+
+.vendors-list-card > .filters-bar .pch-filter-trigger:focus,
+.vendors-list-card > .filters-bar .pch-filter-trigger:focus-visible,
+.vendors-list-card > .filters-bar .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.08) !important;
+  outline: none !important;
+}

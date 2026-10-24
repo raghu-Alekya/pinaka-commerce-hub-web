@@ -5176,7 +5176,7 @@
 }
 
 .page-actions .btn-primary {
-  border: 1px solid #5143bc;
+  border: 1.5px solid #5143bc;
   background: #5143bc;
   color: #ffffff;
 }
@@ -5187,7 +5187,7 @@
 }
 
 .page-actions .btn-secondary {
-  border: 1px solid #5143bc;
+  border: 1.5px solid #5143bc;
   background: transparent;
   color: #5143bc;
 }

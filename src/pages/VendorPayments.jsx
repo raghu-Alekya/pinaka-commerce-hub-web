@@ -449,12 +449,14 @@ export default function VendorPayments({ viewMode } = {}) {
             <label className={fieldErrors.vendor ? "has-error" : ""}>
               Vendor
 
-              <select
+              <FilterDropdown
+                aria-label="Vendor"
                 value={payment.vendor}
                 onChange={(event) =>
                   { setPayment((current) => ({ ...current, vendor: event.target.value })); setFieldErrors((current) => ({ ...current, vendor: "" })); }
                 }
                 aria-invalid={Boolean(fieldErrors.vendor)}
+                className={`${fieldErrors.vendor ? "has-error " : ""}${!payment.vendor ? "vendor-placeholder" : ""}`}
               >
                 <option value="">Select vendor</option>
 
@@ -467,7 +469,7 @@ export default function VendorPayments({ viewMode } = {}) {
                   </option>
                 ))}
 
-              </select>
+              </FilterDropdown>
               {fieldErrors.vendor && <small className="vendor-field-error" role="alert">{fieldErrors.vendor}</small>}
 
             </label>
@@ -475,38 +477,40 @@ export default function VendorPayments({ viewMode } = {}) {
             <label>
               Payment Purpose
 
-              <select
+              <FilterDropdown
+                aria-label="Payment Purpose"
                 value={payment.purpose}
                 onChange={(event) =>
-                  setPayment({
-                    ...payment,
+                  setPayment((current) => ({
+                    ...current,
                     purpose: event.target.value,
-                  })
+                  }))
                 }
               >
-                <option>Purchase</option>
-                <option>Refund</option>
-                <option>Other</option>
-              </select>
+                <option value="Purchase">Purchase</option>
+                <option value="Refund">Refund</option>
+                <option value="Other">Other</option>
+              </FilterDropdown>
 
             </label>
 
             <label>
               Payment Method
 
-              <select
+              <FilterDropdown
+                aria-label="Payment Method"
                 value={payment.method}
                 onChange={(event) =>
-                  setPayment({
-                    ...payment,
+                  setPayment((current) => ({
+                    ...current,
                     method: event.target.value,
-                  })
+                  }))
                 }
               >
-                <option>Cash</option>
-                <option>Card</option>
-                <option>Bank Transfer</option>
-              </select>
+                <option value="Cash">Cash</option>
+                <option value="Card">Card</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+              </FilterDropdown>
 
             </label>
 

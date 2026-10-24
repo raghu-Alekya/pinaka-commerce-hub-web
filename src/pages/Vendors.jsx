@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, } from "react";
 import Pagination from "../components/Pagination";
 import FiltersBar from "../components/FiltersBar";
+import FilterDropdown from "../components/FilterDropdown";
 import { Download } from "lucide-react";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
@@ -1062,7 +1063,7 @@ export default function Vendors({
               Vendor Type <span className="text-red-500">*</span>
             </span>
 
-            <select
+            <FilterDropdown
               name="vendorType"
               value={
                 form.vendorType
@@ -1071,6 +1072,7 @@ export default function Vendors({
               required
               disabled={saving || viewingId !== null}
               aria-invalid={Boolean(validationErrors.vendorType)}
+              className={validationErrors.vendorType ? "field-invalid" : ""}
             >
               <option value="Supplier">
                 Supplier
@@ -1079,7 +1081,7 @@ export default function Vendors({
               <option value="Organizer">
                 Organizer
               </option>
-            </select>
+            </FilterDropdown>
             {validationErrors.vendorType && <small className="vendors-field-error">Select a vendor type.</small>}
 
           </label>
@@ -1202,17 +1204,18 @@ export default function Vendors({
               Country <span className="text-red-500">*</span>
             </span>
 
-            <select
+            <FilterDropdown
               name="country"
               value={form.country}
               onChange={handleChange}
               required
               disabled={saving || viewingId !== null}
               aria-invalid={Boolean(validationErrors.country)}
+              className={validationErrors.country ? "field-invalid" : ""}
             >
               <option value="">Select country</option>
               {locationOptions.countries.map((country) => <option key={country} value={country}>{country}</option>)}
-            </select>
+            </FilterDropdown>
             {validationErrors.country && <small className="vendors-field-error">Country is required.</small>}
 
           </label>
@@ -1226,17 +1229,18 @@ export default function Vendors({
               State <span className="text-red-500">*</span>
             </span>
 
-            <select
+            <FilterDropdown
               name="state"
               value={form.state}
               onChange={handleChange}
               required
               disabled={saving || viewingId !== null}
               aria-invalid={Boolean(validationErrors.state)}
+              className={validationErrors.state ? "field-invalid" : ""}
             >
               <option value="">{form.country ? "Select state or province" : "Select country first"}</option>
               {locationOptions.states.map((state) => <option key={state} value={state}>{state}</option>)}
-            </select>
+            </FilterDropdown>
             {validationErrors.state && <small className="vendors-field-error">State is required.</small>}
 
           </label>
@@ -1351,7 +1355,7 @@ export default function Vendors({
                 Status <span className="text-red-500">*</span>
               </span>
 
-              <select
+              <FilterDropdown
                 name="status"
                 className={`vendors-status-select ${
                   String(form.status || "active").toLowerCase()
@@ -1370,7 +1374,7 @@ export default function Vendors({
                 <option value="Inactive">
                   Inactive
                 </option>
-              </select>
+              </FilterDropdown>
 
             </label>
           )}
