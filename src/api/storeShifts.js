@@ -19,6 +19,7 @@ export async function listStoreShifts(merchantId, storeId, { signal, onEmployees
     getStoreDeviceMappings(storeId),
   ]);
   const employeeNames = new Map();
+  const employeeCodes = new Map();
   const deviceNames = new Map();
   if (employeeResult.status === "fulfilled") {
     const options = normalizeShiftEmployees(employeeResult.value);
@@ -26,6 +27,7 @@ export async function listStoreShifts(merchantId, storeId, { signal, onEmployees
     for (const employee of options) {
       for (const id of [employee.id, employee.employeeId]) {
         if (id && employee.name) employeeNames.set(String(id), employee.name);
+        if (id && employee.code) employeeCodes.set(String(id), employee.code);
       }
     }
   }
@@ -54,7 +56,7 @@ export async function listStoreShifts(merchantId, storeId, { signal, onEmployees
       if (results.some(result => result.status === "rejected")) onDeviceError?.("Some device names could not be loaded. Please retry.");
     }
   } else if (!signal?.aborted) onDeviceError?.("Unable to load the device filter. Please retry.");
-  return shifts.map((shift) => resolveShiftNames(shift, employeeNames, deviceNames));
+  return shifts.map((shift) => resolveShiftNames(shift, employeeNames, deviceNames, employeeCodes));
 }
 
 export function normalizeShiftEmployees(response) {
@@ -62,19 +64,47 @@ export function normalizeShiftEmployees(response) {
   if (!Array.isArray(rows) || response?.success === false) throw new Error("Invalid store employee response.");
   const options = rows.map(employee => ({
     id: String(employee.employeeId || employee.employee_id || employee.id || ""),
+    employeeId: String(employee.id || employee.employeeId || employee.employee_id || ""),
+    code: String(employee.employeeCode || employee.employee_code || ""),
     name: employee.name || employee.fullName || employee.full_name || [employee.firstName ?? employee.first_name, employee.lastName ?? employee.last_name].filter(Boolean).join(" "),
   })).filter(employee => employee.id && employee.name);
   return [...new Map(options.map(employee => [employee.id, employee])).values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function resolveShiftNames(shift, employeeNames, deviceNames) {
+const metaValue = (row, name) => {
+  const items = Array.isArray(row?.meta) ? row.meta : Array.isArray(row?.shift_meta) ? row.shift_meta : [];
+  const match = items.find((item) => (item?.meta_name || item?.metaName) === name && item?.status !== "INACTIVE");
+  return match ? (match.meta_value ?? match.metaValue) : undefined;
+};
+const textMeta = (row, name) => {
+  const value = metaValue(row, name);
+  return value == null || value === "" ? "" : String(value);
+};
+
+export function resolveShiftNames(shift, employeeNames, deviceNames, employeeCodes = new Map()) {
   const deviceName = (...ids) => ids.map(id => id && deviceNames.get(String(id))).find(Boolean) || "";
+  const openedByEmployeeId = shift.openedByEmployeeId || shift.created_by || "";
+  const closedByEmployeeId = shift.closedByEmployeeId || shift.closed_by || "";
+  const openingDeviceId = shift.openingDeviceId || shift.opening_device_id || shift.device_id || "";
+  const closingDeviceId = shift.closingDeviceId || shift.closing_device_id || shift.closed_by_device_id || "";
+  const registerId = shift.registerId || textMeta(shift, "register_id");
+  const terminalId = shift.terminalId || shift.device_id || "";
   return {
     ...shift,
-    openedByName: employeeNames.get(String(shift.openedByEmployeeId)) || shift.cashierName || "",
-    closedByName: employeeNames.get(String(shift.closedByEmployeeId)) || shift.closedByEmployeeName || "",
-    openingDeviceName: deviceName(shift.openingDeviceId, shift.terminalId, shift.registerId),
-    closingDeviceName: deviceName(shift.closed_by_device_id, shift.closingDeviceId),
+    openedByEmployeeId,
+    closedByEmployeeId,
+    openingDeviceId,
+    closingDeviceId,
+    closed_by_device_id: shift.closed_by_device_id || closingDeviceId,
+    terminalId,
+    registerId,
+    cashierName: shift.cashierName || textMeta(shift, "cashier_name"),
+    openedByName: employeeNames.get(String(openedByEmployeeId)) || shift.cashierName || textMeta(shift, "cashier_name") || "",
+    closedByName: employeeNames.get(String(closedByEmployeeId)) || shift.closedByEmployeeName || "",
+    openedByCode: employeeCodes.get(String(openedByEmployeeId)) || "",
+    closedByCode: employeeCodes.get(String(closedByEmployeeId)) || "",
+    openingDeviceName: deviceName(openingDeviceId, terminalId, registerId),
+    closingDeviceName: deviceName(closingDeviceId, shift.closed_by_device_id),
   };
 }
 
@@ -84,44 +114,62 @@ const timestamp = (value) => {
   return date && Number.isFinite(date.getTime()) ? date : null;
 };
 const pad = (value) => String(value).padStart(2, "0");
+const transactionSum = (row, type) => {
+  const items = Array.isArray(row?.transactions) ? row.transactions : [];
+  const matches = items.filter((item) => String(item?.transaction_type || item?.transactionType || "").toUpperCase() === type && item?.status !== "INACTIVE");
+  if (!matches.length) return null;
+  return matches.reduce((total, item) => total + Number(item.total_sum ?? item.totalSum ?? 0), 0);
+};
+const firstAmount = (...values) => {
+  for (const value of values) {
+    const parsed = amount(value);
+    if (parsed != null) return parsed;
+  }
+  return null;
+};
+
 export function normalizeShift(row) {
-  const opened = timestamp(row.openedAt);
-  const closed = timestamp(row.closedAt);
+  const opened = timestamp(row.openedAt || row.opened_at);
+  const closed = timestamp(row.closedAt || row.closed_at);
   const seconds = opened && closed ? Math.max(0, Math.floor((closed - opened) / 1000)) : null;
-  const cashSales = amount(row.totalCashSales);
-  const cardSales = amount(row.totalCardSales);
+  const orderSales = row.order_sales || row.orderSales || {};
+  const cashSales = firstAmount(transactionSum(row, "CASH_SALE"), row.totalCashSales, orderSales.cash);
+  const cardSales = firstAmount(transactionSum(row, "CARD_SALE"), row.totalCardSales, orderSales.card);
+  const ebtSales = firstAmount(transactionSum(row, "EBT_SALE"), row.total_ebt_sales);
+  const payLater = firstAmount(transactionSum(row, "PAY_LATER"), row.total_pay_later);
+  const payoutParts = ["PAYOUT", "PAID_OUT", "VENDOR_PAYMENT"].map((type) => transactionSum(row, type)).filter((value) => value != null);
+  const saleParts = [cashSales, cardSales, ebtSales, payLater].filter((value) => value != null);
   return {
     id: row.id,
     date: opened ? `${opened.getFullYear()}-${pad(opened.getMonth() + 1)}-${pad(opened.getDate())}` : "",
-    openedBy: row.openedByName || row.cashierName || "",
-    openedCode: "",
-    openedByEmployeeId: String(row.openedByEmployeeId || ""),
-    closedByEmployeeId: String(row.closedByEmployeeId || ""),
+    openedBy: row.openedByName || row.cashierName || textMeta(row, "cashier_name") || "",
+    openedCode: row.openedByCode || "",
+    openedByEmployeeId: String(row.openedByEmployeeId || row.created_by || ""),
+    closedByEmployeeId: String(row.closedByEmployeeId || row.closed_by || ""),
     closedBy: row.closedByName || "",
-    closedCode: "",
-    deviceIds: [row.openingDeviceId, row.terminalId, row.registerId, row.closed_by_device_id, row.closingDeviceId].filter(Boolean).map(String),
-    openDevice: row.openingDeviceName || "",
-    closeDevice: row.closingDeviceName || "",
-    openTime: row.openedAt || "",
-    closeTime: row.closedAt || "",
+    closedCode: row.closedByCode || "",
+    deviceIds: [row.openingDeviceId, row.opening_device_id, row.device_id, row.terminalId, row.registerId, textMeta(row, "register_id"), row.closed_by_device_id, row.closingDeviceId, row.closing_device_id].filter(Boolean).map(String),
+    openDevice: row.openingDeviceName || row.opening_device_id || row.device_id || "",
+    closeDevice: row.closingDeviceName || row.closing_device_id || row.closed_by_device_id || "",
+    openTime: row.openedAt || row.opened_at || "",
+    closeTime: row.closedAt || row.closed_at || "",
     duration: seconds == null ? "—" : `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m ${seconds % 60}s`,
     status: row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1).toLowerCase() : "Unknown",
-    openingBalance: amount(row.openingCash),
-    closingBalance: amount(row.closingCashActual),
-    expectedClosing: amount(row.expectedCashInDrawer),
-    actualClosing: amount(row.closingCashActual),
-    cashDifference: amount(row.cashDifference ?? row.discrepancy),
-    safeDrop: amount(row.totalSafeDrops),
-    payouts: amount(row.total_payouts ?? row.totalPaidOuts),
-    cashSales, cardSales,
-    sales: amount(row.total_order_sale_amount) ?? (cashSales == null && cardSales == null ? null : (cashSales ?? 0) + (cardSales ?? 0)),
-    paymentTotal: [cashSales, cardSales, amount(row.total_ebt_sales), amount(row.total_pay_later)].every(value => value == null) ? null : (cashSales ?? 0) + (cardSales ?? 0) + (amount(row.total_ebt_sales) ?? 0) + (amount(row.total_pay_later) ?? 0),
-    orders: amount(row.total_orders),
-    cashback: amount(row.total_cashback),
-    refund: amount(row.total_refunds),
-    voidItems: amount(row.total_void_items),
-    cancelledOrders: amount(row.total_cancelled_orders),
-    ebtSales: amount(row.total_ebt_sales), payLater: amount(row.total_pay_later),
+    openingBalance: firstAmount(row.opening_balance, row.openingCash, row.openingBalance),
+    closingBalance: firstAmount(row.closing_balance, row.closingCashActual, row.closingBalance),
+    expectedClosing: firstAmount(row.expected_cash_in_drawer, row.expectedCashInDrawer),
+    actualClosing: firstAmount(row.closing_balance, row.closingCashActual),
+    cashDifference: firstAmount(row.over_short, row.cashDifference, row.discrepancy),
+    safeDrop: firstAmount(transactionSum(row, "SAFE_DROP"), row.totalSafeDrops),
+    payouts: payoutParts.length ? payoutParts.reduce((total, value) => total + value, 0) : firstAmount(row.total_payouts, row.totalPaidOuts),
+    cashSales, cardSales, ebtSales, payLater,
+    sales: firstAmount(metaValue(row, "total_order_sale_amount"), row.total_order_sale_amount) ?? (saleParts.length ? saleParts.reduce((total, value) => total + value, 0) : null),
+    paymentTotal: saleParts.length ? saleParts.reduce((total, value) => total + value, 0) : null,
+    orders: firstAmount(metaValue(row, "total_orders"), row.total_orders),
+    cashback: firstAmount(transactionSum(row, "CASHBACK"), row.total_cashback),
+    refund: firstAmount(transactionSum(row, "REFUND"), row.total_refunds),
+    voidItems: firstAmount(metaValue(row, "total_void_items"), row.total_void_items),
+    cancelledOrders: firstAmount(metaValue(row, "total_cancelled_orders"), row.total_cancelled_orders),
     paymentCounts: { Cash: null, Card: null, EBT: null, "Pay Later": null },
   };
 }
