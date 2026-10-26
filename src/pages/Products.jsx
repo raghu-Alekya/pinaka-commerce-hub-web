@@ -1,5 +1,5 @@
 import { pendingStoreRead } from "../api/http";
-import FilterDropdown from "../components/FilterDropdown";
+import FiltersBar from "../components/FiltersBar";
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
@@ -621,116 +621,60 @@ export default function Products({
                 TOOLBAR
             ================================================= */}
 
-            <div className="products-toolbar">
-
-                    {/* SEARCH */}
-
-                    <div className="products-search">
-
-                        <i className="bi bi-search" />
-
-                        <input
-                            type="text"
-                            placeholder="Search products, SKU, category..."
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(
-                                    e.target.value
-                                )
-                            }
-                        />
-
-                    </div>
-
-                    {/* CATEGORY */}
-
-                    <FilterDropdown
-                        value={category}
-                        onChange={(e) =>
-                            setCategory(
-                                e.target.value
-                            )
-                        }
-                    >
-                        <option value="">
-                            All Categories
-                        </option>
-
-                        {categories.map(
-                            (item) => (
-                                <option
-                                    key={item}
-                                    value={item}
-                                >
-                                    {item}
-                                </option>
-                            )
-                        )}
-                    </FilterDropdown>
-
-                    {/* TYPE */}
-
-                    <FilterDropdown
-                        value={type}
-                        onChange={(e) =>
-                            setType(
-                                e.target.value
-                            )
-                        }
-                    >
-                        <option value="">
-                            All Types
-                        </option>
-
-                        {types.map(
-                            (item) => (
-                                <option
-                                    key={item}
-                                    value={item}
-                                >
-                                    {item}
-                                </option>
-                            )
-                        )}
-                    </FilterDropdown>
-
-                    {/* STOCK */}
-
-                    <FilterDropdown
-                        value={stockStatus}
-                        onChange={(e) =>
-                            setStockStatus(
-                                e.target.value
-                            )
-                        }
-                    >
-                        <option value="">
-                            All Stock
-                        </option>
-
-                        <option value="instock">
-                            In Stock
-                        </option>
-
-                        <option value="outofstock">
-                            Out of Stock
-                        </option>
-                    </FilterDropdown>
-
-                    {/* CLEAR */}
-
-                    <button
-                        type="button"
-                        className="products-clear-btn"
-                        onClick={
-                            clearFilters
-                        }
-                    >
-                        <i className="bi bi-arrow-counterclockwise" />
-                        Reset
-                    </button>
-
-            </div>
+            <FiltersBar
+                className="products-toolbar"
+                searchValue={search}
+                onSearchChange={(value) => {
+                    setSearch(value);
+                    setCurrentPage(1);
+                }}
+                searchPlaceholder="Search products, SKU, category..."
+                searchAriaLabel="Search products, SKU, or category"
+                filters={[
+                    {
+                        key: "category",
+                        label: "Filter products by category",
+                        value: category,
+                        onChange: (value) => {
+                            setCategory(value);
+                            setCurrentPage(1);
+                        },
+                        options: [
+                            { label: "All Categories", value: "" },
+                            ...categories.map((item) => ({ label: item, value: item })),
+                        ],
+                    },
+                    {
+                        key: "type",
+                        label: "Filter products by type",
+                        value: type,
+                        onChange: (value) => {
+                            setType(value);
+                            setCurrentPage(1);
+                        },
+                        options: [
+                            { label: "All Types", value: "" },
+                            ...types.map((item) => ({ label: item, value: item })),
+                        ],
+                    },
+                    {
+                        key: "stock",
+                        label: "Filter products by stock",
+                        value: stockStatus,
+                        onChange: (value) => {
+                            setStockStatus(value);
+                            setCurrentPage(1);
+                        },
+                        options: [
+                            { label: "All Stock", value: "" },
+                            { label: "In Stock", value: "instock" },
+                            { label: "Out of Stock", value: "outofstock" },
+                        ],
+                    },
+                ]}
+                onClear={clearFilters}
+                clearLabel="Reset"
+            />
 
             <div className="products-card">
 

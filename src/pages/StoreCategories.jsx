@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import FilterDropdown from "../components/FilterDropdown";
+import FiltersBar from "../components/FiltersBar";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
 import {
@@ -404,21 +404,16 @@ export default function StoreCategories({
      SEARCH CHANGE
   ========================================================= */
 
-  const handleSearchChange = (
-    event
-  ) => {
-
-    setSearch(
-      event.target.value
-    );
+  const handleSearchChange = (value) => {
+    setSearch(value);
 
     setCategoryPage(1);
     setTagPage(1);
     setAttributePage(1);
   };
 
-  const handleStatusFilterChange = (event) => {
-    setStatusFilter(event.target.value);
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
     setCategoryPage(1);
     setTagPage(1);
     setAttributePage(1);
@@ -1551,43 +1546,29 @@ export default function StoreCategories({
            TOOLBAR
         =================================================== */}
 
-        <div className="categories-toolbar">
-
-          <div className="categories-search">
-
-            <i className="bi bi-search" />
-
-            <input
-              type="text"
-              placeholder={`Search ${activeTab}...`}
-              value={
-                search
-              }
-              onChange={
-                handleSearchChange
-              }
-            />
-
-          </div>
-
-          <FilterDropdown
-            aria-label={`Filter ${activeTab} by status`}
-            value={statusFilter}
-            onChange={handleStatusFilterChange}
-          >
-            <option value="">All Statuses</option>
-            {[...new Set((activeTab === "categories" ? categories : activeTab === "tags" ? tags : attributes)
-              .map((item) => item.status || "Active"))].map((status) => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </FilterDropdown>
-
-          <button type="button" className="categories-clear-btn" onClick={resetFilters}>
-            <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
-            Reset
-          </button>
-
-          {activeTab === "attributes" && (
+        <FiltersBar
+          className="categories-toolbar"
+          searchValue={search}
+          onSearchChange={handleSearchChange}
+          searchPlaceholder={`Search ${activeTab}...`}
+          searchAriaLabel={`Search ${activeTab}`}
+          filters={[
+            {
+              key: "status",
+              label: `Filter ${activeTab} by status`,
+              value: statusFilter,
+              onChange: handleStatusFilterChange,
+              options: [
+                { label: "All Statuses", value: "" },
+                ...[...new Set((activeTab === "categories" ? categories : activeTab === "tags" ? tags : attributes)
+                  .map((item) => item.status || "Active"))]
+                  .map((status) => ({ label: status, value: status })),
+              ],
+            },
+          ]}
+          onClear={resetFilters}
+          clearLabel="Reset"
+          trailingAction={activeTab === "attributes" && (
             <>
               <button
                 type="button"
@@ -1609,8 +1590,7 @@ export default function StoreCategories({
               </button>
             </>
           )}
-
-        </div>
+        />
 
         {activeTab === "attributes" && attributeActionError && (
           <div className="store-attribute-sync-message error" role="alert">
