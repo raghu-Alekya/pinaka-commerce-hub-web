@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { api, pendingStoreRead } from "../api/http";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import FilterDropdown from "../components/FilterDropdown";
+import FiltersBar from "../components/FiltersBar";
 import Pagination from "../components/Pagination";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
@@ -338,36 +338,38 @@ export default function FastKeys() {
 
       {/* ================= TOOLBAR ================= */}
 
-      <div className="fast-key-toolbar">
-        <input
-          type="text"
-          placeholder="Search fast keys..."
-          value={search}
-          onChange={(event) =>
-            setSearch(event.target.value)
-          }
-        />
-
-        <FilterDropdown
-          aria-label="Filter fast keys by status"
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-        >
-          <option value="">All Statuses</option>
-          {[...new Set(items.map((item) => String(item.status || "")).filter((status) => status && status !== "—"))].map((status) => (
-            <option key={status} value={status}>{status}</option>
-          ))}
-        </FilterDropdown>
-
-        <button
-          type="button"
-          className="store-edit-btn"
-          onClick={() => { setSearch(""); setStatusFilter(""); }}
-        >
-          <i className="bi bi-arrow-counterclockwise" />
-          Reset
-        </button>
-      </div>
+      <FiltersBar
+        className="fast-key-toolbar"
+        searchValue={search}
+        onSearchChange={(value) => {
+          setSearch(value);
+          setCurrentPage(1);
+        }}
+        searchPlaceholder="Search fast keys..."
+        searchAriaLabel="Search fast keys"
+        filters={[
+          {
+            key: "status",
+            label: "Filter fast keys by status",
+            value: statusFilter,
+            onChange: (value) => {
+              setStatusFilter(value);
+              setCurrentPage(1);
+            },
+            options: [
+              { label: "All Statuses", value: "" },
+              ...[...new Set(items.map((item) => String(item.status || "")).filter((status) => status && status !== "—"))]
+                .map((status) => ({ label: status, value: status })),
+            ],
+          },
+        ]}
+        onClear={() => {
+          setSearch("");
+          setStatusFilter("");
+          setCurrentPage(1);
+        }}
+        clearLabel="Reset"
+      />
 
       {/* ================= TABLE ================= */}
 

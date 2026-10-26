@@ -1730,7 +1730,7 @@ dialog.merchant-delete-dialog::backdrop {
   border: 0;
 }
 .mel button {
-  font: inherit;
+  font-family: inherit;
   padding: 8px 12px;
   border: 1px solid #dfe3eb;
   border-radius: 6px;
@@ -1907,7 +1907,7 @@ dialog.merchant-delete-dialog::backdrop {
 .mdl .mdl-header{display:flex;align-items:center;justify-content:space-between;gap:16px;}
 .mdl h2,.mdl h3{margin:0 0 4px;padding:0;border:0;font-size:18px;font-weight:600;color:#17233e;}
 .mdl p{margin:4px 0 12px;color:#81899a;font-size:13px}
-.mdl button{padding:8px 12px;border:1px solid #dfe3eb;border-radius:5px;background:#fff;color:#5143bc;font:inherit;cursor:pointer}
+.mdl button{padding:8px 12px;border:1px solid #dfe3eb;border-radius:5px;background:#fff;color:#5143bc;font-family:inherit;cursor:pointer}
 .mdl button:disabled{opacity:.5;cursor:not-allowed}
 .mdl .mdl-primary{background:#5143bc;color:white;border-color:#5143bc;white-space:nowrap}
 .mdl .mdl-toolbar,.mdl .mdl-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0}

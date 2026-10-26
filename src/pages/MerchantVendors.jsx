@@ -877,7 +877,7 @@ useEffect(() => {
                 </header>
             )}
             <section className={`mv-card${storeScope ? "" : " mv-list-card"}`}>
-                {storeScope ? <h3>Vendor List</h3> : (
+                {!storeScope && (
                     <header className="mv-header">
                         <div>
                             <h2>Vendor List</h2>

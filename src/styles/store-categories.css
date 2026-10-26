@@ -136,15 +136,71 @@
   padding: 12px 0 16px;
 }
 
-.categories-search {
-  position: relative;
+.categories-toolbar .filter-search {
   flex: 1 1 360px;
-  width: auto;
+  min-width: min(230px, 100%);
   max-width: 100%;
 }
 
-.categories-toolbar > .pch-filter-dropdown {
+.categories-toolbar .filter-options {
+  gap: 8px;
+}
+
+.categories-toolbar .filter-select-wrapper {
   flex: 0 0 160px;
+  width: 160px;
+}
+
+.categories-toolbar .filter-reset-btn {
+  height: 40px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-color: #d9dee8 !important;
+  border-radius: 6px;
+  background: #fff;
+  color: #5143bc;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.categories-toolbar .filter-reset-btn:hover {
+  border-color: #c8c1f2;
+  background: #f8f7ff;
+}
+
+.categories-toolbar .filter-select-wrapper > .pch-filter-dropdown {
+  width: 100%;
+  height: 40px;
+}
+
+.categories-toolbar .filter-select-wrapper > .pch-filter-dropdown > .pch-filter-sizing {
+  width: 100%;
+  height: 40px;
+}
+
+.categories-toolbar .filter-select-wrapper > .pch-filter-dropdown > .pch-filter-trigger {
+  width: 100% !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 32px 0 12px !important;
+  border: 1px solid #d9dee8 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  color: #59647a !important;
+  font: 13px Inter, "Segoe UI", sans-serif !important;
+  box-shadow: none !important;
+}
+
+.categories-toolbar .filter-select-wrapper > .pch-filter-dropdown > .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c8c1f2 !important;
+}
+
+.categories-toolbar .filter-reset-btn {
+  cursor: pointer;
+}
+
+.categories-toolbar .filter-reset-btn i {
+  color: #5143bc;
 }
 
 .categories-clear-btn {
@@ -608,13 +664,13 @@
     padding: 12px 0 16px;
   }
 
-  .categories-search {
-    width: auto;
+  .categories-toolbar .filter-search {
     flex: 1 1 auto;
   }
 
-  .categories-toolbar > .pch-filter-dropdown {
+  .categories-toolbar .filter-select-wrapper {
     flex: 0 0 140px;
+    width: 140px;
   }
 
   .categories-table thead th,
