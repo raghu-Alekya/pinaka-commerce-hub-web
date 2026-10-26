@@ -179,6 +179,9 @@ export default function MerchantVendors({
     const [masterVendors, setMasterVendors] =
         useState(initialMasterVendors);
 
+    const [eligibleMerchantVendorIds, setEligibleMerchantVendorIds] =
+        useState(() => new Set());
+
     const [masterLoading, setMasterLoading] =
         useState(false);
 
@@ -391,10 +394,13 @@ useEffect(() => {
        AVAILABLE VENDORS
     ========================================================= */
 
-    const unassignedVendors = vendors.filter(vendor => !ids.includes(vendor.id));
+    const vendorCandidates = storeScope
+        ? vendors.filter(vendor => eligibleMerchantVendorIds.has(vendor.id))
+        : vendors;
+    const unassignedVendors = vendorCandidates.filter(vendor => !ids.includes(vendor.id));
     const countries = locationOptions(unassignedVendors.map(vendorCountry));
     const states = locationOptions(unassignedVendors.filter(vendor => !countryFilter || locationKey(vendorCountry(vendor)) === countryFilter).map(vendorState));
-    const available = vendors.filter(
+    const available = vendorCandidates.filter(
         (vendor) =>
             !ids.includes(vendor.id) &&
             matches(vendor, search) &&
@@ -443,8 +449,14 @@ useEffect(() => {
                     return Array.from(byId.values());
                 });
             }
+            const merchantMappedVendors = storeScope
+                ? await getMappedMerchantVendors(merchantId)
+                : null;
+            if (storeScope) {
+                setEligibleMerchantVendorIds(new Set(merchantMappedVendors.map(idOf)));
+            }
             const vendors = storeScope
-                ? (await getMappedMerchantVendors(merchantId)).filter(vendor => !latestMappedIds.includes(idOf(vendor)))
+                ? merchantMappedVendors.filter(vendor => !latestMappedIds.includes(idOf(vendor)))
                 : await getAvailableMerchantVendors(mappingId);
 
             setMasterVendors((current) => {
