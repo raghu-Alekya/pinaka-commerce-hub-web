@@ -123,7 +123,7 @@ function productSkuMap(response) {
 }
 
 function employeeNameMap(response) {
-  const rows = Array.isArray(response) ? response : response?.employees || response?.data?.employees || response?.data?.data || response?.data || [];
+  const rows = findEmployeeRows(response);
   const names = {};
   for (const row of Array.isArray(rows) ? rows : []) {
     const person = row?.employee || row?.user || row;
@@ -132,10 +132,25 @@ function employeeNameMap(response) {
     if (!name) continue;
     for (const id of [person.id, person.employeeId, person.employeeCode, person.userId, person.user_id, person.uuid,
       row.id, row.employeeId, row.employeeCode, row.userId, row.user_id, row.uuid]) {
-      if (id !== undefined && id !== null && id !== "") names[String(id).trim().toLowerCase()] = name;
+      if (id !== undefined && id !== null && id !== "") {
+        const value = String(id).trim().toLowerCase();
+        names[value] = name;
+        const numericSuffix = value.match(/(?:^|\D)(\d+)$/)?.[1];
+        if (numericSuffix) names[String(Number(numericSuffix))] = name;
+      }
     }
   }
   return names;
+}
+
+function findEmployeeRows(value, depth = 0) {
+  if (Array.isArray(value)) return value;
+  if (!value || typeof value !== "object" || depth > 5) return [];
+  for (const key of ["employees", "items", "results", "records", "content", "data"]) {
+    const rows = findEmployeeRows(value[key], depth + 1);
+    if (rows.length) return rows;
+  }
+  return [];
 }
 
 function displayPlacedBy(value, names) {
@@ -210,38 +225,40 @@ function buildView(payload) {
     return nested.length ? nested : [record];
   });
   const subtotal = storeOrder.subtotal ?? storeOrder.subtotalAmount ?? storeOrder.subtotal_amount ?? order.subtotal ?? order.subtotalAmount ?? order.subtotal_amount;
-  const couponLines = [storeOrder.couponLines, storeOrder.coupon_lines, order.couponLines, order.coupon_lines, request.coupon_lines]
+  const couponLines = [storeOrder.couponLines, storeOrder.coupon_lines, order.couponLines, order.coupon_lines, request.couponLines, request.coupon_lines]
     .map(asArray).find((lines) => lines.length) || [];
-  const feeLines = ([storeOrder.feeLines, storeOrder.fee_lines, order.feeLines, order.fee_lines, request.fee_lines]
-    .map(asArray).find((lines) => lines.length) || [])
-    .filter((fee) => !/merchant[\s_-]*discount/i.test(String(fee?.name || fee?.title || fee?.code || "")));
+  const allFeeLines = [storeOrder.feeLines, storeOrder.fee_lines, order.feeLines, order.fee_lines, request.feeLines, request.fee_lines]
+    .map(asArray).find((lines) => lines.length) || [];
+  const merchantDiscountLine = allFeeLines.find((fee) => /merchant[\s_-]*discount/i.test(String(fee?.name || fee?.title || fee?.code || "")));
+  const feeLines = allFeeLines.filter((fee) => !/merchant[\s_-]*discount/i.test(String(fee?.name || fee?.title || fee?.code || "")));
+  const merchantDiscount = storeOrder.merchantDiscount ?? storeOrder.merchant_discount
+    ?? order.merchantDiscount ?? order.merchant_discount
+    ?? request.merchantDiscount ?? request.merchant_discount
+    ?? metaValueFrom(metadata, ["_merchant_discount", "merchant_discount"])
+    ?? merchantDiscountLine?.total ?? merchantDiscountLine?.amount;
   const discount = storeOrder.discountTotal ?? storeOrder.discount_total ?? storeOrder.discountAmount ?? storeOrder.discount_amount
     ?? order.discountTotal ?? order.discount_total ?? order.discountAmount ?? order.discount_amount;
   const discountLines = [
-    ...couponLines.map((coupon) => {
-      const couponMeta = coupon.meta_data || coupon.metaData;
-      return {
-        name: coupon.code || coupon.name || "Coupon",
-        type: titleCase(metaValueFrom(couponMeta, ["discount_type", "discountType"])) || "Coupon",
-        amount: coupon.discount ?? coupon.discount_amount ?? coupon.amount ?? coupon.discountAmount,
-      };
-    }),
     ...lineItems.flatMap((item) => {
       const itemMeta = item.meta_data || item.metaData;
-      const amount = metaValueFrom(itemMeta, ["_pos_auto_discount", "pos_auto_discount"]);
+      const amount = item.discountAmount ?? item.discount_amount ?? item.discount
+        ?? metaValueFrom(itemMeta, ["_pos_auto_discount", "pos_auto_discount", "discount_amount"]);
       const value = Number(amount);
       return Number.isFinite(value) && value > 0 ? [{
         name: item.name,
-        type: titleCase(metaValueFrom(itemMeta, ["_pos_discount_type", "pos_discount_type"])) || "Automatic discount",
+        type: titleCase(item.discountType || item.discount_type || metaValueFrom(itemMeta, ["_pos_discount_type", "pos_discount_type"])) || "Item discount",
         amount: value,
       }] : [];
     }),
-    ...(Number(metaValueFrom(metadata, ["_merchant_discount", "merchant_discount"])) > 0 ? [{
+    ...(Number(merchantDiscount) > 0 ? [{
       name: "Merchant discount",
       type: "Merchant discount",
-      amount: Number(metaValueFrom(metadata, ["_merchant_discount", "merchant_discount"])),
+      amount: Number(merchantDiscount),
     }] : []),
   ];
+  if (!discountLines.length && Number(discount) > 0) {
+    discountLines.push({ name: "Discount", type: "Order discount", amount: Number(discount) });
+  }
   const taxLineTotal = taxLines.reduce(
     (sum, line) => sum + (Number(line.tax_total ?? line.taxTotal ?? line.amount) || 0),
     0,
@@ -267,7 +284,6 @@ function buildView(payload) {
   const shownTotal = total ?? (payments.length
     ? payments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0)
     : lineItems.reduce((sum, item) => sum + (Number(item.total) || 0), 0));
-  const history = asArray(response?.history || order.history || storeOrder.history || response?.statusHistory || response?.status_history || response?.orderStatusHistory || response?.order_status_history || order.statusHistory || order.status_history || order.orderStatusHistory || order.order_status_history || storeOrder.statusHistory || storeOrder.status_history || metaValue(metadata, "status_history"));
   const currentStatus = response.status || order.status || storeOrder.status || order.orderStatus || order.order_status;
   const inferredPaymentStatus = String(currentStatus || "").toLowerCase().includes("complete")
     ? "Paid"
@@ -295,7 +311,9 @@ function buildView(payload) {
         || inferredPaymentStatus,
     ),
     deviceId: storeOrder.deviceId || storeOrder.device_id || order.deviceId || order.device_id || metaValue(metadata, "pos_device_id") || "—",
-    placedBy: storeOrder.placedBy || metaValue(metadata, "pos_placed_by") || "—",
+    placedBy: storeOrder.placedBy || storeOrder.placed_by || storeOrder.placedByName || storeOrder.placed_by_name ||
+      order.placedBy || order.placed_by || order.placedByName || order.placed_by_name ||
+      metaValueFrom(metadata, ["pos_placed_by", "_pos_placed_by", "placed_by", "placed_by_name"]) || "—",
     shiftId: storeOrder.shiftId || order.shiftId || metaValue(metadata, "shift_id") || "—",
     payLater: storeOrder.payLater ? "Yes" : "No",
     subtotal: formatMoney(shownSubtotal, currency),
@@ -309,7 +327,6 @@ function buildView(payload) {
     couponLines,
     discountLines,
     payments,
-    history: history.length ? history : currentStatus ? [{ status: currentStatus }] : [],
   };
 }
 
@@ -446,26 +463,31 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
             />
           </DetailBlock>
 
-          <DetailBlock title="Fees, discounts, tax, and coupons">
-            <h3>Fees</h3>
+          <DetailBlock title="Fees">
             <Lines
               columns={["Name", "Tax status", "Total"]}
-              rows={view.feeLines.map((fee) => [fee.name || "Fee", fee.tax_status || "—", formatMoney(fee.total, view.currency)])}
+              rows={view.feeLines.map((fee) => [fee.name || fee.title || "Fee", fee.taxStatus || fee.tax_status || "—", formatMoney(fee.total ?? fee.amount, view.currency)])}
             />
-            <h3>Discounts</h3>
+          </DetailBlock>
+
+          <DetailBlock title="Discounts">
             <Lines
               columns={["Name", "Type", "Amount"]}
               rows={view.discountLines.map((discount) => [discount.name || "Discount", discount.type || "—", formatMoney(discount.amount, view.currency)])}
             />
-            <h3>Tax</h3>
+          </DetailBlock>
+
+          <DetailBlock title="Tax">
             <Lines
               columns={["Label", "Rate", "Tax"]}
-              rows={view.taxLines.map((tax) => [tax.label || tax.rate_code || "Tax", `${tax.rate_percent ?? 0}%`, formatMoney(tax.tax_total, view.currency)])}
+              rows={view.taxLines.map((tax) => [tax.label || tax.rateCode || tax.rate_code || "Tax", `${tax.ratePercent ?? tax.rate_percent ?? 0}%`, formatMoney(tax.taxTotal ?? tax.tax_total ?? tax.amount, view.currency)])}
             />
-            <h3>Coupons</h3>
+          </DetailBlock>
+
+          <DetailBlock title="Coupons">
             <Lines
               columns={["Code", "Discount"]}
-              rows={view.couponLines.map((coupon) => [coupon.code || "—", formatMoney(coupon.discount ?? coupon.discount_amount ?? coupon.amount, view.currency)])}
+              rows={view.couponLines.map((coupon) => [coupon.code || coupon.couponCode || coupon.coupon_code || coupon.name || "—", formatMoney(coupon.discount ?? coupon.discountAmount ?? coupon.discount_amount ?? coupon.amount, view.currency)])}
             />
           </DetailBlock>
 

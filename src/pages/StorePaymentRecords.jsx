@@ -357,19 +357,26 @@ function mapPaymentRecord(payment, employeeNames = {}) {
 }
 
 function acceptedByName(payment, employeeNames) {
-  const acceptedBy = payment.accepted_by;
+  const acceptedBy = payment.accepted_by ?? payment.acceptedBy;
   const candidates = [
     payment.user?.name, payment.user?.full_name, payment.user?.fullName,
     payment.employee?.name, payment.employee?.full_name,
-    payment.user_name, payment.user_full_name, payment.accepted_by_name,
+    payment.user_name, payment.user_full_name, payment.accepted_by_name, payment.acceptedByName,
     typeof acceptedBy === "object" ? acceptedBy.name || acceptedBy.full_name || acceptedBy.fullName : null,
   ];
   const directName = candidates.find((value) => typeof value === "string" && value.trim());
   if (directName) return directName.trim();
   const ids = [payment.user_id, payment.userId, payment.employee_id, payment.employeeId,
-    payment.accepted_by_id, payment.acceptedById, typeof acceptedBy === "object" ? acceptedBy.id : acceptedBy,
+    payment.accepted_by_id, payment.acceptedById, typeof acceptedBy === "object" ? acceptedBy.id || acceptedBy.employee_id || acceptedBy.employeeId : acceptedBy,
     payment.user?.id, payment.employee?.id];
-  return ids.map((id) => findEmployeeName(employeeNames, id)).find(Boolean) || "—";
+  const resolvedName = ids.map((id) => findEmployeeName(employeeNames, id)).find(Boolean);
+  if (resolvedName) return resolvedName;
+  // Some API versions return the accepted employee's display name directly in
+  // `accepted_by`; only show it as a name when it is not an ID-like value.
+  if (typeof acceptedBy === "string" && acceptedBy.trim() && !/^[\d-]+$/.test(acceptedBy.trim()) && !/^[\da-f]{8}-[\da-f-]{27,}$/i.test(acceptedBy.trim())) {
+    return acceptedBy.trim();
+  }
+  return "—";
 }
 
 function findEmployeeRows(value, depth = 0) {

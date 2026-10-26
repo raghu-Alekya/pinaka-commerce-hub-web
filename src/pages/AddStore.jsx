@@ -623,6 +623,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const [masterPlans, setMasterPlans] = useState([]);
   const [typeFeatures, setTypeFeatures] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
   const [merchantLoading, setMerchantLoading] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [merchantError, setMerchantError] = useState("");
@@ -1309,7 +1310,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setMerchantInfo(null);
     setSubscription(null);
     setMerchantStores([]);
-    setEmployees([]);
     setMerchantError("");
     setRoleDefinitions([]);
     setRolesError("");
@@ -1318,12 +1318,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
 
     async function loadMerchantContext() {
       try {
-        const [result, employeeResult, storesResult] = await Promise.all([
+        const [result, storesResult] = await Promise.all([
           pendingStoreRead(`merchant:${merchantId}`, () => getMerchant(merchantId)).catch(() => ({
             merchant: merchantContext,
             subscription: existingStore?.subscription,
           })),
-          Promise.resolve([]),
           editing || !embeddedAccess
             ? pendingStoreRead(`merchant-stores:${merchantId}`, () => api.get(endpoints.merchantStores(encodeURIComponent(merchantId)))).catch(() => null)
             : Promise.resolve(null),
@@ -1346,31 +1345,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           [];
         const rows = listed.length ? listed : storeListFromResponse(fallback);
         setMerchantStores(rows.map(normalizeStore));
-        const employeeRows = Array.isArray(employeeResult)
-          ? employeeResult
-          : (employeeResult?.employees ?? employeeResult?.data?.employees);
-        if (!Array.isArray(employeeRows))
-          throw new Error("The merchant employee list could not be read.");
-        setEmployees(
-          employeeRows
-            .map((employee) => ({
-              ...employee,
-              id: employee.id || employee.employeeId,
-              name:
-                employee.name ||
-                employee.employeeName ||
-                [employee.firstName, employee.lastName]
-                  .filter(Boolean)
-                  .join(" "),
-              phone: employee.phone || employee.phoneNumber || "",
-              role:
-                typeof employee.role === "string"
-                  ? employee.role
-                  : employee.roleName || employee.role?.name || "",
-            }))
-            .filter((employee) => employee.id),
-        );
-
         // A new store starts with no role assignments; the user selects them explicitly.
         if (!editing) {
           setStore((current) => ({
@@ -1413,14 +1387,27 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     return () => { active = false; };
   }, [needsRoles, merchantId, reload]);
   useEffect(() => {
-    if (!needsEmployees || !merchantId) return;
     let active = true;
+    if (!needsEmployees || !merchantId) {
+      setEmployees([]);
+      setEmployeesLoading(false);
+      return () => { active = false; };
+    }
+    setEmployeesLoading(true);
     pendingStoreRead(`employees:${merchantId}`, () => listMerchantEmployees(merchantId))
       .then(response => {
         if (!active) return;
-        const rows = Array.isArray(response) ? response : response?.employees || response?.data?.employees || [];
+        const rows = Array.isArray(response)
+          ? response
+          : response?.employees ?? response?.data?.employees ?? response?.data?.data?.employees ?? [];
+        if (!Array.isArray(rows)) throw new Error("The merchant employee list could not be read.");
         setEmployees(rows.map(employee => ({ ...employee, id: employee.id || employee.employeeId, name: employee.name || employee.employeeName || [employee.firstName || employee.first_name, employee.lastName || employee.last_name].filter(Boolean).join(" ") })));
-      }).catch(error => { if (active) setMerchantError(error.message); });
+      }).catch(error => {
+        if (active) {
+          setEmployees([]);
+          setMerchantError(error.message || "Unable to load merchant employees.");
+        }
+      }).finally(() => { if (active) setEmployeesLoading(false); });
     return () => { active = false; };
   }, [needsEmployees, merchantId, reload]);
   // Only offer role templates mapped to this store's selected store type.
@@ -3662,7 +3649,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 {!pagedEmployees.length && (
                   <tr>
                     <td colSpan="8" className="sf-empty">
-                      {employees.length
+                      {employeesLoading
+                        ? "Loading employees…"
+                        : employees.length
                         ? "No active employees match this search."
                         : "No employees were returned for this merchant."}
                     </td>
