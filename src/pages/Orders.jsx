@@ -6,7 +6,7 @@ import FiltersBar from "../components/FiltersBar";
 import ListActions from "../components/ListActions";
 import { listMerchants } from "../api/merchants";
 import { listMerchantStores } from "../api/stores";
-import { listOrders } from "../api/orders";
+import { listAllMerchantOrders, listOrders } from "../api/orders";
 import OrderDetail from "./OrderDetail";
 import "../styles/orders.css";
 
@@ -16,8 +16,8 @@ function statusClass(status) {
   if (value.includes("complete")) return "completed";
   if (value.includes("pending")) return "pending";
   if (value.includes("cancel")) return "cancelled";
-  if (value.includes("refund")) return "refunded";
   if (value.includes("partial")) return "partial";
+  if (value.includes("refund")) return "refunded";
   if (value.includes("inactive")) return "inactive";
   if (value.includes("active")) return "active";
   return "processing";
@@ -52,6 +52,8 @@ export default function Orders({
     storeId || (!embedded && searchParams.get("store")) || "",
   );
   const [orders, setOrders] = useState([]);
+  const [overviewCards, setOverviewCards] = useState(null);
+  const [serverPagination, setServerPagination] = useState(null);
   const [viewedOrder, setViewedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -106,15 +108,46 @@ export default function Orders({
   }, [selectedMerchant, embedded]);
 
   useEffect(() => {
+    if (embedded || selectedMerchant || selectedStore) return undefined;
+    let active = true;
+    setLoading(true);
+    setError("");
+    pendingStoreRead(`all-merchant-orders:${currentPage}:${pageSize}`, () =>
+      listAllMerchantOrders({ page: currentPage, perPage: pageSize }),
+    )
+      .then((result) => {
+        if (!active) return;
+        setOrders(result.orders);
+        setOverviewCards(result.cards);
+        setServerPagination(result.pagination);
+      })
+      .catch((loadError) => {
+        if (!active) return;
+        setOrders([]);
+        setOverviewCards(null);
+        setServerPagination(null);
+        setError(loadError?.message || "Failed to load orders.");
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [embedded, selectedMerchant, selectedStore, currentPage, pageSize]);
+
+  useEffect(() => {
     if (!selectedStore) {
-      setOrders([]);
-      setError("");
-      setLoading(false);
+      if (embedded || selectedMerchant) {
+        setOrders([]);
+        setOverviewCards(null);
+        setServerPagination(null);
+        setError("");
+        setLoading(false);
+      }
       return undefined;
     }
     let active = true;
     setLoading(true);
     setError("");
+    setOverviewCards(null);
+    setServerPagination(null);
     pendingStoreRead(`store-orders:${selectedStore}`, () => listOrders(selectedStore))
       .then((rows) => {
         if (!active) return;
@@ -134,7 +167,7 @@ export default function Orders({
     return () => {
       active = false;
     };
-  }, [selectedStore, selectedMerchant]);
+  }, [selectedStore, selectedMerchant, embedded]);
 
   const authors = useMemo(
     () => [...new Set(orders.map((order) => order.author).filter(Boolean))],
@@ -154,12 +187,14 @@ export default function Orders({
     });
   }, [orders, search, statusFilter, authorFilter, dateFilter]);
 
-  const totalItems = filteredOrders.length;
+  const isServerPaginated = Boolean(serverPagination && !selectedStore && !selectedMerchant && !embedded);
+  const totalItems = isServerPaginated ? Number(serverPagination.total ?? filteredOrders.length) : filteredOrders.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const paginatedOrders = useMemo(() => {
+    if (isServerPaginated) return filteredOrders;
     const start = (currentPage - 1) * pageSize;
     return filteredOrders.slice(start, start + pageSize);
-  }, [filteredOrders, currentPage, pageSize]);
+  }, [filteredOrders, currentPage, pageSize, isServerPaginated]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -169,10 +204,12 @@ export default function Orders({
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, totalPages]);
 
-  const completedCount = orders.filter((order) => statusClass(order.status) === "completed").length;
-  const pendingCount = orders.filter((order) => statusClass(order.status) === "pending").length;
-  const totalAmount = orders.reduce((sum, order) => sum + Number(order.totalValue || 0), 0);
-  const orderPercentage = (count) => (orders.length ? ((count / orders.length) * 100).toFixed(1) : "0.0");
+  const completedCount = overviewCards?.completed ?? orders.filter((order) => statusClass(order.status) === "completed").length;
+  const pendingCount = overviewCards?.pending_payment ?? orders.filter((order) => statusClass(order.status) === "pending").length;
+  const totalOrderCount = overviewCards?.total_orders ?? orders.length;
+  const totalAmount = Number(overviewCards?.total_value ?? orders.reduce((sum, order) => sum + Number(order.totalValue || 0), 0));
+  const completedPercentage = overviewCards?.completed_percent ?? (totalOrderCount ? ((completedCount / totalOrderCount) * 100).toFixed(1) : "0.0");
+  const pendingPercentage = overviewCards?.pending_payment_percent ?? (totalOrderCount ? ((pendingCount / totalOrderCount) * 100).toFixed(1) : "0.0");
   function rememberFilters(nextMerchant, nextStore) {
     if (embedded) return;
     const next = new URLSearchParams(searchParams);
@@ -277,8 +314,8 @@ export default function Orders({
     }
 
     navigate(`/orders/${encodeURIComponent(order.id)}?${new URLSearchParams({
-      ...(selectedMerchant ? { merchant: selectedMerchant } : {}),
-      ...(selectedStore ? { store: selectedStore } : {}),
+      ...((selectedMerchant || order.merchantId) ? { merchant: selectedMerchant || order.merchantId } : {}),
+      ...((selectedStore || order.storeId) ? { store: selectedStore || order.storeId } : {}),
       number: order.wooOrderId,
     }).toString()}`, { state: { from: `${location.pathname}${location.search}` } });
   };
@@ -308,9 +345,9 @@ export default function Orders({
       )}
 
       <div className="orders-summary">
-        <SummaryCard icon="bi-bag-fill" tone="purple" label="Total Orders" value={orders.length} meta="Live Records" metaTone="positive" />
-        <SummaryCard icon="bi-check-circle-fill" tone="green" label="Completed" value={completedCount} meta={`${orderPercentage(completedCount)}% of total`} metaTone="positive" />
-        <SummaryCard icon="bi-clock-fill" tone="orange" label="Pending Payment" value={pendingCount} meta={`${orderPercentage(pendingCount)}% of total`} metaTone="warning" />
+        <SummaryCard icon="bi-bag-fill" tone="purple" label="Total Orders" value={totalOrderCount} meta="Live Records" metaTone="positive" />
+        <SummaryCard icon="bi-check-circle-fill" tone="green" label="Completed" value={completedCount} meta={`${completedPercentage}% of total`} metaTone="positive" />
+        <SummaryCard icon="bi-clock-fill" tone="orange" label="Pending Payment" value={pendingCount} meta={`${pendingPercentage}% of total`} metaTone="warning" />
         <SummaryCard icon="bi-cash-stack" tone="blue" label="Total Value" value={`$${totalAmount.toFixed(2)}`} meta="Across loaded orders" metaTone="info" />
       </div>
 
@@ -388,14 +425,14 @@ export default function Orders({
                       <td className="orders-table-empty" colSpan="7">
                         <div className="products-table-empty-state">
                           <strong>
-                            {!selectedStore
+                            {!selectedStore && (embedded || selectedMerchant)
                               ? "Select a store to view orders"
                               : error
                                 ? "Orders could not be loaded"
                                 : "No orders found"}
                           </strong>
                           <span>
-                            {!selectedStore
+                            {!selectedStore && (embedded || selectedMerchant)
                               ? "Choose a merchant and store to load that store's orders."
                               : error
                                 ? error

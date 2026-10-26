@@ -45,15 +45,15 @@ export function formatMoney(value, currency = "USD") {
 }
 
 export function normalizeOrder(order = {}) {
-  const createdAt = order.createdAt || order.created_at || order.date_created || "";
+  const createdAt = order.createdAt || order.created_at || order.date_created || order.date || "";
   const created = createdAt ? new Date(createdAt) : null;
   const validDate = created && !Number.isNaN(created.getTime());
   const currency = order.currency || "USD";
   const totalValue = Number(order.totalAmount ?? order.total_amount ?? order.total ?? 0);
   const metadata = order.metadata || order.meta_data || [];
   return {
-    id: order.id,
-    wooOrderId: String(order.orderNumber || order.order_number || order.number || order.id || "").replace(/^#/, ""),
+    id: order.id || order.orderId || order.order_id,
+    wooOrderId: String(order.orderNumber || order.order_number || order.number || order.orderId || order.order_id || order.id || "").replace(/^#/, ""),
     offlineOrderId: order.clientOrderId || order.client_order_id || metaValue(metadata, "_pos_client_order_id") || "",
     createdAt,
     date: validDate
@@ -63,7 +63,7 @@ export function normalizeOrder(order = {}) {
       ? created.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
       : "",
     status: normalizeOrderStatus(order.orderStatus || order.order_status || order.status || "Created"),
-    author: order.customerName || order.customer_name || metaValue(metadata, "pos_placed_by") || "Walk-in Customer",
+    author: order.customerName || order.customer_name || order.customer || metaValue(metadata, "pos_placed_by") || "Walk-in Customer",
     paymentMethod: titleCase(order.paymentMethod || order.payment_method || ""),
     totalValue: Number.isFinite(totalValue) ? totalValue : 0,
     total: formatMoney(totalValue, currency),
@@ -83,6 +83,21 @@ export async function listOrders(storeId) {
       ? response
       : [];
   return orders.map(normalizeOrder);
+}
+
+export async function listAllMerchantOrders({ page = 1, perPage = 10 } = {}) {
+  const query = new URLSearchParams({ page: String(page), perPage: String(perPage) });
+  const response = await api.get(`${endpoints.allMerchantOrders}?${query}`);
+  const payload = response?.data?.data && typeof response.data.data === "object"
+    ? response.data.data
+    : response?.data && typeof response.data === "object" ? response.data : response;
+  if (payload?.success === false) throw new Error(payload.message || "Unable to load all merchant orders.");
+  const rows = Array.isArray(payload?.orders) ? payload.orders : [];
+  return {
+    orders: rows.map(normalizeOrder),
+    cards: payload?.cards || {},
+    pagination: payload?.pagination || { page, per_page: perPage, total: rows.length },
+  };
 }
 
 export async function getOrder(orderId, storeId) {
