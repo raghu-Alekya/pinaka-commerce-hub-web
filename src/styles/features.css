@@ -1292,3 +1292,104 @@
   line-height: 18px;
   max-height: 36px;
 }
+
+/* Modern standardized FilterDropdown inside feature-field select-shell */
+.feature-field .select-shell:has(.pch-filter-dropdown) {
+  overflow: visible !important;
+  border: none !important;
+  background: transparent !important;
+  height: auto !important;
+}
+
+.feature-field .select-shell > .pch-filter-dropdown {
+  display: grid !important;
+  width: 100% !important;
+  position: relative !important;
+}
+
+.feature-field .select-shell .pch-filter-sizing {
+  width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+  border: 1px solid #dce3ed !important;
+  border-radius: 7px !important;
+  padding: 0 36px 0 14px !important;
+  font-size: 14px !important;
+}
+
+.feature-field .select-shell .pch-filter-trigger {
+  width: 100% !important;
+  height: 44px !important;
+  box-sizing: border-box !important;
+  padding: 0 36px 0 14px !important;
+  border: 1px solid #dce3ed !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  color: #25314c !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+.feature-field .select-shell .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c4cede !important;
+}
+
+.feature-field .select-shell .pch-filter-trigger:focus,
+.feature-field .select-shell .pch-filter-trigger:focus-visible,
+.feature-field .select-shell .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.15) !important;
+  outline: none !important;
+}
+
+.feature-field .select-shell .feature-input-error + .pch-filter-trigger,
+.feature-field .select-shell .pch-filter-dropdown:has(.feature-input-error) .pch-filter-trigger,
+.feature-field .select-shell .pch-filter-trigger.feature-input-error {
+  border-color: #dc2626 !important;
+}
+
+.feature-field .select-shell .active + .pch-filter-trigger > span,
+.feature-field .select-shell .pch-filter-dropdown:has(.active) .pch-filter-trigger > span {
+  color: #16a34a !important;
+  font-weight: 600 !important;
+}
+
+.feature-field .select-shell .inactive + .pch-filter-trigger > span,
+.feature-field .select-shell .pch-filter-dropdown:has(.inactive) .pch-filter-trigger > span {
+  color: #dc2626 !important;
+  font-weight: 600 !important;
+}
+
+.feature-field .select-shell .feature-placeholder + .pch-filter-trigger > span,
+.feature-field .select-shell .pch-filter-dropdown:has(.feature-placeholder) .pch-filter-trigger > span {
+  color: #8b9bb2 !important;
+  font-weight: normal !important;
+}
+
+.feature-field .select-shell .pch-filter-trigger > i.bi-chevron-down {
+  position: absolute !important;
+  right: 14px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 12px !important;
+  color: #7187a5 !important;
+  pointer-events: none !important;
+  transition: transform 0.15s ease, color 0.15s ease !important;
+}
+
+.feature-field .select-shell .pch-filter-trigger[aria-expanded="true"] > i.bi-chevron-down {
+  transform: translateY(-50%) rotate(180deg) !important;
+  color: #5143bc !important;
+}
+
+.feature-field .select-shell:has(.pch-filter-dropdown) > i {
+  display: none !important;
+}

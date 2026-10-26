@@ -18,6 +18,7 @@ import { formatDate, listSubscriptions } from "../api/subscriptions";
 import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Download } from "lucide-react";
 import { listMerchants, getMerchant, updateMerchantStatus, deleteMerchant } from "../api/merchants";
 import { listMerchantEmployees, getEmployee, updateEmployee } from "../api/employees";
 import { api, ApiError, pendingStoreRead } from "../api/http";
@@ -1076,10 +1077,11 @@ const [statusFilter, setStatusFilter] = useState("");
             <i className="bi bi-plus-lg" /> Add Merchant
           </button>
           <button
-            className="btn btn-secondary"
+            className="btn btn-secondary merchants-export-btn"
+            type="button"
             onClick={() => exportMerchants(rows)}
           >
-            <i className="bi bi-download" /> Export
+            <Download size={20} aria-hidden="true" /> Export
           </button>
         </div>
       </div>

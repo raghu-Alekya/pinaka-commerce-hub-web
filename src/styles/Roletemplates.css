@@ -3027,3 +3027,97 @@ input {
   color: #c93443;
   -webkit-text-fill-color: #c93443;
 }
+
+/* Modern standardized FilterDropdown inside role-select-wrap */
+.role-create-fields-grid .role-select-wrap:has(.pch-filter-dropdown) {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.role-create-fields-grid .role-select-wrap > .pch-filter-dropdown {
+  display: grid !important;
+  width: 100% !important;
+  position: relative !important;
+}
+
+.role-create-fields-grid .role-select-wrap .pch-filter-sizing {
+  width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+  border: 1px solid #dce3ed !important;
+  border-radius: 7px !important;
+  padding: 0 36px 0 14px !important;
+  font-size: 14px !important;
+}
+
+.role-create-fields-grid .role-select-wrap .pch-filter-trigger {
+  width: 100% !important;
+  height: 44px !important;
+  box-sizing: border-box !important;
+  padding: 0 36px 0 14px !important;
+  border: 1px solid #dce3ed !important;
+  border-radius: 7px !important;
+  background: #ffffff !important;
+  color: #172b4d !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+.role-create-fields-grid .role-select-wrap .pch-filter-trigger:hover:not(:disabled) {
+  border-color: #c4cede !important;
+}
+
+.role-create-fields-grid .role-select-wrap .pch-filter-trigger:focus,
+.role-create-fields-grid .role-select-wrap .pch-filter-trigger:focus-visible,
+.role-create-fields-grid .role-select-wrap .pch-filter-trigger[aria-expanded="true"] {
+  border-color: #5143bc !important;
+  box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.15) !important;
+  outline: none !important;
+}
+
+.role-create-fields-grid .role-select-wrap .status-active + .pch-filter-trigger > span,
+.role-create-fields-grid .role-select-wrap .pch-filter-dropdown:has(.status-active) .pch-filter-trigger > span {
+  color: #16a34a !important;
+  font-weight: 600 !important;
+}
+
+.role-create-fields-grid .role-select-wrap .status-inactive + .pch-filter-trigger > span,
+.role-create-fields-grid .role-select-wrap .pch-filter-dropdown:has(.status-inactive) .pch-filter-trigger > span {
+  color: #dc2626 !important;
+  font-weight: 600 !important;
+}
+
+.role-create-fields-grid .role-select-wrap .role-placeholder + .pch-filter-trigger > span,
+.role-create-fields-grid .role-select-wrap .pch-filter-dropdown:has(.role-placeholder) .pch-filter-trigger > span {
+  color: #8b9bb2 !important;
+  font-weight: normal !important;
+}
+
+.role-create-fields-grid .role-select-wrap .pch-filter-trigger > i.bi-chevron-down {
+  position: absolute !important;
+  right: 14px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 12px !important;
+  color: #7187a5 !important;
+  pointer-events: none !important;
+  transition: transform 0.15s ease, color 0.15s ease !important;
+}
+
+.role-create-fields-grid .role-select-wrap .pch-filter-trigger[aria-expanded="true"] > i.bi-chevron-down {
+  transform: translateY(-50%) rotate(180deg) !important;
+  color: #5143bc !important;
+}
+
+.role-create-fields-grid .role-select-wrap:has(.pch-filter-dropdown) > i {
+  display: none !important;
+}

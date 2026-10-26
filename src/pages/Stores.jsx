@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { activateStore, deactivateStore, listStores } from "../api/stores";
 import Pagination from "../components/Pagination";
@@ -273,11 +274,11 @@ useEffect(() => {
             <i className="bi bi-plus-lg" /> Add Store
           </button>
           <button
-            className="add-store-btn btn-secondary"
+            className="stores-export-btn btn-secondary"
             type="button"
             onClick={() => exportStores(rows, merchants)}
           >
-            <i className="bi bi-download" /> Export
+            <Download size={20} aria-hidden="true" /> Export
           </button>
         </div>
       </div>

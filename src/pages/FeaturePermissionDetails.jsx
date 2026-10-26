@@ -172,7 +172,7 @@ const confirmDeletePermission = async () => {
       key: "",
       name: "",
       description: "",
-      status: "Active",
+      status: "",
     });
 
     setFormError("");
@@ -517,19 +517,23 @@ const confirmDeletePermission = async () => {
 
                 <label>
                   Status
-                  <select
-                    value={form.status}
+                  <FilterDropdown
+                    value={form.status || ""}
                     onChange={(e) =>
                       setForm({
                         ...form,
                         status: e.target.value,
                       })
                     }
+                    aria-label="Status"
+                    className={`fp-modal-status-select ${
+                      form.status === "Active" ? "active" : form.status === "Inactive" ? "inactive" : ""
+                    }${!form.status ? " fp-placeholder" : ""}`}
                   >
+                    <option value="" disabled hidden>Select Status</option>
                     <option value="Active">Active</option>
-
                     <option value="Inactive">Inactive</option>
-                  </select>
+                  </FilterDropdown>
                 </label>
               </div>
 

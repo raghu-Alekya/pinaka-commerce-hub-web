@@ -115,7 +115,7 @@ const emptyForm = {
   name: "",
   description: "",
   category: "",
-  status: "Select Status",
+  status: "",
 };
 
 export default function CreateStoreType() {
@@ -687,26 +687,23 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
   </label>
 
   <div className="select-shell">
-    <select
+    <FilterDropdown
       name="status"
-      value={form.status}
+      value={form.status || ""}
       onChange={updateField}
-      className={
+      aria-label="Status"
+      className={`${errors.status ? "field-invalid " : ""}${
         form.status === "Active"
           ? "active"
           : form.status === "Inactive"
           ? "inactive"
           : ""
-      }
+      }${!form.status ? " store-type-placeholder" : ""}`}
     >
-      <option value="Select Status">
-        Select Status
-      </option>
+      <option value="" disabled hidden>Select Status</option>
       <option value="Active">Active</option>
       <option value="Inactive">Inactive</option>
-    </select>
-
-   
+    </FilterDropdown>
   </div>
 
   {errors.status && (

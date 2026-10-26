@@ -506,24 +506,25 @@ async function confirmDeleteTender() {
     Status <span className="text-red-500">*</span>
   </span>
 
-  <select
+  <FilterDropdown
     name="status"
-    value={form.status}
+    value={form.status || ""}
     onChange={handleChange}
     required
     aria-invalid={Boolean(fieldErrors.status)}
+    aria-label="Status"
     className={`tender-status-select ${
       form.status === "Active"
         ? "status-active"
         : form.status === "Inactive"
           ? "status-inactive"
           : ""
-    }`}
+    }${!form.status ? " tenders-placeholder" : ""}`}
   >
-    <option value="">Select Status</option>
+    <option value="" disabled hidden>Select Status</option>
     <option value="Active">Active</option>
     <option value="Inactive">Inactive</option>
-  </select>
+  </FilterDropdown>
   {fieldErrors.status && <small className="tenders-field-error" role="alert">{fieldErrors.status}</small>}
 </label>
         </div>

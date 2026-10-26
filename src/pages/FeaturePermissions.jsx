@@ -42,7 +42,7 @@ const emptyForm = {
   name: "",
   featureId: "",
   description: "",
-  status: "Select Status",
+  status: "",
 };
 
 /* =========================================================
@@ -189,6 +189,7 @@ const [deleteError, setDeleteError] = useState("");
   const requiredFieldsComplete =
   form.name.trim() !== "" &&
   String(form.featureId).trim() !== "" &&
+  Boolean(form.status) &&
   form.status !== "Select Status";
 
   /* =========================================================
@@ -1212,15 +1213,16 @@ const paginatedPermissions = filteredPermissions.slice(
       </label>
 
       <div className="fp-select-wrap">
-        <select
+        <FilterDropdown
           id="permission-feature"
           name="featureId"
-          value={form.featureId}
+          value={form.featureId || ""}
           onChange={handleFeatureChange}
-          autoComplete="off"
           aria-invalid={Boolean(errors.featureId)}
+          aria-label="Feature"
+          className={`${errors.featureId ? "field-invalid " : ""}${!form.featureId ? "fp-placeholder" : ""}`}
         >
-          <option value="">
+          <option value="" disabled hidden>
             Select Feature
           </option>
 
@@ -1232,7 +1234,7 @@ const paginatedPermissions = filteredPermissions.slice(
               {feature.name}
             </option>
           ))}
-        </select>
+        </FilterDropdown>
       </div>
 
       {errors.featureId && (
@@ -1313,22 +1315,22 @@ const paginatedPermissions = filteredPermissions.slice(
   </label>
 
   <div className="fp-select-wrap">
-    <select
+    <FilterDropdown
+      id="permission-status"
+      name="status"
+      value={form.status || ""}
+      onChange={updateField}
+      aria-invalid={Boolean(errors.status)}
+      aria-label="Status"
       className={`fp-form-status-select ${
         form.status === "Active"
           ? "active"
           : form.status === "Inactive"
           ? "inactive"
           : ""
-      }`}
-      id="permission-status"
-      name="status"
-      value={form.status}
-      onChange={updateField}
-      autoComplete="off"
-      aria-invalid={Boolean(errors.status)}
+      }${!form.status ? " fp-placeholder" : ""}`}
     >
-      <option value="Select Status">
+      <option value="" disabled hidden>
         Select Status
       </option>
 
@@ -1339,7 +1341,7 @@ const paginatedPermissions = filteredPermissions.slice(
       <option value="Inactive">
         Inactive
       </option>
-    </select>
+    </FilterDropdown>
   </div>
 
   {errors.status && (

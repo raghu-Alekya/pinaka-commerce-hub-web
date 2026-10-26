@@ -621,7 +621,10 @@ const handleDateRangeChange = (value) => {
   ======================================== */
 
   const handleExport = () => {
-    if (!filtered.length) return;
+    if (!filtered.length) {
+      alert("There are no subscriptions to export.");
+      return;
+    }
 
     const headers = [
       "Subscription ID",
@@ -638,44 +641,32 @@ const handleDateRangeChange = (value) => {
     ];
 
     const rows = filtered.map((item) => [
-      `"${item.id || ""}"`,
-      `"${String(item.merchant || "").replace(/"/g, '""')}"`,
-      `"${item.merchantId || ""}"`,
-      `"${item.plan || ""}"`,
+      item.id || "",
+      item.merchant || "",
+      item.merchantId || "",
+      item.plan || "",
       item.stores ?? "",
       item.devices ?? "",
-      `"${item.start || ""}"`,
-      `"${item.end || ""}"`,
-      `"${item.status || ""}"`,
-      `"${item.currency || "INR"} ${item.price ?? 0}"`,
-      `"${item.billingCycle || ""}"`,
+      item.start || "",
+      item.end || "",
+      item.status || "",
+      `${item.currency || "INR"} ${item.price ?? 0}`,
+      item.billingCycle || "",
     ]);
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [
-        headers.join(","),
-        ...rows.map((row) => row.join(",")),
-      ].join("\n");
+    const csv = [headers, ...rows]
+      .map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\r\n");
 
-    const encodedUri = encodeURI(csvContent);
-
+    const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-
-    link.setAttribute("href", encodedUri);
-
-    link.setAttribute(
-      "download",
-      `subscriptions_${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv`
-    );
-
+    link.href = url;
+    link.download = `subscriptions_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
-
     link.click();
-
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
 
@@ -719,11 +710,11 @@ const handleDateRangeChange = (value) => {
           </button>
 
           <button
-            className="flow-button secondary"
+            type="button"
+            className="subscriptions-export-btn flow-button secondary"
             onClick={handleExport}
-            disabled={!filtered.length}
           >
-            <Download size={17} />
+            <Download size={20} aria-hidden="true" />
             Export
           </button>
 

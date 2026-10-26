@@ -4,7 +4,7 @@ import "../styles/filter-dropdown.css";
 
 // The noninteractive select retains each screen's existing CSS sizing. Only the
 // overlaid trigger and portalled listbox receive user interaction.
-export default function FilterDropdown({ children, value, defaultValue, onChange, disabled, renderFooter, triggerIcon, preserveToolbarLayout = false, ...props }) {
+export default function FilterDropdown({ children, value, defaultValue, onChange, disabled, renderFooter, triggerIcon, preserveToolbarLayout = false, placeholder, ...props }) {
   const id = useId();
   const nativeRef = useRef(null);
   const triggerRef = useRef(null);
@@ -20,12 +20,16 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
   const [tooltip, setTooltip] = useState(null);
   const flatten = (nodes) => Children.toArray(nodes).flatMap((child) => child?.type === Fragment ? flatten(child.props.children) : [child]);
   const optionText = (nodes) => Children.toArray(nodes).map((node) => typeof node === "object" ? optionText(node.props?.children) : String(node)).join("");
-  const options = flatten(children).filter((child) => child?.type === "option").map((child) => ({
+  const rawOptions = flatten(children).filter((child) => child?.type === "option").map((child) => ({
     value: String(child.props.value ?? optionText(child.props.children)),
     label: optionText(child.props.children), disabled: Boolean(child.props.disabled), hidden: Boolean(child.props.hidden),
   }));
+  const options = (placeholder && !rawOptions.some((o) => o.value === ""))
+    ? [{ value: "", label: placeholder, disabled: true, hidden: true }, ...rawOptions]
+    : rawOptions;
   const selectedValue = String(value ?? localValue ?? options[0]?.value ?? "");
   const selected = options.findIndex((option) => option.value === selectedValue);
+  const isPlaceholder = !selectedValue || Boolean(options[selected]?.hidden);
 
   useLayoutEffect(() => {
     const syncStyle = () => {
@@ -175,15 +179,16 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
   };
   const sizingControl = <select {...props} ref={nativeRef} value={selectedValue} disabled={disabled} onChange={() => {}}
       id={undefined} aria-hidden="true" tabIndex={-1} className={`${props.className || ""} ${preserveToolbarLayout ? "pch-master-filter-sizing" : "pch-filter-sizing"}`}>
+      {placeholder && !rawOptions.some((o) => o.value === "") && <option value="" disabled hidden>{placeholder}</option>}
       {children}
     </select>;
-  const trigger = <button type="button" ref={triggerRef} id={props.id} className="pch-filter-trigger" style={triggerStyle}
+  const trigger = <button type="button" ref={triggerRef} id={props.id} className={`pch-filter-trigger ${isPlaceholder ? "pch-is-placeholder" : ""}`} style={triggerStyle}
       disabled={disabled} role="combobox" aria-haspopup="listbox" aria-expanded={open}
       aria-controls={open ? id : undefined} aria-label={props["aria-label"] || options[0]?.label || "Filter"}
       aria-required={props["aria-required"]}
-      title={options[selected]?.label} onKeyDown={keyDown}
+      title={options[selected]?.label || placeholder} onKeyDown={keyDown}
       onClick={() => { if (open) close(); else { setActive(selected >= 0 && !options[selected].disabled ? selected : options.findIndex((option) => !option.disabled && !option.hidden)); setOpen(true); } }}>
-      {triggerIcon}<span>{options[selected]?.label || ""}</span>
+      {triggerIcon}<span>{options[selected]?.label || placeholder || ""}</span>
       {(!preserveToolbarLayout || !triggerStyle.backgroundImage || triggerStyle.backgroundImage === "none") && <i className="bi bi-chevron-down" aria-hidden="true" />}
     </button>;
   return <>
