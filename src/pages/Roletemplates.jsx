@@ -499,26 +499,24 @@ async function confirmDeleteTemplate() {
         : ""
     }`}
   >
-    <select
+    <FilterDropdown
       name="status"
-      value={form.status}
+      value={form.status || ""}
       onChange={handleChange}
-      className={
+      required
+      aria-label="Select status"
+      className={`${
         form.status === "INACTIVE"
           ? "status-inactive"
           : form.status === "ACTIVE"
           ? "status-active"
           : ""
-      }
-      required
-      aria-label="Select status"
+      }${!form.status ? " role-placeholder" : ""}`}
     >
-      <option value="">Select Status</option>
+      <option value="" disabled hidden>Select Status</option>
       <option value="ACTIVE">Active</option>
       <option value="INACTIVE">Inactive</option>
-    </select>
-
-    <i className="bi bi-chevron-down" />
+    </FilterDropdown>
   </div>
 
 </label>

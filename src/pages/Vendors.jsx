@@ -1495,7 +1495,7 @@ export default function Vendors({
         </div>
         <div className="vendors-header-actions">
           <button type="button" className="vendors-primary-button" onClick={() => { resetForm(); setShowForm(true); }}><i className="bi bi-plus-lg" /> Add Vendor</button>
-          <button type="button" className="vendors-export-button" onClick={exportVendors}><Download size={18} aria-hidden="true" /> Export</button>
+          <button type="button" className="vendors-export-button" onClick={exportVendors}><Download size={20} aria-hidden="true" /> Export</button>
         </div>
       </div>
 

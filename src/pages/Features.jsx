@@ -14,7 +14,7 @@ const emptyForm = {
   name: "",
   description: "",
   category: "",
-  status: "Select Status",
+  status: "",
 };
 
 const defaultCategories = [
@@ -395,21 +395,21 @@ const confirmDeleteFeature = async () => {
           <div className="feature-field">
             <label>Feature Category<span className="text-red-500">*</span></label>
             <div className="select-shell">
-              <select
+              <FilterDropdown
                 name="category"
                 data-field="category"
-                value={form.category}
+                value={form.category || ""}
                 onChange={updateField}
-                autoComplete="off"
-                className={formErrors.category ? "feature-input-error" : ""}
+                aria-label="Feature Category"
+                className={`${formErrors.category ? "feature-input-error " : ""}${!form.category ? "feature-placeholder" : ""}`}
               >
-                <option value="">Select category</option>
+                <option value="" disabled hidden>Select category</option>
                 {categoryOptions.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>
                 ))}
-              </select>
+              </FilterDropdown>
             </div>
             {formErrors.category ? (
               <small className="feature-error-text">{formErrors.category}</small>
@@ -422,23 +422,23 @@ const confirmDeleteFeature = async () => {
   <label>Status</label>
 
   <div className="select-shell">
-    <select
+    <FilterDropdown
       name="status"
-      value={form.status}
+      value={form.status || ""}
       onChange={updateField}
-      autoComplete="off"
+      aria-label="Status"
       className={`feature-form-status-select ${
         form.status === "Active"
           ? "active"
           : form.status === "Inactive"
           ? "inactive"
           : ""
-      }`}
+      }${!form.status ? " feature-placeholder" : ""}`}
     >
-      <option value="Select Status">Select Status</option>
+      <option value="" disabled hidden>Select Status</option>
       <option value="Active">Active</option>
       <option value="Inactive">Inactive</option>
-    </select>
+    </FilterDropdown>
   </div>
 
   <small></small>

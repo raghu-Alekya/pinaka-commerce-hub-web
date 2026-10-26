@@ -12,7 +12,7 @@ const emptyForm = {
   name: "",
   description: "",
   applicableStoreType: "",
-  status: "Select Status",
+  status: "",
   billingModel: "",
   currency: "",
   billingCycle: "",
@@ -691,13 +691,15 @@ export default function CreatePlan() {
               <span>
                 Applicable Store Type <span className="text-red-500">*</span>
               </span>
-              <select
+              <FilterDropdown
                 name="applicableStoreType"
-                value={form.applicableStoreType}
+                value={form.applicableStoreType || ""}
                 onChange={updateField}
                 aria-busy={storeTypesLoading}
+                aria-label="Applicable Store Type"
+                className={!form.applicableStoreType ? "plan-select-placeholder" : ""}
               >
-                <option value="">
+                <option value="" disabled hidden>
                   {storeTypesLoading
                     ? "Loading store types..."
                     : "Select a store type"}
@@ -714,7 +716,7 @@ export default function CreatePlan() {
                       storeType.code}
                   </option>
                 ))}
-              </select>
+              </FilterDropdown>
             </label>
 
             <label className="plan-field plan-description-field">
@@ -737,22 +739,23 @@ export default function CreatePlan() {
                 Status <span className="text-red-500">*</span>
               </span>
 
-              <select
+              <FilterDropdown
                 name="status"
-                value={form.status}
+                value={form.status || ""}
                 onChange={updateField}
+                aria-label="Status"
                 className={`plan-status-select ${
                   form.status === "Active"
                     ? "active"
                     : form.status === "Inactive"
                     ? "inactive"
                     : ""
-                }`}
+                }${!form.status ? " plan-select-placeholder" : ""}`}
               >
-                <option value="">Select Status</option>
+                <option value="" disabled hidden>Select Status</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
-              </select>
+              </FilterDropdown>
             </label>
           </div>
 
@@ -793,52 +796,55 @@ export default function CreatePlan() {
               <span>
                 Pricing Basis <span className="text-red-500">*</span>
               </span>
-              <select
-                autoComplete="off"
+              <FilterDropdown
                 name="billingModel"
-                value={form.billingModel}
+                value={form.billingModel || ""}
                 onChange={updateField}
+                aria-label="Pricing Basis"
+                className={!form.billingModel ? "plan-select-placeholder" : ""}
               >
-                <option value="">Select billing model</option>
+                <option value="" disabled hidden>Select billing model</option>
                 <option value="Per store">Per Store</option>
                 <option value="Per terminal">Per Terminal</option>
                 <option value="Flat rate">Flat Rate</option>
                 <option value="Custom">Custom</option>
-              </select>
+              </FilterDropdown>
             </label>
 
             <label className="plan-field">
               <span>
                 Currency <span className="text-red-500">*</span>
               </span>
-              <select
-                autoComplete="off"
+              <FilterDropdown
                 name="currency"
-                value={form.currency}
+                value={form.currency || ""}
                 onChange={updateField}
+                aria-label="Currency"
+                className={!form.currency ? "plan-select-placeholder" : ""}
               >
-                <option value="">Select currency</option>
+                <option value="" disabled hidden>Select currency</option>
                 <option value="USD">US Dollar (USD)</option>
                 <option value="INR">Indian Rupee (INR)</option>
                 <option value="AED">UAE Dirham (AED)</option>
-              </select>
+              </FilterDropdown>
             </label>
 
             <label className="plan-field">
               <span>
                 Billing Frequency <span className="text-red-500">*</span>
               </span>
-              <select
-                autoComplete="off"
+              <FilterDropdown
                 name="billingCycle"
-                value={form.billingCycle}
+                value={form.billingCycle || ""}
                 onChange={updateField}
+                aria-label="Billing Frequency"
+                className={!form.billingCycle ? "plan-select-placeholder" : ""}
               >
-                <option value="">Select Billing Frequency</option>
+                <option value="" disabled hidden>Select Billing Frequency</option>
                 <option value="Monthly">Monthly</option>
                 <option value="Quarterly">Quarterly</option>
                 <option value="Yearly">Yearly</option>
-              </select>
+              </FilterDropdown>
             </label>
           </div>
 
@@ -941,18 +947,19 @@ export default function CreatePlan() {
           <div className="plan-pricing-grid three-columns">
             <label className="plan-field">
               <span>Trial Period</span>
-              <select
-                autoComplete="off"
+              <FilterDropdown
                 name="trialPeriod"
-                value={form.trialPeriod}
+                value={form.trialPeriod || ""}
                 onChange={updateField}
+                aria-label="Trial Period"
+                className={!form.trialPeriod ? "plan-select-placeholder" : ""}
               >
-                <option value="">Select trial period</option>
+                <option value="" disabled hidden>Select trial period</option>
                 <option value="No trial">No Trial</option>
                 <option value="7 days">7 Days</option>
                 <option value="14 days">14 Days</option>
                 <option value="30 days">30 Days</option>
-              </select>
+              </FilterDropdown>
             </label>
 
             <label className="plan-field">
