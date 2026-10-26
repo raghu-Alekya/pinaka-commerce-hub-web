@@ -97,6 +97,7 @@ export const endpoints = {
 
   orders: (storeId) =>
     `/orders${storeId ? `?storeId=${encodeURIComponent(storeId)}` : ""}`,
+  allMerchantOrders: "/orders/all-merchant-orders",
   order: (id) => `/orders/${encodeURIComponent(id)}`,
   // dashboard overview 
   administrationOverview: "/api/v1/admin/administration-overview",

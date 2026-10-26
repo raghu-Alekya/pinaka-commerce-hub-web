@@ -200,6 +200,7 @@ export default function Products({
                 ${item.name || ""}
                 ${item.sku || ""}
                 ${item.category || ""}
+                ${Array.isArray(item.tags) ? item.tags.join(" ") : ""}
                 ${item.brand || ""}
                 ${formatVariantAttributes(item.attributes)}
             `).join(" ").toLowerCase();
@@ -894,7 +895,7 @@ export default function Products({
                                       ? String(selectedProduct.price).startsWith("$")
                                           ? selectedProduct.price
                                           : `$${Number(selectedProduct.price).toFixed(2)}`
-                                      : "$0.00",
+                                      : "—",
                           }
                         : null
                 }
@@ -1044,13 +1045,33 @@ function groupProductVariants(products) {
 
     return parents.map((product) => ({
         product,
-        variants: variantsByParent.get(String(product.id)) || [],
+        variants: (variantsByParent.get(String(product.id)) || []).map((variant) => inheritParentTaxonomy(product, variant)),
     }));
 }
 
+function inheritParentTaxonomy(parent, child) {
+    const parentTags = Array.isArray(parent.tags) ? parent.tags : [];
+    const childTags = Array.isArray(child.tags) ? child.tags : [];
+    const seenTags = new Set();
+    const tags = [...parentTags, ...childTags].filter((tag) => {
+        const key = String(tag || "").trim().toLowerCase();
+        if (!key || seenTags.has(key)) return false;
+        seenTags.add(key);
+        return true;
+    });
+
+    return {
+        ...child,
+        category: parent.category || child.category || "",
+        categoryId: parent.categoryId || child.categoryId || "",
+        tags,
+    };
+}
+
 function ProductGroupRows({ product, variants, onSelect }) {
+    const parentProduct = variants.length ? { ...product, price: "" } : product;
     return <>
-        <ProductRow product={product} onClick={() => onSelect(product)} />
+        <ProductRow product={parentProduct} onClick={() => onSelect(parentProduct)} />
         {variants.map((variant) => {
             const childName = getChildProductName(product.name, variant.name);
             const childProduct = { ...variant, name: childName };
@@ -1207,7 +1228,7 @@ function ProductRow({
                     product.price !==
                         ""
                         ? product.price
-                        : "$0.00"}
+                        : "—"}
                 </strong>
 
             </td>

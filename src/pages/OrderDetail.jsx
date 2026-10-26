@@ -336,6 +336,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
   const [searchParams] = useSearchParams();
   const orderId = providedOrderId || routeOrderId;
   const storeId = providedStoreId || searchParams.get("store") || "";
+  const employeeMerchantId = merchantId || searchParams.get("merchant") || "";
   const orderNumber = providedOrderNumber || searchParams.get("number") || "";
   const [view, setView] = useState(null);
   const [employeeNames, setEmployeeNames] = useState({});
@@ -349,12 +350,12 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
 
   useEffect(() => {
     let active = true;
-    if (!merchantId || !storeId) { setEmployeeNames({}); return undefined; }
-    listStoreEmployees(merchantId, storeId)
+    if (!employeeMerchantId || !storeId) { setEmployeeNames({}); return undefined; }
+    listStoreEmployees(employeeMerchantId, storeId)
       .then((response) => { if (active) setEmployeeNames(employeeNameMap(response)); })
       .catch(() => { if (active) setEmployeeNames({}); });
     return () => { active = false; };
-  }, [merchantId, storeId]);
+  }, [employeeMerchantId, storeId]);
 
   useEffect(() => {
     let active = true;
