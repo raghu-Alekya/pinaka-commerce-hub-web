@@ -28,7 +28,14 @@ const timeLabel = (value) => {
     hour: "2-digit", minute: "2-digit", hour12: true,
   });
 };
-const money = (value) => value == null ? "—" : `$${Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const money = (value) => {
+  const amount = Number(value);
+  return `$${(Number.isFinite(amount) ? amount : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+const count = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
 
 export default function StoreShifts({ merchantId, storeId, store }) {
   const [selectedShift, setSelectedShift] = useState(null);
@@ -187,7 +194,7 @@ function ShiftDetails({ shift, store, onBack }) {
       <div className="sm-info-block"><h2><i className="bi bi-person-circle" /> Opened By</h2><dl><div><dt>Employee</dt><dd>{shift.openedBy || "—"}{shift.openedCode ? ` (${shift.openedCode})` : ""}</dd></div><div><dt>Device</dt><dd>{shift.openDevice || "—"}</dd></div><div><dt>Open Time</dt><dd>{timeLabel(shift.openTime)}</dd></div><div><dt>Opening Balance</dt><dd>{money(shift.openingBalance)}</dd></div></dl></div>
       <div className="sm-info-block"><h2><i className="bi bi-person-circle" /> Closed By</h2><dl><div><dt>Employee</dt><dd>{shift.closedBy ? `${shift.closedBy}${shift.closedCode ? ` (${shift.closedCode})` : ""}` : "—"}</dd></div><div><dt>Device</dt><dd>{shift.closeDevice || "—"}</dd></div><div><dt>Close Time</dt><dd>{timeLabel(shift.closeTime)}</dd></div><div><dt>Closing Balance</dt><dd>{money(shift.closingBalance)}</dd></div></dl></div>
     </section>
-    <section className="sm-detail-data-card"><div className="sm-metric-grid">{metrics.map(([label, value, icon]) => <div className="sm-metric" key={label}><span className="sm-metric-icon"><i className={`bi ${icon}`} aria-hidden="true" /></span><span className="sm-metric-copy"><span>{label}</span><strong>{value ?? "—"}</strong></span></div>)}</div>
+    <section className="sm-detail-data-card"><div className="sm-metric-grid">{metrics.map(([label, value, icon]) => <div className="sm-metric" key={label}><span className="sm-metric-icon"><i className={`bi ${icon}`} aria-hidden="true" /></span><span className="sm-metric-copy"><span>{label}</span><strong>{label === "Total Orders" || label === "Void Items" || label === "Cancelled Orders" ? count(value) : money(value)}</strong></span></div>)}</div>
       <div className="sm-detail-tables"><section><h3><i className="bi bi-file-earmark-text" /> Transaction Summary</h3><table><thead><tr><th>Payment Method</th><th>Amount</th></tr></thead><tbody>{["Cash", "Card", "EBT", "Pay Later"].map((method) => <tr key={method}><td>{method}</td><td>{money(method === "Cash" ? shift.cashSales : method === "Card" ? shift.cardSales : method === "EBT" ? shift.ebtSales : shift.payLater)}</td></tr>)}<tr className="sm-total-row"><td>Total</td><td>{money(shift.paymentTotal)}</td></tr></tbody></table></section><section><h3><i className="bi bi-cash-stack" /> Cash Details</h3><table><thead><tr><th>Cash Details</th><th>Amount</th></tr></thead><tbody><tr><td>Opening Balance</td><td>{money(shift.openingBalance)}</td></tr><tr><td>Safe Drop</td><td>{money(shift.safeDrop)}</td></tr><tr><td>Closing Balance</td><td>{money(shift.closingBalance)}</td></tr><tr className="sm-difference-row"><td>Over/Short</td><td>{money(difference)}</td></tr></tbody></table></section></div>
     </section>
   </section>;
