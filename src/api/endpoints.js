@@ -1,8 +1,8 @@
 export const endpoints = {
-  login: "/auth/login",
-  refresh: "/auth/refresh",
-  logout: "/auth/logout",
-  me: "/auth/me",
+  login: "/api/v1/auth/login",
+  refresh: "/api/v1/auth/refresh",
+  logout: "/api/v1/auth/logout",
+  me: "/api/v1/auth/me",
 
   merchants: "/merchants",
   createMerchant: "/merchants/create-merchant",

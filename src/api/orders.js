@@ -51,10 +51,11 @@ export function normalizeOrder(order = {}) {
   const currency = order.currency || "USD";
   const totalValue = Number(order.totalAmount ?? order.total_amount ?? order.total ?? 0);
   const metadata = order.metadata || order.meta_data || [];
+  const clientOrderId = order.clientOrderId || order.client_order_id || metaValue(metadata, "_pos_client_order_id") || "";
   return {
-    id: order.id || order.orderId || order.order_id,
-    wooOrderId: String(order.orderNumber || order.order_number || order.number || order.orderId || order.order_id || order.id || "").replace(/^#/, ""),
-    offlineOrderId: order.clientOrderId || order.client_order_id || metaValue(metadata, "_pos_client_order_id") || "",
+    id: order.id || order.orderUuid || order.order_uuid || order.orderId || order.order_id,
+    wooOrderId: String(order.orderNumber || order.order_number || order.wooOrderId || order.woo_order_id || order.number || order.orderId || order.order_id || order.id || "").replace(/^#/, ""),
+    offlineOrderId: clientOrderId,
     createdAt,
     date: validDate
       ? created.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
