@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { posImageUrl } from "./storePosConfiguration";
 
 export const PosSettingsContext = createContext(null);
 export const snapshotKey = (value) => JSON.stringify(value);
@@ -197,7 +198,7 @@ export function DenominationRow({
                     <div className="denomination-image-preview">
                         {item.image ? (
                             <img
-                                src={item.image}
+                                src={posImageUrl(item.image)}
                                 alt={
                                     item.amount ||
                                     "Denomination"
