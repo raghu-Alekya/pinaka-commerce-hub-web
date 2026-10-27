@@ -50,7 +50,7 @@ export function DeviceMapping({ onBack }) {
   const [mappedStatusFilter, setMappedStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [mappedPage, setMappedPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [savingSelection, setSavingSelection] = useState(false);
@@ -225,7 +225,7 @@ export function DeviceMapping({ onBack }) {
   if (view === "picker") return <section className="merchant-vendors mv-create-page mv-existing-page mv-device-picker">
     <header className="mv-card mv-header">
       <div><h2>Add Existing Device</h2><p>Choose one or more devices to map to this store.</p></div>
-      <button type="button" onClick={backToMapped}>← Back to Mapped Devices</button>
+      <button type="button" className="pc-button pos-config-heading-back" onClick={backToMapped}><i className="bi bi-arrow-left" aria-hidden="true" /> Back to Mapped Devices</button>
     </header>
     <div className="mv-existing-content">
       <p className="mv-device-scope">Only active devices registered to this merchant are available.</p>
@@ -254,13 +254,13 @@ export function DeviceMapping({ onBack }) {
       </table></div>
       <Pagination currentPage={page} totalPages={pageCount} totalItems={available.length}
         pageSize={pageSize} onPageChange={setPage} onPageSizeChange={changePageSize}
-        itemLabel="devices" showWhenEmpty pageSizeOptions={[10, 25, 50, 100]} />
+        itemLabel="devices" showWhenEmpty pageSizeOptions={[5, 10, 25, 50, 100]} />
     </div>
     <footer className="mv-existing-footer"><span>{selection.length} devices selected</span><div className="mv-popup-actions"><button type="button" disabled={savingSelection} onClick={backToMapped}>Cancel</button><button type="button" disabled={!selection.length || savingSelection} className="mv-primary" onClick={addSelected}>{savingSelection ? "Saving…" : "Add Selected"}</button></div></footer>
   </section>;
 
   return <section className="merchant-vendors mv-device-mapped-page">
-    <header className="mv-card mv-header"><div><h2>Devices</h2><p>These are the devices mapped to this store.</p></div><div className="mv-device-header-actions"><button type="button" onClick={onBack}>← Back</button><button type="button" className="mv-primary" onClick={openPicker}>＋ Add Existing Device</button></div></header>
+    <header className="mv-card mv-header"><div><h2>Devices</h2><p>These are the devices mapped to this store.</p></div><div className="mv-device-header-actions"><button type="button" className="pc-button pos-config-heading-back" onClick={onBack}><i className="bi bi-arrow-left" aria-hidden="true" /> Back</button><button type="button" className="mv-primary" onClick={openPicker}>＋ Add Existing Device</button></div></header>
     {error && <p role="alert" className="mv-error">{error}</p>}
     <section className="mv-card mv-device-list-card">
       <h3>Mapped Device List</h3>
@@ -280,7 +280,7 @@ export function DeviceMapping({ onBack }) {
       </tbody></table></div>
       <Pagination currentPage={mappedPage} totalPages={mappedPageCount} totalItems={filteredMappings.length}
         pageSize={pageSize} onPageChange={setMappedPage} onPageSizeChange={changePageSize}
-        itemLabel="entries" showWhenEmpty pageSizeOptions={[10, 25, 50, 100]} />
+        itemLabel="entries" showWhenEmpty pageSizeOptions={[5, 10, 25, 50, 100]} />
     </section>
   </section>;
 }

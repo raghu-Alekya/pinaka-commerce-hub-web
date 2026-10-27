@@ -443,10 +443,10 @@
   display: flex;
   align-items: center;
   width: 100%;
-  height: 46px;
+  height: 42px;
   overflow: hidden;
   border: 1px solid #d4dfed;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #fff;
   box-sizing: border-box;
 }

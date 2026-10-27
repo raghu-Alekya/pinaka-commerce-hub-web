@@ -66,7 +66,7 @@ export default function Products({
     // =========================================================
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(5);
 
     // =========================================================
     // PRODUCT API STATES

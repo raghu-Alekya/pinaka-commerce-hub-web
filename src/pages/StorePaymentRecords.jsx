@@ -25,7 +25,7 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
  
   useEffect(() => {
@@ -233,7 +233,7 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
           onPageSizeChange={setRowsPerPage}
           itemLabel="payments"
           showWhenEmpty
-          pageSizeOptions={[10, 25, 50, 100]}
+          pageSizeOptions={[5, 10, 25, 50, 100]}
         />}
       </div>
  

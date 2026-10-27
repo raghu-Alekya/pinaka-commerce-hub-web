@@ -11,7 +11,7 @@ export default function CashManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("All Dates");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const handlePageSizeChange = (size) => {
   setPageSize(size);
   setCurrentPage(1);

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import FilterDropdown from "../../../components/FilterDropdown";
+import Pagination from "../../../components/Pagination";
 import { ApiError } from "../../../api/http";
 import {
   ConfigBadge, ConfigField, ConfigFooter, ConfigHeader, ConfigSwitch,
@@ -43,8 +44,17 @@ export function MappingConfiguration({ value, registers, onSave, onBack, onManag
     
     const [rows, setRows] = useConfigState("rows", () => value.map((row) => ({ ...row })));
     const [editor, setEditor] = useConfigEditor();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
+    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+    const paginatedRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    useEffect(() => {
+        setCurrentPage((page) => Math.min(page, totalPages));
+    }, [totalPages]);
+
     const update = (field, next) => setEditor((row) => ({ ...row, [field]: next }));
     const apply = (event) => {
         event?.preventDefault();
@@ -108,7 +118,6 @@ export function MappingConfiguration({ value, registers, onSave, onBack, onManag
             <button type="button" className="pc-button pc-primary" disabled={!!editor}
                 onClick={() => { setEditor({ id: newRecordId(), registerId: registers.find((register) => !rows.some((row) => row.registerId === register.id))?.id || "", terminal: "", printer: "", drawer: "", status: "Setup" }); setError(""); setMessage(""); }}>+ Add Mapping</button>
         </ConfigHeader>
-        <p className="pc-help">POS devices come from Cash Register Settings. Add a register there before mapping its peripherals.</p>
         {editor && <form className="pc-editor" onSubmit={apply}><h3>{rows.some((row) => row.id === editor.id) ? "Edit Mapping" : "Add Mapping"}</h3>
             {!registers.some((register) => !rows.some((row) => row.id !== editor.id && row.registerId === register.id)) && <div className="pc-mapping-notice" role="status">
                 <p>{registers.length ? "All registers already have a mapping. Cancel to edit an existing mapping, or add and save a new register first." : "Add and save a register before creating its device mapping."}</p>
@@ -137,10 +146,13 @@ export function MappingConfiguration({ value, registers, onSave, onBack, onManag
         <div className="pc-editor-actions pos-form-actions"><button type="button" className="pc-button" onClick={() => settings.requestLeave(null)}>Cancel</button><button type="submit" className="pc-button pc-primary" disabled={!editor.registerId}>Apply Mapping</button></div></form>}
         {error && <p className="pc-error" role="alert">{error}</p>}
         <div className="pc-table-wrap"><table className="pc-table"><caption className="pc-sr-only">Terminal and register mappings</caption><thead><tr>{["Register", "POS Device", "Card Terminal", "Printer", "Cash Drawer", "Status", "Actions"].map((heading) => <th key={heading} scope="col">{heading}</th>)}</tr></thead><tbody>
-            {rows.map((row) => { const register = registers.find((item) => item.id === row.registerId); return <tr key={row.id}><th scope="row">{register?.name || "Missing register"}</th><td>{register?.pos || "—"}</td><td>{row.terminal || "—"}</td><td>{row.printer || "—"}</td><td>{row.drawer || "—"}</td><td><ConfigBadge>{row.status}</ConfigBadge></td><td><div className="pc-row-actions"><button type="button" disabled={!!editor} aria-label={`Edit mapping for ${register?.name}`} title="Edit" onClick={() => { setEditor({ ...row }); setError(""); setMessage(""); }}><i className="bi bi-pencil" aria-hidden="true" /></button><button type="button" disabled={!!editor} className="pc-danger" aria-label={`Remove mapping for ${register?.name}`} title="Delete" onClick={() => { setRows((current) => current.filter((item) => item.id !== row.id)); setError(""); setMessage("Mapping removed from the draft. Save Changes to keep this change."); }}><i className="bi bi-trash3" aria-hidden="true" /></button></div></td></tr>; })}
+            {paginatedRows.map((row) => { const register = registers.find((item) => item.id === row.registerId); return <tr key={row.id}><th scope="row">{register?.name || "Missing register"}</th><td>{register?.pos || "—"}</td><td>{row.terminal || "—"}</td><td>{row.printer || "—"}</td><td>{row.drawer || "—"}</td><td><ConfigBadge>{row.status}</ConfigBadge></td><td><div className="pc-row-actions"><button type="button" disabled={!!editor} aria-label={`Edit mapping for ${register?.name}`} title="Edit" onClick={() => { setEditor({ ...row }); setError(""); setMessage(""); }}><i className="bi bi-pencil" aria-hidden="true" /></button><button type="button" disabled={!!editor} className="pc-danger" aria-label={`Remove mapping for ${register?.name}`} title="Delete" onClick={() => { setRows((current) => current.filter((item) => item.id !== row.id)); setError(""); setMessage("Mapping removed from the draft. Save Changes to keep this change."); }}><i className="bi bi-trash3" aria-hidden="true" /></button></div></td></tr>; })}
             {!rows.length && <tr><td colSpan="7" className="pc-empty">No mappings yet. Add a mapping to connect your devices.</td></tr>}
         </tbody></table></div>
+        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={rows.length}
+            pageSize={pageSize} onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+            itemLabel="mappings" showWhenEmpty />
         <ConfigFooter onBack={onBack} message={message} onSave={saveChanges} />
     </section>;
 }
-

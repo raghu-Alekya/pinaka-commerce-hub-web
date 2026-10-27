@@ -37,7 +37,7 @@ export function CashbackSettings() {
     const [maxCashback, setMaxCashback] =
         useConfigState("maxCashback", "");
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(5);
 
     const [tiers, setTiers] = useConfigState("tiers", [
         {
@@ -422,7 +422,7 @@ export function CashbackSettings() {
                     onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
                     itemLabel="entries"
                     showWhenEmpty
-                    pageSizeOptions={[10, 25, 50, 100]}
+                    pageSizeOptions={[5, 10, 25, 50, 100]}
                 />
 
             </div>
@@ -454,4 +454,3 @@ export function CashbackSettings() {
         </div>
     );
 }
-

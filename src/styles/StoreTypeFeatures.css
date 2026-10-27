@@ -214,10 +214,11 @@
 
 .store-features-row {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) 1.3fr 80px;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) 80px;
+  column-gap: 16px;
   min-height: 45px;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 16px;
   border-bottom: 1px solid #e6eef6;
   color: #323a44;
   font-size: 14px;
@@ -611,12 +612,10 @@
     overflow-x: auto;
   }
 
-  .store-features-table {
-    overflow-x: auto;
-  }
-
   .store-features-row {
-    min-width: 620px;
+    column-gap: 10px;
+    padding: 0 12px;
+    font-size: 12px;
   }
 
   .store-features-footer {

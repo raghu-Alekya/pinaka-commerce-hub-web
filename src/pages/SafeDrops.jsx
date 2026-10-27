@@ -67,7 +67,7 @@ export default function SafeDrops({ store, storeId: storeIdProp, merchantId }) {
   const [showCustomDate, setShowCustomDate] = useState(false);
   const [dateError, setDateError] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [selected, setSelected] = useState(null);
   useEffect(() => {
     let cancelled = false;
@@ -159,7 +159,7 @@ export default function SafeDrops({ store, storeId: storeIdProp, merchantId }) {
           {!loading && !error && !rows.length && <tr><td className="sd-empty" colSpan="7">{safeDrops.length ? "No safe drop records match your filters." : "No safe drops recorded for this store yet."}</td></tr>}</tbody>
       </table></div>
       <div className="sd-pagination-wrapper mt-4 mb-0">
-        <Pagination currentPage={page} totalPages={Math.max(1, Math.ceil(rows.length / pageSize))} totalItems={rows.length} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} itemLabel="items" showWhenEmpty pageSizeOptions={[10, 25, 50]} />
+        <Pagination currentPage={page} totalPages={Math.max(1, Math.ceil(rows.length / pageSize))} totalItems={rows.length} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} itemLabel="items" showWhenEmpty pageSizeOptions={[5, 10, 25, 50]} />
       </div>
     </section>
     <BentoDetailModal
