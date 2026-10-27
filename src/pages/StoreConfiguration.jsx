@@ -1,5 +1,5 @@
 import { isUuid, normalizeStoreForConfiguration } from "../api/storeDetails";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { NavLink, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { getMerchant } from "../api/merchants";
@@ -263,11 +263,6 @@ export default function StoreConfiguration() {
      SIDEBAR GROUP STATE
      ======================================================= */
 
-  const [openGroup, setOpenGroup] = useState("store-setup");
-
-  /*
-   * Find the group that contains the current section.
-   */
   const activeGroupId = useMemo(() => {
     return (
       navGroups.find((group) =>
@@ -275,13 +270,16 @@ export default function StoreConfiguration() {
       )?.id || "store-setup"
     );
   }, [section]);
+  const [openGroups, setOpenGroups] = useState(() => new Set([activeGroupId]));
 
   /*
-   * Automatically open the group containing
-   * the currently selected screen.
+   * Keep the active section's group open without collapsing other groups.
    */
-  useEffect(() => {
-    setOpenGroup(activeGroupId);
+  useLayoutEffect(() => {
+    setOpenGroups((current) => {
+      if (current.has(activeGroupId)) return current;
+      return new Set([...current, activeGroupId]);
+    });
   }, [activeGroupId]);
 
   /* =======================================================
@@ -583,7 +581,7 @@ export default function StoreConfiguration() {
 
                 const isCollapsible = group.collapsible !== false;
                 const isOpen =
-                  !isCollapsible || openGroup === group.id;
+                  !isCollapsible || openGroups.has(group.id);
 
                 return (
                   <div
@@ -600,14 +598,12 @@ export default function StoreConfiguration() {
                       className={`store-subnav-group-header ${
                         isOpen ? "open" : ""
                       }`}
-                      onClick={() =>
-                        setOpenGroup(
-                          (current) =>
-                            current === group.id
-                              ? null
-                              : group.id
-                        )
-                      }
+                      onClick={() => setOpenGroups((current) => {
+                        const next = new Set(current);
+                        if (next.has(group.id)) next.delete(group.id);
+                        else next.add(group.id);
+                        return next;
+                      })}
                       aria-expanded={isOpen}
                     >
 
@@ -942,6 +938,3 @@ export default function StoreConfiguration() {
     </div>
   );
 }
-
-
-

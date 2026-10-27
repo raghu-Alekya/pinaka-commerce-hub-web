@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import FilterDropdown from "../../../components/FilterDropdown";
+import Pagination from "../../../components/Pagination";
 import { ApiError } from "../../../api/http";
 import {
   ConfigBadge, ConfigField, ConfigFooter, ConfigHeader, ConfigSwitch,
@@ -43,8 +44,17 @@ export function RegisterConfiguration({ value, mappings, onSave, onBack }) {
     
     const [rows, setRows] = useConfigState("rows", () => value.map((row) => ({ ...row })));
     const [editor, setEditor] = useConfigEditor();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
+    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+    const paginatedRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    useEffect(() => {
+        setCurrentPage((page) => Math.min(page, totalPages));
+    }, [totalPages]);
+
     const update = (field, next) => setEditor((row) => ({ ...row, [field]: next }));
     const openEditor = (row) => { setEditor({ ...row }); setError(""); setMessage(""); };
     const apply = (event) => {
@@ -130,10 +140,13 @@ export function RegisterConfiguration({ value, mappings, onSave, onBack }) {
         {error && <p className="pc-error" role="alert">{error}</p>}
         <div className="pc-table-wrap"><table className="pc-table"><caption className="pc-sr-only">Configured cash registers</caption>
             <thead><tr>{["Register", "Assigned POS", "Max Cash", "Safe Drop", "Status", "Actions"].map((heading) => <th scope="col" key={heading}>{heading}</th>)}</tr></thead>
-            <tbody>{rows.map((row) => <tr key={row.id}><th scope="row">{row.name}</th><td>{row.pos}</td><td>{new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number(row.maxCash))}</td><td>{row.safeDrop ? "Enabled" : "Disabled"}</td><td><ConfigBadge>{row.status}</ConfigBadge></td><td><div className="pc-row-actions"><button type="button" disabled={!!editor} aria-label={`Edit ${row.name}`} title="Edit" onClick={() => openEditor(row)}><i className="bi bi-pencil" aria-hidden="true" /></button><button type="button" disabled={!!editor} className="pc-danger" aria-label={`Remove ${row.name}`} title="Delete" onClick={() => remove(row)}><i className="bi bi-trash3" aria-hidden="true" /></button></div></td></tr>)}
+            <tbody>{paginatedRows.map((row) => <tr key={row.id}><th scope="row">{row.name}</th><td>{row.pos}</td><td>{new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number(row.maxCash))}</td><td>{row.safeDrop ? "Enabled" : "Disabled"}</td><td><ConfigBadge>{row.status}</ConfigBadge></td><td><div className="pc-row-actions"><button type="button" disabled={!!editor} aria-label={`Edit ${row.name}`} title="Edit" onClick={() => openEditor(row)}><i className="bi bi-pencil" aria-hidden="true" /></button><button type="button" disabled={!!editor} className="pc-danger" aria-label={`Remove ${row.name}`} title="Delete" onClick={() => remove(row)}><i className="bi bi-trash3" aria-hidden="true" /></button></div></td></tr>)}
             {!rows.length && <tr><td colSpan="6" className="pc-empty">No registers yet. Add your first register.</td></tr>}</tbody>
         </table></div>
+        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={rows.length}
+            pageSize={pageSize} onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+            itemLabel="registers" showWhenEmpty />
         <ConfigFooter onBack={onBack} message={message} onSave={saveChanges} />
     </section>;
 }
-

@@ -104,7 +104,7 @@ export default function StoreCategories({
     useState(1);
 
   const [categoryPageSize, setCategoryPageSize] =
-    useState(10);
+    useState(5);
 
 
   /* =======================================================
@@ -115,7 +115,7 @@ export default function StoreCategories({
     useState(1);
 
   const [tagPageSize, setTagPageSize] =
-    useState(10);
+    useState(5);
 
 
   /* =======================================================
@@ -126,7 +126,7 @@ export default function StoreCategories({
     useState(1);
 
   const [attributePageSize, setAttributePageSize] =
-    useState(10);
+    useState(5);
 
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);

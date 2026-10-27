@@ -109,7 +109,7 @@ export default function VendorPayments({ viewMode } = {}) {
   const [search, setSearch] = useState("");
   const [methodFilter, setMethodFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
 
   const [showVendorForm, setShowVendorForm] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
@@ -389,7 +389,7 @@ export default function VendorPayments({ viewMode } = {}) {
           onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
           itemLabel="payments"
           showWhenEmpty
-          pageSizeOptions={[10, 25, 50, 100]}
+          pageSizeOptions={[5, 10, 25, 50, 100]}
         />
       )}
 

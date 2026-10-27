@@ -1604,8 +1604,8 @@
   outline: none;
   background: transparent;
   color: #163762;
-  font-size: 11px;
-  font-weight: 400;
+  font-size: 12px;
+  font-weight: normal;
   box-shadow: none;
 }
 
@@ -1620,19 +1620,17 @@
   gap: 8px;
 }
 
-.vendors-list-card > .filters-bar .filter-select-wrapper {
-  position: relative;
-}
 
 .vendors-list-card > .filters-bar .filter-select-wrapper select {
   height: 35px;
   min-width: 130px;
   padding: 0 30px 0 11px;
+  box-sizing: border-box;
   border: 1px solid #e1e4eb;
   border-radius: 5px;
   background: #fff;
   color: #294a76;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   outline: none;
 }
@@ -1645,6 +1643,7 @@
 .vendors-list-card > .filters-bar .filter-reset-btn {
   height: 35px;
   padding: 0 12px;
+  box-sizing: border-box;
   border: 1px solid #e1e4eb;
   border-radius: 5px;
   background: #fff;
@@ -2800,21 +2799,24 @@
 }
 
 .vendors-list-card > .filters-bar .pch-filter-sizing {
-  height: 40px !important;
+  height: 35px !important;
+  box-sizing: border-box !important;
   border: 1px solid #d9e1f0 !important;
   border-radius: 6px !important;
   font-size: 13px !important;
 }
 
 .vendors-list-card > .filters-bar .pch-filter-trigger {
-  height: 40px !important;
+  height: 35px !important;
+  box-sizing: border-box !important;
   border: 1px solid #d9e1f0 !important;
   border-radius: 6px !important;
   background: #fff !important;
   color: #24314a !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   font-family: inherit !important;
   transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
+  width:130px !important;
 }
 
 .vendors-list-card > .filters-bar .pch-filter-trigger:hover:not(:disabled) {

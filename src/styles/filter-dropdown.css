@@ -6,7 +6,7 @@
 .pch-filter-anchor { position: relative; }
 .pch-filter-dropdown > .pch-filter-trigger { grid-area: 1 / 1; position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; margin: 0; }
 .pch-filter-trigger > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.pch-filter-trigger.pch-is-placeholder > span { color: #8b9bb2 !important; font-weight: normal !important; }
+.pch-filter-trigger.pch-is-placeholder > span { color: #59647a !important; font-weight: normal !important; font-size: 12px; }
 .pch-filter-trigger > i { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 11px; }
 .pch-filter-trigger > i:not(:last-child) { position: static; transform: none; }
 .dashboard-date-filter + .pch-filter-trigger { justify-content: flex-start; gap: 10px; text-align: left; }

@@ -906,7 +906,7 @@ const [statusFilter, setStatusFilter] = useState("");
   const [joinedRange, setJoinedRange] = useState("");
   const [storeCount, setStoreCount] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
 
   const handlePageSizeChange = (size) => {
     setPageSize(size);
@@ -1478,7 +1478,7 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
   const blank={query:''};
   const [filters, setFilters] = useState(blank);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [view, setView] = useState(null);
   const dialog=useRef(null),lastFocus=useRef(null);
   useEffect(()=>{if(view)dialog.current?.showModal();else if(dialog.current?.open){dialog.current.close();lastFocus.current?.focus();}},[view]);
@@ -1717,7 +1717,7 @@ const [statusFilter, setStatusFilter] = useState("");
 const [page, setPage] = useState(1);
 const [sort, setSort] = useState({ key: "name", direction: 1 });
 const [view, setView] = useState(null);
-const [pageSize, setPageSize] = useState(10);
+const [pageSize, setPageSize] = useState(5);
   const dialog=useRef(null),lastFocus=useRef(null);
   useEffect(()=>{if(view)dialog.current?.showModal();else if(dialog.current?.open){dialog.current.close();lastFocus.current?.focus();}},[view]);
 const rows = devices

@@ -132,7 +132,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
   const [deleting, setDeleting] = useState(false);
   const deleteLock = useRef(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
 
   useEffect(() => {
     let active = true;

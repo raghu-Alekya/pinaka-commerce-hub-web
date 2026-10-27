@@ -1,4 +1,5 @@
 import { useLocationOptions } from "../data/useLocationOptions";
+import { validatePhoneForCountry } from "../utils/phoneValidation";
 import { EmployeeToast, EmployeeDeleteDialog } from "../components/EmployeeFeedback";
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -13,7 +14,6 @@ import {
   CalendarDays,
   ChevronDown,
   ArrowLeft,
-  Save,
 } from "lucide-react";
 
 import PhoneInputModule from "react-phone-input-2";
@@ -162,7 +162,7 @@ function getEmployeePhone(...values) {
 
 function getNationalPhone(phone, dialCode) {
   const digits = String(phone ?? "").replace(/\D/g, "");
-  if (dialCode && digits.startsWith(dialCode) && digits.length > 10) {
+  if (dialCode && digits.startsWith(dialCode)) {
     return digits.slice(dialCode.length);
   }
   return digits;
@@ -316,7 +316,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
      VALIDATION
   ========================================================= */
 
-  const validateField = (name, value) => {
+  const validateField = (name, value, country = formData.country) => {
     const trimmed = typeof value === "string" ? value.trim() : value;
 
     switch (name) {
@@ -354,11 +354,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
       case "phone": {
         if (!trimmed) return "Phone Number is required.";
-        const phoneDigits = trimmed.replace(/\D/g, "");
-        if (phoneDigits.length < 8 || phoneDigits.length > 15) {
-          return "Enter a valid phone number.";
-        }
-        return "";
+        return validatePhoneForCountry(trimmed, country);
       }
 
       case "dob":
@@ -414,8 +410,8 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
       case "username":
         if (!trimmed) return "Username is required.";
-        if (!/^[A-Za-z0-9_]{4,30}$/.test(trimmed)) {
-          return "Username must be 4-30 characters and use only letters, numbers and underscore.";
+        if (!/^[A-Za-z0-9_-]{4,30}$/.test(trimmed)) {
+          return "Username must be 4-30 characters and use only letters, numbers, underscore, and hyphen.";
         }
         return "";
 
@@ -486,10 +482,13 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
       ...(name === "country" ? { state: "", city: "" } : name === "state" ? { city: "" } : {}),
     }));
 
-    if (errors[name]) {
+    if (errors[name] || (name === "country" && errors.phone)) {
       setErrors((prev) => ({
         ...prev,
         [name]: validateField(name, nextValue),
+        ...(name === "country" && errors.phone
+          ? { phone: validateField("phone", formData.phone, nextValue) }
+          : {}),
       }));
     }
   };
@@ -1085,7 +1084,6 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
           className="save-employee-btn"
           disabled={saving || loadingDetails || detailLoadError}
         >
-          <Save size={15} />
           {saving ? "Updating..." : "Save Changes"}
         </button>
         </div>

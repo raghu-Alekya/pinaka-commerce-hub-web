@@ -1,5 +1,6 @@
 import { buildStoreSetupPayload } from "../api/storeDetails";
 import { useLocationOptions } from "../data/useLocationOptions";
+import { validatePhoneForCountry } from "../utils/phoneValidation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import PhoneInputModule from "react-phone-input-2";
@@ -80,45 +81,6 @@ const COUNTRIES = {
     ],
   },
 };
-const PHONE_RULES = {
-  India: { callingCode: "91", minDigits: 10, maxDigits: 10, trunkPrefix: "0" },
-  "United States": { callingCode: "1", minDigits: 10, maxDigits: 10 },
-  Canada: { callingCode: "1", minDigits: 10, maxDigits: 10 },
-  "United Kingdom": { callingCode: "44", minDigits: 7, maxDigits: 10, trunkPrefix: "0" },
-  Australia: { callingCode: "61", minDigits: 9, maxDigits: 9, trunkPrefix: "0" },
-};
-function validatePhoneForCountry(value, country) {
-  const phone = String(value || "").trim();
-  if (!phone) return "";
-  const rule = PHONE_RULES[country];
-  if (!/^\+?[\d\s().-]+$/.test(phone))
-    return `Enter a valid ${country || "country"} phone number.`;
-
-  // Countries without a local rule still accept internationally formatted numbers.
-  if (!rule) {
-    const digits = phone.replace(/\D/g, "");
-    return digits.length >= 7 && digits.length <= 15
-      ? ""
-      : `Enter a valid ${country || "country"} phone number.`;
-  }
-
-  const hasInternationalPrefix = phone.startsWith("+") || phone.startsWith("00");
-  let digits = phone.replace(/\D/g, "");
-  if (phone.startsWith("00")) digits = digits.slice(2);
-  if (hasInternationalPrefix) {
-    if (!digits.startsWith(rule.callingCode))
-      return `The phone number country code does not match ${country}.`;
-    digits = digits.slice(rule.callingCode.length);
-  } else if (digits.length > rule.maxDigits && digits.startsWith(rule.callingCode)) {
-    digits = digits.slice(rule.callingCode.length);
-  }
-
-  if (rule.trunkPrefix && digits.length > rule.maxDigits && digits.startsWith(rule.trunkPrefix))
-    digits = digits.slice(rule.trunkPrefix.length);
-  if (digits.length < rule.minDigits || digits.length > rule.maxDigits)
-    return `Enter a valid ${country} phone number.`;
-  return "";
-}
 const POSTAL_CODE_RULES = {
   India: /^\d{6}$/,
   "United States": /^\d{5}(?:-\d{4})?$/,
@@ -687,11 +649,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [employeeFilter, setEmployeeFilter] = useState("All");
   const [employeePage, setEmployeePage] = useState(1);
-  const [employeePageSize, setEmployeePageSize] = useState(10);
+  const [employeePageSize, setEmployeePageSize] = useState(5);
   const [featureSearch, setFeatureSearch] = useState("");
   const [featureCategory, setFeatureCategory] = useState("All Features");
   const [featurePage, setFeaturePage] = useState(1);
-  const [featurePageSize, setFeaturePageSize] = useState(10);
+  const [featurePageSize, setFeaturePageSize] = useState(5);
 
   useEffect(() => {
     if (!error) return undefined;
@@ -3193,9 +3155,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 ‹
               </button>
               <div className="pagination-pages">
-                {Array.from({ length: featurePageCount }, (_, index) => index + 1)
-                  .slice(0, 5)
-                  .map((page) => (
+                {Array.from(
+                  { length: Math.min(2, featurePageCount) },
+                  (_, index) => Math.max(1, Math.min(currentFeaturePage, featurePageCount - 1)) + index,
+                ).map((page) => (
                     <button
                       type="button"
                       key={page}
@@ -3205,7 +3168,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                     >
                       {page}
                     </button>
-                  ))}
+                ))}
               </div>
               <button
                 type="button"

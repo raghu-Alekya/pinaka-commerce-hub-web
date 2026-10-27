@@ -82,7 +82,7 @@ export default function StoreShifts({ merchantId, storeId, store }) {
   const [searchQuery, setSearchQuery] = useState("");
   const datePresetBeforeCustom = useRef("any");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
 
   const filtered = useMemo(() => records.filter((row) =>
     (!filters.from || row.date >= filters.from) && (!filters.to || row.date <= filters.to)
@@ -169,7 +169,7 @@ export default function StoreShifts({ merchantId, storeId, store }) {
         onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
         itemLabel="items"
         showWhenEmpty
-        pageSizeOptions={[10, 25, 50]}
+        pageSizeOptions={[5, 10, 25, 50]}
       />
       </div>
   </section>;
@@ -199,5 +199,4 @@ function ShiftDetails({ shift, store, onBack }) {
     </section>
   </section>;
 }
-
 

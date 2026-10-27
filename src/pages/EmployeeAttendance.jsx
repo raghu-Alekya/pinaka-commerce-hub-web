@@ -342,7 +342,7 @@ export default function EmployeeAttendance({
   const [showDateRange, setShowDateRange] = useState(false);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
 
   const merchantId =
     store?.merchantId ||

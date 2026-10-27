@@ -204,7 +204,7 @@ export default function Users({
         useState(1);
 
     const [pageSize, setPageSize] =
-        useState(10);
+        useState(5);
 
 
     /* =====================================================
