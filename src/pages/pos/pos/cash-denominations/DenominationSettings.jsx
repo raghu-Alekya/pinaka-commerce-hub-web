@@ -190,12 +190,6 @@ export function DenominationSettings() {
             return;
         }
 
-        const oversized = allDenominations.some((item) => item.file && item.file.size > 1024 * 1024);
-        if (oversized) {
-            alert("Each denomination image must be 1 MB or smaller.");
-            return;
-        }
-
         const toItem = async (item) => {
             const imageData = item.file ? await readDenominationFile(item.file) : item.image;
             if (typeof imageData !== "string" || !imageData.startsWith("data:image/")) {
