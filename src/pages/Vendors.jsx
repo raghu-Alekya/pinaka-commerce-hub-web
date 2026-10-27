@@ -56,11 +56,7 @@ function getVendorTypeLabel(vendorType) {
 function isVendorInactive(vendor) {
   return (
     String(vendor?.status || "").trim().toLowerCase() === "inactive" ||
-    vendor?.is_deleted === true ||
-    vendor?.is_deleted === "true" ||
-    vendor?.isDeleted === true ||
-    vendor?.isDeleted === "true" ||
-    Boolean(vendor?.deletedAt)
+    Boolean(vendor?.deletedAt ?? vendor?.deleted_at)
   );
 }
 
@@ -287,14 +283,22 @@ export default function Vendors({
       let resultList = [];
 
       if (activeStatus === "Inactive") {
-        resultList = await getVendors({ is_deleted: true });
+        const [deletedList, inactiveStatusList] = await Promise.all([
+          getVendors({ deleted_at: true }).catch(() => []),
+          getVendors({ status: "INACTIVE" }).catch(() => []),
+        ]);
+        const inactiveVendors = new Map();
+        [...deletedList, ...inactiveStatusList].forEach((vendor) => {
+          if (vendor?.id) inactiveVendors.set(String(vendor.id), vendor);
+        });
+        resultList = Array.from(inactiveVendors.values());
       } else if (activeStatus === "Active") {
         resultList = await getVendors();
       } else {
         // "All Statuses": Fetch both active vendors and inactive/deleted vendors
         const [activeList, inactiveList] = await Promise.all([
           getVendors().catch(() => []),
-          getVendors({ is_deleted: true }).catch(() => []),
+          getVendors({ deleted_at: true }).catch(() => []),
         ]);
 
         const map = new Map();
@@ -385,11 +389,7 @@ export default function Vendors({
               statusFilter ||
             (statusFilter === "Inactive" &&
               (vendor.status === "Inactive" ||
-                vendor.is_deleted === true ||
-                vendor.is_deleted === "true" ||
-                vendor.isDeleted === true ||
-                vendor.isDeleted === "true" ||
-                Boolean(vendor.deletedAt)));
+                Boolean(vendor.deletedAt ?? vendor.deleted_at)));
 
           const matchesVendorType =
             vendorTypeFilter ===
@@ -864,9 +864,8 @@ export default function Vendors({
                 ...item,
                 ...restoredVendor,
                 status: "Active",
-                is_deleted: false,
-                isDeleted: false,
                 deletedAt: null,
+                deleted_at: null,
               }
             : item
         )
@@ -901,17 +900,18 @@ export default function Vendors({
         type: "inactive",
       });
 
-      setVendors(
-        (current) =>
-          current.filter(
-            (vendor) =>
-              String(
-                vendor.id
-              ) !==
-              String(
-                deleteTarget.id
-              )
-          )
+      const inactiveAt = new Date().toISOString();
+      setVendors((current) =>
+        current.map((vendor) =>
+          String(vendor.id) === String(deleteTarget.id)
+            ? {
+                ...vendor,
+                status: "Inactive",
+                deletedAt: vendor.deletedAt ?? inactiveAt,
+                deleted_at: vendor.deleted_at ?? inactiveAt,
+              }
+            : vendor
+        )
       );
 
       setDeleteTarget(
