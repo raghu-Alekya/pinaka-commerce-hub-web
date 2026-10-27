@@ -218,7 +218,7 @@ export function DenominationRow({
 
                             <input
                                 type="file"
-                                accept="image/*"
+                                accept="image/png,image/jpeg,image/webp"
                                 onChange={handleImageChange}
                             />
                         </label>

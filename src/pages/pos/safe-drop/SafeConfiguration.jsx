@@ -10,6 +10,7 @@ import {
     createPosSafeDrop,
     updatePosSafeDrop,
 } from "./api";
+import { isStoredPosImage, uploadStorePosImage } from "../storePosConfiguration";
 
 export function SafeConfiguration({ value, onSave, onBack }) {
     const settings = usePosSettings();
@@ -31,13 +32,13 @@ export function SafeConfiguration({ value, onSave, onBack }) {
         }
         setUploads((count) => count + 1); setError("");
         const reader = new FileReader();
-        reader.onload = () => updateRow("drops", id, { image: reader.result, imageName: file.name });
+        reader.onload = () => updateRow("drops", id, { image: reader.result, imageName: file.name, file });
         reader.onerror = () => setError("The image could not be read. Please try again.");
         reader.onloadend = () => setUploads((count) => count - 1);
         reader.readAsDataURL(file);
     };
     const moneyOrNull = (amount) => validMoney(amount) ? Number(amount) : null;
-    const safeDropPayload = (source) => ({
+    const safeDropPayload = async (source) => ({
         enabled: source.enabled,
         primarySafe: source.primarySafe.trim(),
         dropEnabled: source.enabled && source.dropEnabled,
@@ -53,11 +54,20 @@ export function SafeConfiguration({ value, onSave, onBack }) {
             amount: Number(row.amount),
             quantity: Number(row.quantity),
         })),
-        drops: source.drops.map((row) => ({
-            ...(typeof row.id === "string" && serverTaxClassId.test(row.id) ? { id: row.id } : {}),
-            amount: Number(row.amount),
-            imageName: row.imageName || "denomination",
-            imageData: row.image,
+        drops: await Promise.all(source.drops.map(async (row) => {
+            let image = row.image;
+            let imageName = row.imageName || "denomination";
+            if (row.file) {
+                const uploaded = await uploadStorePosImage(settings.storeId, row.file);
+                image = uploaded.path;
+                imageName = uploaded.imageName || imageName;
+            }
+            return {
+                ...(typeof row.id === "string" && serverTaxClassId.test(row.id) ? { id: row.id } : {}),
+                amount: Number(row.amount),
+                imageName,
+                image,
+            };
         })),
     });
     const applySafeDrop = (record) => {
@@ -80,7 +90,7 @@ export function SafeConfiguration({ value, onSave, onBack }) {
             drops: (record.drops || []).map((row) => ({
                 id: row.id,
                 amount: String(row.amount),
-                image: row.imageData,
+                image: row.image || row.imageUrl || row.imageData,
                 imageName: row.imageName,
             })),
         };
@@ -113,13 +123,15 @@ export function SafeConfiguration({ value, onSave, onBack }) {
         }
         if (draft.tubeSize && (!Number.isSafeInteger(Number(draft.tubeSize)) || Number(draft.tubeSize) <= 0)) { setError("Tube size must be a positive whole number."); return; }
         if (draft.tubes.some((row) => !validMoney(row.amount) || !Number.isSafeInteger(Number(row.quantity)) || Number(row.quantity) <= 0)) { setError("Every tube needs a positive amount and a positive whole-number quantity."); return; }
-        if (draft.drops.some((row) => !validMoney(row.amount) || !row.image?.startsWith("data:image/"))) { setError("Every safe-drop denomination needs a positive amount and a PNG, JPG, or WEBP image."); return; }
+        const hasIcon = (row) => row.file || isStoredPosImage(row.image) || (typeof row.image === "string" && row.image.startsWith("data:image/"));
+        if (draft.drops.some((row) => !validMoney(row.amount) || !hasIcon(row))) { setError("Every safe-drop denomination needs a positive amount and a PNG, JPG, or WEBP image."); return; }
         if ([draft.tubes, draft.drops].some((list) => new Set(list.map((row) => Number(row.amount))).size !== list.length)) { setError("Denomination amounts must be unique within each list."); return; }
         if (uploads > 0) { setError("Please wait for the image upload to finish."); return false; }
         const next = { ...draft, primarySafe: draft.primarySafe.trim(), dropEnabled: draft.enabled && draft.dropEnabled };
+        const payload = await safeDropPayload(next);
         const record = savedId.current
-            ? await updatePosSafeDrop(settings.storeId, safeDropPayload(next))
-            : await createPosSafeDrop(settings.storeId, safeDropPayload(next));
+            ? await updatePosSafeDrop(settings.storeId, payload)
+            : await createPosSafeDrop(settings.storeId, payload);
         applySafeDrop(record);
         setError("");
         setMessage("Changes are saved.");
