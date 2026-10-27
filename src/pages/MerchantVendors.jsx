@@ -151,6 +151,7 @@ export default function MerchantVendors({
     );
 
     const [query, setQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("All Statuses");
 
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
@@ -371,6 +372,10 @@ useEffect(() => {
     const rows = assigned
         .filter((vendor) =>
             matches(vendor, query)
+        )
+        .filter((vendor) =>
+            statusFilter === "All Statuses" ||
+            vendor.status.toLowerCase() === statusFilter.toLowerCase()
         )
         .sort(
             (a, b) =>
@@ -906,8 +911,19 @@ useEffect(() => {
                     onSearchChange={(value) => { setQuery(value); setPage(1); }}
                     searchPlaceholder="Search vendors by code, name, type or phone..."
                     searchAriaLabel={storeScope ? "Search assigned vendors" : "Search vendors"}
+                    filters={[{
+                        key: "status",
+                        label: "Status",
+                        value: statusFilter,
+                        options: ["All Statuses", "Active", "Inactive"],
+                        onChange: (value) => {
+                            setStatusFilter(value);
+                            setPage(1);
+                        },
+                    }]}
                     onClear={() => {
                         setQuery("");
+                        setStatusFilter("All Statuses");
                         setPage(1);
                         setSort({ key: "name", direction: 1 });
                     }}

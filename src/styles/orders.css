@@ -1177,7 +1177,7 @@ input {
     white-space: nowrap;
     box-sizing: border-box;
     flex-shrink: 0;
-    margin-left: auto;
+    margin-left: 0;
 }
 
 .orders-standalone-card > .filters-bar .filter-reset-btn:hover {
@@ -1197,7 +1197,16 @@ input {
     }
 
     .orders-standalone-card > .filters-bar .filter-options {
-        flex-wrap: nowrap;
+        display: contents;
+    }
+
+    .orders-standalone-card > .filters-bar .filter-search {
+        flex: 1 1 300px;
+        max-width: none;
+    }
+
+    .orders-standalone-card > .filters-bar .filter-select-wrapper {
+        flex: 0 1 155px;
     }
 }
 
@@ -1254,4 +1263,3 @@ input {
         padding: 12px 0 !important;
     }
 }
-

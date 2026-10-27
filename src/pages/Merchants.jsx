@@ -1475,7 +1475,7 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
       setNotice(error.message || "Unable to activate employee.");
     }
   }
-  const blank={query:''};
+  const blank={query:'',status:''};
   const [filters, setFilters] = useState(blank);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -1487,7 +1487,11 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
   const assignedStoreCount=e=>{if(Array.isArray(e?.stores)) return e.stores.length;if(e?.assignedStoreCount!==undefined&&e?.assignedStoreCount!==null)return Number(e.assignedStoreCount);if(e?.assignedStoresCount!==undefined&&e?.assignedStoresCount!==null)return Number(e.assignedStoresCount);if(e?.storeId||e?.store_id||e?.storeName||e?.store?.name)return 1;return 0;};
   const roleNames=e=>[e.roleName,typeof e.role==='string'?e.role:e.role?.name,...(Array.isArray(e.roles)?e.roles.map(v=>typeof v==='string'?v:v.name || v.roleName):[])].filter(Boolean);
   const update=(key,value)=>{setFilters(old=>({...old,[key]:value}));setPage(1);};
-  const filtered=employees.filter(e=>[employeeName(e),e.id,e.employeeCode,e.username,e.phone,e.phoneNumber,e.email].join(' ').toLowerCase().includes(filters.query.trim().toLowerCase())).sort((a,b)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0));
+  const filtered=employees.filter(e=>{
+    const status=String(e.status||'INACTIVE').toUpperCase()==='ACTIVE'?'ACTIVE':'INACTIVE';
+    return (!filters.status||status===filters.status)
+      && [employeeName(e),e.id,e.employeeCode,e.username,e.phone,e.phoneNumber,e.email].join(' ').toLowerCase().includes(filters.query.trim().toLowerCase());
+  }).sort((a,b)=>(Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0));
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const current = Math.min(page, pages);
   return <div className="mel w-full max-w-full min-w-0 overflow-hidden">
@@ -1541,6 +1545,17 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
     setPage(1);
   }}
   searchPlaceholder="Search employee, ID, username, phone or email..."
+  filters={[{
+    key:"status",
+    label:"Status",
+    value:filters.status,
+    options:[
+      {label:"All Statuses",value:""},
+      {label:"Active",value:"ACTIVE"},
+      {label:"Inactive",value:"INACTIVE"},
+    ],
+    onChange:(value)=>update("status",value),
+  }]}
   onClear={() => {
     setFilters(blank);
     setPage(1);   
