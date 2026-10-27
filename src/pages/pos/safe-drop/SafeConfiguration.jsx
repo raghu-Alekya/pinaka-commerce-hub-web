@@ -10,7 +10,7 @@ import {
     createPosSafeDrop,
     updatePosSafeDrop,
 } from "./api";
-import { isStoredPosImage, uploadStorePosImage } from "../storePosConfiguration";
+import { isStoredPosImage, posImageUrl, uploadStorePosImage } from "../storePosConfiguration";
 
 export function SafeConfiguration({ value, onSave, onBack }) {
     const settings = usePosSettings();
@@ -162,7 +162,7 @@ export function SafeConfiguration({ value, onSave, onBack }) {
         </section>
         <section className="pc-card pc-spaced"><div className="pc-section-heading"><div><h3>Manage Safe Drop Denominations</h3><p>Add amounts and denomination images for safe drops.</p></div><button type="button" className="pc-button" onClick={() => update("drops", [...draft.drops, { id: newRecordId(), amount: "", image: "", imageName: "" }])}>+ Add Denomination</button></div>
             {!draft.drops.length && <p className="pc-empty">No safe-drop denominations added yet.</p>}
-            {draft.drops.map((row, index) => <div className="pc-denomination" key={row.id}><ConfigField label={`Amount (${currency})`}><input type="number" min="0.01" step="0.01" value={row.amount} onChange={(e) => updateRow("drops", row.id, { amount: e.target.value })} /></ConfigField><div className="pc-upload">{row.image && <img src={row.image} alt={`Safe-drop denomination ${row.amount}`} />}<ConfigField label="Denomination Image"><input type="file" disabled={uploads > 0} accept="image/png,image/jpeg,image/webp" onChange={(e) => { upload(row.id, e.target.files?.[0]); e.target.value = ""; }} /><small>{row.imageName || "PNG, JPG or WEBP · Up to 2 MB"}</small></ConfigField></div><button type="button" className="pc-icon-action pc-danger" aria-label={`Remove safe-drop denomination ${index + 1}`} title="Delete" onClick={() => update("drops", draft.drops.filter((item) => item.id !== row.id))}><i className="bi bi-trash3" aria-hidden="true" /></button></div>)}
+            {draft.drops.map((row, index) => <div className="pc-denomination" key={row.id}><ConfigField label={`Amount (${currency})`}><input type="number" min="0.01" step="0.01" value={row.amount} onChange={(e) => updateRow("drops", row.id, { amount: e.target.value })} /></ConfigField><div className="pc-upload">{row.image && <img src={posImageUrl(row.image)} alt={`Safe-drop denomination ${row.amount}`} />}<ConfigField label="Denomination Image"><input type="file" disabled={uploads > 0} accept="image/png,image/jpeg,image/webp" onChange={(e) => { upload(row.id, e.target.files?.[0]); e.target.value = ""; }} /><small>{row.imageName || "PNG, JPG or WEBP · Up to 2 MB"}</small></ConfigField></div><button type="button" className="pc-icon-action pc-danger" aria-label={`Remove safe-drop denomination ${index + 1}`} title="Delete" onClick={() => update("drops", draft.drops.filter((item) => item.id !== row.id))}><i className="bi bi-trash3" aria-hidden="true" /></button></div>)}
         </section>
         {error && <p role="alert" className="pc-error">{error}</p>}
         <ConfigFooter onBack={onBack} onSave={save} disabled={uploads > 0} message={uploads > 0 ? "Reading denomination image…" : message} />

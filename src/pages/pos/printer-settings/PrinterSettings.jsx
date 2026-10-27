@@ -9,7 +9,7 @@ import {
   useSaveAction,
 } from "../shared";
 import { getPrinterSettings, savePrinterSettings } from "./api";
-import { isStoredPosImage, uploadStorePosImage } from "../storePosConfiguration";
+import { isStoredPosImage, posImageUrl, uploadStorePosImage } from "../storePosConfiguration";
 
 const DEFAULTS = { header: "", footer: "", address: "", logo: "", logoName: "" };
 
@@ -122,7 +122,7 @@ export function PrinterSettings({ onBack }) {
       <p className="pc-help">Upload a PNG, JPG, or WEBP logo up to 2 MB.</p>
       <div className="pc-printer-logo-row">
         {draft.logo
-          ? <img className="pc-printer-logo-preview" src={draft.logo} alt="Receipt logo preview" />
+          ? <img className="pc-printer-logo-preview" src={posImageUrl(draft.logo)} alt="Receipt logo preview" />
           : <span className="pc-printer-logo-placeholder" aria-hidden="true"><i className="bi bi-image" /></span>}
         <div className="pc-printer-logo-controls">
           <ConfigField label="Logo image">

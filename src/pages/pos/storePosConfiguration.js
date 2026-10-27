@@ -62,6 +62,32 @@ export function isStoredPosImage(value) {
   return typeof value === "string" && (value.startsWith("/uploads/") || /^https?:\/\//i.test(value));
 }
 
+export function posImageUrl(value) {
+  if (typeof value !== "string" || !value) return "";
+  if (value.startsWith("data:") || value.startsWith("blob:")) return value;
+  let origin = "";
+  let pathname = value;
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const url = new URL(value);
+      origin = url.origin;
+      pathname = url.pathname;
+    } catch {
+      return value;
+    }
+  }
+  if (!pathname.startsWith("/uploads/")) return value;
+  const encoded = pathname.split("/").map((part) => {
+    if (!part) return part;
+    let decoded = part;
+    try { decoded = decodeURIComponent(part); } catch { decoded = part; }
+    return encodeURIComponent(decoded).replace(/[!'()*]/g, (char) =>
+      `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
+  }).join("/");
+  if (!origin && typeof window !== "undefined") origin = window.location.origin;
+  return `${origin}${encoded}`;
+}
+
 export function uploadStorePosImage(storeId, file) {
   const body = new FormData();
   body.append("image", file);
