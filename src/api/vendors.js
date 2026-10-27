@@ -131,11 +131,7 @@ function toApiStatus(status) {
 
 function toUiStatus(status, vendor = {}) {
   if (
-    vendor.is_deleted === true ||
-    vendor.is_deleted === "true" ||
-    vendor.isDeleted === true ||
-    vendor.isDeleted === "true" ||
-    Boolean(vendor.deletedAt)
+    Boolean(vendor.deletedAt ?? vendor.deleted_at)
   ) {
     return "Inactive";
   }
@@ -244,12 +240,6 @@ function normalizeVendor(vendor = {}) {
     */
 
     updatedTime: formatDateTime(vendor.updatedTime ?? vendor.updatedAt ?? vendor.updated_at),
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE DATE
-    |--------------------------------------------------------------------------
-    */
 
     deletedAt: vendor.deletedAt ?? vendor.deleted_at ?? null,
 
@@ -380,12 +370,12 @@ function prepareVendorPayload(values = {}) {
 |--------------------------------------------------------------------------
 */
 
-export async function getVendors({ is_deleted, isDeleted, status, search, token, signal } = {}) {
+export async function getVendors({ deleted_at, deletedAt, status, search, token, signal } = {}) {
   const params = new URLSearchParams();
 
-  const isDeletedVal = is_deleted ?? isDeleted;
-  if (isDeletedVal !== undefined && isDeletedVal !== null) {
-    params.set("is_deleted", String(isDeletedVal));
+  const deletedAtVal = deleted_at ?? deletedAt;
+  if (deletedAtVal !== undefined && deletedAtVal !== null) {
+    params.set("deleted_at", String(deletedAtVal));
   }
 
   if (status && String(status).trim()) {

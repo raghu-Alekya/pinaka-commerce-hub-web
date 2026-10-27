@@ -225,6 +225,13 @@ export default function Orders({
     setStatusFilter("");
     setDateFilter("");
     setAuthorFilter("");
+    if (!embedded) {
+      setSelectedMerchant("");
+      setSelectedStore("");
+      setStores([]);
+      setOrders([]);
+      rememberFilters("", "");
+    }
     setCurrentPage(1);
   }
 
