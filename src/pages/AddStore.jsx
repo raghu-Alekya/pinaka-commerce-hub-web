@@ -3459,6 +3459,18 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 <option value="Available">Available</option>
               </FilterDropdown>
             </label>
+            <button
+              type="button"
+              className="filter-reset-btn sf-employee-reset"
+              onClick={() => {
+                setEmployeeSearch("");
+                setEmployeeFilter("All");
+                setEmployeePage(1);
+              }}
+            >
+              <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
+              Reset
+            </button>
           </div>
           {duplicatePinNames.length > 0 && (
             <div className="alert alert-danger" role="alert">

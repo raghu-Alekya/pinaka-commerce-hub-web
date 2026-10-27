@@ -86,6 +86,7 @@ export default function MerchantStores({
   const [statusNoticeType, setStatusNoticeType] = useState("success");
 
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
@@ -150,11 +151,11 @@ export default function MerchantStores({
   const filteredStores = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    if (!query) {
-      return stores;
-    }
-
     return stores.filter((store) => {
+      if (statusFilter && store.status.toLowerCase() !== statusFilter.toLowerCase()) {
+        return false;
+      }
+      if (!query) return true;
       const searchableText = [
         store.name,
         store.id,
@@ -173,7 +174,7 @@ export default function MerchantStores({
 
       return searchableText.includes(query);
     });
-  }, [stores, search]);
+  }, [stores, search, statusFilter]);
 
   /* =========================
       PAGINATION
@@ -193,10 +194,11 @@ export default function MerchantStores({
 
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [search, statusFilter]);
 
   const handleReset = () => {
     setSearch("");
+    setStatusFilter("");
     setPage(1);
   };
 
@@ -362,9 +364,21 @@ export default function MerchantStores({
             {/* SEARCH + FILTERS */}
             <FiltersBar
               searchValue={search}
-              onSearchChange={setSearch}
+              onSearchChange={(value) => setSearch(value)}
               searchPlaceholder="Search stores by name, type or location..."
-              filters={[]}
+              filters={[
+                {
+                  key: "status",
+                  label: "Status",
+                  value: statusFilter,
+                  options: [
+                    { label: "All Statuses", value: "" },
+                    { label: "Active", value: "Active" },
+                    { label: "Inactive", value: "Inactive" },
+                  ],
+                  onChange: setStatusFilter,
+                },
+              ]}
               onClear={handleReset}
               showClear={true}
             />

@@ -128,6 +128,7 @@ export default function MerchantTenders({
   const [masterError, setMasterError] = useState("");
 
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [pickerPage, setPickerPage] = useState(1);
@@ -272,6 +273,10 @@ export default function MerchantTenders({
 
   const rows = assigned
     .filter((value) => matches(value, query))
+    .filter((value) =>
+      !statusFilter ||
+      value.status.toLowerCase() === statusFilter.toLowerCase()
+    )
     .sort(
       (a, b) =>
         String(a[sort.key]).localeCompare(String(b[sort.key])) *
@@ -287,7 +292,7 @@ export default function MerchantTenders({
 
   useEffect(() => {
     setPage(1);
-  }, [query]);
+  }, [query, statusFilter]);
 
   useEffect(() => {
     setPage((previous) => Math.min(previous, totalPages));
@@ -611,8 +616,22 @@ export default function MerchantTenders({
               setPage(1);
             }}
             searchPlaceholder="Search tenders by name or code…"
+            filters={[
+              {
+                key: "status",
+                label: "Status",
+                value: statusFilter,
+                options: [
+                  { label: "All Statuses", value: "" },
+                  { label: "Active", value: "Active" },
+                  { label: "Inactive", value: "Inactive" },
+                ],
+                onChange: setStatusFilter,
+              },
+            ]}
             onClear={() => {
               setQuery("");
+              setStatusFilter("");
               setPage(1);
               setSort({ key: "name", direction: 1 });
             }}
