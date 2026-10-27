@@ -10,21 +10,18 @@ import {
     createPosCashDenominations,
     updatePosCashDenominations,
 } from "./api";
+import { isStoredPosImage, uploadStorePosImage } from "../storePosConfiguration";
 
-function readDenominationFile(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("The image could not be read. Please try again."));
-        reader.readAsDataURL(file);
-    });
+function displayImage(item) {
+    const candidates = [item?.image, item?.imageUrl, item?.image_url, item?.imageData, item?.image_data];
+    return candidates.find((value) => typeof value === "string" && value) || "";
 }
 
 function denominationRows(items) {
     return (items || []).map((item) => ({
         id: item.id,
         amount: String(item.amount),
-        image: item.imageData,
+        image: displayImage(item),
         imageName: item.imageName,
         file: null,
     }));
@@ -197,15 +194,24 @@ export function DenominationSettings() {
         }
 
         const toItem = async (item) => {
-            const imageData = item.file ? await readDenominationFile(item.file) : item.image;
-            if (typeof imageData !== "string" || !imageData.startsWith("data:image/")) {
+            let image = item.image;
+            let imageName = item.imageName || "denomination";
+            if (item.file) {
+                if (!["image/png", "image/jpeg", "image/webp"].includes(item.file.type)) {
+                    throw new Error("Please select a PNG, JPG, or WEBP image for every denomination.");
+                }
+                const uploaded = await uploadStorePosImage(settings.storeId, item.file);
+                image = uploaded.path;
+                imageName = uploaded.imageName || imageName;
+            }
+            if (typeof image !== "string" || (!isStoredPosImage(image) && !image.startsWith("data:image/"))) {
                 throw new Error("Please select a PNG, JPG, or WEBP image for every denomination.");
             }
             return {
                 ...(typeof item.id === "string" && serverTaxClassId.test(item.id) ? { id: item.id } : {}),
                 amount: Number(item.amount),
-                imageName: item.imageName || "denomination",
-                imageData,
+                imageName,
+                image,
             };
         };
 

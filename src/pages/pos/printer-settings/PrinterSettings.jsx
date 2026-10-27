@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError } from "../../../api/http";
 import {
   ConfigField,
@@ -9,11 +9,13 @@ import {
   useSaveAction,
 } from "../shared";
 import { getPrinterSettings, savePrinterSettings } from "./api";
+import { isStoredPosImage, uploadStorePosImage } from "../storePosConfiguration";
 
 const DEFAULTS = { header: "", footer: "", address: "", logo: "", logoName: "" };
 
 export function PrinterSettings({ onBack }) {
   const settings = usePosSettings();
+  const logoFile = useRef(null);
   const [draft, setDraft] = useConfigState("printerSettings", DEFAULTS);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -48,12 +50,27 @@ export function PrinterSettings({ onBack }) {
       return false;
     }
     setError("");
+    let logo = draft.logo || "";
+    let logoName = draft.logoName || "";
+    if (logoFile.current) {
+      if (!/^image\/(png|jpeg|webp)$/.test(logoFile.current.type) || logoFile.current.size > 2 * 1024 * 1024) {
+        setError("Choose a PNG, JPG, or WEBP logo up to 2 MB.");
+        return false;
+      }
+      const uploaded = await uploadStorePosImage(settings.storeId, logoFile.current);
+      logo = uploaded.path;
+      logoName = uploaded.imageName || logoName;
+      logoFile.current = null;
+    } else if (logo && !isStoredPosImage(logo) && !logo.startsWith("data:image/")) {
+      setError("Choose a PNG, JPG, or WEBP logo up to 2 MB.");
+      return false;
+    }
     const saved = await savePrinterSettings(settings.storeId, {
       header: draft.header,
       footer: draft.footer,
       address: draft.address,
-      logo: draft.logo,
-      logoName: draft.logoName,
+      logo,
+      logoName,
     });
     const next = { ...DEFAULTS, ...(saved && typeof saved === "object" ? saved : draft) };
     setDraft(next);
@@ -72,6 +89,7 @@ export function PrinterSettings({ onBack }) {
       setError("Choose a PNG, JPG, or WEBP logo up to 2 MB.");
       return;
     }
+    logoFile.current = file;
     const reader = new FileReader();
     reader.onload = () => {
       update("logo", String(reader.result || ""));
@@ -111,7 +129,7 @@ export function PrinterSettings({ onBack }) {
             <input type="file" accept="image/png,image/jpeg,image/webp" onChange={selectLogo} />
           </ConfigField>
           {draft.logoName && <small>{draft.logoName}</small>}
-          {draft.logo && <button type="button" className="pc-button" onClick={() => { update("logo", ""); update("logoName", ""); }}>Remove Logo</button>}
+          {draft.logo && <button type="button" className="pc-button" onClick={() => { logoFile.current = null; update("logo", ""); update("logoName", ""); }}>Remove Logo</button>}
         </div>
       </div>
     </section>

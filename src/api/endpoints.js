@@ -31,6 +31,8 @@ export const endpoints = {
   storeTerminalMappings: (storeId) =>
     `/stores/${encodeURIComponent(storeId)}/pos/terminal-mappings`,
   storePosConfiguration: "/store/store-pos-configuration",
+  storePosConfigurationImage: (storeId) =>
+    `/store/store-pos-configuration/${encodeURIComponent(storeId)}/images`,
   storePosConfigurationItem: (storeId, configurationName) =>
     `/store/store-pos-configuration/${encodeURIComponent(storeId)}/${encodeURIComponent(configurationName)}`,
   storePosConfigurations: (storeId) =>

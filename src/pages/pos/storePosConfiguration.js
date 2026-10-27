@@ -58,6 +58,25 @@ export function loadStorePosConfiguration(storeId, configurationName) {
     .then((response) => asRecord(response, storeId, configurationName));
 }
 
+export function isStoredPosImage(value) {
+  return typeof value === "string" && (value.startsWith("/uploads/") || /^https?:\/\//i.test(value));
+}
+
+export function uploadStorePosImage(storeId, file) {
+  const body = new FormData();
+  body.append("image", file);
+  return api.post(endpoints.storePosConfigurationImage(storeId), body).then((response) => {
+    const payload = response?.data && typeof response.data === "object" ? response.data : response;
+    const path = payload?.path || payload?.url;
+    if (!path) throw new Error("The icon was not stored in the store images folder.");
+    return {
+      path,
+      url: payload?.url || path,
+      imageName: payload?.imageName || file.name,
+    };
+  });
+}
+
 export function saveStorePosConfiguration(storeId, configurationName, configurationValue) {
   const createdBy = currentUserId();
   return api
