@@ -791,8 +791,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 13px 17px;
-    border-top: 1px solid #e5e8ef;
     color: #7d889a;
     font-size: 11px;
 }
