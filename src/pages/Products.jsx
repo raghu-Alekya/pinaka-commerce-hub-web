@@ -8,6 +8,7 @@ import {
     normalizeCatalog,
     normalizeProduct,
 } from "../api/products";
+import { syncWordpressProducts } from "../api/storeConnector";
 import "../styles/products.css";
 
 export const normalizeStock = (val) =>
@@ -97,6 +98,7 @@ export default function Products({
 
     const loadProducts = async ({
         showMessage = false,
+        syncWebsite = false,
     } = {}) => {
         if (!storeId) {
             setProducts([]);
@@ -113,8 +115,11 @@ export default function Products({
                 setSyncError("");
             }
 
-            const response =
-                await pendingStoreRead(`store-products:${storeId}`, () => productsApi.getCatalog(storeId));
+            if (syncWebsite) await syncWordpressProducts(storeId);
+
+            const response = syncWebsite
+                ? await productsApi.getCatalog(storeId)
+                : await pendingStoreRead(`store-products:${storeId}`, () => productsApi.getCatalog(storeId));
 
             const catalog =
                 normalizeCatalog(response);
@@ -123,7 +128,9 @@ export default function Products({
 
             if (showMessage) {
                 setSyncMessage(
-                    "Latest product updates completed successfully."
+                    syncWebsite
+                        ? "Latest product updates synced successfully."
+                        : "Latest product updates completed successfully."
                 );
             }
         } catch (error) {
@@ -321,6 +328,7 @@ export default function Products({
 
             await loadProducts({
                 showMessage: true,
+                syncWebsite: true,
             });
         };
 

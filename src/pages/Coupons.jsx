@@ -8,7 +8,7 @@ import ListActions from "../components/ListActions";
 import { api, pendingStoreRead } from "../api/http";
 import { normalizeCatalog } from "../api/products";
 import { catalogProductId } from "./discountForm";
-import { getStoreCoupons, invalidateStoreCoupons } from "../api/storeCoupons";
+import { getStoreCoupons, invalidateStoreCoupons, syncStoreCoupons } from "../api/storeCoupons";
 import "../styles/coupons.css";
 
 const emptyCoupon = {
@@ -76,12 +76,14 @@ function normalizeCoupon(raw = {}) {
 
 function couponToForm(coupon = {}) {
     const csv = (value) => Array.isArray(value) ? value.join(", ") : (value || "");
+    const limitValue = value => value == null || value === "" || value === "∞" ? "" : String(value);
+    const moneyValue = value => value == null || value === "" ? "" : (Number.isFinite(Number(value)) ? Number(value).toFixed(2) : String(value));
     return {
         ...emptyCoupon,
         ...coupon,
         code: coupon.code || "",
         discount_type: coupon.discount_type || coupon.discountType || "fixed_cart",
-        amount: String(coupon.amount ?? "").replace(/[$,%]/g, "").trim(),
+        amount: moneyValue(String(coupon.amount ?? "").replace(/[$,%]/g, "").trim()),
         date_expires: coupon.date_expires ? String(coupon.date_expires).slice(0, 10) : coupon.expiryDate || "",
         product_ids: csv(coupon.product_ids || coupon.productIds),
         required_product_ids: csv(coupon.required_product_ids || coupon.requiredProductIds),
@@ -92,11 +94,11 @@ function couponToForm(coupon = {}) {
         product_categories: csv(coupon.product_categories || coupon.productCategories),
         excluded_product_categories: csv(coupon.excluded_product_categories || coupon.excludedProductCategories),
         email_restrictions: csv(coupon.email_restrictions || coupon.emailRestrictions),
-        minimum_amount: String(coupon.minimum_amount ?? coupon.minimumAmount ?? ""),
-        maximum_amount: String(coupon.maximum_amount ?? coupon.maximumAmount ?? ""),
-        usage_limit: String(coupon.usage_limit ?? coupon.usageLimit ?? ""),
-        usage_limit_per_user: String(coupon.usage_limit_per_user ?? coupon.usageLimitPerUser ?? ""),
-        limit_usage_to_x_items: String(coupon.limit_usage_to_x_items ?? coupon.limitUsageToXItems ?? ""),
+        minimum_amount: moneyValue(coupon.minimum_amount ?? coupon.minimumAmount),
+        maximum_amount: moneyValue(coupon.maximum_amount ?? coupon.maximumAmount),
+        usage_limit: limitValue(coupon.usage_limit ?? coupon.usageLimit),
+        usage_limit_per_user: limitValue(coupon.usage_limit_per_user ?? coupon.usageLimitPerUser),
+        limit_usage_to_x_items: limitValue(coupon.limit_usage_to_x_items ?? coupon.limitUsageToXItems),
     };
 }
 
@@ -164,6 +166,7 @@ export default function Coupons({
 
     const [syncMessage, setSyncMessage] = useState("");
     const [syncError, setSyncError] = useState("");
+    const [syncingCoupons, setSyncingCoupons] = useState(false);
 
     // =========================================================
     // COUPONS
@@ -311,10 +314,32 @@ export default function Coupons({
     // LATEST COUPON UPDATES
     // =========================================================
 
-    const handleLatestCouponUpdates = () => {
+    const handleLatestCouponUpdates = async () => {
+        if (syncingCoupons) return;
         setSyncMessage("");
         setSyncError("");
-        setSyncMessage("WooCommerce sync will be connected after the coupon API is implemented.");
+        if (!ownerId || !storeId) {
+            setSyncError("Select a store with a merchant ID before syncing coupons.");
+            return;
+        }
+        setSyncingCoupons(true);
+        try {
+            const result = await syncStoreCoupons(ownerId, storeId);
+            if (result?.success === false) throw new Error(result.message || "Unable to sync coupons.");
+            invalidateStoreCoupons(ownerId, storeId);
+            setAttempt(value => value + 1);
+            const summary = result?.summary || result?.data?.summary || result;
+            const counts = ["created", "updated", "skipped", "failed"]
+                .filter(key => summary?.[key] != null)
+                .map(key => `${summary[key]} ${key}`);
+            setSyncMessage(counts.length
+                ? `Latest coupon updates completed: ${counts.join(", ")}.`
+                : "Latest coupon updates completed successfully.");
+        } catch (error) {
+            setSyncError(error.message || "Unable to sync coupons.");
+        } finally {
+            setSyncingCoupons(false);
+        }
     };
 
     const openCreate = () => {
@@ -365,7 +390,7 @@ export default function Coupons({
             };
             const payload = {
                 merchantId: ownerId, storeId, code: couponForm.code.trim(),
-                amount: String(couponForm.amount), discountType: couponForm.discount_type,
+                amount: Number(couponForm.amount).toFixed(2), discountType: couponForm.discount_type,
                 description: couponForm.description || "", individualUse: Boolean(couponForm.individual_use),
                 productIds: ids(couponForm.product_ids), requiredProductIds: ids(couponForm.required_product_ids),
                 excludedProductIds: ids(couponForm.excluded_product_ids),
@@ -373,7 +398,8 @@ export default function Coupons({
                 limitUsageToXItems: limit(couponForm.limit_usage_to_x_items),
                 freeShipping: Boolean(couponForm.free_shipping), productCategories: ids(couponForm.product_categories),
                 excludedProductCategories: ids(couponForm.excluded_product_categories), excludeSaleItems: Boolean(couponForm.exclude_sale_items),
-                minimumAmount: couponForm.minimum_amount || "0.00", maximumAmount: couponForm.maximum_amount || "0.00",
+                minimumAmount: couponForm.minimum_amount === "" ? "0.00" : Number(couponForm.minimum_amount).toFixed(2),
+                maximumAmount: couponForm.maximum_amount === "" ? "0.00" : Number(couponForm.maximum_amount).toFixed(2),
                 emailRestrictions: csv(couponForm.email_restrictions), dateExpires: couponForm.date_expires || null,
             };
             const response = editorMode === "edit"
@@ -466,10 +492,9 @@ export default function Coupons({
                         type="button"
                         className="coupon-sync-btn coupon-sync-update"
                         onClick={handleLatestCouponUpdates}
-                        disabled={!storeId}
+                        disabled={!storeId || syncingCoupons}
                     >
-                        <i className="bi bi-arrow-repeat" />
-                        Latest Updates
+                        {syncingCoupons ? <><span className="sync-spinner" /> Updating...</> : <><i className="bi bi-arrow-repeat" /> Latest Updates</>}
                     </button>
 
                 </div>
