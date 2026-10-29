@@ -294,7 +294,7 @@ export function ConfigHeader({ icon, title, description, children }) {
     </div></header>;
 }
 export function ConfigFooter({ onBack, onSave, disabled, message }) {
-    return <footer className="pc-footer pos-form-actions"><p role="status">{message || "Changes are saved for this session. API integration is required for permanent storage."}</p>
+    return <footer className="pc-footer pos-form-actions"><p role="status"></p>
         <button type="button" className="pc-button" onClick={onBack}>Cancel</button>
         <button type="button" className="pc-button pc-primary" disabled={disabled} onClick={onSave}>Save Changes</button>
     </footer>;

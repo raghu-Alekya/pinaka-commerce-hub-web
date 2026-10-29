@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { listStoreShifts, normalizeShift } from "../api/storeShifts";
+import { listStoreShifts, normalizeShift, getShiftById } from "../api/storeShifts";
+import { listStoreSafeDrops } from "../api/storeSafeDrops";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
@@ -47,6 +48,9 @@ export default function StoreShifts({ merchantId, storeId, store }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reload, setReload] = useState(0);
+  const [shiftDetails, setShiftDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState("");
   useEffect(() => {
     const controller = new AbortController();
     setRecords([]);
@@ -72,6 +76,64 @@ export default function StoreShifts({ merchantId, storeId, store }) {
       });
     return () => controller.abort();
   }, [merchantId, storeId, reload]);
+
+  useEffect(() => {
+  if (!selectedShift) return;
+
+  const controller = new AbortController();
+  const requestShiftId = [selectedShift.id, selectedShift.shiftid, selectedShift.shiftId, selectedShift.shift_id, selectedShift.shift_uuid, selectedShift.uuid].find(value => value && value !== "—");
+
+  setShiftDetails(null);
+  setDetailsLoading(true);
+  setDetailsError("");
+
+  getShiftById(
+    requestShiftId,
+    selectedShift.openedByEmployeeId || selectedShift.user_id || selectedShift.employee_id || selectedShift.employeeId,
+    { signal: controller.signal }
+  )
+    .then((data) => {
+      if (!controller.signal.aborted) {
+        const detail = normalizeShift(data);
+        setShiftDetails({
+          ...detail,
+          openingSafeCash: detail.openingSafeCash ?? selectedShift.openingSafeCash,
+          safeDrop: detail.safeDrop ?? selectedShift.safeDrop,
+          safeDrops: detail.safeDrops?.length ? detail.safeDrops : selectedShift.safeDrops || [],
+          openedBy: detail.openedBy || selectedShift.openedBy,
+          openedCode: detail.openedCode || selectedShift.openedCode,
+          openDevice: selectedShift.openingDeviceName || selectedShift.openDevice || detail.openDevice,
+          closedBy: detail.closedBy || selectedShift.closedBy,
+          closedByEmployeeId: detail.closedByEmployeeId || selectedShift.closedByEmployeeId,
+          closedCode: detail.closedCode || selectedShift.closedCode,
+          closeDevice: selectedShift.closingDeviceName || selectedShift.closeDevice || detail.closeDevice,
+        });
+        listStoreSafeDrops(storeId, { signal: controller.signal })
+          .then((records) => {
+            if (controller.signal.aborted) return;
+            const related = records.filter((record) => String(record.shift_id || record.safe_data?.shift_id || "") === String(requestShiftId));
+            if (!related.length) return;
+            const total = related.reduce((sum, record) => sum + Number(record.safe_data?.total_cash ?? record.total_cash ?? record.amount ?? record.total ?? 0), 0);
+            setShiftDetails((current) => current ? { ...current, safeDrop: total, safeDrops: related } : current);
+          })
+          .catch(() => {});
+      }
+    })
+    .catch((error) => {
+      if (!controller.signal.aborted) {
+        setDetailsError(
+          error.message || "Unable to load shift details."
+        );
+      }
+    })
+    .finally(() => {
+      if (!controller.signal.aborted) {
+        setDetailsLoading(false);
+      }
+    });
+
+  return () => controller.abort();
+}, [selectedShift]);
 
   const [draft, setDraft] = useState({ from: "", to: "", status: "", startedBy: "", closedBy: "", device: "" });
   const [filters, setFilters] = useState(draft);
@@ -126,8 +188,45 @@ export default function StoreShifts({ merchantId, storeId, store }) {
     setShowDateRange(false);
   };
 
-  if (selectedShift) return <ShiftDetails shift={selectedShift} store={store} onBack={() => setSelectedShift(null)} />;
+if (selectedShift) {
+  if (detailsLoading && !shiftDetails) {
+    return <p>Loading shift details...</p>;
+  }
 
+  if (detailsError) {
+    return (
+      <section>
+        <p role="alert">{detailsError}</p>
+        <button
+          type="button"
+          onClick={() => setSelectedShift({ ...selectedShift })}
+        >
+          Retry
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedShift(null);
+            setShiftDetails(null);
+          }}
+        >
+          Back to Shift Management
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <ShiftDetails
+      shift={shiftDetails || selectedShift}
+      store={store}
+      onBack={() => {
+        setSelectedShift(null);
+        setShiftDetails(null);
+      }}
+    />
+  );
+}
   return <section className="sm-screen pb-4" aria-label="Store shift management">
     <header className="sm-page-heading">
       <div><h1>Shift Management</h1><p>View and manage store-level shifts. A shift remains open until it is closed.</p></div>
@@ -154,9 +253,9 @@ export default function StoreShifts({ merchantId, storeId, store }) {
       <button type="button" className="sm-text-button" onClick={() => { setCustomStart(""); setCustomEnd(""); setDraft((current) => ({ ...current, from: "", to: "" })); setFilters((current) => ({ ...current, from: "", to: "" })); setDatePreset("any"); setShowDateRange(false); }}>Clear dates</button>
     </div> : null}
 
-      <div className="sm-table-wrap mb-0"><table className="sm-table"><thead><tr><th>#</th><th>Shift ID</th><th>Opened By</th><th>Opening Device</th><th>Open Time</th><th>Closed By</th><th>Closing Device</th><th>Close Time</th><th>Duration</th><th>Opening Balance</th><th>Closing Balance</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>{visible.map((shift, index) => <tr key={shift.id} style={{ cursor: "pointer" }} onClick={(event) => { if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) return; setSelectedShift(shift); }}><td>{(page - 1) * pageSize + index + 1}</td><td><button type="button" className="sm-link" onClick={(e) => { e.stopPropagation(); setSelectedShift(shift); }}>{shift.id}</button></td><td>{shift.openedBy || "—"}{shift.openedCode && <small>({shift.openedCode})</small>}</td><td>{shift.openDevice || "—"}</td><td>{timeLabel(shift.openTime)}</td><td>{shift.closedBy ? <>{shift.closedBy}{shift.closedCode && <small>({shift.closedCode})</small>}</> : "—"}</td><td>{shift.closeDevice || "—"}</td><td>{timeLabel(shift.closeTime)}</td><td>{shift.duration}</td><td>{money(shift.openingBalance)}</td><td>{money(shift.closingBalance)}</td><td><span className={`sm-status ${shift.status.toLowerCase()}`}>{shift.status}</span></td><td><ListActions onView={() => setSelectedShift(shift)} viewLabel={`View shift ${shift.id}`} /></td></tr>)}
-          {!visible.length && <tr><td colSpan={13} className="sm-empty">{loading ? "Loading shifts…" : error ? "Shift records could not be loaded." : records.length ? "No shift records match these filters." : "No shifts found for this store."}</td></tr>}
+      <div className="sm-table-wrap mb-0"><table className="sm-table"><thead><tr><th>Opened By</th><th>Open Time</th><th>Closed By</th><th>Close Time</th><th>Duration</th><th>Opening Balance</th><th>Closing Balance</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>{visible.map((shift) => <tr key={shift.id} style={{ cursor: "pointer" }} onClick={(event) => { if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) return; setSelectedShift(shift); }}><td>{shift.openedBy || "—"}{shift.openedCode && <small>({shift.openedCode})</small>}</td><td>{timeLabel(shift.openTime)}</td><td>{shift.closedBy ? <>{shift.closedBy}{shift.closedCode && <small>({shift.closedCode})</small>}</> : "—"}</td><td>{timeLabel(shift.closeTime)}</td><td>{shift.duration}</td><td>{money(shift.openingBalance)}</td><td>{money(shift.closingBalance)}</td><td><span className={`sm-status ${shift.status.toLowerCase()}`}>{shift.status}</span></td><td><ListActions onView={() => setSelectedShift(shift)} viewLabel={`View shift ${shift.id}`} /></td></tr>)}
+          {!visible.length && <tr><td colSpan={9} className="sm-empty">{loading ? "Loading shifts…" : error ? "Shift records could not be loaded." : records.length ? "No shift records match these filters." : "No shifts found for this store."}</td></tr>}
         </tbody>
       </table></div>
       <div className="sm-pagination-wrapper mt-4 mb-0">
@@ -178,24 +277,29 @@ export default function StoreShifts({ merchantId, storeId, store }) {
 function ShiftDetails({ shift, store, onBack }) {
   const metrics = [
     ["Total Orders", shift.orders, "bi-file-earmark-text"],
-    ["Total Sales", money(shift.sales), "bi-currency-rupee"],
-    ["Payouts", money(shift.payouts), "bi-credit-card"],
-    ["Cashback", money(shift.cashback), "bi-gift"],
-    ["Refund", money(shift.refund), "bi-arrow-repeat"],
+    ["Total Sales", shift.sales, "bi-currency-rupee"],
+    ["Payouts", shift.payouts, "bi-credit-card"],
+    ["Cashback", shift.cashback, "bi-gift"],
+    ["Refund", shift.refund, "bi-arrow-repeat"],
     ["Void Items", shift.voidItems, "bi-slash-circle"],
     ["Cancelled Orders", shift.cancelledOrders, "bi-x-circle"],
+    ["Assigned Staff", shift.assignedStaff, "bi-people"],
+    ["Till Amount", shift.tillAmount, "bi-cash-stack"],
+    ["Opening Safe Cash", shift.openingSafeCash, "bi-safe"],
+    ["Vendor Payments", shift.vendorPayments, "bi-shop"],
   ];
   const difference = shift.cashDifference ?? (shift.actualClosing == null || shift.expectedClosing == null ? null : shift.actualClosing - shift.expectedClosing);
   return <section className="sm-screen sm-detail-screen" aria-label="Shift details">
     <header className="sm-detail-heading"><div><h1>Shift Details</h1><p>View complete information for the selected shift.</p></div><button type="button" className="sm-button-outline store-config-back-button" onClick={onBack}><i className="bi bi-arrow-left" /> Back to Shift Management</button></header>
     <section className="sm-detail-overview">
       <span className={`sm-detail-status ${shift.status.toLowerCase()}`}><i className={`bi ${shift.status === "Closed" ? "bi-check-lg" : "bi-clock"}`} /> {shift.status}</span>
-      <div className="sm-info-block"><h2><i className="bi bi-clock" /> Shift Information</h2><dl><div><dt>Shift ID</dt><dd>{shift.id}</dd></div><div><dt>Shift Date</dt><dd>{dateLabel(shift.date)} {shift.date && `(${new Date(`${shift.date}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long" })})`}</dd></div><div><dt>Status</dt><dd><span className={`sm-status ${shift.status.toLowerCase()}`}>{shift.status}</span></dd></div><div><dt>Duration</dt><dd>{shift.duration}</dd></div><div><dt>Store</dt><dd>{store?.name || store?.storeName || "—"}</dd></div></dl></div>
+      <div className="sm-info-block"><h2><i className="bi bi-clock" /> Shift Information</h2><dl><div><dt>Shift ID</dt><dd>{shift.id}</dd></div><div><dt>Title</dt><dd>{shift.title || "—"}</dd></div><div><dt>Shift Date</dt><dd>{dateLabel(shift.date)} {shift.date && `(${new Date(`${shift.date}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long" })})`}</dd></div><div><dt>Status</dt><dd><span className={`sm-status ${shift.status.toLowerCase()}`}>{shift.status}</span></dd></div><div><dt>Duration</dt><dd>{shift.duration}</dd></div><div><dt>Store</dt><dd>{store?.name || store?.storeName || "—"}</dd></div></dl></div>
       <div className="sm-info-block"><h2><i className="bi bi-person-circle" /> Opened By</h2><dl><div><dt>Employee</dt><dd>{shift.openedBy || "—"}{shift.openedCode ? ` (${shift.openedCode})` : ""}</dd></div><div><dt>Device</dt><dd>{shift.openDevice || "—"}</dd></div><div><dt>Open Time</dt><dd>{timeLabel(shift.openTime)}</dd></div><div><dt>Opening Balance</dt><dd>{money(shift.openingBalance)}</dd></div></dl></div>
       <div className="sm-info-block"><h2><i className="bi bi-person-circle" /> Closed By</h2><dl><div><dt>Employee</dt><dd>{shift.closedBy ? `${shift.closedBy}${shift.closedCode ? ` (${shift.closedCode})` : ""}` : "—"}</dd></div><div><dt>Device</dt><dd>{shift.closeDevice || "—"}</dd></div><div><dt>Close Time</dt><dd>{timeLabel(shift.closeTime)}</dd></div><div><dt>Closing Balance</dt><dd>{money(shift.closingBalance)}</dd></div></dl></div>
     </section>
-    <section className="sm-detail-data-card"><div className="sm-metric-grid">{metrics.map(([label, value, icon]) => <div className="sm-metric" key={label}><span className="sm-metric-icon"><i className={`bi ${icon}`} aria-hidden="true" /></span><span className="sm-metric-copy"><span>{label}</span><strong>{label === "Total Orders" || label === "Void Items" || label === "Cancelled Orders" ? count(value) : money(value)}</strong></span></div>)}</div>
-      <div className="sm-detail-tables"><section><h3><i className="bi bi-file-earmark-text" /> Transaction Summary</h3><table><thead><tr><th>Payment Method</th><th>Amount</th></tr></thead><tbody>{["Cash", "Card", "EBT", "Pay Later"].map((method) => <tr key={method}><td>{method}</td><td>{money(method === "Cash" ? shift.cashSales : method === "Card" ? shift.cardSales : method === "EBT" ? shift.ebtSales : shift.payLater)}</td></tr>)}<tr className="sm-total-row"><td>Total</td><td>{money(shift.paymentTotal)}</td></tr></tbody></table></section><section><h3><i className="bi bi-cash-stack" /> Cash Details</h3><table><thead><tr><th>Cash Details</th><th>Amount</th></tr></thead><tbody><tr><td>Opening Balance</td><td>{money(shift.openingBalance)}</td></tr><tr><td>Safe Drop</td><td>{money(shift.safeDrop)}</td></tr><tr><td>Closing Balance</td><td>{money(shift.closingBalance)}</td></tr><tr className="sm-difference-row"><td>Over/Short</td><td>{money(difference)}</td></tr></tbody></table></section></div>
+    <section className="sm-detail-data-card"><div className="sm-metric-grid">{metrics.map(([label, value, icon]) => <div className="sm-metric" key={label}><span className="sm-metric-icon"><i className={`bi ${icon}`} aria-hidden="true" /></span><span className="sm-metric-copy"><span>{label}</span><strong>{value == null ? "—" : ["Total Orders", "Void Items", "Cancelled Orders", "Assigned Staff"].includes(label) ? count(value) : money(value)}</strong></span></div>)}</div>
+      <div className="sm-detail-tables"><section><h3><i className="bi bi-file-earmark-text" /> Transaction Summary</h3><table><thead><tr><th>Payment Method</th><th>Amount</th></tr></thead><tbody>{["Cash", "Card", "EBT", "Pay Later"].map((method) => { const value = method === "Cash" ? shift.cashSales : method === "Card" ? shift.cardSales : method === "EBT" ? shift.ebtSales : shift.payLater; return <tr key={method}><td>{method}</td><td>{value == null ? "—" : money(value)}</td></tr>; })}<tr className="sm-total-row"><td>Total Sales</td><td>{shift.sales == null ? "—" : money(shift.sales)}</td></tr></tbody></table></section><section><h3><i className="bi bi-cash-stack" /> Cash Details</h3><table><thead><tr><th>Cash Details</th><th>Amount</th></tr></thead><tbody><tr><td>Opening Balance</td><td>{shift.openingBalance == null ? "—" : money(shift.openingBalance)}</td></tr><tr><td>Safe Drop Total</td><td>{shift.safeDrop == null ? "—" : money(shift.safeDrop)}</td></tr><tr><td>Closing Balance</td><td>{shift.closingBalance == null ? "—" : money(shift.closingBalance)}</td></tr><tr className="sm-difference-row"><td>Over/Short</td><td>{difference == null ? "—" : money(difference)}</td></tr></tbody></table></section></div>
+      {(shift.notes || shift.shiftClosingNotes) && <div className="sm-detail-tables"><section>{shift.notes && <><h3>Shift Notes</h3><p>{shift.notes}</p></>}{shift.shiftClosingNotes && <><h3>Closing Notes</h3><p>{shift.shiftClosingNotes}</p></>}</section></div>}
     </section>
   </section>;
 }

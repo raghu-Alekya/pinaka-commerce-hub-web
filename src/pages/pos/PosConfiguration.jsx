@@ -13,6 +13,7 @@ import { RegisterConfiguration, registerRows } from "./cash-registers/RegisterCo
 import { MappingConfiguration, mappingRows } from "./terminal-mappings/MappingConfiguration";
 import { SafeConfiguration } from "./safe-drop/SafeConfiguration";
 import { PrinterSettings } from "./printer-settings/PrinterSettings";
+import { CustomerDisplayPromotionalImages } from "./customer-display-promotional-images/promotional_images";
 import { getPosCashRegisters } from "./cash-registers/api";
 import { getPosTerminalMappings } from "./terminal-mappings/api";
 
@@ -114,6 +115,15 @@ const configurationCards = [
         title: "Printer Settings",
         description: "Add a receipt logo, header, and footer for this store.",
         component: "printer-settings",
+        enabled: true,
+    },
+    {
+        id: "customer-display-promotional-images",
+        icon: "images",
+        iconClass: "pink",
+        title: "Customer Display Promotional Images",
+        description: "Manage promotional images shown on customer displays.",
+        component: "customer-display-promotional-images",
         enabled: true,
     },
 ];
@@ -262,6 +272,9 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
             case "printer-settings":
                 return <PrinterSettings onBack={() => requestLeave(null)} />;
 
+            case "customer-display-promotional-images":
+                return <CustomerDisplayPromotionalImages onBack={() => requestLeave(null)} />;
+
             default:
                 return null;
         }
@@ -353,4 +366,5 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
         </div>
     );
 }
+
 

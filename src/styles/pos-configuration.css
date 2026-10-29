@@ -4998,3 +4998,28 @@
 ):hover:not(:disabled) {
   border: 0 !important;
 }
+
+/* Customer display promotional images */
+.pc-promo-screen > .pc-card h3 { margin: 0 0 22px; color: #17243b; font-size: 17px; }
+.pc-promo-enable { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 24px; align-items: start; color: #26344d; font-weight: 600; }
+.pc-promo-enable > span:last-child { display: grid; justify-items: start; gap: 8px; }
+.pc-promo-enable input { width: 20px; height: 20px; accent-color: #5143bc; }
+.pc-promo-enable small { color: #687894; font-size: 13px; font-weight: 400; }
+.pc-promo-gallery { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+.pc-promo-item { width: 152px; min-width: 0; text-align: center; }
+.pc-promo-preview { display: grid; width: 152px; height: 152px; place-items: center; overflow: hidden; border: 1px solid #dce3ed; background: #f8fafc; }
+.pc-promo-preview img { width: 100%; height: 100%; object-fit: contain; }
+.pc-promo-preview > i { color: #98a4b6; font-size: 28px; }
+.pc-promo-name { display: block; overflow: hidden; margin-top: 6px; color: #687894; text-overflow: ellipsis; white-space: nowrap; }
+.pc-promo-remove { margin-top: 8px; border: 0; background: transparent; color: #d92d20; font: inherit; cursor: pointer; }
+.pc-promo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 28px; }
+.pc-promo-actions > .pc-button, .pc-promo-url > .pc-button { min-height: 48px; padding: 11px 20px; border-color: #6957d5; color: #5143bc; font-size: 13px; }
+.pc-promo-url { display: flex; flex: 1 1 320px; min-width: 0; gap: 8px; }
+.pc-promo-url input { flex: 1 1 auto; min-width: 0; padding: 8px 10px; border: 1px solid #d9e2ef; border-radius: 6px; font: inherit; }
+.pc-promo-url > .pc-button { flex: 0 0 auto; white-space: nowrap; }
+@media (max-width: 650px) {
+  .pc-promo-enable { grid-template-columns: 1fr; gap: 10px; }
+  .pc-promo-actions, .pc-promo-url { width: 100%; }
+  .pc-promo-url input { flex: 1; min-width: 0; }
+  .pc-promo-actions > .pc-button { flex: 1 1 auto; }
+}
