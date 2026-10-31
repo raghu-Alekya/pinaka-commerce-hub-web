@@ -397,7 +397,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
         return "";
 
       case "pinCode":
-        return trimmed ? "" : "PIN Code is required.";
+        return trimmed ? "" : "Postal Code is required.";
 
 
       case "country":
@@ -876,27 +876,6 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
                 description="Enter the employee's address details."
               />
 
-              <div className="employee-form-grid two-columns">
-                <FormField
-                  label="Address Line 1"
-                  required
-                  name="address1"
-                  placeholder="Enter address line 1"
-                  value={formData.address1}
-                  onChange={handleChange}
-                  error={errors.address1}
-                />
-
-                <FormField
-                  label="Address Line 2"
-                  name="address2"
-                  placeholder="Enter address line 2 (optional)"
-                  value={formData.address2}
-                  onChange={handleChange}
-                  error={errors.address2}
-                />
-              </div>
-
               {locationOptions.error && <p role="alert" className="field-error">{locationOptions.error}</p>}
               <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
                 <SelectField label="Country" required name="country" value={formData.country}
@@ -908,7 +887,24 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
                 <SelectField label="City" required name="city" value={formData.city}
                   onChange={handleChange} error={errors.city} options={locationOptions.cities}
                   placeholder={formData.state ? "Select city" : "Select state first"} disabled={locationOptions.loading || !formData.state} />
-                <FormField label="PIN Code" required name="pinCode" placeholder="Enter PIN code"
+                <FormField
+                  label="Address Line 1"
+                  required
+                  name="address1"
+                  placeholder="Enter address line 1"
+                  value={formData.address1}
+                  onChange={handleChange}
+                  error={errors.address1}
+                />
+                <FormField
+                  label="Address Line 2"
+                  name="address2"
+                  placeholder="Enter address line 2 (optional)"
+                  value={formData.address2}
+                  onChange={handleChange}
+                  error={errors.address2}
+                />
+                <FormField label="Postal Code" required name="pinCode" placeholder="Enter postal code"
                   value={formData.pinCode} onChange={handleChange} error={errors.pinCode} />
               </div>
             </section>

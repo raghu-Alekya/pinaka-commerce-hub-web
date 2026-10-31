@@ -1319,6 +1319,8 @@
 
 .mv-create-page { background: #f6f8fc; border: 1px solid #dfe4ee; border-radius: 10px; overflow: hidden; }
 .mv-create-page > .mv-header { border: 0; border-radius: 0; margin: 0; padding: 20px 24px 10px; }
+.mv-create-header-copy { min-width: 0; }
+.mv-create-page > .mv-header .mv-create-header-copy p { margin-top: 6px; color: #75819a; font-size: 14px; }
 .mv-existing-page .mv-existing-title { display: flex; align-items: center; gap: 8px; }
 .mv-existing-page .mv-existing-title > i { color: #5143bc; font-size: 17px; }
 .mv-create-content { padding: 32px 24px; }

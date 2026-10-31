@@ -764,7 +764,10 @@ useEffect(() => {
     if (modal?.type === "create") return (
         <section className="merchant-vendors mv-create-page">
             <header className="mv-card mv-header">
-                <h2>Add New Vendor</h2>
+                <div className="mv-create-header-copy">
+                    <h2>Add New Vendor</h2>
+                    <p>Add vendor details for this merchant.</p>
+                </div>
                 <button type="button" className="store-config-back-button" disabled={busy} onClick={close}>← Back to Vendors</button>
             </header>
             <div className="mv-create-content"><Vendors formOnly onCreate={createAndAssignVendor} onCancel={close} /></div>

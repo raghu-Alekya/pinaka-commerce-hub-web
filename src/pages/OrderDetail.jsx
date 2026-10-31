@@ -110,16 +110,16 @@ function lineItemSku(item) {
     || "";
 }
 
-function productSkuMap(response) {
-  const products = extractProducts(response).map((product) => normalizeProduct(product));
-  const skuById = new Map();
-  products.forEach((product) => {
-    if (!product.sku) return;
-    [product.id, product.wordpressId].filter(Boolean).forEach((id) => {
-      skuById.set(String(id), product.sku);
+function productCatalogMap(response) {
+  const productByKey = new Map();
+  extractProducts(response).forEach((raw) => {
+    const product = normalizeProduct(raw);
+    const catalogProduct = { ...product, raw, rawPayload: asObject(raw.payload) };
+    [product.id, product.wordpressId, product.sku].filter(Boolean).forEach((key) => {
+      productByKey.set(String(key).trim().toLowerCase(), catalogProduct);
     });
   });
-  return skuById;
+  return productByKey;
 }
 
 function employeeNameMap(response) {
@@ -160,7 +160,7 @@ function displayPlacedBy(value, names) {
   return names[text.toLowerCase()] || names[text.replace(/\D/g, "").replace(/^0+/, "").toLowerCase()] || text;
 }
 
-function catalogSkuForLineItem(item, skuById) {
+function catalogProductForLineItem(item, productByKey) {
   const product = item.product || item.productDetails || item.product_details || {};
   const ids = [
     item.productId,
@@ -172,11 +172,21 @@ function catalogSkuForLineItem(item, skuById) {
     item.variation_id,
   ];
   for (const id of ids) {
-    if (id !== undefined && id !== null && skuById.has(String(id))) {
-      return skuById.get(String(id));
+    if (id !== undefined && id !== null && productByKey.has(String(id).trim().toLowerCase())) {
+      return productByKey.get(String(id).trim().toLowerCase());
     }
   }
-  return "";
+  const sku = lineItemSku(item);
+  return sku ? productByKey.get(String(sku).trim().toLowerCase()) : undefined;
+}
+
+function numericPrice(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || String(value).trim() === "") continue;
+    const amount = Number(value);
+    if (Number.isFinite(amount) && amount >= 0) return amount;
+  }
+  return undefined;
 }
 
 function buildView(payload) {
@@ -207,8 +217,12 @@ function buildView(payload) {
     name: item.name || item.productName || item.product_name || item.title || "Item",
     sku: lineItemSku(item),
     quantity: item.quantity ?? item.qty,
-    subtotal: item.subtotal ?? item.totalPrice ?? item.total_price ?? item.total,
-    total: item.total ?? item.totalPrice ?? item.total_price ?? item.subtotal,
+    subtotal: item.subtotal ?? item.subtotalAmount ?? item.subtotal_amount ?? item.originalPrice ?? item.original_price
+      ?? item.priceBeforeDiscount ?? item.price_before_discount ?? item.regularPrice ?? item.regular_price
+      ?? item.totalPrice ?? item.total_price ?? item.total,
+    total: item.total ?? item.discountedPrice ?? item.discounted_price ?? item.totalPrice ?? item.total_price ?? item.subtotal,
+    originalUnitPrice: item.regularPrice ?? item.regular_price ?? item.originalPrice ?? item.original_price
+      ?? item.priceBeforeDiscount ?? item.price_before_discount ?? item.price,
   }));
   const taxLines = [storeOrder.taxLines, storeOrder.tax_lines, order.taxLines, order.tax_lines, request.tax_lines]
     .map(asArray).find((lines) => lines.length) || [];
@@ -259,6 +273,8 @@ function buildView(payload) {
   if (!discountLines.length && Number(discount) > 0) {
     discountLines.push({ name: "Discount", type: "Order discount", amount: Number(discount) });
   }
+  const hasDiscount = Number(discount) > 0 || Number(merchantDiscount) > 0
+    || discountLines.length > 0 || couponLines.length > 0;
   const taxLineTotal = taxLines.reduce(
     (sum, line) => sum + (Number(line.tax_total ?? line.taxTotal ?? line.amount) || 0),
     0,
@@ -322,6 +338,7 @@ function buildView(payload) {
     fees: formatMoney(feeTotal, currency),
     total: formatMoney(shownTotal, currency),
     lineItems,
+    hasDiscount,
     feeLines,
     taxLines,
     couponLines,
@@ -381,16 +398,60 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
             .some((value) => orderKeys.has(String(value).trim().toLowerCase())));
           nextView = { ...nextView, payments: matchingPayments };
         }
-        if (storeId && nextView.lineItems.some((item) => !item.sku)) {
+        if (storeId && (nextView.hasDiscount || nextView.lineItems.some((item) => !item.sku))) {
           try {
             const catalog = await productsApi.getCatalog(storeId);
-            const skuById = productSkuMap(catalog);
+            const productByKey = productCatalogMap(catalog);
             nextView = {
               ...nextView,
               lineItems: nextView.lineItems.map((item) => ({
-                ...item,
-                sku: item.sku || catalogSkuForLineItem(item, skuById),
-              })),
+                item,
+                catalogProduct: catalogProductForLineItem(item, productByKey),
+              })).map(({ item, catalogProduct }) => {
+                const quantity = Number(item.quantity);
+                const divisor = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+                const rawProduct = catalogProduct?.raw || {};
+                const productPayload = catalogProduct?.rawPayload || {};
+                const itemProduct = asObject(item.product || item.productDetails || item.product_details);
+                const itemMeta = asArray(item.meta_data || item.metaData);
+                const subtotal = numericPrice(item.subtotal, item.total);
+                const total = numericPrice(item.total, item.subtotal);
+                const discountAmount = numericPrice(
+                  item.discountAmount,
+                  item.discount_amount,
+                  item.discount,
+                  metaValueFrom(itemMeta, ["_pos_auto_discount", "pos_auto_discount", "discount_amount"]),
+                );
+                let originalUnitPrice = numericPrice(
+                  item.regularPrice,
+                  item.regular_price,
+                  item.originalPrice,
+                  item.original_price,
+                  itemProduct.regularPrice,
+                  itemProduct.regular_price,
+                  metaValueFrom(itemMeta, ["regular_price", "_regular_price", "original_price"]),
+                  rawProduct.regularPrice,
+                  rawProduct.regular_price,
+                  productPayload.regularPrice,
+                  productPayload.regular_price,
+                  item.price,
+                  itemProduct.price,
+                );
+                if (originalUnitPrice === undefined && subtotal !== undefined) {
+                  originalUnitPrice = subtotal / divisor;
+                }
+                const discountedUnitPrice = total === undefined ? undefined : total / divisor;
+                if (discountAmount !== undefined && discountedUnitPrice !== undefined
+                  && (originalUnitPrice === undefined || originalUnitPrice <= discountedUnitPrice)) {
+                  originalUnitPrice = discountedUnitPrice + discountAmount / divisor;
+                }
+                return {
+                  ...item,
+                  sku: item.sku || catalogProduct?.sku || "",
+                  originalUnitPrice,
+                  discountedUnitPrice,
+                };
+              }),
             };
           } catch {
             // Keep the order details available when the catalog cannot be read.
@@ -453,14 +514,31 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
 
           <DetailBlock title="Line items">
             <Lines
-              columns={["Product", "SKU", "Qty", "Subtotal", "Total"]}
-              rows={view.lineItems.map((item) => [
-                item.name || item.productName || "Item",
-                item.sku || "—",
-                item.quantity ?? "—",
-                formatMoney(item.subtotal ?? item.total, view.currency),
-                formatMoney(item.total ?? item.subtotal, view.currency),
-              ])}
+              columns={["Product", "SKU", "Qty", "Price"]}
+              rows={view.lineItems.map((item) => {
+                const quantity = Number(item.quantity);
+                const divisor = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+                const originalUnitPrice = Number(item.originalUnitPrice ?? Number(item.subtotal ?? item.total) / divisor);
+                const discountedUnitPrice = Number(item.discountedUnitPrice ?? Number(item.total ?? item.subtotal) / divisor);
+                const hasDiscount = Number.isFinite(originalUnitPrice)
+                  && Number.isFinite(discountedUnitPrice)
+                  && originalUnitPrice > discountedUnitPrice;
+                return [
+                  item.name || item.productName || "Item",
+                  item.sku || "—",
+                  item.quantity ?? "—",
+                  <span className="order-line-price">
+                    {hasDiscount && (
+                      <del className="order-line-price-original">
+                        {formatMoney(originalUnitPrice, view.currency)}
+                      </del>
+                    )}
+                    <strong className={hasDiscount ? "order-line-price-discounted" : undefined}>
+                      {formatMoney(hasDiscount ? discountedUnitPrice : originalUnitPrice, view.currency)}
+                    </strong>
+                  </span>,
+                ];
+              })}
             />
           </DetailBlock>
 

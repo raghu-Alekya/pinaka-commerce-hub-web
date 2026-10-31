@@ -992,6 +992,22 @@ input {
     text-align: left;
 }
 
+.order-line-price {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.order-line-price-original {
+    color: #8791a3;
+    font-size: 13px;
+}
+
+.order-line-price-discounted {
+    color: #16834a;
+}
+
 @media (max-width: 900px) {
     .order-detail-grid {
         grid-template-columns: 1fr;
