@@ -228,7 +228,6 @@ export function DeviceMapping({ onBack }) {
       <button type="button" className="pc-button pos-config-heading-back" onClick={backToMapped}><i className="bi bi-arrow-left" aria-hidden="true" /> Back to Mapped Devices</button>
     </header>
     <div className="mv-existing-content">
-      <p className="mv-device-scope">Only active devices registered to this merchant are available.</p>
       {error && <p role="alert" className="mv-error">{error}</p>}
       <FiltersBar
         searchValue={search}
@@ -283,4 +282,4 @@ export function DeviceMapping({ onBack }) {
         itemLabel="entries" showWhenEmpty pageSizeOptions={[5, 10, 25, 50, 100]} />
     </section>
   </section>;
-}  
+}

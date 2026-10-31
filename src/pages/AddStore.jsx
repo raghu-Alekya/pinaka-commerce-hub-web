@@ -97,6 +97,16 @@ function validatePostalCode(value, country) {
     : /^[A-Z0-9](?:[A-Z0-9 -]{0,10}[A-Z0-9])$/i.test(postalCode);
   return valid ? "" : `Enter a valid postal code for ${country || "this country"}.`;
 }
+
+function phoneInputValue(value, callingCode) {
+  const phone = String(value || "").trim();
+  if (!phone) return "";
+  const digits = phone.replace(/\D/g, "");
+  if (phone.startsWith("+")) return digits;
+  if (phone.startsWith("00")) return digits;
+  const dial = String(callingCode || "").replace(/\D/g, "");
+  return dial && !digits.startsWith(dial) ? `${dial}${digits}` : digits;
+}
 const STEPS = [
   "Store Details",
   "Subscription",
@@ -2036,7 +2046,13 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       }
       const postalCodeError = validatePostalCode(store.zip, store.country);
       if (postalCodeError) addError("Zip / Postal Code", postalCodeError);
-      const phoneError = validatePhoneForCountry(store.phone, store.country);
+      if (String(store.phone || "").trim() && !String(store.country || "").trim())
+        addError("Country", "Select the store country for this phone number.");
+      const phoneError = validatePhoneForCountry(
+        store.phone,
+        store.country,
+        locationOptions.selectedCountry?.phoneCode,
+      );
       if (phoneError) addError("Store Phone", phoneError);
       if (store.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.email.trim()))
         addError("Store Email", "Enter a valid email address.");
@@ -2954,15 +2970,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <div className={`sf-field sf-phone-field${invalidStoreFields.has("Store Phone") ? " sf-field-invalid" : ""}`}>
               <label htmlFor="store-phone">Store Phone <span style={{ color: "#ef3340" }}>*</span></label>
               <PhoneInput
+                key={locationOptions.selectedCountry?.iso2 || "store-phone"}
                 country={locationOptions.selectedCountry?.iso2?.toLowerCase() || "in"}
                 enableSearch
                 countryCodeEditable={false}
-                value={store.phone}
-                onChange={(value, countryData) => {
-                  updateStore("phone", value.replace(/\D/g, ""));
-                  if (countryData?.name && countryData.name !== store.country) {
-                    changeCountry(countryData.name);
-                  }
+                value={phoneInputValue(store.phone, locationOptions.selectedCountry?.phoneCode)}
+                onChange={(value) => {
+                  const digits = value.replace(/\D/g, "");
+                  updateStore("phone", digits ? `+${digits}` : "");
                 }}
                 inputProps={{ id: "store-phone", name: "phone", type: "tel", autoComplete: "tel", "aria-invalid": invalidStoreFields.has("Store Phone") }}
                 placeholder="Enter phone number"

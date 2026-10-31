@@ -29,6 +29,15 @@ const timeLabel = (value) => {
     hour: "2-digit", minute: "2-digit", hour12: true,
   });
 };
+const tableTimeLabel = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "—";
+  return <span className="sm-table-datetime">
+    <span>{date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>
+    <span>{date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
+  </span>;
+};
 const money = (value) => {
   const amount = Number(value);
   return `$${(Number.isFinite(amount) ? amount : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -254,7 +263,7 @@ if (selectedShift) {
     </div> : null}
 
       <div className="sm-table-wrap mb-0"><table className="sm-table"><thead><tr><th>Opened By</th><th>Open Time</th><th>Closed By</th><th>Close Time</th><th>Duration</th><th>Opening Balance</th><th>Closing Balance</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>{visible.map((shift) => <tr key={shift.id} style={{ cursor: "pointer" }} onClick={(event) => { if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) return; setSelectedShift(shift); }}><td>{shift.openedBy || "—"}{shift.openedCode && <small>({shift.openedCode})</small>}</td><td>{timeLabel(shift.openTime)}</td><td>{shift.closedBy ? <>{shift.closedBy}{shift.closedCode && <small>({shift.closedCode})</small>}</> : "—"}</td><td>{timeLabel(shift.closeTime)}</td><td>{shift.duration}</td><td>{money(shift.openingBalance)}</td><td>{money(shift.closingBalance)}</td><td><span className={`sm-status ${shift.status.toLowerCase()}`}>{shift.status}</span></td><td><ListActions onView={() => setSelectedShift(shift)} viewLabel={`View shift ${shift.id}`} /></td></tr>)}
+        <tbody>{visible.map((shift) => <tr key={shift.id} style={{ cursor: "pointer" }} onClick={(event) => { if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) return; setSelectedShift(shift); }}><td>{shift.openedBy || "—"}{shift.openedCode && <small>({shift.openedCode})</small>}</td><td>{tableTimeLabel(shift.openTime)}</td><td>{shift.closedBy ? <>{shift.closedBy}{shift.closedCode && <small>({shift.closedCode})</small>}</> : "—"}</td><td>{tableTimeLabel(shift.closeTime)}</td><td>{shift.duration}</td><td>{money(shift.openingBalance)}</td><td>{money(shift.closingBalance)}</td><td><span className={`sm-status ${shift.status.toLowerCase()}`}>{shift.status}</span></td><td><ListActions onView={() => setSelectedShift(shift)} viewLabel={`View shift ${shift.id}`} /></td></tr>)}
           {!visible.length && <tr><td colSpan={9} className="sm-empty">{loading ? "Loading shifts…" : error ? "Shift records could not be loaded." : records.length ? "No shift records match these filters." : "No shifts found for this store."}</td></tr>}
         </tbody>
       </table></div>

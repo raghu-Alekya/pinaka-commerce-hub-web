@@ -458,6 +458,15 @@ body:has(.sidebar-collapsed) .bento-modal-overlay,
   word-break: break-all;
 }
 
+.bento-field a[href^="mailto:"] {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .bento-field-value a:hover {
   text-decoration: underline;
 }

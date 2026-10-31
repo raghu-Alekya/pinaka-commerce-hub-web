@@ -1320,8 +1320,8 @@ const [statusFilter, setStatusFilter] = useState("");
                     </td>
                     <td>
                       <div className="contact-info">
-                        <strong>{m.email || "—"}</strong>
-                        <span>{m.phone || "—"}</span>
+                        <strong>{m.phone || "—"}</strong>
+                        <span>{m.email || "—"}</span>
                       </div>
                     </td>
                     <td><div className="contact-info"><strong>{m.state || "—"}</strong><span>{m.country || "—"}</span></div></td>

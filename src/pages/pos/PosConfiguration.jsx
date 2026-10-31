@@ -285,7 +285,7 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
         <PosSettingsContext.Provider value={settings}>
         <div className="page-content pos-page-content">
 
-            <div className="pos-config-detail-card">
+            <div className={`pos-config-detail-card${selectedConfig === "device-mapping" ? " pos-config-device-mapping-card" : ""}`}>
                 <fieldset className="pos-screen-lock" disabled={busy} aria-busy={busy}>{renderSelectedContent()}</fieldset>
             </div>
             {notice && <div className="pos-update-notice" role="status">{notice}</div>}
