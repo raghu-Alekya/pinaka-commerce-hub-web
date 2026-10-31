@@ -3922,6 +3922,92 @@
   margin: 0;
 
 }
+.store-workspace-page .store-workspace-card .merchant-vendors.mv-device-mapped-page {
+  padding: 24px 28px;
+  border: 1px solid #dfe4ee;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(28, 43, 77, .045);
+}
+.store-workspace-page .store-workspace-card .merchant-vendors.mv-device-mapped-page > .mv-header {
+  margin: 0;
+  padding: 0 0 24px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.store-workspace-page .store-workspace-card .merchant-vendors.mv-device-mapped-page .mv-device-list-card {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.store-workspace-page .store-workspace-card .merchant-vendors.mv-device-picker.mv-existing-page > .mv-header {
+  min-height: 0;
+  margin: 0;
+  padding: 24px 28px 16px !important;
+  align-items: center;
+  box-sizing: border-box !important;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+.store-workspace-page .store-workspace-card .merchant-vendors.mv-device-picker.mv-existing-page {
+  margin: 0;
+  padding: 0;
+  border: 1px solid #dfe4ee;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(28, 43, 77, .045);
+  overflow: hidden;
+}
+.store-workspace-page .store-workspace-card:has(.pos-config-device-mapping-card) {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.store-workspace-page .store-workspace-card > .pos-page-content .pos-config-device-mapping-card {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.store-workspace-page .store-workspace-card > .pos-page-content .pos-config-device-mapping-card .mv-device-picker.mv-existing-page {
+  border: 1px solid #dfe4ee !important;
+  border-radius: 14px;
+  background: #fff !important;
+  box-shadow: 0 8px 24px rgba(28, 43, 77, .045) !important;
+}
+.store-workspace-page .store-workspace-card .merchant-vendors.mv-device-picker.mv-existing-page > .mv-existing-content {
+  margin: 0;
+  padding: 0 28px 12px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+}
+.store-workspace-page .store-workspace-card .merchant-vendors.mv-device-picker.mv-existing-page > .mv-existing-footer {
+  margin: 0;
+  padding: 8px 28px 20px;
+  align-items: center;
+  background: #fff;
+}
+@media (max-width: 600px) {
+  .store-workspace-page .store-workspace-card .merchant-vendors.mv-device-picker.mv-existing-page > .mv-header {
+    margin: 0;
+    padding: 16px 16px 12px !important;
+  }
+  .store-workspace-page .store-workspace-card .merchant-vendors.mv-device-picker.mv-existing-page > .mv-existing-content {
+    margin: 0;
+    padding: 0 16px 12px;
+  }
+  .store-workspace-page .store-workspace-card .merchant-vendors.mv-device-picker.mv-existing-page > .mv-existing-footer {
+    margin: 0;
+    padding: 8px 16px 16px;
+    align-items: stretch;
+  }
+}
 .store-workspace-page .store-workspace-card .merchant-vendors .mv-popup-actions {
   margin-left: auto;
   padding: 0;

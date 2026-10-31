@@ -272,14 +272,9 @@ export default function StoreConfiguration() {
   }, [section]);
   const [openGroups, setOpenGroups] = useState(() => new Set([activeGroupId]));
 
-  /*
-   * Keep the active section's group open without collapsing other groups.
-   */
+  /* Keep the active section's group open and collapse other groups. */
   useLayoutEffect(() => {
-    setOpenGroups((current) => {
-      if (current.has(activeGroupId)) return current;
-      return new Set([...current, activeGroupId]);
-    });
+    setOpenGroups(new Set([activeGroupId]));
   }, [activeGroupId]);
 
   /* =======================================================
@@ -599,10 +594,9 @@ export default function StoreConfiguration() {
                         isOpen ? "open" : ""
                       }`}
                       onClick={() => setOpenGroups((current) => {
-                        const next = new Set(current);
-                        if (next.has(group.id)) next.delete(group.id);
-                        else next.add(group.id);
-                        return next;
+                        return current.has(group.id)
+                          ? new Set()
+                          : new Set([group.id]);
                       })}
                       aria-expanded={isOpen}
                     >

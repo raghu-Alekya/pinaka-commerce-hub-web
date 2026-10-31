@@ -70,7 +70,14 @@
 .sm-table-wrap::-webkit-scrollbar-track { border-radius:8px; background:#f1f4f9; }
 .sm-table-wrap::-webkit-scrollbar-thumb { border:2px solid #f1f4f9; border-radius:8px; background:#3c465a; }
 .sm-table-wrap::-webkit-scrollbar-thumb:hover { background:#3c465a; }
-.sm-table { width:100%; min-width:0; table-layout:fixed; border-collapse:separate; border-spacing:0; }
+.sm-table { width:100%; min-width:1250px; table-layout:fixed; border-collapse:separate; border-spacing:0; }
+.sm-table :is(th, td):nth-child(1), .sm-table :is(th, td):nth-child(3) { width:170px; }
+.sm-table :is(th, td):nth-child(2), .sm-table :is(th, td):nth-child(4) { width:170px; white-space:nowrap; }
+.sm-table :is(th, td):nth-child(5) { width:105px; white-space:nowrap; }
+.sm-table :is(th, td):nth-child(6), .sm-table :is(th, td):nth-child(7) { width:140px; white-space:nowrap; }
+.sm-table :is(th, td):nth-child(8) { width:110px; white-space:nowrap; }
+.sm-table :is(th, td):nth-child(9) { width:90px; white-space:nowrap; }
+.sm-table-datetime { display:flex; flex-direction:column; gap:2px; white-space:nowrap; }
 .sm-table th, .sm-table td { min-width:0; padding:13px 12px; border-right:1px solid #e2eaf4; border-bottom:1px solid #e2eaf4; text-align:left; vertical-align:middle; white-space:normal; overflow-wrap:anywhere; }
 .sm-table th:first-child, .sm-table td:first-child { border-left:1px solid #e2eaf4; }
 .sm-table thead th { height:62px; background:#f5f8fc; color:#17264a; font-size:14px; font-weight:700; line-height:1.4; }
