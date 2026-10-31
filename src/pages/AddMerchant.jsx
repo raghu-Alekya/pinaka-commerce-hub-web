@@ -494,7 +494,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
             <h1>Review &amp; Subscribe</h1>
             <p className="pch-muted">Review merchant, plan, and billing information.</p>
             <div className="pch-review-grid">
-              <Panel title="Merchant Details" action={editing && <button className="pch-review-edit" type="button" aria-label="Edit merchant details" title="Edit merchant details" onClick={() => { setError(""); setStep(0); }}><Pencil size={16} aria-hidden="true" /><span>Edit</span></button>}>
+              <Panel title="Merchant Details" action={editing && <button className="pch-review-edit" type="button" aria-label="Edit merchant details" data-tooltip="Edit merchant details" onClick={() => { setError(""); setStep(0); }}><Pencil size={16} aria-hidden="true" /><span>Edit</span></button>}>
                 <dl className="pch-review-list">
                   <div><dt>Business Name</dt><dd>{merchant.business || merchant.display || "—"}</dd></div>
                   <div><dt>Merchant Code</dt><dd>{merchant.code || "Auto Generated"}</dd></div>
@@ -505,7 +505,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
                   <div><dt>Business Address</dt><dd>{address || "—"}</dd></div>
                 </dl>
               </Panel>
-              <Panel title="Plan Details" action={editing && <button className="pch-review-edit" type="button" aria-label="Edit plan details" title="Edit plan details" onClick={() => { setError(""); setStep(1); }}><Pencil size={16} aria-hidden="true" /><span>Edit</span></button>}>
+              <Panel title="Plan Details" action={editing && <button className="pch-review-edit" type="button" aria-label="Edit plan details" data-tooltip="Edit plan details" onClick={() => { setError(""); setStep(1); }}><Pencil size={16} aria-hidden="true" /><span>Edit</span></button>}>
                 <dl className="pch-review-list">
                   <div><dt>Subscription Plan</dt><dd>{plan?.name || "—"}</dd></div>
                   <div><dt>Store Type</dt><dd>{plan ? getPlanStoreType(plan, storeTypes) : "—"}</dd></div>

@@ -441,32 +441,20 @@
 
 /* =========================================================
    VENDORS TABLE: STATUS & ACTIONS COLUMN SPACING
-   Scoped strictly under .merchant-vendors table, .vendor-screen table, .vendor-history-screen table
+   Scoped strictly under .merchant-vendors table
    ========================================================= */
 
 /* Let the preceding vendor details/name column take up remaining auto / 1fr width */
 .merchant-vendors table th:nth-child(2),
-.merchant-vendors table td:nth-child(2),
-.vendor-screen table th:nth-child(2),
-.vendor-screen table td:nth-child(2),
-.vendor-history-screen table th:nth-child(2),
-.vendor-history-screen table td:nth-child(2) {
+.merchant-vendors table td:nth-child(2) {
     width: auto !important;
 }
 
 /* 1. Status Column: fixed 110px width based on 96px badge + 8px to 12px padding, padding-right: 8px */
 .merchant-vendors table th.mv-status-th,
 .merchant-vendors table td.mv-status-cell,
-.vendor-screen table th.mv-status-th,
-.vendor-screen table td.mv-status-cell,
-.vendor-history-screen table th.mv-status-th,
-.vendor-history-screen table td.mv-status-cell,
 .merchant-vendors table th:nth-last-child(2),
-.merchant-vendors table td:nth-last-child(2),
-.vendor-screen table th:nth-last-child(2),
-.vendor-screen table td:nth-last-child(2),
-.vendor-history-screen table th:nth-last-child(2),
-.vendor-history-screen table td:nth-last-child(2) {
+.merchant-vendors table td:nth-last-child(2) {
     width: 140px !important;
     min-width: 140px !important;
     max-width: 140px !important;
@@ -479,11 +467,7 @@
 
 /* Keep Active / Inactive status badge intact without wrapping or clipping */
 .merchant-vendors table td.mv-status-cell .mv-badge,
-.vendor-screen table td.mv-status-cell .mv-badge,
-.vendor-history-screen table td.mv-status-cell .mv-badge,
-.merchant-vendors table td:nth-last-child(2) .mv-badge,
-.vendor-screen table td:nth-last-child(2) .mv-badge,
-.vendor-history-screen table td:nth-last-child(2) .mv-badge {
+.merchant-vendors table td:nth-last-child(2) .mv-badge {
     width: 96px !important;
     min-width: 96px !important;
     max-width: 96px !important;
@@ -494,11 +478,7 @@
 
 /* 2. Actions Column: fixed 90px width based on two 35px action buttons + 6px gap (~76px) + extra space */
 .merchant-vendors table th:last-child,
-.merchant-vendors table td:last-child,
-.vendor-screen table th:last-child,
-.vendor-screen table td:last-child,
-.vendor-history-screen table th:last-child,
-.vendor-history-screen table td:last-child {
+.merchant-vendors table td:last-child {
     width: 120px !important;
     min-width: 120px!important;
     max-width: 120px !important;
@@ -509,9 +489,7 @@
 }
 
 /* Align actions container left towards Status */
-.merchant-vendors table td:last-child .list-actions,
-.vendor-screen table td:last-child .list-actions,
-.vendor-history-screen table td:last-child .list-actions {
+.merchant-vendors table td:last-child .list-actions {
     display: inline-flex !important;
     justify-content: flex-start !important;
     align-items: center !important;

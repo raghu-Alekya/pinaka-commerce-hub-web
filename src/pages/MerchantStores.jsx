@@ -438,7 +438,7 @@ export default function MerchantStores({
                             <button
                               type="button"
                               className="store-name-cell store-name-link"
-                              title={`View ${storeName}`}
+                              data-tooltip={`View ${storeName}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleStoreOverview(store);
@@ -460,7 +460,7 @@ export default function MerchantStores({
                           <td>
                             <span
                               className="store-location"
-                              title={location}
+                              data-tooltip={location}
                               aria-label={`Address: ${location}`}
                             >
                               {shortLocation(location)}

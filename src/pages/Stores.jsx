@@ -447,7 +447,7 @@ useEffect(() => {
                         type="button"
                         className="store-cell stores-name-button"
                         aria-label={`View ${s.storeName}`}
-                        title="View store"
+                        data-tooltip="View store"
                         onClick={() => openView(s)}
                       >
                   

@@ -403,6 +403,28 @@
     white-space: nowrap;
 }
 
+.store-customers-table td:not(:last-child) {
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.store-customer-info,
+.store-customer-info > div:last-child {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.store-customer-info strong,
+.store-customer-info small,
+.store-customer-email {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* =========================================================
    CUSTOMER TYPE
 ========================================================= */

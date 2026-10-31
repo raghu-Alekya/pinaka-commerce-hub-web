@@ -383,7 +383,7 @@ export default function Devices() {
  
           icon={<i className="bi bi-laptop-fill" aria-hidden="true" />}
  
-          title="Total Devices"
+          data-tooltip="Total Devices"
  
           value={totalDevices}
  
@@ -395,7 +395,7 @@ export default function Devices() {
  
           icon={<i className="bi bi-check-circle-fill" aria-hidden="true" />}
  
-          title="Online Devices"
+          data-tooltip="Online Devices"
  
           value={onlineDevices}
  
@@ -407,7 +407,7 @@ export default function Devices() {
  
           icon={<i className="bi bi-pause-circle-fill" aria-hidden="true" />}
  
-          title="Offline Devices"
+          data-tooltip="Offline Devices"
  
           value={offlineDevices}
  
@@ -419,7 +419,7 @@ export default function Devices() {
  
           icon={<i className="bi bi-x-circle-fill" aria-hidden="true" />}
  
-          title="Inactive Devices"
+          data-tooltip="Inactive Devices"
  
           value={inactiveDevices}
  

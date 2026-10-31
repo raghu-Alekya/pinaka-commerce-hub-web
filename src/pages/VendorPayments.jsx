@@ -294,14 +294,14 @@ export default function VendorPayments({ viewMode } = {}) {
 
       {/* Vendors Table */}
       {view === "vendors" && (
-        <div className="vendor-history-table-scroll">
-        <table className="vendor-table">
+        <div className="vendor-history-table-scroll" style={{ width: "100%", overflowX: "auto" }}>
+        <table className="vendor-table" style={{ width: "100%", minWidth: "900px", tableLayout: "auto" }}>
 
           <thead>
             <tr>
-              <th>□</th>
-              <th>Title ↕</th>
-              <th>Date ↕</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>□</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Title ↕</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Date ↕</th>
             </tr>
           </thead>
 
@@ -310,16 +310,17 @@ export default function VendorPayments({ viewMode } = {}) {
             {filteredVendors.map((vendor) => (
               <tr key={vendor.id}>
 
-                <td>□</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>□</td>
 
-                <td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>
                   <strong>{vendor.name}</strong>
                 </td>
 
-                <td>
-                  Published
-                  <br />
-                  {vendor.date}
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>
+                  <div className="vendor-date-cell">
+                    <span className="vendor-date-status">Published</span>
+                    <span className="vendor-date-time">{vendor.date}</span>
+                  </div>
                 </td>
 
               </tr>
@@ -333,17 +334,17 @@ export default function VendorPayments({ viewMode } = {}) {
 
       {/* Vendor Payments Table */}
       {view === "payments" && (
-        <div className="vendor-history-table-scroll">
-        <table className="vendor-table">
+        <div className="vendor-history-table-scroll" style={{ width: "100%", overflowX: "auto" }}>
+        <table className="vendor-table" style={{ width: "100%", minWidth: "900px", tableLayout: "auto" }}>
 
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Vendor Name</th>
-              <th>Payment Purpose</th>
-              <th>Payment Method</th>
-              <th>Payment Amount</th>
-              <th>Date</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Title</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Vendor Name</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Payment Purpose</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Payment Method</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Payment Amount</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Date</th>
             </tr>
           </thead>
 
@@ -352,26 +353,59 @@ export default function VendorPayments({ viewMode } = {}) {
             {paginatedPayments.length ? paginatedPayments.map((payment) => (
               <tr key={payment.id}>
 
-                <td>
-                  <strong title={payment.title}>{payment.title}</strong>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>
+                  <strong
+                    className="vendor-title-cell"
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget;
+                      if (el.scrollWidth > el.clientWidth) {
+                        el.setAttribute("data-tooltip", payment.title);
+                      } else {
+                        el.removeAttribute("data-tooltip");
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.removeAttribute("data-tooltip");
+                    }}
+                  >
+                    {payment.title}
+                  </strong>
                 </td>
 
-                <td>{payment.vendor}</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>
+                  <span
+                    className="vendor-name-cell"
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget;
+                      if (el.scrollWidth > el.clientWidth) {
+                        el.setAttribute("data-tooltip", payment.vendor);
+                      } else {
+                        el.removeAttribute("data-tooltip");
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.removeAttribute("data-tooltip");
+                    }}
+                  >
+                    {payment.vendor}
+                  </span>
+                </td>
 
-                <td>{payment.purpose}</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.purpose}</td>
 
-                <td>{payment.method}</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.method}</td>
 
-                <td>$ {payment.amount}</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>$ {payment.amount}</td>
 
-                <td>
-                  Published
-                  <br />
-                  {payment.date}
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>
+                  <div className="vendor-date-cell">
+                    <span className="vendor-date-status">Published</span>
+                    <span className="vendor-date-time">{payment.date}</span>
+                  </div>
                 </td>
 
               </tr>
-            )) : <tr><td colSpan={6} className="vendor-empty-row">No vendor payments match these filters.</td></tr>}
+            )) : <tr><td colSpan={6} className="vendor-empty-row" style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>No vendor payments match these filters.</td></tr>}
 
           </tbody>
 

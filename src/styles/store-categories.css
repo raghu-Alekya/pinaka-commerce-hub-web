@@ -349,6 +349,22 @@
   vertical-align: middle;
 }
 
+.categories-table tbody td:not(:last-child) {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category-info strong,
+.tag-info strong,
+.attribute-info strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .categories-table tbody tr:last-child td {
   border-bottom: 0;
 }

@@ -197,7 +197,7 @@ export default function FeaturePermissionsOverview() {
           className="fpo-back-button"
           onClick={goBack}
           aria-label="Back to Feature Permissions"
-          title="Back to Feature Permissions"
+          data-tooltip="Back to Feature Permissions"
         >
           <i className="bi bi-arrow-left" />
         </button>

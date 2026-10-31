@@ -1480,7 +1480,7 @@ const paginatedPermissions = filteredPermissions.slice(
             <button
               type="button"
               className="fp-reset-btn pch-master-reset pch-master-control"
-              title="Reset filters"
+              data-tooltip="Reset filters"
               aria-label="Reset filters"
               onClick={
                 resetFilters

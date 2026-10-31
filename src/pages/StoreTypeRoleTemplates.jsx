@@ -273,7 +273,7 @@ async function confirmDeleteRole() {
     className="role-templates-back"
     onClick={() => navigate("/store-types/new")}
     aria-label="Back to Store Types"
-    title="Back to Store Types"
+    data-tooltip="Back to Store Types"
   >
     <i className="bi bi-arrow-left" />
   </button>

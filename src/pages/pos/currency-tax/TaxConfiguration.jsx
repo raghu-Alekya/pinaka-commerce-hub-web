@@ -562,7 +562,7 @@ export function TaxConfiguration() {
                                                         min="0"
                                                         max="100"
                                                         disabled={saving || taxClass.rates?.length > 1}
-                                                        title={taxClass.rates?.length > 1 ? "Multiple regional rates cannot be edited in this form" : ""}
+                                                        data-tooltip={taxClass.rates?.length > 1 ? "Multiple regional rates cannot be edited in this form" : ""}
                                                         step="0.01"
                                                         value={
                                                             taxClass.rate

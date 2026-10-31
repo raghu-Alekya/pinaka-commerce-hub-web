@@ -10,6 +10,7 @@ export default function Pagination({
   itemLabel = "items",
   showWhenEmpty = false,
   pageSizeOptions = [5, 10, 25, 50, 100],
+  style,
 }) {
   if (!totalItems && !showWhenEmpty) {return null;}
 
@@ -47,14 +48,35 @@ export default function Pagination({
   };
 
   return (
-    <div className="pagination-container table-pagination-footer">
-      <div className="pagination-info">
-        Showing <strong>{startItem}</strong> to{" "}
-        <strong>{endItem}</strong> of{" "}
-        <strong>{totalItems}</strong> {itemLabel}
+    <div
+      className="pagination-container table-pagination-footer"
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        width: "100%",
+        boxSizing: "border-box",
+        ...style,
+      }}
+    >
+      <div className="pagination-info" style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+        {`Showing `}
+        <strong>{startItem}</strong>
+        {` to `}
+        <strong>{endItem}</strong>
+        {` of `}
+        <strong>{totalItems}</strong>
+        {` ${itemLabel}`}
       </div>
 
-      <div className="pagination-controls pagination-actions">
+      <div
+        className="pagination-controls pagination-actions"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "16px",
+        }}
+      >
         <div className="pagination-page-size">
           <span>Rows per page:</span>
 

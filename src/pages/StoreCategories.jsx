@@ -887,7 +887,6 @@ export default function StoreCategories({
                       <button
                         type="button"
                         className="table-action"
-                        title="View Category"
                         onClick={(e) => {
                           e.stopPropagation();
                           openView(
@@ -1106,7 +1105,6 @@ export default function StoreCategories({
                       <button
                         type="button"
                         className="table-action"
-                        title="View Tag"
                         onClick={(e) => {
                           e.stopPropagation();
                           openView(
@@ -1320,7 +1318,10 @@ export default function StoreCategories({
                         {item.terms?.length >
                         3 ? (
 
-                          <span className="more-terms">
+                          <span
+                            className="more-terms"
+                            data-tooltip={item.terms.slice(3).map((term) => (typeof term === "object" ? term.name || term.value || "" : String(term))).filter(Boolean).join(", ")}
+                          >
                             +
                             {item.terms.length -
                               3}
@@ -1372,7 +1373,6 @@ export default function StoreCategories({
                       <button
                         type="button"
                         className="table-action"
-                        title="View Attribute"
                         onClick={(e) => {
                           e.stopPropagation();
                           openView(

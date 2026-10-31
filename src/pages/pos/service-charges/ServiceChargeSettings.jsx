@@ -563,7 +563,6 @@ export function ServiceChargeSettings() {
                                             <button
                                                 type="button"
                                                 className="service-charge-edit"
-                                                title="Edit"
                                             >
                                                 <i className="bi bi-pencil" />
                                             </button>
@@ -571,7 +570,6 @@ export function ServiceChargeSettings() {
                                             <button
                                                 type="button"
                                                 className="service-charge-delete"
-                                                title="Delete"
                                                 onClick={() =>
                                                     removeTier(
                                                         tier.id
