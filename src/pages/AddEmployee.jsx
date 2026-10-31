@@ -309,7 +309,7 @@ export default function AddEmployee() {
         return "";
 
       case "pinCode":
-        return trimmed ? "" : "PIN Code is required.";
+        return trimmed ? "" : "Postal Code is required.";
 
       case "country":
         if (!trimmed) return "Country is required.";
@@ -815,7 +815,7 @@ export default function AddEmployee() {
                   error={errors.address2}
                 />
                 <FormField
-                  label="PIN Code" required name="pinCode" placeholder="Enter PIN code"
+                  label="Postal Code" required name="pinCode" placeholder="Enter postal code"
                   value={formData.pinCode} onChange={handleChange} error={errors.pinCode}
                 />
               </div>
