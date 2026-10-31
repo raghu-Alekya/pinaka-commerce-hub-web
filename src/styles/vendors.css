@@ -1618,12 +1618,23 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  height: 35px;
 }
 
 
+.vendors-list-card > .filters-bar .filter-select-wrapper {
+  height: 35px;
+  display: flex;
+  align-items: center;
+  width: auto;
+  min-width: 180px;
+  flex: 0 0 auto;
+}
+
 .vendors-list-card > .filters-bar .filter-select-wrapper select {
   height: 35px;
-  min-width: 130px;
+  min-width: 180px;
+  width: 100%;
   padding: 0 30px 0 11px;
   box-sizing: border-box;
   border: 1px solid #e1e4eb;
@@ -1649,6 +1660,10 @@
   background: #fff;
   color: #5b79ad;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .vendors-list-card > .filters-bar .filter-reset-btn:hover,
@@ -2796,27 +2811,34 @@
 /* Toolbar filters in Vendors list */
 .vendors-list-card > .filters-bar .filter-select-wrapper > .pch-filter-dropdown {
   width: 100%;
+  height: 35px;
+  display: inline-grid;
+  align-items: center;
 }
 
 .vendors-list-card > .filters-bar .pch-filter-sizing {
   height: 35px !important;
   box-sizing: border-box !important;
-  border: 1px solid #d9e1f0 !important;
-  border-radius: 6px !important;
-  font-size: 13px !important;
+  border: 1px solid #e1e4eb !important;
+  border-radius: 5px !important;
+  font-size: 12px !important;
+  min-width: 180px !important;
+  width: 100% !important;
 }
 
 .vendors-list-card > .filters-bar .pch-filter-trigger {
   height: 35px !important;
+  top: 0 !important;
   box-sizing: border-box !important;
-  border: 1px solid #d9e1f0 !important;
-  border-radius: 6px !important;
+  border: 1px solid #e1e4eb !important;
+  border-radius: 5px !important;
   background: #fff !important;
   color: #24314a !important;
   font-size: 12px !important;
   font-family: inherit !important;
   transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
-  width:130px !important;
+  min-width: 180px !important;
+  width: 100% !important;
 }
 
 .vendors-list-card > .filters-bar .pch-filter-trigger:hover:not(:disabled) {

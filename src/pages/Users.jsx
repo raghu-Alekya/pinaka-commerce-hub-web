@@ -1538,7 +1538,6 @@ export default function Users({
                                                         <button
                                                             type="button"
                                                             className="table-action"
-                                                            title="View User"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setSelectedUser(
@@ -1555,7 +1554,6 @@ export default function Users({
                                                         <button
                                                             type="button"
                                                             className="table-action"
-                                                            title="Edit User"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 startEdit(

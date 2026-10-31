@@ -605,7 +605,7 @@ async function confirmDeleteTender() {
                 setStatusFilter("All Statuses");
                 setSortBy("newest");
               }}
-              title="Reset filters"
+              data-tooltip="Reset filters"
               aria-label="Reset filters"
             >
               <i className="bi bi-arrow-counterclockwise" />

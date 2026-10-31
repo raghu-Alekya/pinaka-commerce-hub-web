@@ -3605,7 +3605,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                         ) : (
                           <div className="sf-pin-action">
                             {hasLoginPin && (
-                              <span className="sf-pin-set" title={!visiblePin ? "PIN is stored securely and is not returned by the API." : undefined}>
+                              <span className="sf-pin-set" data-tooltip={!visiblePin ? "PIN is stored securely and is not returned by the API." : undefined}>
                                 {visiblePin || "PIN set"}
                               </span>
                             )}

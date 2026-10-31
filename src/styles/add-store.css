@@ -2147,7 +2147,9 @@
 .sf-search { display: flex; min-width: 185px; height: 38px; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid #e0e5ee; border-radius: 7px; color: #8490a5; }
 .sf-search input { width: 100%; height: 36px; min-width: 0; padding: 0; border: 0; outline: 0; color: var(--sf-text); font-size: 11px; }
 .sf-feature-table th:last-child, .sf-feature-table td:last-child { width: 150px; text-align: center; }
-.sf-feature-table td:nth-child(3) { max-width: 340px; color: #8290a7; }
+.sf-feature-table td:nth-child(3) { max-width: 340px; color: #8290a7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sf-employees-table td:not(:first-child):not(:last-child) { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sf-review-table td:not(:last-child) { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sf-switch { position: relative; width: 34px; height: 19px; padding: 0; border: 0; border-radius: 12px; background: #cbd2df; vertical-align: middle; }
 .sf-switch span { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px #0002; transition: transform .15s ease; }
 .sf-switch.on { background: var(--sf-purple); }

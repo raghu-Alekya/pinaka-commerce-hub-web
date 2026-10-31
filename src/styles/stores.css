@@ -283,6 +283,38 @@
     font-size: 12px;
 }
 
+.stores-card .stores-table td:not(:last-child) {
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stores-card .stores-name-button {
+    max-width: 100%;
+    min-width: 0;
+}
+
+.store-cell,
+.store-cell > div,
+.merchant-name-cell,
+.merchant-name-cell > div,
+.store-table-details {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.store-cell strong,
+.store-cell small,
+.merchant-name-cell strong,
+.store-table-details strong,
+.store-table-details small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .stores-table tbody tr:hover {
     background: #fafbff;
 }

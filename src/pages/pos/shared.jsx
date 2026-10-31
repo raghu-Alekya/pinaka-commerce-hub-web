@@ -241,7 +241,6 @@ export function DenominationRow({
                     type="button"
                     className="pos-remove-button pc-icon-action pc-danger"
                     aria-label={`Remove denomination ${index + 1}`}
-                    title="Delete"
                     onClick={() => onRemove(index)}
                 >
                     <i className="bi bi-trash3" aria-hidden="true" />

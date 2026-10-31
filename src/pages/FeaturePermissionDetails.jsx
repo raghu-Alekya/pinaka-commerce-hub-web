@@ -234,7 +234,7 @@ const confirmDeletePermission = async () => {
             className="feature-detail-back"
             onClick={() => navigate("/features")}
             aria-label="Back to Features"
-            title="Back to Features"
+            data-tooltip="Back to Features"
           >
             <i className="bi bi-arrow-left" />
           </button>

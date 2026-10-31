@@ -817,18 +817,18 @@ useEffect(() => {
                                         key={vendor.id}
                                         className={`${selected ? "mv-row-selected" : ""} ${!active(vendor) ? "mv-row-disabled" : ""}`}
                                         aria-selected={selected}
-                                        title={active(vendor) ? "Click to select or deselect this vendor" : "Inactive vendors cannot be selected"}
+                                        data-tooltip={active(vendor) ? "Click to select or deselect this vendor" : "Inactive vendors cannot be selected"}
                                         onClick={event => {
                                             if (event.target.closest("input,button,a,select")) return;
                                             toggleVendorSelection(vendor);
                                         }}
                                     >
                                         <td><input type="checkbox" aria-label={`Select ${vendor.name}`} disabled={busy || !active(vendor)} checked={selected} onChange={() => toggleVendorSelection(vendor)} /></td>
-                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.code)}>{displayValue(vendor.code)}</span></td>
-                                        <td><strong className="mv-cell-ellipsis" title={vendor.name}>{vendor.name}</strong></td>
-                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.type)}>{displayValue(vendor.type)}</span></td>
-                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.products)}>{displayValue(vendor.products)}</span></td>
-                                        <td><span className="mv-cell-ellipsis" title={vendor.phone || vendor.contact || "—"}>{vendor.phone || vendor.contact || "—"}</span></td>
+                                        <td><span className="mv-cell-ellipsis">{displayValue(vendor.code)}</span></td>
+                                        <td><strong className="mv-cell-ellipsis">{vendor.name}</strong></td>
+                                        <td><span className="mv-cell-ellipsis">{displayValue(vendor.type)}</span></td>
+                                        <td><span className="mv-cell-ellipsis">{displayValue(vendor.products)}</span></td>
+                                        <td><span className="mv-cell-ellipsis">{vendor.phone || vendor.contact || "—"}</span></td>
                                     </tr>
                                 );
                             })}

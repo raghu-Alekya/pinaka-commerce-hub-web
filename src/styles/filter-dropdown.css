@@ -23,9 +23,24 @@
 .pch-filter-menu > .pch-filter-option:focus-visible { background: #f4f1ff; color: #5143bc; outline: none; }
 .pch-filter-menu > .pch-filter-option[aria-selected="true"] { background: #5143bc; color: #fff; }
 .pch-filter-menu > .pch-filter-option:disabled { opacity: .5; cursor: default; }
-.pch-filter-tooltip { position: fixed; z-index: 10001; max-width: min(250px, calc(100vw - 16px)); padding: 6px 8px; border-radius: 4px; background: #183354; color: #fff; font: 12px/18px Inter, "Segoe UI", sans-serif; overflow-wrap: anywhere; pointer-events: none; }
+.pch-filter-tooltip { position: fixed; z-index: 10001; max-width: min(250px, calc(100vw - 16px)); box-sizing: border-box; padding: 8px 12px; border: 1px solid #dbe5f4; border-radius: 8px; background: #ffffff; color: #24324d; box-shadow: 0 8px 24px rgba(16, 35, 65, 0.16); font: 12px/18px Inter, "Segoe UI", sans-serif; overflow-wrap: anywhere; pointer-events: none; }
 .filter-select-wrapper:has(> .pch-filter-dropdown) > .filter-select-arrow { display: none; }
 .pch-filter-footer { padding: 8px; border-top: 1px solid #e1e8f1; font-size: 11px; color: #294a76; }
 .pch-filter-footer .dashboard-date-inputs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
 .pch-filter-footer .dashboard-date-inputs input { box-sizing: border-box; width: 100%; min-width: 0; }
 .pch-filter-footer .dashboard-custom-apply { width: 100%; }
+
+/* Standard truncation with ellipsis */
+.truncated-text-with-tooltip {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.truncated-text-with-tooltip,
+.pch-filter-option.truncated-text-with-tooltip {
+  display: block;
+  width: 100%;
+}

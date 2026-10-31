@@ -703,7 +703,7 @@ const handleDateRangeChange = (value) => {
             className="flow-button primary"
             onClick={onAdd}
             disabled={crudBusy}
-            title="Add Subscription"
+            data-tooltip="Add Subscription"
           >
              <i className="bi bi-plus-lg" />
             Add Subscription

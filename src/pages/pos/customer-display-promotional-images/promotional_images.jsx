@@ -96,7 +96,7 @@ export function CustomerDisplayPromotionalImages({ onBack }) {
       <div className="pc-promo-gallery">
         {draft.images.map((item, index) => <div className="pc-promo-item" key={`${item.image}-${index}`}>
           <div className="pc-promo-preview">{item.image ? <img src={posImageUrl(item.image)} alt={item.imageName || `Promotional image ${index + 1}`} /> : <i className="bi bi-image" aria-hidden="true" />}</div>
-          {item.imageName && <small className="pc-promo-name" title={item.imageName}>{item.imageName}</small>}
+          {item.imageName && <small className="pc-promo-name" data-tooltip={item.imageName}>{item.imageName}</small>}
           <button type="button" className="pc-promo-remove" onClick={() => { if (item.id) setRemovedImageIds((current) => current.includes(item.id) ? current : [...current, item.id]); update({ ...draft, images: draft.images.filter((_, imageIndex) => imageIndex !== index) }); }}>Remove</button>
         </div>)}
         {!draft.images.length && <p className="pc-empty">No promotional images added yet.</p>}

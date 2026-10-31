@@ -79,6 +79,7 @@
 .sm-table :is(th, td):nth-child(9) { width:90px; white-space:nowrap; }
 .sm-table-datetime { display:flex; flex-direction:column; gap:2px; white-space:nowrap; }
 .sm-table th, .sm-table td { min-width:0; padding:13px 12px; border-right:1px solid #e2eaf4; border-bottom:1px solid #e2eaf4; text-align:left; vertical-align:middle; white-space:normal; overflow-wrap:anywhere; }
+.sm-table td:not(:last-child) { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sm-table th:first-child, .sm-table td:first-child { border-left:1px solid #e2eaf4; }
 .sm-table thead th { height:62px; background:#f5f8fc; color:#17264a; font-size:14px; font-weight:700; line-height:1.4; }
 .sm-table thead th:first-child { border-top-left-radius:5px; }

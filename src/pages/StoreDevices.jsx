@@ -923,7 +923,6 @@ function DeviceRow({ device, onView, onEdit }) {
           <button
             type="button"
             className="store-device-action-btn"
-            title="View"
             aria-label={`View ${device.name}`}
             onClick={() => onView(device)}
           >
@@ -933,7 +932,6 @@ function DeviceRow({ device, onView, onEdit }) {
           <button
             type="button"
             className="store-device-action-btn edit"
-            title="Edit"
             aria-label={`Edit ${device.name}`}
             onClick={() => onEdit(device)}
           >

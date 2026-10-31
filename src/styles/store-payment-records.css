@@ -306,6 +306,17 @@
     line-height: 1.35;
     text-align: left;
     cursor: pointer;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.store-payment-records-table td:not(:last-child) {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .store-payment-title-link:hover {

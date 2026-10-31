@@ -611,7 +611,7 @@ async function confirmDeleteTemplate() {
               <button
                 type="button"
                 className="role-reset-icon-btn pch-master-reset pch-master-control"
-                title="Reset filters"
+                data-tooltip="Reset filters"
                 aria-label="Reset filters"
                 onClick={resetFilters}
               >

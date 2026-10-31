@@ -934,7 +934,7 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
 
                   className="store-type-date-cell"
 
-                  title={`${item.createdDate}, ${item.createdTime}`}
+                  data-tooltip={`${item.createdDate}, ${item.createdTime}`}
                 >
                   <strong>{item.createdDate}</strong>
                   <span>{item.createdTime}</span>
@@ -944,7 +944,7 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
 
                   className="store-type-date-cell"
 
-                  title={`${item.updatedDate}, ${item.updatedTime}`}
+                  data-tooltip={`${item.updatedDate}, ${item.updatedTime}`}
                 >
                   <strong>{item.updatedDate}</strong>
                   <span>{item.updatedTime}</span>

@@ -489,7 +489,14 @@ export default function MerchantTenders({
               <i className="bi bi-arrow-left" /> Back to Tenders
             </button>
           </header>
-          <div className="mt-existing-content">
+          <div
+            className="mt-existing-content"
+            style={{
+              width: "100%",
+              maxWidth: "100%",
+              boxSizing: "border-box",
+            }}
+          >
           {masterLoading && <p role="status">Loading master tenders…</p>}
           {masterError && <p role="alert" className="mt-error">{masterError}</p>}
           <FiltersBar
@@ -565,30 +572,49 @@ export default function MerchantTenders({
             }}
             itemLabel="tenders"
             showWhenEmpty={true}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              width: "100%",
+              marginTop: "16px",
+            }}
           />
           {saveError && <p role="alert" className="mt-error">{saveError}</p>}
           </div>
           <footer className="mt-existing-footer">
-            <button type="button" disabled={busy} onClick={close}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="mt-primary"
-              disabled={busy || !selection.length || masterLoading}
-              onClick={() =>
-                save([
-                  ...new Set([
-                    ...ids,
-                    ...selection.filter((id) =>
-                      tenders.some((value) => value.id === id && active(value))
-                    ),
-                  ]),
-                ])
-              }
+            <div
+              className="mt-existing-actions"
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                gap: "12px",
+                marginTop: "16px",
+                width: "100%",
+              }}
             >
-              {busy ? "Saving…" : "Add Selected"}
-            </button>
+              <button type="button" disabled={busy} onClick={close}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="mt-primary"
+                disabled={busy || !selection.length || masterLoading}
+                onClick={() =>
+                  save([
+                    ...new Set([
+                      ...ids,
+                      ...selection.filter((id) =>
+                        tenders.some((value) => value.id === id && active(value))
+                      ),
+                    ]),
+                  ])
+                }
+              >
+                {busy ? "Saving…" : "Add Selected"}
+              </button>
+            </div>
           </footer>
         </section>
       ) : (

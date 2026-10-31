@@ -24,7 +24,8 @@
 .sd-table td { color:#3c465a; font-size:13px; }
 .sd-table tbody tr:last-child td { border-bottom:0; }
 .sd-table td small { display:block; margin-top:4px; color:#7f8ba2; font-size:12px; }
-.sd-record-name { display:block; color:#202124; font-size:13px; font-weight:650; white-space:nowrap; }
+.sd-table td:not(:last-child) { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sd-record-name { display:block; color:#202124; font-size:13px; font-weight:650; white-space:nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sd-denomination { display:block; line-height:1.55; white-space:nowrap; }
 .sd-total { color:#202124!important; font-size:13px!important; font-weight:700; white-space:nowrap; }
 .sd-view { display:grid; width:40px; height:40px; place-items:center; margin:auto; border:1px solid #dce3fb; border-radius:8px; background:#fff; color:#5144f5; font-size:16px; cursor:pointer; }
