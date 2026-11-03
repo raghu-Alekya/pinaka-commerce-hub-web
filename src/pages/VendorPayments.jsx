@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { listStoreVendorPayments } from "../api/vendorPayments";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import { formatCurrency } from "../utils/currency";
@@ -105,7 +106,25 @@ export default function VendorPayments({ viewMode, store } = {}) {
   const view = viewMode || selectedView;
 
   const [vendors, setVendors] = useState(initialVendors);
-  const [payments, setPayments] = useState(initialPayments);
+  const [payments, setPayments] = useState(storeId ? [] : initialPayments);
+
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const ownerId = merchantId || store?.merchantId || store?.merchant_id || store?.merchant?.id;
+  useEffect(() => {
+    if (!storeId || view !== "payments") return undefined;
+    const controller = new AbortController();
+    setPayments([]);
+    setLoading(true);
+    setLoadError("");
+    setCurrentPage(1);
+    listStoreVendorPayments(ownerId, storeId, { signal: controller.signal })
+      .then(rows => { if (!controller.signal.aborted) setPayments(rows); })
+      .catch(error => { if (!controller.signal.aborted) setLoadError(error.message || "Unable to load vendor payments."); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [ownerId, storeId, view, attempt]);
 
   const [search, setSearch] = useState("");
   const [methodFilter, setMethodFilter] = useState("");
@@ -139,7 +158,7 @@ export default function VendorPayments({ viewMode, store } = {}) {
     const term = search.toLowerCase().trim();
 
     return payments.filter((payment) => {
-      const matchesSearch = `${payment.title} ${payment.vendor} ${payment.purpose} ${payment.method} ${payment.amount} ${payment.date}`
+      const matchesSearch = `${payment.title} ${payment.vendor} ${payment.purpose} ${payment.method} ${payment.amount} ${payment.createdAt || payment.date || ""} ${payment.updatedAt || ""} ${payment.createdBy || ""} ${payment.updatedBy || ""}`
         .toLowerCase()
         .includes(term);
       const matchesMethod = !methodFilter || payment.method === methodFilter;
@@ -204,6 +223,7 @@ export default function VendorPayments({ viewMode, store } = {}) {
 
   return (
     <div className={`vendor-screen ${viewMode ? "vendor-history-screen" : ""}`}>
+      {loadError && <div role="alert">{loadError} <button type="button" onClick={() => setAttempt(value => value + 1)}>Retry</button></div>}
 
       {/* Header */}
       <div className="vendor-title-row">
@@ -232,12 +252,7 @@ export default function VendorPayments({ viewMode, store } = {}) {
             </button>
           )}
 
-          {view === "payments" && (
-            <button className="vendor-primary-action" onClick={() => { setFieldErrors({}); setShowPaymentForm(true); }}>
-              <i className="bi bi-plus-lg" aria-hidden="true" />
-              Add New Vendor Payment
-            </button>
-          )}
+
 
         </div>
       </div>
@@ -345,7 +360,10 @@ export default function VendorPayments({ viewMode, store } = {}) {
               <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Payment Purpose</th>
               <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Payment Method</th>
               <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Payment Amount</th>
-              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Date</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Created By</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Updated By</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Created At</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Updated At</th>
             </tr>
           </thead>
 
@@ -398,15 +416,13 @@ export default function VendorPayments({ viewMode, store } = {}) {
 
                 <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{formatCurrency(payment.amount, store?.currency, store?.currencySymbol)}</td>
 
-                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>
-                  <div className="vendor-date-cell">
-                    <span className="vendor-date-status">Published</span>
-                    <span className="vendor-date-time">{payment.date}</span>
-                  </div>
-                </td>
 
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.createdBy || "—"}</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.updatedBy || "—"}</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.createdAt || payment.date || "—"}</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.updatedAt || "—"}</td>
               </tr>
-            )) : <tr><td colSpan={6} className="vendor-empty-row" style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>No vendor payments match these filters.</td></tr>}
+            )) : <tr><td colSpan={9} className="vendor-empty-row" style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{loading ? "Loading vendor payments…" : loadError ? "Vendor payments could not be loaded." : payments.length ? "No vendor payments match these filters." : "No vendor payments found for this store."}</td></tr>}
 
           </tbody>
 
