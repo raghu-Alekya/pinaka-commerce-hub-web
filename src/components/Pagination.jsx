@@ -70,13 +70,7 @@ export default function Pagination({
       </div>
 
       <div
-        className="pagination-controls pagination-actions"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "16px",
-        }}
-      >
+        className="pagination-controls pagination-actions" >
         <div className="pagination-page-size">
           <span>Rows per page:</span>
 

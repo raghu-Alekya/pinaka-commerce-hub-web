@@ -101,7 +101,7 @@ const initialPayments = [
   },
 ];
 
-export default function VendorPayments({ viewMode, store } = {}) {
+export default function VendorPayments({ viewMode, merchantId, storeId, store } = {}) {
   const [selectedView, setView] = useState("vendors");
   const view = viewMode || selectedView;
 

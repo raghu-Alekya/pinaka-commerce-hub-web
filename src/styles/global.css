@@ -424,6 +424,7 @@ th:has(.status-badge, .status-badge--active, .status-badge--inactive, .store-sta
     white-space: nowrap;
     margin-left: 0;
     padding-left: 0;
+    gap: 3px;
 }
 
 .pagination-info strong {
