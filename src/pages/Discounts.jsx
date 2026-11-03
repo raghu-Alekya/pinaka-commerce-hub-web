@@ -452,7 +452,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
                 <th>Discount type</th>
                 <th>Amount</th>
                 <th>Product</th>
-                <th>Usage / limit</th>
+                <th>Usage / Limit</th>
                 <th>Start date</th>
                 <th>Expiry date</th>
                 <th>Actions</th>
@@ -469,7 +469,13 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
                   <td><span className="discount-type-pill">{discount.type || "—"}</span></td>
                   <td><strong className="discount-amount">{amountLabel(discount)}</strong></td>
                   <td><span className="discount-product-cell">{`${discount.product}${discount.type === "mix_match" && discount.discounted_products ? ` → ${discount.discounted_products}` : ""}${discount.type === "multipack" ? ` · ${discount.qty} items` : ""}`}</span></td>
-                  <td>{discount.usage_limit === 0 || discount.usage_limit ? discount.usage_limit : "∞"}</td>
+                  <td>{(() => {
+                    const limit = Number(discount.usage_limit ?? discount.usageLimit);
+                    const used = Number(discount.usage_count ?? discount.usageCount ?? 0);
+                    const usageCount = Number.isFinite(used) ? Math.max(0, used) : 0;
+                    const usageLimit = Number.isFinite(limit) && limit > 0 ? limit : "∞";
+                    return `${usageCount} / ${usageLimit}`;
+                  })()}</td>
                   <td>{formatSystemDate(discount.date_starts)}</td>
                   <td>{formatSystemDate(discount.date_expires)}</td>
                   <td className="coupon-row-actions">
