@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ShoppingBag, CreditCard, CircleDollarSign, Package, ReceiptText } from "lucide-react";
 import { formatMoney, getOrder, normalizeOrderStatus } from "../api/orders";
+import { getCurrencySymbol } from "../utils/currency";
 import { listStorePosPayments } from "../api/storePosPayments";
 import { listStoreEmployees } from "../api/employees";
 import { extractProducts, normalizeProduct, productsApi } from "../api/products";
@@ -189,7 +190,7 @@ function numericPrice(...values) {
   return undefined;
 }
 
-function buildView(payload) {
+function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
   // The API may return the order directly or wrap it in `data` / `order`.
   const payloadData = asObject(payload?.data);
   const response = Object.keys(payloadData).length ? payloadData : asObject(payload);
@@ -203,7 +204,8 @@ function buildView(payload) {
     : asArray(storeOrder.metadata || storeOrder.meta_data).length
       ? asArray(storeOrder.metadata || storeOrder.meta_data)
       : asArray(order.metadata || order.meta_data || request.meta_data);
-  const currency = storeOrder.currency || order.currency || request.currency || "USD";
+  const currency = storeOrder.currency || order.currency || request.currency || fallbackCurrency || "USD";
+  const currencySymbol = storeOrder.currencySymbol || storeOrder.currency_symbol || order.currencySymbol || order.currency_symbol || request.currencySymbol || request.currency_symbol || fallbackCurrencySymbol || getCurrencySymbol(currency);
   const rawLineItems = [
     asArray(storeOrder.lineItems),
     asArray(storeOrder.line_items),
@@ -311,7 +313,8 @@ function buildView(payload) {
     id: order.id,
     number: String(order.orderNumber || order.order_number || order.number || request.number || order.id || "").replace(/^#/, ""),
     status: normalizeOrderStatus(storeOrder.status || storeOrder.orderStatus || storeOrder.order_status || order.orderStatus || order.order_status || order.status || request.status),
-    currency: storeOrder.currency || order.currency || request.currency || "USD",
+    currency: storeOrder.currency || order.currency || request.currency || fallbackCurrency || "USD",
+    currencySymbol,
     timezone: storeOrder.timezone || storeOrder.time_zone || "UTC",
     createdAt: displayDate(storeOrder.createdAt || storeOrder.created_at || order.createdAt || order.created_at || order.dateCreated || order.date_created || order.created || request.date_created || request.created_at || response.createdAt || response.created_at),
     clientOrderId: storeOrder.clientOrderId || storeOrder.client_order_id || order.clientOrderId || order.client_order_id || metaValue(metadata, "_pos_client_order_id") || "—",
@@ -332,11 +335,11 @@ function buildView(payload) {
       metaValueFrom(metadata, ["pos_placed_by", "_pos_placed_by", "placed_by", "placed_by_name"]) || "—",
     shiftId: storeOrder.shiftId || order.shiftId || metaValue(metadata, "shift_id") || "—",
     payLater: storeOrder.payLater ? "Yes" : "No",
-    subtotal: formatMoney(shownSubtotal, currency),
-    discount: formatMoney(shownDiscount, currency),
-    tax: formatMoney(tax, currency),
-    fees: formatMoney(feeTotal, currency),
-    total: formatMoney(shownTotal, currency),
+    subtotal: formatMoney(shownSubtotal, currency, currencySymbol),
+    discount: formatMoney(shownDiscount, currency, currencySymbol),
+    tax: formatMoney(tax, currency, currencySymbol),
+    fees: formatMoney(feeTotal, currency, currencySymbol),
+    total: formatMoney(shownTotal, currency, currencySymbol),
     lineItems,
     hasDiscount,
     feeLines,
@@ -347,7 +350,7 @@ function buildView(payload) {
   };
 }
 
-export default function OrderDetail({ embedded = false, orderId: providedOrderId, storeId: providedStoreId, merchantId, orderNumber: providedOrderNumber, onBack }) {
+export default function OrderDetail({ embedded = false, orderId: providedOrderId, storeId: providedStoreId, merchantId, orderNumber: providedOrderNumber, currency: providedCurrency, currencySymbol: providedCurrencySymbol, onBack }) {
   const { orderId: routeOrderId } = useParams();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -384,7 +387,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
     ])
       .then(async ([payload, paymentPayload]) => {
         if (!active) return;
-        let nextView = buildView(payload);
+        let nextView = buildView(payload, providedCurrency || searchParams.get("currency") || "USD", providedCurrencySymbol || searchParams.get("currencySymbol"));
         if (!nextView.payments.length) {
           const paymentRows = Array.isArray(paymentPayload?.payments)
             ? paymentPayload.payments
@@ -472,7 +475,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
     return () => {
       active = false;
     };
-  }, [orderId, storeId, orderNumber]);
+  }, [orderId, storeId, orderNumber, providedCurrency, providedCurrencySymbol]);
 
   return (
     <div className="employee-view-page order-detail-page">
@@ -530,11 +533,11 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
                   <span className="order-line-price">
                     {hasDiscount && (
                       <del className="order-line-price-original">
-                        {formatMoney(originalUnitPrice, view.currency)}
+                        {formatMoney(originalUnitPrice, view.currency, view.currencySymbol)}
                       </del>
                     )}
                     <strong className={hasDiscount ? "order-line-price-discounted" : undefined}>
-                      {formatMoney(hasDiscount ? discountedUnitPrice : originalUnitPrice, view.currency)}
+                      {formatMoney(hasDiscount ? discountedUnitPrice : originalUnitPrice, view.currency, view.currencySymbol)}
                     </strong>
                   </span>,
                 ];
@@ -545,28 +548,28 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
           <DetailBlock title="Fees">
             <Lines
               columns={["Name", "Tax status", "Total"]}
-              rows={view.feeLines.map((fee) => [fee.name || fee.title || "Fee", fee.taxStatus || fee.tax_status || "—", formatMoney(fee.total ?? fee.amount, view.currency)])}
+              rows={view.feeLines.map((fee) => [fee.name || fee.title || "Fee", fee.taxStatus || fee.tax_status || "—", formatMoney(fee.total ?? fee.amount, view.currency, view.currencySymbol)])}
             />
           </DetailBlock>
 
           <DetailBlock title="Discounts">
             <Lines
               columns={["Name", "Type", "Amount"]}
-              rows={view.discountLines.map((discount) => [discount.name || "Discount", discount.type || "—", formatMoney(discount.amount, view.currency)])}
+              rows={view.discountLines.map((discount) => [discount.name || "Discount", discount.type || "—", formatMoney(discount.amount, view.currency, view.currencySymbol)])}
             />
           </DetailBlock>
 
           <DetailBlock title="Tax">
             <Lines
               columns={["Label", "Rate", "Tax"]}
-              rows={view.taxLines.map((tax) => [tax.label || tax.rateCode || tax.rate_code || "Tax", `${tax.ratePercent ?? tax.rate_percent ?? 0}%`, formatMoney(tax.taxTotal ?? tax.tax_total ?? tax.amount, view.currency)])}
+              rows={view.taxLines.map((tax) => [tax.label || tax.rateCode || tax.rate_code || "Tax", `${tax.ratePercent ?? tax.rate_percent ?? 0}%`, formatMoney(tax.taxTotal ?? tax.tax_total ?? tax.amount, view.currency, view.currencySymbol)])}
             />
           </DetailBlock>
 
           <DetailBlock title="Coupons">
             <Lines
               columns={["Code", "Discount"]}
-              rows={view.couponLines.map((coupon) => [coupon.code || coupon.couponCode || coupon.coupon_code || coupon.name || "—", formatMoney(coupon.discount ?? coupon.discountAmount ?? coupon.discount_amount ?? coupon.amount, view.currency)])}
+              rows={view.couponLines.map((coupon) => [coupon.code || coupon.couponCode || coupon.coupon_code || coupon.name || "—", formatMoney(coupon.discount ?? coupon.discountAmount ?? coupon.discount_amount ?? coupon.amount, view.currency, view.currencySymbol)])}
             />
           </DetailBlock>
 
@@ -576,7 +579,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
               rows={view.payments.map((payment) => [
                 payment.method || payment.paymentMethod || payment.payment_method || payment.paymentMethodTitle || payment.payment_method_title || payment.payment_type || "—",
                 paymentTransactionId(payment),
-                formatMoney(payment.amount ?? payment.tenderAmount ?? payment.tender_amount, view.currency),
+                formatMoney(payment.amount ?? payment.tenderAmount ?? payment.tender_amount, view.currency, view.currencySymbol),
                 titleCase(payment.status || payment.paymentStatus || payment.payment_status),
                 displayDate(payment.created_at || payment.createdAt || payment.payment_at || payment.paymentAt),
               ])}

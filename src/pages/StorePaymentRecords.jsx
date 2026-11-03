@@ -5,9 +5,11 @@ import BentoDetailModal from "../components/BentoDetailModal";
 import { listStorePosPayments } from "../api/storePosPayments";
 import { listStoreEmployees } from "../api/employees";
 import { isUuid } from "../api/storeDetails";
+import { formatCurrency } from "../utils/currency";
 import "../styles/store-payment-records.css";
  
 export default function StorePaymentRecords({ store, storeId: storeIdProp, merchantId }) {
+  const money = (value) => formatCurrency(value, store?.currency, store?.currencySymbol);
   const storeId = [
     store?.uuid,
     store?.storeUUID,
@@ -193,7 +195,7 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                 <th>Client Order ID</th>
                 <th>Order Total</th>
                 <th>Tender Amount</th>
-                <th>Balance Amount</th>
+                <th>Remaining Amount</th>
                 <th>Change Amount</th>
                 <th>Payment Accepted By</th>
                 <th>Date</th>
@@ -210,6 +212,8 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                   <PaymentRecordRow
                     key={payment.id}
                     payment={payment}
+                    currency={store?.currency}
+                    currencySymbol={store?.currencySymbol}
                     onView={() => setSelectedPayment(payment)}
                   />
                 ))
@@ -275,11 +279,12 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                       value: money(selectedPayment.tenderAmount),
                     },
                     {
-                      label: "CHANGE / BALANCE",
-                      value:
-                        selectedPayment.changeAmount > 0
-                          ? `Change: ${money(selectedPayment.changeAmount)}`
-                          : `Balance: ${money(selectedPayment.balanceAmount)}`,
+                      label: "REMAINING AMOUNT",
+                      value: money(selectedPayment.balanceAmount),
+                    },
+                    {
+                      label: "CHANGE AMOUNT",
+                      value: money(selectedPayment.changeAmount),
                     },
                   ],
                 },
@@ -341,7 +346,7 @@ function mapPaymentRecord(payment, employeeNames = {}) {
     orderTotal: Number(payment.order_total || 0),
     tenderAmount: Number(payment.amount || 0),
     balanceAmount: Number(payment.remaining || 0),
-    changeAmount: Number(payment.change_amount || 0),
+    changeAmount: Number(payment.change_amount || payment.pos_change_returned || metaValue(payment.metadata, "pos_change_returned") || 0),
     transactionId: payment.providerTransactionId || payment.provider_transaction_id || payment.transactionId || payment.transaction_id ||
       payment.transactionNumber || payment.transaction_number || payment.txnId || payment.txn_id ||
       payment.transactionReference || payment.transaction_reference || payment.paymentReference || payment.payment_reference ||
@@ -414,7 +419,7 @@ function formatPaymentDate(value) {
   return `${datePart} at ${timePart}`;
 }
  
-function PaymentRecordRow({ payment, onView }) {
+function PaymentRecordRow({ payment, currency = "USD", currencySymbol, onView }) {
   return (
     <tr
       className="store-payment-record-clickable"
@@ -443,11 +448,11 @@ function PaymentRecordRow({ payment, onView }) {
  
       <td>{payment.orderId}</td>
       <td>{payment.clientOrderId}</td>
-      <td>{money(payment.orderTotal)}</td>
-      <td>{money(payment.tenderAmount)}</td>
-      <td>{money(payment.balanceAmount)}</td>
+      <td>{formatCurrency(payment.orderTotal, currency, currencySymbol)}</td>
+      <td>{formatCurrency(payment.tenderAmount, currency, currencySymbol)}</td>
+      <td>{formatCurrency(payment.balanceAmount, currency, currencySymbol)}</td>
       <td className={payment.changeAmount > 0 ? "change-positive" : ""}>
-        {money(payment.changeAmount)}
+        {formatCurrency(payment.changeAmount, currency, currencySymbol)}
       </td>
       <td>{payment.paymentAcceptedBy}</td>
       <td>
@@ -458,8 +463,11 @@ function PaymentRecordRow({ payment, onView }) {
   );
 }
  
-function money(value) {
-  return `$${Number(value || 0).toFixed(2)}`;
+function metaValue(metadata, key) {
+  if (Array.isArray(metadata)) {
+    return metadata.find((entry) => entry?.key === key)?.value;
+  }
+  return metadata && typeof metadata === "object" ? metadata[key] : undefined;
 }
  
  

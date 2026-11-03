@@ -96,7 +96,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
     if(result?.success===false)throw new Error(result.message || 'Device creation failed.');
     const returned=result?.device || result?.data?.device || result?.data || result;
     const record=returned && typeof returned==='object' && !Array.isArray(returned)?returned:{};
-    const device={...record,id:record.id || record.uuid || record.deviceUuid || crypto.randomUUID(),deviceId:record.deviceId || record.device_id || values.deviceId || values.device_id || '',code:record.code || record.deviceCode || record.device_code || '',merchantId:record.merchantId || record.merchant_id || merchantId,name:record.name || record.deviceName || record.device_name || values.deviceName,type:record.type || record.deviceType || record.device_type || values.deviceType,serialNumber:record.serialNumber || record.serial_number || record.serial || values.serialNumber,storeId:record.storeId || record.store_id || values.storeId || values.store_id,storeName:record.storeName || record.store_name,status:record.connectionStatus || record.connection_status || record.status || values.status || 'Unknown'};
+    const device={...record,id:record.id || record.uuid || record.deviceUuid || crypto.randomUUID(),activationKey:record.device_active_code || record.authorization_code || record.activation_code || values.activationKey || '',code:record.code || record.deviceCode || record.device_code || '',merchantId:record.merchantId || record.merchant_id || merchantId,name:record.name || record.deviceName || record.device_name || values.deviceName,type:record.type || record.deviceType || record.device_type || values.deviceType,serialNumber:record.serialNumber || record.serial_number || record.serial || values.serialNumber,storeId:record.storeId || record.store_id || values.storeId || values.store_id,storeName:record.storeName || record.store_name,status:record.connectionStatus || record.connection_status || record.status || values.status || 'Unknown'};
     setCreatedDevices(old=>[device,...old.filter(item=>String(item.id)!==String(device.id))]);return result;
   }
   async function updateMerchantDevice(values) {
@@ -109,7 +109,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       ...editingDevice,
       ...record,
       id: record.id || record.uuid || record.deviceUuid || deviceId,
-      deviceId: record.deviceId || record.device_id || values.deviceId || "",
+      activationKey: record.device_active_code || record.authorization_code || record.activation_code || values.activationKey || "",
       code: record.code || record.deviceCode || record.device_code || editingDevice.code || "",
       name: record.name || record.deviceName || record.device_name || values.deviceName,
       type: record.type || record.deviceType || record.device_type || values.deviceType,
@@ -1738,7 +1738,7 @@ const [pageSize, setPageSize] = useState(5);
 const rows = devices
   .map((d) => ({
     ...d,
-    deviceIdentifier: d.deviceId || d.device_id || "—",
+    activationKey: d.activationKey || d.device_active_code || d.authorization_code || d.activation_code || "—",
     deviceCode: d.code || d.deviceCode || d.device_code || "—",
     name: d.name || d.deviceName || "—",
     type: d.type || d.deviceType || "—",
@@ -1748,7 +1748,7 @@ const rows = devices
   }))
   .filter((d) => {
     const searchText = [
-      d.deviceIdentifier,
+      d.activationKey,
       d.deviceCode,
       d.name,
       d.type,
@@ -1843,7 +1843,7 @@ return (
           <thead>
             <tr>
               {[
-                ['deviceIdentifier', 'Device ID'],
+                ['activationKey', 'Activation Key'],
                 ['deviceCode', 'Device Code'],
                 ['name', 'Device Name'],
                 ['type', 'Type'],
@@ -1900,7 +1900,7 @@ return (
                       setView(d);
                     }}
                   >
-                    <td>{d.deviceIdentifier}</td>
+                    <td>{d.activationKey}</td>
                     <td>{d.deviceCode}</td>
                     <td>
                       <span className="mdl-name">
@@ -1959,7 +1959,7 @@ return (
       onClose={() => setView(null)}
       headerIcon="bi-tablet"
       title="Device Details"
-      code={view?.deviceCode ? view.deviceCode : (view?.deviceIdentifier || "")}
+      code={view?.deviceCode || ""}
       size="compact"
       hero={
         view
@@ -1986,8 +1986,8 @@ return (
                 mono: true,
               },
               {
-                label: "DEVICE ID",
-                value: view.deviceIdentifier || view.id,
+                label: "ACTIVATION KEY",
+                value: view.activationKey,
                 mono: true,
               },
               {

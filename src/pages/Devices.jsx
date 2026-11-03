@@ -520,7 +520,7 @@ export default function Devices() {
                 {" "}
 
  
-                <th>Device Code</th> <th>Device ID</th> <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
+                <th>Device Code</th> <th>Activation Key</th> <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
  
                 <th>Merchant Name</th> <th>Connection Status</th>{" "}
  
@@ -754,8 +754,8 @@ function DeviceRow({
       {/* DEVICE CODE */}
       <td>{device.code || device.deviceCode || "-"}</td>
 
-      {/* DEVICE ID */}
-      <td>{device.deviceId || device.device_id || "-"}</td>
+      {/* ACTIVATION KEY */}
+      <td>{device.activationKey || device.device_active_code || device.authorization_code || device.activation_code || "-"}</td>
   
      {/* DEVICE NAME */}
       <td>

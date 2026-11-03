@@ -116,7 +116,7 @@ export default function DeviceView() {
           {" "}
           <Info label="Device Name" value={deviceName} />{" "}
           <Info label="Device Code" value={deviceCode} />{" "}
-          <Info label="Device ID" value={device.deviceId || "—"} />{" "}
+          <Info label="Activation Key" value={device.activationKey || "—"} />{" "}
           <Info label="Device Type" value={deviceType} />{" "}
           <Info label="Serial Number" value={serialNumber} />{" "}
           <Info label="Merchant" value={merchant} />{" "}

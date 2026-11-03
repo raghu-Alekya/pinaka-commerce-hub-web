@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { listStoreVendorPayments } from "../api/vendorPayments";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
+import { formatCurrency } from "../utils/currency";
 import "../styles/vendor-payments.css";
 
 const initialVendors = [
@@ -100,7 +101,7 @@ const initialPayments = [
   },
 ];
 
-export default function VendorPayments({ viewMode, merchantId, storeId, store } = {}) {
+export default function VendorPayments({ viewMode, store } = {}) {
   const [selectedView, setView] = useState("vendors");
   const view = viewMode || selectedView;
 
@@ -413,7 +414,7 @@ export default function VendorPayments({ viewMode, merchantId, storeId, store } 
 
                 <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.method}</td>
 
-                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>$ {payment.amount}</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{formatCurrency(payment.amount, store?.currency, store?.currencySymbol)}</td>
 
 
                 <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.createdBy || "—"}</td>

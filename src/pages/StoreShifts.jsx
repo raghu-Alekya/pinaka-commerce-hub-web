@@ -4,6 +4,7 @@ import { listStoreSafeDrops } from "../api/storeSafeDrops";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
+import { formatCurrency } from "../utils/currency";
 import "../styles/store-shifts.css";
 
 const dateLabel = (value) => !value ? "—" : new Date(`${value}T12:00:00`).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -38,16 +39,13 @@ const tableTimeLabel = (value) => {
     <span>{date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
   </span>;
 };
-const money = (value) => {
-  const amount = Number(value);
-  return `$${(Number.isFinite(amount) ? amount : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-};
 const count = (value) => {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
 };
 
 export default function StoreShifts({ merchantId, storeId, store }) {
+  const money = (value) => formatCurrency(value, store?.currency, store?.currencySymbol);
   const [selectedShift, setSelectedShift] = useState(null);
   const [records, setRecords] = useState([]);
   const [devices, setDevices] = useState([]);
@@ -284,6 +282,7 @@ if (selectedShift) {
 }
 
 function ShiftDetails({ shift, store, onBack }) {
+  const money = (value) => formatCurrency(value, store?.currency, store?.currencySymbol);
   const metrics = [
     ["Total Orders", shift.orders, "bi-file-earmark-text"],
     ["Total Sales", shift.sales, "bi-currency-rupee"],

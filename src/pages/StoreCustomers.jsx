@@ -3,7 +3,14 @@ import { useEffect, useMemo, useState } from "react";
 import Pagination from "../components/Pagination";
 import { customersSeed } from "../data/data";
 import BentoDetailModal from "../components/BentoDetailModal";
+import { formatCurrency } from "../utils/currency";
 import "../styles/store-customers.css";
+
+function formatCustomerSpend(value, store) {
+  if (value === undefined || value === null || value === "") return formatCurrency(0, store?.currency, store?.currencySymbol);
+  const numericText = typeof value === "string" ? value.replace(/,/g, "").match(/-?\d+(?:\.\d+)?/)?.[0] : value;
+  return Number.isFinite(Number(numericText)) ? formatCurrency(numericText, store?.currency, store?.currencySymbol) : value;
+}
 
 export default function StoreCustomers({
   embedded = false,
@@ -439,10 +446,7 @@ export default function StoreCustomers({
                 subtitle: selectedCustomer.type || "Retail Customer",
                 status: selectedCustomer.status || "Active",
                 metricLabel: "TOTAL SPENT",
-                metricValue:
-                  typeof selectedCustomer.totalSpent === "number"
-                    ? `$${selectedCustomer.totalSpent.toFixed(2)}`
-                    : selectedCustomer.totalSpent || "$0.00",
+                metricValue: formatCustomerSpend(selectedCustomer.totalSpent, store),
               }
             : null
         }
@@ -504,10 +508,7 @@ export default function StoreCustomers({
                     },
                     {
                       label: "LIFETIME VALUE",
-                      value:
-                        typeof selectedCustomer.totalSpent === "number"
-                          ? `$${selectedCustomer.totalSpent.toFixed(2)}`
-                          : selectedCustomer.totalSpent || "$0.00",
+                      value: formatCustomerSpend(selectedCustomer.totalSpent, store),
                     },
                     {
                       label: "LAST UPDATED",

@@ -1,5 +1,6 @@
 import { api } from "./http";
 import { endpoints } from "./endpoints";
+import { formatCurrency, getCurrencySymbol } from "../utils/currency";
 
 function metaValue(entries, key) {
   const match = (Array.isArray(entries) ? entries : []).find((entry) => entry?.key === key);
@@ -19,29 +20,11 @@ export function normalizeOrderStatus(value) {
 }
 
 export function currencySymbol(currency = "USD") {
-  switch (String(currency || "USD").toUpperCase()) {
-    case "EUR":
-      return "€";
-    case "GBP":
-      return "£";
-    case "INR":
-      return "₹";
-    default:
-      return "$";
-  }
+  return getCurrencySymbol(currency);
 }
 
-export function formatMoney(value, currency = "USD") {
-  const amount = Number(value || 0);
-  const safe = Number.isFinite(amount) ? amount : 0;
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: String(currency || "USD").toUpperCase(),
-    }).format(safe);
-  } catch {
-    return `${currencySymbol(currency)}${safe.toFixed(2)}`;
-  }
+export function formatMoney(value, currency = "USD", savedSymbol) {
+  return formatCurrency(value, currency, savedSymbol);
 }
 
 export function normalizeOrder(order = {}) {
@@ -49,6 +32,7 @@ export function normalizeOrder(order = {}) {
   const created = createdAt ? new Date(createdAt) : null;
   const validDate = created && !Number.isNaN(created.getTime());
   const currency = order.currency || "USD";
+  const savedCurrencySymbol = order.currencySymbol || order.currency_symbol || getCurrencySymbol(currency);
   const totalValue = Number(order.totalAmount ?? order.total_amount ?? order.total ?? 0);
   const metadata = order.metadata || order.meta_data || [];
   const clientOrderId = order.clientOrderId || order.client_order_id || metaValue(metadata, "_pos_client_order_id") || "";
@@ -67,38 +51,50 @@ export function normalizeOrder(order = {}) {
     author: order.customerName || order.customer_name || order.customer || metaValue(metadata, "pos_placed_by") || "Walk-in Customer",
     paymentMethod: titleCase(order.paymentMethod || order.payment_method || ""),
     totalValue: Number.isFinite(totalValue) ? totalValue : 0,
-    total: formatMoney(totalValue, currency),
+    total: formatMoney(totalValue, currency, savedCurrencySymbol),
     currency,
+    currencySymbol: savedCurrencySymbol,
     merchantId: order.merchantId || order.merchant_id || "",
     storeId: order.storeId || order.store_id || "",
   };
 }
 
 export async function listOrders(storeId) {
-  const response = await api.get(endpoints.orders(storeId), {
-    headers: storeId ? { "x-store-id": storeId } : undefined,
-  });
-  const orders = Array.isArray(response?.orders)
-    ? response.orders
-    : Array.isArray(response)
-      ? response
-      : [];
-  return orders.map(normalizeOrder);
+  const result = await listScopedOrders({ storeId });
+  return result.orders;
 }
 
-export async function listAllMerchantOrders({ page = 1, perPage = 10 } = {}) {
-  const query = new URLSearchParams({ page: String(page), perPage: String(perPage) });
-  const response = await api.get(`${endpoints.allMerchantOrders}?${query}`);
-  const payload = response?.data?.data && typeof response.data.data === "object"
-    ? response.data.data
-    : response?.data && typeof response.data === "object" ? response.data : response;
-  if (payload?.success === false) throw new Error(payload.message || "Unable to load all merchant orders.");
-  const rows = Array.isArray(payload?.orders) ? payload.orders : [];
-  return {
-    orders: rows.map(normalizeOrder),
-    cards: payload?.cards || {},
-    pagination: payload?.pagination || { page, per_page: perPage, total: rows.length },
+// Load every matching database row so the UI can count the same records it
+// displays, without relying on a separate summary/count value.
+export async function listScopedOrders({ merchantId, storeId, perPage = 100 } = {}) {
+  const headers = {
+    ...(merchantId ? { "x-merchant-id": String(merchantId) } : {}),
+    ...(storeId ? { "x-store-id": String(storeId) } : {}),
   };
+  const orders = [];
+  const seenOrderIds = new Set();
+  let page = 1;
+  do {
+    const query = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+    if (storeId) query.set("storeId", String(storeId));
+    const response = await api.get(`${endpoints.allMerchantOrders}?${query}`, { headers });
+    const payload = response?.data?.data && typeof response.data.data === "object"
+      ? response.data.data
+      : response?.data && typeof response.data === "object" ? response.data : response;
+    if (payload?.success === false) throw new Error(payload.message || "Unable to load orders.");
+    const rows = Array.isArray(payload?.orders) ? payload.orders : [];
+    if (!rows.length) break;
+    const newRows = rows.filter((row, index) => {
+      const id = String(row?.id ?? row?.order_id ?? `page-${page}-row-${index}`);
+      if (seenOrderIds.has(id)) return false;
+      seenOrderIds.add(id);
+      return true;
+    });
+    if (!newRows.length) break;
+    orders.push(...newRows.map(normalizeOrder));
+    page += 1;
+  } while (true);
+  return { orders, total: orders.length };
 }
 
 export async function getOrder(orderId, storeId) {

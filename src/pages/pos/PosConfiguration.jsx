@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../../styles/pos-configuration.css";
 import { ApiError, pendingStoreRead } from "../../api/http";
+import { getCurrencySymbol } from "../../utils/currency";
 import { CashRegisterIcon, PosSettingsContext, SettingsChangeDialog, snapshotKey } from "./shared";
 import { OpeningBalanceSettings } from "./opening-balance/OpeningBalanceSettings";
 import { TaxConfiguration } from "./currency-tax/TaxConfiguration";
@@ -145,7 +146,7 @@ const initialSafeSettings = {
     cashierInitiated: true, reasonRequired: true, tubeSize: "", tubes: [], drops: [],
 };
 
-export default function PosConfiguration({ merchantId, storeId, store, embedded = false } = {}) {
+export default function PosConfiguration({ merchantId, storeId, store, onCurrencyChange, embedded = false } = {}) {
     const [registers, setRegisters] = useState(() => (storeId ? [] : initialRegisters));
     const [mappings, setMappings] = useState(() => (storeId ? [] : initialMappings));
     const [safeSettings, setSafeSettings] = useState(initialSafeSettings);
@@ -174,6 +175,9 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
 
 
     const [storeCurrency, setStoreCurrency] = useState(store?.currency || "USD");
+    useEffect(() => {
+        if (store?.currency) setStoreCurrency(store.currency);
+    }, [store?.currency]);
     const savedScreens = useRef({});
     const [pendingLeave, setPendingLeave] = useState(null);
     const [busy, setBusy] = useState(false);
@@ -206,7 +210,10 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
             if (await session.save() !== true) { setPendingLeave(null); return; }
             // Newer screens already save through their existing parent setters.
             if (!["cash-register", "terminal-mapping", "safe-drop"].includes(selectedConfig)) savedScreens.current[selectedConfig] = { ...session.draft };
-            if (selectedConfig === "tax") setStoreCurrency(session.draft.currency);
+            if (selectedConfig === "tax") {
+                setStoreCurrency(session.draft.currency);
+                onCurrencyChange?.(session.draft.currency);
+            }
             session.baseline = { ...session.draft };
             setPendingLeave(null);
             setNotice("Changes are updated.");
@@ -220,7 +227,7 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
         window.addEventListener("beforeunload", preventLoss);
         return () => window.removeEventListener("beforeunload", preventLoss);
     }, [session]);
-    const currencySymbol = new Intl.NumberFormat("en", { style: "currency", currency: storeCurrency, currencyDisplay: "narrowSymbol" }).formatToParts(0).find((part) => part.type === "currency").value;
+    const currencySymbol = getCurrencySymbol(storeCurrency);
     const settings = { session, currency: storeCurrency, currencySymbol, merchantId, storeId, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) };
 
     const filteredCards = configurationCards.filter((card) => {

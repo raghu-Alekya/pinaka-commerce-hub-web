@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import FiltersBar from "../components/FiltersBar";
 import Pagination from "../components/Pagination";
 import { listStoreSafeDrops } from "../api/storeSafeDrops";
+import { formatCurrency } from "../utils/currency";
 import { listStoreEmployees } from "../api/employees";
 import { isUuid } from "../api/storeDetails";
 import BentoDetailModal from "../components/BentoDetailModal";
 import ListActions from "../components/ListActions";
 import "../styles/safe-drops.css";
 
-const currency = (value) => `$${Number(value || 0).toFixed(2)}`;
 const dateParts = (value) => {
   const date = new Date(value);
   if (!value || Number.isNaN(date.getTime())) return { date: "-", time: "" };
@@ -52,6 +52,7 @@ function mapSafeDrop(record, employeeNames) {
 }
 
 export default function SafeDrops({ store, storeId: storeIdProp, merchantId }) {
+  const currency = (value) => formatCurrency(value, store?.currency, store?.currencySymbol);
   const storeId = [store?.uuid, store?.storeUUID, store?.storeUuid, store?.store_uuid, store?.id, storeIdProp, store?.storeId, store?.storeID].find(isUuid);
   const [records, setRecords] = useState([]);
   const [employeeNames, setEmployeeNames] = useState({});
