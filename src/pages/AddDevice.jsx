@@ -11,15 +11,16 @@ import { listMerchants } from "../api/merchants";
 const deviceTypes = ["POS Terminal", "Kitchen Display", "Barcode Scanner", "Receipt Printer", "Customer Display"]
   .map((label) => ({ value: label, label }));
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const createSerialNumber = () => `SN-${globalThis.crypto?.randomUUID?.().toUpperCase() || `${Date.now()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`}`;
 
 export default function AddDevice({ merchantId: scopedMerchantId = "", merchant: scopedMerchant = null, embedded = false, onSave, onCancel, initialDevice = null } = {}) {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     deviceName: "",
-    deviceId: "",
     deviceType: "",
-    serialNumber: "",
+    serialNumber: createSerialNumber(),
+    activationKey: "",
     merchantId: "",
     merchantName: "",
     status: "Active",
@@ -38,9 +39,9 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
     setFormData((current) => ({
       ...current,
       deviceName: initialDevice.name || initialDevice.deviceName || initialDevice.device_name || "",
-      deviceId: initialDevice.deviceId || initialDevice.device_id || "",
       deviceType: initialDevice.type || initialDevice.deviceType || initialDevice.device_type || "",
       serialNumber: initialDevice.serialNumber || initialDevice.serial_number || initialDevice.serial || "",
+      activationKey: initialDevice.activationKey || initialDevice.device_active_code || initialDevice.authorization_code || initialDevice.activation_code || "",
       merchantId: scopedMerchantId || initialDevice.merchantId || initialDevice.merchant_id || "",
       merchantName: scopedMerchant?.businessDisplayName || scopedMerchant?.name || initialDevice.merchantName || initialDevice.merchant_name || "",
       status: initialDevice.status || initialDevice.connectionStatus || "Active",
@@ -114,6 +115,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
       ...(!formData.deviceName.trim() && { deviceName: true }),
       ...(!formData.deviceType && { deviceType: true }),
       ...(!formData.serialNumber.trim() && { serialNumber: true }),
+      ...(!formData.activationKey.trim() && { activationKey: true }),
       ...(!formData.merchantId && { merchantId: true }),
     };
     setValidationErrors(nextValidationErrors);
@@ -192,16 +194,6 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
               />
             </FormField>
 
-            {/* DEVICE ID */}
-            <FormField label="Device ID">
-              <input
-                name="deviceId"
-                value={formData.deviceId}
-                onChange={handleChange}
-                placeholder="Enter device ID "
-              />
-            </FormField>
-
             {/* GENERATED DEVICE CODE */}
             <FormField label="Device Code">
               <input
@@ -218,11 +210,15 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
               <input
                 name="serialNumber"
                 value={formData.serialNumber}
-                onChange={handleChange}
-                placeholder="Enter device serial number"
+                readOnly
+                placeholder="Generated automatically"
                 required
                 aria-invalid={Boolean(validationErrors.serialNumber)}
               />
+            </FormField>
+
+            <FormField label="Activation Key" required invalid={validationErrors.activationKey} error={validationErrors.activationKey && "Activation Key is required."}>
+              <input name="activationKey" value={formData.activationKey} onChange={handleChange} placeholder="Enter activation key" required aria-invalid={Boolean(validationErrors.activationKey)} />
             </FormField>
 
             {/* DEVICE TYPE */}

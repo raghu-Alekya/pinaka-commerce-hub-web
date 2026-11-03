@@ -22,6 +22,7 @@ export default function EditDevice() {
     deviceName: "",
     deviceCode: "",
     deviceId: "",
+    activationKey: "",
     deviceType: "",
     serialNumber: "",
     merchantId: "",
@@ -62,7 +63,7 @@ export default function EditDevice() {
       setForm({
         deviceName: data.name || "",
         deviceCode: data.code || "",
-        deviceId: data.deviceId || "",
+        activationKey: data.activationKey || "",
         deviceType: data.type || "",
         serialNumber: data.serial || "",
         merchantId: data.merchantId || "",
@@ -98,6 +99,7 @@ export default function EditDevice() {
     if (!form.deviceName.trim()) errors.deviceName = "Device Name is required.";
     if (!form.deviceType) errors.deviceType = "Device Type is required.";
     if (!form.serialNumber.trim()) errors.serialNumber = "Serial Number is required.";
+    if (!form.activationKey.trim()) errors.activationKey = "Activation Key is required.";
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -282,13 +284,8 @@ export default function EditDevice() {
             />
           </EditField>
 
-          <EditField label="Device ID">
-            <input
-              name="deviceId"
-              value={form.deviceId}
-              onChange={update}
-              placeholder="Enter device ID (optional)"
-            />
+          <EditField label="Activation Key" required error={validationErrors.activationKey}>
+            <input name="activationKey" value={form.activationKey} onChange={update} placeholder="Enter activation key" required aria-invalid={Boolean(validationErrors.activationKey)} />
           </EditField>
 
           {/* DEVICE TYPE */}
