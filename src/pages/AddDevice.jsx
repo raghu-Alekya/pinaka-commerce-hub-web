@@ -11,7 +11,6 @@ import { listMerchants } from "../api/merchants";
 const deviceTypes = ["POS Terminal", "Kitchen Display", "Barcode Scanner", "Receipt Printer", "Customer Display"]
   .map((label) => ({ value: label, label }));
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const createSerialNumber = () => `SN-${globalThis.crypto?.randomUUID?.().toUpperCase() || `${Date.now()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`}`;
 
 export default function AddDevice({ merchantId: scopedMerchantId = "", merchant: scopedMerchant = null, embedded = false, onSave, onCancel, initialDevice = null } = {}) {
   const navigate = useNavigate();
@@ -19,7 +18,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
   const [formData, setFormData] = useState({
     deviceName: "",
     deviceType: "",
-    serialNumber: createSerialNumber(),
+    serialNumber: "",
     activationKey: "",
     merchantId: "",
     merchantName: "",
@@ -115,7 +114,6 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
       ...(!formData.deviceName.trim() && { deviceName: true }),
       ...(!formData.deviceType && { deviceType: true }),
       ...(!formData.serialNumber.trim() && { serialNumber: true }),
-      ...(!formData.activationKey.trim() && { activationKey: true }),
       ...(!formData.merchantId && { merchantId: true }),
     };
     setValidationErrors(nextValidationErrors);
@@ -210,15 +208,22 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
               <input
                 name="serialNumber"
                 value={formData.serialNumber}
-                readOnly
-                placeholder="Generated automatically"
+                onChange={handleChange}
+                placeholder="Enter device serial number"
                 required
                 aria-invalid={Boolean(validationErrors.serialNumber)}
               />
             </FormField>
 
-            <FormField label="Activation Key" required invalid={validationErrors.activationKey} error={validationErrors.activationKey && "Activation Key is required."}>
-              <input name="activationKey" value={formData.activationKey} onChange={handleChange} placeholder="Enter activation key" required aria-invalid={Boolean(validationErrors.activationKey)} />
+            <FormField label="Activation Key">
+              <input
+                name="activationKey"
+                value={formData.activationKey}
+                readOnly
+                aria-readonly="true"
+                placeholder="Auto-generated"
+                className="device-code-readonly"
+              />
             </FormField>
 
             {/* DEVICE TYPE */}

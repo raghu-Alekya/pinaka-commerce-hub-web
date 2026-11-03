@@ -15,6 +15,7 @@ import { MappingConfiguration, mappingRows } from "./terminal-mappings/MappingCo
 import { SafeConfiguration } from "./safe-drop/SafeConfiguration";
 import { PrinterSettings } from "./printer-settings/PrinterSettings";
 import { CustomerDisplayPromotionalImages } from "./customer-display-promotional-images/promotional_images";
+import { LoyaltySettings } from "./loyalty/LoyaltySettings";
 import { getPosCashRegisters } from "./cash-registers/api";
 import { getPosTerminalMappings } from "./terminal-mappings/api";
 
@@ -127,6 +128,15 @@ const configurationCards = [
         component: "customer-display-promotional-images",
         enabled: true,
     },
+    {
+        id: "loyalty-settings",
+        icon: "award",
+        iconClass: "purple",
+        title: "Loyalty Settings",
+        description: "Manage customer loyalty points, earning rules, and redemption settings.",
+        component: "loyalty-settings",
+        enabled: true,
+    },
 ];
 
 const initialRegisters = [
@@ -228,7 +238,7 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
         return () => window.removeEventListener("beforeunload", preventLoss);
     }, [session]);
     const currencySymbol = getCurrencySymbol(storeCurrency);
-    const settings = { session, currency: storeCurrency, currencySymbol, merchantId, storeId, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) };
+    const settings = useMemo(() => ({ session, currency: storeCurrency, currencySymbol, merchantId, storeId, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) }), [session, storeCurrency, currencySymbol, merchantId, storeId, selectedConfig, requestLeave, saveChanges]);
 
     const filteredCards = configurationCards.filter((card) => {
         if (card.component === "device-mapping" && !embedded) return false;
@@ -281,6 +291,9 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
 
             case "customer-display-promotional-images":
                 return <CustomerDisplayPromotionalImages onBack={() => requestLeave(null)} />;
+
+            case "loyalty-settings":
+                return <LoyaltySettings />;
 
             default:
                 return null;
@@ -373,5 +386,3 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
         </div>
     );
 }
-
-
