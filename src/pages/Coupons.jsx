@@ -8,6 +8,7 @@ import ListActions from "../components/ListActions";
 import { api, pendingStoreRead } from "../api/http";
 import { normalizeCatalog } from "../api/products";
 import { catalogProductId } from "./discountForm";
+import { formatCurrency } from "../utils/currency";
 import { getStoreCoupons, invalidateStoreCoupons, syncStoreCoupons } from "../api/storeCoupons";
 import "../styles/coupons.css";
 
@@ -72,6 +73,12 @@ function normalizeCoupon(raw = {}) {
         expiryDate: expiryDate ? String(expiryDate).slice(0, 10) : "",
         status,
     };
+}
+
+function formatCouponAmount(value, currency, currencySymbol) {
+    const text = String(value ?? "");
+    if (!text || text === "—" || text.includes("%")) return text || "—";
+    return formatCurrency(text.replace(/[^\d.-]/g, ""), currency, currencySymbol);
 }
 
 function couponToForm(coupon = {}) {
@@ -707,6 +714,8 @@ export default function Coupons({
                                     <CouponRow
                                         key={coupon.id}
                                         coupon={coupon}
+                                        currency={store?.currency}
+                                        currencySymbol={store?.currencySymbol}
                                         onView={() =>
                                             setSelectedCoupon(coupon)
                                         }
@@ -800,7 +809,7 @@ export default function Coupons({
                               metricValue: selectedCoupon.amount
                                   ? (String(selectedCoupon.type || "").toLowerCase().includes("percent")
                                         ? `${selectedCoupon.amount}%`
-                                        : `$${selectedCoupon.amount}`)
+                                        : formatCouponAmount(selectedCoupon.amount, store?.currency, store?.currencySymbol))
                                   : "—",
                           }
                         : null
@@ -1096,7 +1105,7 @@ function CouponEditor({ mode, form, setForm, error, busy, products = [], catalog
 // COUPON ROW
 // =========================================================
 
-function CouponRow({ coupon, onView, onEdit, onDelete }) {
+function CouponRow({ coupon, currency, currencySymbol, onView, onEdit, onDelete }) {
     return (
         <tr
             className="coupon-row-clickable"
@@ -1181,7 +1190,7 @@ function CouponRow({ coupon, onView, onEdit, onDelete }) {
             <td>
 
                 <strong className="coupon-amount">
-                    {coupon.amount}
+                    {formatCouponAmount(coupon.amount, currency, currencySymbol)}
                 </strong>
 
             </td>

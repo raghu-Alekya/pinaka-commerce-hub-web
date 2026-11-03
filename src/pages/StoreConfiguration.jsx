@@ -24,6 +24,8 @@ import EmployeeAttendance, { AttendanceDetails } from "./EmployeeAttendance";
 
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { endpoints } from "../api/endpoints";
+import { getPosCurrencyTax } from "./pos/currency-tax/api";
+import { getCurrencySymbol } from "../utils/currency";
 
 
 import {
@@ -140,7 +142,7 @@ function StoreDetailsSummary({ store, merchant }) {
       ["Store Name", store.name], ["Store Code", store.storeCode || store.id],
       ["Merchant", merchant?.name || store.merchantName],
       ["Store Type", typeof store.type === "object" ? store.type.name || store.type.code : store.type],
-      ["Status", store.status], ["Currency", store.currency],
+      ["Status", store.status], ["Currency", store.currency ? `${store.currency} (${store.currencySymbol || getCurrencySymbol(store.currency)})` : "—"],
     ]} />
     <SummaryFields title="Contact & Location" items={[
       ["Phone", store.phone], ["Email", store.email || store.storeEmail], ["Website", store.url],
@@ -239,6 +241,9 @@ export default function StoreConfiguration() {
   const [merchant, setMerchant] = useState(null);
   const [storeResponse, setStoreResponse] = useState(null);
   const [store, setStore] = useState(null);
+  const updateStoreCurrency = (currency, currencySymbol = getCurrencySymbol(currency)) => {
+    if (currency) setStore((current) => current ? { ...current, currency, currencySymbol } : current);
+  };
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -330,6 +335,19 @@ export default function StoreConfiguration() {
       cancelled = true;
     };
   }, [merchantId, storeId, revision]);
+
+  useEffect(() => {
+    if (!store?.uuid) return undefined;
+    let active = true;
+    getPosCurrencyTax(store.uuid)
+      .then((settings) => {
+        if (active && settings?.currency) {
+          updateStoreCurrency(settings.currency, settings.currencySymbol || getCurrencySymbol(settings.currency));
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [store?.uuid]);
 
   /* =======================================================
      LOAD WORDPRESS CONNECTOR
@@ -757,6 +775,7 @@ export default function StoreConfiguration() {
                   merchantId={merchant?.id || merchant?.merchantId || merchant?.merchant_id || store?.merchantId || store?.merchant_id || store?.merchant?.id || merchantId}
                   storeId={store?.uuid || ""}
                   store={store}
+                  onCurrencyChange={updateStoreCurrency}
                   embedded
                 />
 
@@ -795,6 +814,8 @@ export default function StoreConfiguration() {
                 <MerchantVendors
                   storeId={store?.uuid || storeId}
                   merchantId={merchant?.id || merchant?.merchantId || merchant?.merchant_id || store?.merchantId || store?.merchant_id || store?.merchant?.id || merchantId}
+                  currency={store?.currency}
+                  currencySymbol={store?.currencySymbol}
                 />
 
               ) : section === "vendorhistory" ? (

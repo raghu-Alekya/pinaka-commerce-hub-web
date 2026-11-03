@@ -6,6 +6,7 @@ import FiltersBar from "../components/FiltersBar";
 import FilterDropdown from "../components/FilterDropdown";
 import ListActions from "../components/ListActions";
 import Pagination from "../components/Pagination";
+import { formatCurrency } from "../utils/currency";
 import "../styles/merchant-vendors.css";
 import Vendors from "./Vendors";
 import { listMerchantStores } from "../api/stores";
@@ -135,6 +136,8 @@ const locationOptions = values => [...new Map(values.filter(Boolean).map(value =
 export default function MerchantVendors({
     merchantId,
     storeId,
+    currency = "USD",
+    currencySymbol,
     masterVendors: initialMasterVendors = [],
     assignedVendorIds = [],
     onSaveAssignments,
@@ -1433,7 +1436,7 @@ useEffect(() => {
                     subtitle: `${modal.vendor.type || "Organization"} • Master Account`,
                     status: modal.vendor.status || "Verified Active",
                     metricLabel: "TOTAL REVENUE",
-                    metricValue: modal.vendor.totalSpend ? `$${Number(modal.vendor.totalSpend).toLocaleString()}` : (modal.vendor.assignedStoreCount ? `${modal.vendor.assignedStoreCount} Stores` : "$12,450.00"),
+                    metricValue: modal.vendor.totalSpend ? formatCurrency(modal.vendor.totalSpend, currency, currencySymbol) : (modal.vendor.assignedStoreCount ? `${modal.vendor.assignedStoreCount} Stores` : formatCurrency(12450, currency, currencySymbol)),
                 } : null}
                 layout="bento-3"
                 maxWidth="max-w-4xl"

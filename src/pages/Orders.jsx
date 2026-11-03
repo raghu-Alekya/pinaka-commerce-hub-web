@@ -6,7 +6,8 @@ import FiltersBar from "../components/FiltersBar";
 import ListActions from "../components/ListActions";
 import { listMerchants } from "../api/merchants";
 import { listMerchantStores } from "../api/stores";
-import { listAllMerchantOrders, listOrders } from "../api/orders";
+import { listScopedOrders } from "../api/orders";
+import { formatCurrency } from "../utils/currency";
 import OrderDetail from "./OrderDetail";
 import "../styles/orders.css";
 
@@ -52,8 +53,6 @@ export default function Orders({
     storeId || (!embedded && searchParams.get("store")) || "",
   );
   const [orders, setOrders] = useState([]);
-  const [overviewCards, setOverviewCards] = useState(null);
-  const [serverPagination, setServerPagination] = useState(null);
   const [viewedOrder, setViewedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -112,32 +111,27 @@ export default function Orders({
     let active = true;
     setLoading(true);
     setError("");
-    pendingStoreRead(`all-merchant-orders:${currentPage}:${pageSize}`, () =>
-      listAllMerchantOrders({ page: currentPage, perPage: pageSize }),
+    setOrders([]);
+    pendingStoreRead("all-orders:database-rows", () =>
+      listScopedOrders(),
     )
-      .then((result) => {
+      .then(({ orders: rows }) => {
         if (!active) return;
-        setOrders(result.orders);
-        setOverviewCards(result.cards);
-        setServerPagination(result.pagination);
+        setOrders(rows);
       })
       .catch((loadError) => {
         if (!active) return;
         setOrders([]);
-        setOverviewCards(null);
-        setServerPagination(null);
         setError(loadError?.message || "Failed to load orders.");
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [embedded, selectedMerchant, selectedStore, currentPage, pageSize]);
+  }, [embedded, selectedMerchant, selectedStore]);
 
   useEffect(() => {
     if (!selectedStore) {
       if (embedded || selectedMerchant) {
         setOrders([]);
-        setOverviewCards(null);
-        setServerPagination(null);
         setError("");
         setLoading(false);
       }
@@ -146,15 +140,14 @@ export default function Orders({
     let active = true;
     setLoading(true);
     setError("");
-    setOverviewCards(null);
-    setServerPagination(null);
-    pendingStoreRead(`store-orders:${selectedStore}`, () => listOrders(selectedStore))
-      .then((rows) => {
+    setOrders([]);
+    pendingStoreRead(
+      `scoped-orders:${selectedMerchant || "all"}:${selectedStore}`,
+      () => listScopedOrders({ merchantId: selectedMerchant, storeId: selectedStore }),
+    )
+      .then(({ orders: rows }) => {
         if (!active) return;
-        const merchantOrders = selectedMerchant
-          ? rows.filter((order) => !order.merchantId || String(order.merchantId) === String(selectedMerchant))
-          : rows;
-        setOrders(merchantOrders);
+        setOrders(rows);
       })
       .catch((loadError) => {
         if (!active) return;
@@ -187,14 +180,12 @@ export default function Orders({
     });
   }, [orders, search, statusFilter, authorFilter, dateFilter]);
 
-  const isServerPaginated = Boolean(serverPagination && !selectedStore && !selectedMerchant && !embedded);
-  const totalItems = isServerPaginated ? Number(serverPagination.total ?? filteredOrders.length) : filteredOrders.length;
+  const totalItems = filteredOrders.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const paginatedOrders = useMemo(() => {
-    if (isServerPaginated) return filteredOrders;
     const start = (currentPage - 1) * pageSize;
     return filteredOrders.slice(start, start + pageSize);
-  }, [filteredOrders, currentPage, pageSize, isServerPaginated]);
+  }, [filteredOrders, currentPage, pageSize]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -204,12 +195,12 @@ export default function Orders({
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, totalPages]);
 
-  const completedCount = overviewCards?.completed ?? orders.filter((order) => statusClass(order.status) === "completed").length;
-  const pendingCount = overviewCards?.pending_payment ?? orders.filter((order) => statusClass(order.status) === "pending").length;
-  const totalOrderCount = overviewCards?.total_orders ?? orders.length;
-  const totalAmount = Number(overviewCards?.total_value ?? orders.reduce((sum, order) => sum + Number(order.totalValue || 0), 0));
-  const completedPercentage = overviewCards?.completed_percent ?? (totalOrderCount ? ((completedCount / totalOrderCount) * 100).toFixed(1) : "0.0");
-  const pendingPercentage = overviewCards?.pending_payment_percent ?? (totalOrderCount ? ((pendingCount / totalOrderCount) * 100).toFixed(1) : "0.0");
+  const completedCount = orders.filter((order) => statusClass(order.status) === "completed").length;
+  const pendingCount = orders.filter((order) => statusClass(order.status) === "pending").length;
+  const totalOrderCount = orders.length;
+  const totalAmount = orders.reduce((sum, order) => sum + Number(order.totalValue || 0), 0);
+  const completedPercentage = totalOrderCount ? ((completedCount / totalOrderCount) * 100).toFixed(1) : "0.0";
+  const pendingPercentage = totalOrderCount ? ((pendingCount / totalOrderCount) * 100).toFixed(1) : "0.0";
   function rememberFilters(nextMerchant, nextStore) {
     if (embedded) return;
     const next = new URLSearchParams(searchParams);
@@ -323,6 +314,8 @@ export default function Orders({
     navigate(`/orders/${encodeURIComponent(order.id)}?${new URLSearchParams({
       ...((selectedMerchant || order.merchantId) ? { merchant: selectedMerchant || order.merchantId } : {}),
       ...((selectedStore || order.storeId) ? { store: selectedStore || order.storeId } : {}),
+      ...(store?.currency ? { currency: store.currency } : {}),
+      ...(store?.currencySymbol ? { currencySymbol: store.currencySymbol } : {}),
       number: order.wooOrderId,
     }).toString()}`, { state: { from: `${location.pathname}${location.search}` } });
   };
@@ -334,6 +327,8 @@ export default function Orders({
       orderNumber={viewedOrder.wooOrderId}
       storeId={selectedStore}
       merchantId={selectedMerchant}
+      currency={store?.currency}
+      currencySymbol={store?.currencySymbol}
       onBack={() => setViewedOrder(null)}
     />;
   }
@@ -355,7 +350,7 @@ export default function Orders({
         <SummaryCard icon="bi-bag-fill" tone="purple" label="Total Orders" value={totalOrderCount} meta="Live Records" metaTone="positive" />
         <SummaryCard icon="bi-check-circle-fill" tone="green" label="Completed" value={completedCount} meta={`${completedPercentage}% of total`} metaTone="positive" />
         <SummaryCard icon="bi-clock-fill" tone="orange" label="Pending Payment" value={pendingCount} meta={`${pendingPercentage}% of total`} metaTone="warning" />
-        <SummaryCard icon="bi-cash-stack" tone="blue" label="Total Value" value={`$${totalAmount.toFixed(2)}`} meta="Across loaded orders" metaTone="info" />
+        <SummaryCard icon="bi-cash-stack" tone="blue" label="Total Value" value={formatCurrency(totalAmount, store?.currency, store?.currencySymbol)} meta="Across loaded orders" metaTone="info" />
       </div>
 
       <div className={`orders-card ${!embedded ? "orders-standalone-card" : ""} w-full max-w-full min-w-0 overflow-hidden`}>
@@ -419,7 +414,7 @@ export default function Orders({
                           <span>{embedded ? String(order.author || "").replace(/^\s*\.\s*/, "").trim() || "Walk-in Customer" : order.author}</span>
                         </div>
                       </td>
-                      <td><strong className="order-total">{order.total}</strong></td>
+                      <td><strong className="order-total">{formatCurrency(order.totalValue, store?.currency || order.currency, store?.currencySymbol)}</strong></td>
                       <td className="orders-actions-cell">
                         <ListActions
                           onView={() => handleViewOrder(order)}

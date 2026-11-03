@@ -9,6 +9,7 @@ import {
     normalizeProduct,
 } from "../api/products";
 import { syncWordpressProducts } from "../api/storeConnector";
+import { formatCurrency } from "../utils/currency";
 import "../styles/products.css";
 
 export const normalizeStock = (val) =>
@@ -743,6 +744,8 @@ export default function Products({
                                             key={product.id}
                                             product={product}
                                             variants={variants}
+                                            currency={store?.currency}
+                                            currencySymbol={store?.currencySymbol}
                                             onSelect={setSelectedProduct}
                                         />
                                     )
@@ -844,9 +847,7 @@ export default function Products({
                                   selectedProduct.price !== undefined &&
                                   selectedProduct.price !== null &&
                                   selectedProduct.price !== ""
-                                      ? String(selectedProduct.price).startsWith("$")
-                                          ? selectedProduct.price
-                                          : `$${Number(selectedProduct.price).toFixed(2)}`
+                                       ? formatCurrency(String(selectedProduct.price).replace(/^[^\d-]+/, ""), store?.currency, store?.currencySymbol)
                                       : "—",
                           }
                         : null
@@ -1020,10 +1021,10 @@ function inheritParentTaxonomy(parent, child) {
     };
 }
 
-function ProductGroupRows({ product, variants, onSelect }) {
+function ProductGroupRows({ product, variants, currency, currencySymbol, onSelect }) {
     const parentProduct = variants.length ? { ...product, price: "" } : product;
     return <>
-        <ProductRow product={parentProduct} onClick={() => onSelect(parentProduct)} />
+        <ProductRow product={parentProduct} currency={currency} currencySymbol={currencySymbol} onClick={() => onSelect(parentProduct)} />
         {variants.map((variant) => {
             const childName = getChildProductName(product.name, variant.name);
             const childProduct = { ...variant, name: childName };
@@ -1031,6 +1032,8 @@ function ProductGroupRows({ product, variants, onSelect }) {
                 <ProductRow
                     key={variant.id}
                     product={childProduct}
+                    currency={currency}
+                    currencySymbol={currencySymbol}
                     variant
                     onClick={() => onSelect(childProduct)}
                 />
@@ -1050,6 +1053,8 @@ function getChildProductName(parentName, variantName) {
 
 function ProductRow({
     product,
+    currency,
+    currencySymbol,
     onClick,
     variant = false,
 }) {
@@ -1179,7 +1184,7 @@ function ProductRow({
                         null &&
                     product.price !==
                         ""
-                        ? product.price
+                        ? formatCurrency(String(product.price).replace(/^[^\d-]+/, ""), currency, currencySymbol)
                         : "—"}
                 </strong>
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import FilterDropdown from "../../../components/FilterDropdown";
 import { ApiError } from "../../../api/http";
+import { getCurrencySymbol } from "../../../utils/currency";
 import {
   ConfigBadge, ConfigField, ConfigFooter, ConfigHeader, ConfigSwitch,
   DenominationRow, SettingInput,
@@ -17,6 +18,7 @@ import {
 function currencyTaxPayload(values) {
     return {
         currency: values.currency,
+        currencySymbol: getCurrencySymbol(values.currency),
         rounding: values.rounding,
         decimalPlaces: Number(values.decimalPlaces),
         taxEnabled: values.taxEnabled,
@@ -321,6 +323,18 @@ export function TaxConfiguration() {
 
                         </div>
 
+                    </div>
+
+
+                    <div className="currency-tax-field">
+                        <label htmlFor="pos-currency-symbol">Currency Symbol</label>
+                        <input
+                            id="pos-currency-symbol"
+                            type="text"
+                            value={getCurrencySymbol(currency)}
+                            readOnly
+                            aria-readonly="true"
+                        />
                     </div>
 
 

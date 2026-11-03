@@ -7,6 +7,7 @@ import Pagination from "../components/Pagination";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
 import { buildDiscountPayload, catalogProductId, storedProductId, validateDiscountForm } from "./discountForm";
+import { formatCurrency } from "../utils/currency";
 import "../styles/coupons.css";
 import "../styles/discounts.css";
 
@@ -58,9 +59,9 @@ const discountStatus = (discount) => {
   if (discount.date_expires && discount.date_expires < today) return "Expired";
   return "Active";
 };
-const amountLabel = (discount) => {
+const amountLabel = (discount, currency, currencySymbol) => {
   if (discount.discount_type === "percent") return `${discount.amount}%`;
-  return `$${Number(discount.amount || 0).toFixed(2)}`;
+  return formatCurrency(discount.amount, currency, currencySymbol);
 };
 const inputDate = value => {
   const text = String(value ?? "").slice(0, 10);
@@ -107,7 +108,7 @@ function DiscountProductPicker({ products, value, onChange, multiple = false, di
     </div>}
   </div>;
 }
-export default function Discounts({ embedded = false, storeId: storeIdProp }) {
+export default function Discounts({ embedded = false, storeId: storeIdProp, store }) {
   const { storeId: routeStoreId } = useParams();
   const storeId = storeIdProp || routeStoreId;
   const [discounts, setDiscounts] = useState([]);
@@ -467,7 +468,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
                 <tr key={`${discount.type}-${discount.id}`}>
                   <td><div className="discount-name-cell"><strong>{discount.code}</strong><small>{typeLabel(discount.type)}</small></div></td>
                   <td><span className="discount-type-pill">{discount.type || "—"}</span></td>
-                  <td><strong className="discount-amount">{amountLabel(discount)}</strong></td>
+                  <td><strong className="discount-amount">{amountLabel(discount, store?.currency, store?.currencySymbol)}</strong></td>
                   <td><span className="discount-product-cell">{`${discount.product}${discount.type === "mix_match" && discount.discounted_products ? ` → ${discount.discounted_products}` : ""}${discount.type === "multipack" ? ` · ${discount.qty} items` : ""}`}</span></td>
                   <td>{discount.usage_limit === 0 || discount.usage_limit ? discount.usage_limit : "∞"}</td>
                   <td>{formatSystemDate(discount.date_starts)}</td>
