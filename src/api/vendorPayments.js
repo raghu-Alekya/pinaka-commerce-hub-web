@@ -19,6 +19,8 @@ export function normalizeVendorPayment(row, employeeNames = new Map()) {
     purpose: row.description || "—",
     method: String(row.payment_mode || "").toLowerCase().replace(/_/g, " ").replace(/\b\w/g, letter => letter.toUpperCase()),
     amount: Number.isFinite(amount) ? amount.toFixed(2) : "—",
+    createdAtValue: row.created_at,
+    updatedAtValue: row.updated_at,
     createdAt: formatPaymentDate(row.created_at),
     updatedAt: formatPaymentDate(row.updated_at),
   };

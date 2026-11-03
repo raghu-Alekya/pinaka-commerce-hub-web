@@ -505,15 +505,15 @@ export default function StoreConfiguration() {
      ======================================================= */
 
   const backToStores = () => {
+    if (merchantId) {
+      nav("/merchants", { replace: true });
+      return;
+    }
     if (location.state?.returnTo) {
       nav(location.state.returnTo);
       return;
     }
-    if (merchantId) {
-      nav(`/merchants?view=${encodeURIComponent(merchantId)}&tab=stores`);
-    } else {
-      nav("/stores");
-    }
+    nav("/stores");
   };
 
   const statusClass = useMemo(
@@ -555,7 +555,6 @@ export default function StoreConfiguration() {
           <span>/</span><span>Store Details &amp; Configuration</span><span>/</span><span>Employee Attendance</span><span>/</span><strong>View Details</strong>
         </> : <>
           <button className="link-button" onClick={backToStores}><i className="bi bi-arrow-left" />Stores</button>
-          <span>/</span><strong>Store Details &amp; Configuration</strong>
         </>}
 
       </header>

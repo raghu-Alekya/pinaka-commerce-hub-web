@@ -199,14 +199,15 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                 <th>Change Amount</th>
                 <th>Payment Accepted By</th>
                 <th>Date</th>
+                <th>Status</th>
               </tr>
             </thead>
  
             <tbody>
               {loading ? (
-                <tr><td colSpan="10" className="store-payment-records-empty">Loading payment records…</td></tr>
+                <tr><td colSpan="11" className="store-payment-records-empty">Loading payment records…</td></tr>
               ) : error ? (
-                <tr><td colSpan="10" className="store-payment-records-empty">{error}</td></tr>
+                <tr><td colSpan="11" className="store-payment-records-empty">{error}</td></tr>
               ) : filteredPayments.length ? (
                 paginatedPayments.map((payment) => (
                   <PaymentRecordRow
@@ -219,7 +220,7 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                 ))
               ) : (
                 <tr>
-                  <td colSpan="10" className="store-payment-records-empty">
+                  <td colSpan="11" className="store-payment-records-empty">
                     No payment records found.
                   </td>
                 </tr>
@@ -353,6 +354,7 @@ function mapPaymentRecord(payment, employeeNames = {}) {
       payment.reference || payment.transaction?.id || payment.provider_transaction?.id || payment.localId || payment.local_id || "—",
     paymentAcceptedBy: acceptedByName(payment, employeeNames),
     status: payment.status || "—",
+    dateTime: payment.payment_at,
     date: formatPaymentDate(payment.payment_at),
     paymentMethod: method,
     paymentType: payment.payment_type || "—",
@@ -456,13 +458,41 @@ function PaymentRecordRow({ payment, currency = "USD", currencySymbol, onView })
       </td>
       <td>{payment.paymentAcceptedBy}</td>
       <td>
-        <span className="payment-status">{payment.status}</span>
-        <span className="payment-date">{payment.date}</span>
+        <span className="payment-date">
+          {formatPaymentTimestamp(payment.dateTime, payment.date)}
+        </span>
+      </td>
+      <td>
+        <span className={`payment-status ${paymentStatusClass(payment.status)}`}>
+          <i className="bi bi-circle-fill" aria-hidden="true" />
+          {payment.status}
+        </span>
       </td>
     </tr>
   );
 }
- 
+
+function formatPaymentTimestamp(value, fallback) {
+  if (!value) return fallback;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+  return <>
+    <span>{date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+    <small>{date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</small>
+  </>;
+}
+
+function paymentStatusClass(status) {
+  const value = String(status || "").toLowerCase();
+  if (value.includes("complete")) return "completed";
+  if (value.includes("pending")) return "pending";
+  if (value.includes("cancel")) return "cancelled";
+  if (value.includes("refund")) return "refunded";
+  if (value.includes("partial")) return "partial";
+  if (value.includes("create")) return "created";
+  return "processing";
+}
+
 function metaValue(metadata, key) {
   if (Array.isArray(metadata)) {
     return metadata.find((entry) => entry?.key === key)?.value;

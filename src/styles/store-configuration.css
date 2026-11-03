@@ -643,7 +643,6 @@
 .store-workspace-page .breadcrumb-area .link-button:hover,
 .store-workspace-page .store-workspace-main .link-button:hover {
   color: #3f32a3;
-  text-decoration: underline;
 }
 
 .store-workspace-page .breadcrumb-area .link-button i,
@@ -2184,10 +2183,15 @@
 .store-overview-step{display:inline-flex;align-items:center;justify-content:center;width:23px;height:23px;flex-shrink:0;border-radius:50%;background:#edf0f4;font-size:12px}
 .store-overview-nav a[aria-current=page] .store-overview-step{background:#5143bc;color:#fff}
 .store-overview-section-title{font-size:20px;margin:0 0 18px;color:#17233e}
-.store-overview-table{overflow-x:auto}
-.store-overview-table table{width:100%;border-collapse:collapse;font-size:13px}
-.store-overview-table th,.store-overview-table td{height:52px;padding:10px 14px;text-align:left;border-bottom:1px solid #edf0f4;overflow-wrap:anywhere;vertical-align:middle}
-.store-overview-table th{height:44px;background:#f1f3fd;color:#758096;font-size:12px;font-weight:600}
+.store-overview-table{overflow-x:auto;padding:16px}
+.store-overview-table table{width:100%;border:1px solid #dfe4ee;border-collapse:separate;border-spacing:0;border-radius:10px;font-size:13px}
+.store-overview-table th,.store-overview-table td{height:52px;padding:10px 14px;text-align:left;border-bottom:1px solid #e4e8ef;overflow-wrap:anywhere;vertical-align:middle}
+.store-overview-table th{height:44px;background:#f1f3fd;color:#102d59;font-size:12px;font-weight:600}
+.store-overview-table thead th:first-child{border-top-left-radius:8px}
+.store-overview-table thead th:last-child{border-top-right-radius:8px}
+.store-overview-table tbody tr:last-child td{border-bottom:1px solid #e4e8ef!important}
+.store-overview-table tbody tr:last-child td:first-child{border-bottom-left-radius:8px}
+.store-overview-table tbody tr:last-child td:last-child{border-bottom-right-radius:8px}
 .store-overview-empty{padding:0 20px 20px;color:#758096}
 
 
