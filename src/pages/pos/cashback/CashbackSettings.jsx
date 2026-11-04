@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Pagination from "../../../components/Pagination";
+import ListActions from "../../../components/ListActions";
 import { ApiError } from "../../../api/http";
 import {
   ConfigBadge, ConfigField, ConfigFooter, ConfigHeader, ConfigSwitch,
@@ -30,6 +31,7 @@ function cashbackPayload(values) {
 export function CashbackSettings() {
     const settings = usePosSettings();
     const savedId = useRef(null);
+    const tierInputRefs = useRef(new Map());
     const currency = settings.currency;
     
     const [enabled, setEnabled] = useConfigState("enabled", false);
@@ -308,6 +310,10 @@ export function CashbackSettings() {
                                     <td>
 
                                         <input
+                                            ref={(element) => {
+                                                if (element) tierInputRefs.current.set(tier.id, element);
+                                                else tierInputRefs.current.delete(tier.id);
+                                            }}
                                             type="number"
                                             min="0"
                                             step="0.01"
@@ -374,26 +380,12 @@ export function CashbackSettings() {
                                     <td>
 
                                         <div className="cashback-actions">
-
-                                            <button
-                                                type="button"
-                                                className="cashback-edit"
-                                            >
-                                                <i className="bi bi-pencil" />
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                className="cashback-delete"
-                                                onClick={() =>
-                                                    removeTier(
-                                                        tier.id
-                                                    )
-                                                }
-                                            >
-                                                <i className="bi bi-trash3" />
-                                            </button>
-
+                                            <ListActions
+                                                onEdit={() => tierInputRefs.current.get(tier.id)?.focus()}
+                                                editLabel={`Edit cashback tier from ${tier.from || "blank"}`}
+                                                onDelete={() => removeTier(tier.id)}
+                                                deleteLabel={`Remove cashback tier from ${tier.from || "blank"}`}
+                                            />
                                         </div>
 
                                     </td>

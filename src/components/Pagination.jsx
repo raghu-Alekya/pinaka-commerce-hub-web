@@ -49,17 +49,8 @@ export default function Pagination({
 
   return (
     <div
-      className="pagination-container table-pagination-footer"
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        width: "100%",
-        boxSizing: "border-box",
-        ...style,
-      }}
-    >
-      <div className="pagination-info" style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+      className="pagination-container table-pagination-footer" >
+      <div className="pagination-info" >
         {`Showing `}
         <strong>{startItem}</strong>
         {` to `}
