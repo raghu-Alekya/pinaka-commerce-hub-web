@@ -19,7 +19,7 @@
 .store-payment-records-title-area {
     display: flex;
     align-items: center;
-    gap: 12px;
+    
 }
 
 
@@ -319,9 +319,6 @@
     white-space: nowrap;
 }
 
-.store-payment-title-link:hover {
-    text-decoration: underline;
-}
 
 .change-positive {
     color: #1b8b3f !important;
@@ -329,9 +326,56 @@
 }
 
 .payment-status {
-    display: block;
-    color: #4964a7;
-    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 140px;
+    min-height: 32px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    text-transform: capitalize;
+}
+
+.payment-status i {
+    flex: 0 0 auto;
+    font-size: 8px;
+}
+
+.payment-status.completed {
+    background: #e7f6ec;
+    color: #177245;
+}
+
+.payment-status.pending {
+    background: #e8f3fb;
+    color: #17638c;
+}
+
+.payment-status.cancelled,
+.payment-status.refunded {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.payment-status.partial {
+    background: #f6edff;
+    color: #8750bd;
+}
+
+.payment-status.created {
+    background: #eff6ff;
+    color: #1e40af;
+}
+
+.payment-status.processing {
+    background: #edf0ff;
+    color: #5660bd;
 }
 
 .payment-date {
@@ -339,6 +383,23 @@
     margin-top: 4px;
     color: #687184;
     font-size: 11px;
+}
+
+.payment-date > span,
+.payment-date > small {
+    display: block;
+}
+
+.payment-date > span {
+    color: #17233e;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.payment-date > small {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 12px;
 }
 
 .store-payment-records-empty {

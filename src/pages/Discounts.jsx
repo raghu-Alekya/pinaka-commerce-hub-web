@@ -205,7 +205,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
     });
   }, [discounts, search, typeFilter, statusFilter]);
   const totalPages = Math.max(1, Number(pagination.total_pages ?? pagination.totalPages) || (pagination.has_more ? currentPage + 1 : currentPage));
-  const visibleDiscounts = filtered;
+  const visibleDiscounts = filtered.slice(0, pageSize);
   const resetFilters = () => {
     setSearch("");
     setTypeFilter("");

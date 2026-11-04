@@ -289,7 +289,8 @@
 ========================================================= */
 
 .merchant-stores-embedded .store-table-wrapper {
-    overflow: hidden;
+    overflow-x: hidden !important;
+    overflow-y: hidden;
 
     border: 1px solid #e5ebf4;
     border-radius: 6px;
@@ -852,4 +853,3 @@
     align-items: flex-start;
   }
 }
-

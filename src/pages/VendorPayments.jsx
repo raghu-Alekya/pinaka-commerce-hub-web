@@ -101,6 +101,18 @@ const initialPayments = [
   },
 ];
 
+function formatVendorTimestamp(value, fallback) {
+  if (!value) return fallback || "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback || "—";
+  return (
+    <span className="vendor-audit-timestamp">
+      <span>{date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+      <small>{date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</small>
+    </span>
+  );
+}
+
 export default function VendorPayments({ viewMode, merchantId, storeId, store } = {}) {
   const [selectedView, setView] = useState("vendors");
   const view = viewMode || selectedView;
@@ -419,8 +431,12 @@ export default function VendorPayments({ viewMode, merchantId, storeId, store } 
 
                 <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.createdBy || "—"}</td>
                 <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.updatedBy || "—"}</td>
-                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.createdAt || payment.date || "—"}</td>
-                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.updatedAt || "—"}</td>
+                <td className="vendor-audit-date-cell">
+                  {formatVendorTimestamp(payment.createdAtValue, payment.createdAt || payment.date)}
+                </td>
+                <td className="vendor-audit-date-cell">
+                  {formatVendorTimestamp(payment.updatedAtValue, payment.updatedAt)}
+                </td>
               </tr>
             )) : <tr><td colSpan={9} className="vendor-empty-row" style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{loading ? "Loading vendor payments…" : loadError ? "Vendor payments could not be loaded." : payments.length ? "No vendor payments match these filters." : "No vendor payments found for this store."}</td></tr>}
 
