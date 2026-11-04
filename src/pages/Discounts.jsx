@@ -134,6 +134,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
   const deleteLock = useRef(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const [knownTotals, setKnownTotals] = useState({});
 
   useEffect(() => {
     let active = true;
@@ -188,7 +189,37 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
           date_starts: inputDate(item.date_starts ?? item.start_date),
           date_expires: inputDate(item.date_expires ?? item.expiry_date),
         })));
-        setPagination(response?.pagination || {});
+        const responsePagination = response?.pagination || data?.pagination || response?.meta || data?.meta || {};
+        const responseTotal = Number(
+          responsePagination.total_items
+            ?? responsePagination.totalItems
+            ?? responsePagination.total
+            ?? responsePagination.total_count
+            ?? responsePagination.totalCount
+            ?? responsePagination.total_records
+            ?? responsePagination.totalRecords
+            ?? response?.total_records
+            ?? response?.totalRecords
+            ?? data?.total_records
+            ?? data?.totalRecords
+        );
+        setKnownTotals(previous => ({
+          ...previous,
+          [storeId]: Math.max(
+            previous[storeId] || 0,
+            rows.length,
+            Number.isFinite(responseTotal) && responseTotal >= 0 ? responseTotal : 0
+          ),
+        }));
+        setPagination({
+          ...responsePagination,
+          total_records: responsePagination.total_records
+            ?? responsePagination.totalRecords
+            ?? response?.total_records
+            ?? response?.totalRecords
+            ?? data?.total_records
+            ?? data?.totalRecords,
+        });
       })
       .catch(error => { if (active) setLoadError(error.message || "Unable to load discounts."); })
       .finally(() => { if (active) setLoading(false); });
@@ -204,7 +235,34 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
       return matchesType && matchesStatus && matchesSearch;
     });
   }, [discounts, search, typeFilter, statusFilter]);
-  const totalPages = Math.max(1, Number(pagination.total_pages ?? pagination.totalPages) || (pagination.has_more ? currentPage + 1 : currentPage));
+  const reportedTotalItems = Number(
+    pagination.total_items
+      ?? pagination.totalItems
+      ?? pagination.total
+      ?? pagination.total_count
+      ?? pagination.totalCount
+      ?? pagination.total_records
+      ?? pagination.totalRecords
+  );
+  const totalItems = Math.max(
+    filtered.length,
+    knownTotals[storeId] || 0,
+    Number.isFinite(reportedTotalItems) && reportedTotalItems >= 0
+      ? reportedTotalItems
+      : 0
+  );
+  const reportedTotalPages = Number(
+    pagination.total_pages
+      ?? pagination.totalPages
+      ?? pagination.last_page
+      ?? pagination.lastPage
+  );
+  const totalPages = Math.max(
+    1,
+    Number.isFinite(reportedTotalPages) && reportedTotalPages > 0 ? reportedTotalPages : 1,
+    Math.ceil(totalItems / pageSize),
+    pagination.has_more ? currentPage + 1 : 1
+  );
   const visibleDiscounts = filtered.slice(0, pageSize);
   const resetFilters = () => {
     setSearch("");
@@ -339,10 +397,10 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
                 <h2>Discount details</h2>
                 <div className="coupon-editor-grid">
                   {mode === "create" ? <label className="coupon-form-field"><span className="discount-field-label">Select discount <span className="discount-required" data-tooltip="Required" aria-label="Required">*</span></span>
-                    <select value={form.type} onChange={(event) => changeProgramType(event.target.value)} required>
+                    <FilterDropdown aria-label="Select discount" value={form.type} onChange={(event) => changeProgramType(event.target.value)} required>
                       <option value="" disabled>Select a discount</option>
                       {TYPES.filter((type) => type.id !== "all").map((type) => <option key={type.id} value={type.id}>{type.label}</option>)}
-                    </select>
+                    </FilterDropdown>
                   </label> : <div className="coupon-form-field"><span>Select discount</span><div className="discount-program-readonly">{typeLabel(form.type)}</div></div>}
                   {form.type ? <>
                   <label className="coupon-form-field"><span className="discount-field-label">Discount name <span className="discount-required" data-tooltip="Required" aria-label="Required">*</span></span>
@@ -396,7 +454,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
             </div>
             <div className="coupon-editor-actions">
               <button type="button" className="coupon-form-cancel" onClick={closeEditor}>Cancel</button>
-              <button type="submit" className="coupon-form-save" disabled={saving || (mode === "create" && !form.type)}><i className="bi bi-check2" />{saving ? "Saving…" : mode === "edit" ? "Save changes" : "Create discount"}</button>
+              <button type="submit" className="coupon-form-save" disabled={saving || (mode === "create" && !form.type)}>{saving ? "Saving…" : mode === "edit" ? "Save changes" : "Create discount"}</button>
             </div>
           </div>
         </form>
@@ -501,7 +559,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
             </tbody>
           </table>
         </div>
-        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filtered.length} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }} itemLabel="Discounts" showWhenEmpty />
+        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }} itemLabel="Discounts" showWhenEmpty />
       </div>
 
       <DeleteConfirmationDialog isOpen={Boolean(deleteTarget)} title="Delete discount?" message={deleteTarget ? `Delete “${deleteTarget.code}”?` : ""} busy={deleting} busyLabel="Deleting…" error={deleteError} onCancel={() => { if (deleteLock.current) return; setDeleteTarget(null); setDeleteError(""); }} onConfirm={deleteDiscount} />

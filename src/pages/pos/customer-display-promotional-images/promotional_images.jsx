@@ -103,10 +103,10 @@ export function CustomerDisplayPromotionalImages({ onBack }) {
       </div>
       <div className="pc-promo-actions">
         <input ref={fileInput} className="pc-sr-only" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif" onChange={selectImages} aria-label="Upload promotional images" />
-        <button type="button" className="pc-button" onClick={() => fileInput.current?.click()}><i className="bi bi-upload" aria-hidden="true" /> Upload / Select Images</button>
-        {!showUrlEntry && <button type="button" className="pc-button" onClick={() => setShowUrlEntry(true)}>Add Image by URL</button>}
-        {showUrlEntry && <div className="pc-promo-url"><input autoFocus type="url" value={url} onChange={(event) => setUrl(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addByUrl(); } }} aria-label="Image URL" /><button type="button" className="pc-button" onClick={addByUrl}>Add</button><button type="button" className="pc-button" onClick={() => { setShowUrlEntry(false); setUrl(""); }}>Cancel</button></div>}
-        <button type="button" className="pc-button" onClick={() => { setRemovedImageIds((current) => [...new Set([...current, ...draft.images.map((image) => image.id).filter(Boolean)])]); update({ ...draft, images: [] }); }} disabled={!draft.images.length}>Clear All</button>
+        <button type="button" className="pc-button pc-primary" onClick={() => fileInput.current?.click()}><i className="bi bi-upload" aria-hidden="true" /> Upload / Select Images</button>
+        {!showUrlEntry && <button type="button" className="pc-button pc-secondary" onClick={() => setShowUrlEntry(true)}>Add Image by URL</button>}
+        {showUrlEntry && <div className="pc-promo-url"><input autoFocus type="url" value={url} onChange={(event) => setUrl(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addByUrl(); } }} aria-label="Image URL" /><button type="button" className="pc-button pc-primary" onClick={addByUrl}>Add</button><button type="button" className="pc-button pc-secondary" onClick={() => { setShowUrlEntry(false); setUrl(""); }}>Cancel</button></div>}
+        <button type="button" className="pc-button pc-secondary" onClick={() => { setRemovedImageIds((current) => [...new Set([...current, ...draft.images.map((image) => image.id).filter(Boolean)])]); update({ ...draft, images: [] }); }} disabled={!draft.images.length}>Clear All</button>
       </div>
     </section>
     <ConfigFooter onBack={onBack} onSave={save} message={message} />

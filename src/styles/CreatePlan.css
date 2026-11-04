@@ -102,7 +102,7 @@
 .plans-list-card {
   margin-top: 12px;
   margin-bottom: 20px;
-  padding: 17px 18px 10px;
+  padding: 17px 18px 30px;
   border: 1px solid #e1ebf5;
   border-radius: 9px;
   background: #fff;
@@ -1738,4 +1738,30 @@
 .plan-field .pch-filter-trigger[aria-expanded="true"] > i.bi-chevron-down {
   transform: translateY(-50%) rotate(180deg) !important;
   color: #5143bc !important;
+}
+
+/* Keep wizard actions consistent with the Plan Details step. */
+.plan-form-card:not(.plan-information-card) .plan-actions {
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 0;
+}
+
+.plan-form-card:not(.plan-information-card) .plan-actions .plan-cancel-button,
+.plan-form-card:not(.plan-information-card) .plan-actions .plan-submit-button {
+  min-width: 180px;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 24px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@media (max-width: 700px) {
+  .plan-form-card:not(.plan-information-card) .plan-actions .plan-cancel-button,
+  .plan-form-card:not(.plan-information-card) .plan-actions .plan-submit-button {
+    min-width: 0;
+  }
 }

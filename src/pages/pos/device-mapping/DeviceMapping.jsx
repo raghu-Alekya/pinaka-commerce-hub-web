@@ -259,10 +259,9 @@ export function DeviceMapping({ onBack }) {
   </section>;
 
   return <section className="merchant-vendors mv-device-mapped-page">
-    <header className="mv-card mv-header"><div><h2>Devices</h2><p>These are the devices mapped to this store.</p></div><div className="mv-device-header-actions"><button type="button" className="pc-button pos-config-heading-back" onClick={onBack}><i className="bi bi-arrow-left" aria-hidden="true" /> Back</button><button type="button" className="mv-primary" onClick={openPicker}>＋ Add Existing Device</button></div></header>
+    <header className="mv-card mv-header pc-heading"><div className="pc-heading-title"><span className="pc-icon"><i className="bi bi-pc-display" aria-hidden="true" /></span><div><h2>Devices</h2><p>These are the devices mapped to this store.</p></div></div><div className="mv-device-header-actions pc-heading-actions"><button type="button" className="pc-button pos-config-heading-back" onClick={onBack}><i className="bi bi-arrow-left" aria-hidden="true" /> Back</button><button type="button" className="mv-primary" onClick={openPicker}>＋ Add Existing Device</button></div></header>
     {error && <p role="alert" className="mv-error">{error}</p>}
     <section className="mv-card mv-device-list-card">
-      <h3>Mapped Device List</h3>
       <FiltersBar
         searchValue={mappedSearch}
         onSearchChange={(value) => { setMappedSearch(value); setMappedPage(1); }}

@@ -2246,7 +2246,7 @@
 .store-workspace-page .sf-primary:hover:not(:disabled) { background: var(--store-accent-hover); border-color: var(--store-accent-hover); }
 .store-workspace-page .sf-outline { background: #fff; color: var(--store-text); border-color: #cbd5e1; }
 .store-workspace-page .sf-outline:hover:not(:disabled) { background: #f8fafc; border-color: #94a3b8; }
-.store-workspace-page :is(button, a, input, select):focus-visible { outline: 3px solid #c4bdf2; outline-offset: 2px; }
+.store-workspace-page :is(button, a, input, select):focus-visible { outline: 1px solid #c4bdf2; outline-offset: 2px; }
 .store-workspace-page .store-section-editor.sf-root {
   --sf-purple: var(--store-accent);
   --sf-purple-dark: var(--store-accent-hover);
@@ -5208,6 +5208,11 @@
   box-shadow: none !important;
 }
 
+/* The feature toolbar already provides the 16px gap below its nested filter bar. */
+.store-workspace-page .store-workspace-card .sf-feature-tools > .sf-feature-filters {
+  margin-bottom: 0 !important;
+}
+
 /* 6. Horizontal Alignment & Cadence: Table Wrappers (Flush 0 to 100%, 0 Bottom Margin) */
 .store-workspace-page .store-workspace-card :is(
   .sf-employees-table-wrap,
@@ -5379,8 +5384,8 @@
   padding: 0 !important;
 }
 
-.store-workspace-page .store-workspace-card > div > .store-section-editor:not(:has(.sf-employee-assignment-panel)):not(:has(.sf-employee-summary)):not(:has(.sf-employee-tools)):not(:has(.sf-employees-table-wrap)),
-.store-workspace-page .store-section-editor.sf-root:not(:has(.sf-employee-assignment-panel)):not(:has(.sf-employee-summary)):not(:has(.sf-employee-tools)):not(:has(.sf-employees-table-wrap)) {
+.store-workspace-page .store-workspace-card > div > .store-section-editor:not(:has(.sf-employee-assignment-panel)):not(:has(.sf-employee-summary)):not(:has(.sf-employee-tools)):not(:has(.sf-employees-table-wrap)):not(:has(.sf-feature-list-panel)),
+.store-workspace-page .store-section-editor.sf-root:not(:has(.sf-employee-assignment-panel)):not(:has(.sf-employee-summary)):not(:has(.sf-employee-tools)):not(:has(.sf-employees-table-wrap)):not(:has(.sf-feature-list-panel)) {
   background: transparent !important;
   border: 0 !important;
   border-radius: 0 !important;
@@ -5426,10 +5431,12 @@
 .store-workspace-page .store-workspace-card > div > .store-section-editor:has(.sf-employee-summary),
 .store-workspace-page .store-workspace-card > div > .store-section-editor:has(.sf-employee-tools),
 .store-workspace-page .store-workspace-card > div > .store-section-editor:has(.sf-employees-table-wrap),
+.store-workspace-page .store-workspace-card > div > .store-section-editor:has(.sf-feature-list-panel),
 .store-workspace-page .store-section-editor.sf-root:has(.sf-employee-assignment-panel),
 .store-workspace-page .store-section-editor.sf-root:has(.sf-employee-summary),
 .store-workspace-page .store-section-editor.sf-root:has(.sf-employee-tools),
-.store-workspace-page .store-section-editor.sf-root:has(.sf-employees-table-wrap) {
+.store-workspace-page .store-section-editor.sf-root:has(.sf-employees-table-wrap),
+.store-workspace-page .store-section-editor.sf-root:has(.sf-feature-list-panel) {
   background: #ffffff !important;
   border: 1px solid #e1e4eb !important;
   border-radius: 12px !important;

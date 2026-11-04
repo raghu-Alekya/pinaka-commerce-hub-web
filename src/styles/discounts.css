@@ -66,19 +66,19 @@
   text-align: center;
   box-sizing: border-box;
   white-space: nowrap;
-  padding: 6px 9px;
-  border-radius: 6px;
+  padding: 12px 16px;
+  border-radius: 50px;
   background: #e8f6ed;
   color: #247447;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
 }
 
 .discount-status {
   display: inline-flex;
-  padding: 5px 9px;
-  border-radius: 6px;
-  font-size: 11px;
+  padding: 12px 16px;
+  border-radius: 50px;
+  font-size: 13px;
   font-weight: 600;
 }
 
