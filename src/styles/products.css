@@ -478,6 +478,35 @@
     font-size: 11px;
 }
 
+.product-variants-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #5846c8;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.product-variants-toggle i {
+    font-size: 10px;
+}
+
+.product-variants-toggle span {
+    margin-left: 3px;
+    color: #8a93a5;
+    font-weight: 400;
+}
+
+.product-variants-toggle:hover span {
+    color: #5846c8;
+}
+
 .product-sku {
     color: #657189;
     font-family: monospace;

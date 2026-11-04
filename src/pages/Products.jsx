@@ -76,6 +76,7 @@ export default function Products({
 
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [expandedProductIds, setExpandedProductIds] = useState(() => new Set());
 
     // =========================================================
     // PRODUCT SYNC STATES
@@ -746,6 +747,14 @@ export default function Products({
                                             variants={variants}
                                             currency={store?.currency}
                                             currencySymbol={store?.currencySymbol}
+                                            expanded={expandedProductIds.has(String(product.id))}
+                                            onToggleVariants={() => setExpandedProductIds((current) => {
+                                                const next = new Set(current);
+                                                const key = String(product.id);
+                                                if (next.has(key)) next.delete(key);
+                                                else next.add(key);
+                                                return next;
+                                            })}
                                             onSelect={setSelectedProduct}
                                         />
                                     )
@@ -844,11 +853,11 @@ export default function Products({
                               status: selectedProduct.stockStatus || "In Stock",
                               metricLabel: "PRICE",
                               metricValue:
-                                  selectedProduct.price !== undefined &&
+                                  selectedProduct.priceRangeLabel || (selectedProduct.price !== undefined &&
                                   selectedProduct.price !== null &&
                                   selectedProduct.price !== ""
                                        ? formatCurrency(String(selectedProduct.price).replace(/^[^\d-]+/, ""), store?.currency, store?.currencySymbol)
-                                      : "—",
+                                      : "—"),
                           }
                         : null
                 }
@@ -1021,11 +1030,48 @@ function inheritParentTaxonomy(parent, child) {
     };
 }
 
-function ProductGroupRows({ product, variants, currency, currencySymbol, onSelect }) {
-    const parentProduct = variants.length ? { ...product, price: "" } : product;
+function getProductPriceValue(product) {
+    const rawPrice = [
+        product?.price,
+        product?.regularPrice,
+        product?.regular_price,
+        product?.salePrice,
+        product?.sale_price,
+    ].find((value) => value !== undefined && value !== null && value !== "");
+    if (typeof rawPrice === "number") return Number.isFinite(rawPrice) ? rawPrice : null;
+    const numericPrice = Number.parseFloat(String(rawPrice ?? "").replace(/,/g, "").replace(/[^\d.-]/g, ""));
+    return Number.isFinite(numericPrice) ? numericPrice : null;
+}
+
+function getVariantPriceRangeLabel(variants, currency, currencySymbol) {
+    const prices = variants.map(getProductPriceValue).filter((price) => price !== null);
+    if (!prices.length) return "";
+    const minimum = Math.min(...prices);
+    const maximum = Math.max(...prices);
+    const minimumLabel = formatCurrency(minimum, currency, currencySymbol);
+    if (minimum === maximum) return minimumLabel;
+    return `${minimumLabel}–${formatCurrency(maximum, currency, currencySymbol)}`;
+}
+
+function ProductGroupRows({ product, variants, currency, currencySymbol, expanded, onToggleVariants, onSelect }) {
+    const priceRangeLabel = variants.length
+        ? getVariantPriceRangeLabel(variants, currency, currencySymbol)
+        : "";
+    const parentProduct = variants.length
+        ? { ...product, price: "", priceRangeLabel }
+        : product;
     return <>
-        <ProductRow product={parentProduct} currency={currency} currencySymbol={currencySymbol} onClick={() => onSelect(parentProduct)} />
-        {variants.map((variant) => {
+        <ProductRow
+            product={parentProduct}
+            currency={currency}
+            currencySymbol={currencySymbol}
+            priceDisplay={priceRangeLabel}
+            variantCount={variants.length}
+            expanded={expanded}
+            onToggleVariants={onToggleVariants}
+            onClick={() => onSelect(parentProduct)}
+        />
+        {expanded && variants.map((variant) => {
             const childName = getChildProductName(product.name, variant.name);
             const childProduct = { ...variant, name: childName };
             return (
@@ -1055,6 +1101,10 @@ function ProductRow({
     product,
     currency,
     currencySymbol,
+    priceDisplay,
+    variantCount = 0,
+    expanded = false,
+    onToggleVariants,
     onClick,
     variant = false,
 }) {
@@ -1105,6 +1155,22 @@ function ProductRow({
                             <small>
                                 {variant ? variantAttributes : product.type}
                             </small>
+                        )}
+
+                        {variantCount > 0 && (
+                            <button
+                                type="button"
+                                className="product-variants-toggle"
+                                aria-expanded={expanded}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onToggleVariants?.();
+                                }}
+                            >
+                                <i className={`bi ${expanded ? "bi-chevron-down" : "bi-chevron-right"}`} aria-hidden="true" />
+                                {variantCount} {variantCount === 1 ? "variant" : "variants"}
+                                <span>{expanded ? "Hide options" : "View options"}</span>
+                            </button>
                         )}
 
                     </div>
@@ -1178,14 +1244,14 @@ function ProductRow({
             <td>
 
                 <strong className="product-price">
-                    {product.price !==
+                    {priceDisplay || (product.price !==
                         undefined &&
                     product.price !==
                         null &&
                     product.price !==
                         ""
                         ? formatCurrency(String(product.price).replace(/^[^\d-]+/, ""), currency, currencySymbol)
-                        : "—"}
+                        : "—")}
                 </strong>
 
             </td>
