@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Award, ChevronDown, ChevronUp, Search } from "lucide-react";
 import Pagination from "../../../components/Pagination";
 import { ConfigHeader, usePosSettings } from "../shared";
+import { apiRequest } from "../../../api/http";
 import "./loyalty-settings.css";
 
 const DEFAULT_SETTINGS = {
@@ -37,15 +38,61 @@ const SAMPLE_CUSTOMERS = [
 ];
 
 export function LoyaltySettings() {
-  const { currencySymbol } = usePosSettings();
+  const { currencySymbol, merchantId, storeId } = usePosSettings();
   const [tab, setTab] = useState("customers");
-  const [customers] = useState(SAMPLE_CUSTOMERS);
+  const [customers, setCustomers] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [query, setQuery] = useState("");
   const [expandedId, setExpandedId] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [notice, setNotice] = useState("");
+
+  const headers = useMemo(() => ({
+    "x-merchant-id": merchantId || "",
+    "x-store-id": storeId || "",
+  }), [merchantId, storeId]);
+
+  useEffect(() => {
+    if (!merchantId || !storeId) return;
+    let active = true;
+    Promise.allSettled([
+      apiRequest("/connector/api/v1/loyalty/get-settings", { headers }),
+      apiRequest("/connector/api/v1/loyalty/get-all-customers", { headers }),
+    ]).then(([settingsResult, customersResult]) => {
+      if (!active) return;
+      const settingsResponse = settingsResult.status === "fulfilled" ? settingsResult.value : null;
+      const customersResponse = customersResult.status === "fulfilled" ? customersResult.value : null;
+      const data = settingsResponse?.data || {};
+      setSettings((current) => ({
+        ...current,
+        ratio_dollar: data.ratio_dollar ?? current.ratio_dollar,
+        ratio_point: data.ratio_point ?? current.ratio_point,
+        new_customer_points: data.new_customer_points ?? current.new_customer_points,
+        default_points: data.default_points ?? current.default_points,
+        loyalty_tag: data.loyalty_tag ?? current.loyalty_tag,
+        expiry_days: data.expiry_days ?? current.expiry_days,
+        allow_expiry: data.expiry_days > 0,
+        calculation_mode: data.mode ?? current.calculation_mode,
+        min_spend: data.min_spend ?? current.min_spend,
+        max_spend: data.max_spend ?? current.max_spend,
+        redeem_point: data.redeem_point ?? current.redeem_point,
+        redeem_amt: data.redeem_amt ?? current.redeem_amt,
+        min_points: data.min_points ?? current.min_points,
+        max_points: data.max_points ?? current.max_points,
+        redeem_perc: data.redeem_perc ?? current.redeem_perc,
+        allow_redemption: Number(data.redeem_point ?? current.redeem_point) > 0 && Number(data.redeem_amt ?? current.redeem_amt) > 0,
+        allow_with_coupons: data.conflict_rule === "disable" ? false : data.conflict_rule === "enable" ? true : current.allow_with_coupons,
+      }));
+      setCustomers(Array.isArray(customersResponse?.data) ? customersResponse.data : []);
+      if (settingsResult.status === "rejected" && settingsResult.reason?.status !== 403) {
+        setNotice(settingsResult.reason?.message || "Unable to load loyalty settings.");
+      } else if (settingsResult.status === "rejected") {
+        setNotice("Loyalty is disabled. Review the settings and click Save Settings to enable it.");
+      }
+    });
+    return () => { active = false; };
+  }, [merchantId, storeId, headers]);
 
   const filteredCustomers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -65,9 +112,34 @@ export function LoyaltySettings() {
     setNotice("");
   };
 
-  const save = (event) => {
+  const save = async (event) => {
     event.preventDefault();
-    setNotice("Settings saved for this session.");
+    await apiRequest("/connector/api/v1/loyalty/update-settings", {
+      method: "POST",
+      headers,
+      body: {
+        enable_loyalty_points: "yes",
+        pinaka_loyalty_ratio_dollar: Number(settings.ratio_dollar),
+        pinaka_loyalty_ratio_point: Number(settings.ratio_point),
+        pinaka_new_customer_points: Number(settings.new_customer_points),
+        pinaka_loyalty_default_points: Number(settings.default_points),
+        pinaka_loyalty_tag: settings.loyalty_tag,
+        pinaka_loyalty_expiry_days: settings.allow_expiry ? Number(settings.expiry_days) : 0,
+        pinaka_loyalty_mode: settings.calculation_mode,
+        pinaka_loyalty_min_spend: Number(settings.min_spend),
+        pinaka_loyalty_max_spend: Number(settings.max_spend),
+        // Keep the configured ratio even when redemption is disabled. The
+        // toggle controls eligibility; it must not erase the administrator's
+        // redemption settings on save.
+        pinaka_loyalty_redeem_point: Number(settings.redeem_point),
+        pinaka_loyalty_redeem_amt: Number(settings.redeem_amt),
+        pinaka_loyalty_min_points: Number(settings.min_points),
+        pinaka_loyalty_max_points: Number(settings.max_points),
+        pinaka_loyalty_redeem_perc: Number(settings.redeem_perc),
+        pinaka_loyalty_conflict_rule: settings.allow_with_coupons ? "enable" : "disable",
+      },
+    });
+    setNotice("Loyalty settings saved.");
   };
 
   const reset = () => {
@@ -130,7 +202,7 @@ export function LoyaltySettings() {
               <ToggleField label="Allow Loyalty with Coupons?" name="allow_with_coupons" checked={settings.allow_with_coupons} onChange={updateField} help="Customers can earn loyalty points when coupons are applied." />
             </div>
           </section>
-          <div className="loyalty-form-actions"><button type="button" className="loyalty-cancel" onClick={reset}>Reset</button><button type="submit" className="loyalty-save">Save Settings</button></div>
+          <div className="loyalty-form-actions"><button type="button" className="loyalty-cancel" onClick={reset}>Reset</button><button type="submit" className="loyalty-save">Enable Loyalty &amp; Save Settings</button></div>
         </form>
       )}
     </main>
