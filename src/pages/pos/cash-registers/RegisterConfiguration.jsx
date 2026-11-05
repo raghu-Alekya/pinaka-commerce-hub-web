@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import FilterDropdown from "../../../components/FilterDropdown";
+import ListActions from "../../../components/ListActions";
 import Pagination from "../../../components/Pagination";
 import { ApiError } from "../../../api/http";
 import {
-  ConfigBadge, ConfigField, ConfigFooter, ConfigHeader, ConfigSwitch,
+  ConfigBadge, ConfigField, ConfigHeader, ConfigSwitch,
   DenominationRow, SettingInput,
   newRecordId, normalized, serverTaxClassId, useConfigEditor, useConfigState, usePosSettings, useSaveAction, validMoney,
 } from "../shared";
@@ -126,8 +127,13 @@ export function RegisterConfiguration({ value, mappings, onSave, onBack }) {
             <button type="button" className="pc-button pc-primary" disabled={!!editor}
                 onClick={() => openEditor({ id: newRecordId(), name: "", pos: "", maxCash: "", safeDrop: true, status: "Active" })}>+ Add Register</button>
         </ConfigHeader>
-        {editor && <form className="pc-editor" onSubmit={apply}>
-            <h3>{rows.some((row) => row.id === editor.id) ? "Edit Register" : "Add Register"}</h3>
+        {editor && <form className="pc-editor cash-register-editor" onSubmit={apply}>
+            <div className="cash-register-editor-heading">
+                <div>
+                    <h3>{rows.some((row) => row.id === editor.id) ? "Edit Register" : "Add Register"}</h3>
+                    <p>Enter the register details.</p>
+                </div>
+            </div>
             <div className="pc-form-grid">
                 <ConfigField label="Register"><input autoFocus required value={editor.name} onChange={(e) => update("name", e.target.value)} placeholder="REG-04" /></ConfigField>
                 <ConfigField label="Assigned POS"><input required value={editor.pos} onChange={(e) => update("pos", e.target.value)} placeholder="SUNMI-D3-004" /></ConfigField>
@@ -135,18 +141,24 @@ export function RegisterConfiguration({ value, mappings, onSave, onBack }) {
                 <ConfigField label="Status"><FilterDropdown value={editor.status} onChange={(e) => update("status", e.target.value)}><option>Active</option><option>Inactive</option></FilterDropdown></ConfigField>
                 <ConfigSwitch label="Safe Drop Enabled" checked={editor.safeDrop} onChange={(next) => update("safeDrop", next)} />
             </div>
-            <div className="pc-editor-actions pos-form-actions"><button type="button" className="pc-button" onClick={() => settings.requestLeave(null)}>Cancel</button><button className="pc-button pc-primary" type="submit">Apply Register</button></div>
+            <div className="pc-editor-actions cash-register-editor-actions"><button type="button" className="pc-button" onClick={() => { setEditor(null); setError(""); setMessage(""); }}>Cancel</button><button className="pc-button pc-primary" type="submit">{rows.some((row) => row.id === editor.id) ? "Update Register" : "Add Register"}</button></div>
         </form>}
         {error && <p className="pc-error" role="alert">{error}</p>}
         <div className="pc-table-wrap"><table className="pc-table"><caption className="pc-sr-only">Configured cash registers</caption>
             <thead><tr>{["Register", "Assigned POS", "Max Cash", "Safe Drop", "Status", "Actions"].map((heading) => <th scope="col" key={heading}>{heading}</th>)}</tr></thead>
-            <tbody>{paginatedRows.map((row) => <tr key={row.id}><th scope="row">{row.name}</th><td>{row.pos}</td><td>{new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number(row.maxCash))}</td><td>{row.safeDrop ? "Enabled" : "Disabled"}</td><td><ConfigBadge>{row.status}</ConfigBadge></td><td><div className="pc-row-actions"><button type="button" disabled={!!editor} aria-label={`Edit ${row.name}`} onClick={() => openEditor(row)}><i className="bi bi-pencil" aria-hidden="true" /></button><button type="button" disabled={!!editor} className="pc-danger" aria-label={`Remove ${row.name}`} onClick={() => remove(row)}><i className="bi bi-trash3" aria-hidden="true" /></button></div></td></tr>)}
+            <tbody>{paginatedRows.map((row) => <tr key={row.id}><td><strong>{row.name}</strong></td><td>{row.pos}</td><td><strong>{new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number(row.maxCash))}</strong></td><td>{row.safeDrop ? "Enabled" : "Disabled"}</td><td><ConfigBadge>{row.status}</ConfigBadge></td><td><ListActions
+                onEdit={() => openEditor(row)}
+                onDelete={() => remove(row)}
+                editLabel={`Edit ${row.name}`}
+                deleteLabel={`Remove ${row.name}`}
+                editDisabled={!!editor}
+                deleteDisabled={!!editor}
+            /></td></tr>)}
             {!rows.length && <tr><td colSpan="6" className="pc-empty">No registers yet. Add your first register.</td></tr>}</tbody>
         </table></div>
         <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={rows.length}
             pageSize={pageSize} onPageChange={setCurrentPage}
             onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
             itemLabel="registers" showWhenEmpty />
-        <ConfigFooter onBack={onBack} message={message} onSave={saveChanges} />
     </section>;
 }

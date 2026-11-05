@@ -464,7 +464,7 @@ export default function MerchantTenders({
       setModal(null);
       setSnackbar(`${removedTender?.name || "Tender"} was Inactive.`);
       window.clearTimeout(snackbarTimer.current);
-      snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 3000);
+      snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 1800);
     } catch (e) {
       console.error("Failed to remove merchant tendor:", e);
 

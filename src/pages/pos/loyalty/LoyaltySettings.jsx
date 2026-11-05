@@ -45,8 +45,14 @@ export function LoyaltySettings() {
   const [query, setQuery] = useState("");
   const [expandedId, setExpandedId] = useState(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timeout = window.setTimeout(() => setNotice(""), 1800);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
 
   const headers = useMemo(() => ({
     "x-merchant-id": merchantId || "",

@@ -135,6 +135,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [knownTotals, setKnownTotals] = useState({});
+  const [summaryDiscounts, setSummaryDiscounts] = useState({});
 
   useEffect(() => {
     let active = true;
@@ -177,7 +178,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
           }).join(", ");
         };
         const rows = Array.isArray(data) ? data : ["auto", "mix_match", "multipack"].flatMap(type => (Array.isArray(data?.[type]) ? data[type] : []).map(item => ({ ...item, type })));
-        setDiscounts(rows.map(item => ({
+        const normalizedDiscounts = rows.map(item => ({
           ...item,
           id: item.id ?? item.discount_id,
           type: item.type || "auto",
@@ -188,7 +189,14 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
           discounted_products: names(item.discounted_products ?? item.discount_products ?? item.discount_product_ids),
           date_starts: inputDate(item.date_starts ?? item.start_date),
           date_expires: inputDate(item.date_expires ?? item.expiry_date),
-        })));
+        }));
+        setDiscounts(normalizedDiscounts);
+        setSummaryDiscounts(previous => {
+          const discountKey = item => `${item.type}-${item.id ?? item.code}`;
+          const byId = new Map((previous[storeId] || []).map(item => [discountKey(item), item]));
+          normalizedDiscounts.forEach(item => byId.set(discountKey(item), item));
+          return { ...previous, [storeId]: [...byId.values()] };
+        });
         const responsePagination = response?.pagination || data?.pagination || response?.meta || data?.meta || {};
         const responseTotal = Number(
           responsePagination.total_items
@@ -341,6 +349,8 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
         setNotice(response?.message || (mode === "edit" ? "Discount updated successfully." : "Discount created successfully."));
         setMode("");
         setCurrentPage(1);
+        setSummaryDiscounts(previous => ({ ...previous, [storeId]: [] }));
+        setKnownTotals(previous => ({ ...previous, [storeId]: 0 }));
         setRetry(value => value + 1);
       } catch (error) {
         setFormError(error.message || "Unable to save discount.");
@@ -362,6 +372,11 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
       if (response?.success === false || ["error", "failed"].includes(response?.status)) throw new Error(response.message || "Unable to delete discount.");
       setNotice(response?.message || "Discount deleted successfully.");
       setDeleteTarget(null);
+      setSummaryDiscounts(previous => ({
+        ...previous,
+        [storeId]: (previous[storeId] || []).filter(item => !(item.type === deleteTarget.type && String(item.id) === String(deleteTarget.id))),
+      }));
+      setKnownTotals(previous => ({ ...previous, [storeId]: 0 }));
       if (discounts.length === 1 && currentPage > 1) setCurrentPage(page => page - 1);
       else setRetry(value => value + 1);
     } catch (error) {
@@ -478,10 +493,10 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
 
       <div className="coupons-summary discounts-summary">
         {[
-          { label: "All Discounts", count: discounts.length, icon: "bi-percent", tone: "purple" },
-          { label: "Auto Discount", count: discounts.filter((item) => item.type === "auto").length, icon: "bi-lightning-charge", tone: "green" },
-          { label: "Mix 'n Match", count: discounts.filter((item) => item.type === "mix_match").length, icon: "bi-intersect", tone: "orange" },
-          { label: "Multipack", count: discounts.filter((item) => item.type === "multipack").length, icon: "bi-boxes", tone: "red" },
+          { label: "All Discounts", count: totalItems, icon: "bi-percent", tone: "purple" },
+          { label: "Auto Discount", count: (summaryDiscounts[storeId] || discounts).filter((item) => item.type === "auto").length, icon: "bi-lightning-charge", tone: "green" },
+          { label: "Mix 'n Match", count: (summaryDiscounts[storeId] || discounts).filter((item) => item.type === "mix_match").length, icon: "bi-intersect", tone: "orange" },
+          { label: "Multipack", count: (summaryDiscounts[storeId] || discounts).filter((item) => item.type === "multipack").length, icon: "bi-boxes", tone: "red" },
         ].map((card) => <div className="coupon-summary-card" key={card.label}>
           <div className={`coupon-summary-icon ${card.tone}`}><i className={`bi ${card.icon}`} /></div>
           <div><span>{card.label}</span><strong>{card.count}</strong></div>
