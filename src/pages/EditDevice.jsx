@@ -98,7 +98,6 @@ export default function EditDevice() {
     const errors = {};
     if (!form.deviceName.trim()) errors.deviceName = "Device Name is required.";
     if (!form.deviceType) errors.deviceType = "Device Type is required.";
-    if (!form.serialNumber.trim()) errors.serialNumber = "Serial Number is required.";
     if (!form.activationKey.trim()) errors.activationKey = "Activation Key is required.";
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -307,14 +306,12 @@ export default function EditDevice() {
 
           {/* SERIAL NUMBER */}
 
-          <EditField label="Serial Number" required error={validationErrors.serialNumber}>
+          <EditField label="Serial Number">
             <input
               name="serialNumber"
               value={form.serialNumber}
               readOnly
               placeholder="Enter serial number"
-              required
-              aria-invalid={Boolean(validationErrors.serialNumber)}
             />
           </EditField>
 

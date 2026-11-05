@@ -113,7 +113,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
     const nextValidationErrors = {
       ...(!formData.deviceName.trim() && { deviceName: true }),
       ...(!formData.deviceType && { deviceType: true }),
-      ...(!formData.serialNumber.trim() && { serialNumber: true }),
+
       ...(!formData.merchantId && { merchantId: true }),
     };
     setValidationErrors(nextValidationErrors);
@@ -204,14 +204,12 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
             </FormField>
 
             {/* SERIAL NUMBER */}
-            <FormField label="Device Serial Number" required invalid={validationErrors.serialNumber} error={validationErrors.serialNumber && "Device Serial Number is required."}>
+            <FormField label="Device Serial Number">
               <input
                 name="serialNumber"
                 value={formData.serialNumber}
                 onChange={handleChange}
                 placeholder="Enter device serial number"
-                required
-                aria-invalid={Boolean(validationErrors.serialNumber)}
               />
             </FormField>
 
