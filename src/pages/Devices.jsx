@@ -52,7 +52,7 @@ export default function Devices() {
 
   useEffect(() => {
     if (!statusNotice) return undefined;
-    const timeout = window.setTimeout(() => setStatusNotice(null), 2500);
+    const timeout = window.setTimeout(() => setStatusNotice(null), 1800);
     return () => window.clearTimeout(timeout);
   }, [statusNotice]);
  
@@ -380,51 +380,28 @@ export default function Devices() {
         {" "}
  
         <StatCard
- 
           icon={<i className="bi bi-laptop-fill" aria-hidden="true" />}
- 
-          data-tooltip="Total Devices"
- 
+          title="Total Devices"
           value={totalDevices}
- 
           variant="purple"
- 
         />{" "}
- 
         <StatCard
- 
           icon={<i className="bi bi-check-circle-fill" aria-hidden="true" />}
- 
-          data-tooltip="Online Devices"
- 
+          title="Online Devices"
           value={onlineDevices}
- 
           variant="green"
- 
         />{" "}
- 
         <StatCard
- 
           icon={<i className="bi bi-pause-circle-fill" aria-hidden="true" />}
- 
-          data-tooltip="Offline Devices"
- 
+          title="Offline Devices"
           value={offlineDevices}
- 
           variant="orange"
- 
         />{" "}
- 
         <StatCard
- 
           icon={<i className="bi bi-x-circle-fill" aria-hidden="true" />}
- 
-          data-tooltip="Inactive Devices"
- 
+          title="Inactive Devices"
           value={inactiveDevices}
- 
           variant="red"
- 
         />{" "}
  
       </div>{" "}

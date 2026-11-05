@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import ListActions from "../../components/ListActions";
 import { posImageUrl } from "./storePosConfiguration";
 
 export const PosSettingsContext = createContext(null);
@@ -237,14 +238,10 @@ export function DenominationRow({
             <div className="denomination-action-field">
                 <label>Actions</label>
 
-                <button
-                    type="button"
-                    className="pos-remove-button pc-icon-action pc-danger"
-                    aria-label={`Remove denomination ${index + 1}`}
-                    onClick={() => onRemove(index)}
-                >
-                    <i className="bi bi-trash3" aria-hidden="true" />
-                </button>
+                <ListActions
+                    onDelete={() => onRemove(index)}
+                    deleteLabel={`Remove denomination ${item.amount || index + 1}`}
+                />
             </div>
         </div>
     );
@@ -292,9 +289,9 @@ export function ConfigHeader({ icon, title, description, children }) {
         {children}
     </div></header>;
 }
-export function ConfigFooter({ onBack, onSave, disabled, message }) {
+export function ConfigFooter({ onBack, onSave, disabled, message, hideCancel = false }) {
     return <footer className="pc-footer pos-form-actions"><p role="status"></p>
-        <button type="button" className="pc-button" onClick={onBack}>Cancel</button>
+        {!hideCancel && <button type="button" className="pc-button" onClick={onBack}>Cancel</button>}
         <button type="button" className="pc-button pc-primary" disabled={disabled} onClick={onSave}>Save Changes</button>
     </footer>;
 }

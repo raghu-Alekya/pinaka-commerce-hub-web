@@ -205,7 +205,7 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
     const saveLock = useRef(false);
     useEffect(() => {
         if (!notice) return undefined;
-        const timeout = window.setTimeout(() => setNotice(""), 3000);
+        const timeout = window.setTimeout(() => setNotice(""), 1800);
         return () => window.clearTimeout(timeout);
     }, [notice]);
     const session = useMemo(() => ({ saved: savedScreens.current[selectedConfig] || {}, baseline: {}, draft: {}, resets: {}, save: null, editorDirty: null, resetEditor: null }), [selectedConfig]);

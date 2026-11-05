@@ -608,7 +608,7 @@ useEffect(() => {
             if (removingVendor) {
                 setSnackbar(`${removingVendor.name} was Inactive.`);
                 window.clearTimeout(snackbarTimer.current);
-                snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 3000);
+                snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 1800);
             }
         } catch (e) {
             console.error(

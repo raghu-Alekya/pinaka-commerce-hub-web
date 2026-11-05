@@ -54,7 +54,7 @@ export default function StoreDevices({
 
   useEffect(() => {
     if (!inactiveNotice) return undefined;
-    const timeout = window.setTimeout(() => setInactiveNotice(""), 2500);
+    const timeout = window.setTimeout(() => setInactiveNotice(""), 1800);
     return () => window.clearTimeout(timeout);
   }, [inactiveNotice]);
 

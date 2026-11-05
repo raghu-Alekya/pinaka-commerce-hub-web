@@ -94,19 +94,28 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
     const query = search.trim().toLowerCase();
  
     return payments.filter((payment) => {
-      const matchesSearch =
-        !query ||
-        [
-          payment.title,
-          payment.orderId,
-          payment.transactionId,
-          payment.paymentAcceptedBy,
-          payment.paymentMethod,
-          payment.paymentType,
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
+      const searchableValues = [
+        payment.title,
+        payment.orderId,
+        payment.clientOrderId,
+        payment.transactionId,
+        payment.paymentAcceptedBy,
+        payment.paymentMethod,
+        payment.paymentType,
+        payment.status,
+        payment.date,
+        payment.dateTime,
+        payment.shiftId,
+        payment.orderTotal,
+        payment.tenderAmount,
+        payment.balanceAmount,
+        payment.changeAmount,
+      ];
+      const matchesSearch = !query || searchableValues
+        .filter((value) => value != null)
+        .map((value) => String(value).toLowerCase())
+        .join(" ")
+        .includes(query);
  
       const matchesDate =
         !dateFilter ||

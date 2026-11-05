@@ -4559,9 +4559,20 @@
 .pc-switch-field input:checked + .pc-switch-track::after { transform: translateX(15px); }
 .pc-switch-field input:focus-visible + .pc-switch-track { outline: 3px solid #82baff; outline-offset: 3px; }
 .pc-muted { opacity: .55; cursor: default; }
-.pc-form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: end; }
+.pc-form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
 .pc-editor { padding: 20px; margin-bottom: 22px; border: 1px solid #c8defc; border-radius: 9px; background: #f8fbff; }
 .pc-editor-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.cash-register-editor { padding: 22px 28px 30px; border-color: #dfe9f5; border-radius: 12px; background: #fff; box-shadow: 0 3px 12px rgba(21, 67, 129, .04); }
+.cash-register-editor-heading { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+.cash-register-editor-heading .pc-icon { border-radius: 50%; background: #eef3ff; color: #5b50e9; }
+.cash-register-editor-heading h3 { margin: 0 0 5px; color: #10264d; font-size: 19px; line-height: 1.2; font-weight: 500; }
+.cash-register-editor-heading p { margin: 0; color: #5b79ad; font-size: 14px; line-height: 1.4; font-weight: 400; }
+.cash-register-editor .pc-form-grid { column-gap: 24px; row-gap: 20px; }
+.cash-register-editor .pc-field { gap: 7px; color: #173d70; font-size: 14px; }
+.cash-register-editor .pc-field > span { color: #173d70; }
+.cash-register-editor input:not([type=checkbox]) { min-height: 44px; }
+.cash-register-editor-actions { gap: 12px; margin-top: 20px; padding-top: 8px; }
+.cash-register-editor-actions .pc-button { min-width: 180px; height: 44px; border-radius: 7px; font-size: 14px; font-weight: 500; }
 .pc-table-wrap { width: 100%; overflow-x: auto; border: 1px solid #e0e7f1; border-radius: 7px; }
 .pc-table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 12px; text-align: left; }
 .pc-table thead { background: #f1f3fd; }
@@ -4640,6 +4651,7 @@
     .pos-page-content .pc-heading-actions { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
     .pos-page-content .pc-heading .pos-config-heading-back { width: auto; }
     .pc-card, .pc-editor { padding: 16px; }
+    .cash-register-editor-actions .pc-button { flex: 1; min-width: 0; }
     .pc-footer { flex-wrap: wrap; }
     .pc-footer p { flex-basis: 100%; }
     .pc-footer .pc-button { flex: 1; }
@@ -4827,7 +4839,7 @@
     border-radius: 7px;
 }
 .settings-table, .pc-table { border-color: #e0e6f0; border-radius: 8px; overflow: hidden; }
-.settings-table th, .pc-table thead { background: #f4f5fb; }
+.settings-table th, .pc-table thead th { background: #f4f5fb; }
 .settings-table th { color: #40516e; }
 .settings-table td { border-color: #edf0f5; }
 @media (max-width: 900px) {

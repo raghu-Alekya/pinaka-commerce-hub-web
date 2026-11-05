@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Pagination from "../../../components/Pagination";
 import FiltersBar from "../../../components/FiltersBar";
 import ListActions from "../../../components/ListActions";
+import StatusBadge from "../../../components/StatusBadge";
 import { devicesApi } from "../../../api/devices";
 import { createStoreDeviceMapping, deleteStoreDeviceMapping, getStoreDeviceMappings } from "../../../api/storeDeviceMappings";
 import "../../../styles/merchant-vendors.css";
@@ -239,13 +240,13 @@ export function DeviceMapping({ onBack }) {
         ]}
         onClear={() => { setSearch(""); setDeviceTypeFilter("all"); setDeviceStatusFilter("all"); setPage(1); setSelection([]); }}
       />
-      <div className="mv-picker-summary"><span>{available.length} matching devices · {selection.length} selected</span></div>
+      <div className="mv-picker-summary"></div>
       <div className="mv-existing-table-wrap"><table>
         <thead><tr><th>Select</th><th>Device ID</th><th>Device Code</th><th>Device Name</th><th>Device Type</th><th>Serial Number</th><th>Status</th></tr></thead>
         <tbody>
           {pageRows.map((device) => { const selected = selection.includes(String(device.id)); return <tr key={device.id} className={selected ? "mv-row-selected" : ""} aria-selected={selected} onClick={(event) => { if (!event.target.closest("input,button,a,select")) toggleSelection(device.id); }}>
             <td><input type="checkbox" aria-label={`Select ${device.name}`} checked={selected} onChange={() => toggleSelection(device.id)} /></td>
-            <td>{device.deviceId || device.device_id || "—"}</td><td>{device.code || device.deviceCode || device.device_code || "—"}</td><td><strong>{device.name || "—"}</strong></td><td>{device.type || "—"}</td><td>{device.serial || "—"}</td><td>{device.status || "Active"}</td>
+            <td>{device.deviceId || device.device_id || device.id || "—"}</td><td>{device.code || device.deviceCode || device.device_code || "—"}</td><td><strong>{device.name || "—"}</strong></td><td>{device.type || "—"}</td><td>{device.serial || "—"}</td><td><StatusBadge status={device.status || "Active"} /></td>
           </tr>; })}
           {!loading && !pageRows.length && <tr><td colSpan="7">No unassigned devices found for this merchant.</td></tr>}
           {loading && <tr><td colSpan="7" role="status">Loading merchant devices…</td></tr>}
@@ -255,7 +256,7 @@ export function DeviceMapping({ onBack }) {
         pageSize={pageSize} onPageChange={setPage} onPageSizeChange={changePageSize}
         itemLabel="devices" showWhenEmpty pageSizeOptions={[5, 10, 25, 50, 100]} />
     </div>
-    <footer className="mv-existing-footer"><span>{selection.length} devices selected</span><div className="mv-popup-actions"><button type="button" disabled={savingSelection} onClick={backToMapped}>Cancel</button><button type="button" disabled={!selection.length || savingSelection} className="mv-primary" onClick={addSelected}>{savingSelection ? "Saving…" : "Add Selected"}</button></div></footer>
+    <footer className="mv-existing-footer"><div className="mv-popup-actions"><button type="button" disabled={savingSelection} onClick={backToMapped}>Cancel</button><button type="button" disabled={!selection.length || savingSelection} className="mv-primary" onClick={addSelected}>{savingSelection ? "Saving…" : "Add Selected"}</button></div></footer>
   </section>;
 
   return <section className="merchant-vendors mv-device-mapped-page">

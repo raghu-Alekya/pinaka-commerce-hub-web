@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import FilterDropdown from "../../../components/FilterDropdown";
+import ListActions from "../../../components/ListActions";
 import Pagination from "../../../components/Pagination";
 import { ApiError } from "../../../api/http";
 import {
@@ -558,28 +559,12 @@ export function ServiceChargeSettings() {
 
                                     <td>
 
-                                        <div className="service-charge-actions">
-
-                                            <button
-                                                type="button"
-                                                className="service-charge-edit"
-                                            >
-                                                <i className="bi bi-pencil" />
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                className="service-charge-delete"
-                                                onClick={() =>
-                                                    removeTier(
-                                                        tier.id
-                                                    )
-                                                }
-                                            >
-                                                <i className="bi bi-trash3" />
-                                            </button>
-
-                                        </div>
+                                        <ListActions
+                                            onEdit={(event) => event.currentTarget.closest("tr")?.querySelector("input")?.focus()}
+                                            onDelete={() => removeTier(tier.id)}
+                                            editLabel={`Edit service charge tier ${tier.from} to ${tier.to}`}
+                                            deleteLabel={`Delete service charge tier ${tier.from} to ${tier.to}`}
+                                        />
 
                                     </td>
 
@@ -637,4 +622,3 @@ export function ServiceChargeSettings() {
         </div>
     );
 }
-

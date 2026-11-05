@@ -258,7 +258,7 @@ export default function Vendors({
 
   useEffect(() => {
     if (!statusNotice) return undefined;
-    const timeout = window.setTimeout(() => setStatusNotice(null), 2500);
+    const timeout = window.setTimeout(() => setStatusNotice(null), 1800);
     return () => window.clearTimeout(timeout);
   }, [statusNotice]);
 

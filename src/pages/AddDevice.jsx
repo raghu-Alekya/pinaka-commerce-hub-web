@@ -113,7 +113,6 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
     const nextValidationErrors = {
       ...(!formData.deviceName.trim() && { deviceName: true }),
       ...(!formData.deviceType && { deviceType: true }),
-
       ...(!formData.merchantId && { merchantId: true }),
     };
     setValidationErrors(nextValidationErrors);

@@ -243,7 +243,7 @@ export default function Employees() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   useEffect(() => {
     if (!notice) return undefined;
-    const timeout = window.setTimeout(() => setNotice(""), 2500);
+    const timeout = window.setTimeout(() => setNotice(""), 1800);
     return () => window.clearTimeout(timeout);
   }, [notice]);
   useEffect(() => {
