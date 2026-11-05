@@ -256,7 +256,7 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
           selectedPayment
             ? {
                 icon: "bi-credit-card",
-                title: selectedPayment.paymentMethod ? `${selectedPayment.paymentMethod} Payment` : "Payment Record",
+                title: selectedPayment.title,
                 subtitle: `Order #${selectedPayment.orderId || "—"}`,
                 status: selectedPayment.status || "Completed",
                 metricLabel: "AMOUNT PAID",
@@ -322,7 +322,11 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                     },
                     {
                       label: "PAYMENT DATE",
-                      value: selectedPayment.date,
+                      value: (
+                        <span className="payment-date">
+                          {formatPaymentTimestamp(selectedPayment.dateTime, selectedPayment.date)}
+                        </span>
+                      ),
                     },
                   ],
                 },
@@ -338,10 +342,12 @@ function mapPaymentRecord(payment, employeeNames = {}) {
   const orderId = payment.order_number || "—";
   const clientOrderId = payment.client_order_id || "—";
   const method = payment.payment_method_title || payment.payment_method || "Payment";
+  const methodName = String(method).trim().replace(/^pos[\s_-]*/i, "").replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
  
   return {
     id: payment.id,
-    title: `${method} Payment for Order ${orderId}`,
+    title: `POS ${methodName}`,
     orderId,
     clientOrderId,
     orderTotal: Number(payment.order_total || 0),

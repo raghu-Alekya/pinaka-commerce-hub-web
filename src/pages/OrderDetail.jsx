@@ -241,12 +241,66 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
     return nested.length ? nested : [record];
   });
   const subtotal = storeOrder.subtotal ?? storeOrder.subtotalAmount ?? storeOrder.subtotal_amount ?? order.subtotal ?? order.subtotalAmount ?? order.subtotal_amount;
-  const couponLines = [storeOrder.couponLines, storeOrder.coupon_lines, order.couponLines, order.coupon_lines, request.couponLines, request.coupon_lines]
+  const rawCouponLines = [storeOrder.couponLines, storeOrder.coupon_lines, order.couponLines, order.coupon_lines, request.couponLines, request.coupon_lines]
     .map(asArray).find((lines) => lines.length) || [];
+  const generatedCouponPayload = asObject(metaValue(metadata, "_pos_generated_coupon"));
+  const generatedCoupons = asArray(generatedCouponPayload.coupons);
+  const declaredCouponDiscount = Number(metaValueFrom(metadata, ["_pos_coupon_discount", "pos_coupon_discount"]));
+  const appliedCouponByCode = new Map();
+  rawCouponLines.forEach((coupon) => {
+    const code = String(coupon?.code || coupon?.couponCode || coupon?.coupon_code || coupon?.name || "").trim();
+    if (code) appliedCouponByCode.set(code.toLowerCase(), { ...coupon, code });
+  });
+  const metadataCouponCodes = metaValueFrom(metadata, ["_pos_coupon_codes", "pos_coupon_codes"]);
+  const couponCodeList = Array.isArray(metadataCouponCodes)
+    ? metadataCouponCodes
+    : String(metadataCouponCodes || "").split(/[\s,;]+/);
+  couponCodeList.map((code) => String(code || "").trim()).filter(Boolean).forEach((code) => {
+    const key = code.toLowerCase();
+    if (!appliedCouponByCode.has(key)) appliedCouponByCode.set(key, { code, discount: 0 });
+  });
+  const appliedCouponLines = [...appliedCouponByCode.values()].map((coupon) => {
+    const amount = Number(coupon.discount ?? coupon.discountAmount ?? coupon.discount_amount);
+    let appliedAmount = appliedCouponByCode.size === 1 && Number.isFinite(declaredCouponDiscount) && declaredCouponDiscount > 0
+      ? declaredCouponDiscount
+      : Number.isFinite(amount) && amount > 0 ? amount : 0;
+    const generatedDefinition = generatedCoupons.find((generated) =>
+      String(generated?.code || generated?.couponCode || generated?.coupon_code || "").trim().toLowerCase()
+        === String(coupon.code || "").trim().toLowerCase());
+    if (generatedDefinition && String(generatedDefinition.discount_type || "").toLowerCase() === "fixed_cart") {
+      const configuredLimit = Number(generatedDefinition.max_amount ?? generatedDefinition.amount);
+      if (Number.isFinite(configuredLimit) && configuredLimit >= 0) {
+        appliedAmount = Math.min(appliedAmount, configuredLimit);
+      }
+    }
+    return {
+      ...coupon,
+      source: "Applied",
+      amount: appliedAmount,
+    };
+  });
+  const appliedCouponCodes = new Set(appliedCouponLines.map((coupon) => String(coupon.code || "").toLowerCase()));
+  const generatedCouponLines = generatedCoupons.flatMap((coupon) => {
+    const code = String(coupon?.code || coupon?.couponCode || coupon?.coupon_code || coupon?.name || "").trim();
+    if (!code || appliedCouponCodes.has(code.toLowerCase())) return [];
+    const amount = Number(coupon.amount);
+    return [{
+      ...coupon,
+      code,
+      source: "Generated",
+      amount: Number.isFinite(amount) ? amount : 0,
+    }];
+  }).slice(0, 1);
+  const couponLines = [...appliedCouponLines, ...generatedCouponLines];
+  const hasCoupon = couponLines.length > 0 || (Number.isFinite(declaredCouponDiscount) && declaredCouponDiscount > 0);
   const allFeeLines = [storeOrder.feeLines, storeOrder.fee_lines, order.feeLines, order.fee_lines, request.feeLines, request.fee_lines]
     .map(asArray).find((lines) => lines.length) || [];
   const merchantDiscountLine = allFeeLines.find((fee) => /merchant[\s_-]*discount/i.test(String(fee?.name || fee?.title || fee?.code || "")));
-  const feeLines = allFeeLines.filter((fee) => !/merchant[\s_-]*discount/i.test(String(fee?.name || fee?.title || fee?.code || "")));
+  const feeLines = allFeeLines.filter((fee) => {
+    const name = String(fee?.name || fee?.title || fee?.code || "");
+    return !/merchant[\s_-]*discount/i.test(name)
+      && !(hasCoupon && /coupon[\s_-]*discount/i.test(name));
+  });
   const merchantDiscount = storeOrder.merchantDiscount ?? storeOrder.merchant_discount
     ?? order.merchantDiscount ?? order.merchant_discount
     ?? request.merchantDiscount ?? request.merchant_discount
@@ -272,7 +326,7 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
       amount: Number(merchantDiscount),
     }] : []),
   ];
-  if (!discountLines.length && Number(discount) > 0) {
+  if (!discountLines.length && Number(discount) > 0 && !hasCoupon) {
     discountLines.push({ name: "Discount", type: "Order discount", amount: Number(discount) });
   }
   const hasDiscount = Number(discount) > 0 || Number(merchantDiscount) > 0
@@ -297,8 +351,16 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
   const shownSubtotal = subtotal ?? lineItems.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0);
   const feeTotal = storeOrder.feeTotal ?? storeOrder.fee_total ?? order.feeTotal ?? order.fee_total
     ?? feeLines.reduce((sum, fee) => sum + (Number(fee.total ?? fee.amount) || 0), 0);
+  const couponFeeTotal = hasCoupon ? allFeeLines.reduce((sum, fee) => {
+    if (!/coupon[\s_-]*discount/i.test(String(fee?.name || fee?.title || fee?.code || ""))) return sum;
+    return sum + (Number(fee.total ?? fee.amount) || 0);
+  }, 0) : 0;
+  const shownFeeTotal = (Number(feeTotal) || 0) - couponFeeTotal;
+  const couponDiscountTotal = Number.isFinite(declaredCouponDiscount) && declaredCouponDiscount > 0
+    ? declaredCouponDiscount
+    : appliedCouponLines.reduce((sum, coupon) => sum + (Number(coupon.amount) || 0), 0);
   const inferredDiscount = discountLines.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
-  const shownDiscount = Number(discount) > 0 ? discount : inferredDiscount > 0 ? inferredDiscount : discount;
+  const shownDiscount = Number(discount) > 0 ? discount : inferredDiscount > 0 ? inferredDiscount : hasCoupon ? couponDiscountTotal : discount;
   const shownTotal = total ?? (payments.length
     ? payments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0)
     : lineItems.reduce((sum, item) => sum + (Number(item.total) || 0), 0));
@@ -338,7 +400,7 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
     subtotal: formatMoney(shownSubtotal, currency, currencySymbol),
     discount: formatMoney(shownDiscount, currency, currencySymbol),
     tax: formatMoney(tax, currency, currencySymbol),
-    fees: formatMoney(feeTotal, currency, currencySymbol),
+    fees: formatMoney(shownFeeTotal, currency, currencySymbol),
     total: formatMoney(shownTotal, currency, currencySymbol),
     lineItems,
     hasDiscount,
@@ -545,19 +607,19 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
             />
           </DetailBlock>
 
-          <DetailBlock title="Fees">
+          {view.feeLines.length > 0 && <DetailBlock title="Fees">
             <Lines
               columns={["Name", "Tax status", "Total"]}
               rows={view.feeLines.map((fee) => [fee.name || fee.title || "Fee", fee.taxStatus || fee.tax_status || "—", formatMoney(fee.total ?? fee.amount, view.currency, view.currencySymbol)])}
             />
-          </DetailBlock>
+          </DetailBlock>}
 
-          <DetailBlock title="Discounts">
+          {view.discountLines.length > 0 && <DetailBlock title="Discounts">
             <Lines
               columns={["Name", "Type", "Amount"]}
               rows={view.discountLines.map((discount) => [discount.name || "Discount", discount.type || "—", formatMoney(discount.amount, view.currency, view.currencySymbol)])}
             />
-          </DetailBlock>
+          </DetailBlock>}
 
           <DetailBlock title="Tax">
             <Lines
@@ -568,8 +630,12 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
 
           <DetailBlock title="Coupons">
             <Lines
-              columns={["Code", "Discount"]}
-              rows={view.couponLines.map((coupon) => [coupon.code || coupon.couponCode || coupon.coupon_code || coupon.name || "—", formatMoney(coupon.discount ?? coupon.discountAmount ?? coupon.discount_amount ?? coupon.amount, view.currency, view.currencySymbol)])}
+              columns={["Code", "Status", "Amount"]}
+              rows={view.couponLines.map((coupon) => [
+                coupon.code || coupon.couponCode || coupon.coupon_code || coupon.name || "—",
+                coupon.source || "Applied",
+                formatMoney(coupon.amount ?? 0, view.currency, view.currencySymbol),
+              ])}
             />
           </DetailBlock>
 
