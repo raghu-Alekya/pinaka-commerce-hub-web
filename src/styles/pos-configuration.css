@@ -4521,6 +4521,14 @@
 .pc-screen :is(button, input, select):focus-visible { outline: 3px solid #b6aeef; outline-offset: 3px; }
 .pc-safe-grid { display: grid; grid-template-columns: .95fr 1.1fr 1.1fr; gap: 18px; }
 .pc-card { border: 1px solid #e0e7f1; border-radius: 9px; padding: 20px; min-width: 0; background: #fff; }
+.functionality-settings-card h3 { margin: 0; }
+.functionality-settings-panel { display: flex; flex-direction: column; gap: 16px; }
+.functionality-settings-panel > .pos-form-actions { margin-top: 0; }
+.functionality-settings-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; margin-top: 20px; }
+.functionality-settings-list .pc-switch-field { padding: 12px 14px; border: 1px solid #e0e7f1; border-radius: 8px; background: #fbfcfe; }
+.functionality-settings-list .pc-switch-track { background: #e3e7ee; }
+.functionality-settings-list .pc-switch-field input:checked + .pc-switch-track { background: #5143bc; }
+@media (max-width: 640px) { .functionality-settings-list { grid-template-columns: minmax(0, 1fr); } }
 .pc-spaced { margin-top: 22px; }
 .pc-screen fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .pc-screen fieldset:disabled { opacity: .55; }
