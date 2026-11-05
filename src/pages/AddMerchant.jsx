@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Pencil } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   createMerchant,
@@ -28,6 +28,7 @@ const blankMerchant = () => ({
   business: "",
   display: "",
   email: "",
+  password: "",
   phone: "",
   addressLine1: "",
   addressLine2: "",
@@ -57,6 +58,7 @@ function merchantDetailToDraft(result, fallback = {}) {
       business: field(raw.legalBusinessName, raw.legal_business_name, raw.businessName, raw.business_name, fallback.name),
       display: field(raw.businessDisplayName, raw.business_display_name, raw.display, raw.businessName, raw.business_name, raw.name, fallback.name),
       email: field(raw.email, raw.merchantEmail, raw.merchant_email, fallback.email),
+      password: field(raw.actual_password, raw.actualPassword, raw.password),
       phone: normalizePhone(field(raw.phone, raw.merchantPhoneNumber, raw.merchant_phone_number, fallback.phone)),
       addressLine1: addressField(raw.addressLine1, raw.address_line_1, raw.address_line1, typeof address === "object" && (address.addressLine1 || address.address_line1 || address.street || address.streetAddress)),
       addressLine2: field(raw.addressLine2, raw.address_line_2, typeof address === "object" && (address.addressLine2 || address.address_line2 || address.unit)),
@@ -79,10 +81,15 @@ function merchantDetailToDraft(result, fallback = {}) {
 function renderFieldLabel(label) { if (label == null || typeof label !== "string") return label; if (!label.includes("*")) return label; const parts = label.split("*"); return (<>{parts.map((part, index) => (<span key={index}>{part}{index < parts.length - 1 && (<span className="text-red-500" style={{ color: "#dc2626" }}>*</span>)}</span>))}</>); }
 
 function Field({ label, value, onChange, error, ...props }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = props.type === "password";
   return (
     <label className={`pch-field${error ? " pch-field-invalid" : ""}`}>
       {renderFieldLabel(label)}
-      <input {...props} aria-invalid={Boolean(error)} value={value ?? ""} onChange={(event) => onChange?.(event.target.value)} />
+      <span className={isPassword ? "pch-password-input" : undefined}>
+        <input {...props} type={isPassword && showPassword ? "text" : props.type} aria-invalid={Boolean(error)} value={value ?? ""} onChange={(event) => onChange?.(event.target.value)} />
+        {isPassword && <button type="button" className="pch-password-toggle" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button>}
+      </span>
       {error && <span className="pch-field-error" role="alert">{error}</span>}
     </label>
   );
@@ -157,6 +164,8 @@ function Header({ editing, onBack }) {
 
 export function onboardingToRow(data) {
   const merchant = data.merchant;
+  const { password: _password, ...safeMerchant } = merchant;
+  const { password: _topLevelPassword, ...safeData } = data;
   const name = merchant.business || merchant.display || "Merchant";
   return {
     id: merchant.code || data.merchantId,
@@ -174,7 +183,7 @@ export function onboardingToRow(data) {
     joined: new Date().toLocaleDateString(),
     active: "â€”",
     initials: name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase(),
-    _onboarding: structuredClone(data),
+    _onboarding: structuredClone({ ...safeData, merchant: safeMerchant }),
   };
 }
 
@@ -295,6 +304,8 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     }
     if (!String(merchant.email || "").trim()) errors.email = "Email Address is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(merchant.email)) errors.email = "Enter a valid email address.";
+    if (!editing && !String(merchant.password || "")) errors.password = "Password is required.";
+    else if (String(merchant.password || "") && String(merchant.password).length < 8) errors.password = "Password must be at least 8 characters.";
     errors.phone = validatePhone();
     return errors;
   };
@@ -333,6 +344,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     setSubmitting(true);
     const data = {
       merchant: { ...merchant, name: [merchant.firstName, merchant.lastName].filter(Boolean).join(" ") },
+      password: String(merchant.password || "") || undefined,
       planId: plan.id,
       planDetails: plan,
       planName: plan.name,
@@ -431,6 +443,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
               <Field label="First Name *" placeholder="Enter first name" value={merchant.firstName} required error={fieldErrors.firstName} onChange={(v) => updateField("firstName", v)} />
               <Field label="Last Name *" placeholder="Enter last name" value={merchant.lastName} required error={fieldErrors.lastName} onChange={(v) => updateField("lastName", v)} />
               <Field label="Email Address *" type="email" placeholder="Enter email address" value={merchant.email} required error={fieldErrors.email} onChange={(v) => updateField("email", v)} />
+              <Field label="Password *" type="password" placeholder={editing ? "Enter a new password" : "Enter password"} value={merchant.password} required={!editing} autoComplete="new-password" error={fieldErrors.password} onChange={(v) => updateField("password", v)} />
               <div className={`pch-field pch-phone-field${fieldErrors.phone ? " pch-field-invalid" : ""}`}>
                 <label htmlFor="merchant-phone">Phone Number <span className="text-red-500" style={{ color: "#dc2626" }}>*</span></label>
                 <PhoneInput country={locationOptions.selectedCountry?.iso2?.toLowerCase() || phoneCountry} enableSearch countryCodeEditable={false} autoFormat value={merchant.phone} onMount={(_value, data) => { if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} onChange={(value, data) => { updateField("phone", value); if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} inputProps={{ id: "merchant-phone", name: "phone", required: true, autoComplete: "tel", "aria-invalid": Boolean(fieldErrors.phone) }} />

@@ -320,6 +320,7 @@ export function toFlatMerchantPayload(data) {
 
   return {
     ein: m.ein || m.EIN || "",
+    ...(data.password ? { password: data.password } : {}),
       firstName: m.firstName || "",
       lastName: m.lastName || "",
     merchantName,
@@ -640,14 +641,12 @@ function mapStoreToRow(store) {
 
 export async function createMerchant(data) {
   const flatPayload = toFlatMerchantPayload(data);
-  console.log("[CREATE MERCHANT PAYLOAD]", flatPayload);
   const result = await api.post(endpoints.merchants, flatPayload);
 
   if (result && result.success === false) {
     throw new Error(result.message || "Unable to create merchant.");
   }
 
-  console.log("[CREATE MERCHANT API RESPONSE]", result);
   return result;
 }
 
@@ -659,7 +658,6 @@ export async function updateMerchant(id, data) {
     throw new Error(result.message || "Unable to update merchant.");
   }
 
-  console.log("[UPDATE MERCHANT API RESPONSE]", result);
   return result;
 }
 

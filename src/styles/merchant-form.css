@@ -433,6 +433,36 @@
     color:#304766;
 }
 
+#pch-new .pch-password-input {
+    position: relative;
+    display: block;
+}
+
+#pch-new .pch-password-input input {
+    padding-right: 38px;
+}
+
+#pch-new .pch-password-toggle {
+    position: absolute;
+    top: 0px;
+    right: 7px;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #667085;
+    cursor: pointer;
+}
+
+#pch-new .pch-password-toggle:focus-visible {
+    outline: 2px solid #8b7ce0;
+    outline-offset: 1px;
+    border-radius: 4px;
+}
+
 #pch-new .pch-field > .pch-filter-dropdown {
     display: grid;
     width: 100%;
