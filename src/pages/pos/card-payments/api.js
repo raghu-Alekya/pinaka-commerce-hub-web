@@ -30,6 +30,10 @@ async function saveCardPayment(storeId, payload) {
   return { id: saved.id, ...match };
 }
 
+export function savePosCardPaymentSettings(storeId, cardPayments) {
+  return saveStorePosConfiguration(storeId, NAME, { cardPayments });
+}
+
 export function createPosCardPayments(storeId, payload) {
   return saveCardPayment(storeId, payload);
 }
