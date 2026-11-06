@@ -190,6 +190,15 @@ function numericPrice(...values) {
   return undefined;
 }
 
+function numericAmount(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || String(value).trim() === "") continue;
+    const amount = Number(value);
+    if (Number.isFinite(amount)) return amount;
+  }
+  return undefined;
+}
+
 function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
   // The API may return the order directly or wrap it in `data` / `order`.
   const payloadData = asObject(payload?.data);
@@ -223,6 +232,8 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
       ?? item.priceBeforeDiscount ?? item.price_before_discount ?? item.regularPrice ?? item.regular_price
       ?? item.totalPrice ?? item.total_price ?? item.total,
     total: item.total ?? item.discountedPrice ?? item.discounted_price ?? item.totalPrice ?? item.total_price ?? item.subtotal,
+    orderSubtotal: item.subtotal ?? item.subtotalAmount ?? item.subtotal_amount,
+    orderTotal: item.total ?? item.totalPrice ?? item.total_price,
     originalUnitPrice: item.regularPrice ?? item.regular_price ?? item.originalPrice ?? item.original_price
       ?? item.priceBeforeDiscount ?? item.price_before_discount ?? item.price,
   }));
@@ -349,13 +360,6 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
     ?? metaValueFrom(metadata, ["_pos_order_tax", "pos_order_tax"]);
   const total = order.totalAmount ?? order.total_amount ?? storeOrder.total ?? storeOrder.totalAmount ?? storeOrder.total_amount ?? order.total ?? request.total;
   const shownSubtotal = subtotal ?? lineItems.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0);
-  const feeTotal = storeOrder.feeTotal ?? storeOrder.fee_total ?? order.feeTotal ?? order.fee_total
-    ?? feeLines.reduce((sum, fee) => sum + (Number(fee.total ?? fee.amount) || 0), 0);
-  const couponFeeTotal = hasCoupon ? allFeeLines.reduce((sum, fee) => {
-    if (!/coupon[\s_-]*discount/i.test(String(fee?.name || fee?.title || fee?.code || ""))) return sum;
-    return sum + (Number(fee.total ?? fee.amount) || 0);
-  }, 0) : 0;
-  const shownFeeTotal = (Number(feeTotal) || 0) - couponFeeTotal;
   const couponDiscountTotal = Number.isFinite(declaredCouponDiscount) && declaredCouponDiscount > 0
     ? declaredCouponDiscount
     : appliedCouponLines.reduce((sum, coupon) => sum + (Number(coupon.amount) || 0), 0);
@@ -400,9 +404,10 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
     subtotal: formatMoney(shownSubtotal, currency, currencySymbol),
     discount: formatMoney(shownDiscount, currency, currencySymbol),
     tax: formatMoney(tax, currency, currencySymbol),
-    fees: formatMoney(shownFeeTotal, currency, currencySymbol),
     total: formatMoney(shownTotal, currency, currencySymbol),
     lineItems,
+    rawSubtotal: numericAmount(shownSubtotal),
+    rawTotal: numericAmount(shownTotal),
     hasDiscount,
     feeLines,
     taxLines,
@@ -574,7 +579,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
           </DetailBlock>
 
           <DetailBlock title="Totals">
-            <Fields items={[["Subtotal", view.subtotal], ["Discount", view.discount], ["Tax", view.tax], ["Fees", view.fees], ["Total", view.total]]} />
+            <Fields items={[["Subtotal", view.subtotal], ["Discount", view.discount], ["Tax", view.tax], ["Total", view.total]]} />
           </DetailBlock>
 
           <DetailBlock title="Line items">
@@ -583,11 +588,40 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
               rows={view.lineItems.map((item) => {
                 const quantity = Number(item.quantity);
                 const divisor = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
-                const originalUnitPrice = Number(item.originalUnitPrice ?? Number(item.subtotal ?? item.total) / divisor);
-                const discountedUnitPrice = Number(item.discountedUnitPrice ?? Number(item.total ?? item.subtotal) / divisor);
-                const hasDiscount = Number.isFinite(originalUnitPrice)
-                  && Number.isFinite(discountedUnitPrice)
-                  && originalUnitPrice > discountedUnitPrice;
+                const isPayout = /payout/i.test(String(item.name || ""));
+                const lineSubtotal = isPayout ? numericAmount(item.orderSubtotal) : numericPrice(item.orderSubtotal);
+                let lineTotal = isPayout ? numericAmount(item.orderTotal) : numericPrice(item.orderTotal);
+                let payoutAmount;
+                if (isPayout && (lineTotal === undefined || lineTotal === 0)) {
+                  const itemMeta = asArray(item.meta_data || item.metaData);
+                  const explicitAmount = numericAmount(
+                    item.payoutAmount,
+                    item.payout_amount,
+                    item.paidOutAmount,
+                    item.paid_out_amount,
+                    item.amount,
+                    item.value,
+                    metaValueFrom(itemMeta, ["_pos_payout_amount", "pos_payout_amount", "payout_amount", "paid_out_amount"]),
+                  );
+                  const orderPayout = [view.rawTotal, view.rawSubtotal]
+                    .find((amount) => Number.isFinite(amount) && amount < 0);
+                  payoutAmount = explicitAmount !== undefined && explicitAmount !== 0
+                    ? -Math.abs(explicitAmount)
+                    : orderPayout;
+                  if (payoutAmount !== undefined) lineTotal = payoutAmount;
+                }
+                const lineDiscount = numericPrice(
+                  item.discountAmount,
+                  item.discount_amount,
+                  item.discount,
+                  metaValueFrom(asArray(item.meta_data || item.metaData), ["_pos_auto_discount", "pos_auto_discount", "discount_amount"]),
+                );
+                const hasDiscount = !isPayout && ((lineDiscount !== undefined && lineDiscount > 0)
+                  || (lineSubtotal !== undefined && lineTotal !== undefined && lineSubtotal > lineTotal + 0.005));
+                const discountedUnitPrice = Number((lineTotal ?? lineSubtotal ?? 0) / divisor);
+                const originalUnitPrice = hasDiscount
+                  ? Number((lineSubtotal !== undefined && lineSubtotal > lineTotal ? lineSubtotal / divisor : item.originalUnitPrice ?? (discountedUnitPrice + (lineDiscount || 0) / divisor)))
+                  : discountedUnitPrice;
                 return [
                   item.name || item.productName || "Item",
                   item.sku || "—",
@@ -623,7 +657,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
 
           <DetailBlock title="Tax">
             <Lines
-              columns={["Label", "Rate", "Tax"]}
+              columns={["Label", "Rate", "Tax Amount"]}
               rows={view.taxLines.map((tax) => [tax.label || tax.rateCode || tax.rate_code || "Tax", `${tax.ratePercent ?? tax.rate_percent ?? 0}%`, formatMoney(tax.taxTotal ?? tax.tax_total ?? tax.amount, view.currency, view.currencySymbol)])}
             />
           </DetailBlock>
@@ -641,13 +675,12 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
 
           <DetailBlock title="Payments">
             <Lines
-              columns={["Method", "Transaction ID", "Amount", "Status", "Created"]}
+              columns={["Method", "Transaction ID", "Amount", "Status"]}
               rows={view.payments.map((payment) => [
                 payment.method || payment.paymentMethod || payment.payment_method || payment.paymentMethodTitle || payment.payment_method_title || payment.payment_type || "—",
                 paymentTransactionId(payment),
                 formatMoney(payment.amount ?? payment.tenderAmount ?? payment.tender_amount, view.currency, view.currencySymbol),
                 titleCase(payment.status || payment.paymentStatus || payment.payment_status),
-                displayDate(payment.created_at || payment.createdAt || payment.payment_at || payment.paymentAt),
               ])}
             />
           </DetailBlock>

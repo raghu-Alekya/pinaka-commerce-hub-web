@@ -54,8 +54,8 @@ export function normalizeOrder(order = {}) {
     total: formatMoney(totalValue, currency, savedCurrencySymbol),
     currency,
     currencySymbol: savedCurrencySymbol,
-    merchantId: order.merchantId || order.merchant_id || "",
-    storeId: order.storeId || order.store_id || "",
+    merchantId: order.merchantId || order.merchant_id || order.merchant?.id || order.merchant?.merchantId || "",
+    storeId: order.storeId || order.store_id || order.storeUuid || order.storeUUID || order.store_uuid || order.store?.id || order.store?.storeId || order.storeCode || order.store_code || "",
   };
 }
 

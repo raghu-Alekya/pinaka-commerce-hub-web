@@ -175,6 +175,11 @@ input {
   border-color: #dbe8f4;
 }
 
+.order-summary-card:has(.order-summary-icon.red) {
+    background: linear-gradient(135deg, #fff 0%, #fff0f0 100%);
+    border-color: #f2d5d5;
+}
+
 .order-summary-icon {
     width: 40px;
     height: 40px;
@@ -205,6 +210,11 @@ input {
 .order-summary-icon.blue {
     background: #e7f1ff;
     color: #4185dd;
+}
+
+.order-summary-icon.red {
+    background: #ffe7e7;
+    color: #d64545;
 }
 
 .order-summary-card span {
