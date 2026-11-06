@@ -3224,12 +3224,15 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         <Panel
           title="Role Templates"
           subtitle={readOnly ? "Role templates assigned to this store." : "Choose from merchant-selected role templates for this store."}
-          action={<label className="sf-select-all-label sf-panel-select-all"><input type="checkbox" disabled={readOnly || !selectableRoleDefinitions.length || storeTypeRolesLoading} checked={selectableRoleDefinitions.length > 0 && selectableRoleDefinitions.every((role) => roleIsSelected(role))} onChange={(event) => {
+          action={<div className="sf-role-panel-actions">
+            {readOnly && onEdit && <button type="button" className="store-config-btn" onClick={onEdit}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
+            <label className="sf-select-all-label sf-panel-select-all"><input type="checkbox" disabled={readOnly || !selectableRoleDefinitions.length || storeTypeRolesLoading} checked={selectableRoleDefinitions.length > 0 && selectableRoleDefinitions.every((role) => roleIsSelected(role))} onChange={(event) => {
             const ids = selectableRoleDefinitions.map((role) => role.id);
             const next = event.target.checked ? [...new Set([...roles, ...ids])] : roles.filter((roleId) => !ids.includes(roleId));
             setRoles(next);
             setActiveRole((current) => next.includes(current) ? current : next[0] || "");
-          }} />Select all roles</label>}
+          }} />Select all roles</label>
+          </div>}
         >
           {rolesError && (
             <p className="sf-empty" role="alert">
@@ -3962,13 +3965,13 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     const pending = saving || mastersLoading || merchantLoading || featuresLoading || subscriptionLoading || rolesLoading || storeTypeRolesLoading || permissionsLoading;
     const failure = loadError || merchantError || rolesError;
     return <div className={"sf-root store-section-editor" + (readOnly ? " store-section-readonly" : "")}>
-      <div className="store-panel-heading">
+      {step !== 3 && <div className="store-panel-heading">
         <div>
           <h2>{STEPS[step]}</h2>
           <p>{readOnly ? "View saved store information." : STEP_HINTS[step]}</p>
         </div>
         {readOnly && onEdit && <button type="button" className="store-config-btn" onClick={onEdit}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
-      </div>
+      </div>}
       {error && <ValidationSummary error={error} summaryRef={errorBannerRef} onDismiss={() => setError("")} />}
       {failure && <div className="alert alert-danger" role="alert">{failure}<button type="button" onClick={() => setReload(v => v + 1)}>Retry</button></div>}
       {pending && <p role="status">Loading store selections…</p>}

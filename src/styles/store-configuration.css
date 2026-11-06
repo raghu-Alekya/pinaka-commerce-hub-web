@@ -5495,3 +5495,86 @@
 .store-workspace-page .store-workspace-card .store-categories-embedded .categories-toolbar {
   margin-top: 12px !important;
 }
+
+/* Replace section metric tiles with the shared heading and description. */
+.store-workspace-page .store-section-intro {
+  margin: 0 0 22px !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+.store-workspace-page .store-section-intro h2 {
+  margin: 0 !important;
+  color: var(--store-text, #17233e) !important;
+  font-size: 18px !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+}
+.store-workspace-page .store-section-intro p {
+  margin: 6px 0 0 !important;
+  color: var(--store-muted, #71809a) !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+.store-workspace-page .store-workspace-card :is(
+  .sf-employee-summary,
+  .sf-plan-summary,
+  .orders-summary,
+  .products-summary,
+  .store-customers-summary,
+  .store-customer-summary,
+  .coupons-summary,
+  .discounts-summary,
+  .employees-stats,
+  .employees-stat-card,
+  .store-device-summary
+) {
+  display: none !important;
+}
+.store-workspace-page .vendor-history-description {
+  margin: 6px 0 0 !important;
+  color: var(--store-muted, #71809a) !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+.store-workspace-page .store-workspace-main {
+  background: #f6f7fb !important;
+}
+html body .store-workspace-page .store-workspace-main > .store-workspace-card {
+  border: 1px solid #e2e7f0 !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.store-workspace-page .orders-embedded-page .orders-card {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.store-workspace-page .store-workspace-card > .store-section-intro {
+  margin-bottom: 0 !important;
+  padding: 16px 24px 0 !important;
+}
+.store-workspace-page .store-workspace-card > .orders-embedded-page {
+  padding: 8px 24px 24px !important;
+  text-align: left !important;
+}
+.store-workspace-page .store-workspace-card:has(.sf-permissions-layout) {
+  background: #fff !important;
+}
+.store-workspace-page .store-workspace-card:has(.sf-permissions-layout) .store-section-editor.sf-root {
+  padding: 24px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+}
+.store-workspace-page .sf-role-panel-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.store-workspace-page .store-workspace-card .store-customers-toolbar {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+}
