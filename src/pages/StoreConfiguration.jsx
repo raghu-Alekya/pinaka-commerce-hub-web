@@ -122,8 +122,6 @@ const navGroups = [
 ];
 
 const sectionIntro = {
-  details: ["Store Details", "Review the store profile, contact information, location, and operating hours."],
-  subscription: ["Subscription", "Review the plan and subscription details assigned to this store."],
   features: ["Features", "Review the features available to this store and update its access when needed."],
   roles: ["Roles & Permissions", "Manage the roles and permissions that control access to this store."],
   users: ["Employees", "Manage employee assignments, store roles, and login access."],

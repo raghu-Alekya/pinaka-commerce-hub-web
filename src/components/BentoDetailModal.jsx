@@ -17,6 +17,7 @@ export default function BentoDetailModal({
   size,
   showHeaderText = true,
   compactSpacing = false,
+  containerClassName = "",
 }) {
   // Compute left offset to ensure the dark left navigation sidebar remains 100% visible, active, and unblurred
   const [leftOffset, setLeftOffset] = useState(() => {
@@ -256,7 +257,7 @@ export default function BentoDetailModal({
       }}
     >
       <div
-        className={`bento-modal-container bg-white w-full ${widthClass} rounded-2xl shadow-2xl border border-slate-100 relative max-h-[90vh] ${compactSpacing ? "compact-spacing" : ""} ${
+        className={`bento-modal-container bg-white w-full ${widthClass} rounded-2xl shadow-2xl border border-slate-100 relative max-h-[90vh] ${compactSpacing ? "compact-spacing" : ""} ${containerClassName} ${
           isCompact ? "overflow-visible" : "overflow-hidden"
         }`}
         role="dialog"

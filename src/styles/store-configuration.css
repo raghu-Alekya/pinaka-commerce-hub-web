@@ -4253,6 +4253,31 @@
 .fast-keys-panel .fast-key-table td > strong { color: #263550; font-size: 13px; font-weight: 600; }
 .fast-key-products { font-size: 12px; line-height: 18px; }
 .fast-key-products small { color: #7c8799; font-size: 11px; }
+.fast-key-row { cursor: pointer; }
+.fast-key-row:hover { background: #f8faff; }
+.fast-key-row:focus-visible { outline: 2px solid #5542ce; outline-offset: -2px; }
+.fast-key-product-chips { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.fast-key-product-chip { display: inline-block; max-width: 100%; overflow: hidden; padding: 3px 9px; border: 1px solid #dfe6f2; border-radius: 6px; background: #f8faff; color: #34445f; text-overflow: ellipsis; white-space: nowrap; }
+.fast-key-products .fast-key-more { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 30px; padding: 0 8px; border: 1px solid #d9d4ff; border-radius: 999px; background: #f4f1ff; color: #5744c8; font-size: 12px; font-weight: 650; cursor: pointer; }
+.fast-key-products-detail { padding: 14px 18px; border: 1px solid #dfe6f2; border-radius: 14px; background: #fff; }
+.fast-key-products-detail h3 { margin: 0 0 9px; color: #5143bc; font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+.fast-key-products-head, .fast-key-products-row { display: grid; grid-template-columns: minmax(0, 1fr) 54px; align-items: center; gap: 16px; }
+.fast-key-products-head { padding: 0 0 7px; border-bottom: 1px solid #e7edf5; color: #94a3b8; font-size: 11px; font-weight: 700; }
+.fast-key-products-rows { max-height: none; overflow: visible; }
+.fast-key-products-row { min-height: 38px; padding: 6px 0; border-bottom: 1px solid #e7edf5; color: #334155; font-size: 13px; }
+.fast-key-products-row > span:first-child { overflow-wrap: anywhere; }
+.fast-key-product-number { text-align: right; color: #64748b; }
+.fast-key-products-rows p { margin: 0; padding: 12px 0; color: #7c8799; }
+.fast-key-products-summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 9px 12px; margin-top: 12px; border: 1px solid #dcd6ff; border-radius: 8px; background: #f5f3ff; color: #5143bc; font-size: 13px; font-weight: 650; }
+.fast-key-products-summary strong { display: inline-flex; min-width: 28px; height: 24px; align-items: center; justify-content: center; padding: 0 7px; border-radius: 999px; background: #e8e3ff; color: #4633b8; font-size: 13px; }
+@media (max-width: 600px) { .fast-key-products-detail { padding: 16px; } }
+.fast-key-detail-modal .bento-modal-header { min-height: 0; padding: 4px 14px; }
+.fast-key-detail-modal .bento-header-badge { padding: 4px; border-radius: 8px; }
+.fast-key-detail-modal .bento-modal-close-btn { padding: 5px; }
+.fast-key-detail-modal .bento-header-title { font-size: 14px; line-height: 1.2; }
+.fast-key-detail-modal .bento-hero-card { padding: 8px 12px !important; gap: 8px; }
+.fast-key-detail-modal .bento-hero-icon-box { width: 48px; height: 48px; border-radius: 10px; }
+.fast-key-detail-modal .fast-key-modal-date { white-space: nowrap; }
 .fast-key-employee { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
 .fast-key-timestamp { display: flex; flex-direction: column; gap: 3px; white-space: nowrap; }
 .fast-keys-panel .fast-key-timestamp strong { font-size: 12px; font-weight: 500; color: #465573; }
