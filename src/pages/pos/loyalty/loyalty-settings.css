@@ -77,7 +77,7 @@
     border:1px solid #dce3ee;
     border-radius:12px;
     background:#fff;
-    padding:20px;
+    padding: 16px;
     box-shadow:0 2px 5px #1b2b4610
 }
 .loyalty-card-heading{
@@ -116,12 +116,14 @@
     background:transparent
 }
 .loyalty-table-scroll{
-    overflow:auto
+    width:100%;
+    overflow:hidden
 }
 .loyalty-table{
     width:100%;
+    table-layout:fixed;
     border-collapse:collapse;
-    white-space:nowrap;
+    white-space:normal;
     font-size:13px
 }
 .loyalty-table th{
@@ -132,8 +134,20 @@
 }
 .loyalty-table th,.loyalty-table td{
     border:1px solid #e1e6ef;
-    padding:12px 10px
+    padding:10px 7px;
+    overflow-wrap:anywhere;
+    word-break:break-word
 }
+.loyalty-table th:nth-child(1){width:15%}
+.loyalty-table th:nth-child(2){width:14%}
+.loyalty-table th:nth-child(3),
+.loyalty-table th:nth-child(4),
+.loyalty-table th:nth-child(5),
+.loyalty-table th:nth-child(6){width:11%}
+.loyalty-table th:nth-child(7){width:13%}
+.loyalty-table th:nth-child(8){width:13%}
+.loyalty-table td:last-child,
+.loyalty-table th:last-child{text-align:center}
 .loyalty-table td{
     color:#2f3d56
 }
@@ -142,35 +156,82 @@
     padding:34px!important;
     color:#78869a!important
 }
-.loyalty-details-button{
-    border:0;
-    background:transparent;
-    color:#5142c9;
-    font-weight:600;
-    display:inline-flex;
-    gap:5px;
-    align-items:center;
-    cursor:pointer
-}
-.loyalty-transaction-row td{
-    padding:14px;
-    background:#fafbfe
-}
 .loyalty-transaction-wrap{
-    overflow:auto
+    width:100%;
+    overflow-x:auto;
+    overflow-y:hidden
 }
 .loyalty-transaction-wrap table{
     width:100%;
+    min-width:1050px;
+    table-layout:fixed;
     border-collapse:collapse;
-    font-size:12px
+    font-size:11px
 }
 .loyalty-transaction-wrap th,.loyalty-transaction-wrap td{
     border:1px solid #e1e6ef;
-    padding:10px;
-    text-align:left
+    padding:9px 10px;
+    text-align:left;
+    overflow-wrap:anywhere;
+    word-break:break-word
 }
 .loyalty-transaction-wrap th{
-    background:#f5f6fb
+    background:#f5f6fb;
+    white-space:nowrap
+}
+.loyalty-transactions-table th:nth-child(1){width:12%}
+.loyalty-transactions-table th:nth-child(2){width:10%}
+.loyalty-transactions-table th:nth-child(3){width:12%}
+.loyalty-transactions-table th:nth-child(4){width:12%}
+.loyalty-transactions-table th:nth-child(5){width:11%}
+.loyalty-transactions-table th:nth-child(6){width:12%}
+.loyalty-transactions-table th:nth-child(7){width:10%}
+.loyalty-transactions-table th:nth-child(8){width:11%}
+.loyalty-transactions-table th:nth-child(9){width:11%}
+.loyalty-transactions-table td:nth-child(7){
+    padding-right:4px;
+    padding-left:4px
+}
+.loyalty-transactions-table .loyalty-status-badge{
+    width:82px!important;
+    min-width:82px!important;
+    max-width:82px!important;
+    height:28px!important;
+    min-height:28px!important;
+    max-height:28px!important;
+    gap:5px!important;
+    padding:0 7px!important;
+    font-size:11px!important
+}
+@media(max-width:900px){
+    .loyalty-transaction-wrap th,.loyalty-transaction-wrap td{
+        padding:8px 7px;
+        font-size:10px
+    }
+}
+.loyalty-detail-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:16px;
+    margin:0
+}
+.loyalty-summary-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:18px;
+    margin-bottom:20px;
+}
+.loyalty-detail-grid dt{
+    margin-bottom:5px;
+    color:#7b8799;
+    font-size:12px;
+    font-weight:650
+}
+.loyalty-detail-grid dd{
+    margin:0;
+    color:#253351;
+    font-size:15px;
+    overflow-wrap:anywhere
 }
 .loyalty-settings-form{
     display:grid;
@@ -294,6 +355,10 @@
     .loyalty-card-heading{
         align-items:flex-start;
         flex-direction:column
+    }
+    @media(max-width:600px){
+        .loyalty-detail-grid{grid-template-columns:1fr}
+        .loyalty-summary-grid{grid-template-columns:1fr}
     }
     .loyalty-search{
         width:100%
@@ -421,7 +486,11 @@
 .loyalty-table-scroll,.loyalty-transaction-wrap{
     border:1px solid #e1e6ef;
     border-radius:10px;
-    overflow:auto
+    overflow:hidden
+}
+.loyalty-transaction-wrap{
+    overflow-x:auto;
+    overflow-y:hidden
 }
 .loyalty-table,.loyalty-transaction-wrap table{
     border:0;

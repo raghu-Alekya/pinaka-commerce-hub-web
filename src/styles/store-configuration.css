@@ -2169,7 +2169,9 @@
 .store-overview-nav a[aria-current=page]{color:#5143bc;border-left-color:#5143bc;font-weight:600;background:#f8f7ff}
 .store-overview-nav a:hover{background:#f8f7ff;color:#5143bc}
 .store-overview-card{border:1px solid #e1e4eb;border-radius:10px;background:#fff;margin-bottom:20px;overflow:hidden}
-.store-overview-card h2{font-size:17px;padding:18px 20px;margin:0;border-bottom:1px solid #edf0f4;color:#17233e}
+.store-overview-card-heading{padding:18px 20px;border-bottom:1px solid #edf0f4}
+.store-overview-card-heading h2{font-size:17px;padding:0;margin:0;color:#17233e}
+.store-overview-card-heading p{margin:5px 0 0;color:#758096;font-size:13px;line-height:1.5}
 .store-overview-card dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;padding:20px;margin:0}
 .store-overview-card dt{font-size:13px;font-weight:400;color:#758096;margin-bottom:6px}
 .store-overview-card dd{margin:0;color:#17233e;font-size:15px;overflow-wrap:anywhere}
@@ -2364,7 +2366,7 @@
 .store-section-editor .sf-field { font-size: 13px; font-weight: 500; }
 .store-section-editor :is(.sf-field input,.sf-field select,.sf-table select,.sf-copy-permissions select) { height: 40px; border-radius: 7px; font-size: 14px; }
 .store-section-editor .sf-copy-permissions label { font-size: 12px; }
-.store-section-editor .sf-template-grid { padding: 20px; gap: 12px; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); }
+.store-section-editor .sf-template-grid { padding: 0px 20px 20px; gap: 12px; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); }
 .store-section-editor .sf-template { padding: 14px; min-height: 90px; }
 .store-section-editor .sf-template strong { font-size: 14px; font-weight: 600; }
 .store-section-editor .sf-template small { font-size: 12px; line-height: 1.5; color: var(--store-muted); }
@@ -2463,7 +2465,7 @@
   justify-content: space-between;
   gap: 16px;
   min-height: 64px;
-  padding: 10px 12px;
+  padding: 10px 14px;
 }
 .store-section-editor .sf-permissions-panel .sf-panel-head > div:first-child {
   min-width: 0;
@@ -4433,9 +4435,16 @@
   gap: 16px;
 }
 .store-workspace-page .store-section-editor .sf-permissions-panel > .sf-panel-head > .sf-copy-permissions {
+  display: flex !important;
   flex: 0 0 auto;
-  width: fit-content !important;
-  margin-left: auto !important;
+  grid-template-columns: none !important;
+  width: max-content !important;
+  margin: 0 0 0 auto !important;
+  padding: 0 !important;
+  justify-content: flex-end !important;
+}
+.store-workspace-page .store-section-editor .sf-permissions-panel > .sf-panel-head {
+  padding-right: 14px !important;
 }
 
 /* Features summary cards and table follow the embedded Products layout. */
@@ -5302,6 +5311,11 @@
 ) :is(.pagination-controls, .pagination-actions, .mv-pagination) {
   margin-right: 0 !important;
   padding-right: 0 !important;
+}
+
+.store-workspace-page .store-workspace-card .store-section-editor .sf-permissions-panel > .pagination-container {
+  padding: 16px 14px !important;
+  margin: 0 !important;
 }
 
 /* 8. Natural Empty Table Row Heights (Eliminate artificial vertical whitespace voids) */

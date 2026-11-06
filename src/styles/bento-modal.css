@@ -353,6 +353,11 @@ body:has(.sidebar-collapsed) .bento-modal-overlay,
   gap: 14px;
 }
 
+.bento-grid-vertical {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
 /* Column Card: p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm space-y-3 */
 .bento-card {
   padding: 14px 16px;

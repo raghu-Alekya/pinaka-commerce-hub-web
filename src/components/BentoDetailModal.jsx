@@ -358,7 +358,9 @@ export default function BentoDetailModal({
           {sections && sections.length > 0 && (
             <div
               className={`bento-grid ${
-                layout === "bento-2"
+                layout === "bento-vertical"
+                  ? "bento-grid-vertical grid"
+                  : layout === "bento-2"
                   ? "bento-grid-2 grid grid-cols-2 gap-3.5"
                   : "bento-grid-3 grid grid-cols-3 gap-4"
               }`}

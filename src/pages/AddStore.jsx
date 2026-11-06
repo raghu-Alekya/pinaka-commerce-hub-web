@@ -29,6 +29,7 @@ import {
 } from "../api/storeRoleTemplatesApi";
 import FilterDropdown from "../components/FilterDropdown";
 import FiltersBar from "../components/FiltersBar";
+import Pagination from "../components/Pagination";
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { endpoints } from "../api/endpoints";
 import { normalizeStore, storeListFromResponse } from "../api/stores";
@@ -621,7 +622,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const appliedRoleSnapshot = useRef("");
   const lastLoadedStoreTypeRolesRef = useRef("");
   const [activeRole, setActiveRole] = useState("");
-  const [copyFromRole, setCopyFromRole] = useState("");
   const [permissions, setPermissions] = useState({});
   const [savedRolePermissions, setSavedRolePermissions] = useState([]);
   useEffect(() => {
@@ -664,6 +664,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const [featureCategory, setFeatureCategory] = useState("All Features");
   const [featurePage, setFeaturePage] = useState(1);
   const [featurePageSize, setFeaturePageSize] = useState(5);
+  const [rolePermissionPage, setRolePermissionPage] = useState(1);
+  const [rolePermissionPageSize, setRolePermissionPageSize] = useState(5);
 
   useEffect(() => {
     if (!error) return undefined;
@@ -1746,7 +1748,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setFeatureSearch("");
     setFeatureCategory("All Features");
     setFeaturePage(1);
-    setCopyFromRole("");
     setError("");
     setStep(0);
   };
@@ -2860,7 +2861,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               </button>
             }
           >
-            <div className="sf-table-wrap">
+            <div className="sf-table-wrap sf-hours-table-wrap">
               <table className="sf-table sf-hours-table">
                 <thead>
                   <tr>
@@ -3079,7 +3080,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                     checked={allVisibleFeaturesSelected}
                     onChange={(event) => setEnabledFeatures((current) => event.target.checked ? [...new Set([...current, ...selectableFeatureNames])] : current.filter((name) => !selectableFeatureNames.includes(name)))}
                   />
-                  Select all eligible
+                  Select all features
                 </label>
               )}
             />
@@ -3211,6 +3212,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             name: feature.name,
             id: feature.id || feature.name,
           }));
+    const rolePermissionPageCount = Math.max(1, Math.ceil(matrixRows.length / rolePermissionPageSize));
+    const currentRolePermissionPage = Math.min(rolePermissionPage, rolePermissionPageCount);
+    const pagedMatrixRows = matrixRows.slice(
+      (currentRolePermissionPage - 1) * rolePermissionPageSize,
+      currentRolePermissionPage * rolePermissionPageSize,
+    );
     const availability = permissionAvailability[active] || {};
     return (
       <>
@@ -3265,7 +3272,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         <div className="sf-permissions-layout">
           <Panel
             title="Roles for This Store"
-            subtitle={readOnly ? "Select a role to view its saved permissions." : "Configure permissions for each selected role."}
           >
             <div className="sf-role-list">
               {roles.map((roleId) => (
@@ -3273,7 +3279,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   type="button"
                   key={roleId}
                   className={active === roleId ? "active" : ""}
-                  onClick={() => setActiveRole(roleId)}
+                  onClick={() => {
+                    setActiveRole(roleId);
+                    setRolePermissionPage(1);
+                  }}
                 >
                   <i className="bi bi-grip-vertical" />
                   <span>{roleName(roleId)}</span>
@@ -3320,21 +3329,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   }} />
                   Select all permissions
                 </label>
-                <label className="sf-copy-role-select">
-                  <FilterDropdown
-                    value={copyFromRole}
-                    onChange={(event) => setCopyFromRole(event.target.value)}
-                  >
-                    <option value="">Select a role</option>
-                    {roles
-                      .filter((roleId) => roleId !== active)
-                      .map((roleId) => (
-                        <option key={roleId} value={roleId}>
-                          {roleName(roleId)}
-                        </option>
-                      ))}
-                  </FilterDropdown>
-                </label>
               </div>
             }
           >
@@ -3353,7 +3347,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                     </tr>
                   </thead>
                   <tbody>
-                    {matrixRows.map((item) => {
+                    {pagedMatrixRows.map((item) => {
                       const name = item.name;
                       const values = permissions[active]?.[name] || {};
                       const available = availability[name] || {};
@@ -3391,6 +3385,18 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 </table>
               </div>
             )}
+            {active && !permissionsLoading && <Pagination
+              currentPage={currentRolePermissionPage}
+              totalPages={rolePermissionPageCount}
+              totalItems={matrixRows.length}
+              pageSize={rolePermissionPageSize}
+              onPageChange={setRolePermissionPage}
+              onPageSizeChange={(pageSize) => {
+                setRolePermissionPageSize(pageSize);
+                setRolePermissionPage(1);
+              }}
+              itemLabel="features"
+            />}
             {!active && (
               <p className="sf-empty">
                 Select a role to configure permissions.

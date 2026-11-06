@@ -39,8 +39,13 @@ function readValue(value) {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   return typeof value === 'object' ? (value.name || value.label || '—') : String(value);
 }
-function ViewSection({ title, children, actions }) {
-  return <section className="merchant-view-section">{actions ? <div className="merchant-section-heading"><h2>{title}</h2>{actions}</div> : <h2>{title}</h2>}{children}</section>;
+function ViewSection({ title, subtitle, children, actions }) {
+  const heading = subtitle
+    ? <div className="merchant-overview-section-heading"><div><h2>{title}</h2><p>{subtitle}</p></div>{actions}</div>
+    : actions
+      ? <div className="merchant-section-heading"><h2>{title}</h2>{actions}</div>
+      : <h2>{title}</h2>;
+  return <section className="merchant-view-section">{heading}{children}</section>;
 }
 function ViewFields({ items }) {
   return <dl className="merchant-view-fields">{items.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{readValue(value)}</dd></div>)}</dl>;
@@ -539,6 +544,9 @@ async function openEmployeeEdit(employee) {
       @media(max-width:650px){.merchant-readonly .page-header{flex-wrap:wrap;gap:16px;}.merchant-readonly .merchant-detail-actions{width:100%;}}
       .merchant-readonly .merchant-view-section{background:#fff;border:1px solid #e1e4eb;border-radius:10px;margin-bottom:16px;overflow:hidden;}
       .merchant-readonly .merchant-view-section h2{font-size:18px;padding:16px 20px;margin:0;border-bottom:1px solid #edf0f4;color:#17233e;}
+      .merchant-readonly .merchant-overview-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid #edf0f4;}
+      .merchant-readonly .merchant-overview-section-heading h2{padding:0;border:0;}
+      .merchant-readonly .merchant-overview-section-heading p{margin:5px 0 0;color:#758096;font-size:13px;line-height:1.5;}
       .merchant-readonly .merchant-view-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 28px;padding:20px;margin:0;}
       .merchant-readonly .merchant-view-fields dt{font-weight:500;color:#7c8495;font-size:13px;margin-bottom:5px;}
       .merchant-readonly .merchant-view-fields dd{margin:0;color:#17233e;font-size:15px;overflow-wrap:anywhere;}
@@ -564,13 +572,13 @@ async function openEmployeeEdit(employee) {
     </div>
     {loading ? <p role="status">Loading merchant details…</p> : error ? <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div> : <>
       <div role="tabpanel" id="merchant-panel-overview" aria-labelledby="merchant-tab-overview" hidden={activeTab !== 'overview'} tabIndex={0}>
-        <ViewSection title="Business Details"><ViewFields items={[
+        <ViewSection title="Business Details" subtitle="Key business and registration information for this merchant."><ViewFields items={[
           ['Merchant Code', displayMerchantCode], ['Legal / Business Name', business],
           ['Business Display Name', businessDisplayName], ['Status', summary.status || raw.status],
           ['Joined Date', formatDate(summary.joined || raw.createdAt || raw.created_at)],
           ['Billing Cycle', billingCycle],
         ]} /></ViewSection>
-        <ViewSection title="Primary Contact"><ViewFields items={[
+        <ViewSection title="Primary Contact" subtitle="Contact details and the merchant's location."><ViewFields items={[
           ['Merchant Name', contact.name || raw.merchantName || raw.ownerName || [firstName, lastName].filter(Boolean).join(' ')],
           ['Email', contact.email || raw.merchantEmail || summary.email], ['Phone', contact.phone || raw.merchantPhoneNumber || summary.phone],
           ['Country', contact.country || raw.country || address.country || summary.country], ['City', contact.city || raw.city || address.city],
@@ -580,7 +588,7 @@ async function openEmployeeEdit(employee) {
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-subscription" aria-labelledby="merchant-tab-subscription" hidden={activeTab !== 'subscription'} tabIndex={0}>
-        <ViewSection title="Subscription & Usage"><ViewFields items={[
+        <ViewSection title="Subscription & Usage" subtitle="Plan, usage limits, and current subscription activity."><ViewFields items={[
           ['Plan', displayPlanName], ['Billing Cycle', displayBillingCycle],
           ['Store Type', displayStoreType],
           ['Subscription Status', displayStatus], ['Start Date', displayStartDate],

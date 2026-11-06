@@ -4855,6 +4855,7 @@
     .opening-balance-save, .cashback-save-button, .service-charge-save-button, .cd-save-btn) {
     min-height: 35px;
     border-radius: 7px;
+    gap: 7px;
 }
 .settings-table, .pc-table { border-color: #e0e6f0; border-radius: 8px; overflow: hidden; }
 .settings-table th, .pc-table thead th { background: #f4f5fb; }

@@ -125,9 +125,16 @@ const navGroups = [
    STORE CONFIGURATION
    ========================================================= */
 
-function SummaryFields({ title, items }) {
-  return <section className="store-overview-card">
+function StoreOverviewCardHeading({ title, subtitle }) {
+  return <div className="store-overview-card-heading">
     <h2>{title}</h2>
+    <p>{subtitle}</p>
+  </div>;
+}
+
+function SummaryFields({ title, subtitle, items }) {
+  return <section className="store-overview-card">
+    <StoreOverviewCardHeading title={title} subtitle={subtitle} />
     <dl>{items.map(([label, value]) => <div key={label}>
       <dt>{label}</dt><dd>{value == null || value === "" ? "—" : value}</dd>
     </div>)}</dl>
@@ -138,20 +145,21 @@ function StoreDetailsSummary({ store, merchant }) {
   const address = typeof store.address === "object" && store.address ? store.address : {};
   const hours = store.hours || store.onboardingSetup?.hours || [];
   return <>
-    <SummaryFields title="Store Details" items={[
+    <SummaryFields title="Store Details" subtitle="Basic information about this store." items={[
       ["Store Name", store.name], ["Store Code", store.storeCode || store.id],
       ["Merchant", merchant?.name || store.merchantName],
       ["Store Type", typeof store.type === "object" ? store.type.name || store.type.code : store.type],
       ["Status", store.status], ["Currency", store.currency ? `${store.currency} (${store.currencySymbol || getCurrencySymbol(store.currency)})` : "—"],
     ]} />
-    <SummaryFields title="Contact & Location" items={[
+    <SummaryFields title="Contact & Location" subtitle="Contact details and the store's physical location." items={[
       ["Phone", store.phone], ["Email", store.email || store.storeEmail], ["Website", store.url],
       ["Address", store.addressLine1 || address.street || address.addressLine1 || (typeof store.address === "string" ? store.address : "")],
       ["Address Line 2", store.addressLine2 || address.addressLine2],
       ["City", store.city || address.city], ["State / Province", store.state || address.state],
       ["Country", store.country || address.country], ["Postal Code", store.zip || store.postalCode || address.zipCode || address.postalCode],
     ]} />
-    <section className="store-overview-card"><h2>Operating Hours</h2>
+    <section className="store-overview-card">
+      <StoreOverviewCardHeading title="Operating Hours" subtitle="View the store's weekly opening times and shifts." />
       <div className="store-overview-table"><table>
         <thead><tr>{["Day", "Status", "Open", "Close", "Shifts"].map(label => <th key={label}>{label}</th>)}</tr></thead>
         <tbody>{Array.isArray(hours) && hours.length ? hours.map((row, index) => <tr key={row.day || index}>
@@ -186,9 +194,12 @@ function StoreSubscriptionSummary({ merchantId }) {
   }, [merchantId, attempt]);
   if (loading) return <p role="status">Loading subscription…</p>;
   if (error) return <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div>;
-  if (!subscription) return <section className="store-overview-card"><h2>Subscription</h2><p className="store-overview-empty">No active subscription found.</p></section>;
+  if (!subscription) return <section className="store-overview-card">
+    <StoreOverviewCardHeading title="Subscription" subtitle="Plan and billing details for this store." />
+    <p className="store-overview-empty">No active subscription found.</p>
+  </section>;
   const plan = subscription.plan || subscription.subscriptionPlan || {};
-  return <SummaryFields title="Subscription" items={[
+  return <SummaryFields title="Subscription" subtitle="Plan and billing details for this store." items={[
     ["Plan", subscription.planName || plan.name || (typeof plan === "string" ? plan : "")],
     ["Status", subscription.status], ["Billing", subscription.billingCycle || subscription.billingPeriod || plan.billingCycle],
     ["Price", subscription.price ?? subscription.amount ?? plan.price], ["Currency", subscription.currency || plan.currency],
