@@ -5561,3 +5561,6 @@ html body .store-workspace-page .store-workspace-main > .store-workspace-card {
   justify-content: flex-end;
   gap: 10px;
 }
+.store-workspace-page .store-workspace-card .store-customers-toolbar {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+}
