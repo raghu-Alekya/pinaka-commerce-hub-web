@@ -121,6 +121,36 @@ const navGroups = [
   },
 ];
 
+const sectionIntro = {
+  details: ["Store Details", "Review the store profile, contact information, location, and operating hours."],
+  subscription: ["Subscription", "Review the plan and subscription details assigned to this store."],
+  features: ["Features", "Review the features available to this store and update its access when needed."],
+  roles: ["Roles & Permissions", "Manage the roles and permissions that control access to this store."],
+  users: ["Employees", "Manage employee assignments, store roles, and login access."],
+  attendance: ["Employee Attendance", "Review attendance records and working hours for this store."],
+  customers: ["Customers", "Browse customer profiles and activity associated with this store."],
+  vendors: ["Vendors", "Manage the vendors that supply this store."],
+  overview: ["Website Connection", "Manage the store website connection and sync catalog data."],
+  pos: ["POS Configuration", "Configure point of sale settings used by this store."],
+  categories: ["Categories", "Organize the product categories available at this store."],
+  products: ["Products", "Manage the products listed in this store's catalog."],
+  fastkeys: ["Fast Keys", "Configure quick access keys used by the store's point of sale."],
+  orders: ["Orders", "Review and manage orders placed through this store."],
+  paymentrecords: ["Payment History", "Review payment transactions recorded for this store."],
+  vendorhistory: ["Vendor History", "Review payment history for this store's vendors."],
+  coupons: ["Coupons", "Create and manage coupon offers available at this store."],
+  discounts: ["Discounts", "Manage the discount offers applied to this store's catalog."],
+  shifts: ["Shift Management", "Set up and review employee shifts for this store."],
+  safedrops: ["Safe Drops", "Review and manage safe drop records for this store."],
+};
+
+// These embedded pages already render their own page heading and description.
+const sectionsWithPageHeading = new Set([
+  "features", "roles", "users", "attendance", "customers", "vendors",
+  "overview", "pos", "categories", "products", "fastkeys", "vendorhistory",
+  "paymentrecords", "coupons", "discounts", "shifts", "safedrops",
+]);
+
 /* =========================================================
    STORE CONFIGURATION
    ========================================================= */
@@ -709,6 +739,10 @@ export default function StoreConfiguration() {
                   =========================================== */}
 
               <div className="store-workspace-card">
+              {sectionIntro[section] && !sectionsWithPageHeading.has(section) && <header className="store-section-intro">
+                <h2>{sectionIntro[section][0]}</h2>
+                <p>{sectionIntro[section][1]}</p>
+              </header>}
               {section === "attendance" && attendanceDetailRecord ? (
                 <AttendanceDetails record={attendanceDetailRecord} store={store} onBack={() => setAttendanceDetailRecord(null)} />
               ) : section === "details" ? (

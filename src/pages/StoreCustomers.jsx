@@ -196,11 +196,6 @@ export default function StoreCustomers({
       <div className="store-customers-header">
 
         <div className="store-customers-title-area">
-
-          <div className="store-customers-title-icon">
-      
-          </div>
-
           <div>
             <h1>Customers</h1>
 

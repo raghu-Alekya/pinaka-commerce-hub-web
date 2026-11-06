@@ -15,6 +15,8 @@ export default function BentoDetailModal({
   children = null,
   maxWidth,
   size,
+  showHeaderText = true,
+  compactSpacing = false,
 }) {
   // Compute left offset to ensure the dark left navigation sidebar remains 100% visible, active, and unblurred
   const [leftOffset, setLeftOffset] = useState(() => {
@@ -254,18 +256,22 @@ export default function BentoDetailModal({
       }}
     >
       <div
-        className={`bento-modal-container bg-white w-full ${widthClass} rounded-2xl shadow-2xl border border-slate-100 relative max-h-[90vh] ${
+        className={`bento-modal-container bg-white w-full ${widthClass} rounded-2xl shadow-2xl border border-slate-100 relative max-h-[90vh] ${compactSpacing ? "compact-spacing" : ""} ${
           isCompact ? "overflow-visible" : "overflow-hidden"
         }`}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="bento-modal-title"
+        aria-label={showHeaderText ? undefined : (title || "Details")}
+        aria-labelledby={showHeaderText ? "bento-modal-title" : undefined}
         style={customStyle}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        {/* Header: Category icon badge + Title + Subtitle Code + Top-right X button only */}
-        <div className="bento-modal-header flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/40">
-          <div className="bento-header-left flex items-center gap-3">
+        {/* Header: Optional title details and top-right close button */}
+        <div
+          className={`bento-modal-header flex items-center ${showHeaderText ? "justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/40" : "justify-end px-4 py-2"}`}
+          style={!showHeaderText ? { justifyContent: "flex-end", padding: "8px 16px", borderBottom: 0, background: "transparent" } : undefined}
+        >
+          {showHeaderText && <div className="bento-header-left flex items-center gap-3">
             <div className="bento-header-badge p-2 bg-indigo-50 text-indigo-600 rounded-xl">
               <i className={`bi ${headerIcon} text-lg`} aria-hidden="true" />
             </div>
@@ -279,7 +285,7 @@ export default function BentoDetailModal({
                 </p>
               ) : null}
             </div>
-          </div>
+          </div>}
 
           {/* Top-Right Close Button (The ONLY Close trigger) */}
           <button
