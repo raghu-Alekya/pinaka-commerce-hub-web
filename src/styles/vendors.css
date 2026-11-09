@@ -2794,19 +2794,19 @@
 
 /* Status dropdown styles inside .vendors-form */
 .vendors-form .vendors-status-select.active + .pch-filter-trigger,
-.vendors-form .pch-filter-dropdown:has(.vendors-status-select.active) .pch-filter-trigger {
-  border-color: #b9ead2 !important;
-  background: #f7fffb !important;
+.vendors-form .pch-filter-dropdown:has(.vendors-status-select.active) .pch-filter-trigger,
+.vendors-form .pch-filter-dropdown:has(.vendors-status-select.active) .pch-filter-trigger > span {
   color: #08a961 !important;
   font-weight: 600 !important;
+  opacity: 1 !important;
 }
 
 .vendors-form .vendors-status-select.inactive + .pch-filter-trigger,
-.vendors-form .pch-filter-dropdown:has(.vendors-status-select.inactive) .pch-filter-trigger {
-  border-color: #f3c0c8 !important;
-  background: #fff8f9 !important;
+.vendors-form .pch-filter-dropdown:has(.vendors-status-select.inactive) .pch-filter-trigger,
+.vendors-form .pch-filter-dropdown:has(.vendors-status-select.inactive) .pch-filter-trigger > span {
   color: #ed304d !important;
   font-weight: 600 !important;
+  opacity: 1 !important;
 }
 
 /* Toolbar filters in Vendors list */

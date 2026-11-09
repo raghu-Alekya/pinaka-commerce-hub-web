@@ -15,7 +15,7 @@ export default function ReadOnlyDetails({ title, subtitle, listLabel, onBack, da
               const display = value == null || value === "" ? "—" : Array.isArray(value) ? (value.length ? value.join(", ") : "—") : typeof value === "boolean" ? (value ? "Yes" : "No") : typeof value === "object" ? JSON.stringify(value) : String(value);
               return <div className={`device-view-field${field.fullWidth ? " details-full-width" : ""}`} key={field.key}>
                 <label>{field.label}</label>
-                <div className="device-view-value">{field.render ? field.render(value, data) : display}</div>
+                <div className={`device-view-value${field.status ? ` device-view-status-field ${String(value || "").toLowerCase()}` : ""}`} style={field.status ? { color: String(value || "").toLowerCase() === "active" ? "#08a961" : String(value || "").toLowerCase() === "inactive" ? "#ed304d" : undefined } : undefined}>{field.render ? field.render(value, data) : display}</div>
               </div>;
             })}
           </div>

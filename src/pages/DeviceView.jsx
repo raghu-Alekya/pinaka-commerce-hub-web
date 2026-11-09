@@ -84,7 +84,13 @@ export default function DeviceView() {
   const deviceType = device.type || "-";
   const serialNumber = device.serial || "-";
   const merchant = device.merchant || "-";
-  const store = device.store || "-";
+  const storeValue = device.store;
+  const store =
+    storeValue == null ||
+    (typeof storeValue === "string" &&
+      (!storeValue.trim() || storeValue.trim() === "-" || storeValue.trim() === "—"))
+      ? "Not provided"
+      : storeValue;
   const status = device.status || "-";
   const lastSeen = device.lastSeen || "-";
   const notes = device.notes || "";

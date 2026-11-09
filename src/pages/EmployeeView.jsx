@@ -27,7 +27,7 @@ function Section({ title, icon: Icon, fields, children }) {
       <dl className="employee-view-grid">
         {fields.map(([label, value]) => (
           <div className="employee-view-field" key={label}>
-            <dt>{label}</dt><dd>{displayValue(value)}</dd>
+            <dt>{label}</dt><dd style={label === "Status" ? { color: String(value).toLowerCase() === "active" ? "#08a961" : String(value).toLowerCase() === "inactive" ? "#ed304d" : undefined } : undefined}>{displayValue(value)}</dd>
           </div>
         ))}
       </dl>
