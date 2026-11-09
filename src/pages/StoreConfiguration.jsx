@@ -229,7 +229,7 @@ function StoreSubscriptionSummary({ merchantId }) {
   const plan = subscription.plan || subscription.subscriptionPlan || {};
   return <SummaryFields title="Subscription" subtitle="Plan and billing details for this store." items={[
     ["Plan", subscription.planName || plan.name || (typeof plan === "string" ? plan : "")],
-    ["Status", subscription.status], ["Billing", subscription.billingCycle || subscription.billingPeriod || plan.billingCycle],
+    ["Status", subscription.status], ["Billing Cycle", subscription.billingCycle || subscription.billingPeriod || plan.billingCycle],
     ["Price", subscription.price ?? subscription.amount ?? plan.price], ["Currency", subscription.currency || plan.currency],
     ["Start Date", subscription.startDate || subscription.startsAt],
     ["Renewal / End Date", subscription.renewalDate || subscription.endDate || subscription.expiresAt],
@@ -794,7 +794,7 @@ export default function StoreConfiguration() {
                         </label>
                         <div className="store-form-actions">
                           <button type="button" className="sf-outline" onClick={() => {restoreConnection();setEditingSection(false);}}>Cancel</button>
-                          <button type="submit" className="store-config-btn">{saving ? "Saving…" : "Save Changes"}</button>
+                          <button type="submit" className="store-config-btn">{saving ? "Saving…" : "Update Changes"}</button>
                         </div>
                       </fieldset>
                     </form>

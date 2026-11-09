@@ -169,4 +169,3 @@ export function SafeConfiguration({ value, onSave, onBack }) {
         <ConfigFooter onBack={onBack} onSave={save} disabled={uploads > 0} message={uploads > 0 ? "Reading denomination image…" : message} />
     </section>;
 }
-

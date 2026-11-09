@@ -10,6 +10,7 @@ export default function AddMerchantDevice({ merchantId, merchant, onBack, onSave
       onSave={onSave}
       onCancel={onBack}
       initialDevice={initialDevice}
+      editSubmitLabel="Update Changes"
     />
   );
 }

@@ -158,7 +158,7 @@ export default function ViewPlanOverview() {
                       ? "plan-details-status-inactive"
                       : "plan-details-status"
                   }
-                  value={plan.status ? `● ${plan.status}` : "—"}
+                  value={plan.status || "—"}
                   readOnly
                 />
                

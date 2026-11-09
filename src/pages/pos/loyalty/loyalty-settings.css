@@ -48,6 +48,7 @@
     border-radius:8px;
     padding:10px 16px;
     font-weight:600;
+    font-size:14px;
     cursor:pointer
 }
 .loyalty-back-button,.loyalty-cancel{
@@ -67,6 +68,7 @@
     color:#65738c;
     padding:12px 18px 11px;
     font-weight:650;
+    font-size:14px;
     cursor:pointer
 }
 .loyalty-tabs button.active{
@@ -95,7 +97,7 @@
 .loyalty-card-heading p{
     margin:5px 0 0;
     color:#7b8799;
-    font-size:13px
+    font-size:14px
 }
 .loyalty-search{
     width:min(360px,100%);
@@ -106,7 +108,8 @@
     padding:0 12px;
     border:1px solid #d8e0ed;
     border-radius:8px;
-    color:#8b98ac
+    color:#8b98ac;
+    font-size:14px
 }
 .loyalty-search input{
     width:100%;
@@ -166,7 +169,7 @@
     min-width:1050px;
     table-layout:fixed;
     border-collapse:collapse;
-    font-size:11px
+    font-size:12px
 }
 .loyalty-transaction-wrap th,.loyalty-transaction-wrap td{
     border:1px solid #e1e6ef;
@@ -201,19 +204,20 @@
     max-height:28px!important;
     gap:5px!important;
     padding:0 7px!important;
-    font-size:11px!important
+    font-size:12px!important
 }
 @media(max-width:900px){
     .loyalty-transaction-wrap th,.loyalty-transaction-wrap td{
         padding:8px 7px;
-        font-size:10px
+        font-size:11px
     }
 }
 .loyalty-detail-grid{
     display:grid;
     grid-template-columns:minmax(0,1fr);
     gap:16px;
-    margin:0
+    margin:0;
+    padding:12px 0px;
 }
 .loyalty-summary-grid{
     display:grid;
@@ -224,7 +228,7 @@
 .loyalty-detail-grid dt{
     margin-bottom:5px;
     color:#7b8799;
-    font-size:12px;
+    font-size:13px;
     font-weight:650
 }
 .loyalty-detail-grid dd{
@@ -259,7 +263,7 @@
     flex-direction:column;
     gap:8px;
     color:#435574;
-    font-size:13px;
+    font-size:14px;
     font-weight:600
 }
 .loyalty-field b{
@@ -277,7 +281,7 @@
     font-weight:400
 }
 .loyalty-field small,.loyalty-select-field small{
-    font-size:12px;
+    font-size:13px;
     font-weight:400;
     color:#7c899b
 }
@@ -415,11 +419,11 @@
     flex-direction:column;
     gap:5px;
     color:#435574;
-    font-size:13px
+    font-size:14px
 }
 .loyalty-toggle-copy small{
     color:#7c899b;
-    font-size:12px;
+    font-size:13px;
     font-weight:400
 }
 .loyalty-switch{

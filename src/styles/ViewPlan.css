@@ -99,8 +99,8 @@
   gap: 5px;
   padding: 6px 10px;
   border-radius: 14px;
-  color: #0aa763;
-  background: #dff9eb;
+  color: #047857;
+  background: #ecfdf5;
   font-size: 10px;
   font-weight: 700;
 }
@@ -243,7 +243,7 @@
 }
 
 .view-plan-status-text {
-  color: #0aa763 !important;
+  color: #047857 !important;
 }
 
 .view-plan-pricing {

@@ -1490,7 +1490,7 @@ function ChoosePlan({
               disabled={!selectedPlan || selectedPlan === currentKey || plansLoading || !plans.length}
               onClick={onNext}
             >
-              Next <ArrowRight size={17} />
+              Next
             </button>
           </div>
         </div>
@@ -1527,10 +1527,10 @@ function ConfirmPlanChange({ merchant, plans, selectedPlan, onBack, onNext }) {
 
       <div className="confirm-plan-layout">
         <aside className="subscription-stepper confirm-stepper" aria-label="Subscription plan change progress">
-          <div className="subscription-step">
+          <button type="button" className="subscription-step is-navigable" onClick={onBack} aria-label="Go back to Choose Subscription Plan">
             <span className="step-number">1</span>
             <div><strong>Choose Subscription Plan</strong><p>Select a plan for your merchant.</p></div>
-          </div>
+          </button>
           <div className="subscription-step active">
             <span className="step-number">2</span>
             <div><strong>Confirm Plan Change</strong><p>Review the plan details.</p></div>
@@ -1647,7 +1647,6 @@ function ConfirmPlanChange({ merchant, plans, selectedPlan, onBack, onNext }) {
             <button type="button" className="secondary-flow-button" onClick={onBack}>Cancel</button>
             <button type="button" className="primary-flow-button" onClick={onNext}>
               Proceed to Payment
-              <ArrowRight size={17} />
             </button>
           </div>
         </main>
@@ -1688,6 +1687,8 @@ function PaymentScreen({
 
   onBack,
 
+  onChoosePlan,
+
   onSubmit,
 
 }) {
@@ -1713,8 +1714,8 @@ function PaymentScreen({
       </div>
       <div className="payment-layout">
         <aside className="subscription-stepper payment-stepper" aria-label="Subscription plan change progress">
-          <div className="subscription-step"><span className="step-number">1</span><div><strong>Choose Subscription Plan</strong><p>Select a plan for your merchant.</p></div></div>
-          <div className="subscription-step"><span className="step-number">2</span><div><strong>Confirm Plan Change</strong><p>Review the plan details.</p></div></div>
+          <button type="button" className="subscription-step is-navigable" onClick={onChoosePlan} aria-label="Go back to Choose Subscription Plan"><span className="step-number">1</span><div><strong>Choose Subscription Plan</strong><p>Select a plan for your merchant.</p></div></button>
+          <button type="button" className="subscription-step is-navigable" onClick={onBack} aria-label="Go back to Confirm Plan Change"><span className="step-number">2</span><div><strong>Confirm Plan Change</strong><p>Review the plan details.</p></div></button>
           <div className="subscription-step active"><span className="step-number">3</span><div><strong>Payment</strong><p>Complete the payment.</p></div></div>
           <div className="subscription-step"><span className="step-number">4</span><div><strong>Confirmation</strong><p>Plan updated successfully.</p></div></div>
         </aside>
@@ -2998,6 +2999,8 @@ export default function MerchantSubscriptions() {
         paymentSubmitting={paymentSubmitting}
 
         onBack={() => setScreen("confirm")}
+
+        onChoosePlan={() => setScreen("choose")}
 
         onSubmit={submitPayment}
 

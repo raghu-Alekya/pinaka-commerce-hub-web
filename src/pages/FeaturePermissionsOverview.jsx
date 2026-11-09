@@ -99,6 +99,13 @@ function DetailField({ label, children, fullWidth = false }) {
         />
       ) : (
         <input
+          className={
+            label === "Status"
+              ? String(children || "").toLowerCase() === "active"
+                ? "plan-details-status"
+                : "plan-details-status-inactive"
+              : undefined
+          }
           value={children || ""}
           readOnly
         />
@@ -299,4 +306,3 @@ export default function FeaturePermissionsOverview() {
     </section>
   );
 }
-

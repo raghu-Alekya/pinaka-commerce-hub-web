@@ -2,9 +2,24 @@
    STORE CONFIGURATION PAGE
    ========================================================= */
 
-.main-content:has(> .store-workspace-page) {
+html:has(.store-workspace-page),
+body:has(.store-workspace-page),
+#root:has(.store-workspace-page) {
+  height: 100%;
+  overflow: hidden;
+}
+
+.dashboard-app:has(> .main-content > .store-workspace-page) {
   height: 100dvh;
   min-height: 0;
+  overflow: hidden;
+}
+
+.main-content:has(> .store-workspace-page) {
+  box-sizing: border-box;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .main-content:has(> .store-workspace-page) > .topbar {
@@ -280,6 +295,7 @@
   min-width: 0;
   min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 24px;
 }
 
@@ -2306,7 +2322,16 @@
 .store-section-editor .sf-employee-tools .sf-search { grid-column: 1; width: 100%; min-width: 0; flex: initial; }
 .store-section-editor .sf-employee-tools .sf-field { grid-column: 2; }
 .store-section-editor .sf-employee-tools .sf-employee-reset { grid-column: 3; }
-.store-section-editor .sf-employee-tools .sf-select-all-employees { grid-column: 4; justify-self: end; }
+.store-section-editor .sf-employee-tools .sf-select-all-employees {
+  grid-column: 4;
+  justify-self: end;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 8px 11px;
+  border: 1px solid #e2e6ef;
+  border-radius: 7px;
+  background: #fff;
+}
 .store-section-editor .sf-tabs { gap: 8px; }
 .store-section-editor .sf-feature-tools .sf-tabs { flex: 1 1 auto; min-width: 0; }
 .store-section-editor .sf-tabs button { min-height: 36px; padding: 8px 12px; border-radius: 7px; color: var(--store-muted); font-size: 13px; line-height: 1.4; }
@@ -2556,6 +2581,7 @@
 }
 .store-workspace-page .store-workspace-card > .pos-page-content:has(.pos-config-detail-card) {
   padding: 0;
+  min-height: 0;
   background: transparent;
   border-radius: 0;
 }
@@ -3905,8 +3931,8 @@
   white-space: nowrap !important;
 }
 
-.store-workspace-card .products-table td:last-child :is(.product-status, .status-badge, [class*="status"]),
-.store-workspace-page .store-workspace-card .products-table td:last-child :is(.product-status, .status-badge, [class*="status"]) {
+.store-workspace-card .products-table td:last-child :is(.product-status, .status-badge),
+.store-workspace-page .store-workspace-card .products-table td:last-child :is(.product-status, .status-badge) {
   width: auto !important;
   min-width: 105px !important;
   max-width: none !important;
@@ -4099,15 +4125,24 @@
   box-sizing: border-box;
   width: 104px;
   flex: none;
-  min-height: 28px;
+  min-height: 32px;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
-  border-radius: 6px;
+  gap: 7px;
+  padding: 0 11px;
+  border-radius: 999px;
   font-size: 12px;
-  font-weight: 650;
-  line-height: 16px;
+  font-weight: 500;
+  line-height: 1;
   white-space: nowrap;
+}
+.store-workspace-page .store-workspace-card .products-table .stock-info strong::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: currentColor;
 }
 .store-workspace-page .store-workspace-card .products-table .stock-info strong.in-stock {
   background: #d9f5e8;

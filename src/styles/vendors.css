@@ -185,14 +185,14 @@
 .vendors-form h2 {
   margin: 0 0 3px;
   color: #10264d;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
 }
 
 .vendors-heading-content p {
   margin: 0;
   color: #5b79ad;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.4;
 }
 
@@ -309,7 +309,7 @@
 .vendors-field-error {
   margin: 2px 0 0;
   color: #ed304d;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -2453,13 +2453,13 @@
 .vendors-create-page .vendors-form h2 {
   margin-bottom: 2px;
   color: #183354;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
 }
 
 .vendors-create-page .vendors-heading-content p {
   color: #8194ae;
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .vendors-create-page .vendors-form-grid {
@@ -2471,12 +2471,13 @@
 .vendors-create-page .vendors-form label {
   gap: 0;
   color: #243e60;
+  font-size: 13px;
 }
 
 .vendors-create-page .vendors-form label span {
   margin-bottom: 6px;
   color: #243e60;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -2488,7 +2489,7 @@
   border-radius: 5px;
   color: #294668;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
 }
 
@@ -2702,7 +2703,7 @@
   padding: 0 35px 0 12px !important;
   border: 1px solid #d9e1f0 !important;
   border-radius: 6px !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
 }
 
 .vendors-form .pch-filter-trigger {
@@ -2715,7 +2716,7 @@
   background: #fff !important;
   color: #24314a !important;
   font-family: inherit !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   text-align: left !important;
   display: flex !important;
   align-items: center !important;
@@ -2770,7 +2771,7 @@
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   font-weight: 400 !important;
   color: #24314a !important;
 }

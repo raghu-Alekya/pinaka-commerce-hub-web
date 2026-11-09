@@ -3634,9 +3634,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       <td>
                         <span
                           className={
-                            isAssigned
-                              ? "sf-status-assigned"
-                              : "sf-status-available"
+                            `sf-status-pill ${
+                              isAssigned
+                                ? "sf-status-assigned"
+                                : "sf-status-available"
+                            }`
                           }
                         >
                           {isAssigned ? "Assigned" : "Available"}
@@ -3975,7 +3977,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       {error && <ValidationSummary error={error} summaryRef={errorBannerRef} onDismiss={() => setError("")} />}
       {failure && <div className="alert alert-danger" role="alert">{failure}<button type="button" onClick={() => setReload(v => v + 1)}>Retry</button></div>}
       {pending && <p role="status">Loading store selections…</p>}
-      <form onSubmit={saveSection}><fieldset disabled={pending || Boolean(failure) || (readOnly && step < 2)} style={{border:0,padding:0,minWidth:0}}>{screens[step]()} {!readOnly && <div className="sf-footer"><button type="button" className="sf-outline" onClick={onDone}>Cancel</button><button type="submit" className="sf-primary">{saving ? "Saving…" : "Save Changes"}</button></div>}</fieldset></form>
+      <form onSubmit={saveSection}><fieldset disabled={pending || Boolean(failure) || (readOnly && step < 2)} style={{border:0,padding:0,minWidth:0}}>{screens[step]()} {!readOnly && <div className="sf-footer"><button type="button" className="sf-outline" onClick={onDone}>Cancel</button><button type="submit" className="sf-primary">{saving ? "Saving…" : step === 3 ? "Update Changes" : "Save Changes"}</button></div>}</fieldset></form>
     </div>;
   }
 

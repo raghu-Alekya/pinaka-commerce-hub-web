@@ -303,15 +303,16 @@
 }
 
 .role-overview-active {
-  color: #00a762 !important;
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid #d5e0ed;
+  border-radius: 7px;
+  background: #f8fafc;
+  color: #00a870 !important;
   font-weight: 600 !important;
 }
-
-.role-overview-active i {
-  margin-right: 5px;
-  font-size: 6px;
-}
-
 
 /* =========================================================
    STORE TYPE SELECTION
