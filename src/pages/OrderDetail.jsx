@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ShoppingBag, CreditCard, CircleDollarSign, Package, ReceiptText } from "lucide-react";
+import { ArrowLeft, ShoppingBag, CreditCard, CircleDollarSign, Package, ReceiptText, Award } from "lucide-react";
 import { formatMoney, getOrder, normalizeOrderStatus } from "../api/orders";
 import { getCurrencySymbol } from "../utils/currency";
 import { listStorePosPayments } from "../api/storePosPayments";
 import { listStoreEmployees } from "../api/employees";
+import { apiRequest } from "../api/http";
 import { extractProducts, normalizeProduct, productsApi } from "../api/products";
 import "../styles/orders.css";
 import "../styles/employee-view.css";
@@ -226,6 +227,15 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
     originalUnitPrice: item.regularPrice ?? item.regular_price ?? item.originalPrice ?? item.original_price
       ?? item.priceBeforeDiscount ?? item.price_before_discount ?? item.price,
   }));
+  const creditedPoints = lineItems.reduce((sum, item) => {
+    const itemMeta = asArray(item.meta_data || item.metaData);
+    return sum + (Number(metaValueFrom(itemMeta, ["_credited_loyalty_points", "credited_loyalty_points"])) || 0);
+  }, 0);
+  const redeemedPoints = Number(metaValueFrom(metadata, ["redeem_points", "order_redeem_points"])) || 0;
+  const expiredPoints = Number(metaValueFrom(metadata, ["expired_points", "order_expired_points"])) || 0;
+  const redeemedValue = Number(metaValueFrom(metadata, ["redeemed_value", "redeem_amount"])) || 0;
+  const availablePoints = Math.max(0, creditedPoints - redeemedPoints - expiredPoints);
+  const loyaltyStatus = redeemedPoints > 0 ? "Used" : creditedPoints > 0 ? "Active" : "—";
   const taxLines = [storeOrder.taxLines, storeOrder.tax_lines, order.taxLines, order.tax_lines, request.tax_lines]
     .map(asArray).find((lines) => lines.length) || [];
   const paymentRecords = [
@@ -381,7 +391,7 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
     createdAt: displayDate(storeOrder.createdAt || storeOrder.created_at || order.createdAt || order.created_at || order.dateCreated || order.date_created || order.created || request.date_created || request.created_at || response.createdAt || response.created_at),
     clientOrderId: storeOrder.clientOrderId || storeOrder.client_order_id || order.clientOrderId || order.client_order_id || metaValue(metadata, "_pos_client_order_id") || "—",
     customer: storeOrder.customerName || storeOrder.customer_name || order.customerName || order.customer_name || [billing.first_name, billing.last_name].filter(Boolean).join(" ") || customer.name || "Walk-in Customer",
-    phone: storeOrder.customerPhone || storeOrder.customer_phone || storeOrder.phone || order.customerPhone || order.customer_phone || order.phone || order.phoneNumber || order.phone_number || request.customerPhone || request.customer_phone || request.phone || billing.phone || billing.phoneNumber || billing.phone_number || customer.phone || customer.phoneNumber || customer.phone_number || metaValueFrom(metadata, ["billing_phone", "_billing_phone", "customer_phone", "phone"]) || "—",
+    phone: storeOrder.customerPhone || storeOrder.customer_phone || storeOrder.phone || order.customerPhone || order.customer_phone || order.phone || order.phoneNumber || order.phone_number || request.customerPhone || request.customer_phone || request.phone || request.phone_number || billing.phone || billing.phoneNumber || billing.phone_number || customer.phone || customer.phoneNumber || customer.phone_number || metaValueFrom(metadata, ["customerPhone", "customer_phone", "billing_phone", "_billing_phone", "phone"]) || "—",
     email: storeOrder.customerEmail || storeOrder.customer_email || storeOrder.email || order.customerEmail || order.customer_email || order.email || request.customerEmail || request.customer_email || request.email || billing.email || customer.email || metaValueFrom(metadata, ["billing_email", "_billing_email", "customer_email", "email"]) || "—",
     paymentMethod: titleCase(storeOrder.paymentMethodTitle || storeOrder.payment_method_title || storeOrder.paymentMethod || storeOrder.payment_method || order.paymentMethod || order.payment_method || request.payment_method),
     paymentStatus: titleCase(
@@ -409,6 +419,20 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
     couponLines,
     discountLines,
     payments,
+    loyalty: {
+      creditedPoints,
+      redeemedPoints,
+      expiredPoints,
+      availablePoints,
+      overallCreditedPoints: creditedPoints,
+      overallRedeemedPoints: redeemedPoints,
+      overallExpiredPoints: expiredPoints,
+      overallAvailablePoints: availablePoints,
+      redeemedValue,
+      status: loyaltyStatus,
+      createdDate: metaValueFrom(metadata, ["points_created_date", "loyalty_created_at"]),
+      expiryDate: metaValueFrom(metadata, ["points_expiry_date", "loyalty_expiry_date"]),
+    },
   };
 }
 
@@ -450,6 +474,69 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
       .then(async ([payload, paymentPayload]) => {
         if (!active) return;
         let nextView = buildView(payload, providedCurrency || searchParams.get("currency") || "USD", providedCurrencySymbol || searchParams.get("currencySymbol"));
+        if (employeeMerchantId && storeId) {
+          try {
+            const loyaltyResponse = await apiRequest("/connector/api/v1/loyalty/get-all-customers", {
+              headers: { "x-merchant-id": employeeMerchantId, "x-store-id": storeId },
+            });
+            const customers = Array.isArray(loyaltyResponse?.data)
+              ? loyaltyResponse.data
+              : Array.isArray(loyaltyResponse?.customers) ? loyaltyResponse.customers : [];
+            const contactCustomer = customers.find((candidate) => {
+              const contact = String(candidate?.contact || "").trim().toLowerCase();
+              return contact && [nextView.phone, nextView.email]
+                .filter((value) => value && value !== "—")
+                .some((value) => String(value).trim().toLowerCase() === contact);
+            });
+            const orderKeys = new Set([orderId, nextView.number, nextView.clientOrderId]
+              .filter(Boolean).map((value) => String(value).trim().toLowerCase()));
+            const matchedCustomerTransactions = customers.flatMap((candidate) => (Array.isArray(candidate?.transactions)
+              ? candidate.transactions : [])
+              .filter((transaction) => orderKeys.has(String(transaction?.order_id ?? transaction?.orderId ?? "").trim().toLowerCase()))
+              .map((transaction) => ({ candidate, transaction })));
+            const customer = matchedCustomerTransactions[0]?.candidate || contactCustomer;
+            const transactions = matchedCustomerTransactions.map(({ transaction }) => transaction);
+            if (transactions.length) {
+              const creditedPoints = transactions.reduce((sum, row) => sum + (Number(row.credited_points) || 0), 0);
+              const redeemedPoints = transactions.reduce((sum, row) => sum + (Number(row.redeemed_points) || 0), 0);
+              const expiredPoints = transactions.reduce((sum, row) => sum + (Number(row.expired_points) || 0), 0);
+              const latest = transactions[transactions.length - 1];
+              nextView = {
+                ...nextView,
+                phone: nextView.phone === "—" && customer?.contact ? String(customer.contact) : nextView.phone,
+                loyalty: {
+                  creditedPoints,
+                  redeemedPoints,
+                  expiredPoints,
+                  availablePoints: Math.max(0, creditedPoints - redeemedPoints - expiredPoints),
+                  overallCreditedPoints: Number(customer?.credited ?? customer?.credited_points) || creditedPoints,
+                  overallRedeemedPoints: Number(customer?.redeemed ?? customer?.redeemed_points) || redeemedPoints,
+                  overallExpiredPoints: Number(customer?.expired ?? customer?.expired_points) || expiredPoints,
+                  overallAvailablePoints: Number(customer?.available_points ?? customer?.available) || Math.max(0, creditedPoints - redeemedPoints - expiredPoints),
+                  redeemedValue: nextView.loyalty.redeemedValue,
+                  status: latest.points_status || nextView.loyalty.status,
+                  createdDate: latest.points_created_date || nextView.loyalty.createdDate,
+                  expiryDate: latest.points_expiry_date || nextView.loyalty.expiryDate,
+                },
+              };
+            }
+            if (customer && !transactions.length) {
+              nextView = {
+                ...nextView,
+                phone: nextView.phone === "—" && customer?.contact ? String(customer.contact) : nextView.phone,
+                loyalty: {
+                  ...nextView.loyalty,
+                  overallCreditedPoints: Number(customer.credited ?? customer.credited_points) || 0,
+                  overallRedeemedPoints: Number(customer.redeemed ?? customer.redeemed_points) || 0,
+                  overallExpiredPoints: Number(customer.expired ?? customer.expired_points) || 0,
+                  overallAvailablePoints: Number(customer.available_points ?? customer.available) || 0,
+                },
+              };
+            }
+          } catch {
+            // Keep the order-local loyalty metadata as a fallback.
+          }
+        }
         if (!nextView.payments.length) {
           const paymentRows = Array.isArray(paymentPayload?.payments)
             ? paymentPayload.payments
@@ -577,6 +664,16 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
             <Fields items={[["Subtotal", view.subtotal], ["Discount", view.discount], ["Tax", view.tax], ["Fees", view.fees], ["Total", view.total]]} />
           </DetailBlock>
 
+          <DetailBlock title="Loyalty points">
+            <Fields items={[
+              ["Customer number", view.phone !== "—" ? view.phone : view.email],
+              ["Order credited points", view.loyalty.creditedPoints],
+              ["Customer available points", view.loyalty.overallAvailablePoints],
+              ["Order redeemed points", view.loyalty.redeemedPoints],
+              ["Amount used", formatMoney(view.loyalty.redeemedValue, view.currency, view.currencySymbol)],
+            ]} />
+          </DetailBlock>
+
           <DetailBlock title="Line items">
             <Lines
               columns={["Product", "SKU", "Qty", "Price"]}
@@ -663,6 +760,7 @@ function DetailBlock({ title, children }) {
     : title === "Payment and device" || title === "Payments" ? CreditCard
       : title === "Totals" ? CircleDollarSign
           : title === "Line items" ? Package
+            : title === "Loyalty points" ? Award
           : ReceiptText;
   return (
     <section className="employee-view-card order-detail-block">
