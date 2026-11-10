@@ -27,16 +27,12 @@
 }
 
 .work-merchant-field {
-  margin-top: 24px;
+  margin-top: 12px !important;
 }
 
 /* =========================================================
    EMPLOYEE LOGIN PIN
 ========================================================= */
-
-.employee-login-pin-field {
-  margin-top: 20px;
-}
 
 .employee-login-pin-field label {
   display: block;
@@ -538,4 +534,7 @@
   align-content: start;
 }
 .edit-employee-page .employee-form-grid { row-gap: 18px; align-items: start; }
-.edit-employee-page .employee-form-actions { margin-top: 20px; }
+.edit-employee-page .employee-account-settings-card .employee-form-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+

@@ -43,7 +43,7 @@ const FeatureOverview = () => {
       </nav>
     </section>
     <section className="feature-info-card">
-      <div className="feature-info-header"><div className="info-icon-box"><Info size={20} strokeWidth={2.2} /></div><div className="feature-info-title"><h2>Feature Details</h2><p>View feature details.</p></div></div>
+      <div className="feature-info-header"><div className="info-icon-box"><Info size={20} strokeWidth={2.2} /></div><div className="feature-info-title"><h2>Feature Details</h2></div></div>
       {error && <p role="alert">{error}</p>}
       <div className="feature-info-form">
         <div className="feature-form-row feature-two-columns">

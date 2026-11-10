@@ -132,7 +132,6 @@ export default function ViewPlanOverview() {
               </div>
               <div>
                 <h2> Plan Details </h2>
-                <p>View plan details and the applicable store type.</p>
               </div>
             </div>
 

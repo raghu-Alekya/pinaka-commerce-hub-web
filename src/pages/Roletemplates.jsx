@@ -417,10 +417,6 @@ async function confirmDeleteTemplate() {
                   ? "Edit Role Template"
                   : "Add Role Template"}
               </h2>
-              <p>
-                Provide the basic details and configuration for this role
-                template.
-              </p>
             </div>
           </div>
  

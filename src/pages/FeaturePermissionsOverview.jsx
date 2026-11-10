@@ -262,7 +262,6 @@ export default function FeaturePermissionsOverview() {
 
               <div>
                 <h2>Permission Details</h2>
-                <p>View permission details.</p>
               </div>
             </div>
 

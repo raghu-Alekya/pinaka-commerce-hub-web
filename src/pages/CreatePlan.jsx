@@ -667,7 +667,6 @@ export default function CreatePlan() {
             </div>
             <div>
               <h2>{editingId ? "Edit Plan" : "Create Plan"}</h2>
-              <p>Enter the subscription plan details.</p>
             </div>
           </div>
 
@@ -800,7 +799,6 @@ export default function CreatePlan() {
             </div>
             <div>
               <h2>Pricing & Limits</h2>
-              <p>Set pricing, included limits, and the trial period.</p>
             </div>
           </div>
 
@@ -1018,7 +1016,6 @@ export default function CreatePlan() {
             </div>
             <div>
               <h2>Included Features</h2>
-              <p>Select the features included in this plan.</p>
             </div>
           </div>
 
@@ -1146,7 +1143,6 @@ export default function CreatePlan() {
 
             <div>
               <h2>Review & Confirm</h2>
-              <p>Review the plan details before saving.</p>
             </div>
           </div>
 

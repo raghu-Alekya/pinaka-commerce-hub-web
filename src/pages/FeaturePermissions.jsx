@@ -1146,10 +1146,6 @@ const paginatedPermissions = filteredPermissions.slice(
                   ? "Edit Permission"
                   : "Add Permission"}
               </h2>
-
-              <p>
-                Enter the permission details.
-              </p>
             </div>
           </div>
         </div>

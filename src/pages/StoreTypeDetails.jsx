@@ -126,7 +126,6 @@ export default function StoreTypeDetails() {
 
           <div>
             <h2>Store Type Details</h2>
-            <p>View store type details.</p>
           </div>
         </div>
 

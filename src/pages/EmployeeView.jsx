@@ -89,8 +89,8 @@ export default function EmployeeView() {
           ["Email", employee.email], ["Phone", employee.phone],
           ["Date of Birth", employee.dateOfBirth || employee.dob], ["Gender", employee.gender],
         ]}>
-          {photo && !photoError && <img className="employee-view-photo" src={photo}
-            alt="Employee profile" onError={() => setPhotoError(true)} />}
+          {/* {photo && !photoError && <img className="employee-view-photo" src={photo}
+            alt="Employee profile" onError={() => setPhotoError(true)} />} */}
         </Section>
         <Section title="Work Information" icon={BriefcaseBusiness} fields={[
           ["Employee Code", employee.employeeCode],
@@ -99,7 +99,7 @@ export default function EmployeeView() {
           ["Manager", employee.manager], ["Status", employee.status],
         ]}>
           {assignments.length > 0 && <div className="employee-view-assignments">
-            <h3>Store Assignments</h3>
+            {/* <h3>Store Assignments</h3> */}
             {assignments.map((assignment, index) => <dl className="employee-view-grid" key={index}>
               <div className="employee-view-field"><dt>Store</dt><dd>{displayValue(assignment.storeName || assignment.store)}</dd></div>
               <div className="employee-view-field"><dt>Roles</dt><dd>{displayValue(assignment.roles)}</dd></div>
