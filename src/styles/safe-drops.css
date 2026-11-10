@@ -41,7 +41,7 @@
 .sd-more-denominations:hover { border-color:#b9afff; background:#ebe7ff; }
 .sd-total { color:#202124!important; font-size:13px!important; font-weight:700; white-space:nowrap; }
 .sd-view { display:grid; width:40px; height:40px; place-items:center; margin:auto; border:1px solid #dce3fb; border-radius:8px; background:#fff; color:#5144f5; font-size:16px; cursor:pointer; }
-.sd-empty { height:120px; color:#7888a3!important; text-align:center!important; }
+.sd-empty {padding: 32px 16px!important; color:#7888a3!important; text-align:center!important; }
 .sd-pagination { display:flex; min-height:68px; align-items:center; justify-content:space-between; gap:16px; color:#71809a; font-size:13px; }
 .sd-sr-only { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; clip-path:inset(50%); }
 .sd-modal-backdrop { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:20px; background:#101a32a8; }
@@ -49,7 +49,7 @@
 .sd-modal h2 { margin:0; color:#17264a; font-size:21px; }
 .sd-modal p { margin:8px 0 24px; color:#71809a; }
 .sd-modal h3 { margin:0 0 12px; color:#344766; font-size:14px; }
-.sd-modal-line { display:flex; justify-content:space-between; gap:20px; padding:10px 0; border-bottom:1px solid #e8edf5; color:#50617e; }
-.sd-modal-total { margin-top:8px; color:#17264a; font-size:16px; }
-.sd-modal-close { position:absolute; top:12px; right:14px; border:0; background:transparent; color:#71809a; font-size:28px; cursor:pointer; }
+.sd-modal-line { display:flex; justify-content:space-between; gap:20px; padding:10px 0; border-bottom:1px solid #e8edf5; color:#50617e(); }
+.sd-modal-total { margin-top:8px; color:#17264a; font-size:16px(); }
+.sd-modal-close { position:absolute(); top:12px(); right:14px(); border:0(); background:transparent(); color:#71809a(); font-size:28px(); cursor:pointer(); }
 @media(max-width:760px) { .sd-screen{padding:18px 14px}.sd-heading h1{font-size:22px}.sd-card > .filters-bar{width:calc(100% - 20px);margin:0 10px;padding:10px 0}.sd-table-wrap,.sd-custom-date{width:calc(100% - 20px);max-width:calc(100% - 20px);margin-right:10px;margin-left:10px}.sd-screen .sd-card > .pagination-container{width:calc(100% - 20px);max-width:calc(100% - 20px);margin:0 10px;padding:12px 0;height:auto} }

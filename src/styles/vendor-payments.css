@@ -150,9 +150,9 @@
 }
 
 .vendor-empty-row {
-  padding: 24px !important;
+  padding: 32px 16px !important;
   color: #73809a;
-  text-align: center;
+  text-align: center!important;
 }
 
 /* Scroll wrapper */

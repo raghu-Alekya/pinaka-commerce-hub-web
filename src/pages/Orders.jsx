@@ -478,19 +478,12 @@ export default function Orders({
                     <tr>
                       <td className="orders-table-empty" colSpan="7">
                         <div className="products-table-empty-state">
-                          <strong>
-                            {!selectedStore && (embedded || selectedMerchant)
-                              ? "Select a store to view orders"
-                              : error
-                                ? "Orders could not be loaded"
-                                : "No orders found"}
-                          </strong>
                           <span>
                             {!selectedStore && (embedded || selectedMerchant)
                               ? "Choose a merchant and store to load that store's orders."
                               : error
                                 ? error
-                                : "Try changing your search or filters."}
+                                : "No orders found"}
                           </span>
                         </div>
                       </td>

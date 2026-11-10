@@ -763,8 +763,6 @@ export default function Products({
                                     <tr>
                                         <td className="products-table-empty-cell" colSpan="8">
                                             <div className="products-table-empty-state">
-                                            
-                                                <strong>No products found</strong>
                                                 <span>
                                                     {products.length === 0
                                                         ? "No products are available for this store."

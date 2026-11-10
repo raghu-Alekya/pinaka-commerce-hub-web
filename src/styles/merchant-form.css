@@ -1442,12 +1442,12 @@
 #pch-new .pch-success-art i:nth-of-type(4) { left:234px; top:57px; background:#ffc300; }
 #pch-new .pch-success-art i:nth-of-type(5) { left:75px; top:4px; }
 #pch-new .pch-success-art i:nth-of-type(6) { left:187px; top:76px; background:#06ae69; }
-#pch-new .pch-success-details { text-align:left; background:#f8fbff; border:1px solid #e3edf9; border-radius:7px; padding:12px 20px; margin:26px 0 20px; }
+#pch-new .pch-success-details { text-align:left; background:#fdfeff; border:1px solid #e3edf9; border-radius:7px; padding:12px 20px; margin:26px 0 20px; }
 #pch-new .pch-success-details .pch-rule { display:grid; grid-template-columns:1fr 1fr; padding:9px 0; font-size:14px; gap:16px; }
 #pch-new .pch-subscription-status { color:#805b00; background:#fff1cb; padding:3px 8px; border-radius:4px; font-size:12px; }
 #pch-new .pch-success-actions { display:flex; gap:16px; justify-content:center; }
-#pch-new .pch-success-actions > button { flex:1; min-height:42px; border:1px solid #bed4fa; color:#0062f5; background:white; border-radius:5px; font-weight:600; }
-#pch-new .pch-success-actions > button.pch-subscribe-now { color:white; background:#0062f5; }
+#pch-new .pch-success-actions > button { flex:1; min-height:42px; border:1px solid #5143bc; color:#5143bc; background:white; border-radius:6px; font-weight:600; }
+#pch-new .pch-success-actions > button.pch-subscribe-now { color:white; background:#5143bc; }
 #pch-new .pch-success-secondary { display:flex; justify-content:center; gap:20px; margin:20px 0; }
 @media(max-width:700px) {
   #pch-new .pch-subscribe-grid { grid-template-columns:1fr; }

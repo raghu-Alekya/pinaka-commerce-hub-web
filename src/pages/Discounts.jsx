@@ -147,12 +147,54 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
     setLoading(true);
     setLoadError("");
     setCatalogError("");
-    const path = `/stores/${storeId}/discounts?page=${currentPage}&per_page=${pageSize}`;
+    const apiPageSize = 100;
+    const path = `/stores/${encodeURIComponent(storeId)}/discounts?page=1&per_page=${apiPageSize}`;
     pendingStoreRead(`discounts:${path}`, () => api.get(path, { headers: { Accept: "application/json" } }))
       .then(async response => {
         if (!active) return;
         if (response?.success === false || response?.status === "error") throw new Error(response.message || "Unable to load discounts.");
         const data = response?.data ?? response;
+        const rowsFrom = value => {
+          const pageData = value?.data ?? value;
+          return Array.isArray(pageData) ? pageData : ["auto", "mix_match", "multipack"].flatMap(type =>
+            (Array.isArray(pageData?.[type]) ? pageData[type] : []).map(item => ({ ...item, type }))
+          );
+        };
+        const paginationFrom = value => {
+          const pageData = value?.data ?? value;
+          return value?.pagination || pageData?.pagination || value?.meta || pageData?.meta || {};
+        };
+        let rows = rowsFrom(response);
+        const responsePagination = paginationFrom(response);
+        const pageCount = meta => Number(meta.total_pages ?? meta.totalPages ?? meta.last_page ?? meta.lastPage);
+        const recordCount = (value, pageData, meta) => Number(
+          meta.total_items ?? meta.totalItems ?? meta.total ?? meta.total_count ?? meta.totalCount ??
+          meta.total_records ?? meta.totalRecords ?? value?.total_records ?? value?.totalRecords ??
+          pageData?.total_records ?? pageData?.totalRecords
+        );
+        let lastPage = pageCount(responsePagination);
+        const reportedRecordCount = recordCount(response, data, responsePagination);
+        if (!(Number.isFinite(lastPage) && lastPage > 0) && Number.isFinite(reportedRecordCount) && reportedRecordCount > apiPageSize) {
+          lastPage = Math.ceil(reportedRecordCount / apiPageSize);
+        }
+        let hasMore = responsePagination.has_more ?? responsePagination.hasMore;
+        for (let page = 2; page <= 1000; page += 1) {
+          const shouldLoadPage = Number.isFinite(lastPage) && lastPage > 0
+            ? page <= lastPage
+            : hasMore === true || (hasMore == null && rows.length >= (page - 1) * apiPageSize);
+          if (!shouldLoadPage) break;
+          const nextPath = `/stores/${encodeURIComponent(storeId)}/discounts?page=${page}&per_page=${apiPageSize}`;
+          const nextResponse = await pendingStoreRead(`discounts:${nextPath}`, () => api.get(nextPath, { headers: { Accept: "application/json" } }));
+          if (nextResponse?.success === false || nextResponse?.status === "error") throw new Error(nextResponse.message || "Unable to load discounts.");
+          const nextRows = rowsFrom(nextResponse);
+          if (!nextRows.length) break;
+          rows = [...rows, ...nextRows];
+          const nextPagination = paginationFrom(nextResponse);
+          const nextPageCount = pageCount(nextPagination);
+          if (Number.isFinite(nextPageCount) && nextPageCount > 0) lastPage = nextPageCount;
+          hasMore = nextPagination.has_more ?? nextPagination.hasMore;
+          if (!(Number.isFinite(lastPage) && lastPage > 0) && hasMore !== true && nextRows.length < apiPageSize) break;
+        }
         if (!catalogCache.current[storeId]) {
           catalogCache.current[storeId] = pendingStoreRead(`store-products:${storeId}`, () => api.get(`/stores/${encodeURIComponent(storeId)}/catalog`))
             .then(result => normalizeCatalog(result).products)
@@ -177,7 +219,6 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
             return productNames.get(String(item)) || (/^\d+$/.test(String(item)) ? "Product unavailable" : String(item));
           }).join(", ");
         };
-        const rows = Array.isArray(data) ? data : ["auto", "mix_match", "multipack"].flatMap(type => (Array.isArray(data?.[type]) ? data[type] : []).map(item => ({ ...item, type })));
         const normalizedDiscounts = rows.map(item => ({
           ...item,
           id: item.id ?? item.discount_id,
@@ -197,7 +238,6 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
           normalizedDiscounts.forEach(item => byId.set(discountKey(item), item));
           return { ...previous, [storeId]: [...byId.values()] };
         });
-        const responsePagination = response?.pagination || data?.pagination || response?.meta || data?.meta || {};
         const responseTotal = Number(
           responsePagination.total_items
             ?? responsePagination.totalItems
@@ -232,7 +272,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
       .catch(error => { if (active) setLoadError(error.message || "Unable to load discounts."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [storeId, currentPage, pageSize, retry]);
+  }, [storeId, retry]);
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return discounts.filter((item) => {
@@ -259,19 +299,10 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
       ? reportedTotalItems
       : 0
   );
-  const reportedTotalPages = Number(
-    pagination.total_pages
-      ?? pagination.totalPages
-      ?? pagination.last_page
-      ?? pagination.lastPage
-  );
-  const totalPages = Math.max(
-    1,
-    Number.isFinite(reportedTotalPages) && reportedTotalPages > 0 ? reportedTotalPages : 1,
-    Math.ceil(totalItems / pageSize),
-    pagination.has_more ? currentPage + 1 : 1
-  );
-  const visibleDiscounts = filtered.slice(0, pageSize);
+  const hasActiveFilters = Boolean(search.trim() || typeFilter || statusFilter);
+  const paginationTotalItems = hasActiveFilters ? filtered.length : totalItems;
+  const totalPages = Math.max(1, Math.ceil(paginationTotalItems / pageSize));
+  const visibleDiscounts = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const resetFilters = () => {
     setSearch("");
     setTypeFilter("");
@@ -536,7 +567,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
               {loading ? (
                 <tr><td className="discount-table-empty" colSpan="8">Loading discounts…</td></tr>
               ) : loadError ? (
-                <tr><td className="discount-table-empty" colSpan="8"><div className="products-table-empty-state"><strong>Unable to load discounts</strong><span>{loadError}</span></div></td></tr>
+                <tr><td className="discount-table-empty" colSpan="8"><div className="products-table-empty-state"><span>Unable to load discounts</span></div></td></tr>
               ) : visibleDiscounts.length ? visibleDiscounts.map((discount) => (
                 <tr key={`${discount.type}-${discount.id}`}>
                   <td><div className="discount-name-cell"><strong>{discount.code}</strong><small>{typeLabel(discount.type)}</small></div></td>
@@ -574,7 +605,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
             </tbody>
           </table>
         </div>
-        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }} itemLabel="Discounts" showWhenEmpty />
+        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={paginationTotalItems} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }} itemLabel="Discounts" showWhenEmpty />
       </div>
 
       <DeleteConfirmationDialog isOpen={Boolean(deleteTarget)} title="Delete discount?" message={deleteTarget ? `Delete “${deleteTarget.code}”?` : ""} busy={deleting} busyLabel="Deleting…" error={deleteError} onCancel={() => { if (deleteLock.current) return; setDeleteTarget(null); setDeleteError(""); }} onConfirm={deleteDiscount} />

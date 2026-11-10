@@ -181,10 +181,11 @@ function StoreDetailsSummary({ store, merchant }) {
     ]} />
     <SummaryFields title="Contact & Location" subtitle="Contact details and the store's physical location." items={[
       ["Phone", store.phone], ["Email", store.email || store.storeEmail], ["Website", store.url],
+      ["Country", store.country || address.country], ["State / Province", store.state || address.state],
+      ["City", store.city || address.city],
       ["Address", store.addressLine1 || address.street || address.addressLine1 || (typeof store.address === "string" ? store.address : "")],
       ["Address Line 2", store.addressLine2 || address.addressLine2],
-      ["City", store.city || address.city], ["State / Province", store.state || address.state],
-      ["Country", store.country || address.country], ["Postal Code", store.zip || store.postalCode || address.zipCode || address.postalCode],
+      ["Zip / Postal Code", store.zip || store.postalCode || address.zipCode || address.postalCode],
     ]} />
     <section className="store-overview-card">
       <StoreOverviewCardHeading title="Operating Hours" subtitle="View the store's weekly opening times and shifts." />
@@ -232,7 +233,7 @@ function StoreSubscriptionSummary({ merchantId }) {
     ["Status", subscription.status], ["Billing Cycle", subscription.billingCycle || subscription.billingPeriod || plan.billingCycle],
     ["Price", subscription.price ?? subscription.amount ?? plan.price], ["Currency", subscription.currency || plan.currency],
     ["Start Date", subscription.startDate || subscription.startsAt],
-    ["Renewal / End Date", subscription.renewalDate || subscription.endDate || subscription.expiresAt],
+    ["End Date", subscription.renewalDate || subscription.endDate || subscription.expiresAt],
     ["Store Limit", subscription.storeLimit ?? subscription.locationLimit ?? plan.includedStores ?? plan.included_stores],
   ]} />;
 }

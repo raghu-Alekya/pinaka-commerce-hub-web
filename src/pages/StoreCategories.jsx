@@ -904,10 +904,6 @@ export default function StoreCategories({
                 <td colSpan="6">
 
                   <div className="categories-empty-state">
-                    <h3>
-                      No categories found
-                    </h3>
-
                     <p>
                       No categories match your current search.
                     </p>

@@ -729,12 +729,6 @@ useEffect(() => {
  
     'Feature';
  
-  const desc =
- 
-    feature?.description ||
- 
-    '';
- 
   return (
  
     <div className="store-types-page feature-detail-page">
@@ -771,7 +765,7 @@ useEffect(() => {
  
             <h1>{name}</h1>
  
-            <p>{desc}</p>
+            <p>Select the store types where this feature will be available.</p>
  
           </div>
  

@@ -242,9 +242,7 @@ const confirmDeletePermission = async () => {
           <div className="feature-detail-copy">
             <h1>{feature?.name || "Feature"}</h1>
 
-            <p>
-              {feature?.description || "Manage permissions for this feature."}
-            </p>
+            <p>Manage permissions for this feature.</p>
           </div>
         </div>
 

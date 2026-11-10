@@ -34,7 +34,7 @@ const FeatureOverview = () => {
              >
             <i className="bi bi-arrow-left" />
            </button>
-        <div className="feature-detail-copy"><h1>{name}</h1><p>{description}</p></div>
+        <div className="feature-detail-copy"><h1>{name}</h1><p>View feature details and configuration.</p></div>
       </div>
       <nav className="feature-detail-tabs" aria-label="Feature sections">
         <button className="feature-detail-tab active" type="button">Overview</button>

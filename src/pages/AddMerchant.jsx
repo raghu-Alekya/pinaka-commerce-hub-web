@@ -11,6 +11,7 @@ import { listPlans } from "../api/plans";
 import { useLocationOptions } from "../data/useLocationOptions";
 import { storeTypesApi } from "../api/storeTypes";
 import FilterDropdown from "../components/FilterDropdown";
+import StatusBadge from "../components/StatusBadge";
 import PhoneInputModule from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import "../styles/merchant-form.css";
@@ -408,11 +409,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
           <div className="pch-rule"><span className="pch-muted">Subscription ID</span><span>{saved.subscriptionId || "Pending assignment"}</span></div>
           <div className="pch-rule"><span className="pch-muted">Start Date</span><span>{saved.start}</span></div>
           <div className="pch-rule"><span className="pch-muted">Next Billing Date</span><span>{saved.renewalDate}</span></div>
-          <div className="pch-rule"><span className="pch-muted">Status</span><span><span className="pch-subscription-status">{saved.subscriptionStatus}</span></span></div>
+          <div className="pch-rule"><span className="pch-muted">Status</span><span><StatusBadge status={saved.subscriptionStatus} /></span></div>
         </section>
         <div className="pch-success-actions">
           <button className="pch-subscribe-now" type="button" onClick={() => navigate("/dashboard")}>Go to Dashboard</button>
-          <button className="pch-subscribe-now" type="button" onClick={cancel}>Back to Merchants</button>
+          <button type="button" onClick={cancel}>Back to Merchants</button>
         </div>
       </main>
     </div>

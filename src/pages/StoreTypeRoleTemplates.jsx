@@ -292,7 +292,7 @@ async function confirmDeleteRole() {
       </span> */}
     </div>
 
-    <p>{storeType.description}</p>
+    <p>Manage role templates assigned to this store type.</p>
   </div>
 </div>
 

@@ -316,8 +316,7 @@ export default function StoreCustomers({
             TABLE
         =================================================== */}
 
-        {loading || loadError || filteredCustomers.length > 0 ? (
-          <div className="store-customers-table-wrapper">
+        <div className="store-customers-table-wrapper">
 
             <table className="store-customers-table">
 
@@ -348,38 +347,20 @@ export default function StoreCustomers({
                 )}
                 {loading && <tr><td colSpan={7}>Loading customers...</td></tr>}
                 {!loading && loadError && <tr><td colSpan={7} role="alert">{loadError}</td></tr>}
-                {!loading && !loadError && filteredCustomers.length === 0 && <tr><td colSpan={7}>No customers found.</td></tr>}
+                {!loading && !loadError && filteredCustomers.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="store-customers-empty-cell">
+                      <div className="store-customers-empty">
+                        <h3>No customers found</h3>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
 
             </table>
 
           </div>
-        ) : (
-          /* =================================================
-             EMPTY STATE
-          ================================================= */
-
-          <div className="store-customers-empty">
-
-            <div className="store-customers-empty-icon">
-              <i className="bi bi-people" />
-            </div>
-
-            <h3>
-              No customers found
-            </h3>
-
-            <p>{loadError || "Try changing your search."}</p>
-
-            <button
-              type="button"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </button>
-
-          </div>
-        )}
 
         {/* ===================================================
             PAGINATION

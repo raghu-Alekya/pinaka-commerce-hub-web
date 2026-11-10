@@ -135,7 +135,7 @@ export default function ViewPlanPricing() {
                            <h1> {plan.name || "Unnamed plan"} </h1>
                      </div>
 
-                     <p> {plan.description || "No description provided."} </p>
+                     <p>View plan details and configuration.</p>
                 </div>
                    
             </div>  

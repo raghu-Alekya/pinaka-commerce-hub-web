@@ -30,6 +30,7 @@ import {
 import FilterDropdown from "../components/FilterDropdown";
 import FiltersBar from "../components/FiltersBar";
 import Pagination from "../components/Pagination";
+import StatusBadge from "../components/StatusBadge";
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { endpoints } from "../api/endpoints";
 import { normalizeStore, storeListFromResponse } from "../api/stores";
@@ -3106,15 +3107,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       <td>{feature.name}</td>
                       <td>{feature.description || "—"}</td>
                       <td>
-                        <span
-                          className={
-                            hasPlan
-                              ? "sf-access-included"
-                              : "sf-access-excluded"
-                          }
+                        <StatusBadge
+                          status={hasPlan ? "Active" : "Inactive"}
+                          className="sf-plan-access-badge"
                         >
                           {hasPlan ? "Included" : "Not included"}
-                        </span>
+                        </StatusBadge>
                       </td>
                       <td>
                         <input

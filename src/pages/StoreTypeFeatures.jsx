@@ -418,7 +418,7 @@ async function confirmDeleteFeature() {
             <h1>{storeType.name}</h1>
           </div>
 
-          <p>{storeType.description}</p>
+          <p>Manage features available for this store type.</p>
         </div>
       </div>
 

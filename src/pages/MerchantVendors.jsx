@@ -6,7 +6,6 @@ import FiltersBar from "../components/FiltersBar";
 import FilterDropdown from "../components/FilterDropdown";
 import ListActions from "../components/ListActions";
 import Pagination from "../components/Pagination";
-import { formatCurrency } from "../utils/currency";
 import "../styles/merchant-vendors.css";
 import Vendors from "./Vendors";
 import { listMerchantStores } from "../api/stores";
@@ -136,8 +135,6 @@ const locationOptions = values => [...new Map(values.filter(Boolean).map(value =
 export default function MerchantVendors({
     merchantId,
     storeId,
-    currency = "USD",
-    currencySymbol,
     masterVendors: initialMasterVendors = [],
     assignedVendorIds = [],
     onSaveAssignments,
@@ -1029,9 +1026,7 @@ useEffect(() => {
                                         <tr>
                                             <td colSpan={storeScope ? 7 : 8}>
                                                 No assigned vendors
-                                                match. Use Add Existing Vendor
-                                                to select from master
-                                                data.
+                                                match. 
                                             </td>
                                         </tr>
                                     )}
@@ -1435,10 +1430,10 @@ useEffect(() => {
                 hero={modal?.vendor ? {
                     icon: "bi-shop-window",
                     title: modal.vendor.name || "Vendor",
-                    subtitle: `${modal.vendor.type || "Organization"} • Master Account`,
-                    status: modal.vendor.status || "Verified Active",
-                    metricLabel: "TOTAL REVENUE",
-                    metricValue: modal.vendor.totalSpend ? formatCurrency(modal.vendor.totalSpend, currency, currencySymbol) : (modal.vendor.assignedStoreCount ? `${modal.vendor.assignedStoreCount} Stores` : formatCurrency(12450, currency, currencySymbol)),
+                    subtitle: `${modal.vendor.type || "Vendor"} • Master Vendor`,
+                    status: modal.vendor.status || "Not specified",
+                    metricLabel: "ASSIGNED STORES",
+                    metricValue: `${modal.vendor.assignedStoreCount || 0} ${modal.vendor.assignedStoreCount === 1 ? "Store" : "Stores"}`,
                 } : null}
                 layout="bento-3"
                 maxWidth="max-w-4xl"
@@ -1492,7 +1487,7 @@ useEffect(() => {
                         fields: [
                             { label: "DIRECT PHONE", value: modal.vendor.phone },
                             { label: "EMAIL ADDRESS", value: modal.vendor.email },
-                            { label: "SYNCED AT", value: modal.vendor.updatedTime ? new Date(modal.vendor.updatedTime).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Today, 03:02 PM" }
+                            { label: "UPDATED AT", value: modal.vendor.updatedTime ? new Date(modal.vendor.updatedTime).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Not available" }
                         ]
                     }
                 ] : []}
