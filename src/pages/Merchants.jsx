@@ -584,7 +584,7 @@ async function openEmployeeEdit(employee) {
           ['Country', contact.country || raw.country || address.country || summary.country], ['City', contact.city || raw.city || address.city],
           ['State / Province', contact.state || raw.state || address.state || summary.state],
           ['Address', typeof address === 'string' ? address : fullAddress],
-          ['Postal Code', contact.postal || contact.postalCode || contact.postal_code || raw.postalCode || raw.postal_code || address.postalCode || address.postal_code || address.zipCode],
+          ['Zip / Postal Code', contact.postal || contact.postalCode || contact.postal_code || raw.postalCode || raw.postal_code || address.postalCode || address.postal_code || address.zipCode],
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-subscription" aria-labelledby="merchant-tab-subscription" hidden={activeTab !== 'subscription'} tabIndex={0}>
@@ -592,7 +592,7 @@ async function openEmployeeEdit(employee) {
           ['Plan', displayPlanName], ['Billing Cycle', displayBillingCycle],
           ['Store Type', displayStoreType],
           ['Subscription Status', displayStatus], ['Start Date', displayStartDate],
-          ['Renewal Date', displayRenewalDate],
+          ['End Date', displayRenewalDate],
           ['Registered Stores', stores.length > 0 ? stores.length : (subMatch?.stores ?? summary.stores ?? raw.storeCount ?? (Array.isArray(raw.stores) ? raw.stores.length : 0))],
           ['Store Allowance', displayStoreAllowance],
           ['Registered Devices', devices.length > 0 ? devices.length : (registeredDeviceCount ?? subMatch?.devices ?? raw.deviceCount ?? (Array.isArray(raw.devices) ? raw.devices.length : 0))],

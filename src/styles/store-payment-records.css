@@ -242,7 +242,7 @@
 .store-payment-records-table td {
     border-right: 0;
     border-bottom: 1px solid #e4e8ef;
-    padding: 10px 14px;
+    padding: 32px 16px;
     text-align: left;
     vertical-align: middle;
     font-size: 13px;
@@ -403,7 +403,6 @@
 }
 
 .store-payment-records-empty {
-    height: 160px;
     color: #8a919e !important;
     text-align: center !important;
 }

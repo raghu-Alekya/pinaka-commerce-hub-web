@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError } from "../../../api/http";
-import { ConfigFooter, ConfigHeader, useConfigState, usePosSettings, useSaveAction } from "../shared";
+import { ConfigFooter, ConfigHeader, ConfigSwitch, useConfigState, usePosSettings, useSaveAction } from "../shared";
 import { posImageUrl } from "../storePosConfiguration";
 import { getPromotionalImages, savePromotionalImages } from "./api";
 
@@ -89,7 +89,13 @@ export function CustomerDisplayPromotionalImages({ onBack }) {
     {error && <p className="pc-error" role="alert">{error}</p>}
     <section className="pc-card">
       <h3>Enable/Disable Features</h3>
-      <label className="pc-promo-enable"><span>Enable/Disable Images</span><span><input type="checkbox" checked={draft.enabled} onChange={(event) => update({ ...draft, enabled: event.target.checked })} /><small>Check to enable the images on customer displays.</small></span></label>
+      <div className="pc-promo-enable">
+        <span>Enable/Disable Images</span>
+        <div className="pc-promo-enable-control">
+          <ConfigSwitch checked={draft.enabled} onChange={(enabled) => update({ ...draft, enabled })} />
+          <small>Enable promotional images on customer displays.</small>
+        </div>
+      </div>
     </section>
     <section className="pc-card pc-spaced">
       <h3>Manage Promotion Images</h3>

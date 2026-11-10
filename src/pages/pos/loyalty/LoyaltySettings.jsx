@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Award, Search } from "lucide-react";
+import { Award } from "lucide-react";
+import FiltersBar from "../../../components/FiltersBar";
 import ListActions from "../../../components/ListActions";
 import Pagination from "../../../components/Pagination";
 import StatusBadge from "../../../components/StatusBadge";
@@ -239,7 +240,14 @@ export function LoyaltySettings() {
             <section className="loyalty-card">
               <div className="loyalty-card-heading">
                 <div><h2>Loyalty Points List</h2><p>View customer balances and their loyalty points history.</p></div>
-                <label className="loyalty-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by customer name or contact" aria-label="Search loyalty customers" /></label>
+                <FiltersBar
+                  className="loyalty-search-bar"
+                  searchValue={query}
+                  onSearchChange={setQuery}
+                  searchPlaceholder="Search by customer name or contact"
+                  searchAriaLabel="Search loyalty customers"
+                  showClear={false}
+                />
               </div>
               <div className="loyalty-table-scroll"><table className="loyalty-table">
                 <thead><tr><th>Customer Name</th><th>Mobile / Email</th><th>Total Points</th><th>Redeemed Pts</th><th>Expired Pts</th><th>Available Pts</th><th>Last Updated</th><th>Actions</th></tr></thead>

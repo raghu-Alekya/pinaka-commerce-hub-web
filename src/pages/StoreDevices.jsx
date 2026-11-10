@@ -545,10 +545,7 @@ export default function StoreDevices({
             <div className="store-devices-empty-icon">
               <i className="bi bi-pc-display" />
             </div>
-
-            <h3>No devices found</h3>
-
-            <p>Try changing your search or filters.</p>
+            <p>No devices found</p>
 
             <button type="button" onClick={clearFilters}>
               Clear Filters

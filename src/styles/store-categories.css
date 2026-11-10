@@ -568,8 +568,7 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  min-height: 280px;
-  padding: 30px;
+  padding: 18px;
   text-align: center;
 }
 
@@ -594,20 +593,15 @@
 }
 
 .categories-empty-state p {
-  margin: 6px 0 0;
-  color: #929caf;
-  font-size: 12px;
+  color: #8791a3;
+  font-size: 14px;
 }
 
 .categories-table tbody td:has(> .categories-empty-state) {
-  height: 240px;
   padding: 20px;
   text-align: center;
 }
 
-.categories-table tbody td > .categories-empty-state {
-  min-height: 190px;
-}
 .store-categories-page {
   padding: 18px;
 }

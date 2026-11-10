@@ -5103,8 +5103,9 @@
 /* Customer display promotional images */
 .pc-promo-screen > .pc-card h3 { margin: 0 0 22px; color: #17243b; font-size: 17px; }
 .pc-promo-enable { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 24px; align-items: start; color: #26344d; font-weight: 600; }
-.pc-promo-enable > span:last-child { display: grid; justify-items: start; gap: 8px; }
-.pc-promo-enable input { width: 20px; height: 20px; accent-color: #5143bc; }
+.pc-promo-enable-control { display: grid; justify-items: start; gap: 8px; }
+.pc-promo-enable-control .pc-switch-field { justify-content: flex-start; min-height: 24px; }
+.pc-promo-enable-control .pc-switch-field > span:first-child { display: none; }
 .pc-promo-enable small { color: #687894; font-size: 13px; font-weight: 400; }
 .pc-promo-gallery { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
 .pc-promo-item { width: 152px; min-width: 0; text-align: center; }

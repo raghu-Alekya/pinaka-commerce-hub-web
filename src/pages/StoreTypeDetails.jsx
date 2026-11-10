@@ -83,7 +83,7 @@ export default function StoreTypeDetails() {
       <h1>{form.name}</h1>
     </div>
 
-    <p>{form.description}</p>
+    <p>Overview and configuration for this store type.</p>
   </div>
 </div>
 

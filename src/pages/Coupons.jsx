@@ -728,14 +728,13 @@ export default function Coupons({
                                     <td className="coupons-table-empty" colSpan="7">
                                         <div className="products-table-empty-state">
                                 
-                                            <strong>
+                                            <span>
                                                 {loading
                                                     ? "Loading coupons..."
                                                     : loadError
                                                         ? "Coupons could not be loaded."
                                                         : "No coupons found"}
-                                            </strong>
-                                            {!loading && !loadError && <span>Try changing your search or filters.</span>}
+                                            </span>
                                             
                                         </div>
                                     </td>

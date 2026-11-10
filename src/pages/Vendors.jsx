@@ -1324,7 +1324,7 @@ export default function Vendors({
 
           <label>
             <span>
-              ZIP Code <span className="text-red-500">*</span>
+              Zip / Postal Code <span className="text-red-500">*</span>
             </span>
 
             <input

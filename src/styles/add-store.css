@@ -2300,7 +2300,6 @@
 .sf-employees-table th:nth-child(7), .sf-employees-table td:nth-child(7) { min-width: 155px; }
 .sf-employees-table th:last-child, .sf-employees-table td:last-child { min-width: 105px; }
 .sf-pin-cell { min-width: 130px; }
-.sf-pin-action { display: flex; align-items: center; gap: 6px; }
 .sf-pin-set { color: #168754; font-size: 12px; white-space: nowrap; }
 .sf-pin-editor { display: grid; min-width: 125px; gap: 5px; }
 .sf-pin-editor input { width: 100%; height: 28px !important; }
