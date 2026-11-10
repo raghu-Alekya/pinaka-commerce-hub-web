@@ -453,10 +453,6 @@ async function confirmDeleteTender() {
               <h2>
                 {editingId ? "Edit Tender" : "Add Tender"}
               </h2>
-
-              <p>
-                Enter the tender details.
-              </p>
             </div>
           </div>
         </div>

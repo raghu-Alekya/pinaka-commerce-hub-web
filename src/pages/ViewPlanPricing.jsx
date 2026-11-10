@@ -169,10 +169,6 @@ export default function ViewPlanPricing() {
               <div>
                 {" "}
                 <h2>Pricing & Limits</h2>{" "}
-                <p>
-                  {" "}
-                 View pricing, included limits, and trial details.{" "}
-                </p>{" "}
               </div>{" "}
             </div>{" "}
             <div className="plan-pricing-fields">

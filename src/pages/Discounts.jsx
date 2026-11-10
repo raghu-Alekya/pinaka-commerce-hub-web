@@ -529,7 +529,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
                 <th>Usage / Limit</th>
                 <th>Start date</th>
                 <th>Expiry date</th>
-                <th>Actions</th>
+                <th className="discounts-actions-heading">Actions</th>
               </tr>
             </thead>
             <tbody>

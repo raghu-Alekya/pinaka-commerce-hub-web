@@ -627,7 +627,6 @@ const paginatedStoreTypes = filteredStoreTypes.slice(
 
           <div>
             <h2>{editingId ? "Edit Store Type" : "Add Store Type"}</h2>
-            <p>Enter the store type details.</p>
           </div>
         </div>
 

@@ -534,106 +534,94 @@ export function TaxConfiguration() {
                                 </div>
 
 
-                                <div className="tax-class-table">
-
-                                    {taxClasses.map(
-                                        (taxClass) => (
-
-                                            <div
-                                                className="tax-class-row"
-                                                key={taxClass.clientId}
-                                            >
-
-                                                <div className="tax-class-name">
-
-                                                    <input
-                                                        type="text"
-                                                        disabled={saving || Boolean(taxClass.slug)}
-                                                        value={
-                                                            taxClass.name
-                                                        }
-                                                        onChange={(
-                                                            event
-                                                        ) =>
-                                                            updateTaxClass(
-                                                                taxClass.clientId,
-                                                                "name",
-                                                                event
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                        }
-                                                        placeholder="Tax class name"
-                                                    />
-
-                                                </div>
-
-
-                                                <div className="tax-class-rate">
-
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        max="100"
-                                                        disabled={saving || taxClass.rates?.length > 1}
-                                                        data-tooltip={taxClass.rates?.length > 1 ? "Multiple regional rates cannot be edited in this form" : ""}
-                                                        step="0.01"
-                                                        value={
-                                                            taxClass.rate
-                                                        }
-                                                        onChange={(
-                                                            event
-                                                        ) =>
-                                                            updateTaxClass(
-                                                                taxClass.clientId,
-                                                                "rate",
-                                                                event
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                        }
-                                                    />
-
-                                                </div>
-
-                                                <span className="tax-percent">
-                                                    %
-                                                </span>
-
-
-                                                <button
-                                                    type="button"
-                                                    className="tax-class-delete"
-                                                    disabled={saving || taxClass.slug === "standard"}
-                                                    onClick={() =>
-                                                        removeTaxClass(
-                                                            taxClass.clientId
-                                                        )
-                                                    }
-                                                    aria-label={`Remove ${taxClass.name || "tax class"}`}
+                                {!classesLoaded ? (
+                                    <div className="tax-class-empty-state" role="status">
+                                        <i className="bi bi-arrow-repeat" />
+                                        <span>Loading tax classes...</span>
+                                    </div>
+                                ) : taxClasses.length === 0 ? (
+                                    <div className="tax-class-empty-state">
+                                        <span className="tax-class-empty-icon">
+                                            <i className="bi bi-receipt" />
+                                        </span>
+                                        <h5>No tax classes yet</h5>
+                                        <p>Add a tax class to map products to a specific tax rate.</p>
+                                        <button
+                                            type="button"
+                                            className="add-tax-class-button"
+                                            onClick={addTaxClass}
+                                            disabled={saving || updatingTaxEnabled}
+                                        >
+                                            <i className="bi bi-plus-lg" />
+                                            Add first tax class
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="tax-class-table">
+                                            {taxClasses.map((taxClass) => (
+                                                <div
+                                                    className="tax-class-row"
+                                                    key={taxClass.clientId}
                                                 >
-                                                    <i className="bi bi-trash3" />
-                                                </button>
+                                                    <div className="tax-class-name">
+                                                        <input
+                                                            type="text"
+                                                            disabled={saving || Boolean(taxClass.slug)}
+                                                            value={taxClass.name}
+                                                            onChange={(event) =>
+                                                                updateTaxClass(
+                                                                    taxClass.clientId,
+                                                                    "name",
+                                                                    event.target.value
+                                                                )
+                                                            }
+                                                            placeholder="Tax class name"
+                                                        />
+                                                    </div>
+                                                    <div className="tax-class-rate">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            max="100"
+                                                            disabled={saving || taxClass.rates?.length > 1}
+                                                            data-tooltip={taxClass.rates?.length > 1 ? "Multiple regional rates cannot be edited in this form" : ""}
+                                                            step="0.01"
+                                                            value={taxClass.rate}
+                                                            onChange={(event) =>
+                                                                updateTaxClass(
+                                                                    taxClass.clientId,
+                                                                    "rate",
+                                                                    event.target.value
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <span className="tax-percent">%</span>
+                                                    <button
+                                                        type="button"
+                                                        className="tax-class-delete"
+                                                        disabled={saving || taxClass.slug === "standard"}
+                                                        onClick={() => removeTaxClass(taxClass.clientId)}
+                                                        aria-label={`Remove ${taxClass.name || "tax class"}`}
+                                                    >
+                                                        <i className="bi bi-trash3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
 
-                                            </div>
-
-                                        )
-                                    )}
-
-                                </div>
-
-
-                                {/* ADD TAX CLASS */}
-
-                                <button
-                                    type="button"
-                                    className="add-tax-class-button"
-                                    onClick={addTaxClass}
-                                    disabled={saving || updatingTaxEnabled || !classesLoaded}
-                                >
-                                    <i className="bi bi-plus-lg" />
-                                    Add Tax Class
-                                </button>
+                                        <button
+                                            type="button"
+                                            className="add-tax-class-button"
+                                            onClick={addTaxClass}
+                                            disabled={saving || updatingTaxEnabled}
+                                        >
+                                            <i className="bi bi-plus-lg" />
+                                            Add Tax Class
+                                        </button>
+                                    </>
+                                )}
 
                             </div>
 
@@ -673,4 +661,3 @@ export function TaxConfiguration() {
         </div>
     );
 }
-

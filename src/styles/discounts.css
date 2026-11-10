@@ -36,7 +36,21 @@
 
 .discounts-table th:last-child,
 .discounts-table td:last-child {
-  text-align: right;
+  width: 140px;
+  min-width: 140px;
+  text-align: center;
+}
+
+.discounts-table .discounts-actions-heading,
+.discounts-table .coupon-row-actions {
+  width: 140px;
+  min-width: 140px;
+  text-align: center;
+}
+
+.discounts-table .coupon-row-actions .list-actions {
+  width: 100%;
+  justify-content: center;
 }
 
 .discount-name-cell strong,

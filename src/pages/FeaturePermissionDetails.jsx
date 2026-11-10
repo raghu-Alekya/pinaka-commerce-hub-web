@@ -289,7 +289,7 @@ const confirmDeletePermission = async () => {
             <div className="fp-title-copy">
               <h2>Feature Permissions</h2>
 
-              <p>Manage permissions for this feature.</p>
+             
             </div>
           </div>
 

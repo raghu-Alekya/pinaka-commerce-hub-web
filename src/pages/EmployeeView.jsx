@@ -6,23 +6,28 @@ import "../styles/employee-view.css";
 
 function displayValue(value) {
   if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (Array.isArray(value)) return value.map(displayValue).filter(Boolean).join(", ");
-  if (value && typeof value === "object") {
-    return value.name || value.businessName || value.storeName || value.roleName || value.id || "";
+  if (Array.isArray(value)) {
+    const values = value.map(displayValue).filter((item) => item !== "Not provided");
+    return values.length ? values.join(", ") : "Not provided";
   }
-  return value == null ? "" : String(value);
+  if (value && typeof value === "object") {
+    return displayValue(value.name || value.businessName || value.storeName || value.roleName || value.id);
+  }
+  if (value == null || String(value).trim() === "" || String(value).trim() === "—") {
+    return "Not provided";
+  }
+  return String(value);
 }
 
 function Section({ title, icon: Icon, fields, children }) {
-  const available = fields.filter(([, value]) => value !== undefined && value !== null && value !== "—");
   return (
     <section className="employee-view-card">
       <div className="employee-view-card-header"><span><Icon size={19} /></span><h2>{title}</h2></div>
       {children}
       <dl className="employee-view-grid">
-        {available.map(([label, value]) => (
+        {fields.map(([label, value]) => (
           <div className="employee-view-field" key={label}>
-            <dt>{label}</dt><dd>{displayValue(value) || "Not provided"}</dd>
+            <dt>{label}</dt><dd style={label === "Status" ? { color: String(value).toLowerCase() === "active" ? "#08a961" : String(value).toLowerCase() === "inactive" ? "#ed304d" : undefined } : undefined}>{displayValue(value)}</dd>
           </div>
         ))}
       </dl>
@@ -84,8 +89,8 @@ export default function EmployeeView() {
           ["Email", employee.email], ["Phone", employee.phone],
           ["Date of Birth", employee.dateOfBirth || employee.dob], ["Gender", employee.gender],
         ]}>
-          {photo && !photoError && <img className="employee-view-photo" src={photo}
-            alt="Employee profile" onError={() => setPhotoError(true)} />}
+          {/* {photo && !photoError && <img className="employee-view-photo" src={photo}
+            alt="Employee profile" onError={() => setPhotoError(true)} />} */}
         </Section>
         <Section title="Work Information" icon={BriefcaseBusiness} fields={[
           ["Employee Code", employee.employeeCode],
@@ -94,10 +99,10 @@ export default function EmployeeView() {
           ["Manager", employee.manager], ["Status", employee.status],
         ]}>
           {assignments.length > 0 && <div className="employee-view-assignments">
-            <h3>Store Assignments</h3>
+            {/* <h3>Store Assignments</h3> */}
             {assignments.map((assignment, index) => <dl className="employee-view-grid" key={index}>
-              <div className="employee-view-field"><dt>Store</dt><dd>{displayValue(assignment.storeName || assignment.store) || "Not provided"}</dd></div>
-              <div className="employee-view-field"><dt>Roles</dt><dd>{displayValue(assignment.roles) || "Not provided"}</dd></div>
+              <div className="employee-view-field"><dt>Store</dt><dd>{displayValue(assignment.storeName || assignment.store)}</dd></div>
+              <div className="employee-view-field"><dt>Roles</dt><dd>{displayValue(assignment.roles)}</dd></div>
             </dl>)}
           </div>}
         </Section>

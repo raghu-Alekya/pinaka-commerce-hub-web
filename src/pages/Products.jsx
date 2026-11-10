@@ -3,6 +3,7 @@ import FiltersBar from "../components/FiltersBar";
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
+import StatusBadge from "../components/StatusBadge";
 import {
     productsApi,
     normalizeCatalog,
@@ -1318,13 +1319,7 @@ function ProductRow({
 
             <td>
 
-                <span className="product-status">
-
-                    <i className="bi bi-check-circle-fill" />
-
-                    Published
-
-                </span>
+                <StatusBadge status="Active">Published</StatusBadge>
 
             </td>
 

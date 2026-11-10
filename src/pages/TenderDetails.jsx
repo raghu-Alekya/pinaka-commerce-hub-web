@@ -145,7 +145,6 @@ export default function TenderDetails() {
 
               <div>
                 <h2>Tender Details</h2>
-                <p>View the saved tender information.</p>
               </div>
             </div>
 

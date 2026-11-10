@@ -348,11 +348,14 @@
 
 .plan-features-limits-grid {
   display: grid;
-  grid-template-columns: 1.05fr 1fr 1.05fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
 }
 
 .plan-feature-panel {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 13px;
   border: 1px solid #dce9f5;
   border-radius: 8px;

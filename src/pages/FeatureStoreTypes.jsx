@@ -883,14 +883,6 @@ useEffect(() => {
  
               </h2>
  
-              <p>
- 
-                Select the store types where this
- 
-                feature will be available.
- 
-              </p>
- 
             </div>
  
           </div>

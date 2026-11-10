@@ -4,6 +4,7 @@ import { listStoreSafeDrops } from "../api/storeSafeDrops";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
+import StatusBadge from "../components/StatusBadge";
 import { formatCurrency } from "../utils/currency";
 import "../styles/store-shifts.css";
 
@@ -261,7 +262,7 @@ if (selectedShift) {
     </div> : null}
 
       <div className="sm-table-wrap mb-0"><table className="sm-table"><thead><tr><th>Opened By</th><th>Open Time</th><th>Closed By</th><th>Close Time</th><th>Duration</th><th>Opening Balance</th><th>Closing Balance</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>{visible.map((shift) => <tr key={shift.id} style={{ cursor: "pointer" }} onClick={(event) => { if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) return; setSelectedShift(shift); }}><td>{shift.openedBy || "—"}{shift.openedCode && <small>({shift.openedCode})</small>}</td><td>{tableTimeLabel(shift.openTime)}</td><td>{shift.closedBy ? <>{shift.closedBy}{shift.closedCode && <small>({shift.closedCode})</small>}</> : "—"}</td><td>{tableTimeLabel(shift.closeTime)}</td><td>{shift.duration}</td><td>{money(shift.openingBalance)}</td><td>{money(shift.closingBalance)}</td><td><span className={`sm-status ${shift.status.toLowerCase()}`}>{shift.status}</span></td><td><ListActions onView={() => setSelectedShift(shift)} viewLabel={`View shift ${shift.id}`} /></td></tr>)}
+        <tbody>{visible.map((shift) => <tr key={shift.id} style={{ cursor: "pointer" }} onClick={(event) => { if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) return; setSelectedShift(shift); }}><td>{shift.openedBy || "—"}{shift.openedCode && <small>({shift.openedCode})</small>}</td><td>{tableTimeLabel(shift.openTime)}</td><td>{shift.closedBy ? <>{shift.closedBy}{shift.closedCode && <small>({shift.closedCode})</small>}</> : "—"}</td><td>{tableTimeLabel(shift.closeTime)}</td><td>{shift.duration}</td><td>{money(shift.openingBalance)}</td><td>{money(shift.closingBalance)}</td><td><StatusBadge status={shift.status === "Open" ? "Active" : "Inactive"}>{shift.status}</StatusBadge></td><td><ListActions onView={() => setSelectedShift(shift)} viewLabel={`View shift ${shift.id}`} /></td></tr>)}
           {!visible.length && <tr><td colSpan={9} className="sm-empty">{loading ? "Loading shifts…" : error ? "Shift records could not be loaded." : records.length ? "No shift records match these filters." : "No shifts found for this store."}</td></tr>}
         </tbody>
       </table></div>
@@ -300,7 +301,6 @@ function ShiftDetails({ shift, store, onBack }) {
   return <section className="sm-screen sm-detail-screen" aria-label="Shift details">
     <header className="sm-detail-heading"><div><h1>Shift Details</h1><p>View complete information for the selected shift.</p></div><button type="button" className="sm-button-outline store-config-back-button" onClick={onBack}><i className="bi bi-arrow-left" /> Back to Shift Management</button></header>
     <section className="sm-detail-overview">
-      <span className={`sm-detail-status ${shift.status.toLowerCase()}`}><i className={`bi ${shift.status === "Closed" ? "bi-check-lg" : "bi-clock"}`} /> {shift.status}</span>
       <div className="sm-info-block"><h2><i className="bi bi-clock" /> Shift Information</h2><dl><div><dt>Shift ID</dt><dd>{shift.id}</dd></div><div><dt>Title</dt><dd>{shift.title || "—"}</dd></div><div><dt>Shift Date</dt><dd>{dateLabel(shift.date)} {shift.date && `(${new Date(`${shift.date}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long" })})`}</dd></div><div><dt>Status</dt><dd><span className={`sm-status ${shift.status.toLowerCase()}`}>{shift.status}</span></dd></div><div><dt>Duration</dt><dd>{shift.duration}</dd></div><div><dt>Store</dt><dd>{store?.name || store?.storeName || "—"}</dd></div></dl></div>
       <div className="sm-info-block"><h2><i className="bi bi-person-circle" /> Opened By</h2><dl><div><dt>Employee</dt><dd>{shift.openedBy || "—"}{shift.openedCode ? ` (${shift.openedCode})` : ""}</dd></div><div><dt>Device</dt><dd>{shift.openDevice || "—"}</dd></div><div><dt>Open Time</dt><dd>{timeLabel(shift.openTime)}</dd></div><div><dt>Opening Balance</dt><dd>{money(shift.openingBalance)}</dd></div></dl></div>
       <div className="sm-info-block"><h2><i className="bi bi-person-circle" /> Closed By</h2><dl><div><dt>Employee</dt><dd>{shift.closedBy ? `${shift.closedBy}${shift.closedCode ? ` (${shift.closedCode})` : ""}` : "—"}</dd></div><div><dt>Device</dt><dd>{shift.closeDevice || "—"}</dd></div><div><dt>Close Time</dt><dd>{timeLabel(shift.closeTime)}</dd></div><div><dt>Closing Balance</dt><dd>{money(shift.closingBalance)}</dd></div></dl></div>
@@ -311,4 +311,3 @@ function ShiftDetails({ shift, store, onBack }) {
     </section>
   </section>;
 }
-

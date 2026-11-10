@@ -132,7 +132,6 @@ export default function ViewPlanOverview() {
               </div>
               <div>
                 <h2> Plan Details </h2>
-                <p>View plan details and the applicable store type.</p>
               </div>
             </div>
 
@@ -158,7 +157,7 @@ export default function ViewPlanOverview() {
                       ? "plan-details-status-inactive"
                       : "plan-details-status"
                   }
-                  value={plan.status ? `● ${plan.status}` : "—"}
+                  value={plan.status || "—"}
                   readOnly
                 />
                

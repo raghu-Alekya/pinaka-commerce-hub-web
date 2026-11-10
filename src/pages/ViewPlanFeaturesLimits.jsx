@@ -222,7 +222,6 @@ useEffect(() => {
               <div>
                 {" "}
                 <h2> Included Features </h2>{" "}
-                <p> View features included in this plan. </p>{" "}
               </div>{" "}
             </div>{" "}
             {/* ================================================= FEATURES TABLE ================================================= */}{" "}

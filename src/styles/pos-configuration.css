@@ -627,7 +627,7 @@
 
     border: 1px solid #dfe3ea;
 
-    border-radius: 5px;
+    border-radius: 6px;
 
     background: #ffffff;
 
@@ -665,7 +665,7 @@
     padding: 0 11px;
 
     border: 1px solid #bfc4cc;
-    border-radius: 3px;
+    border-radius: 6px;
 
     background: #ffffff;
 
@@ -699,7 +699,7 @@
     padding: 5px 8px;
 
     border: 1px solid #bfc4cc;
-    border-radius: 3px;
+    border-radius: 6px;
 
     background: #ffffff;
 
@@ -762,7 +762,7 @@
     gap: 5px;
 
     border: 1px solid #4b83b4;
-    border-radius: 3px;
+    border-radius: 6px;
 
     background: #ffffff;
 
@@ -1757,6 +1757,54 @@
 
     background: #ffffff;
     padding:8px 10px;
+}
+
+.tax-class-empty-state {
+    min-height: 132px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 18px;
+    border: 1px dashed #d7dced;
+    border-radius: 8px;
+    background: #fafaff;
+    color: #66758d;
+    text-align: center;
+}
+
+.tax-class-empty-state > i {
+    color: #7c70d5;
+    font-size: 15px;
+}
+
+.tax-class-empty-icon {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: #efedff;
+    color: #5143bc;
+    font-size: 15px;
+}
+
+.tax-class-empty-state h5 {
+    margin: 0;
+    color: #17233e;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.tax-class-empty-state p {
+    margin: 0;
+    font-size: 11px;
+}
+
+.tax-class-empty-state .add-tax-class-button {
+    margin-top: 3px;
 }
 
 .tax-class-row {
@@ -4470,6 +4518,7 @@
     grid-template-columns: minmax(120px, 1fr) minmax(220px, 2fr) auto;
     align-items: end;
     gap: 16px;
+    background: #fcfcff;
 }
 .denomination-split-panel .denomination-row > div { min-width: 0; }
 .denomination-split-panel .denomination-upload-content { min-width: 0; }
@@ -4679,7 +4728,7 @@
 .pos-page-content .pc-heading .pc-icon { width: 58px; height: 58px; flex-basis: 58px; border-radius: 10px; color: var(--pos-primary); background: #f0eaff; font-size: 27px; }
 .pos-page-content :is(button, input, select, textarea) { font-family: inherit; }
 .pos-config-detail-card { font-size: var(--pos-text-size); color: var(--pos-heading); }
-.pos-config-detail-card :is(input, select, textarea, label, th, td) { font-size: var(--pos-text-size); }
+.pos-config-detail-card :is(input, select, textarea, label, th, td):not(.loyalty-page *) { font-size: var(--pos-text-size); }
 .pos-config-detail-card h3 { font-size: 14px; color: var(--pos-heading); }
 .pos-page-content .pc-row-actions button { font-size: var(--pos-button-size); }
 .pos-page-content :is(.pc-button, .pos-primary-button, .pos-add-button, .pos-remove-button,
@@ -4691,7 +4740,7 @@
     .cashback-save-button, .service-charge-save-button, .cd-save-btn) { background: var(--pos-primary); border-color: var(--pos-primary); color: #fff; }
 .pos-page-content :is(.pc-primary, .pos-primary-button, .opening-balance-save, .currency-tax-save-button,
     .cashback-save-button, .service-charge-save-button, .cd-save-btn):hover:not(:disabled) { background: var(--pos-primary-hover); border-color: var(--pos-primary-hover); }
-.pos-page-content :is(.pos-add-button, .cashback-add-button, .service-charge-add-button) { color: var(--pos-primary); background: #fff; border-color: var(--pos-primary); }
+.pos-page-content :is(.pos-add-button, .cashback-add-button, .service-charge-add-button) { color: var(--pos-primary); background: #fff; border-color: var(--pos-primary); border-radius: 6px; }
 .pos-page-content :is(.pos-add-button, .cashback-add-button, .service-charge-add-button):hover:not(:disabled) { background: #f4f2ff; }
 .pos-page-content .pc-screen { --pc-blue: var(--pos-primary); font-family: inherit; }
 .pos-page-content .pc-screen :is(.pc-field, .pc-switch-field) { color: var(--pos-label); font-size: var(--pos-text-size); }
@@ -4855,6 +4904,7 @@
     .opening-balance-save, .cashback-save-button, .service-charge-save-button, .cd-save-btn) {
     min-height: 35px;
     border-radius: 7px;
+    gap: 7px;
 }
 .settings-table, .pc-table { border-color: #e0e6f0; border-radius: 8px; overflow: hidden; }
 .settings-table th, .pc-table thead th { background: #f4f5fb; }

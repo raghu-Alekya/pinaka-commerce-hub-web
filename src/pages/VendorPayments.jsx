@@ -239,10 +239,12 @@ export default function VendorPayments({ viewMode, merchantId, storeId, store } 
 
       {/* Header */}
       <div className="vendor-title-row">
-
-        <h2>
-          {view === "vendors" ? "Vendors" : viewMode ? "Vendor History" : "Vendor Payments"}
-        </h2>
+        <div className="vendor-title-copy">
+          <h2>
+            {view === "vendors" ? "Vendors" : viewMode ? "Vendor History" : "Vendor Payments"}
+          </h2>
+          {viewMode && <p className="vendor-history-description">Review payment history and transactions for this store's vendors.</p>}
+        </div>
 
         <div className="vendor-actions">
 

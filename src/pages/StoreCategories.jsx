@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import FiltersBar from "../components/FiltersBar";
+import ListActions from "../components/ListActions";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
 import {
@@ -884,19 +885,10 @@ export default function StoreCategories({
 
                     <td>
 
-                      <button
-                        type="button"
-                        className="table-action"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openView(
-                            item,
-                            "category"
-                          );
-                        }}
-                      >
-                        <i className="bi bi-eye" />
-                      </button>
+                      <ListActions
+                        onView={() => openView(item, "category")}
+                        viewLabel={`View ${item.name} category`}
+                      />
 
                     </td>
 
@@ -1102,19 +1094,10 @@ export default function StoreCategories({
 
                     <td>
 
-                      <button
-                        type="button"
-                        className="table-action"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openView(
-                            item,
-                            "tag"
-                          );
-                        }}
-                      >
-                        <i className="bi bi-eye" />
-                      </button>
+                      <ListActions
+                        onView={() => openView(item, "tag")}
+                        viewLabel={`View ${item.name} tag`}
+                      />
 
                     </td>
 
@@ -1370,19 +1353,10 @@ export default function StoreCategories({
 
                     <td>
 
-                      <button
-                        type="button"
-                        className="table-action"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openView(
-                            item,
-                            "attribute"
-                          );
-                        }}
-                      >
-                        <i className="bi bi-eye" />
-                      </button>
+                      <ListActions
+                        onView={() => openView(item, "attribute")}
+                        viewLabel={`View ${item.name} attribute`}
+                      />
 
                     </td>
 

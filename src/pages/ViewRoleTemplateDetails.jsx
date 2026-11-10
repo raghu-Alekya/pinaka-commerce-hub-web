@@ -142,7 +142,6 @@ export default function ViewRoleTemplateOverview() {
 
           <div>
             <h2>Role Template Details</h2>
-            <p>View role template details.</p>
           </div>
         </div>
 

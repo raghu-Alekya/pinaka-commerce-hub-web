@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Award, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { Award, Search } from "lucide-react";
+import ListActions from "../../../components/ListActions";
 import Pagination from "../../../components/Pagination";
+import StatusBadge from "../../../components/StatusBadge";
 import { ConfigHeader, usePosSettings } from "../shared";
 import { apiRequest } from "../../../api/http";
 import "./loyalty-settings.css";
@@ -43,7 +45,9 @@ export function LoyaltySettings() {
   const [customers, setCustomers] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [query, setQuery] = useState("");
-  const [expandedId, setExpandedId] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [transactionPage, setTransactionPage] = useState(1);
+  const [transactionPageSize, setTransactionPageSize] = useState(5);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [notice, setNotice] = useState("");
@@ -109,6 +113,9 @@ export function LoyaltySettings() {
   }, [customers, query]);
   const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
   const rows = filteredCustomers.slice((page - 1) * pageSize, page * pageSize);
+  const transactions = Array.isArray(selectedCustomer?.transactions) ? selectedCustomer.transactions : [];
+  const transactionTotalPages = Math.max(1, Math.ceil(transactions.length / transactionPageSize));
+  const visibleTransactions = transactions.slice((transactionPage - 1) * transactionPageSize, transactionPage * transactionPageSize);
 
   useEffect(() => { setPage(1); }, [query]);
 
@@ -155,33 +162,95 @@ export function LoyaltySettings() {
 
   return (
     <main className="loyalty-page pos-panel">
-      <ConfigHeader title="Loyalty Settings" description="Manage customer points, earning rules, and redemption settings." />
-
-      <div className="loyalty-tabs" role="tablist" aria-label="Loyalty settings sections">
-        <button type="button" role="tab" aria-selected={tab === "customers"} className={tab === "customers" ? "active" : ""} onClick={() => setTab("customers")}>Loyalty Points</button>
-        <button type="button" role="tab" aria-selected={tab === "settings"} className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>Loyalty Settings</button>
-      </div>
-
-      {notice && <div className="loyalty-success" role="status">{notice}</div>}
-
-      {tab === "customers" ? (
-        <section className="loyalty-card">
-          <div className="loyalty-card-heading">
-            <div><h2>Loyalty Points List</h2><p>View customer balances and their loyalty points history.</p></div>
-            <label className="loyalty-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by customer name or contact" aria-label="Search loyalty customers" /></label>
+      {selectedCustomer ? (
+        <>
+          <header className="pc-heading">
+            <div className="pc-heading-title">
+              <span className="pc-icon"><i className="bi bi-award" aria-hidden="true" /></span>
+              <div><h2>Loyalty Customer Details</h2><p>Customer point balance and transaction history.</p></div>
+            </div>
+            <div className="pc-heading-actions">
+              <button type="button" className="pc-button" onClick={() => setSelectedCustomer(null)}>
+                <i className="bi bi-arrow-left" aria-hidden="true" /> Back to Loyalty Points
+              </button>
+            </div>
+          </header>
+          <div className="loyalty-summary-grid">
+            <section className="loyalty-card loyalty-detail-section">
+              <h2 className="loyalty-section-title">Customer Details</h2>
+              <dl className="loyalty-detail-grid">
+                <DetailField label="Customer Name" value={selectedCustomer.name} />
+                <DetailField label="Mobile / Email" value={selectedCustomer.contact} />
+                <DetailField label="Last Updated" value={selectedCustomer.last_updated} />
+              </dl>
+            </section>
+            <section className="loyalty-card loyalty-detail-section">
+              <h2 className="loyalty-section-title">Points Balance</h2>
+              <dl className="loyalty-detail-grid">
+                <DetailField label="Total Points" value={selectedCustomer.credited} />
+                <DetailField label="Redeemed Points" value={selectedCustomer.redeemed} />
+                <DetailField label="Expired Points" value={selectedCustomer.expired} />
+                <DetailField label="Available Points" value={selectedCustomer.available} />
+              </dl>
+            </section>
           </div>
-          <div className="loyalty-table-scroll"><table className="loyalty-table">
-            <thead><tr><th>Customer Name</th><th>Mobile / Email</th><th>Total Points</th><th>Redeemed Points</th><th>Expired Points</th><th>Available Points</th><th>Last Updated</th><th>Details</th></tr></thead>
-            <tbody>{rows.length ? rows.map((customer, index) => {
-              const rowId = customer.user_id;
-              const expanded = String(expandedId) === String(rowId);
-              return <CustomerRow key={rowId} customer={customer} currencySymbol={currencySymbol} expanded={expanded} onToggle={() => setExpandedId(expanded ? null : rowId)} />;
-            }) : <tr><td colSpan={8} className="loyalty-table-message">No loyalty customers match your search.</td></tr>}</tbody>
-          </table></div>
-          <Pagination currentPage={Math.min(page, totalPages)} totalPages={totalPages} totalItems={filteredCustomers.length} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} itemLabel="customers" showWhenEmpty />
-        </section>
+          <section className="loyalty-card">
+            <div className="loyalty-card-heading"><div><h2>Points Transactions</h2><p>Transaction history for {selectedCustomer.name || "this customer"}.</p></div></div>
+            <div className="loyalty-transaction-wrap">
+              <table className="loyalty-transactions-table">
+                <thead><tr><th>Order ID</th><th>Order Amount</th><th>Credited Pts</th><th>Redeemed Pts</th><th>Expired Pts</th><th>Order Redeem Pts</th><th>Status</th><th>Created Date</th><th>Expiry Date</th></tr></thead>
+                <tbody>{visibleTransactions.length ? visibleTransactions.map((transaction, index) => (
+                  <tr key={`${transaction.order_id ?? "order"}-${index}`}>
+                    <td>{transaction.order_id ?? "—"}</td>
+                    <td>{transaction.order_amount == null ? "—" : `${currencySymbol}${Number(transaction.order_amount).toFixed(2)}`}</td>
+                    <td>{transaction.credited_points ?? "—"}</td>
+                    <td>{transaction.redeemed_points ?? "—"}</td>
+                    <td>{transaction.expired_points ?? "—"}</td>
+                    <td>{transaction.order_redeem_points ?? "—"}</td>
+                    <td><StatusBadge className="loyalty-status-badge" status={transaction.points_status || "Unknown"} /></td>
+                    <td>{transaction.points_created_date ?? "—"}</td>
+                    <td>{transaction.points_expiry_date ?? "—"}</td>
+                  </tr>
+                )) : <tr><td colSpan={9} className="loyalty-table-message">No points transactions for this customer.</td></tr>}</tbody>
+              </table>
+            </div>
+            <Pagination
+              currentPage={Math.min(transactionPage, transactionTotalPages)}
+              totalPages={transactionTotalPages}
+              totalItems={transactions.length}
+              pageSize={transactionPageSize}
+              onPageChange={setTransactionPage}
+              onPageSizeChange={(size) => { setTransactionPageSize(size); setTransactionPage(1); }}
+              itemLabel="transactions"
+              showWhenEmpty
+              pageSizeOptions={[5, 10, 25, 50, 100]}
+            />
+          </section>
+        </>
       ) : (
-        <form className="loyalty-settings-form" onSubmit={save}>
+        <>
+          <ConfigHeader title="Loyalty Settings" description="Manage customer points, earning rules, and redemption settings." />
+          <div className="loyalty-tabs" role="tablist" aria-label="Loyalty settings sections">
+            <button type="button" role="tab" aria-selected={tab === "customers"} className={tab === "customers" ? "active" : ""} onClick={() => setTab("customers")}>Loyalty Points</button>
+            <button type="button" role="tab" aria-selected={tab === "settings"} className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>Loyalty Settings</button>
+          </div>
+          {notice && <div className="loyalty-success" role="status">{notice}</div>}
+          {tab === "customers" ? (
+            <section className="loyalty-card">
+              <div className="loyalty-card-heading">
+                <div><h2>Loyalty Points List</h2><p>View customer balances and their loyalty points history.</p></div>
+                <label className="loyalty-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by customer name or contact" aria-label="Search loyalty customers" /></label>
+              </div>
+              <div className="loyalty-table-scroll"><table className="loyalty-table">
+                <thead><tr><th>Customer Name</th><th>Mobile / Email</th><th>Total Points</th><th>Redeemed Pts</th><th>Expired Pts</th><th>Available Pts</th><th>Last Updated</th><th>Actions</th></tr></thead>
+                <tbody>{rows.length ? rows.map((customer, index) => (
+                  <CustomerRow key={customer.user_id ?? index} customer={customer} onView={() => { setSelectedCustomer(customer); setTransactionPage(1); }} />
+                )) : <tr><td colSpan={8} className="loyalty-table-message">No loyalty customers match your search.</td></tr>}</tbody>
+              </table></div>
+              <Pagination currentPage={Math.min(page, totalPages)} totalPages={totalPages} totalItems={filteredCustomers.length} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} itemLabel="customers" showWhenEmpty />
+            </section>
+          ) : (
+            <form className="loyalty-settings-form" onSubmit={save}>
           <section className="loyalty-card">
             <h2 className="loyalty-section-title"><Award size={20} /> Loyalty Program Settings</h2>
             <div className="loyalty-form-grid">
@@ -209,7 +278,9 @@ export function LoyaltySettings() {
             </div>
           </section>
           <div className="loyalty-form-actions"><button type="button" className="loyalty-cancel" onClick={reset}>Reset</button><button type="submit" className="loyalty-save">Enable Loyalty &amp; Save Settings</button></div>
-        </form>
+            </form>
+          )}
+        </>
       )}
     </main>
   );
@@ -223,10 +294,19 @@ function ToggleField({ label, name, checked, onChange, help }) {
   return <label className="loyalty-toggle-field"><span className="loyalty-toggle-copy"><strong>{label}</strong><small>{help}</small></span><span className="loyalty-switch"><input type="checkbox" name={name} checked={checked} onChange={onChange} /><span /></span></label>;
 }
 
-function CustomerRow({ customer, currencySymbol, expanded, onToggle }) {
-  const transactions = Array.isArray(customer.transactions) ? customer.transactions : [];
-  return <>
-    <tr><td>{customer.name}</td><td>{customer.contact}</td><td>{customer.credited}</td><td>{customer.redeemed}</td><td>{customer.expired}</td><td><strong>{customer.available}</strong></td><td>{customer.last_updated}</td><td><button className="loyalty-details-button" type="button" aria-expanded={expanded} onClick={onToggle}>{expanded ? "Hide Details" : "View Details"}{expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button></td></tr>
-    {expanded && <tr className="loyalty-transaction-row"><td colSpan={8}><div className="loyalty-transaction-wrap"><table><thead><tr><th>Order ID</th><th>Order Amount</th><th>Credited Points</th><th>Redeemed Points</th><th>Expired Points</th><th>Status</th><th>Created Date</th><th>Expiry Date</th></tr></thead><tbody>{transactions.length ? transactions.map((transaction, index) => <tr key={`${transaction.order_id}-${index}`}><td>{transaction.order_id}</td><td>{transaction.order_amount == null ? "—" : `${currencySymbol}${Number(transaction.order_amount).toFixed(2)}`}</td><td>{transaction.credited_points}</td><td>{transaction.redeemed_points}</td><td>{transaction.expired_points}</td><td>{transaction.points_status}</td><td>{transaction.points_created_date}</td><td>{transaction.points_expiry_date}</td></tr>) : <tr><td colSpan={8}>No points transactions for this customer.</td></tr>}</tbody></table></div></td></tr>}
-  </>;
+function DetailField({ label, value }) {
+  return <div><dt>{label}</dt><dd>{value ?? "—"}</dd></div>;
+}
+
+function CustomerRow({ customer, onView }) {
+  return <tr>
+    <td>{customer.name || "—"}</td>
+    <td>{customer.contact || "—"}</td>
+    <td>{customer.credited ?? "—"}</td>
+    <td>{customer.redeemed ?? "—"}</td>
+    <td>{customer.expired ?? "—"}</td>
+    <td><strong>{customer.available ?? "—"}</strong></td>
+    <td>{customer.last_updated || "—"}</td>
+    <td><ListActions onView={onView} viewLabel={`View loyalty details for ${customer.name || customer.contact || "customer"}`} /></td>
+  </tr>;
 }

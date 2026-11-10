@@ -169,6 +169,8 @@ export default function CreatePlan() {
   const [planStep, setPlanStep] = useState(1);
   const [editingId, setEditingId] = useState(null);
   const [includedFeatures, setIncludedFeatures] = useState([]);
+  const [featurePage, setFeaturePage] = useState(1);
+  const [featurePageSize, setFeaturePageSize] = useState(10);
 
   const [pendingIncludedFeatureNames, setPendingIncludedFeatureNames] =
     useState([]);
@@ -177,6 +179,16 @@ export default function CreatePlan() {
   const [storeTypeFeaturesLoading, setStoreTypeFeaturesLoading] =
     useState(false);
   const [storeTypeFeaturesError, setStoreTypeFeaturesError] = useState("");
+
+  const featureTotalPages = Math.max(1, Math.ceil(storeTypeFeatures.length / featurePageSize));
+  const visibleStoreTypeFeatures = storeTypeFeatures.slice(
+    (featurePage - 1) * featurePageSize,
+    featurePage * featurePageSize,
+  );
+
+  useEffect(() => {
+    if (featurePage > featureTotalPages) setFeaturePage(featureTotalPages);
+  }, [featurePage, featureTotalPages]);
 
   const [search, setSearch] = useState("");
   const [billingFilter, setBillingFilter] = useState("");
@@ -464,6 +476,7 @@ export default function CreatePlan() {
 
   function updateField(event) {
     const { name, value } = event.target;
+    if (name === "applicableStoreType") setFeaturePage(1);
     setForm((current) => ({
       ...current,
       [name]: name === "code" ? value.toUpperCase() : value,
@@ -654,7 +667,6 @@ export default function CreatePlan() {
             </div>
             <div>
               <h2>{editingId ? "Edit Plan" : "Create Plan"}</h2>
-              <p>Enter the subscription plan details.</p>
             </div>
           </div>
 
@@ -787,7 +799,6 @@ export default function CreatePlan() {
             </div>
             <div>
               <h2>Pricing & Limits</h2>
-              <p>Set pricing, included limits, and the trial period.</p>
             </div>
           </div>
 
@@ -1005,7 +1016,6 @@ export default function CreatePlan() {
             </div>
             <div>
               <h2>Included Features</h2>
-              <p>Select the features included in this plan.</p>
             </div>
           </div>
 
@@ -1043,7 +1053,7 @@ export default function CreatePlan() {
                 )}
 
               {!storeTypeFeaturesLoading &&
-                storeTypeFeatures.map(
+                visibleStoreTypeFeatures.map(
                   ({ featureId, name, category, description, icon }) => (
                     <label className="plan-feature-check" key={featureId}>
                       <input
@@ -1065,6 +1075,22 @@ export default function CreatePlan() {
                     </label>
                   ),
                 )}
+
+              {!storeTypeFeaturesLoading && storeTypeFeatures.length > 0 && (
+                <Pagination
+                  currentPage={featurePage}
+                  totalPages={featureTotalPages}
+                  totalItems={storeTypeFeatures.length}
+                  pageSize={featurePageSize}
+                  onPageChange={setFeaturePage}
+                  onPageSizeChange={(size) => {
+                    setFeaturePageSize(size);
+                    setFeaturePage(1);
+                  }}
+                  itemLabel="features"
+                  pageSizeOptions={[5, 10, 25, 50, 100]}
+                />
+              )}
 
               <div className="plan-feature-summary">
                 <span className="plan-feature-summary-label">
@@ -1117,7 +1143,6 @@ export default function CreatePlan() {
 
             <div>
               <h2>Review & Confirm</h2>
-              <p>Review the plan details before saving.</p>
             </div>
           </div>
 

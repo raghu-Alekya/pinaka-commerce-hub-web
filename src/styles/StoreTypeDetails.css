@@ -65,8 +65,8 @@
   gap: 5px;
   padding: 0 9px;
   border-radius: 12px;
-  color: #0aa763;
-  background: #dff9eb;
+  color: #047857;
+  background: #ecfdf5;
   font-size: 10px;
   font-weight: 700;
 }
@@ -216,7 +216,9 @@
 }
 
 .store-type-details-status {
-  color: #0ba965 !important;
+  color: #00a870 !important;
+  border-color: #d5e0ed !important;
+  background: #f8fafc !important;
 }
 
 .store-type-details-description {

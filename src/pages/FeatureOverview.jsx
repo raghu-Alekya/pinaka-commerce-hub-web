@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Info, ChevronDown } from "lucide-react";
+import { Info } from "lucide-react";
 import { useNavigate, useParams } from 'react-router-dom';
 import { getFeature } from '../api/features';
 import '../styles/featureoverview.css';
@@ -43,7 +43,7 @@ const FeatureOverview = () => {
       </nav>
     </section>
     <section className="feature-info-card">
-      <div className="feature-info-header"><div className="info-icon-box"><Info size={20} strokeWidth={2.2} /></div><div className="feature-info-title"><h2>Feature Details</h2><p>View feature details.</p></div></div>
+      <div className="feature-info-header"><div className="info-icon-box"><Info size={20} strokeWidth={2.2} /></div><div className="feature-info-title"><h2>Feature Details</h2></div></div>
       {error && <p role="alert">{error}</p>}
       <div className="feature-info-form">
         <div className="feature-form-row feature-two-columns">
@@ -53,9 +53,14 @@ const FeatureOverview = () => {
           </div>
           <div className="feature-field">
             <label>Status</label>
-            <div className="feature-status-field">
-              <div className="feature-status-value"><span className="feature-status-dot" /><span>{status}</span></div>
-              <ChevronDown className="feature-status-chevron" size={16} strokeWidth={2} />
+            <div
+              className={`feature-status-field ${
+                status.toLowerCase() === "active"
+                  ? "plan-details-status"
+                  : "plan-details-status-inactive"
+              }`}
+            >
+              <div className="feature-status-value"><span>{status}</span></div>
             </div>
           </div>
         </div>

@@ -56,14 +56,6 @@ const storeRoleStyles = `
     overflow: visible;
   }
  
-  .work-merchant-field {
-    margin-top: 24px;
-  }
- 
-  .employee-login-pin-field {
-    margin-top: 20px;
-  }
- 
   .employee-login-pin-field label {
     display: block;
     margin-bottom: 7px;
@@ -912,7 +904,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
           {/* RIGHT COLUMN */}
           <div className="add-employee-right">
-            {/* PROFILE PHOTO */}
+            {/* PROFILE PHOTO
             <section className="employee-card profile-photo-card">
               <CardHeader
                 icon={<Camera size={21} />}
@@ -957,7 +949,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
                   <div className="upload-help">JPG, PNG (Max 2MB)</div>
                 </div>
               </div>
-            </section>
+            </section> */}
 
             {/* WORK INFORMATION */}
             <section className="employee-card work-information-card">
@@ -973,7 +965,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
                 <input id="employee-code" name="employeeCode" value={employee.employeeCode || employee.employee_code || ""} readOnly />
               </div>
 
-              <div style={{ marginTop: "24px" }}>
+              <div style={{ marginTop: "12px" }}>
                 <SelectField
                   label="Status"
                   required
@@ -1003,10 +995,11 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
             </section>
 
             {/* ACCOUNT SETTINGS */}
-            <section className="employee-card">
+            <section className="employee-card employee-account-settings-card">
               <CardHeader
                 icon={<Settings size={21} />}
                 title="Account Settings"
+                theme="purple"
                 description="Set login and access details."
               />
 

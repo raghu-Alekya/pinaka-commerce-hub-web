@@ -238,26 +238,14 @@ export function AttendanceDetails({ record, store, onBack }) {
         <div className="ea-profile-grid">
           <div className="ea-profile-primary">
             <span className="ea-avatar">{initials || "E"}</span>
-
-            <dl>
-              <div>
-                <dt>Employee Code</dt>
-                <dd>{selectedRecord?.code || selectedRecord?.employeeCode || "—"}</dd>
-              </div>
-
-              <div>
-                <dt>Employee Name</dt>
-                <dd>{name}</dd>
-              </div>
-
-              <div>
-                <dt>Role</dt>
-                <dd>{profile.role || selectedRecord?.role || "—"}</dd>
-              </div>
-            </dl>
+            <div className="ea-profile-identity">
+              <strong>{name}</strong>
+              <span>{selectedRecord?.code || selectedRecord?.employeeCode || "—"}</span>
+              <span className="ea-profile-role">{profile.role || selectedRecord?.role || "—"}</span>
+            </div>
           </div>
 
-          <dl>
+          <dl className="ea-profile-contact">
             <div>
               <dt>Phone</dt>
               <dd>{profile.phone || "—"}</dd>

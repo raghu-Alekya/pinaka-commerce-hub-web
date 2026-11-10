@@ -806,9 +806,20 @@ function DetailBlock({ title, children }) {
 function Fields({ items }) {
   return (
     <dl className="employee-view-grid">
-      {items.map(([label, value]) => <div className="employee-view-field" key={label}><dt>{label}</dt><dd>{value || "—"}</dd></div>)}
+      {items.map(([label, value]) => (
+        <div className="employee-view-field" key={label}>
+          <dt>{label}</dt>
+          <dd>{displayOrderValue(value)}</dd>
+        </div>
+      ))}
     </dl>
   );
+}
+
+function displayOrderValue(value) {
+  return value == null || (typeof value === "string" && (!value.trim() || value.trim() === "—"))
+    ? "Not provided"
+    : value;
 }
 
 function Lines({ columns, rows }) {
@@ -822,7 +833,7 @@ function Lines({ columns, rows }) {
         <tbody>
           {rows.map((row, index) => (
             <tr key={`${row[0]}-${index}`}>
-              {row.map((cell, cellIndex) => <td key={`${columns[cellIndex]}-${index}`}>{cell || "—"}</td>)}
+              {row.map((cell, cellIndex) => <td key={`${columns[cellIndex]}-${index}`}>{displayOrderValue(cell)}</td>)}
             </tr>
           ))}
         </tbody>

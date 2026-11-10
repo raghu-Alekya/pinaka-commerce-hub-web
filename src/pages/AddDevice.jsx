@@ -12,7 +12,7 @@ const deviceTypes = ["POS Terminal", "Kitchen Display", "Barcode Scanner", "Rece
   .map((label) => ({ value: label, label }));
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export default function AddDevice({ merchantId: scopedMerchantId = "", merchant: scopedMerchant = null, embedded = false, onSave, onCancel, initialDevice = null } = {}) {
+export default function AddDevice({ merchantId: scopedMerchantId = "", merchant: scopedMerchant = null, embedded = false, onSave, onCancel, initialDevice = null, editSubmitLabel = "Save Changes" } = {}) {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -306,7 +306,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
           className="device-save-btn"
           disabled={saving}
         >
-          {saving ? "Saving..." : editing ? "Save Changes" : "Save Device"}
+          {saving ? "Saving..." : editing ? editSubmitLabel : "Save Device"}
         </button>
       </div>
     </div>

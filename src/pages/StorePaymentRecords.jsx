@@ -256,18 +256,14 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
         onClose={() => setSelectedPayment(null)}
         headerIcon="bi-receipt"
         title="Payment Details"
-        code={
-          selectedPayment?.transactionId && selectedPayment.transactionId !== "—"
-            ? `Ref: ${selectedPayment.transactionId}`
-            : (selectedPayment?.id ? `ID: ${selectedPayment.id}` : "")
-        }
+        compactSpacing
         hero={
           selectedPayment
             ? {
                 icon: "bi-credit-card",
                 title: selectedPayment.title,
                 subtitle: `Order #${selectedPayment.orderId || "—"}`,
-                status: selectedPayment.status || "Completed",
+                status: formatPaymentStatus(selectedPayment.status),
                 metricLabel: "AMOUNT PAID",
                 metricValue: money(selectedPayment.tenderAmount || selectedPayment.orderTotal || 0),
               }
@@ -306,7 +302,7 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                       value: selectedPayment.paymentMethod,
                     },
                     {
-                      label: "ORDER NUMBER",
+                      label: "ORDER ID",
                       value: selectedPayment.orderId,
                       mono: true,
                     },
@@ -506,6 +502,11 @@ function paymentStatusClass(status) {
   if (value.includes("partial")) return "partial";
   if (value.includes("create")) return "created";
   return "processing";
+}
+
+function formatPaymentStatus(status) {
+  const label = String(status || "Completed").replace(/[_-]+/g, " ").trim().toLowerCase();
+  return label.replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function metaValue(metadata, key) {
