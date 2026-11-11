@@ -3,6 +3,7 @@ export const endpoints = {
   refresh: "/api/v1/auth/refresh",
   logout: "/api/v1/auth/logout",
   me: "/api/v1/auth/me",
+  generalSettings: "/api/v1/settings/general-settings",
 
   merchants: "/merchants",
   createMerchant: "/merchants/create-merchant",

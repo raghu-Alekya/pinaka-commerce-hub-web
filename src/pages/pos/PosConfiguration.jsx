@@ -248,7 +248,7 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
         return () => window.removeEventListener("beforeunload", preventLoss);
     }, [session]);
     const currencySymbol = getCurrencySymbol(storeCurrency);
-    const settings = useMemo(() => ({ session, currency: storeCurrency, currencySymbol, merchantId, storeId, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) }), [session, storeCurrency, currencySymbol, merchantId, storeId, selectedConfig, requestLeave, saveChanges]);
+    const settings = useMemo(() => ({ session, currency: storeCurrency, currencySymbol, merchantId, storeId, store, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) }), [session, storeCurrency, currencySymbol, merchantId, storeId, store, selectedConfig, requestLeave, saveChanges]);
  
     const filteredCards = configurationCards.filter((card) => {
         if (card.component === "device-mapping" && !embedded) return false;
@@ -399,5 +399,3 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
         </div>
     );
 }
- 
- 
