@@ -10,6 +10,9 @@ import {
   Eye,
   Search,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
   Download,
   Store,
   Crown,
@@ -315,6 +318,55 @@ function DetailRow({ label, value }) {
 
 }
 
+function SubscriptionCalendarField({ label, value, onChange, min, max }) {
+  const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
+  const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(() => selectedDate || new Date());
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const daysInPreviousMonth = new Date(month.getFullYear(), month.getMonth(), 0).getDate();
+  const dateCells = Array.from({ length: 42 }, (_, index) => {
+    const dayOffset = index - firstDay + 1;
+    const date = dayOffset < 1
+      ? new Date(month.getFullYear(), month.getMonth() - 1, daysInPreviousMonth + dayOffset)
+      : dayOffset > daysInMonth
+        ? new Date(month.getFullYear(), month.getMonth() + 1, dayOffset - daysInMonth)
+        : new Date(month.getFullYear(), month.getMonth(), dayOffset);
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return { date, iso, inMonth: date.getMonth() === month.getMonth() };
+  });
+  const displayValue = value ? `${value.slice(5, 7)}/${value.slice(8, 10)}/${value.slice(0, 4)}` : "mm/dd/yyyy";
+
+  return <div className="subscription-date-field">
+    <span>{label}</span>
+    <div className="subscription-date-picker">
+      <button type="button" className="subscription-date-trigger" aria-label={`${label}: ${displayValue}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setOpen(current => !current); }}>
+        <span>{displayValue}</span><CalendarDays size={16} aria-hidden="true" />
+      </button>
+      {open && <div className="subscription-calendar-popover" role="dialog" aria-label={`${label} calendar`}>
+        <div className="subscription-calendar-heading">
+          <strong>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</strong>
+          <div>
+            <button type="button" aria-label="Previous month" onClick={() => setMonth(current => new Date(current.getFullYear(), current.getMonth() - 1, 1))}><ChevronLeft size={17} /></button>
+            <button type="button" aria-label="Next month" onClick={() => setMonth(current => new Date(current.getFullYear(), current.getMonth() + 1, 1))}><ChevronRight size={17} /></button>
+          </div>
+        </div>
+        <div className="subscription-calendar-grid subscription-calendar-weekdays" aria-hidden="true">{"Su Mo Tu We Th Fr Sa".split(" ").map(day => <span key={day}>{day}</span>)}</div>
+        <div className="subscription-calendar-grid">
+          {dateCells.map(({ date, iso, inMonth }) => {
+            const disabled = (min && iso < min) || (max && iso > max);
+            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); setOpen(false); }}>{date.getDate()}</button>;
+          })}
+        </div>
+        <div className="subscription-calendar-footer">
+          <button type="button" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
+          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); setOpen(false); setMonth(today); } }}>Today</button>
+        </div>
+      </div>}
+    </div>
+  </div>;
+}
+
 /* ========================================
 
    LIST SCREEN
@@ -341,6 +393,9 @@ const [dateRange, setDateRange] = useState("");
 const [startDate, setStartDate] = useState("");
 const [endDate, setEndDate] = useState("");
 const [datePickerOpen, setDatePickerOpen] = useState(false);
+const [draftStartDate, setDraftStartDate] = useState("");
+const [draftEndDate, setDraftEndDate] = useState("");
+const [dateRangeError, setDateRangeError] = useState("");
 
 const [page, setPage] = useState(1);
 const [pageSize, setPageSize] = useState(5);
@@ -585,6 +640,9 @@ const handleDateRangeChange = (value) => {
         setStartDate(from.toISOString().split("T")[0]);
         setEndDate(today.toISOString().split("T")[0]);
     } else if (value === "custom") {
+        setDraftStartDate(startDate);
+        setDraftEndDate(endDate);
+        setDateRangeError("");
         setDatePickerOpen(true);
     }
 
@@ -604,6 +662,9 @@ const handleDateRangeChange = (value) => {
     setDateRange("");
     setStartDate("");
     setEndDate("");
+    setDraftStartDate("");
+    setDraftEndDate("");
+    setDateRangeError("");
     setDatePickerOpen(false);
     setPage(1);
 };
@@ -797,7 +858,7 @@ const handleDateRangeChange = (value) => {
 
               <strong>{stats.active}</strong>
 
-              <small className="positive overview-meta">
+              <small className="success overview-meta">
                 <i /> {stats.activePercentage}% of total
               </small>
             </div>
@@ -857,6 +918,7 @@ const handleDateRangeChange = (value) => {
             FILTER BAR
         ======================================== */}
 
+       <div className="subscription-filter-anchor">
        <FiltersBar
     searchValue={search}
     onSearchChange={(value) => {
@@ -932,6 +994,27 @@ const handleDateRangeChange = (value) => {
     ]}
     onClear={resetFilters}
 />
+        {datePickerOpen && <section className="subscription-custom-range" aria-label="Custom subscription date range">
+          <SubscriptionCalendarField label="From date" value={draftStartDate} max={draftEndDate || undefined} onChange={value => { setDraftStartDate(value); setDateRangeError(""); }} />
+          <SubscriptionCalendarField label="To date" value={draftEndDate} min={draftStartDate || undefined} onChange={value => { setDraftEndDate(value); setDateRangeError(""); }} />
+          <div className="subscription-range-actions"><button type="button" className="subscription-range-apply" onClick={() => {
+            if (!draftStartDate || !draftEndDate) { setDateRangeError("Select both dates."); return; }
+            if (draftStartDate > draftEndDate) { setDateRangeError("To date must be on or after From date."); return; }
+            setStartDate(draftStartDate);
+            setEndDate(draftEndDate);
+            setDatePickerOpen(false);
+            setDateRangeError("");
+            setPage(1);
+          }}>Apply date range</button>
+          <button type="button" className="subscription-range-clear" onClick={() => {
+            setDateRange(""); setStartDate(""); setEndDate("");
+            setDraftStartDate(""); setDraftEndDate(""); setDateRangeError("");
+            setDatePickerOpen(false); setPage(1);
+          }}>Clear dates</button>
+          </div>
+          {dateRangeError && <p role="alert">{dateRangeError}</p>}
+        </section>}
+        </div>
 
         {/* ========================================
             FILTER RESULT INFO

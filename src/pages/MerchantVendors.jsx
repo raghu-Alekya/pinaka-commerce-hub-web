@@ -647,7 +647,7 @@ useEffect(() => {
 
     const name = (vendor) => (
         <span className="mv-name">
-            <strong>{vendor.name}</strong>
+            <span className="mv-name-text">{vendor.name}</span>
         </span>
     );
 

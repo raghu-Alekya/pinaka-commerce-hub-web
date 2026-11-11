@@ -275,7 +275,7 @@
 }
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .positive {
 
-  color: var(--green);
+  color:#5143bc;
 
 }
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .negative {
@@ -286,6 +286,12 @@
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .warning {
 
   color: var(--orange);
+
+}
+
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success {
+
+  color:#00ad78;
 
 }
 /* ========================================
@@ -473,8 +479,9 @@
 }:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card td {
 
   height: 52px;
-  color: #234d88;
+  color: #10264d;
   font-size: 13px;
+  font-weight: 550;
   line-height: 18px;
   padding: 10px 14px;
   border-bottom: 1px solid #e4e8ef;
@@ -518,7 +525,8 @@
 
   display: block;
   color: #8199bd;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 450;
 
 }
 
@@ -1342,7 +1350,7 @@
 
 }}
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
 
   .merchant-subscriptions-page,
 
@@ -2615,7 +2623,7 @@
 
 }.merchant-subscriptions-page .subscription-overview-refined .overview-card small {
 
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
 
 }.merchant-subscriptions-page .overview-meta {
@@ -5668,7 +5676,7 @@
 }
 .merchant-subscriptions-page .subscription-overview-refined .overview-card small {
   margin-top: 2px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
   line-height: 14px;
 }
@@ -5936,4 +5944,270 @@
   justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
+}
+/* Custom date range picker in the subscriptions list */
+.subscription-filter-anchor {
+  position: relative;
+  z-index: 5;
+}
+
+.subscription-table-card:has(.subscription-custom-range) {
+  overflow: visible;
+}
+
+.subscription-custom-range {
+  position: absolute;
+  top: calc(100% - 4px);
+  left: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: end;
+  flex-wrap: nowrap;
+  gap: 12px;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: calc(100vw - 380px);
+  padding: 14px;
+  border: 1px solid #d7e1ef;
+  border-radius: 10px;
+  background: #f8f7ff;
+  box-shadow: 0 10px 28px rgba(31, 41, 75, .16);
+}
+
+.subscription-custom-range label {
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 170px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.subscription-custom-range input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 42px;
+  padding: 0 10px;
+  border: 1px solid #d7e1ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  color-scheme: light;
+  font: inherit;
+  font-weight: 400;
+}
+
+.subscription-custom-range input:focus {
+  outline: none;
+  border-color: #5143bc;
+  box-shadow: 0 0 0 3px rgba(81, 67, 188, .12);
+}
+
+.subscription-custom-range > button {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.subscription-range-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: end;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.subscription-range-actions button {
+  flex: 0 0 auto;
+  height: 42px;
+  padding: 0 15px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.subscription-custom-range .subscription-range-apply {
+  border: 1px solid #5143bc;
+  background: #5143bc;
+  color: #fff;
+}
+
+.subscription-custom-range .subscription-range-clear {
+  border: 1px solid #d7e1ef;
+  background: #fff;
+  color: #475467;
+}
+
+.subscription-custom-range > p {
+  flex-basis: 100%;
+  margin: 0;
+  color: #b42318;
+  font-size: 12px;
+}
+
+.subscription-date-field {
+  display: flex;
+  flex: 0 0 190px;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.subscription-date-picker {
+  position: relative;
+}
+
+.subscription-date-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d7e1ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #52617a;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.subscription-date-trigger:hover,
+.subscription-date-trigger[aria-expanded="true"] {
+  border-color: #a8a0df;
+}
+
+.subscription-date-trigger svg {
+  color: #65748b;
+}
+
+.subscription-calendar-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 280px;
+  padding: 12px;
+  border: 1px solid #dfe3f0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(31, 41, 75, .16);
+}
+
+.subscription-calendar-heading,
+.subscription-calendar-heading > div,
+.subscription-calendar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.subscription-calendar-heading {
+  margin-bottom: 10px;
+  color: #24324b;
+  font-size: 14px;
+}
+
+.subscription-calendar-heading > div {
+  gap: 4px;
+}
+
+.subscription-calendar-heading button,
+.subscription-calendar-grid button,
+.subscription-calendar-footer button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.subscription-calendar-heading button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 6px;
+  color: #52617a;
+}
+
+.subscription-calendar-heading button:hover,
+.subscription-calendar-grid button:not(:disabled):hover {
+  background: #f0effa;
+}
+
+.subscription-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.subscription-calendar-weekdays {
+  margin-bottom: 4px;
+  color: #77839a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.subscription-calendar-weekdays span {
+  padding: 5px 0;
+}
+
+.subscription-calendar-grid button {
+  height: 32px;
+  border-radius: 6px;
+  color: #344054;
+  font-size: 12px;
+}
+
+.subscription-calendar-grid button.outside-month {
+  color: #a7afbd;
+}
+
+.subscription-calendar-grid button.selected {
+  background: #5143bc;
+  color: #fff;
+}
+
+.subscription-calendar-grid button:disabled {
+  color: #c6cbd4;
+  cursor: not-allowed;
+}
+
+.subscription-calendar-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eef0f5;
+}
+
+.subscription-calendar-footer button {
+  padding: 5px 4px;
+  color: #5143bc;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .subscription-custom-range {
+    flex-wrap: wrap;
+    max-width: calc(100vw - 48px);
+  }
+
+  .subscription-date-field {
+    flex: 1 1 220px;
+  }
 }

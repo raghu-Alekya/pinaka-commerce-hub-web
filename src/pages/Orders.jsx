@@ -400,7 +400,7 @@ export default function Orders({
 
       <div className="orders-summary">
         <SummaryCard icon="bi-bag-fill" tone="purple" label="Total Orders" value={totalOrderCount} meta="Live Records" metaTone="positive" />
-        <SummaryCard icon="bi-check-circle-fill" tone="green" label="Completed" value={completedCount} meta={`${completedPercentage}% of total`} metaTone="positive" />
+        <SummaryCard icon="bi-check-circle-fill" tone="green" label="Completed" value={completedCount} meta={`${completedPercentage}% of total`} metaTone="success" />
         <SummaryCard icon="bi-clock-fill" tone="orange" label="Pending Payment" value={pendingCount} meta={`${pendingPercentage}% of total`} metaTone="warning" />
         <SummaryCard icon="bi-arrow-counterclockwise" tone="red" label="Refunded Orders" value={refundedCount} meta="Live Records" metaTone="info" />
       </div>

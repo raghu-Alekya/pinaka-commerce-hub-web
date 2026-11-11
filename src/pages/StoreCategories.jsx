@@ -1026,11 +1026,6 @@ export default function StoreCategories({
 
                       <div className="category-name-cell">
 
-                        <div className="category-icon tag-icon">
-
-                          <i className="bi bi-tag" />
-
-                        </div>
 
                         <div>
 
@@ -1540,7 +1535,7 @@ export default function StoreCategories({
           clearLabel="Reset"
           trailingAction={activeTab === "attributes" && (
             <>
-              <button
+              {/* <button
                 type="button"
                 className="categories-clear-btn"
                 onClick={handleFetchAttributes}
@@ -1557,7 +1552,7 @@ export default function StoreCategories({
               >
                 <i className="bi bi-arrow-repeat" aria-hidden="true" />
                 {attributeAction === "sync" ? "Syncing…" : "Sync Attributes"}
-              </button>
+              </button> */}
             </>
           )}
         />

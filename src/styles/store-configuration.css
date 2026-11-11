@@ -4103,8 +4103,8 @@ body:has(.store-workspace-page),
 .store-workspace-page .store-workspace-card .merchant-vendors table td {
   height: 42px;
   font-size: 14px;
-  color: #8791a3;
-  text-align: center;
+  color: #273041;
+ 
 }
 @media (max-width: 760px) {
   .store-workspace-page .store-workspace-card > .products-page,
@@ -4183,7 +4183,7 @@ body:has(.store-workspace-page),
   line-height: 18px;
   height: auto !important;          
   min-height: 48px !important;                 
-  padding: 32px 16px !important;      
+  padding: 8px 16px !important;      
   vertical-align: middle !important;
 }
 .store-workspace-page .store-workspace-card .fast-key-table td.fast-key-table-empty-cell {
@@ -4316,8 +4316,8 @@ body:has(.store-workspace-page),
 .fast-key-detail-modal .fast-key-modal-date { white-space: nowrap; }
 .fast-key-employee { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
 .fast-key-timestamp { display: flex; flex-direction: column; gap: 3px; white-space: nowrap; }
-.fast-keys-panel .fast-key-timestamp strong { font-size: 12px; font-weight: 500; color: #465573; }
-.fast-key-timestamp small { font-size: 11px; color: #7c8799; }
+.fast-keys-panel .fast-key-timestamp strong { font-size: 12px; font-weight: 500; color: #10264d; }
+.fast-key-timestamp small { font-size: 11px; color: #7290ba; }
 .fast-key-actions .edit-button { color: #5367f0 !important; border: 1.5px solid #dce9f5 !important; background: #fcfdff !important; }
 .fast-key-actions .delete-button { color: #d9485f !important; border: 1.5px solid #dce9f5 !important; background: #fcfdff !important; }
 .fast-keys-heading > button { flex-shrink: 0; }
