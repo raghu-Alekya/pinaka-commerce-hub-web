@@ -238,10 +238,11 @@ input {
     align-items: center;
     gap: 5px;
     margin-top: 2px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 400;
     line-height: 14px;
     white-space: nowrap;
+    
 }
 
 .order-summary-meta i {
@@ -249,7 +250,7 @@ input {
 }
 
 .order-summary-meta.positive {
-    color: #06a866;
+    color: #674ed9;
 }
 
 .order-summary-meta.warning {
@@ -257,8 +258,14 @@ input {
 }
 
 .order-summary-meta.info {
-    color: #4185dd;
+    color: #dc2626;
 }
+
+.order-summary-meta.success {
+    color: #16a34a;
+}
+
+
 
 /* =========================================================
    MAIN CARD

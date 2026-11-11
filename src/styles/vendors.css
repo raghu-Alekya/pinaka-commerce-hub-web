@@ -577,7 +577,7 @@
   padding: 0 16px;
   background: #f1f3fd;
   color: #23426e;
-  font-size: 12px;
+  font-size: 12px !important;
   font-weight: 600;
   line-height: 16px;
   text-overflow: clip;
@@ -872,7 +872,7 @@
   padding: 38px;
   text-align: center;
   color: #8994aa;
-  font-size: 10px;
+  font-size: 16px;
 }
 
 
@@ -1693,12 +1693,12 @@
 .vendors-table td {
   height: 50px;
   padding: 10px 12px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 18px;
 }
 
 .vendors-table td .vendors-cell-value {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 18px;
 }
 
@@ -1907,6 +1907,25 @@
   font-weight: 750;
   line-height: 25px;
 }
+
+.vendors-stat-description {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.vendors-stat-description i {
+  font-size: 6px;
+}
+
+.vendors-stat-description.purple { color: #674ed9; }
+.vendors-stat-description.green { color: #2eaa62; }
+.vendors-stat-description.orange { color: #e99b2b; }
+.vendors-stat-description.red { color: #df5c66; }
 
 .vendors-table-wrap {
   width: calc(100% - 24px);
@@ -2149,9 +2168,8 @@
 
 .vendors-audit-time {
   color: #7890ba;
-  font-size: 9px;
-  font-weight: 500;
-  line-height: 1.1;
+  font-size: 11px;
+  font-weight: 450;
   white-space: nowrap;
 }
 

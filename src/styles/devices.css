@@ -288,8 +288,8 @@
 
   margin-top: 2px;
 
-  font-size: 10px;
-  font-weight: 400;
+  font-size: 12px;
+  font-weight:400;
   line-height: 14px;
   white-space: nowrap;
 }
@@ -298,18 +298,10 @@
   font-size: 6px;
 }
 
-.device-stat-description.purple,
-.device-stat-description.green {
-  color: #06a866;
-}
-
-.device-stat-description.orange {
-  color: #ea8a00;
-}
-
-.device-stat-description.red {
-  color: #ea354d;
-}
+.device-stat-description.purple { color: #674ed9; }
+.device-stat-description.green { color: #2eaa62; }
+.device-stat-description.orange { color: #e99b2b; }
+.device-stat-description.red { color: #df5c66; }
 
 
 /* =========================================================

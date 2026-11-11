@@ -173,11 +173,11 @@ function VendorAuditCell({ value }) {
   );
 }
 
-function VendorStatCard({ icon, title, value, variant }) {
+function VendorStatCard({ icon, title, value, description, variant }) {
   return (
     <div className="vendors-stat-card">
       <div className={`vendors-stat-icon ${variant}`}><i className={`bi ${icon}`} aria-hidden="true" /></div>
-      <div className="vendors-stat-content"><div className="vendors-stat-title">{title}</div><div className="vendors-stat-value">{value}</div></div>
+      <div className="vendors-stat-content"><div className="vendors-stat-title">{title}</div><div className="vendors-stat-value">{value}</div><div className={`vendors-stat-description ${variant}`}><i className="bi bi-circle-fill" aria-hidden="true" />{description}</div></div>
     </div>
   );
 }
@@ -1500,10 +1500,10 @@ export default function Vendors({
       </div>
 
       <div className="vendors-stats" aria-label="Vendor summary">
-        <VendorStatCard icon="bi-truck-front-fill" title="Total Vendors" value={vendors.length} variant="purple" />
-        <VendorStatCard icon="bi-check-circle-fill" title="Active Vendors" value={activeVendorCount} variant="green" />
-        <VendorStatCard icon="bi-box-seam-fill" title="Suppliers" value={supplierCount} variant="orange" />
-        <VendorStatCard icon="bi-people-fill" title="Organizers" value={organizerCount} variant="red" />
+        <VendorStatCard icon="bi-truck-front-fill" title="Total Vendors" value={vendors.length} description="All vendor types" variant="purple" />
+        <VendorStatCard icon="bi-check-circle-fill" title="Active Vendors" value={activeVendorCount} description={`${vendors.length ? Math.round((activeVendorCount / vendors.length) * 100) : 0}% of total`} variant="green" />
+        <VendorStatCard icon="bi-box-seam-fill" title="Suppliers" value={supplierCount} description={`${vendors.length ? Math.round((supplierCount / vendors.length) * 100) : 0}% of total`} variant="orange" />
+        <VendorStatCard icon="bi-people-fill" title="Organizers" value={organizerCount} description={`${vendors.length ? Math.round((organizerCount / vendors.length) * 100) : 0}% of total`} variant="red" />
       </div>
 
       {/* =====================================================
@@ -1795,27 +1795,9 @@ export default function Vendors({
             filteredVendors.length ===
               0 && (
               <div className="vendors-empty">
-
-                <i className="bi bi-truck" />
-
-                <h3>
+                <span>
                   No vendors found
-                </h3>
-
-                <p>
-                  Try changing your
-                  search or filters.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={
-                    clearFilters
-                  }
-                >
-                  Clear Filters
-                </button>
-
+                </span>
               </div>
             )}
 

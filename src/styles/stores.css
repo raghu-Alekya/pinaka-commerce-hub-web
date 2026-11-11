@@ -210,7 +210,7 @@
 .summary-card small {
     display: block;
     margin-top: 5px;
-    color: #8d95a5;
+    color: #674ed9;
     font-size: 12px;
 }
 
@@ -268,19 +268,17 @@
     gap: 3px;
 }
 
-.store-table-details strong {
-    color: #394256;
-    font-weight: 500;
-}
 
 .store-table-datetime strong {
     color: #10264d;
     font-weight: 600;
+    font-size: 12px;
 }
 
 .store-table-details small {
     color: #7a8498;
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: 450;
 }
 
 .stores-card .stores-table td:not(:last-child) {

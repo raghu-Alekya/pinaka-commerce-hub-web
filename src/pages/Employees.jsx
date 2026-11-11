@@ -200,16 +200,6 @@ function StatCard({ icon, title, value, description, type, progress }) {
         <div className="employees-stat-title">{title}</div>
         <div className="employees-stat-value">{value}</div>
         <div className={`employees-stat-change ${type}`}>{description}</div>
-        {progress !== undefined && (
-          <div className="employees-progress-track">
-            <div
-              className={`employees-progress-bar ${type}`}
-              style={{
-                width: `${progress}%`,
-              }}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -264,7 +254,6 @@ export default function Employees() {
   const [deletingId, setDeletingId] = useState(null);
   const [activatingId, setActivatingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-const [roleFilter, setRoleFilter] = useState("");
 const [statusFilter, setStatusFilter] = useState("");
 const [storeFilter, setStoreFilter] = useState("");
 
@@ -392,12 +381,8 @@ const handlePageSizeChange = (size) => {
       employee.name?.toLowerCase().includes(searchValue) ||
       employee.email?.toLowerCase().includes(searchValue) ||
       employee.phone?.toLowerCase().includes(searchValue) ||
-      employee.role?.toLowerCase().includes(searchValue) ||
       employee.merchant?.toLowerCase().includes(searchValue) ||
       employee.store?.toLowerCase().includes(searchValue);
-
-    const matchesRole =
-      !roleFilter || employee.role === roleFilter;
 
     const matchesStatus =
       !statusFilter || employee.status === statusFilter;
@@ -407,7 +392,6 @@ const handlePageSizeChange = (size) => {
 
     return (
       matchesSearch &&
-      matchesRole &&
       matchesStatus &&
       matchesStore
     );
@@ -415,7 +399,6 @@ const handlePageSizeChange = (size) => {
 }, [
   employeeRows,
   searchTerm,
-  roleFilter,
   statusFilter,
   storeFilter,
 ]);
@@ -533,19 +516,6 @@ const handlePageSizeChange = (size) => {
     searchPlaceholder="Search employee name, email, or phone..."
     filters={[
         {
-            key: "role",
-            label: "Role",
-            value: roleFilter,
-            options: [
-                { label: "All Roles", value: "" },
-                ...[...new Set(employeeRows.map(employee => employee.role).filter(role => typeof role === "string" && role !== "—"))].map(role => ({ label: role, value: role })),
-            ],
-            onChange: (value) => {
-                setRoleFilter(value);
-                setPage(1);
-            },
-        },
-        {
             key: "status",
             label: "Status",
             value: statusFilter,
@@ -578,7 +548,6 @@ const handlePageSizeChange = (size) => {
     ]}
     onClear={() => {
         setSearchTerm("");
-        setRoleFilter("");
         setStatusFilter("");
         setStoreFilter("");
         setPage(1);

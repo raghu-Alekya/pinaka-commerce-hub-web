@@ -18,7 +18,7 @@ import { formatDate, listSubscriptions } from "../api/subscriptions";
 import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Download } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { listMerchants, getMerchant, updateMerchantStatus, deleteMerchant } from "../api/merchants";
 import { listMerchantEmployees, getEmployee, updateEmployee } from "../api/employees";
 import { api, ApiError, pendingStoreRead } from "../api/http";
@@ -810,12 +810,54 @@ function dateRangeMatch(merchant, value, from = '', to = '', now = new Date()) {
   return date >= start && date < end;
 }
 function CalendarField({ label, value, onChange, min, max }) {
-  const input = useRef(null);
-  return <label style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 180 }}>{label}
-    <span style={{ display: 'flex', gap: 6 }}><input ref={input} type="date" value={value} min={min} max={max} onChange={event => onChange(event.target.value)} style={{ minWidth: 145, padding: '8px 10px', border: '1px solid #dfe3ea', borderRadius: 6, colorScheme: 'light' }} />
-      <button type="button" aria-label={'Open ' + label.toLowerCase() + ' calendar'} onClick={() => { try { if (input.current.showPicker) input.current.showPicker(); else input.current.focus(); } catch { input.current.focus(); } }} style={{ padding: '8px 10px', border: '1px solid #dfe3ea', borderRadius: 6, background: '#fff' }}>▦</button></span>
-  </label>;
+  const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
+  const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(() => selectedDate || new Date());
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const daysInPreviousMonth = new Date(month.getFullYear(), month.getMonth(), 0).getDate();
+  const dateCells = Array.from({ length: 42 }, (_, index) => {
+    const dayOffset = index - firstDay + 1;
+    const date = dayOffset < 1
+      ? new Date(month.getFullYear(), month.getMonth() - 1, daysInPreviousMonth + dayOffset)
+      : dayOffset > daysInMonth
+        ? new Date(month.getFullYear(), month.getMonth() + 1, dayOffset - daysInMonth)
+        : new Date(month.getFullYear(), month.getMonth(), dayOffset);
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return { date, iso, inMonth: date.getMonth() === month.getMonth() };
+  });
+  const displayValue = value ? `${value.slice(5, 7)}/${value.slice(8, 10)}/${value.slice(0, 4)}` : "mm/dd/yyyy";
+
+  return <div className="merchant-date-field">
+    <span>{label}</span>
+    <div className="merchant-date-picker">
+      <button type="button" className={`merchant-date-trigger${value ? " has-value" : ""}`} aria-label={`${label}: ${displayValue}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setOpen(current => !current); }}>
+        <span>{displayValue}</span><CalendarDays size={16} aria-hidden="true" />
+      </button>
+      {open && <div className="merchant-calendar-popover" role="dialog" aria-label={`${label} calendar`}>
+        <div className="merchant-calendar-heading">
+          <strong>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</strong>
+          <div>
+            <button type="button" aria-label="Previous month" onClick={() => setMonth(current => new Date(current.getFullYear(), current.getMonth() - 1, 1))}><ChevronLeft size={17} /></button>
+            <button type="button" aria-label="Next month" onClick={() => setMonth(current => new Date(current.getFullYear(), current.getMonth() + 1, 1))}><ChevronRight size={17} /></button>
+          </div>
+        </div>
+        <div className="merchant-calendar-grid merchant-calendar-weekdays" aria-hidden="true">{"Su Mo Tu We Th Fr Sa".split(" ").map(day => <span key={day}>{day}</span>)}</div>
+        <div className="merchant-calendar-grid">
+          {dateCells.map(({ date, iso, inMonth }) => {
+            const disabled = (min && iso < min) || (max && iso > max);
+            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); setOpen(false); }}>{date.getDate()}</button>;
+          })}
+        </div>
+        <div className="merchant-calendar-footer">
+          <button type="button" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
+          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); setOpen(false); setMonth(today); } }}>Today</button>
+        </div>
+      </div>}
+    </div>
+  </div>;
 }
+
 function storeLimitFor(merchant, masterPlans) {
   const plan = String(merchant.plan || "").toLowerCase();
 
@@ -1103,34 +1145,20 @@ const [statusFilter, setStatusFilter] = useState("");
               <div className="stat-content">
                 <span>{x[2]}</span>
                 <strong>{x[3]}</strong>
-                <small
-                  className={
-                    i === 0 || i === 4 ? "positive" : i === 2 ? "negative" : ""
-                  }
-                >
+                <small className={`merchant-stat-change ${x[0]}`}>
                   <i
                     className={`bi ${i === 2 ? "bi-arrow-down" : "bi-arrow-up"}`}
                   />{" "}
                   {x[4]}
                 </small>
-                {(i === 1 || i === 3) && (
-                  <div className={`progress ${i === 3 ? "red-progress" : ""}`}>
-                    <div
-                      style={{
-                        width:
-                          i === 1
-                            ? `${total ? (activeCount / total) * 100 : 0}%`
-                            : `${total ? (inactiveCount / total) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-                )}
+            
               </div>
             </div>
           </div>
         ))}
       </div>
       <div className="merchant-table-card">
+        <div className="merchant-filters-anchor">
         <FiltersBar
     searchValue={q}
     onSearchChange={(value) => {
@@ -1241,15 +1269,15 @@ const [statusFilter, setStatusFilter] = useState("");
         setPage(1);
     }}
 />
-        {datePickerOpen && <section id="merchant-date-range" aria-label="Custom date range" style={{ padding: 16, background: '#f8f7ff', borderBottom: '1px solid #e1e4eb' }}>
-          <div style={{ display: 'flex', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
+        {datePickerOpen && <section id="merchant-date-range" className="merchant-date-range" aria-label="Custom date range">
+          <div className="merchant-date-range-fields">
             <CalendarField label="From date" value={draftFrom} max={draftTo || undefined} onChange={value => { setDraftFrom(value); setDateError(''); }} />
             <CalendarField label="To date" value={draftTo} min={draftFrom || undefined} onChange={value => { setDraftTo(value); setDateError(''); }} />
-            <button type="button" className="btn btn-primary" onClick={applyDateRange}>Apply date range</button>
-            <button type="button" className="btn btn-secondary" onClick={() => { setDatePickerOpen(false); setDateError(''); }}>Cancel</button>
-            <button type="button" className="btn btn-secondary" onClick={() => { setJoinedRange(''); setDateFrom(''); setDateTo(''); setDatePickerOpen(false); setDateError(''); setPage(1); }}>Clear dates</button>
-          </div>{dateError && <p role="alert" style={{ color: '#b42318', margin: '10px 0 0' }}>{dateError}</p>}
+            <div className="merchant-date-range-actions"><button type="button" className="merchant-date-apply" onClick={applyDateRange}>Apply date range</button>
+            <button type="button" className="merchant-date-secondary" onClick={() => { setJoinedRange(''); setDateFrom(''); setDateTo(''); setDatePickerOpen(false); setDateError(''); setPage(1); }}>Clear dates</button></div>
+          </div>{dateError && <p className="merchant-date-error" role="alert">{dateError}</p>}
         </section>}
+        </div>
         <div className="table-wrapper">
           <table className="merchant-table">
             <thead>
@@ -1275,13 +1303,7 @@ const [statusFilter, setStatusFilter] = useState("");
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="9"
-                    style={{
-                      textAlign: "center",
-                      padding: "40px",
-                    }}
-                  >
+                  <td colSpan="9" className="merchant-empty-cell">
                     No merchants found.
                   </td>
                 </tr>

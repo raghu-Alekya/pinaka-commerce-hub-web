@@ -5,6 +5,20 @@ import { apiRequest } from "../api/http";
 import { isUuid } from "../api/storeDetails";
 import "../styles/store-customers.css";
 
+function formatCustomerDate(value) {
+  if (!value || value === "—" || value === "â€”") return "—";
+  const isoDate = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const date = isoDate
+    ? new Date(Number(isoDate[1]), Number(isoDate[2]) - 1, Number(isoDate[3]))
+    : new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default function StoreCustomers({
   embedded = false,
   merchantId,
@@ -468,7 +482,7 @@ function CustomerRow({ customer, onView }) {
       <td>{customer.redeemed}</td>
       <td>{customer.expired}</td>
       <td><strong className="store-customer-spent">{customer.available}</strong></td>
-      <td><span className="store-customer-date">{customer.last_updated || "—"}</span></td>
+      <td><span className="store-customer-date">{formatCustomerDate(customer.last_updated)}</span></td>
     </tr>
   );
 }

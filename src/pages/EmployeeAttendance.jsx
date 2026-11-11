@@ -2,6 +2,7 @@ import FilterDropdown from "../components/FilterDropdown";
 import ListActions from "../components/ListActions";
 import Pagination from "../components/Pagination";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   getAttendanceRecordById,
   getAttendanceRecords,
@@ -34,6 +35,55 @@ const localIsoDate = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
     date.getDate(),
   ).padStart(2, "0")}`;
+
+function AttendanceCalendarField({ label, value, onChange, min, max }) {
+  const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
+  const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(() => selectedDate || new Date());
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const daysInPreviousMonth = new Date(month.getFullYear(), month.getMonth(), 0).getDate();
+  const dateCells = Array.from({ length: 42 }, (_, index) => {
+    const dayOffset = index - firstDay + 1;
+    const date = dayOffset < 1
+      ? new Date(month.getFullYear(), month.getMonth() - 1, daysInPreviousMonth + dayOffset)
+      : dayOffset > daysInMonth
+        ? new Date(month.getFullYear(), month.getMonth() + 1, dayOffset - daysInMonth)
+        : new Date(month.getFullYear(), month.getMonth(), dayOffset);
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return { date, iso, inMonth: date.getMonth() === month.getMonth() };
+  });
+  const displayValue = value ? `${value.slice(5, 7)}/${value.slice(8, 10)}/${value.slice(0, 4)}` : "mm/dd/yyyy";
+
+  return <div className="ea-date-field">
+    <span>{label}</span>
+    <div className="ea-date-picker">
+      <button type="button" className="ea-date-trigger" aria-label={`${label}: ${displayValue}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setOpen(current => !current); }}>
+        <span>{displayValue}</span><CalendarDays size={16} aria-hidden="true" />
+      </button>
+      {open && <div className="ea-calendar-popover" role="dialog" aria-label={`${label} calendar`}>
+        <div className="ea-calendar-heading">
+          <strong>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</strong>
+          <div>
+            <button type="button" aria-label="Previous month" onClick={() => setMonth(current => new Date(current.getFullYear(), current.getMonth() - 1, 1))}><ChevronLeft size={17} /></button>
+            <button type="button" aria-label="Next month" onClick={() => setMonth(current => new Date(current.getFullYear(), current.getMonth() + 1, 1))}><ChevronRight size={17} /></button>
+          </div>
+        </div>
+        <div className="ea-calendar-grid ea-calendar-weekdays" aria-hidden="true">{"Su Mo Tu We Th Fr Sa".split(" ").map(day => <span key={day}>{day}</span>)}</div>
+        <div className="ea-calendar-grid">
+          {dateCells.map(({ date, iso, inMonth }) => {
+            const disabled = (min && iso < min) || (max && iso > max);
+            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); setOpen(false); }}>{date.getDate()}</button>;
+          })}
+        </div>
+        <div className="ea-calendar-footer">
+          <button type="button" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
+          <button type="button" onClick={() => { const today = new Date(); const iso = localIsoDate(today); if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); setOpen(false); setMonth(today); } }}>Today</button>
+        </div>
+      </div>}
+    </div>
+  </div>;
+}
 
 const displayDate = (value) => {
   const date = parseDate(value);
@@ -583,6 +633,7 @@ export default function EmployeeAttendance({
         </div>
       </header>
 
+      <div className="ea-toolbar-anchor">
       <div className="ea-toolbar">
         <form
           className="ea-search"
@@ -695,25 +746,10 @@ export default function EmployeeAttendance({
 
       {showDateRange && (
         <div className="ea-date-range-panel">
-          <label>
-            From date
-            <input
-              type="date"
-              value={draftStartDate}
-              onChange={(event) => setDraftStartDate(event.target.value)}
-            />
-          </label>
+          <AttendanceCalendarField label="From date" value={draftStartDate} max={draftEndDate || undefined} onChange={setDraftStartDate} />
+          <AttendanceCalendarField label="To date" value={draftEndDate} min={draftStartDate || undefined} onChange={setDraftEndDate} />
 
-          <label>
-            To date
-            <input
-              type="date"
-              value={draftEndDate}
-              onChange={(event) => setDraftEndDate(event.target.value)}
-            />
-          </label>
-
-          <button
+          <div className="ea-range-actions"><button
             className="ea-apply-range"
             type="button"
             disabled={
@@ -730,18 +766,6 @@ export default function EmployeeAttendance({
           >
             Apply date range
           </button>
-
-          <button
-            className="ea-cancel-range"
-            type="button"
-            onClick={() => {
-              setShowDateRange(false);
-              setDateFilter(startDate || endDate ? "custom" : "any");
-            }}
-          >
-            Cancel
-          </button>
-
           <button
             className="ea-clear-dates"
             type="button"
@@ -756,9 +780,10 @@ export default function EmployeeAttendance({
             }}
           >
             Clear dates
-          </button>
+          </button></div>
         </div>
       )}
+      </div>
 
       {apiError && (
         <div role="alert" className="ea-api-error">

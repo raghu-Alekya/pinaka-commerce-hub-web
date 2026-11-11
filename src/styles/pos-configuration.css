@@ -5120,6 +5120,9 @@
 .pc-promo-screen .pc-promo-url > .pc-button.pc-primary { border-color: #5143bc; background: #5143bc; color: #fff; gap: 8px; }
 .pc-promo-screen .pc-promo-actions > .pc-button.pc-primary:hover:not(:disabled),
 .pc-promo-screen .pc-promo-url > .pc-button.pc-primary:hover:not(:disabled) { border-color: #4437a5; background: #4437a5; }
+.pc-promo-screen .pc-promo-actions > .pc-button.pc-danger { border-color: transparent; text-decoration: underline; color: #e3385d; background: #fff; }
+.pc-promo-screen .pc-promo-actions > .pc-button.pc-danger:hover:not(:disabled) { border-color: #f0a9b7; color: #c91f46; background: #fff0f3; }
+.pc-promo-screen .pc-promo-actions > .pc-button.pc-danger:disabled { opacity: .55; cursor: not-allowed; }
 .pc-promo-url { display: flex; flex: 1 1 320px; min-width: 0; gap: 8px; }
 .pc-promo-url input { flex: 1 1 auto; min-width: 0; padding: 8px 10px; border: 1px solid #d9e2ef; border-radius: 6px; font: inherit; }
 .pc-promo-url > .pc-button { flex: 0 0 auto; white-space: nowrap; }

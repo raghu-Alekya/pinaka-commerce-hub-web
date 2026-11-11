@@ -383,24 +383,28 @@ export default function Devices() {
           icon={<i className="bi bi-laptop-fill" aria-hidden="true" />}
           title="Total Devices"
           value={totalDevices}
+          description="Across all stores"
           variant="purple"
         />{" "}
         <StatCard
           icon={<i className="bi bi-check-circle-fill" aria-hidden="true" />}
           title="Online Devices"
           value={onlineDevices}
+          description={`${totalDevices ? Math.round((onlineDevices / totalDevices) * 100) : 0}% of total`}
           variant="green"
         />{" "}
         <StatCard
           icon={<i className="bi bi-pause-circle-fill" aria-hidden="true" />}
           title="Offline Devices"
           value={offlineDevices}
+          description={`${offlineDevices} currently`}
           variant="orange"
         />{" "}
         <StatCard
           icon={<i className="bi bi-x-circle-fill" aria-hidden="true" />}
           title="Inactive Devices"
           value={inactiveDevices}
+          description={`${totalDevices ? Math.round((inactiveDevices / totalDevices) * 100) : 0}% of total`}
           variant="red"
         />{" "}
  
@@ -625,6 +629,8 @@ export default function Devices() {
   title,
  
   value,
+
+  description,
  
   variant,
  
@@ -645,6 +651,7 @@ export default function Devices() {
         <div className="device-stat-title"> {title} </div>{" "}
  
         <div className="device-stat-value"> {value} </div>{" "}
+        <div className={`device-stat-description ${variant}`}><i className="bi bi-circle-fill" aria-hidden="true" />{description}</div>
  
       </div>{" "}
  
