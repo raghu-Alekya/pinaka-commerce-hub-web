@@ -1331,15 +1331,6 @@ const [statusFilter, setStatusFilter] = useState("");
                     <td>
                       <div
                         className="merchant-name clickable"
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => openView(m)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            openView(m);
-                          }
-                        }}
                       >
             
                         <div>
