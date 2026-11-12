@@ -1010,6 +1010,11 @@ input {
     text-align: left;
 }
 
+.order-detail-refunded-item td {
+    text-decoration: line-through;
+    color: #8791a3;
+}
+
 .order-line-price {
     display: inline-flex;
     align-items: baseline;

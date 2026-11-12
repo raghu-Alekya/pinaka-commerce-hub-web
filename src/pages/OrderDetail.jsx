@@ -238,6 +238,23 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
     originalUnitPrice: item.regularPrice ?? item.regular_price ?? item.originalPrice ?? item.original_price
       ?? item.priceBeforeDiscount ?? item.price_before_discount ?? item.price,
   }));
+  const isPartialRefund = /partial[\s_-]*refund/i.test(String(response.status || storeOrder.status || order.status || order.orderStatus || ""));
+  const seenRefunds = new Set();
+  const refundRows = isPartialRefund ? asArray(response.refunds) : [];
+  const refundedItemIds = new Set();
+  const refundedAmount = refundRows.reduce((sum, refund, index) => {
+    const detail = asObject(refund.metadata);
+    const refundId = String(detail.refund_id ?? detail.legacy_refund_id ?? `row-${index}`);
+    if (seenRefunds.has(refundId)) return sum;
+    seenRefunds.add(refundId);
+    const items = asArray(detail.line_items);
+    items.forEach((item) => {
+      const id = item.order_item_id ?? item.line_item_id ?? item.id;
+      if (id != null) refundedItemIds.add(String(id));
+    });
+    const itemAmount = items.reduce((amount, item) => amount + (Number(item.refundable_amount ?? item.refund_total) || 0), 0);
+    return sum + (itemAmount > 0 ? itemAmount : Number(refund.amount) || 0);
+  }, 0);
   const creditedPoints = lineItems.reduce((sum, item) => {
     const itemMeta = asArray(item.meta_data || item.metaData);
     return sum + (Number(metaValueFrom(itemMeta, ["_credited_loyalty_points", "credited_loyalty_points"])) || 0);
@@ -415,6 +432,8 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
     discount: formatMoney(shownDiscount, currency, currencySymbol),
     tax: formatMoney(tax, currency, currencySymbol),
     total: formatMoney(shownTotal, currency, currencySymbol),
+    refundedAmount: isPartialRefund ? formatMoney(refundedAmount, currency, currencySymbol) : null,
+    refundedItemIds,
     lineItems,
     rawSubtotal: numericAmount(shownSubtotal),
     rawTotal: numericAmount(shownTotal),
@@ -439,6 +458,39 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
       expiryDate: metaValueFrom(metadata, ["points_expiry_date", "loyalty_expiry_date"]),
     },
   };
+}
+
+function findTotalOrder(payload, orderKeys) {
+  const root = asObject(payload);
+  const data = asObject(root.data);
+  const rows = Array.isArray(root.orders_data) ? root.orders_data
+    : Array.isArray(data.orders_data) ? data.orders_data
+      : Array.isArray(root.orders) ? root.orders
+        : Array.isArray(data.orders) ? data.orders
+          : Array.isArray(root.data) ? root.data : [];
+  return rows.find((row) => [
+    row?.id, row?.order_id, row?.client_order_id, row?.clientOrderId,
+    row?.woo_order_id, row?.order_number, row?.number,
+  ].some((value) => value !== undefined && value !== null && orderKeys.has(String(value).trim().replace(/^#/, "").toLowerCase())));
+}
+
+async function getTotalOrderByKeys(orderKeys, storeId) {
+  const perPage = 100;
+  for (let page = 1; page <= 100; page += 1) {
+    const query = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+    if (storeId) query.set("storeId", storeId);
+    const payload = await apiRequest(`/orders/total-orders?${query}`, {
+      headers: storeId ? { "x-store-id": storeId } : undefined,
+    });
+    const match = findTotalOrder(payload, orderKeys);
+    if (match) return match;
+    const root = asObject(payload);
+    const data = asObject(root.data);
+    const total = Number(root.order_total_count ?? data.order_total_count ?? 0);
+    const perPageValue = Number(root.per_page ?? data.per_page ?? perPage);
+    if (!total || page * perPageValue >= total) break;
+  }
+  return null;
 }
 
 export default function OrderDetail({ embedded = false, orderId: providedOrderId, storeId: providedStoreId, merchantId, orderNumber: providedOrderNumber, currency: providedCurrency, currencySymbol: providedCurrencySymbol, onBack }) {
@@ -479,6 +531,25 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
       .then(async ([payload, paymentPayload]) => {
         if (!active) return;
         let nextView = buildView(payload, providedCurrency || searchParams.get("currency") || "USD", providedCurrencySymbol || searchParams.get("currencySymbol"));
+        const orderKeys = new Set([
+          orderId, orderNumber, nextView.number, nextView.clientOrderId,
+          payload?.id, payload?.order?.id, payload?.woo_order_id, payload?.order?.woo_order_id,
+        ].filter(Boolean).map((value) => String(value).trim().replace(/^#/, "").toLowerCase()));
+        const totalOrder = nextView.loyalty.redeemedValue > 0 && nextView.loyalty.redeemedPoints > 0
+          ? null
+          : await getTotalOrderByKeys(orderKeys, storeId).catch(() => null);
+        if (totalOrder) {
+          const totalRedeemedPoints = Number(totalOrder.redeem_points ?? totalOrder.order_redeem_points);
+          const totalRedeemedValue = Number(totalOrder.redeem_amount ?? totalOrder.redeemed_value ?? totalOrder.loyalty_amount);
+          nextView = {
+            ...nextView,
+            loyalty: {
+              ...nextView.loyalty,
+              redeemedPoints: nextView.loyalty.redeemedPoints || (Number.isFinite(totalRedeemedPoints) ? totalRedeemedPoints : 0),
+              redeemedValue: nextView.loyalty.redeemedValue || (Number.isFinite(totalRedeemedValue) ? totalRedeemedValue : 0),
+            },
+          };
+        }
         if (employeeMerchantId && storeId) {
           try {
             const loyaltyResponse = await apiRequest("/connector/api/v1/loyalty/get-all-customers", {
@@ -493,11 +564,11 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
                 .filter((value) => value && value !== "—")
                 .some((value) => String(value).trim().toLowerCase() === contact);
             });
-            const orderKeys = new Set([orderId, nextView.number, nextView.clientOrderId]
+            const loyaltyOrderKeys = new Set([orderId, nextView.number, nextView.clientOrderId]
               .filter(Boolean).map((value) => String(value).trim().toLowerCase()));
             const matchedCustomerTransactions = customers.flatMap((candidate) => (Array.isArray(candidate?.transactions)
               ? candidate.transactions : [])
-              .filter((transaction) => orderKeys.has(String(transaction?.order_id ?? transaction?.orderId ?? "").trim().toLowerCase()))
+              .filter((transaction) => loyaltyOrderKeys.has(String(transaction?.order_id ?? transaction?.orderId ?? "").trim().toLowerCase()))
               .map((transaction) => ({ candidate, transaction })));
             const customer = matchedCustomerTransactions[0]?.candidate || contactCustomer;
             const transactions = matchedCustomerTransactions.map(({ transaction }) => transaction);
@@ -669,7 +740,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
           </DetailBlock>
 
           <DetailBlock title="Totals">
-            <Fields items={[["Subtotal", view.subtotal], ["Discount", view.discount], ["Tax", view.tax], ["Total", view.total]]} />
+            <Fields items={[["Subtotal", view.subtotal], ["Discount", view.discount], ["Tax", view.tax], ["Total", view.total], ...(view.refundedAmount ? [["Refunded amount", view.refundedAmount]] : [])]} />
           </DetailBlock>
 
           <DetailBlock title="Loyalty points">
@@ -685,6 +756,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
           <DetailBlock title="Line items">
             <Lines
               columns={["Product", "SKU", "Qty", "Unit price", "Line total"]}
+              rowClassNames={view.lineItems.map((item) => view.refundedItemIds.has(String(item.id ?? item.order_item_id ?? item.orderItemId ?? "")) ? "order-detail-refunded-item" : "")}
               rows={view.lineItems.map((item) => {
                 const quantity = Number(item.quantity);
                 const divisor = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
@@ -827,7 +899,7 @@ function displayOrderValue(value) {
     : value;
 }
 
-function Lines({ columns, rows }) {
+function Lines({ columns, rows, rowClassNames = [] }) {
   if (!rows.length) return <p className="order-detail-empty">None</p>;
   return (
     <div className="order-detail-table-wrap">
@@ -837,7 +909,7 @@ function Lines({ columns, rows }) {
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={`${row[0]}-${index}`}>
+            <tr key={`${row[0]}-${index}`} className={rowClassNames[index] || undefined}>
               {row.map((cell, cellIndex) => <td key={`${columns[cellIndex]}-${index}`}>{displayOrderValue(cell)}</td>)}
             </tr>
           ))}
