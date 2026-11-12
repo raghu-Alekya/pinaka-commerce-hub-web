@@ -633,23 +633,26 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
 
   return (
     <div className="employee-view-page order-detail-page">
-      <header className="employee-view-topbar">
-        {embedded
-          ? <button type="button" onClick={onBack}><ArrowLeft size={16} /> Orders</button>
-          : <Link to={backTo}><ArrowLeft size={16} /> Orders</Link>}
+      {!embedded && <header className="employee-view-topbar">
+        <Link to={backTo}><ArrowLeft size={16} /> Orders</Link>
         <span>/</span><strong>View Order</strong>
-      </header>
+      </header>}
       <div className="employee-view-header order-detail-heading-row">
         <div>
           <h1>{view ? `Order ${view.number}` : "Order"}</h1>
           <p>Order, payment, line, and tender details for this sale.</p>
         </div>
-        {view && (
-          <span className={`order-status ${statusClass(view.status)}`}>
-            <i className="bi bi-circle-fill" />
-            {view.status}
-          </span>
-        )}
+        <div className={`order-detail-heading-actions${embedded ? " is-embedded" : ""}`}>
+          {view && (
+            <span className={`order-status ${statusClass(view.status)}`}>
+              <i className="bi bi-circle-fill" />
+              {view.status}
+            </span>
+          )}
+          {embedded && <button type="button" className="order-detail-back-button" onClick={onBack}>
+            <ArrowLeft size={16} /> Back
+          </button>}
+        </div>
       </div>
 
       {loading && <p role="status">Loading order...</p>}
@@ -681,7 +684,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
 
           <DetailBlock title="Line items">
             <Lines
-              columns={["Product", "SKU", "Qty", "Price"]}
+              columns={["Product", "SKU", "Qty", "Unit price", "Line total"]}
               rows={view.lineItems.map((item) => {
                 const quantity = Number(item.quantity);
                 const divisor = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
@@ -719,6 +722,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
                 const originalUnitPrice = hasDiscount
                   ? Number((lineSubtotal !== undefined && lineSubtotal > lineTotal ? lineSubtotal / divisor : item.originalUnitPrice ?? (discountedUnitPrice + (lineDiscount || 0) / divisor)))
                   : discountedUnitPrice;
+                const displayedLineTotal = lineTotal ?? (discountedUnitPrice * divisor);
                 return [
                   item.name || item.productName || "Item",
                   item.sku || "—",
@@ -733,6 +737,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
                       {formatMoney(hasDiscount ? discountedUnitPrice : originalUnitPrice, view.currency, view.currencySymbol)}
                     </strong>
                   </span>,
+                  formatMoney(displayedLineTotal, view.currency, view.currencySymbol),
                 ];
               })}
             />
