@@ -1,6 +1,5 @@
 import { api } from "../../../api/http";
 import { endpoints } from "../../../api/endpoints";
-import { loadStorePosConfiguration, saveStorePosConfiguration } from "../storePosConfiguration";
 
 function unwrap(response) {
   let value = response;
@@ -20,24 +19,15 @@ function scopeHeaders(merchantId, storeId) {
 }
 
 export async function getPrinterSettings(merchantId, storeId) {
-  const [general, printer] = await Promise.all([
-    api.get(endpoints.generalSettings, {
-      headers: scopeHeaders(merchantId, storeId),
-    }).then(unwrap),
-    loadStorePosConfiguration(storeId, "printer_settings").catch((error) => {
-      if (error?.status === 404) return null;
-      throw error;
-    }),
-  ]);
-  return { general, printer };
+  const general = await api.get(endpoints.generalSettings, {
+    headers: scopeHeaders(merchantId, storeId),
+  });
+  return unwrap(general);
 }
 
-export async function savePrinterSettings(merchantId, storeId, settings, printerSettings) {
-  const [general] = await Promise.all([
-    api.post(endpoints.generalSettings, settings, {
-      headers: scopeHeaders(merchantId, storeId),
-    }).then(unwrap),
-    saveStorePosConfiguration(storeId, "printer_settings", printerSettings),
-  ]);
-  return general;
+export async function savePrinterSettings(merchantId, storeId, settings) {
+  const general = await api.post(endpoints.generalSettings, settings, {
+    headers: scopeHeaders(merchantId, storeId),
+  });
+  return unwrap(general);
 }
