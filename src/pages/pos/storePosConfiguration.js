@@ -62,6 +62,21 @@ export function isStoredPosImage(value) {
   return typeof value === "string" && (value.startsWith("/uploads/") || /^https?:\/\//i.test(value));
 }
 
+// Store configuration APIs persist paths relative to the uploads root. Older
+// records may contain an absolute URL, which the UI can render but the API's
+// store-image validator does not accept when the configuration is saved.
+export function storedPosImagePath(value) {
+  if (typeof value !== "string") return value;
+  if (value.startsWith("/uploads/")) return value;
+  if (!/^https?:\/\//i.test(value)) return value;
+  try {
+    const pathname = new URL(value).pathname;
+    return pathname.startsWith("/uploads/") ? pathname : value;
+  } catch {
+    return value;
+  }
+}
+
 export function posImageUrl(value) {
   if (typeof value !== "string" || !value) return "";
   if (value.startsWith("data:") || value.startsWith("blob:")) return value;
@@ -84,6 +99,10 @@ export function posImageUrl(value) {
     return encodeURIComponent(decoded).replace(/[!'()*]/g, (char) =>
       `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
   }).join("/");
+  if (!origin) {
+    const apiOrigin = import.meta.env.VITE_API_ORIGIN || "";
+    if (/^https?:\/\//i.test(apiOrigin)) origin = apiOrigin.replace(/\/+$/, "");
+  }
   if (!origin && typeof window !== "undefined") origin = window.location.origin;
   return `${origin}${encoded}`;
 }
