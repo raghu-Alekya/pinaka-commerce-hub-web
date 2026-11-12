@@ -38,11 +38,24 @@ const emptyCoupon = {
 };
 
 const listValues = (value) => Array.isArray(value) ? value : [];
+const couponExpiryDate = (coupon = {}) => coupon.date_expires || coupon.dateExpires || coupon.expiryDate
+    || coupon.expiry_date || coupon.date_expires_gmt || coupon.dateExpiresGmt || "";
+const formatCouponExpiryDate = (value) => {
+    if (!value) return "";
+    const datePart = String(value).slice(0, 10);
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+    const date = match
+        ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+        : new Date(value);
+    return Number.isNaN(date.getTime())
+        ? String(value)
+        : new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
+};
 
 function normalizeCoupon(raw = {}) {
     const usageCount = Number(raw.usage_count ?? raw.usedCount ?? raw.used_count ?? 0);
     const usageLimit = raw.usage_limit ?? raw.usageLimit ?? "";
-    const expiryDate = raw.date_expires || raw.expiryDate || raw.expiry_date || "";
+    const expiryDate = couponExpiryDate(raw);
     const expired = expiryDate && new Date(expiryDate) < new Date();
     const usedUp = Number(usageLimit) > 0 && usageCount >= Number(usageLimit);
     const rawStatus = String(raw.status || "Active").toLowerCase();
@@ -91,7 +104,7 @@ function couponToForm(coupon = {}) {
         code: coupon.code || "",
         discount_type: coupon.discount_type || coupon.discountType || "fixed_cart",
         amount: moneyValue(String(coupon.amount ?? "").replace(/[$,%]/g, "").trim()),
-        date_expires: coupon.date_expires ? String(coupon.date_expires).slice(0, 10) : coupon.expiryDate || "",
+        date_expires: couponExpiryDate(coupon) ? String(couponExpiryDate(coupon)).slice(0, 10) : "",
         product_ids: csv(coupon.product_ids || coupon.productIds),
         required_product_ids: csv(coupon.required_product_ids || coupon.requiredProductIds),
         individual_use: coupon.individual_use ?? coupon.individualUse ?? false,
@@ -857,7 +870,7 @@ export default function Coupons({
                                       },
                                       {
                                           label: "EXPIRATION DATE",
-                                          value: selectedCoupon.expiryDate,
+                                          value: formatCouponExpiryDate(selectedCoupon.expiryDate),
                                           emptyText: "No Expiration",
                                       },
                                       {
@@ -1223,7 +1236,7 @@ function CouponRow({ coupon, currency, currencySymbol, onView, onEdit, onDelete 
             <td>
 
                 <span className="coupon-expiry">
-                    {coupon.expiryDate || "—"}
+                    {formatCouponExpiryDate(coupon.expiryDate) || "—"}
                 </span>
 
             </td>
