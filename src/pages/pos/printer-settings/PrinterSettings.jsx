@@ -16,7 +16,8 @@ const DEFAULTS = { header: "", footer: "", address: "", logo: "", logoName: "" }
 function mapGeneralSettings(record = {}) {
   return {
     ...DEFAULTS,
-    header: record.business_name || "",
+    header: record.receipt_header || "",
+    footer: record.receipt_footer || "",
     address: record.address || "",
     logo: record.logo_url || "",
     logoName: record.logo_url ? record.logo_url.split("/").pop() : "",
@@ -54,17 +55,15 @@ export function PrinterSettings({ onBack }) {
     getPrinterSettings(settings.merchantId, settings.storeId)
       .then((record) => {
         if (!active || !record || typeof record !== "object") return;
-        const general = record.general || {};
-        const printer = record.printer || {};
+        const general = record || {};
         setGeneralSettings(general);
         const loaded = {
           ...mapGeneralSettings(general),
-          ...printer,
-          header: printer.header ?? general.business_name ?? "",
-          footer: printer.footer ?? draft.footer ?? "",
-          address: storeReceiptAddress(settings.store) || printer.address || general.address || "",
-          logo: printer.logo ?? general.logo_url ?? "",
-          logoName: printer.logoName || (general.logo_url ? general.logo_url.split("/").pop() : ""),
+          header: general.receipt_header || "",
+          footer: general.receipt_footer ?? "",
+          address: general.address || storeReceiptAddress(settings.store) || "",
+          logo: general.logo_url || "",
+          logoName: general.logo_url ? general.logo_url.split("/").pop() : "",
         };
         setDraft(loaded);
         settings.session.saved.printerSettings = loaded;
@@ -102,21 +101,17 @@ export function PrinterSettings({ onBack }) {
     }
     const generalPayload = {
       ...generalSettings,
-      business_name: draft.header,
+      receipt_header: draft.header,
+      receipt_footer: draft.footer,
       address: draft.address,
       logo_url: logo,
     };
-    const saved = await savePrinterSettings(settings.merchantId, settings.storeId, generalPayload, {
-      header: draft.header,
-      footer: draft.footer,
-      address: draft.address,
-      logo,
-      logoName,
-    });
+    const saved = await savePrinterSettings(settings.merchantId, settings.storeId, generalPayload);
     const nextGeneral = {
       ...generalPayload,
       ...(saved && typeof saved === "object" ? saved : {}),
-      business_name: draft.header,
+      receipt_header: draft.header,
+      receipt_footer: draft.footer,
       address: draft.address,
       logo_url: logo,
     };
