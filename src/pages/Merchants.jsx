@@ -19,7 +19,8 @@ import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CalendarDays, ChevronLeft, ChevronRight, Download } from "lucide-react";
-import { listMerchants, getMerchant, updateMerchantStatus, deleteMerchant } from "../api/merchants";
+import { listMerchants, getMerchant, updateMerchantStatus, deleteMerchant, isSubscriptionExpired } from "../api/merchants";
+import { storeTypesApi } from "../api/storeTypes";
 import { listMerchantEmployees, getEmployee, updateEmployee } from "../api/employees";
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { devicesApi } from "../api/devices";
@@ -189,6 +190,15 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const [employeesError, setEmployeesError] = useState('');
   const [allSubscriptions, setAllSubscriptions] = useState([]);
   const [allPlans, setAllPlans] = useState([]);
+  const [masterStoreTypes, setMasterStoreTypes] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    storeTypesApi.getAll().then(response => {
+      if (active) setMasterStoreTypes(response.storeTypes || []);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (draft) { setLoading(false); setError(''); return; }
@@ -392,38 +402,34 @@ async function openEmployeeEdit(employee) {
       : String(rawCycle).charAt(0).toUpperCase() + String(rawCycle).slice(1).toLowerCase()
     : "Monthly";
 
-  const displayStoreType =
-    subMatch?.storeTypeName ||
-    (typeof subStoreType === "object" && subStoreType ? subStoreType.name || subStoreType.storeTypeName || subStoreType.code : subStoreType) ||
-    subscription.storeTypeName ||
-    subscription.store_type_name ||
-    matchedPlan?.storeTypeName ||
-    raw.storeTypeName ||
-    raw.storeType ||
-    summary.storeType ||
-    "Convenience Store";
-
-  const displayStatus =
-    subMatch?.status ||
-    subscription.status ||
-    saved?.subscriptionStatus ||
-    raw.status ||
-    "ACTIVE";
+  const storeTypeRefs = [
+    subMatch?.storeTypeId, subMatch?.storeTypeCode,
+    subscription.storeTypeId, subscription.store_type_id,
+    typeof subStoreType === "object" ? subStoreType.id || subStoreType.storeTypeId || subStoreType.store_type_id || subStoreType.code || subStoreType.storeTypeCode : subStoreType,
+    matchedPlan?.storeTypeId, matchedPlan?.store_type_id, matchedPlan?.storeType,
+  ].filter(Boolean).map(value => String(value).trim().toLowerCase());
+  const masterStoreType = masterStoreTypes.find(type => [type.id, type.storeTypeId, type.store_type_id, type.code, type.storeTypeCode, type.store_type_code, type.name]
+    .some(value => value && storeTypeRefs.includes(String(value).trim().toLowerCase())));
+  const explicitStoreTypeNames = [
+    typeof subStoreType === "object" ? subStoreType.name || subStoreType.storeTypeName || subStoreType.store_type_name : "",
+    subscription.storeTypeName, subscription.store_type_name,
+    matchedPlan?.storeTypeName, matchedPlan?.store_type_name,
+    raw.storeTypeName, summary.storeType,
+  ].filter(value => typeof value === "string" && value.trim() && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim()));
+  const displayStoreType = masterStoreType?.name || explicitStoreTypeNames[0] || "Store Type";
 
   const rawStartVal =
-    subMatch?.start ||
     subMatch?.rawStart ||
+    subMatch?.start ||
     subscription.startDate ||
     subscription.start_date ||
     subscription.createdAt ||
     subscription.created_at ||
     saved?.start;
 
-  const displayStartDate = rawStartVal ? String(rawStartVal).slice(0, 10) : undefined;
-
   const rawEndVal =
-    subMatch?.end ||
     subMatch?.rawEnd ||
+    subMatch?.end ||
     subscription.renewalDate ||
     subscription.renewal_date ||
     subscription.nextBillingDate ||
@@ -431,6 +437,18 @@ async function openEmployeeEdit(employee) {
     subscription.currentPeriodEnd ||
     subscription.current_period_end ||
     summary.renewal;
+
+  const statusValue =
+    subMatch?.status ||
+    subscription.status ||
+    saved?.subscriptionStatus ||
+    raw.status ||
+    "ACTIVE";
+  const displayStatus = String(statusValue).toLowerCase() === "active" && isSubscriptionExpired(rawEndVal)
+    ? "Inactive"
+    : statusValue;
+
+  const displayStartDate = rawStartVal ? String(rawStartVal).slice(0, 10) : undefined;
 
   const displayRenewalDate = rawEndVal ? String(rawEndVal).slice(0, 10) : undefined;
 
@@ -974,7 +992,19 @@ const [statusFilter, setStatusFilter] = useState("");
     setDateFrom(draftFrom); setDateTo(draftTo); setJoinedRange('custom'); setPage(1); setDatePickerOpen(false);
   }
   const [apiMerchants, setMerchants] = useState([]);
-  const merchants = useMemo(() => { const combined = new Map(apiMerchants.map(row => [String(row.id), row])); localMerchants.forEach(row => combined.set(String(row.id), row)); return [...combined.values()]; }, [apiMerchants, localMerchants]);
+  const merchants = useMemo(() => {
+    const combined = new Map(apiMerchants.map(row => [String(row.id), row]));
+    localMerchants.forEach(row => combined.set(String(row.id), row));
+    return [...combined.values()].map(row => {
+      const raw = row._raw || row;
+      const subscription = row.subscription || raw.subscription || raw.merchant?.subscription || {};
+      const renewal = subscription.renewalDate || subscription.renewal_date || subscription.currentPeriodEnd || subscription.current_period_end || row.renewalDate || row.renewal_date || raw._onboarding?.renewalDate || raw._onboarding?.renewal_date;
+      if (String(row.status || '').toLowerCase() === 'active' && isSubscriptionExpired(renewal)) {
+        return { ...row, status: 'Inactive' };
+      }
+      return row;
+    });
+  }, [apiMerchants, localMerchants]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
