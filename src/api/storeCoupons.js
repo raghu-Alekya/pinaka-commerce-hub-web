@@ -33,7 +33,7 @@ export function getStoreCoupons(merchantId, storeId, { refresh = false } = {}) {
     const unique = new Map();
     allCoupons.forEach((coupon) => {
       const id = coupon.id ?? coupon.couponId ?? coupon.coupon_id ?? coupon.code ?? coupon.coupon_code;
-      const deleted = String(coupon.syncStatus ?? coupon.sync_status ?? coupon.status ?? "").toUpperCase() === "DELETED" || Boolean(coupon.deletedAt ?? coupon.deleted_at);
+      const deleted = String(coupon.syncStatus ?? coupon.sync_status ?? "").toUpperCase() === "DELETED" || Boolean(coupon.deletedAt ?? coupon.deleted_at);
       if (!deleted && id != null && !unique.has(String(id))) unique.set(String(id), coupon);
     });
     const rows = [...unique.values()];

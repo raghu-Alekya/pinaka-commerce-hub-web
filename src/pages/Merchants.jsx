@@ -602,7 +602,7 @@ async function openEmployeeEdit(employee) {
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-stores" aria-labelledby="merchant-tab-stores" hidden={activeTab !== 'stores'} tabIndex={0}>
-        {activeTab === 'stores' && <MerchantStores merchantId={apiMerchantId || merchantId} merchantDetails={result?.merchant || merchant || raw} embedded />}
+        {activeTab === 'stores' && <MerchantStores merchantId={apiMerchantId || merchantId} merchantDetails={result?.merchant || merchant || raw} subscription={result?.subscription || subscription} embedded />}
       </div>
       <div role="tabpanel" id="merchant-panel-vendors" aria-labelledby="merchant-tab-vendors" hidden={activeTab !== 'vendors'} tabIndex={0}>
         {activeTab === 'vendors' && <MerchantVendors merchantId={merchantId} masterVendors={masterVendors} assignedVendorIds={vendorAssignments?.[merchantId] ?? saved?.vendorIds ?? raw.vendorIds ?? raw.vendors ?? []} onSaveAssignments={onSaveVendorAssignments} onNavigationChange={setVendorFlow} navigationBackRef={vendorBackRef} loading={vendorsLoading} error={vendorsError}/>}
@@ -1366,7 +1366,7 @@ const [statusFilter, setStatusFilter] = useState("");
                     <td>
                       <div className="plan-info">
                         <strong>{m.plan}</strong>
-                        {m.renewal ? <span>Renews on {m.renewal}</span> : null}
+                        {m.renewal ? <span>{m.renewalLabel || "Renews on"} {m.renewal}</span> : null}
                       </div>
                     </td>
                     <td>

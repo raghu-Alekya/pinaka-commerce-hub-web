@@ -377,6 +377,14 @@ function titleCase(value) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+export function isSubscriptionExpired(value, now = new Date()) {
+  if (!value) return false;
+  const dateText = String(value).trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateText)) return false;
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return dateText < today;
+}
+
 function toInitials(name) {
   return (
     String(name || "M")
@@ -512,6 +520,10 @@ export function mapMerchantToRow(item) {
     merchant.status ||
     merchant.onboardingStatus ||
     "ACTIVE";
+  const normalizedStatus = titleCase(status);
+  const displayStatus = normalizedStatus.toLowerCase() === "active" && isSubscriptionExpired(renewal)
+    ? "Inactive"
+    : normalizedStatus;
 
   const createdAt =
     merchant.createdAt || merchant.created_at || merchant.createdDate ||
@@ -554,7 +566,7 @@ export function mapMerchantToRow(item) {
     stores,
     plan: planName,
     renewal: renewal ? formatDate(renewal) : "—",
-    status: titleCase(status),
+    status: displayStatus,
     joined: formatDate(createdAt),
     active: formatRelative(updatedAt),
     initials: toInitials(name),
