@@ -8,7 +8,6 @@
   min-height: calc(100vh - 72px);
   padding: 18px 28px 30px;
   background: #f6f7fb;
-  color: #10264d;
 }
 
 .vendors-status-notice {
@@ -496,93 +495,18 @@
 
 .vendors-table th,
 .vendors-table td {
-  height: 58px;
+  height: 45px;
   padding: 12px 16px;
   box-sizing: border-box;
   border-bottom: 1px solid #e4e8ef;
   text-align: left;
   vertical-align: middle;
-  color: #29466f;
-  font-size: 14px;
-  line-height: 20px;
   overflow: visible;
-  white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.vendors-table th:nth-child(1),
-.vendors-table td:nth-child(1) {
-  width: 120px;
-  min-width: 110px;
-}
-
-.vendors-table th:nth-child(2),
-.vendors-table td:nth-child(2) {
-  width: 140px;
-  min-width: 130px;
-}
-
-.vendors-table th:nth-child(3),
-.vendors-table td:nth-child(3) {
-  width: 160px;
-  min-width: 150px;
-}
-
-.vendors-table th:nth-child(4),
-.vendors-table td:nth-child(4) {
-  width: 140px;
-  min-width: 130px;
-}
-
-.vendors-table th:nth-child(5),
-.vendors-table td:nth-child(5) {
-  width: 150px;
-  min-width: 145px;
-}
-
-.vendors-table th:nth-child(6),
-.vendors-table td:nth-child(6) {
-  width: 160px;
-  min-width: 150px;
-}
-
-.vendors-table th:nth-child(7),
-.vendors-table td:nth-child(7) {
-  width: 170px;
-  min-width: 160px;
-}
-
-.vendors-table th:nth-child(8),
-.vendors-table td:nth-child(8) {
-  width: 130px;
-  min-width: 120px;
-}
-
-.vendors-table th:nth-child(9),
-.vendors-table td:nth-child(9) {
-  width: 135px;
-  min-width: 135px;
-  white-space: nowrap;
-}
-
-.vendors-table th:nth-child(10),
-.vendors-table td:nth-child(10) {
-  width: 150px;
-  min-width: 150px;
-  white-space: nowrap;
-}
-
-.vendors-table th {
-  height: 44px;
-  padding: 0 16px;
-  background: #f1f3fd;
-  color: #23426e;
-  font-size: 12px !important;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 16px;
-  text-overflow: clip;
-  white-space: nowrap;
 }
+
 
 .vendors-table tbody tr:hover td {
   background: #fbfdff;
@@ -611,13 +535,18 @@
   font-size: 11px;
 }
 
+/* =========================================================
+   TABLE CELL VALUE
+   ========================================================= */
+
 .vendors-table td .vendors-cell-value {
   display: block;
   width: 100%;
   overflow: hidden;
-  color: inherit;
-  font-size: 14px;
-  line-height: 1.45;
+  color: #10264d;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1350,32 +1279,7 @@
   max-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
-
-.vendors-table td .vendors-cell-value {
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* =========================================================
-   TABLE CELL VALUE
-   ========================================================= */
-
-.vendors-table td .vendors-cell-value {
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  color: inherit;
-  font-size: 12px;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 
 /* =========================================================
    FINAL VENDOR FORM / TABLE UX OVERRIDES
@@ -1469,7 +1373,6 @@
   min-height: calc(100vh - 64px);
   padding: 24px;
   background: #f5f7fb;
-  color: #193354;
   box-sizing: border-box;
 }
 
@@ -1682,24 +1585,6 @@
   border-color: #aeb7ff;
   outline: none;
   box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
-}
-
-.vendors-table th {
-  height: 40px;
-  padding: 0 12px;
-  font-size: 12px;
-}
-
-.vendors-table td {
-  height: 50px;
-  padding: 10px 12px;
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.vendors-table td .vendors-cell-value {
-  font-size: 13px;
-  line-height: 18px;
 }
 
 .vendors-create-page .vendors-navigation {

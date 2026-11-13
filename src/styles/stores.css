@@ -256,10 +256,11 @@
     height: 52px;
     padding: 10px 14px;
     font-size: 13px;
+    font-weight: 600!important;
     vertical-align: middle;
     white-space: nowrap;
     border-bottom: 1px solid #e4e8ef;
-    color: #697285;
+    color: #10264d;
 }
 
 .store-table-details {
@@ -276,7 +277,7 @@
 }
 
 .store-table-details small {
-    color: #7a8498;
+    color: #7290ba;
     font-size: 11px;
     font-weight: 450;
 }
@@ -355,13 +356,13 @@
 }
 
 .store-cell strong {
-    color: #344057;
-    font-size: 12px;
+    color: #10264d;
+    font-size: 13px;
     font-weight: 600;
 }
 
 .store-cell small {
-    color: #979eac;
+    color: #7290ba;
     font-size: 12px;
     margin-top: 3px;
 }

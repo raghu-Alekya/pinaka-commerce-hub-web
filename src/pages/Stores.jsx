@@ -467,13 +467,13 @@ useEffect(() => {
                     <td>{s.storeTypeName || s.type || "—"}</td>
                     <td>
                       <div className="store-table-details">
-                        <strong>{s.state || s.address?.state || "—"}</strong>
+                        <span>{s.state || s.address?.state || "—"}</span>
                         <small>{s.country || s.address?.country || "—"}</small>
                       </div>
                     </td>
                     <td>
                       <div className="store-table-details">
-                        <strong>{s.phone || "—"}</strong>
+                        <span>{s.phone || "—"}</span>
                         <small>{s.email || "—"}</small>
                       </div>
                     </td>

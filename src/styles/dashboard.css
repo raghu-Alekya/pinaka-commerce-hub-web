@@ -1546,7 +1546,6 @@ a {
 .super-admin-dashboard .dashboard-kpi-details > :first-child::before { background:#12b85c; }
 .super-admin-dashboard .dashboard-kpi-details > :nth-child(2)::before { background:#258bf6; }
 .super-admin-dashboard .dashboard-kpi-details > .is-warning::before { background:#ffad0c; }
-.super-admin-dashboard .dashboard-kpi.orange .dashboard-kpi-details > :nth-child(2)::before { background:#abb3cc; }
 .super-admin-dashboard .dashboard-kpi-details strong { color:#203657; font-size:12px; font-weight:600; line-height:inherit; flex:none; }
 .super-admin-dashboard .dashboard-kpi-details > * > span { font-size:13px; font-weight:450; line-height:inherit; min-width:0; white-space:nowrap; }
 @container kpi-status (max-width:260px) {
@@ -1714,7 +1713,24 @@ a {
 .role-metric.orange div strong { color:#18274b;}.role-metric.red div strong { color:#e05361; }
 
 .dashboard-growth { min-height:92px; border-radius:10px; background:linear-gradient(105deg,#eeeaff,#ddd7ff); border:1px solid #d8d1ff; display:flex; align-items:center; gap:14px; padding:16px 18px; margin-bottom:2px; }
-.growth-icon { width:52px; height:52px; border-radius:50%; background:#5944e9; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; flex:none; }.dashboard-growth > div:nth-child(2) { display:flex; flex-direction:column; gap:4px; }.dashboard-growth strong { color:#3021a7; font-size:16px; }.dashboard-growth span { color:#5c6480; font-size:10.5px; }.dashboard-growth button { margin-left:auto; height:38px; padding:0 17px; border:0; border-radius:7px; background:#fff; color:#4e3ce0; font-size:10.5px; font-weight:700; cursor:pointer; }.dashboard-growth button i { margin-left:5px; }
+.growth-icon { width:52px; height:52px; border-radius:50%; background:#5944e9; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; flex:none; }.dashboard-growth > div:nth-child(2) { display:flex; flex-direction:column; gap:4px; }.dashboard-growth strong { color:#3021a7; font-size:16px; }
+.dashboard-growth span { 
+    color:#32384b; 
+    font-size:12px; }
+.dashboard-growth button { margin-left:auto; 
+    height:40px; 
+    padding:0 16px; 
+    border:0; 
+    border-radius:7px; 
+    background:#fff; 
+    color:#5143bc; 
+    font-size:13px; 
+    font-weight:600; 
+    cursor:pointer; 
+}
+ .dashboard-growth button i {
+         margin-left:5px; 
+ }
 
 @media (max-width: 1200px) {
   .super-admin-dashboard .dashboard-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }

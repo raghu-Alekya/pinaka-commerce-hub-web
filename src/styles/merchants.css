@@ -961,7 +961,7 @@ a {
     min-height: 52px;
     padding: 10px 14px;
     border-bottom: 1px solid #f1f2f5;
-    color: #697285;
+    color: #10264d;
     font-size: 13px;
     vertical-align: middle;
     white-space: nowrap;
@@ -1047,7 +1047,7 @@ a {
 
 .merchant-name small {
     font-size: 12px;
-    color: #9aa1ae;
+    color: #7290ba;
     margin-top: 2px;
 }
 
@@ -1065,7 +1065,7 @@ a {
 .contact-info strong {
     font-size: 12px;
 
-    color: #394256 ;
+    color: #10264d ;
 
     font-weight: 500;
 }
@@ -1073,7 +1073,7 @@ a {
 .contact-info span {
     font-size: 12px;
 
-    color: #9aa1ae;
+    color: #7290ba;
 
     margin-top: 3px;
 }
@@ -1090,9 +1090,9 @@ a {
 .merchant-table td:nth-child(3) strong {
     display: block;
 
-    color: #364159;
+    color: #10264d;
 
-    font-size: 12px;
+    font-size: 13px;
 
     font-weight: 600;
 }
@@ -1118,14 +1118,14 @@ a {
 }
 
 .plan-info strong {
-    font-size: 12px;
-    color: #3f4a60;
+    font-size: 13px;
+    color: #10264d;
     font-weight: 600;
 }
 
 .plan-info span {
-    font-size: 12px;
-    color: #9aa1ae;
+    font-size: 13px;
+    color: #7290ba;
     margin-top: 3px;
 }
 
