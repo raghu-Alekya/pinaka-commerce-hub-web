@@ -2156,6 +2156,64 @@ dialog.merchant-delete-dialog::backdrop {
     background: #fff;
 }
 
+.merchant-table-card > .table-wrapper > .merchant-table {
+    width: 100%;
+    min-width: 1600px;
+    table-layout: fixed;
+}
+
+.merchant-table-card > .table-wrapper > .merchant-table th,
+.merchant-table-card > .table-wrapper > .merchant-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(1),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) { width: 16%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(2),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(2) { width: 20%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(3),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(3) { width: 9%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(4),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(4) { width: 5%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(5),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(5) { width: 12%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(6),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(6) { width: 8%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(7),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(7),
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(8),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(8) { width: 10%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(9),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(9) { width: 10%; }
+
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) .merchant-name,
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(2) .contact-info {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) .merchant-name > div,
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(2) .contact-info > * {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) .merchant-name > div {
+    flex: 1 1 0;
+}
+
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) .merchant-name strong,
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) .merchant-name small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .merchant-table-card > .filter-bar {
     border-bottom: 0;
 }
