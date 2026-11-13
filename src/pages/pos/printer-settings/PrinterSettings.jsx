@@ -14,13 +14,14 @@ import { isStoredPosImage, posImageUrl, uploadStorePosImage } from "../storePosC
 const DEFAULTS = { header: "", footer: "", address: "", logo: "", logoName: "" };
 
 function mapGeneralSettings(record = {}) {
+  const logo = record.logo_url || record.image_url || "";
   return {
     ...DEFAULTS,
     header: record.receipt_header || "",
     footer: record.receipt_footer || "",
     address: record.address || "",
-    logo: record.logo_url || "",
-    logoName: record.logo_url ? record.logo_url.split("/").pop() : "",
+    logo,
+    logoName: logo ? logo.split("/").pop() : "",
   };
 }
 
@@ -62,8 +63,8 @@ export function PrinterSettings({ onBack }) {
           header: general.receipt_header || "",
           footer: general.receipt_footer ?? "",
           address: general.address || storeReceiptAddress(settings.store) || "",
-          logo: general.logo_url || "",
-          logoName: general.logo_url ? general.logo_url.split("/").pop() : "",
+          logo: general.logo_url || general.image_url || "",
+          logoName: (general.logo_url || general.image_url) ? (general.logo_url || general.image_url).split("/").pop() : "",
         };
         setDraft(loaded);
         settings.session.saved.printerSettings = loaded;

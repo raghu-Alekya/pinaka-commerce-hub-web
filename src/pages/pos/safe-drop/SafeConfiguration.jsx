@@ -11,7 +11,7 @@ import {
     createPosSafeDrop,
     updatePosSafeDrop,
 } from "./api";
-import { isStoredPosImage, posImageUrl, uploadStorePosImage } from "../storePosConfiguration";
+import { isStoredPosImage, posImageUrl, storedPosImagePath, uploadStorePosImage } from "../storePosConfiguration";
 
 export function SafeConfiguration({ value, onSave, onBack }) {
     const settings = usePosSettings();
@@ -22,6 +22,7 @@ export function SafeConfiguration({ value, onSave, onBack }) {
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
     const [uploads, setUploads] = useState(0);
+    const [unavailableDrops, setUnavailableDrops] = useState(new Set());
     const update = (field, next) => { setDraft((current) => ({ ...current, [field]: next })); setMessage(""); setError(""); };
     const updateRow = (list, id, patch) => {
         setDraft((current) => ({ ...current, [list]: current[list].map((row) => row.id === id ? { ...row, ...patch } : row) })); setMessage("");
@@ -33,7 +34,10 @@ export function SafeConfiguration({ value, onSave, onBack }) {
         }
         setUploads((count) => count + 1); setError("");
         const reader = new FileReader();
-        reader.onload = () => updateRow("drops", id, { image: reader.result, imageName: file.name, file });
+        reader.onload = () => {
+            updateRow("drops", id, { image: reader.result, imageName: file.name, file });
+            setUnavailableDrops((current) => { const next = new Set(current); next.delete(id); return next; });
+        };
         reader.onerror = () => setError("The image could not be read. Please try again.");
         reader.onloadend = () => setUploads((count) => count - 1);
         reader.readAsDataURL(file);
@@ -56,11 +60,11 @@ export function SafeConfiguration({ value, onSave, onBack }) {
             quantity: Number(row.quantity),
         })),
         drops: await Promise.all(source.drops.map(async (row) => {
-            let image = row.image;
+            let image = storedPosImagePath(row.image);
             let imageName = row.imageName || "denomination";
             if (row.file) {
                 const uploaded = await uploadStorePosImage(settings.storeId, row.file);
-                image = uploaded.path;
+                image = storedPosImagePath(uploaded.path);
                 imageName = uploaded.imageName || imageName;
             }
             return {
@@ -96,6 +100,7 @@ export function SafeConfiguration({ value, onSave, onBack }) {
             })),
         };
         savedId.current = record.id;
+        setUnavailableDrops(new Set());
         setDraft(next);
         onSave(next);
         settings.session.baseline = { ...settings.session.draft };
@@ -126,6 +131,7 @@ export function SafeConfiguration({ value, onSave, onBack }) {
         if (draft.tubes.some((row) => !validMoney(row.amount) || !Number.isSafeInteger(Number(row.quantity)) || Number(row.quantity) <= 0)) { setError("Every tube needs a positive amount and a positive whole-number quantity."); return; }
         const hasIcon = (row) => row.file || isStoredPosImage(row.image) || (typeof row.image === "string" && row.image.startsWith("data:image/"));
         if (draft.drops.some((row) => !validMoney(row.amount) || !hasIcon(row))) { setError("Every safe-drop denomination needs a positive amount and a PNG, JPG, or WEBP image."); return; }
+        if (unavailableDrops.size) { setError("Some safe-drop images are unavailable in this store. Select and upload a replacement for each unavailable image before saving."); return; }
         if ([draft.tubes, draft.drops].some((list) => new Set(list.map((row) => Number(row.amount))).size !== list.length)) { setError("Denomination amounts must be unique within each list."); return; }
         if (uploads > 0) { setError("Please wait for the image upload to finish."); return false; }
         const next = { ...draft, primarySafe: draft.primarySafe.trim(), dropEnabled: draft.enabled && draft.dropEnabled };
@@ -163,7 +169,7 @@ export function SafeConfiguration({ value, onSave, onBack }) {
         </section>
         <section className="pc-card pc-spaced"><div className="pc-section-heading"><div><h3>Manage Safe Drop Denominations</h3><p>Add amounts and denomination images for safe drops.</p></div><button type="button" className="pc-button" onClick={() => update("drops", [...draft.drops, { id: newRecordId(), amount: "", image: "", imageName: "" }])}>+ Add Denomination</button></div>
             {!draft.drops.length && <p className="pc-empty">No safe-drop denominations added yet.</p>}
-            {draft.drops.map((row, index) => <div className="pc-denomination" key={row.id}><ConfigField label={`Amount (${currency})`}><input type="number" min="0.01" step="0.01" value={row.amount} onChange={(e) => updateRow("drops", row.id, { amount: e.target.value })} /></ConfigField><div className="pc-upload">{row.image && <img src={posImageUrl(row.image)} alt={`Safe-drop denomination ${row.amount}`} />}<ConfigField label="Denomination Image"><input type="file" disabled={uploads > 0} accept="image/png,image/jpeg,image/webp" onChange={(e) => { upload(row.id, e.target.files?.[0]); e.target.value = ""; }} /><small>{row.imageName || "PNG, JPG or WEBP · Up to 2 MB"}</small></ConfigField></div><ListActions onDelete={() => update("drops", draft.drops.filter((item) => item.id !== row.id))} deleteLabel={`Remove safe-drop denomination ${index + 1}`} /></div>)}
+            {draft.drops.map((row, index) => <div className="pc-denomination" key={row.id}><ConfigField label={`Amount (${currency})`}><input type="number" min="0.01" step="0.01" value={row.amount} onChange={(e) => updateRow("drops", row.id, { amount: e.target.value })} /></ConfigField><div className="pc-upload">{row.image && <img src={posImageUrl(row.image)} alt={`Safe-drop denomination ${row.amount}`} onError={(event) => { event.currentTarget.alt = `Image unavailable; select a replacement for safe-drop denomination ${row.amount}`; setUnavailableDrops((current) => new Set(current).add(row.id)); }} onLoad={() => setUnavailableDrops((current) => { if (!current.has(row.id)) return current; const next = new Set(current); next.delete(row.id); return next; })} />}<ConfigField label="Denomination Image"><input type="file" disabled={uploads > 0} accept="image/png,image/jpeg,image/webp" onChange={(e) => { upload(row.id, e.target.files?.[0]); e.target.value = ""; }} /><small>{row.imageName || "PNG, JPG or WEBP · Up to 2 MB"}</small></ConfigField></div><ListActions onDelete={() => { setUnavailableDrops((current) => { const next = new Set(current); next.delete(row.id); return next; }); update("drops", draft.drops.filter((item) => item.id !== row.id)); }} deleteLabel={`Remove safe-drop denomination ${index + 1}`} /></div>)}
         </section>
         {error && <p role="alert" className="pc-error">{error}</p>}
         <ConfigFooter onBack={onBack} onSave={save} disabled={uploads > 0} message={uploads > 0 ? "Reading denomination image…" : message} />

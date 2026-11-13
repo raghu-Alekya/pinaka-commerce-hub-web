@@ -16,6 +16,7 @@ const FEATURE_GROUPS = [
       ["ebtPayments", "EBT Payments"],
       ["fullRefunds", "Full Refunds"],
       ["partialRefunds", "Partial Refunds"],
+      ["cashback", "Cashback"],
     ],
   },
   {

@@ -285,7 +285,6 @@
 .pos-config-detail-card {
     width: 100%;
     background: #ffffff;
-    border: 1px solid #dfe3ea;
     border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;
@@ -4552,44 +4551,165 @@
 }
 
 /* Register, mapping and combined safe screens. Scoped to avoid existing styles. */
-.pc-screen { --pc-blue: #0878f9; --pc-ink: #17233e; padding: 26px; color: var(--pc-ink); font-family: inherit; }
+.pc-screen { --pc-blue: #0878f9; 
+    --pc-ink: #17233e; 
+    padding: 26px; 
+    color: var(--pc-ink); 
+    font-family: inherit; 
+}
 .pc-screen *, .pc-screen *::before, .pc-screen *::after { box-sizing: border-box; }
-.pc-screen h2 { margin: 0; font-size: 21px; line-height: 1.35; }
-.pc-screen h3 { margin: 0 0 18px; font-size: 15px; line-height: 1.4; }
-.pc-heading, .pc-heading-title, .pc-section-heading { display: flex; align-items: center; gap: 16px; }
-.pc-heading, .pc-section-heading { justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; }
-.pc-heading-title { flex: 1; min-width: 220px; }
-.pc-heading p, .pc-section-heading p, .pc-help { margin: 5px 0 0; font-size: 12px; color: #65758e; line-height: 1.65; }
+.pc-screen h2 { 
+    margin: 0; 
+    font-size: 21px; 
+    line-height: 1.35;
+ }
+.pc-screen h3 { 
+    margin: 0 0 18px; 
+    font-size: 15px; 
+    line-height: 1.4; 
+}
+.pc-heading, .pc-heading-title, .pc-section-heading { 
+    display: flex; 
+    align-items: center; 
+    gap: 16px; 
+}
+.pc-heading, .pc-section-heading { 
+    justify-content: space-between; 
+    margin-bottom: 22px; 
+    flex-wrap: wrap; 
+}
+.pc-heading-title { flex: 1; 
+    min-width: 220px; 
+}
+.pc-heading p, .pc-section-heading p, .pc-help { 
+    margin: 5px 0 0; 
+    font-size: 12px; 
+    color: #65758e; 
+    line-height: 1.65; 
+}
 .pc-screen > .pc-help { margin: -8px 0 20px; }
-.pc-icon { width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center; border-radius: 10px; background: #eaf3ff; color: var(--pc-blue); font-size: 25px; }
-.pc-button { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; border: 1px solid #d9e2ef; border-radius: 6px; background: white; color: #5143BC; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
-.pc-button:hover:not(:disabled) { background: #f4f2ff; border-color: #5143BC; }
-.pc-button.pc-primary { background: #5143BC; color: white; border-color: #5143BC; }
-.pc-button.pc-primary:hover:not(:disabled) { background: #4437a5; border-color: #4437a5; }
+.pc-icon { 
+    width: 48px; 
+    height: 48px; 
+    flex: 0 0 48px; 
+    display: grid; 
+    place-items: center; 
+    border-radius: 10px; 
+    background: #eaf3ff; 
+    color: var(--pc-blue); 
+    font-size: 25px; 
+}
+.pc-button { 
+    min-height: 38px; 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 8px 16px; 
+    border: 1px solid #d9e2ef; 
+    border-radius: 6px; 
+    background: white; 
+    color: #5143BC; 
+    font: inherit; 
+    font-size: 12px; 
+    font-weight: 600; 
+    cursor: pointer; 
+}
+.pc-button:hover:not(:disabled) { 
+    background: #f4f2ff; 
+    border-color: #5143BC; 
+}
+.pc-button.pc-primary { 
+    background: #5143BC; 
+    color: white; 
+    border-color: #5143BC; 
+}
+.pc-button.pc-primary:hover:not(:disabled) { 
+    background: #4437a5; 
+    border-color: #4437a5; 
+}
 .pc-screen button:disabled { opacity: .5; cursor: not-allowed; }
-.pc-screen :is(button, input, select):focus-visible { outline: 3px solid #b6aeef; outline-offset: 3px; }
-.pc-safe-grid { display: grid; grid-template-columns: .95fr 1.1fr 1.1fr; gap: 18px; }
-.pc-card { border: 1px solid #e0e7f1; border-radius: 9px; padding: 20px; min-width: 0; background: #fff; }
+.pc-screen :is(button, input, select):focus-visible { 
+    outline: 3px solid #b6aeef; 
+    outline-offset: 3px; 
+}
+.pc-safe-grid { 
+    display: grid; 
+    grid-template-columns: .95fr 1.1fr 1.1fr; 
+    gap: 18px; 
+}
+.pc-card { 
+    border: 1px solid #e0e7f1; 
+    border-radius: 9px; 
+    padding: 20px; 
+    min-width: 0; 
+    background: #fff; 
+}
 .functionality-settings-card h3 { margin: 0; }
-.functionality-settings-panel { display: flex; flex-direction: column; gap: 16px; }
+.functionality-settings-panel { display: flex; 
+    flex-direction: column; 
+    gap: 16px; 
+}
 .functionality-settings-panel > .pos-form-actions { margin-top: 0; }
-.functionality-settings-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; margin-top: 20px; }
-.functionality-settings-list .pc-switch-field { padding: 12px 14px; border: 1px solid #e0e7f1; border-radius: 8px; background: #fbfcfe; }
+.functionality-settings-list { 
+    display: grid; 
+    grid-template-columns: repeat(2, minmax(0, 1fr)); 
+    gap: 12px 28px; 
+    margin-top: 20px; 
+}
+.functionality-settings-list .pc-switch-field { 
+    padding: 12px 14px; 
+    border: 1px solid #e0e7f1; 
+    border-radius: 8px; 
+    background: #fbfcfe; 
+}
 .functionality-settings-list .pc-switch-track { background: #e3e7ee; }
 .functionality-settings-list .pc-switch-field input:checked + .pc-switch-track { background: #5143bc; }
 @media (max-width: 640px) { .functionality-settings-list { grid-template-columns: minmax(0, 1fr); } }
 .pc-spaced { margin-top: 22px; }
-.pc-screen fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.pc-screen fieldset { border: 0; 
+    padding: 0; 
+    margin: 0; 
+    min-width: 0; 
+}
 .pc-screen fieldset:disabled { opacity: .55; }
-.pc-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; font-size: 12px; font-weight: 600; color: #475c78; }
-.pc-field > span { transform-origin: left center; transition: color 0.18s ease, transform 0.18s ease; }
+.pc-field { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    min-width: 0; 
+    font-size: 12px; 
+    font-weight: 600; 
+    color: #475c78; 
+}
+.pc-field > span { 
+    transform-origin: left center; 
+    transition: color 0.18s ease, transform 0.18s ease; 
+}
 .pc-field:focus-within > span { color: #5143bc; transform: translateY(-2px); }
 .pc-card > .pc-field, .pc-card > fieldset > .pc-field { margin-top: 16px; }
-.pc-field small { font-size: 11px; font-weight: 400; color: #65758e; overflow-wrap: anywhere; }
-.pc-screen input:not([type=checkbox]), .pc-screen select { width: 100%; min-width: 0; min-height: 39px; border: 1px solid #d8e1ee; border-radius: 5px; padding: 8px 10px; background: white; color: var(--pc-ink); font: inherit; font-size: 12px; transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.18s ease; }
+.pc-field small { 
+    font-size: 11px; 
+    font-weight: 400; 
+    color: #65758e; 
+    overflow-wrap: anywhere; 
+}
+.pc-screen input:not([type=checkbox]), .pc-screen select { 
+    width: 100%; 
+    min-width: 0; 
+    min-height: 39px; 
+    border: 1px solid #d8e1ee; 
+    border-radius: 5px; 
+    padding: 8px 10px; 
+    background: white; 
+    color: var(--pc-ink); 
+    font: inherit; 
+    font-size: 12px; 
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.18s ease; }
 .pc-field > .pch-filter-dropdown { display: grid; width: 100%; }
 .pc-field > .pch-filter-dropdown > .pch-filter-sizing { width: 100%; }
-.pc-screen .pc-field textarea { width:100%; min-height:100px; resize:vertical; border:1px solid #d8e1ee; border-radius:5px; padding:10px; background:#fff; color:var(--pc-ink); font:inherit; font-size:12px; }
+.pc-screen .pc-field textarea { 
+    width:100%; 
+    min-height:100px; resize:vertical; border:1px solid #d8e1ee; border-radius:5px; padding:10px; background:#fff; color:var(--pc-ink); font:inherit; font-size:12px; }
 .pc-screen .pc-field textarea:focus { outline:none; border-color:#5143bc; box-shadow:0 0 0 3px rgba(81,67,188,.08); }
 .pc-printer-logo-row { display:flex; align-items:center; gap:18px; margin-top:16px; }
 .pc-printer-logo-preview, .pc-printer-logo-placeholder { display:grid; width:132px; height:88px; flex:0 0 132px; place-items:center; object-fit:contain; border:1px solid #e0e7f1; border-radius:7px; background:#f8faff; color:#8795aa; font-size:26px; }

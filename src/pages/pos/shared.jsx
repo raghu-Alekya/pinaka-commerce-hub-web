@@ -149,6 +149,8 @@ export function DenominationRow({
     index,
     onAmountChange,
     onImageChange,
+    onImageError,
+    onImageLoad,
     onRemove,
 }) {
     const { currency } = usePosSettings();
@@ -204,6 +206,11 @@ export function DenominationRow({
                                     item.amount ||
                                     "Denomination"
                                 }
+                                onError={(event) => {
+                                    event.currentTarget.alt = `Image unavailable; select a replacement for denomination ${item.amount || index + 1}`;
+                                    onImageError?.(index);
+                                }}
+                                onLoad={() => onImageLoad?.(index)}
                             />
                         ) : (
                             <i className="bi bi-image" />

@@ -10,7 +10,7 @@ import {
     createPosCashDenominations,
     updatePosCashDenominations,
 } from "./api";
-import { isStoredPosImage, uploadStorePosImage } from "../storePosConfiguration";
+import { isStoredPosImage, storedPosImagePath, uploadStorePosImage } from "../storePosConfiguration";
 
 function displayImage(item) {
     const candidates = [item?.image, item?.imageUrl, item?.image_url, item?.imageData, item?.image_data];
@@ -39,9 +39,24 @@ export function DenominationSettings() {
 
     const [coinDenominations, setCoinDenominations] =
         useConfigState("coinDenominations", []);
+    const [unavailableImages, setUnavailableImages] = useState({ cash: new Set(), coin: new Set() });
+
+    const markImageAvailable = (section, index) => setUnavailableImages((current) => {
+        if (!current[section].has(index)) return current;
+        const next = new Set(current[section]);
+        next.delete(index);
+        return { ...current, [section]: next };
+    });
+    const markImageUnavailable = (section, index) => setUnavailableImages((current) => {
+        if (current[section].has(index)) return current;
+        const next = new Set(current[section]);
+        next.add(index);
+        return { ...current, [section]: next };
+    });
 
     const applyDenominations = (record) => {
         savedId.current = record.id;
+        setUnavailableImages({ cash: new Set(), coin: new Set() });
         setCashDenominations(denominationRows(record.cashDenominations));
         setCoinDenominations(denominationRows(record.coinDenominations));
         settings.session.baseline = { ...settings.session.draft };
@@ -186,16 +201,20 @@ export function DenominationSettings() {
             );
             return;
         }
+        if (unavailableImages.cash.size || unavailableImages.coin.size) {
+            alert("Some denomination images are unavailable in this store. Use Change Image to select and upload a replacement for each unavailable image before saving.");
+            return;
+        }
 
         const toItem = async (item) => {
-            let image = item.image;
+            let image = storedPosImagePath(item.image);
             let imageName = item.imageName || "denomination";
             if (item.file) {
                 if (!["image/png", "image/jpeg", "image/webp"].includes(item.file.type)) {
                     throw new Error("Please select a PNG, JPG, or WEBP image for every denomination.");
                 }
                 const uploaded = await uploadStorePosImage(settings.storeId, item.file);
-                image = uploaded.path;
+                image = storedPosImagePath(uploaded.path);
                 imageName = uploaded.imageName || imageName;
             }
             if (typeof image !== "string" || (!isStoredPosImage(image) && !image.startsWith("data:image/"))) {
@@ -303,12 +322,10 @@ export function DenominationSettings() {
                                             rowIndex,
                                             imageData
                                         ) =>
-                                            updateDenominationImage(
-                                                setCashDenominations,
-                                                rowIndex,
-                                                imageData
-                                            )
+                                            (updateDenominationImage(setCashDenominations, rowIndex, imageData), markImageAvailable("cash", rowIndex))
                                         }
+                                        onImageError={(rowIndex) => markImageUnavailable("cash", rowIndex)}
+                                        onImageLoad={(rowIndex) => markImageAvailable("cash", rowIndex)}
                                         onRemove={(rowIndex) =>
                                             removeDenomination(
                                                 setCashDenominations,
@@ -389,12 +406,10 @@ export function DenominationSettings() {
                                             rowIndex,
                                             imageData
                                         ) =>
-                                            updateDenominationImage(
-                                                setCoinDenominations,
-                                                rowIndex,
-                                                imageData
-                                            )
+                                            (updateDenominationImage(setCoinDenominations, rowIndex, imageData), markImageAvailable("coin", rowIndex))
                                         }
+                                        onImageError={(rowIndex) => markImageUnavailable("coin", rowIndex)}
+                                        onImageLoad={(rowIndex) => markImageAvailable("coin", rowIndex)}
                                         onRemove={(rowIndex) =>
                                             removeDenomination(
                                                 setCoinDenominations,

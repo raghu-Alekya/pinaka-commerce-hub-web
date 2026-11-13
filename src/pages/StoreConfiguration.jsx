@@ -146,7 +146,7 @@ const sectionIntro = {
 const sectionsWithPageHeading = new Set([
   "features", "roles", "users", "attendance", "customers", "vendors",
   "overview", "pos", "categories", "products", "fastkeys", "vendorhistory",
-  "paymentrecords", "coupons", "discounts", "shifts", "safedrops",
+  "paymentrecords", "coupons", "discounts", "shifts", "safedrops", "orders",
 ]);
 
 /* =========================================================
