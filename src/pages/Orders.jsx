@@ -469,6 +469,7 @@ export default function Orders({
                       <td><strong className="order-total">{formatCurrency(order.totalValue, order.currency || store?.currency, order.currencySymbol || store?.currencySymbol)}</strong></td>
                       <td className="orders-actions-cell">
                         <ListActions
+                          module="orders"
                           onView={() => handleViewOrder(order)}
                           viewLabel={`View order ${order.wooOrderId}`}
                         />

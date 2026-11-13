@@ -1,8 +1,10 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
+import { moduleForRoute } from "./permissions";
+
 export default function ProtectedRoute({ children }) {
-  const { isReady, isAuthenticated } = useAuth();
+  const { isReady, isAuthenticated, can } = useAuth();
   const location = useLocation();
 
   if (!isReady) {
@@ -11,6 +13,11 @@ export default function ProtectedRoute({ children }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  const moduleName = moduleForRoute(location.pathname);
+  if (moduleName && !can(moduleName, "view")) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;

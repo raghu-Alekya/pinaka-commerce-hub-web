@@ -21,15 +21,30 @@ export default function Login() {
     setError("");
     setSubmitting(true);
 
+    const trimmedEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setError("Enter a valid email address.");
+      setSubmitting(false);
+      return;
+    }
+    if (!password || password.length > 128) {
+      setError("Password is required.");
+      setSubmitting(false);
+      return;
+    }
+
     try {
-      await login(email.trim(), password, remember);
+      await login(trimmedEmail, password, remember);
       nav(redirectTo, { replace: true });
     } catch (err) {
+      const inactive = err instanceof ApiError && /inactive/i.test(err.message || "");
       const message =
         err instanceof ApiError
-          ? err.status === 401 || err.status === 403
-            ? "Invalid email or password."
-            : err.message
+          ? inactive
+            ? err.message
+            : err.status === 401
+              ? "Invalid email or password."
+              : err.message
           : "Unable to reach the login API. Check the NestJS URL and CORS settings.";
       setError(message);
     } finally {

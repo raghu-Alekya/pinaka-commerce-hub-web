@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+import { MENU_MODULES } from "../auth/permissions";
 
 const sections = [
   {
@@ -65,6 +67,24 @@ export default function Sidebar({
   setMobileOpen,
 }) {
   const location = useLocation();
+  const { can, user } = useAuth();
+  const menuSections = user?.accountType
+    ? sections.map((section) => (
+        section.title === "OPERATIONS"
+          ? {
+              ...section,
+              items: [
+                ...section.items,
+                ["/access", "bi-shield-lock", "Access & Permissions"],
+              ],
+            }
+          : section
+      ))
+    : sections;
+  const canSee = (path) => {
+    const moduleName = MENU_MODULES[path];
+    return !moduleName || can(moduleName, "view");
+  };
   const originPath = location.state?.from?.split("?")[0] || "";
 
   function isContextActive(path, isRouteActive) {
@@ -114,13 +134,18 @@ export default function Sidebar({
       </div>
 
       <nav className="sidebar-menu">
-        {sections.map((section, sectionIndex) => (
+        {menuSections.map((section, sectionIndex) => {
+          const visibleItems = section.items.filter(([to, , , , subItems]) => (
+            subItems ? subItems.some(([subTo]) => canSee(subTo)) : canSee(to)
+          ));
+          if (!visibleItems.length) return null;
+          return (
           <div key={`${section.title}-${sectionIndex}`}>
             {section.title && !collapsed && (
               <div className="menu-section">{section.title}</div>
             )}
 
-            {section.items.map(
+            {visibleItems.map(
               ([to, icon, label, hasArrow, subItems]) => {
                 const isMasterSetup = label === "Master Setup";
 
@@ -158,7 +183,7 @@ export default function Sidebar({
 
                       {!collapsed && masterSetupOpen && (
                         <div id="master-setup-submenu" className="master-setup-submenu">
-                          {subItems.map(([subTo, subIcon, subLabel]) => (
+                          {subItems.filter(([subTo]) => canSee(subTo)).map(([subTo, subIcon, subLabel]) => (
                             <NavLink
                               key={subTo}
                               to={subTo}
@@ -252,7 +277,8 @@ className={({ isActive }) => {
               }
             )}
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       <button

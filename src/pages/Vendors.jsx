@@ -5,6 +5,7 @@ import FilterDropdown from "../components/FilterDropdown";
 import { Download } from "lucide-react";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
+import Permit from "../auth/Permit";
 import { useLocationOptions } from "../data/useLocationOptions";
 import { getVendor, getVendors, createVendor, updateVendor, updateVendorStatus, deleteVendor as deleteVendorApi, } from "../api/vendors";
 
@@ -1494,7 +1495,7 @@ export default function Vendors({
           </p>
         </div>
         <div className="vendors-header-actions">
-          <button type="button" className="vendors-primary-button" onClick={() => { resetForm(); setShowForm(true); }}><i className="bi bi-plus-lg" /> Add Vendor</button>
+          <Permit module="vendors" action="create"><button type="button" className="vendors-primary-button" onClick={() => { resetForm(); setShowForm(true); }}><i className="bi bi-plus-lg" /> Add Vendor</button></Permit>
           <button type="button" className="vendors-export-button" onClick={exportVendors}><Download size={20} aria-hidden="true" /> Export</button>
         </div>
       </div>
@@ -1762,6 +1763,7 @@ export default function Vendors({
 
                       <td>
                         <ListActions
+                          module="vendors"
                           onView={() => viewVendor(vendor)}
                           onEdit={() => editVendor(vendor)}
                           onDelete={isVendorInactive(vendor) ? undefined : () => confirmDelete(vendor)}

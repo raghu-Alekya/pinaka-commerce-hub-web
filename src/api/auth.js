@@ -1,4 +1,5 @@
-import { api } from "./http";
+import { api, ApiError } from "./http";
+import { getStoredUser } from "../auth/tokenStore";
 import { endpoints } from "./endpoints";
 import {
   clearSession,
@@ -44,21 +45,35 @@ function applyAuthResponse(data, remember = getRememberMe()) {
 }
 
 export async function login(email, password, remember = false) {
-  const data = await api.post(
+  const attempts = [
+    "/api/v1/pos/auth/merchant-login",
+    "/api/v1/pos/auth/employee-console-login",
     endpoints.login,
-    { email, password },
-    { skipAuthRefresh: true }
-  );
+  ];
+  let lastError = null;
 
-  if (data && data.success === false) {
-    const message = data.message || "Invalid email or password.";
-    const error = new Error(message);
-    error.name = "ApiError";
-    error.status = 401;
-    throw error;
+  for (const path of attempts) {
+    try {
+      const data = await api.post(path, { email, password }, { skipAuthRefresh: true });
+      if (data && data.success === false) {
+        lastError = new ApiError(data.message || "Invalid email or password.", 401, data);
+        continue;
+      }
+      return applyAuthResponse(data, remember);
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 404)) {
+        lastError = error;
+        continue;
+      }
+      throw error;
+    }
   }
 
-  return applyAuthResponse(data, remember);
+  throw lastError || new ApiError("Invalid email or password.", 401, null);
+}
+
+export function getConsoleProfile() {
+  return api.get("/api/v1/pos/auth/console/me");
 }
 
 export async function refreshSession() {
@@ -77,8 +92,11 @@ export async function refreshSession() {
 
 export async function logout() {
   const refreshToken = getRefreshToken();
+  const accountType = getStoredUser()?.accountType;
   try {
-    if (refreshToken) {
+    if (accountType) {
+      await api.post("/api/v1/pos/auth/console/logout", {}, { skipAuthRefresh: true });
+    } else if (refreshToken) {
       await api.post(
         endpoints.logout,
         { refreshToken },

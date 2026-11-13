@@ -107,11 +107,17 @@ export async function apiRequest(
   const payload = body !== undefined ? body : undefined;
   const isFormData = payload instanceof FormData;
 
+  const loggedPayload = payload && typeof payload === "object" && !(payload instanceof FormData)
+    ? Object.fromEntries(Object.entries(payload).map(([key, value]) => [
+        key,
+        /password|pin|token|secret/i.test(key) ? "[redacted]" : value,
+      ]))
+    : payload;
   console.log("[API REQUEST]", {
     method,
     url: requestUrl,
     path,
-    payload,
+    payload: loggedPayload,
     authenticated: Boolean(token),
   });
 

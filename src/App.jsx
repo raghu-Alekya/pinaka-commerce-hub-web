@@ -23,6 +23,7 @@ import StoreConfiguration from "./pages/StoreConfiguration";
 import Placeholder from "./pages/Placeholder";
 import Legal from "./pages/Legal";
 import Employees from "./pages/Employees";
+import AccessPermissions from "./pages/AccessPermissions";
 import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
 import EmployeeView from "./pages/EmployeeView";
@@ -280,6 +281,7 @@ export default function App() {
         <Route path="/pos-configuration" element={<PosConfiguration />} />
         {/* Employees */}
         <Route path="/employees" element={<Employees />} />
+        <Route path="/access" element={<AccessPermissions />} />
         <Route path="/employees/add" element={<AddEmployee />} />
         <Route path="/employees/edit" element={<EditEmployee />} />
         <Route path="/employees/:employeeId" element={<EmployeeView />} />

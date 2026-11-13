@@ -5,6 +5,7 @@ import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
+import Permit from "../auth/Permit";
 import { api, pendingStoreRead } from "../api/http";
 import { normalizeCatalog } from "../api/products";
 import { catalogProductId } from "./discountForm";
@@ -483,7 +484,7 @@ export default function Coupons({
 
                 <div className="coupons-header-actions">
 
-                    <button
+                    <Permit module="coupons" action="create"><button
                         type="button"
                         className="coupon-create-btn"
                         onClick={openCreate}
@@ -491,7 +492,7 @@ export default function Coupons({
                     >
                         <i className="bi bi-plus-lg" />
                         Create Coupon
-                    </button>
+                    </button></Permit>
 
                     {/* LATEST UPDATES */}
 
@@ -1242,6 +1243,7 @@ function CouponRow({ coupon, currency, currencySymbol, onView, onEdit, onDelete 
 
             <td className="coupon-row-actions" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
                 <ListActions
+                    module="coupons"
                     onView={onView}
                     onEdit={onEdit}
                     onDelete={onDelete}

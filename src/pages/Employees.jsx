@@ -18,6 +18,7 @@ import {
   Filter,
 } from "lucide-react";
 import ListActions from "../components/ListActions";
+import Permit from "../auth/Permit";
 import "../styles/Employees.css";
 /* =========================================================
    AVATAR COMPONENT WITH SAFE FALLBACK
@@ -451,6 +452,7 @@ const handlePageSizeChange = (size) => {
           </p>
         </div>
         <div className="employees-header-actions">
+          <Permit module="employees" action="create">
           <button
             className="employees-add-btn"
             onClick={() => navigate("/employees/add")}
@@ -458,6 +460,7 @@ const handlePageSizeChange = (size) => {
             <Plus size={18} />
             Add Employee
           </button>
+          </Permit>
           <button
             className="employees-export-btn"
             onClick={() => console.log("Export clicked")}
@@ -682,6 +685,7 @@ const handlePageSizeChange = (size) => {
                     {/* ACTIONS */}
                     <td>
                       <ListActions
+                          module="employees"
                           onView={() => openView(employee)}
                           viewLabel={`View ${employee.name}`}
                           onEdit={() =>

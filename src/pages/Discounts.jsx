@@ -6,6 +6,7 @@ import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
+import Permit from "../auth/Permit";
 import { buildDiscountPayload, catalogProductId, storedProductId, validateDiscountForm } from "./discountForm";
 import { formatCurrency } from "../utils/currency";
 import "../styles/coupons.css";
@@ -515,7 +516,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
           <div><h1>Discounts</h1><p>Create and manage automatic, mix 'n match, and multipack discounts for this store.</p></div>
         </div>
         <div className="coupons-header-actions">
-          <button type="button" className="coupon-create-btn" onClick={openCreate}><i className="bi bi-plus-lg" />Create discount</button>
+          <Permit module="discounts" action="create"><button type="button" className="coupon-create-btn" onClick={openCreate}><i className="bi bi-plus-lg" />Create discount</button></Permit>
         </div>
       </div>
 
@@ -585,6 +586,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
                   <td>{formatSystemDate(discount.date_expires)}</td>
                   <td className="coupon-row-actions">
                     <ListActions
+                      module="discounts"
                       onEdit={() => openEdit(discount)}
                       onDelete={() => { setDeleteError(""); setDeleteTarget(discount); }}
                       editLabel={`Edit ${discount.code}`}

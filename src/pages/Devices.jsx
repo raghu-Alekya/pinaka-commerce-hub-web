@@ -13,6 +13,7 @@ import "../styles/devices.css";
 import { devicesApi } from "../api/devices";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
+import Permit from "../auth/Permit";
 import FiltersBar from "../components/FiltersBar";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
  
@@ -323,7 +324,7 @@ export default function Devices() {
  
           {" "}
  
-          <button
+          <Permit module="devices" action="create"><button
  
             type="button"
  
@@ -337,7 +338,7 @@ export default function Devices() {
  
             <span>+</span> Add Device{" "}
  
-          </button>{" "}
+          </button></Permit>{" "}
  
           <button type="button" className="devices-export-btn">
  
@@ -778,6 +779,7 @@ function DeviceRow({
       {/* ACTIONS */}
       <td onClick={(event) => event.stopPropagation()}>
         <ListActions
+          module="devices"
           onView={onView}
           onEdit={onEdit}
           onDelete={device.status === "Inactive" ? undefined : onDelete}

@@ -1,4 +1,7 @@
+import { useAuth } from "../auth/AuthContext";
+
 export default function ListActions({
+    module,
     onView,
     onEdit,
     onDelete,
@@ -17,9 +20,11 @@ export default function ListActions({
     deleteButtonClassName = "",
     deleteIconClassName = "bi bi-trash3",
 }) {
+    const { can } = useAuth();
+    const allow = (action) => !module || can(module, action);
     return (
         <div className="list-actions" onClick={(event) => event.stopPropagation()}>
-            {onView && (
+            {onView && allow("view") && (
                 <button
                     type="button"
                     className="list-action-btn"
@@ -34,7 +39,7 @@ export default function ListActions({
                 </button>
             )}
 
-            {onEdit && (
+            {onEdit && allow("update") && (
                 <button
                     type="button"
                     className={`list-action-btn ${editButtonClassName}`.trim()}
@@ -49,7 +54,7 @@ export default function ListActions({
                 </button>
             )}
 
-            {onActivate && (
+            {onActivate && allow("update") && (
                 <button
                     type="button"
                     className="list-action-btn text-success"
@@ -64,7 +69,7 @@ export default function ListActions({
                 </button>
             )}
 
-            {onDelete && (
+            {onDelete && allow("delete") && (
                 <button
                     type="button"
                     className={`list-action-btn text-danger ${deleteButtonClassName}`.trim()}

@@ -4,10 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { activateStore, deactivateStore, listStores } from "../api/stores";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
+import Permit from "../auth/Permit";
 import FiltersBar from "../components/FiltersBar";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import { getStoreDeviceMappings } from "../api/storeDeviceMappings";
 import { listMerchants } from "../api/merchants";
+import { useAuth } from "../auth/AuthContext";
 
 const title = (value) =>
   String(value || "")
@@ -108,6 +110,7 @@ const merchantNameOf = (store, merchants) => {
 
 export default function Stores() {
   const nav = useNavigate();
+  const { user } = useAuth();
   const openView = (store) => nav(`/stores/${encodeURIComponent(store.id)}`);
 
   const [stores, setStores] = useState([]),
@@ -141,10 +144,20 @@ const handlePageSizeChange = (size) => {
     let active = true;
     setLoading(true);
     setError("");
-    Promise.all([listStores(), listMerchants()])
+    Promise.all([
+      listStores(),
+      listMerchants().catch(() => user?.accountType && user?.merchantId
+        ? [{ id: user.merchantId, merchantId: user.merchantCode || user.merchantId, name: user.businessDisplayName || user.email || "Merchant" }]
+        : []),
+    ])
       .then(([data, merchantRows]) => {
         if (active) {
-          const storeRows = Array.isArray(data.stores) ? data.stores : [];
+          const ownMerchantIds = user?.accountType && user?.merchantId
+            ? [user.merchantId, user.merchantCode].filter(Boolean).map(String)
+            : [];
+          const storeRows = (Array.isArray(data.stores) ? data.stores : []).filter((store) => (
+            !ownMerchantIds.length || ownMerchantIds.includes(String(store.merchantId || ""))
+          ));
           setStores(storeRows);
           setMerchants(Array.isArray(merchantRows) ? merchantRows : []);
           Promise.all(storeRows.map(async (store) => {
@@ -270,9 +283,11 @@ useEffect(() => {
           <p>Manage and monitor all stores connected to Pinaka Commerce Hub</p>
         </div>
         <div className="page-actions">
+          <Permit module="stores" action="create">
           <button className="add-store-btn btn-primary" onClick={() => nav("/stores/new")}>
             <i className="bi bi-plus-lg" /> Add Store
           </button>
+          </Permit>
           <button
             className="stores-export-btn btn-secondary"
             type="button"
@@ -500,6 +515,7 @@ useEffect(() => {
                     })}
                     <td>
                       <ListActions
+                         module="stores"
                          onView={() => openView(s)}
                          onEdit={() =>
                              nav(`/stores/${encodeURIComponent(s.id)}/edit`)}
