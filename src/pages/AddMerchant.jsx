@@ -18,7 +18,11 @@ import "../styles/merchant-form.css";
 
 const PhoneInput = PhoneInputModule.default || PhoneInputModule;
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 10);
+};
 const TAX_RATE = 8.6;
 const blankMerchant = () => ({
   code: "",
@@ -127,12 +131,32 @@ function formatPrice(amount, currency = "USD") {
 }
 
 function getPlanStoreType(plan, storeTypes) {
-  const value = plan.applicableStoreType ?? plan.storeType ?? plan.store_type;
-  if (!value) return "General Plans";
-  if (typeof value === "object") return value.name || value.storeTypeName || value.title || value.code || "General Plans";
-  const name = String(value).trim();
-  const match = storeTypes.find((type) => [type.id, type.code, type.name].some((field) => String(field || "").toLowerCase() === name.toLowerCase()));
-  return match?.name || name || "General Plans";
+  const explicitName = [plan.storeTypeName, plan.store_type_name]
+    .find((value) => typeof value === "string" && value.trim());
+  const values = [
+    plan.storeTypeId,
+    plan.store_type_id,
+    plan.applicableStoreType,
+    plan.applicable_store_type,
+    plan.storeType,
+    plan.store_type,
+  ].filter((value) => value !== undefined && value !== null && value !== "");
+  if (!values.length) return "General Plans";
+  const objectNames = values.flatMap((value) => typeof value === "object"
+    ? [value.name, value.storeTypeName, value.store_type_name, value.title]
+    : []).filter((value) => typeof value === "string" && value.trim());
+  const identifiers = values.flatMap((value) => typeof value === "object"
+    ? [value.id, value.storeTypeId, value.store_type_id, value.code, value.storeTypeCode, value.store_type_code, ...objectNames]
+    : [value]).filter(Boolean);
+  const key = (value) => String(value ?? "").trim().toLowerCase();
+  const match = storeTypes.find((type) => [type.id, type.storeTypeId, type.store_type_id, type.code, type.storeTypeCode, type.store_type_code, type.name]
+    .some((field) => identifiers.some((identifier) => key(field) && key(field) === key(identifier))));
+  if (match?.name) return match.name;
+  if (explicitName) return explicitName.trim();
+
+  const fallback = objectNames.find((name) => name.trim());
+  if (fallback) return fallback.trim();
+  return "Store Type";
 }
 
 function renewalDate(start, cycle) {
@@ -210,6 +234,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const [start, setStart] = useState(selected?._onboarding?.start || today());
   const [step, setStep] = useState(0);
   const [storeTypes, setStoreTypes] = useState([]);
+  const lookedUpStoreTypeIdsRef = useRef(new Set());
   const [loading, setLoading] = useState(Boolean(merchantId && !selected?._onboarding));
   const [plansLoading, setPlansLoading] = useState(true);
   const [error, setError] = useState("");
@@ -245,9 +270,56 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     listPlans().then((items) => active && setPlans(items.filter((item) => String(item.status).toUpperCase() === "ACTIVE")))
       .catch((failure) => active && setError(failure.message || "Unable to load plans."))
       .finally(() => active && setPlansLoading(false));
-    if (!editing) storeTypesApi.getAll().then((response) => active && setStoreTypes(response.storeTypes || [])).catch(() => {});
+    storeTypesApi.getAll().then((response) => {
+      const source = response?.storeTypes ?? response?.data?.storeTypes ?? response?.data;
+      const items = Array.isArray(source) ? source : [];
+      if (active) setStoreTypes(items);
+    }).catch(() => {});
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!plans.length) return;
+    const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+    const knownIds = new Set(storeTypes.flatMap((type) => [type.id, type.storeTypeId, type.store_type_id]
+      .filter(Boolean).map((value) => String(value).trim().toLowerCase())));
+    const ids = new Set();
+    plans.forEach((item) => {
+      [item.storeTypeId, item.store_type_id, item.applicableStoreType, item.applicable_store_type, item.storeType, item.store_type]
+        .forEach((value) => {
+          const candidates = value && typeof value === "object"
+            ? [value.id, value.storeTypeId, value.store_type_id]
+            : [value];
+          candidates.filter(isUuid).forEach((id) => {
+            const key = String(id).trim().toLowerCase();
+            if (!knownIds.has(key) && !lookedUpStoreTypeIdsRef.current.has(key)) ids.add(String(id).trim());
+          });
+        });
+    });
+    if (!ids.size) return;
+
+    let active = true;
+    const lookups = [...ids].map(async (id) => {
+      lookedUpStoreTypeIdsRef.current.add(id.toLowerCase());
+      try {
+        const response = await storeTypesApi.getById(id);
+        return response?.storeType || null;
+      } catch {
+        return null;
+      }
+    });
+    Promise.all(lookups).then((resolved) => {
+      const items = resolved.filter((item) => item?.name);
+      if (active && items.length) {
+        setStoreTypes((current) => {
+          const byId = new Map(current.map((item) => [String(item.id || item.storeTypeId || "").toLowerCase(), item]));
+          items.forEach((item) => byId.set(String(item.id || item.storeTypeId || "").toLowerCase(), item));
+          return [...byId.values()];
+        });
+      }
+    });
+    return () => { active = false; };
+  }, [plans, storeTypes]);
 
   useEffect(() => {
     if (!merchantId || selected?._onboarding) return;
@@ -319,8 +391,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
         setError("");
         return;
       }
-    } else if (!plan) {
+    } else if (step === 1 && !plan) {
       setError("Choose an active plan.");
+      return;
+    } else if (step === 1 && start < today()) {
+      setError("Start date must be today or later.");
       return;
     }
     setError("");
@@ -339,6 +414,10 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     if (!plan) {
       setStep(1);
       return setError("Choose an active plan.");
+    }
+    if (start < today()) {
+      setStep(1);
+      return setError("Start date must be today or later.");
     }
     if (!onSave) return setError("Merchant saving is not connected.");
     setError("");
@@ -490,7 +569,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
                   </section>
                   <section className="pch-plan-agreement" aria-label="Billing Details"><h3>Billing Details</h3><div className="pch-grid">
                     <Select label="Billing cycle" value={cycle} options={["Monthly", "Quarterly", "Annual"]} onChange={(value) => setCycle(normalizeCycle(value))} />
-                    <Field label="Start date" type="date" value={start} onChange={setStart} />
+                    <Field label="Start date" type="date" min={today()} value={start} onChange={setStart} />
                     <Field label="Renewal date" type="date" value={renewalDate(start, cycle)} readOnly />
                     <Field label="Subscription Price" value={`${formatPrice(total, plan?.currency || "USD")} / ${cycleLabel}`} readOnly />
                   </div><p className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</p></section>
