@@ -131,8 +131,9 @@ function formatPrice(amount, currency = "USD") {
 }
 
 function getPlanStoreType(plan, storeTypes) {
+  const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   const explicitName = [plan.storeTypeName, plan.store_type_name]
-    .find((value) => typeof value === "string" && value.trim());
+    .find((value) => typeof value === "string" && value.trim() && !isUuid(value));
   const values = [
     plan.storeTypeId,
     plan.store_type_id,
@@ -144,7 +145,7 @@ function getPlanStoreType(plan, storeTypes) {
   if (!values.length) return "General Plans";
   const objectNames = values.flatMap((value) => typeof value === "object"
     ? [value.name, value.storeTypeName, value.store_type_name, value.title]
-    : []).filter((value) => typeof value === "string" && value.trim());
+    : []).filter((value) => typeof value === "string" && value.trim() && !isUuid(value));
   const identifiers = values.flatMap((value) => typeof value === "object"
     ? [value.id, value.storeTypeId, value.store_type_id, value.code, value.storeTypeCode, value.store_type_code, ...objectNames]
     : [value]).filter(Boolean);
@@ -156,7 +157,7 @@ function getPlanStoreType(plan, storeTypes) {
 
   const fallback = objectNames.find((name) => name.trim());
   if (fallback) return fallback.trim();
-  return "Store Type";
+  return "Other Plans";
 }
 
 function renewalDate(start, cycle) {
@@ -285,7 +286,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       .filter(Boolean).map((value) => String(value).trim().toLowerCase())));
     const ids = new Set();
     plans.forEach((item) => {
-      [item.storeTypeId, item.store_type_id, item.applicableStoreType, item.applicable_store_type, item.storeType, item.store_type]
+      [item.storeTypeId, item.store_type_id, item.storeTypeName, item.store_type_name, item.applicableStoreType, item.applicable_store_type, item.storeType, item.store_type]
         .forEach((value) => {
           const candidates = value && typeof value === "object"
             ? [value.id, value.storeTypeId, value.store_type_id]
@@ -569,7 +570,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
                   </section>
                   <section className="pch-plan-agreement" aria-label="Billing Details"><h3>Billing Details</h3><div className="pch-grid">
                     <Select label="Billing cycle" value={cycle} options={["Monthly", "Quarterly", "Annual"]} onChange={(value) => setCycle(normalizeCycle(value))} />
-                    <Field label="Start date" type="date" min={today()} value={start} onChange={setStart} />
+                    <Field label="Start date" type="date" min={today()} value={start} onChange={(value) => setStart(value && value < today() ? today() : value)} />
                     <Field label="Renewal date" type="date" value={renewalDate(start, cycle)} readOnly />
                     <Field label="Subscription Price" value={`${formatPrice(total, plan?.currency || "USD")} / ${cycleLabel}`} readOnly />
                   </div><p className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</p></section>
