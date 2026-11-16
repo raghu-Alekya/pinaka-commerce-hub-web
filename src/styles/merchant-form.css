@@ -520,11 +520,12 @@
 ========================================================= */
 
 #pch-new button {
-    min-height: 36px;
+    min-height: 40px;
+    width: 120px;
     padding: 0 12px;
     border: 1px solid #5143bc;
     border-radius: 8px;
-    background: #fff;
+    background: #f6f7fb;
     color: #5143bc;
     font-size: 14px;
     font-weight: 500;

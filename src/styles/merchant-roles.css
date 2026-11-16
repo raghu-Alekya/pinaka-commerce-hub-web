@@ -47,13 +47,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 88px;
+  min-width: 120px;
   min-height: 40px;
   padding: 0 16px;
-  border: 1px solid #dce8f4;
+  border: 1px solid #5143bc;
   border-radius: 7px;
-  background: #fff;
-  color: #25466f;
+  background: #f6f7fb;
+  color: #5143bc;
   font: 500 14px/1.2 Inter, "Segoe UI", Arial, sans-serif;
 }
 .merchant-roles > .mr-footer-actions button:hover:not(:disabled) {

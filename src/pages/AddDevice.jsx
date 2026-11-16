@@ -168,6 +168,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
       <form
         id="add-device-form"
         className="add-device-form"
+        autoComplete="off"
         onSubmit={handleSave}
         noValidate
       >
@@ -183,6 +184,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
             <FormField label="Device Name" required invalid={validationErrors.deviceName} error={validationErrors.deviceName && "Device Name is required."}>
               <input
                 name="deviceName"
+                autoComplete="off"
                 value={formData.deviceName}
                 onChange={handleChange}
                 placeholder="Enter device name (e.g. POS Terminal 01)"

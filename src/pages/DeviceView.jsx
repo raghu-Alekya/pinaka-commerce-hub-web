@@ -143,7 +143,7 @@ export default function DeviceView() {
           {" "}
           <div className="device-view-section-title">
             {" "}
-            <FileText size={17} /> Additional Information{" "}
+             Additional Information{" "}
           </div>{" "}
           <div className="device-view-notes">
             {" "}

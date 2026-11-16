@@ -183,9 +183,16 @@ body:has(.store-workspace-page),
     color 0.15s ease;
 }
 
-.store-subnav-group-header:hover {
+.store-subnav-group-header:hover{
   background: #f3f0ff;
-  color: #5937e8;
+  color: #5143bc;
+}
+
+.store-subnav-group-header.active {
+  background: #e7e1ff;
+  color: #5143bc;
+  border: 1px solid #c4b9ff;
+  font-size: 14px!important;
 }
 
 .store-subnav-group-header i {

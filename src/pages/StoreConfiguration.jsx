@@ -632,6 +632,7 @@ export default function StoreConfiguration() {
               {navGroups.map((group) => {
 
                 const isCollapsible = group.collapsible !== false;
+                const isActive = group.items.some(([id]) => id === section);
                 const isOpen =
                   !isCollapsible || openGroups.has(group.id);
 
@@ -649,7 +650,7 @@ export default function StoreConfiguration() {
                       type="button"
                       className={`store-subnav-group-header ${
                         isOpen ? "open" : ""
-                      }`}
+                      } ${isActive ? "active" : ""}`}
                       onClick={() => setOpenGroups((current) => {
                         return current.has(group.id)
                           ? new Set()

@@ -452,7 +452,7 @@ export default function MerchantStores({
                             >
                               <div className="store-name-info">
                                 <strong>{storeName}</strong>
-                                <span>Store ID: {storeId}</span>
+                                <span> {storeId}</span>
                               </div>
                             </button>
                           </td>
