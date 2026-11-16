@@ -6,6 +6,29 @@
   margin-bottom: 18px;
 }
 
+.discounts-page .discount-sync-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.discounts-page .discount-sync-btn:hover:not(:disabled) { background: #f8fafc; }
+.discounts-page .discount-sync-btn:disabled { opacity: .65; cursor: not-allowed; }
+.discount-sync-spinning { animation: discount-sync-spin .8s linear infinite; }
+@keyframes discount-sync-spin { to { transform: rotate(360deg); } }
+
 .discounts-summary .coupon-summary-card {
   min-width: 0;
 }
