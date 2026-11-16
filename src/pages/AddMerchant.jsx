@@ -395,7 +395,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     } else if (step === 1 && !plan) {
       setError("Choose an active plan.");
       return;
-    } else if (step === 1 && start < today()) {
+    } else if (step === 1 && !editing && start < today()) {
       setError("Start date must be today or later.");
       return;
     }
@@ -416,7 +416,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       setStep(1);
       return setError("Choose an active plan.");
     }
-    if (start < today()) {
+    if (!editing && start < today()) {
       setStep(1);
       return setError("Start date must be today or later.");
     }
@@ -570,7 +570,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
                   </section>
                   <section className="pch-plan-agreement" aria-label="Billing Details"><h3>Billing Details</h3><div className="pch-grid">
                     <Select label="Billing cycle" value={cycle} options={["Monthly", "Quarterly", "Annual"]} onChange={(value) => setCycle(normalizeCycle(value))} />
-                    <Field label="Start date" type="date" min={today()} value={start} onChange={(value) => setStart(value && value < today() ? today() : value)} />
+                    <Field label="Start date" type="date" min={editing ? undefined : today()} value={start} onChange={(value) => setStart(!editing && value && value < today() ? today() : value)} />
                     <Field label="Renewal date" type="date" value={renewalDate(start, cycle)} readOnly />
                     <Field label="Subscription Price" value={`${formatPrice(total, plan?.currency || "USD")} / ${cycleLabel}`} readOnly />
                   </div><p className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</p></section>
