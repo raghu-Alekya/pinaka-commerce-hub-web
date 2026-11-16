@@ -143,6 +143,7 @@ export async function getDevice(deviceId) {
  * POST /devices
  */
 export async function createDevice(data) {
+  await ensureMerchantSerialIsUnique(data);
   const payload = toDevicePayload(data);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
@@ -166,6 +167,8 @@ export async function updateDevice(deviceId, data) {
     throw new Error("Device ID is required");
   }
 
+  const current = await getDevice(deviceId);
+  await ensureMerchantSerialIsUnique({ ...current, ...data, id: deviceId, merchantId: current?.merchantId || current?.merchant_id });
   const payload = toDevicePayload(data, { includeMerchant: false });
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
@@ -178,6 +181,27 @@ export async function updateDevice(deviceId, data) {
     throw error;
   } finally {
     clearTimeout(timeout);
+  }
+}
+
+function normalizedSerial(value) {
+  return String(value || "").trim().toLocaleLowerCase();
+}
+
+async function ensureMerchantSerialIsUnique(data) {
+  const serial = normalizedSerial(data.serialNumber || data.serial_number || data.serial);
+  if (!serial) return;
+  const merchantId = String(data.merchantId || data.merchant_id || "");
+  if (!UUID_PATTERN.test(merchantId)) return;
+
+  const existingDevices = await listDevices();
+  const duplicate = existingDevices.find((device) =>
+    String(device.merchantId || device.merchant_id || "") === merchantId &&
+    normalizedSerial(device.serial || device.serialNumber || device.serial_number) === serial &&
+    String(device.id) !== String(data.id || data.deviceId || "")
+  );
+  if (duplicate) {
+    throw new Error("This serial number is already used by another device for this merchant.");
   }
 }
 
