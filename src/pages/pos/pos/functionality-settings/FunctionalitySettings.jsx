@@ -7,12 +7,10 @@ const FEATURE_GROUPS = [
   {
     title: "Features",
     items: [
-      ["payouts", "Payouts"],
       ["fastKeys", "Fast Keys"],
       ["customItems", "Custom Items"],
       ["cardPayments", "Card Payments"],
       ["partialPayments", "Partial Payments"],
-      ["payLater", "Pay Later"],
       ["ebtPayments", "EBT Payments"],
       ["fullRefunds", "Full Refunds"],
       ["partialRefunds", "Partial Refunds"],
@@ -26,7 +24,6 @@ const FEATURE_GROUPS = [
       ["coupons", "Coupons"],
       ["loyalty", "Loyalty"],
       ["customerDisplay", "Customer Display"],
-      ["weighingScale", "Weighing Scale (Grocery-specific)"],
     ],
   },
 ];
@@ -43,11 +40,16 @@ export function FunctionalitySettings() {
       .then((record) => {
         if (!active || !record) return;
         const legacyFeatures = Object.fromEntries(
-          ["payouts", "merchantDiscounts", "customItems", "coupons"]
+          ["merchantDiscounts", "customItems", "coupons"]
             .filter((key) => record[key] !== undefined)
             .map((key) => [key, record[key]]),
         );
-        setFeatures({ ...DEFAULTS, ...legacyFeatures, ...(record.features || {}) });
+        const savedFeatures = Object.fromEntries(
+          Object.keys(DEFAULTS)
+            .filter((key) => record.features?.[key] !== undefined)
+            .map((key) => [key, record.features[key]]),
+        );
+        setFeatures({ ...DEFAULTS, ...legacyFeatures, ...savedFeatures });
         settings.session.baseline = { ...settings.session.draft };
       })
       .catch((error) => {
@@ -63,8 +65,11 @@ export function FunctionalitySettings() {
       alert("Open Functionality Settings from a store before saving.");
       return;
     }
+    const visibleFeatures = Object.fromEntries(
+      Object.keys(DEFAULTS).map((key) => [key, Boolean(features[key])]),
+    );
     await saveStorePosConfiguration(settings.storeId, "functionality_settings", {
-      features,
+      features: visibleFeatures,
     });
     return true;
   });

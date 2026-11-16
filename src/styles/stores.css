@@ -133,6 +133,8 @@
 ========================================================= */
 
 .summary-row {
+    margin-right: 0;
+    margin-left: 0;
     margin-bottom: 16px;
 }
 
@@ -277,9 +279,9 @@
 }
 
 .store-table-details small {
-    color: #7290ba;
-    font-size: 11px;
-    font-weight: 450;
+    color: #5f728e;
+    font-size: 12px;
+    font-weight: 400;
 }
 
 .stores-card .stores-table td:not(:last-child) {
@@ -362,9 +364,10 @@
 }
 
 .store-cell small {
-    color: #7290ba;
+    color: #5f728e;
     font-size: 12px;
     margin-top: 3px;
+    font-weight: 400;
 }
 
 /* =========================================================

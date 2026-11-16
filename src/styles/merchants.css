@@ -1047,7 +1047,7 @@ a {
 
 .merchant-name small {
     font-size: 12px;
-    color: #7290ba;
+    color: #5f728e;
     margin-top: 2px;
 }
 
@@ -1067,13 +1067,13 @@ a {
 
     color: #10264d ;
 
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .contact-info span {
     font-size: 12px;
 
-    color: #7290ba;
+    color: #5f728e;
 
     margin-top: 3px;
 }
@@ -1125,7 +1125,7 @@ a {
 
 .plan-info span {
     font-size: 13px;
-    color: #7290ba;
+    color: #5f728e;
     margin-top: 3px;
 }
 
@@ -1605,6 +1605,8 @@ dialog.merchant-delete-dialog::backdrop {
 .page-content:has(> .merchant-table-card) > .stats-grid {
   --bs-gutter-x: 10px;
   --bs-gutter-y: 10px;
+  margin-right: 0;
+  margin-left: 0;
   margin-bottom: 16px;
 }
 .page-content:has(> .merchant-table-card) .stat-card {
@@ -1879,6 +1881,13 @@ dialog.merchant-delete-dialog::backdrop {
   font-size: 12px;
   font-weight: 600;
 }
+
+.mel td span {
+  font-weight: 500;
+  color: #102d59;
+  font-size: 13px;
+}
+
 .mel td small {
   display: block;
   color: #81899a;
@@ -2392,7 +2401,7 @@ dialog.merchant-delete-dialog::backdrop {
 
 .merchant-timestamp { display: inline-flex; flex-direction: column; gap: 3px; line-height: 1.5; white-space: nowrap; }
 .merchant-timestamp > span { font-size: 12px; font-weight: 600; color: #10264d; }
-.merchant-timestamp small { font-size: 11px; font-weight: 450; color:#7290ba; }
+.merchant-timestamp small { font-size: 12px; font-weight: 400; color:#5f728e; }
 
 .merchant-notice { display: flex; align-items: center; }
 .merchant-notice-deactivated { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }

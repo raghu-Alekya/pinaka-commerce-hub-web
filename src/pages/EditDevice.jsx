@@ -373,8 +373,6 @@ export default function EditDevice() {
         </button>
 
         <button type="submit" form="edit-device-form" className="device-view-save" disabled={saving}>
-          <Save size={15} />
-
           {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>

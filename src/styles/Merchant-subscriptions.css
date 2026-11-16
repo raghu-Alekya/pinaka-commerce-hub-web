@@ -547,8 +547,9 @@
 .subscription-merchant-cell small {
   display: block;
   font-size: 12px;
-  color: #7290ba; 
+  color: #5f728e; 
   margin-top: 3px;
+  font-weight: 400;
 }
 
 /* ========================================
@@ -2002,8 +2003,8 @@
 
   margin: 0 0 6px;
   color: #081b3a;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   line-height: 1.2;
 
 }.subscription-details-redesign .subscription-details-heading .flow-subtitle {
@@ -5318,6 +5319,7 @@
   justify-content: center;
   gap: 8px;
   min-height: 40px;
+  min-width: 106px;
   padding: 10px 16px;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -5336,9 +5338,9 @@
   background: #40339e;
 }
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .btn-secondary {
-  border-color: #d7e1ef;
-  background: #fff;
-  color: #25436e;
+  border-color: #5143bc;
+  background: #f7f9fd;
+  color: #5143bc;
 }
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .btn-secondary:hover:not(:disabled) {
   border-color: #aebdd2;
@@ -5431,6 +5433,103 @@
    Global selectors are intentional: the dialog may render
    outside .merchant-subscriptions-page (e.g. via a portal).
 ========================================================= */
+.subscription-create-screen .subscription-create-form {
+  width: 100%;
+  padding: 24px 28px;
+  border: 1px solid #e4eaf3;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 14px rgba(20, 42, 78, .04);
+  color: #172b4d;
+}
+
+.subscription-create-screen .subscription-create-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 20px 28px;
+}
+
+.subscription-create-screen .subscription-create-form .form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  color: #344563;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.subscription-create-screen .subscription-create-form .form-group input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #172b4d;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  outline: none;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.subscription-create-screen .subscription-create-form .form-group input:focus {
+  border-color: #6558cf;
+  box-shadow: 0 0 0 3px rgba(81, 67, 188, .13);
+}
+
+.subscription-create-screen .subscription-create-form .form-group input[readonly] {
+  background: #f4f6fa;
+  color: #66758c;
+  cursor: not-allowed;
+}
+
+.subscription-create-screen .subscription-create-form .form-group .pch-filter-dropdown {
+  width: 100%;
+}
+
+.subscription-create-screen .subscription-create-form .form-group .pch-filter-sizing {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  height: 42px;
+  padding: 9px 32px 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #172b4d;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.subscription-create-screen .subscription-create-form .form-group .pch-filter-dropdown .pch-filter-trigger {
+  min-height: 42px;
+  height: 42px;
+  font-size: 14px;
+}
+
+.subscription-create-screen .subscription-create-form .form-actions {
+  margin-top: 28px !important;
+  padding-top: 20px;
+  border-top: 1px solid #edf0f5;
+}
+
+.subscription-create-screen .subscription-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 [role="dialog"][aria-labelledby="subscription-crud-title"] {
   box-sizing: border-box;
   background: rgba(15, 23, 42, .48) !important;
@@ -5453,9 +5552,9 @@
 
 [role="dialog"][aria-labelledby="subscription-crud-title"] h2 {
   color: #142746;
-  font-size: 30px;
-  font-weight: 650;
-  line-height: 1.2;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
   letter-spacing: -.025em;
 }
 
@@ -5593,6 +5692,33 @@
 }
 
 @media (max-width: 680px) {
+  .subscription-create-screen .subscription-create-form {
+    padding: 20px 16px;
+  }
+
+  .subscription-create-screen .subscription-create-form .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .subscription-create-screen .subscription-create-form .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .subscription-create-screen .subscription-create-form .form-actions .btn {
+    width: 100%;
+  }
+
+  .subscription-create-screen .subscription-create-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .subscription-create-screen .subscription-create-actions .btn {
+    width: 100%;
+  }
+
   [role="dialog"][aria-labelledby="subscription-crud-title"] {
     align-items: flex-start !important;
     overflow-y: auto;

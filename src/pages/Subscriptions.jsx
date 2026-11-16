@@ -752,12 +752,7 @@ const handleDateRangeChange = (value) => {
           </p>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-          }}
-        >
+        <div>
 
  <button
             type="button"
@@ -2236,25 +2231,13 @@ function SubscriptionCrudForm({
     ? reference.subscriptionStatuses
     : ["ACTIVE", "INACTIVE", "CANCELLED"];
 
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="subscription-crud-title"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 1000,
-        background: "rgba(15, 23, 42, 0.45)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-      }}
-    >
+  const createPage = !editing;
+  const formElement = (
       <form
+        id={createPage ? "subscription-create-form" : undefined}
+        className={createPage ? "subscription-create-form" : ""}
         onSubmit={onSubmit}
-        style={{
+        style={createPage ? undefined : {
           width: "min(920px, 100%)",
           maxHeight: "90vh",
           overflowY: "auto",
@@ -2264,10 +2247,10 @@ function SubscriptionCrudForm({
           padding: "24px",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-          <div>
+        {!createPage && <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+          <div className={createPage ? "subscription-create-form-heading" : ""}>
             <h2 id="subscription-crud-title" style={{ margin: 0 }}>
-              {editing ? "Edit Subscription" : "Add Subscription"}
+              Edit Subscription
             </h2>
             <p style={{ margin: "6px 0 0", color: "#667085", fontSize: "13px" }}>
               Manage the merchant subscription record and billing details.
@@ -2276,7 +2259,7 @@ function SubscriptionCrudForm({
           <button type="button" onClick={onCancel} disabled={busy} aria-label="Close" style={{ border: 0, background: "transparent", cursor: "pointer" }}>
             <X size={20} />
           </button>
-        </div>
+        </div>}
 
         {error && (
           <div style={{ padding: "10px 12px", marginBottom: "16px", background: "#fff1f2", color: "#b42318", borderRadius: "8px", fontSize: "13px" }} role="alert">
@@ -2417,16 +2400,56 @@ function SubscriptionCrudForm({
             </label>
           </div>
 
-          <div className="form-actions" style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+          {!createPage && <div className="form-actions" style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
             <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={busy}>
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={busy}>
-              {busy ? "Saving…" : editing ? "Update subscription" : "Save subscription"}
+              {busy ? "Saving…" : editing ? "Update Subscription" : "Save Subscription"}
             </button>
-          </div>
+          </div>}
         </fieldset>
       </form>
+  );
+
+  if (createPage) {
+    return (
+      <section className="subscription-flow-page subscription-details-redesign subscription-create-screen">
+        <PageBack label="Back to Subscriptions" onClick={onCancel} />
+        <div className="subscription-details-heading">
+          <h1>Add Subscription</h1>
+          <p className="flow-subtitle">Manage the merchant subscription record and billing details.</p>
+        </div>
+        {formElement}
+        <div className="subscription-create-actions">
+          <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={busy}>
+            Cancel
+          </button>
+          <button type="submit" className="btn btn-primary" form="subscription-create-form" disabled={busy}>
+            {busy ? "Saving…" : "Save Subscription"}
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="subscription-crud-title"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1000,
+        background: "rgba(15, 23, 42, 0.45)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+      }}
+    >
+      {formElement}
     </div>
   );
 }
@@ -3117,7 +3140,27 @@ export default function MerchantSubscriptions() {
 
   }
 
-  return (
+  const crudFormView = crudForm ? (
+    <SubscriptionCrudForm
+      form={crudForm}
+      setForm={setCrudForm}
+      editing={crudEditing}
+      merchants={crudMerchants}
+      plans={crudPlans}
+      busy={crudBusy}
+      error={crudError}
+      onCancel={() => {
+        setCrudForm(null);
+        setCrudEditing(null);
+        setCrudError("");
+      }}
+      onSubmit={saveSubscription}
+    />
+  ) : null;
+
+  return crudForm && !crudEditing ? (
+    crudFormView
+  ) : (
     <>
       <SubscriptionList
         subscriptions={subscriptions}
@@ -3131,23 +3174,7 @@ export default function MerchantSubscriptions() {
         crudBusy={crudBusy}
       />
 
-      {crudForm && (
-        <SubscriptionCrudForm
-          form={crudForm}
-          setForm={setCrudForm}
-          editing={crudEditing}
-          merchants={crudMerchants}
-          plans={crudPlans}
-          busy={crudBusy}
-          error={crudError}
-          onCancel={() => {
-            setCrudForm(null);
-            setCrudEditing(null);
-            setCrudError("");
-          }}
-          onSubmit={saveSubscription}
-        />
-      )}
+      {crudEditing && crudFormView}
     </>
   );
 

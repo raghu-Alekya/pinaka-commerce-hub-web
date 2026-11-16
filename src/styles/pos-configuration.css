@@ -4709,7 +4709,8 @@
 .pc-field > .pch-filter-dropdown > .pch-filter-sizing { width: 100%; }
 .pc-screen .pc-field textarea { 
     width:100%; 
-    min-height:100px; resize:vertical; border:1px solid #d8e1ee; border-radius:5px; padding:10px; background:#fff; color:var(--pc-ink); font:inherit; font-size:12px; }
+    min-height:100px; resize:vertical; border:1px solid #d8e1ee; border-radius:5px; padding:10px; background:#fff; color:#17233e; font:inherit; font-size:12px; }
+.pc-screen .pc-field textarea::placeholder { color:#8b97a9; opacity:1; font-weight: 400; }
 .pc-screen .pc-field textarea:focus { outline:none; border-color:#5143bc; box-shadow:0 0 0 3px rgba(81,67,188,.08); }
 .pc-printer-logo-row { display:flex; align-items:center; gap:18px; margin-top:16px; }
 .pc-printer-logo-preview, .pc-printer-logo-placeholder { display:grid; width:132px; height:88px; flex:0 0 132px; place-items:center; object-fit:contain; border:1px solid #e0e7f1; border-radius:7px; background:#f8faff; color:#8795aa; font-size:26px; }
@@ -4849,7 +4850,7 @@
 .pos-page-content :is(button, input, select, textarea) { font-family: inherit; }
 .pos-config-detail-card { font-size: var(--pos-text-size); color: var(--pos-heading); }
 .pos-config-detail-card :is(input, select, textarea, label, th, td):not(.loyalty-page *) { font-size: var(--pos-text-size); }
-.pos-config-detail-card h3 { font-size: 14px; color: var(--pos-heading); }
+.pos-config-detail-card h3 { font-size: 16px; color: var(--pos-heading); }
 .pos-page-content .pc-row-actions button { font-size: var(--pos-button-size); }
 .pos-page-content :is(.pc-button, .pos-primary-button, .pos-add-button, .pos-remove-button,
     .opening-balance-back, .opening-balance-save, .currency-tax-back-button, .currency-tax-save-button,
@@ -4863,7 +4864,7 @@
 .pos-page-content :is(.pos-add-button, .cashback-add-button, .service-charge-add-button) { color: var(--pos-primary); background: #fff; border-color: var(--pos-primary); border-radius: 6px; }
 .pos-page-content :is(.pos-add-button, .cashback-add-button, .service-charge-add-button):hover:not(:disabled) { background: #f4f2ff; }
 .pos-page-content .pc-screen { --pc-blue: var(--pos-primary); font-family: inherit; }
-.pos-page-content .pc-screen :is(.pc-field, .pc-switch-field) { color: var(--pos-label); font-size: var(--pos-text-size); }
+.pos-page-content .pc-screen :is(.pc-field, .pc-switch-field) { color:#52637b; font-size: 13px; }
 .pos-page-content .pc-screen select:disabled { background: #f3f6fa; color: var(--pos-muted); cursor: not-allowed; }
 .pos-change-dialog { width: min(470px, calc(100vw - 32px)); padding: 24px; border: 1px solid #dfe3ea; border-radius: 10px; background: #fff; color: #17233e; font-family: inherit; box-shadow: 0 18px 60px #17233e30; }
 .pos-change-dialog::backdrop { background: #17233e65; }

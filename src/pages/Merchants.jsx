@@ -559,7 +559,19 @@ async function openEmployeeEdit(employee) {
       @media(max-width:650px){.merchant-readonly .merchant-view-fields{grid-template-columns:1fr;}}
     `}</style>
     <header className="merchant-view-topbar">
-      {vendorFlow ? <><button type="button" className="merchant-view-back" onClick={() => vendorBackRef.current?.()}><i className="bi bi-arrow-left" /> Vendors</button><span>/</span><strong>{vendorFlow === "create" ? "Add New Vendor" : "Add Existing Vendor"}</strong></> : tenderFlow ? <><button type="button" className="merchant-view-back" onClick={() => tenderBackRef.current?.()}><i className="bi bi-arrow-left" /> Tenders</button><span>/</span><strong>Add Existing Tender</strong></> : addingEmployee ? <><button type="button" className="merchant-view-back" onClick={() => setAddingEmployee(false)}><i className="bi bi-arrow-left" /> Employees</button><span>/</span><strong>Add Employee</strong></> : addingDevice ? <><button type="button" className="merchant-view-back" onClick={() => setAddingDevice(false)}><i className="bi bi-arrow-left" /> Devices</button><span>/</span><strong>Add Device</strong></> : <button type="button" className="merchant-view-back" onClick={onBack}><i className="bi bi-arrow-left" /> Merchants</button>}
+      {activeTab === "vendors" && vendorFlow ? (
+        <><button type="button" className="merchant-view-back" onClick={() => vendorBackRef.current?.()}><i className="bi bi-arrow-left" /> Vendors</button><span>/</span><strong>{vendorFlow === "create" ? "Add New Vendor" : "Add Existing Vendor"}</strong></>
+      ) : activeTab === "tenders" && tenderFlow ? (
+        <><button type="button" className="merchant-view-back" onClick={() => tenderBackRef.current?.()}><i className="bi bi-arrow-left" /> Tenders</button><span>/</span><strong>Add Existing Tender</strong></>
+      ) : activeTab === "employees" && addingEmployee ? (
+        <><button type="button" className="merchant-view-back" onClick={() => setAddingEmployee(false)}><i className="bi bi-arrow-left" /> Employees</button><span>/</span><strong>Add Employee</strong></>
+      ) : activeTab === "employees" && editingEmployee ? (
+        <><button type="button" className="merchant-view-back" onClick={() => setEditingEmployee(null)}><i className="bi bi-arrow-left" /> Employees</button><span>/</span><strong>Edit Employee</strong></>
+      ) : activeTab === "devices" && (addingDevice || editingDevice) ? (
+        <><button type="button" className="merchant-view-back" onClick={() => { setAddingDevice(false); setEditingDevice(null); }}><i className="bi bi-arrow-left" /> Devices</button><span>/</span><strong>{editingDevice ? "Edit Device" : "Add Device"}</strong></>
+      ) : (
+        <button type="button" className="merchant-view-back" onClick={onBack}><i className="bi bi-arrow-left" /> Merchants</button>
+      )}
     </header>
     <div className="merchant-view-layout">
       {!loading && !error && <div className="merchant-view-tabs" role="tablist" aria-orientation="vertical" aria-label="Merchant details">
@@ -1595,7 +1607,7 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
         }}
     >
         <td>
-            <strong>{employeeName(e)}</strong>
+            <span>{employeeName(e)}</span>
             {e.employeeCode && <small>{e.employeeCode}</small>}
         </td>
 
@@ -1864,8 +1876,8 @@ return (
           <thead>
             <tr>
               {[
+                ['deviceCode', 'Device ID'],
                 ['activationKey', 'Activation Key'],
-                ['deviceCode', 'Device Code'],
                 ['name', 'Device Name'],
                 ['type', 'Type'],
                 ['storeLabel', 'Store'],
@@ -1921,11 +1933,11 @@ return (
                       setView(d);
                     }}
                   >
-                    <td>{d.activationKey}</td>
                     <td>{d.deviceCode}</td>
+                    <td>{d.activationKey}</td>
                     <td>
                       <span className="mdl-name">
-                        <strong>{d.name}</strong>
+                        <span>{d.name}</span>
                       </span>
                     </td>
                     <td>{d.type}</td>

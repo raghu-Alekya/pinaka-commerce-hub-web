@@ -7,8 +7,8 @@
   width:100%;
   border:1px solid #d5e0ed;
   border-radius:5px;
-  font-size:14px;
-  font-weight:600
+  font-size:13px;
+  font-weight:500
 }
 .device-view-page .device-view-status-field.active,
 .device-view-page .device-view-status-field.online{color:#08a961}
@@ -56,9 +56,8 @@
   color:#294466}
   .device-view-edit,.device-view-save{
     border:0;
-    background:linear-gradient(90deg,#5d3ddd,#6740e5);
+    background:#5143bc;
     color:#fff;
-    box-shadow:0 4px 10px rgba(93,61,221,.16)
   }
   .device-view-card{width:100%;
     box-sizing:border-box;
@@ -93,7 +92,8 @@
     background:#fbfcfe;
     color:#294668;
     font:inherit;
-    font-size:16px}
+    font-size:13px}
+
  .device-view-status{
       height:24px;
       padding:0 10px;
@@ -154,7 +154,7 @@
     border-radius:5px;
     background:#fbfcfe;
     color:#8294ab;
-    font-size:14px
+    font-size:13px;
   }
   .device-view-meta-grid{
     display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
@@ -246,19 +246,20 @@
     display:flex;
     justify-content:flex-end;
     gap:10px;
-    margin-top:16px
+    margin-top:16px;
   }
   .device-view-cancel,.device-view-save{
-    height:39px;
+    height:40px;
+    min-width:100px;
     padding:0 19px;
     border-radius:6px;
     font:11px inherit;
     cursor:pointer
   }
   .device-view-cancel{
-    border:1px solid #d6e0ec;
-    background:#fff;
-    color:#334e70
+    border:1px solid #5143bc;
+    background:#f5f7fb;
+    color:#5143bc
   }
   .device-view-save{
     display:flex;
