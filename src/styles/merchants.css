@@ -1214,6 +1214,16 @@ a {
     color: #b91c1c !important;
 }
 
+.status.expired {
+    color: #b91c1c !important;
+    background-color: #fee2e2 !important;
+}
+
+.status.expired i {
+    background-color: #b91c1c !important;
+    color: #b91c1c !important;
+}
+
 .status.pending-setup {
     color: #d18d25 !important;
     background-color: #fff0d9 !important;

@@ -131,6 +131,13 @@ export function mapSubscriptionToRow(item, index = 0) {
     item.renewal_date ||
     item.currentPeriodEnd ||
     item.current_period_end;
+  const baseStatus = titleCaseStatus(item.status);
+  const renewalDay = rawEnd ? String(rawEnd).trim().slice(0, 10) : "";
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const effectiveStatus = baseStatus === "Active" && /^\d{4}-\d{2}-\d{2}$/.test(renewalDay) && renewalDay < today
+    ? "Inactive"
+    : baseStatus;
 
   const entitlements =
     Array.isArray(item.entitlements) && item.entitlements.length > 0
@@ -169,7 +176,7 @@ export function mapSubscriptionToRow(item, index = 0) {
     end: formatDate(rawEnd),
     rawStart: rawStart || "",
     rawEnd: rawEnd || "",
-    status: titleCaseStatus(item.status),
+    status: effectiveStatus,
     price: Number(
       item.price ||
         item.agreementPrice ||

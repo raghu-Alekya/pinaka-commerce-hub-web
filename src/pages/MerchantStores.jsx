@@ -1,7 +1,7 @@
 import "../styles/merchant-stores-embedded.css";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getMerchant } from "../api/merchants";
+import { getMerchant, isSubscriptionExpired } from "../api/merchants";
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { activateStore, deactivateStore } from "../api/stores";
 import { endpoints } from "../api/endpoints";
@@ -20,7 +20,7 @@ const formatStatus = (status) => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
-function toStoreRow(store) {
+function toStoreRow(store, subscription) {
   const address = store.address && typeof store.address === "object" ? store.address : null;
   const typeValue = store.storeType ?? store.type;
   const type = typeof typeValue === "string"
@@ -41,6 +41,10 @@ function toStoreRow(store) {
     .find(isUuid) || "";
   const storeCode = [store.storeCode, store.store_code, store.code, store.storeId, store.storeID, store.id]
     .find((value) => value && !isUuid(value)) || "";
+  const status = formatStatus(store.status || "Active");
+  const renewalDate = subscription?.renewalDate || subscription?.renewal_date
+    || subscription?.nextBillingDate || subscription?.next_billing_date
+    || subscription?.currentPeriodEnd || subscription?.current_period_end;
   return {
     ...store,
     id: storeUuid,
@@ -54,7 +58,7 @@ function toStoreRow(store) {
     city: address?.city || store.city || "",
     state: address?.state || store.state || "",
     address: typeof store.address === "string" ? store.address : address?.street || "",
-    status: formatStatus(store.status || "Active"),
+    status: status === "Active" && isSubscriptionExpired(renewalDate) ? "Inactive" : status,
   };
 }
 
@@ -67,6 +71,7 @@ export default function MerchantStores({
   merchantId: selectedMerchantId,
   embedded = false,
   merchantDetails = null,
+  subscription: providedSubscription = null,
 }) {
   const params = useParams();
   const merchantId = selectedMerchantId ?? params.merchantId;
@@ -119,8 +124,9 @@ export default function MerchantStores({
           }
 
           const listed = storesResult?.stores ?? storesResult?.data?.stores ?? result.stores ?? [];
+          const subscription = providedSubscription || result.subscription || result.merchant?.subscription || merchantDetails?.subscription || null;
           setMerchant(result.merchant);
-          setStores((Array.isArray(listed) ? listed : []).map(toStoreRow));
+          setStores((Array.isArray(listed) ? listed : []).map((store) => toStoreRow(store, subscription)));
         }
       } catch (err) {
         if (!cancelled) {
