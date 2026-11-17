@@ -34,6 +34,7 @@ import {
   saveWordpressConnector,
   syncWordpressAttributes,
   syncWordpressCategories,
+  syncWordpressDiscounts,
   syncWordpressProducts,
   syncWordpressTags,
 } from "../api/storeConnector";
@@ -540,6 +541,26 @@ export default function StoreConfiguration() {
     "Categories, attributes, and tags synced.",
   );
 
+  const handleSyncDiscounts = async () => {
+    if (syncing || saving || !connected) return;
+    setSyncing(true);
+    setMessage("");
+    setSyncProgress({ label: "Syncing Discounts", percent: 0 });
+    try {
+      const response = await syncWordpressDiscounts(storeId);
+      if (response?.success === false || ["error", "failed"].includes(String(response?.status || "").toLowerCase())) {
+        throw new Error(response.message || "Unable to sync discounts.");
+      }
+      setSyncProgress({ label: "Sync complete", percent: 100 });
+      setMessage(response?.message || "Discounts synced successfully.");
+    } catch (err) {
+      setMessage(err?.message || "Unable to sync discounts.");
+      setSyncProgress(null);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   /* =======================================================
      BACK TO STORES
      ======================================================= */
@@ -773,6 +794,7 @@ export default function StoreConfiguration() {
                       {connected && <>
                         <button type="button" className="sf-outline" onClick={handleSyncCategories} disabled={syncing || saving}>Sync Category</button>
                         <button type="button" className="sf-outline" onClick={handleSyncProducts} disabled={syncing || saving}>Sync Product</button>
+                        <button type="button" className="sf-outline" onClick={handleSyncDiscounts} disabled={syncing || saving}>Sync Discount</button>
                       </>}
                       {!editingSection && <button type="button" className="store-config-btn" onClick={() => {restoreConnection();setEditingSection(true);}}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
                     </div>
