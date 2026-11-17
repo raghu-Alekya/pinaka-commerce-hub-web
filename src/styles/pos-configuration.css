@@ -4728,7 +4728,8 @@
 .pc-switch-field input:checked + .pc-switch-track { background: var(--pc-blue); }
 .pc-switch-field input:checked + .pc-switch-track::after { transform: translateX(15px); }
 .pc-switch-field input:focus-visible + .pc-switch-track { outline: 3px solid #82baff; outline-offset: 3px; }
-.pc-muted { opacity: .55; cursor: default; }
+.pc-muted { opacity: .55; cursor: not-allowed; }
+.pc-muted *, .pc-muted input:disabled { cursor: not-allowed !important; }
 .pc-form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
 .pc-editor { padding: 20px; margin-bottom: 22px; border: 1px solid #c8defc; border-radius: 9px; background: #f8fbff; }
 .pc-editor-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }

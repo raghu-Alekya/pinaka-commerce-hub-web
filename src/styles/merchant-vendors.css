@@ -384,12 +384,12 @@
 
 .merchant-vendors th:nth-child(1),
 .merchant-vendors td:nth-child(1) {
-    width: 11%;
+    width: 15%;
 }
 
 .merchant-vendors th:nth-child(2),
 .merchant-vendors td:nth-child(2) {
-    width: auto;
+    width: 20%;
 }
 
 .merchant-vendors th:nth-child(3),
@@ -1265,7 +1265,7 @@
 .mv-create-page > .mv-header { border: 0; border-radius: 0; margin: 0; padding: 20px 24px 10px; }
 .mv-create-header-copy { min-width: 0; }
 .mv-create-page > .mv-header .mv-create-header-copy p { margin-top: 6px; color: #75819a; font-size: 14px; }
-.merchant-vendors.mv-existing-page > .mv-existing-content { margin: 0; border-radius: 0;padding: 10px 24px; background: #f6f8fc; }
+.merchant-vendors.mv-existing-page > .mv-existing-content { margin: 0; border-radius: 9px;padding: 10px 10px; background: #f6f8fc; }
 .mv-existing-selection-card { padding: 24px; border: 1px solid #e8ecf3; border-radius: 12px; background: #fff; }
 .merchant-vendors.mv-existing-page > .mv-existing-footer { justify-content: flex-end; padding: 0px 20px 0px; }
 .mv-existing-page .mv-existing-title { display: flex; align-items: center; gap: 8px; }
@@ -1297,7 +1297,7 @@
 .mv-existing-page .mv-existing-table-wrap .mv-cell-ellipsis { display: block; width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mv-existing-page .mv-existing-table-wrap th { white-space: nowrap; }
 .mv-existing-table-wrap th { position: sticky; top: 0; z-index: 1; background: #f5f7fb; color: #17233e; white-space: nowrap; }
-.mv-existing-table-wrap th:nth-child(1), .mv-existing-table-wrap td:nth-child(1) { width: 52px; min-width: 52px; text-align: center; }
+.mv-existing-table-wrap th:nth-child(1), .mv-existing-table-wrap td:nth-child(1) { width: 60px; min-width: 60px; text-align: center; }
 .mv-existing-table-wrap th:nth-child(2), .mv-existing-table-wrap td:nth-child(2) { width: 140px; min-width: 130px; }
 .mv-existing-table-wrap th:nth-child(3), .mv-existing-table-wrap td:nth-child(3) { width: 180px; min-width: 160px; }
 .mv-existing-table-wrap th:nth-child(4), .mv-existing-table-wrap td:nth-child(4) { width: 150px; min-width: 140px; }

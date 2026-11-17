@@ -202,11 +202,22 @@
   .device-edit-select{
     position:relative
   }
+  .device-edit-select > .pch-filter-dropdown{
+    display:grid;
+    width:100%;
+    max-width:100%
+  }
   .device-edit-select select{
     appearance:none;
     padding-right:30px;
     outline:none;
     cursor:pointer
+  }
+  .device-edit-select .pch-filter-trigger:focus-visible,
+  .device-edit-select .pch-filter-trigger[aria-expanded="true"]{
+    border-color:#6744dc !important;
+    box-shadow:0 0 0 2px rgba(103,68,220,.08);
+    outline:none
   }
   .device-edit-select svg{
     position:absolute;
