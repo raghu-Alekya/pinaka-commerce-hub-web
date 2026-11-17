@@ -36,8 +36,7 @@ export function CashbackSettings() {
     const currency = settings.currency;
     
     const [enabled, setEnabled] = useConfigState("enabled", false);
-    const [functionalityEnabled, setFunctionalityEnabled] = useState(false);
-    const cashbackEnabled = functionalityEnabled && enabled;
+    const cashbackEnabled = enabled;
 
     const [maxCashback, setMaxCashback] =
         useConfigState("maxCashback", "");
@@ -113,30 +112,19 @@ export function CashbackSettings() {
             .then((record) => {
                 if (active && record?.id) applyCashback(record);
             })
-            .catch((error) => {
-                if (error instanceof ApiError && error.status === 404) return;
-                if (active) alert(error?.message || "Unable to load cashback settings.");
-            });
-        return () => { active = false; };
-    }, [settings.storeId]);
-
-    useEffect(() => {
-        if (!settings.storeId) {
-            setFunctionalityEnabled(false);
-            return undefined;
-        }
-        let active = true;
-        setFunctionalityEnabled(false);
-        loadStorePosConfiguration(settings.storeId, "functionality_settings")
-            .then((record) => {
-                if (active) setFunctionalityEnabled(Boolean(record?.features?.cashback ?? record?.cashback));
-            })
-            .catch((error) => {
+            .catch(async (error) => {
                 if (error instanceof ApiError && error.status === 404) {
-                    if (active) setFunctionalityEnabled(false);
+                    try {
+                        const functionality = await loadStorePosConfiguration(settings.storeId, "functionality_settings");
+                        if (active) setEnabled(Boolean(functionality?.features?.cashback ?? functionality?.cashback));
+                    } catch (functionalityError) {
+                        if (!(functionalityError instanceof ApiError && functionalityError.status === 404) && active) {
+                            alert(functionalityError?.message || "Unable to load functionality settings.");
+                        }
+                    }
                     return;
                 }
-                if (active) alert(error?.message || "Unable to load functionality settings.");
+                if (active) alert(error?.message || "Unable to load cashback settings.");
             });
         return () => { active = false; };
     }, [settings.storeId]);
@@ -173,7 +161,6 @@ export function CashbackSettings() {
             ...functionalitySettings,
             features: { ...(functionalityRecord?.features || {}), cashback: cashbackEnabled },
         });
-        setFunctionalityEnabled(cashbackEnabled);
         applyCashback(record);
         return true;
     });
@@ -227,15 +214,8 @@ export function CashbackSettings() {
                             className={`cashback-switch ${
                                 cashbackEnabled ? "active" : ""
                             }`}
-                            disabled={!functionalityEnabled}
-                            title={!functionalityEnabled ? "Enable Cashback in Functionality Settings first." : undefined}
-                            onClick={() => {
-                                if (!functionalityEnabled) return;
-                                setEnabled(
-                                    (value) => !value
-                                );
-                            }}
-                            aria-pressed={cashbackEnabled}
+                            onClick={() => setEnabled((value) => !value)}
+                            aria-pressed={enabled}
                         >
                             <span />
                         </button>
