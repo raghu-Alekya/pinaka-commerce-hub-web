@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import DeviceNavigation from "../components/DeviceNavigation";
+import FilterDropdown from "../components/FilterDropdown";
 import {
   ArrowLeft,
   Save,
   Settings,
-  ChevronDown,
   AlertCircle,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -147,7 +147,15 @@ export default function EditDevice() {
 
   const select = (name, value, options, placeholder) => (
     <div className={`device-edit-select${validationErrors[name] ? " field-invalid" : ""}`}>
-      <select name={name} value={value} onChange={update} required aria-invalid={Boolean(validationErrors[name])}>
+      <FilterDropdown
+        name={name}
+        value={value}
+        onChange={update}
+        required
+        aria-label={placeholder}
+        aria-required="true"
+        className={validationErrors[name] ? "field-invalid" : ""}
+      >
         <option value="">{placeholder}</option>
 
         {options.map((option) => (
@@ -155,9 +163,7 @@ export default function EditDevice() {
             {option}
           </option>
         ))}
-      </select>
-
-      <ChevronDown size={15} />
+      </FilterDropdown>
       {validationErrors[name] && <small className="device-field-error" role="alert">{validationErrors[name]}</small>}
     </div>
   );
