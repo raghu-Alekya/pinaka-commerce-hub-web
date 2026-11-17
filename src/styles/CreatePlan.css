@@ -146,6 +146,10 @@
   gap: 14px 18px;
 }
 
+.plan-pricing-grid {
+  gap: 12px 20px;
+}
+
 .plan-create-grid,
 .plan-bottom-grid,
 .plan-pricing-grid.two-columns {
@@ -154,7 +158,11 @@
 
 .plan-pricing-grid.three-columns {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 14px;
+  margin-top: 12px;
+}
+
+.plan-card-heading:has(+ .plan-pricing-grid.three-columns) {
+  margin-bottom: 0;
 }
 
 .plan-field {
@@ -214,7 +222,7 @@
   height: auto;
   padding: 0;
   border: 0;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -224,7 +232,7 @@
   height: 34px;
   padding: 0 10px;
   outline: 0;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -362,10 +370,35 @@
   background: #fff;
 }
 
+.plan-feature-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
 .plan-feature-panel h3 {
-  margin: 0 0 10px;
+  margin: 0;
+  color: #183963;
+  font-size: 14px;
+}
+
+.plan-feature-select-all {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
   color: #183963;
   font-size: 12px;
+  cursor: pointer;
+}
+
+.plan-feature-select-all input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #5143bc;
 }
 
 .plan-feature-panel h3 b {
@@ -379,6 +412,7 @@
   align-items: center;
   gap: 9px;
   border-bottom: 1px solid #edf2f8;
+  margin-bottom: 10px;
 }
 
 .plan-feature-check:last-child,
@@ -387,21 +421,22 @@
 }
 
 .plan-feature-check input {
-  width: 13px;
-  height: 13px;
+  width: 16px;
+  height: 16px;
   accent-color: #684ee3;
+  border-radius: 6px;
 }
 
 .plan-feature-icon {
   display: grid;
-  width: 25px;
-  height: 25px;
+  width: 28px;
+  height: 28px;
   flex: 0 0 25px;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #684ee3;
   background: #e7f2ff;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 
@@ -415,7 +450,8 @@
 
 .plan-feature-check strong,
 .plan-addon-row strong {
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .plan-feature-check small,
@@ -489,8 +525,8 @@
 
 .plan-feature-summary-label {
   color: #23426e;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .plan-review-feature-list {
@@ -513,7 +549,7 @@
 
 .plan-review-empty {
   color: #6380ae;
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .plan-review-feature-container {
@@ -1145,13 +1181,13 @@
 }
 
 /* Fixed Label Height */
-.plan-field > span {
+.plan-field > span:first-child {
   display: flex;
   align-items: center;
   gap: 4px;
   height: 20px;
   margin-bottom: 6px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: #23426e;
 }
@@ -1677,6 +1713,10 @@
   font-size: 13px !important;
 }
 
+.plan-pricing-grid .plan-field > input {
+  height: 38px;
+}
+
 .plan-pricing-grid .plan-field .pch-filter-trigger {
   width: 100% !important;
   height: 38px !important;
@@ -1695,6 +1735,142 @@
   justify-content: space-between !important;
   cursor: pointer !important;
   transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+.plan-date-picker {
+  position: relative;
+  width: 100%;
+}
+
+.plan-date-trigger {
+  display: flex;
+  width: 100%;
+  height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0 11px;
+  border: 1px solid #d9e6f4;
+  border-radius: 7px;
+  background: #fff;
+  color: #183963;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.plan-date-trigger svg {
+  flex: 0 0 auto;
+  color: #65748b;
+}
+
+.plan-date-trigger:focus-visible {
+  outline: 2px solid #8172ef;
+  outline-offset: 1px;
+}
+
+.plan-calendar-popover {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(100% + 6px);
+  left: 0;
+  width: 272px;
+  padding: 12px;
+  border: 1px solid #dfe3f0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(31, 41, 75, .16);
+}
+
+.plan-calendar-heading,
+.plan-calendar-heading > div,
+.plan-calendar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plan-calendar-heading {
+  margin-bottom: 10px;
+  color: #24324b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.plan-calendar-heading > div {
+  gap: 4px;
+}
+
+.plan-calendar-heading button,
+.plan-calendar-grid button,
+.plan-calendar-footer button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.plan-calendar-heading button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 6px;
+  color: #52617a;
+}
+
+.plan-calendar-heading button:hover,
+.plan-calendar-grid button:hover {
+  background: #f0effa;
+}
+
+.plan-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.plan-calendar-weekdays {
+  margin-bottom: 4px;
+  color: #77839a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.plan-calendar-weekdays span {
+  padding: 5px 0;
+}
+
+.plan-calendar-grid button {
+  height: 32px;
+  border-radius: 6px;
+  color: #344054;
+  font-size: 12px;
+}
+
+.plan-calendar-grid button.outside-month {
+  color: #a7afbd;
+}
+
+.plan-calendar-grid button.selected {
+  background: #5143bc;
+  color: #fff;
+}
+
+.plan-calendar-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eef0f5;
+}
+
+.plan-calendar-footer button {
+  padding: 5px 4px;
+  color: #5143bc;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .plan-field .pch-filter-trigger:hover:not(:disabled) {

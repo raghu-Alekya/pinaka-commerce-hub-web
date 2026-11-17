@@ -3130,6 +3130,11 @@
     background: #5143bc;
 }
 
+.cashback-switch:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
 .cashback-switch.active span {
     transform: translateX(19px);
 }
