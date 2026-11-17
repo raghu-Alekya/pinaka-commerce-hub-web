@@ -12,6 +12,7 @@ import { useLocationOptions } from "../data/useLocationOptions";
 import { storeTypesApi } from "../api/storeTypes";
 import FilterDropdown from "../components/FilterDropdown";
 import StatusBadge from "../components/StatusBadge";
+import BentoDetailModal from "../components/BentoDetailModal";
 import PhoneInputModule from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import "../styles/merchant-form.css";
@@ -84,11 +85,12 @@ function renderFieldLabel(label) { if (label == null || typeof label !== "string
 function Field({ label, value, onChange, error, ...props }) {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = props.type === "password";
+  const autoComplete = props.autoComplete || (props.readOnly || props.type === "date" ? undefined : "new-password");
   return (
     <label className={`pch-field${error ? " pch-field-invalid" : ""}`}>
       {renderFieldLabel(label)}
       <span className={isPassword ? "pch-password-input" : undefined}>
-        <input {...props} type={isPassword && showPassword ? "text" : props.type} aria-invalid={Boolean(error)} value={value ?? ""} onChange={(event) => onChange?.(event.target.value)} />
+        <input {...props} name={isPassword ? (props.name || "merchant-password-entry") : props.name} autoComplete={autoComplete} className={`${props.className || ""}${isPassword && !showPassword ? " pch-password-masked" : ""}`.trim()} type={isPassword ? "text" : props.type} aria-invalid={Boolean(error)} value={value ?? ""} onChange={(event) => onChange?.(event.target.value)} />
         {isPassword && <button type="button" className="pch-password-toggle" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button>}
       </span>
       {error && <span className="pch-field-error" role="alert">{error}</span>}
@@ -219,6 +221,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const [submitting, setSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [saved, setSaved] = useState(null);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const initialDraftRef = useRef(null);
   const editing = Boolean(merchantId);
   const currentDraftSnapshot = JSON.stringify({ merchant, planId, cycle, start, paymentMethod });
@@ -227,9 +230,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     if (
       !saved &&
       initialDraftRef.current !== null &&
-      initialDraftRef.current !== currentDraftSnapshot &&
-      !window.confirm("You have unsaved changes. Are you sure you want to leave this page?")
-    ) return;
+      initialDraftRef.current !== currentDraftSnapshot
+    ) {
+      setShowUnsavedDialog(true);
+      return;
+    }
     navigate("/merchants");
   };
   const goToStep = (index) => setStep(index);
@@ -443,11 +448,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
             <Panel title="Primary Contact"><div className="pch-grid">
               <Field label="First Name *" placeholder="Enter first name" value={merchant.firstName} required error={fieldErrors.firstName} onChange={(v) => updateField("firstName", v)} />
               <Field label="Last Name *" placeholder="Enter last name" value={merchant.lastName} required error={fieldErrors.lastName} onChange={(v) => updateField("lastName", v)} />
-              <Field label="Email Address *" type="email" placeholder="Enter email address" value={merchant.email} required error={fieldErrors.email} onChange={(v) => updateField("email", v)} />
-              <Field label="Password *" type="password" placeholder={editing ? "Enter a new password" : "Enter password"} value={merchant.password} required={!editing} autoComplete="new-password" error={fieldErrors.password} onChange={(v) => updateField("password", v)} />
+              <Field label="Email Address *" type="text" inputMode="email" placeholder="Enter email address" value={merchant.email} required error={fieldErrors.email} onChange={(v) => updateField("email", v)} />
+              <Field label="Password *" type="password" name="merchant-entry-token" placeholder={editing ? "Enter a new password" : "Enter password"} value={merchant.password} required={!editing} autoComplete="one-time-code" error={fieldErrors.password} onChange={(v) => updateField("password", v)} />
               <div className={`pch-field pch-phone-field${fieldErrors.phone ? " pch-field-invalid" : ""}`}>
                 <label htmlFor="merchant-phone">Phone Number <span className="text-red-500" style={{ color: "#dc2626" }}>*</span></label>
-                <PhoneInput country={locationOptions.selectedCountry?.iso2?.toLowerCase() || phoneCountry} enableSearch countryCodeEditable={false} autoFormat value={merchant.phone} onMount={(_value, data) => { if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} onChange={(value, data) => { updateField("phone", value); if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} inputProps={{ id: "merchant-phone", name: "phone", required: true, autoComplete: "tel", "aria-invalid": Boolean(fieldErrors.phone) }} />
+                <PhoneInput country={locationOptions.selectedCountry?.iso2?.toLowerCase() || phoneCountry} enableSearch countryCodeEditable={false} autoFormat value={merchant.phone} onMount={(_value, data) => { if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} onChange={(value, data) => { updateField("phone", value); if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} inputProps={{ id: "merchant-phone", name: "merchant-phone-entry", required: true, autoComplete: "new-password", "aria-invalid": Boolean(fieldErrors.phone) }} />
                 {fieldErrors.phone && <span className="pch-field-error" role="alert">{fieldErrors.phone}</span>}
               </div>
               <Select label="Country *" value={merchant.country} options={locationOptions.countries.map((value) => ({ value, label: value }))} required error={fieldErrors.country} onChange={(v) => { updateField("country", v); updateField("state", ""); }} />
@@ -553,6 +558,21 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
           </section>
         </main>
       </div>
+      {showUnsavedDialog && <BentoDetailModal
+        open
+        onClose={() => setShowUnsavedDialog(false)}
+        title="Unsaved changes"
+        headerIcon="bi-exclamation-circle"
+        maxWidth="max-w-[480px]"
+        compactSpacing
+        containerClassName="pch-unsaved-modal"
+      >
+        <p className="pch-unsaved-modal-message">You have unsaved changes. Are you sure you want to leave this page?</p>
+        <div className="pch-unsaved-modal-actions">
+          <button type="button" className="pch-unsaved-stay" onClick={() => setShowUnsavedDialog(false)}>Keep Editing</button>
+          <button type="button" className="pch-unsaved-leave" onClick={() => { setShowUnsavedDialog(false); navigate("/merchants"); }}>Leave Page</button>
+        </div>
+      </BentoDetailModal>}
     </div>
   );
 }

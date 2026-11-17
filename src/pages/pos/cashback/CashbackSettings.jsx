@@ -12,6 +12,7 @@ import {
     createPosCashback,
     updatePosCashback,
 } from "./api";
+import { loadStorePosConfiguration, saveStorePosConfiguration } from "../storePosConfiguration";
 
 function cashbackPayload(values) {
     return {
@@ -35,6 +36,8 @@ export function CashbackSettings() {
     const currency = settings.currency;
     
     const [enabled, setEnabled] = useConfigState("enabled", false);
+    const [functionalityEnabled, setFunctionalityEnabled] = useState(false);
+    const cashbackEnabled = functionalityEnabled && enabled;
 
     const [maxCashback, setMaxCashback] =
         useConfigState("maxCashback", "");
@@ -117,26 +120,60 @@ export function CashbackSettings() {
         return () => { active = false; };
     }, [settings.storeId]);
 
+    useEffect(() => {
+        if (!settings.storeId) {
+            setFunctionalityEnabled(false);
+            return undefined;
+        }
+        let active = true;
+        setFunctionalityEnabled(false);
+        loadStorePosConfiguration(settings.storeId, "functionality_settings")
+            .then((record) => {
+                if (active) setFunctionalityEnabled(Boolean(record?.features?.cashback ?? record?.cashback));
+            })
+            .catch((error) => {
+                if (error instanceof ApiError && error.status === 404) {
+                    if (active) setFunctionalityEnabled(false);
+                    return;
+                }
+                if (active) alert(error?.message || "Unable to load functionality settings.");
+            });
+        return () => { active = false; };
+    }, [settings.storeId]);
+
     const saveCashbackSettings = useSaveAction(async () => {
         if (!settings.storeId) {
             alert("Open Cashback Settings from a store before saving.");
             return;
         }
 
-        if (enabled && maxCashback === "") {
+        if (cashbackEnabled && maxCashback === "") {
             alert("Please enter the maximum cashback limit.");
             return;
         }
 
-        if (enabled && tiers.some((item) => item.from === "" || item.to === "" || item.fee === "")) {
+        if (cashbackEnabled && tiers.some((item) => item.from === "" || item.to === "" || item.fee === "")) {
             alert("Each cashback tier needs a from, to, and fee.");
             return;
         }
 
-        const payload = cashbackPayload({ enabled, maxCashback, tiers });
+        const payload = cashbackPayload({ enabled: cashbackEnabled, maxCashback, tiers });
         const record = savedId.current
             ? await updatePosCashback(settings.storeId, payload)
             : await createPosCashback(settings.storeId, payload);
+        let functionalityRecord = null;
+        try {
+            functionalityRecord = await loadStorePosConfiguration(settings.storeId, "functionality_settings");
+        } catch (error) {
+            if (!(error instanceof ApiError && error.status === 404)) throw error;
+        }
+        const functionalitySettings = { ...(functionalityRecord || {}) };
+        delete functionalitySettings.id;
+        await saveStorePosConfiguration(settings.storeId, "functionality_settings", {
+            ...functionalitySettings,
+            features: { ...(functionalityRecord?.features || {}), cashback: cashbackEnabled },
+        });
+        setFunctionalityEnabled(cashbackEnabled);
         applyCashback(record);
         return true;
     });
@@ -188,14 +225,17 @@ export function CashbackSettings() {
                         <button
                             type="button"
                             className={`cashback-switch ${
-                                enabled ? "active" : ""
+                                cashbackEnabled ? "active" : ""
                             }`}
-                            onClick={() =>
+                            disabled={!functionalityEnabled}
+                            title={!functionalityEnabled ? "Enable Cashback in Functionality Settings first." : undefined}
+                            onClick={() => {
+                                if (!functionalityEnabled) return;
                                 setEnabled(
                                     (value) => !value
-                                )
-                            }
-                            aria-pressed={enabled}
+                                );
+                            }}
+                            aria-pressed={cashbackEnabled}
                         >
                             <span />
                         </button>

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { ApiError } from "../../../../api/http";
 import { ConfigHeader, ConfigSwitch, useConfigState, usePosSettings, useSaveAction } from "../../shared";
 import { loadStorePosConfiguration, saveStorePosConfiguration } from "../../storePosConfiguration";
+import { getPosCashback, updatePosCashback } from "../../cashback/api";
  
 const FEATURE_GROUPS = [
   {
@@ -50,7 +51,7 @@ export function FunctionalitySettings() {
       .then((record) => {
         if (!active || !record) return;
         const legacyFeatures = Object.fromEntries(
-          ["payouts", "merchantDiscounts", "customItems", "coupons"]
+          ["payouts", "merchantDiscounts", "customItems", "coupons", "cashback"]
             .filter((key) => record[key] !== undefined)
             .map((key) => [key, record[key]]),
         );
@@ -81,9 +82,24 @@ export function FunctionalitySettings() {
         Boolean(features[key]) && !(isConvenienceStore && CONVENIENCE_STORE_RESTRICTED_FEATURES.has(key)),
       ]),
     );
+    const cashbackChanged = Boolean(settings.session.baseline.features?.cashback) !== visibleFeatures.cashback;
     await saveStorePosConfiguration(settings.storeId, "functionality_settings", {
       features: visibleFeatures,
     });
+    if (cashbackChanged) {
+      try {
+        const cashback = await getPosCashback(settings.storeId);
+        if (cashback && typeof cashback === "object") {
+          await updatePosCashback(settings.storeId, {
+            enabled: visibleFeatures.cashback,
+            ...(cashback.maxCashback == null ? {} : { maxCashback: cashback.maxCashback }),
+            tiers: Array.isArray(cashback.tiers) ? cashback.tiers : [],
+          });
+        }
+      } catch (error) {
+        if (!(error instanceof ApiError && error.status === 404)) throw error;
+      }
+    }
     return true;
   });
  
