@@ -2406,7 +2406,7 @@ body:has(.store-workspace-page),
 .store-section-editor .sf-role-list > button { min-height: 46px; padding: 10px; }
 .store-section-editor .sf-role-list > button span { font-size: 14px; }
 .store-section-editor .sf-role-list > button small,
-.store-section-editor .sf-pin-set { font-size: 14px; font-weight: 500; color: var(--store-muted); }
+.store-section-editor .sf-pin-set { font-size: 12px; font-weight: 400; color: #2b3646; }
 .store-section-editor .sf-pagination { padding: 16px 20px; font-size: 13px; color: var(--store-muted); flex-wrap: wrap; }
 .store-section-editor .sf-pagination button { min-width: 34px; height: 34px; font-size: 13px; border-radius: 7px; }
 .store-section-editor .sf-pagination-page-size { display: flex; align-items: center; gap: 8px; margin-right: 8px; white-space: nowrap; }
