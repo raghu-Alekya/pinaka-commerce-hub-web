@@ -23,6 +23,10 @@ export default defineConfig(({ mode }) => {
  
   if (proxyTarget) {
     proxy["/uploads/employees"] = { target: proxyTarget, changeOrigin: true, secure: false };
+    // POS and store configuration images are served from the API's uploads
+    // directory. Proxy relative /uploads URLs so they do not resolve against
+    // the Vite frontend origin in local development.
+    proxy["/uploads"] = { target: proxyTarget, changeOrigin: true, secure: false };
     proxy["/api"] = {
       target: proxyTarget,
       changeOrigin: true,
@@ -60,4 +64,3 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
- 

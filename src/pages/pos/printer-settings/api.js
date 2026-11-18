@@ -5,7 +5,8 @@ function unwrap(response) {
   let value = response;
   for (let depth = 0; depth < 5 && value && typeof value === "object"; depth += 1) {
     const nested = value.data || value.result || value.settings || value.general_settings ||
-      value.printer_settings || value.printerSettings || value.configurationValue || value.configuration_value;
+      value.generalSettings || value.printer_settings || value.printerSettings ||
+      value.configurationValue || value.configuration_value;
     if (!nested || typeof nested !== "object") break;
     value = nested;
   }

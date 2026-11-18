@@ -39,6 +39,19 @@
   box-sizing: border-box;
 }
 
+.add-employee-page .employee-phone-field .react-tel-input .country-list {
+  max-width: calc(100vw - 32px);
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .add-employee-page .employee-phone-field .react-tel-input .country-list {
+    right: 0;
+    left: auto !important;
+  }
+}
+
 
 
 /* =========================================================

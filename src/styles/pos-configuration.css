@@ -4722,6 +4722,7 @@
 .pc-printer-logo-controls { display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; min-width:0; }
 .pc-printer-logo-controls .pc-field { min-width:min(300px, 100%); }
 .pc-printer-logo-controls > small { color:#65758e; font-size:11px; }
+.pc-printer-logo-actions { display:flex; flex-wrap:wrap; gap:10px; }
 .pc-field > .pch-filter-dropdown > .pch-filter-trigger { transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.18s ease; }
 .pc-field:focus-within > .pch-filter-dropdown > .pch-filter-trigger { transform: translateY(-1px); }
 .pc-field input:focus, .pc-field select:focus { transform: translateY(-1px); box-shadow: 0 0 0 3px rgba(81, 67, 188, 0.08); }
