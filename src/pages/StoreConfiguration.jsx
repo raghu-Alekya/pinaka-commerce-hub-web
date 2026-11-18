@@ -837,6 +837,7 @@ export default function StoreConfiguration() {
               ) : section === "pos" ? (
 
                 <PosConfiguration
+                  key={store?.uuid || storeId}
                   merchantId={merchant?.id || merchant?.merchantId || merchant?.merchant_id || store?.merchantId || store?.merchant_id || store?.merchant?.id || merchantId}
                   storeId={store?.uuid || ""}
                   store={store}

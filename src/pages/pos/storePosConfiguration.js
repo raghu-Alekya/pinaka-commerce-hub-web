@@ -68,7 +68,10 @@ export function isStoredPosImage(value) {
 export function storedPosImagePath(value) {
   if (typeof value !== "string") return value;
   if (value.startsWith("/uploads/")) return value;
-  if (!/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("uploads/")) return `/${value}`;
+  if (!/^https?:\/\//i.test(value)) {
+    return !value.includes("/") && /\.(png|jpe?g|webp)$/i.test(value) ? `/uploads/${value}` : value;
+  }
   try {
     const pathname = new URL(value).pathname;
     return pathname.startsWith("/uploads/") ? pathname : value;
@@ -77,7 +80,7 @@ export function storedPosImagePath(value) {
   }
 }
 
-export function posImageUrl(value) {
+export function posImageUrl(value, { sameOrigin = false } = {}) {
   if (typeof value !== "string" || !value) return "";
   if (value.startsWith("data:") || value.startsWith("blob:")) return value;
   let origin = "";
@@ -91,6 +94,12 @@ export function posImageUrl(value) {
       return value;
     }
   }
+  // Some general-settings responses return only the stored filename. Treat
+  // those as files in the same uploads directory used by the upload API.
+  if (pathname.startsWith("uploads/")) pathname = `/${pathname}`;
+  else if (!pathname.startsWith("/") && !pathname.includes("/") && /\.(png|jpe?g|webp)$/i.test(pathname)) {
+    pathname = `/uploads/${pathname}`;
+  }
   if (!pathname.startsWith("/uploads/")) return value;
   const encoded = pathname.split("/").map((part) => {
     if (!part) return part;
@@ -99,6 +108,7 @@ export function posImageUrl(value) {
     return encodeURIComponent(decoded).replace(/[!'()*]/g, (char) =>
       `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
   }).join("/");
+  if (sameOrigin && typeof window !== "undefined") origin = window.location.origin;
   if (!origin) {
     const apiOrigin = import.meta.env.VITE_API_ORIGIN || "";
     if (/^https?:\/\//i.test(apiOrigin)) origin = apiOrigin.replace(/\/+$/, "");
@@ -107,17 +117,29 @@ export function posImageUrl(value) {
   return `${origin}${encoded}`;
 }
 
-export function uploadStorePosImage(storeId, file) {
+export function uploadStorePosImage(storeId, file, merchantId) {
   const body = new FormData();
   body.append("image", file);
-  return api.post(endpoints.storePosConfigurationImage(storeId), body).then((response) => {
-    const payload = response?.data && typeof response.data === "object" ? response.data : response;
-    const path = payload?.path || payload?.url;
+  return api.post(endpoints.storePosConfigurationImage(storeId), body, {
+    headers: {
+      ...(merchantId ? { "x-merchant-id": String(merchantId) } : {}),
+      ...(storeId ? { "x-store-id": String(storeId) } : {}),
+    },
+  }).then((response) => {
+    let payload = response;
+    for (let depth = 0; depth < 4 && payload && typeof payload === "object"; depth += 1) {
+      const nested = payload.data || payload.result || payload.image || payload.file;
+      if (!nested || typeof nested !== "object") break;
+      payload = nested;
+    }
+    const responsePath = payload?.path || payload?.imagePath || payload?.image_path || payload?.filePath || payload?.file_path ||
+      payload?.url || payload?.imageUrl || payload?.image_url;
+    const path = storedPosImagePath(responsePath);
     if (!path) throw new Error("The icon was not stored in the store images folder.");
     return {
       path,
-      url: payload?.url || path,
-      imageName: payload?.imageName || file.name,
+      url: payload?.url || payload?.imageUrl || payload?.image_url || path,
+      imageName: payload?.imageName || payload?.image_name || file.name,
     };
   });
 }
