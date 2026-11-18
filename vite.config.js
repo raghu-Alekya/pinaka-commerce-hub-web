@@ -5,6 +5,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const proxyTarget = env.VITE_API_PROXY_TARGET || "https://pch.alektasolutions.com";
   const authProxyTarget = env.VITE_AUTH_PROXY_TARGET || proxyTarget;
+  const adminProxyTarget = env.VITE_ADMIN_API_PROXY_TARGET || "http://localhost:3009";
  
   const proxy = {};
  
@@ -21,6 +22,15 @@ export default defineConfig(({ mode }) => {
     };
   }
  
+  if (adminProxyTarget) {
+    proxy["/admin-api"] = {
+      target: adminProxyTarget,
+      changeOrigin: true,
+      secure: false,
+      rewrite: (path) => path.replace(/^\/admin-api/, ""),
+    };
+  }
+
   if (proxyTarget) {
     proxy["/uploads/employees"] = { target: proxyTarget, changeOrigin: true, secure: false };
     proxy["/api"] = {
