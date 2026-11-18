@@ -56,50 +56,6 @@ const storeRoleStyles = `
     overflow: visible;
   }
  
-  .work-merchant-field {
-    margin-top: 24px;
-  }
- 
-  .employee-login-pin-field {
-    margin-top: 20px;
-  }
- 
-  .employee-login-pin-field label {
-    display: block;
-    margin-bottom: 7px;
-    color: #17233d;
-    font-size: 15px;
-    font-weight: 600;
-  }
- 
-  .employee-login-pin-field label span {
-    color: #e11d48;
-  }
- 
-  .employee-login-pin-field input {
-    width: 100%;
-    height: 46px;
-    padding: 0 14px;
-    border: 1px solid #d4dfed;
-    border-radius: 8px;
-    background: #fff;
-    color: #1c3154;
-    font-size: 15px;
-    outline: none;
-    box-sizing: border-box;
-    letter-spacing: 2px;
-  }
- 
-  .employee-login-pin-field input::placeholder {
-    color: #91a3bd;
-    letter-spacing: 0;
-  }
- 
-  .employee-login-pin-field input:focus {
-    border-color: #8172ef;
-    box-shadow: 0 0 0 3px rgba(129, 114, 239, .10);
-  }
- 
   .employee-login-pin-help {
     display: block;
     margin-top: 6px;
@@ -397,7 +353,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
         return "";
 
       case "pinCode":
-        return trimmed ? "" : "PIN Code is required.";
+        return trimmed ? "" : "Postal Code is required.";
 
 
       case "country":
@@ -876,27 +832,6 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
                 description="Enter the employee's address details."
               />
 
-              <div className="employee-form-grid two-columns">
-                <FormField
-                  label="Address Line 1"
-                  required
-                  name="address1"
-                  placeholder="Enter address line 1"
-                  value={formData.address1}
-                  onChange={handleChange}
-                  error={errors.address1}
-                />
-
-                <FormField
-                  label="Address Line 2"
-                  name="address2"
-                  placeholder="Enter address line 2 (optional)"
-                  value={formData.address2}
-                  onChange={handleChange}
-                  error={errors.address2}
-                />
-              </div>
-
               {locationOptions.error && <p role="alert" className="field-error">{locationOptions.error}</p>}
               <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
                 <SelectField label="Country" required name="country" value={formData.country}
@@ -908,7 +843,24 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
                 <SelectField label="City" required name="city" value={formData.city}
                   onChange={handleChange} error={errors.city} options={locationOptions.cities}
                   placeholder={formData.state ? "Select city" : "Select state first"} disabled={locationOptions.loading || !formData.state} />
-                <FormField label="PIN Code" required name="pinCode" placeholder="Enter PIN code"
+                <FormField
+                  label="Address Line 1"
+                  required
+                  name="address1"
+                  placeholder="Enter address line 1"
+                  value={formData.address1}
+                  onChange={handleChange}
+                  error={errors.address1}
+                />
+                <FormField
+                  label="Address Line 2"
+                  name="address2"
+                  placeholder="Enter address line 2 (optional)"
+                  value={formData.address2}
+                  onChange={handleChange}
+                  error={errors.address2}
+                />
+                <FormField label="Postal Code" required name="pinCode" placeholder="Enter postal code"
                   value={formData.pinCode} onChange={handleChange} error={errors.pinCode} />
               </div>
             </section>
@@ -916,7 +868,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
           {/* RIGHT COLUMN */}
           <div className="add-employee-right">
-            {/* PROFILE PHOTO */}
+            {/* PROFILE PHOTO
             <section className="employee-card profile-photo-card">
               <CardHeader
                 icon={<Camera size={21} />}
@@ -961,7 +913,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
                   <div className="upload-help">JPG, PNG (Max 2MB)</div>
                 </div>
               </div>
-            </section>
+            </section> */}
 
             {/* WORK INFORMATION */}
             <section className="employee-card work-information-card">
@@ -977,7 +929,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
                 <input id="employee-code" name="employeeCode" value={employee.employeeCode || employee.employee_code || ""} readOnly />
               </div>
 
-              <div style={{ marginTop: "24px" }}>
+              <div style={{ marginTop: "12px" }}>
                 <SelectField
                   label="Status"
                   required
@@ -1007,10 +959,11 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
             </section>
 
             {/* ACCOUNT SETTINGS */}
-            <section className="employee-card">
+            <section className="employee-card employee-account-settings-card">
               <CardHeader
                 icon={<Settings size={21} />}
                 title="Account Settings"
+                theme="purple"
                 description="Set login and access details."
               />
 

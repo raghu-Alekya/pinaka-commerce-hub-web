@@ -234,7 +234,7 @@ const confirmDeletePermission = async () => {
             className="feature-detail-back"
             onClick={() => navigate("/features")}
             aria-label="Back to Features"
-            title="Back to Features"
+            data-tooltip="Back to Features"
           >
             <i className="bi bi-arrow-left" />
           </button>
@@ -242,9 +242,7 @@ const confirmDeletePermission = async () => {
           <div className="feature-detail-copy">
             <h1>{feature?.name || "Feature"}</h1>
 
-            <p>
-              {feature?.description || "Manage permissions for this feature."}
-            </p>
+            <p>Manage permissions for this feature.</p>
           </div>
         </div>
 
@@ -289,7 +287,7 @@ const confirmDeletePermission = async () => {
             <div className="fp-title-copy">
               <h2>Feature Permissions</h2>
 
-              <p>Manage permissions for this feature.</p>
+             
             </div>
           </div>
 

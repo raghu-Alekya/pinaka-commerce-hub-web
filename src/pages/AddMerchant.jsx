@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Pencil } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   createMerchant,
@@ -11,13 +11,19 @@ import { listPlans } from "../api/plans";
 import { useLocationOptions } from "../data/useLocationOptions";
 import { storeTypesApi } from "../api/storeTypes";
 import FilterDropdown from "../components/FilterDropdown";
+import StatusBadge from "../components/StatusBadge";
+import BentoDetailModal from "../components/BentoDetailModal";
 import PhoneInputModule from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import "../styles/merchant-form.css";
 
 const PhoneInput = PhoneInputModule.default || PhoneInputModule;
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 10);
+};
 const TAX_RATE = 8.6;
 const blankMerchant = () => ({
   code: "",
@@ -28,6 +34,7 @@ const blankMerchant = () => ({
   business: "",
   display: "",
   email: "",
+  password: "",
   phone: "",
   addressLine1: "",
   addressLine2: "",
@@ -57,6 +64,7 @@ function merchantDetailToDraft(result, fallback = {}) {
       business: field(raw.legalBusinessName, raw.legal_business_name, raw.businessName, raw.business_name, fallback.name),
       display: field(raw.businessDisplayName, raw.business_display_name, raw.display, raw.businessName, raw.business_name, raw.name, fallback.name),
       email: field(raw.email, raw.merchantEmail, raw.merchant_email, fallback.email),
+      password: field(raw.actual_password, raw.actualPassword, raw.password),
       phone: normalizePhone(field(raw.phone, raw.merchantPhoneNumber, raw.merchant_phone_number, fallback.phone)),
       addressLine1: addressField(raw.addressLine1, raw.address_line_1, raw.address_line1, typeof address === "object" && (address.addressLine1 || address.address_line1 || address.street || address.streetAddress)),
       addressLine2: field(raw.addressLine2, raw.address_line_2, typeof address === "object" && (address.addressLine2 || address.address_line2 || address.unit)),
@@ -79,10 +87,16 @@ function merchantDetailToDraft(result, fallback = {}) {
 function renderFieldLabel(label) { if (label == null || typeof label !== "string") return label; if (!label.includes("*")) return label; const parts = label.split("*"); return (<>{parts.map((part, index) => (<span key={index}>{part}{index < parts.length - 1 && (<span className="text-red-500" style={{ color: "#dc2626" }}>*</span>)}</span>))}</>); }
 
 function Field({ label, value, onChange, error, ...props }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = props.type === "password";
+  const autoComplete = props.autoComplete || (props.readOnly || props.type === "date" ? undefined : "new-password");
   return (
     <label className={`pch-field${error ? " pch-field-invalid" : ""}`}>
       {renderFieldLabel(label)}
-      <input {...props} aria-invalid={Boolean(error)} value={value ?? ""} onChange={(event) => onChange?.(event.target.value)} />
+      <span className={isPassword ? "pch-password-input" : undefined}>
+        <input {...props} name={isPassword ? (props.name || "merchant-password-entry") : props.name} autoComplete={autoComplete} className={`${props.className || ""}${isPassword && !showPassword ? " pch-password-masked" : ""}`.trim()} type={isPassword ? "text" : props.type} aria-invalid={Boolean(error)} value={value ?? ""} onChange={(event) => onChange?.(event.target.value)} />
+        {isPassword && <button type="button" className="pch-password-toggle" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button>}
+      </span>
       {error && <span className="pch-field-error" role="alert">{error}</span>}
     </label>
   );
@@ -119,12 +133,33 @@ function formatPrice(amount, currency = "USD") {
 }
 
 function getPlanStoreType(plan, storeTypes) {
-  const value = plan.applicableStoreType ?? plan.storeType ?? plan.store_type;
-  if (!value) return "General Plans";
-  if (typeof value === "object") return value.name || value.storeTypeName || value.title || value.code || "General Plans";
-  const name = String(value).trim();
-  const match = storeTypes.find((type) => [type.id, type.code, type.name].some((field) => String(field || "").toLowerCase() === name.toLowerCase()));
-  return match?.name || name || "General Plans";
+  const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  const explicitName = [plan.storeTypeName, plan.store_type_name]
+    .find((value) => typeof value === "string" && value.trim() && !isUuid(value));
+  const values = [
+    plan.storeTypeId,
+    plan.store_type_id,
+    plan.applicableStoreType,
+    plan.applicable_store_type,
+    plan.storeType,
+    plan.store_type,
+  ].filter((value) => value !== undefined && value !== null && value !== "");
+  if (!values.length) return "General Plans";
+  const objectNames = values.flatMap((value) => typeof value === "object"
+    ? [value.name, value.storeTypeName, value.store_type_name, value.title]
+    : []).filter((value) => typeof value === "string" && value.trim() && !isUuid(value));
+  const identifiers = values.flatMap((value) => typeof value === "object"
+    ? [value.id, value.storeTypeId, value.store_type_id, value.code, value.storeTypeCode, value.store_type_code, ...objectNames]
+    : [value]).filter(Boolean);
+  const key = (value) => String(value ?? "").trim().toLowerCase();
+  const match = storeTypes.find((type) => [type.id, type.storeTypeId, type.store_type_id, type.code, type.storeTypeCode, type.store_type_code, type.name]
+    .some((field) => identifiers.some((identifier) => key(field) && key(field) === key(identifier))));
+  if (match?.name) return match.name;
+  if (explicitName) return explicitName.trim();
+
+  const fallback = objectNames.find((name) => name.trim());
+  if (fallback) return fallback.trim();
+  return "Other Plans";
 }
 
 function renewalDate(start, cycle) {
@@ -157,6 +192,8 @@ function Header({ editing, onBack }) {
 
 export function onboardingToRow(data) {
   const merchant = data.merchant;
+  const { password: _password, ...safeMerchant } = merchant;
+  const { password: _topLevelPassword, ...safeData } = data;
   const name = merchant.business || merchant.display || "Merchant";
   return {
     id: merchant.code || data.merchantId,
@@ -174,7 +211,7 @@ export function onboardingToRow(data) {
     joined: new Date().toLocaleDateString(),
     active: "â€”",
     initials: name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase(),
-    _onboarding: structuredClone(data),
+    _onboarding: structuredClone({ ...safeData, merchant: safeMerchant }),
   };
 }
 
@@ -200,6 +237,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const [start, setStart] = useState(selected?._onboarding?.start || today());
   const [step, setStep] = useState(0);
   const [storeTypes, setStoreTypes] = useState([]);
+  const lookedUpStoreTypeIdsRef = useRef(new Set());
   const [loading, setLoading] = useState(Boolean(merchantId && !selected?._onboarding));
   const [plansLoading, setPlansLoading] = useState(true);
   const [error, setError] = useState("");
@@ -209,6 +247,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const [submitting, setSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [saved, setSaved] = useState(null);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const initialDraftRef = useRef(null);
   const editing = Boolean(merchantId);
   const currentDraftSnapshot = JSON.stringify({ merchant, planId, cycle, start, paymentMethod });
@@ -217,9 +256,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     if (
       !saved &&
       initialDraftRef.current !== null &&
-      initialDraftRef.current !== currentDraftSnapshot &&
-      !window.confirm("You have unsaved changes. Are you sure you want to leave this page?")
-    ) return;
+      initialDraftRef.current !== currentDraftSnapshot
+    ) {
+      setShowUnsavedDialog(true);
+      return;
+    }
     navigate("/merchants");
   };
   const goToStep = (index) => setStep(index);
@@ -235,9 +276,56 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     listPlans().then((items) => active && setPlans(items.filter((item) => String(item.status).toUpperCase() === "ACTIVE")))
       .catch((failure) => active && setError(failure.message || "Unable to load plans."))
       .finally(() => active && setPlansLoading(false));
-    if (!editing) storeTypesApi.getAll().then((response) => active && setStoreTypes(response.storeTypes || [])).catch(() => {});
+    storeTypesApi.getAll().then((response) => {
+      const source = response?.storeTypes ?? response?.data?.storeTypes ?? response?.data;
+      const items = Array.isArray(source) ? source : [];
+      if (active) setStoreTypes(items);
+    }).catch(() => {});
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!plans.length) return;
+    const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+    const knownIds = new Set(storeTypes.flatMap((type) => [type.id, type.storeTypeId, type.store_type_id]
+      .filter(Boolean).map((value) => String(value).trim().toLowerCase())));
+    const ids = new Set();
+    plans.forEach((item) => {
+      [item.storeTypeId, item.store_type_id, item.storeTypeName, item.store_type_name, item.applicableStoreType, item.applicable_store_type, item.storeType, item.store_type]
+        .forEach((value) => {
+          const candidates = value && typeof value === "object"
+            ? [value.id, value.storeTypeId, value.store_type_id]
+            : [value];
+          candidates.filter(isUuid).forEach((id) => {
+            const key = String(id).trim().toLowerCase();
+            if (!knownIds.has(key) && !lookedUpStoreTypeIdsRef.current.has(key)) ids.add(String(id).trim());
+          });
+        });
+    });
+    if (!ids.size) return;
+
+    let active = true;
+    const lookups = [...ids].map(async (id) => {
+      lookedUpStoreTypeIdsRef.current.add(id.toLowerCase());
+      try {
+        const response = await storeTypesApi.getById(id);
+        return response?.storeType || null;
+      } catch {
+        return null;
+      }
+    });
+    Promise.all(lookups).then((resolved) => {
+      const items = resolved.filter((item) => item?.name);
+      if (active && items.length) {
+        setStoreTypes((current) => {
+          const byId = new Map(current.map((item) => [String(item.id || item.storeTypeId || "").toLowerCase(), item]));
+          items.forEach((item) => byId.set(String(item.id || item.storeTypeId || "").toLowerCase(), item));
+          return [...byId.values()];
+        });
+      }
+    });
+    return () => { active = false; };
+  }, [plans, storeTypes]);
 
   useEffect(() => {
     if (!merchantId || selected?._onboarding) return;
@@ -295,6 +383,8 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     }
     if (!String(merchant.email || "").trim()) errors.email = "Email Address is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(merchant.email)) errors.email = "Enter a valid email address.";
+    if (!editing && !String(merchant.password || "")) errors.password = "Password is required.";
+    else if (String(merchant.password || "") && String(merchant.password).length < 8) errors.password = "Password must be at least 8 characters.";
     errors.phone = validatePhone();
     return errors;
   };
@@ -307,8 +397,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
         setError("");
         return;
       }
-    } else if (!plan) {
+    } else if (step === 1 && !plan) {
       setError("Choose an active plan.");
+      return;
+    } else if (step === 1 && !editing && start < today()) {
+      setError("Start date must be today or later.");
       return;
     }
     setError("");
@@ -328,11 +421,16 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       setStep(1);
       return setError("Choose an active plan.");
     }
+    if (!editing && start < today()) {
+      setStep(1);
+      return setError("Start date must be today or later.");
+    }
     if (!onSave) return setError("Merchant saving is not connected.");
     setError("");
     setSubmitting(true);
     const data = {
       merchant: { ...merchant, name: [merchant.firstName, merchant.lastName].filter(Boolean).join(" ") },
+      password: String(merchant.password || "") || undefined,
       planId: plan.id,
       planDetails: plan,
       planName: plan.name,
@@ -396,11 +494,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
           <div className="pch-rule"><span className="pch-muted">Subscription ID</span><span>{saved.subscriptionId || "Pending assignment"}</span></div>
           <div className="pch-rule"><span className="pch-muted">Start Date</span><span>{saved.start}</span></div>
           <div className="pch-rule"><span className="pch-muted">Next Billing Date</span><span>{saved.renewalDate}</span></div>
-          <div className="pch-rule"><span className="pch-muted">Status</span><span><span className="pch-subscription-status">{saved.subscriptionStatus}</span></span></div>
+          <div className="pch-rule"><span className="pch-muted">Status</span><span><StatusBadge status={saved.subscriptionStatus} /></span></div>
         </section>
         <div className="pch-success-actions">
           <button className="pch-subscribe-now" type="button" onClick={() => navigate("/dashboard")}>Go to Dashboard</button>
-          <button className="pch-subscribe-now" type="button" onClick={cancel}>Back to Merchants</button>
+          <button type="button" onClick={cancel}>Back to Merchants</button>
         </div>
       </main>
     </div>
@@ -430,10 +528,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
             <Panel title="Primary Contact"><div className="pch-grid">
               <Field label="First Name *" placeholder="Enter first name" value={merchant.firstName} required error={fieldErrors.firstName} onChange={(v) => updateField("firstName", v)} />
               <Field label="Last Name *" placeholder="Enter last name" value={merchant.lastName} required error={fieldErrors.lastName} onChange={(v) => updateField("lastName", v)} />
-              <Field label="Email Address *" type="email" placeholder="Enter email address" value={merchant.email} required error={fieldErrors.email} onChange={(v) => updateField("email", v)} />
+              <Field label="Email Address *" type="text" inputMode="email" placeholder="Enter email address" value={merchant.email} required error={fieldErrors.email} onChange={(v) => updateField("email", v)} />
+              <Field label="Password *" type="password" name="merchant-entry-token" placeholder={editing ? "Enter a new password" : "Enter password"} value={merchant.password} required={!editing} autoComplete="one-time-code" error={fieldErrors.password} onChange={(v) => updateField("password", v)} />
               <div className={`pch-field pch-phone-field${fieldErrors.phone ? " pch-field-invalid" : ""}`}>
                 <label htmlFor="merchant-phone">Phone Number <span className="text-red-500" style={{ color: "#dc2626" }}>*</span></label>
-                <PhoneInput country={locationOptions.selectedCountry?.iso2?.toLowerCase() || phoneCountry} enableSearch countryCodeEditable={false} autoFormat value={merchant.phone} onMount={(_value, data) => { if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} onChange={(value, data) => { updateField("phone", value); if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} inputProps={{ id: "merchant-phone", name: "phone", required: true, autoComplete: "tel", "aria-invalid": Boolean(fieldErrors.phone) }} />
+                <PhoneInput country={locationOptions.selectedCountry?.iso2?.toLowerCase() || phoneCountry} enableSearch countryCodeEditable={false} autoFormat value={merchant.phone} onMount={(_value, data) => { if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} onChange={(value, data) => { updateField("phone", value); if (data?.countryCode) setPhoneCountry(data.countryCode); if (data?.dialCode) setPhoneDialCode(data.dialCode); }} inputProps={{ id: "merchant-phone", name: "merchant-phone-entry", required: true, autoComplete: "new-password", "aria-invalid": Boolean(fieldErrors.phone) }} />
                 {fieldErrors.phone && <span className="pch-field-error" role="alert">{fieldErrors.phone}</span>}
               </div>
               <Select label="Country *" value={merchant.country} options={locationOptions.countries.map((value) => ({ value, label: value }))} required error={fieldErrors.country} onChange={(v) => { updateField("country", v); updateField("state", ""); }} />
@@ -476,7 +575,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
                   </section>
                   <section className="pch-plan-agreement" aria-label="Billing Details"><h3>Billing Details</h3><div className="pch-grid">
                     <Select label="Billing cycle" value={cycle} options={["Monthly", "Quarterly", "Annual"]} onChange={(value) => setCycle(normalizeCycle(value))} />
-                    <Field label="Start date" type="date" value={start} onChange={setStart} />
+                    <Field label="Start date" type="date" min={editing ? undefined : today()} value={start} onChange={(value) => setStart(!editing && value && value < today() ? today() : value)} />
                     <Field label="Renewal date" type="date" value={renewalDate(start, cycle)} readOnly />
                     <Field label="Subscription Price" value={`${formatPrice(total, plan?.currency || "USD")} / ${cycleLabel}`} readOnly />
                   </div><p className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</p></section>
@@ -494,7 +593,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
             <h1>Review &amp; Subscribe</h1>
             <p className="pch-muted">Review merchant, plan, and billing information.</p>
             <div className="pch-review-grid">
-              <Panel title="Merchant Details" action={editing && <button className="pch-review-edit" type="button" aria-label="Edit merchant details" title="Edit merchant details" onClick={() => { setError(""); setStep(0); }}><Pencil size={16} aria-hidden="true" /><span>Edit</span></button>}>
+              <Panel title="Merchant Details" action={editing && <button className="pch-review-edit" type="button" aria-label="Edit merchant details" data-tooltip="Edit merchant details" onClick={() => { setError(""); setStep(0); }}><Pencil size={16} aria-hidden="true" /><span>Edit</span></button>}>
                 <dl className="pch-review-list">
                   <div><dt>Business Name</dt><dd>{merchant.business || merchant.display || "—"}</dd></div>
                   <div><dt>Merchant Code</dt><dd>{merchant.code || "Auto Generated"}</dd></div>
@@ -505,7 +604,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
                   <div><dt>Business Address</dt><dd>{address || "—"}</dd></div>
                 </dl>
               </Panel>
-              <Panel title="Plan Details" action={editing && <button className="pch-review-edit" type="button" aria-label="Edit plan details" title="Edit plan details" onClick={() => { setError(""); setStep(1); }}><Pencil size={16} aria-hidden="true" /><span>Edit</span></button>}>
+              <Panel title="Plan Details" action={editing && <button className="pch-review-edit" type="button" aria-label="Edit plan details" data-tooltip="Edit plan details" onClick={() => { setError(""); setStep(1); }}><Pencil size={16} aria-hidden="true" /><span>Edit</span></button>}>
                 <dl className="pch-review-list">
                   <div><dt>Subscription Plan</dt><dd>{plan?.name || "—"}</dd></div>
                   <div><dt>Store Type</dt><dd>{plan ? getPlanStoreType(plan, storeTypes) : "—"}</dd></div>
@@ -539,6 +638,21 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
           </section>
         </main>
       </div>
+      {showUnsavedDialog && <BentoDetailModal
+        open
+        onClose={() => setShowUnsavedDialog(false)}
+        title="Unsaved changes"
+        headerIcon="bi-exclamation-circle"
+        maxWidth="max-w-[480px]"
+        compactSpacing
+        containerClassName="pch-unsaved-modal"
+      >
+        <p className="pch-unsaved-modal-message">You have unsaved changes. Are you sure you want to leave this page?</p>
+        <div className="pch-unsaved-modal-actions">
+          <button type="button" className="pch-unsaved-stay" onClick={() => setShowUnsavedDialog(false)}>Keep Editing</button>
+          <button type="button" className="pch-unsaved-leave" onClick={() => { setShowUnsavedDialog(false); navigate("/merchants"); }}>Leave Page</button>
+        </div>
+      </BentoDetailModal>}
     </div>
   );
 }

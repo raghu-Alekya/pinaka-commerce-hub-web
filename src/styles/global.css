@@ -1,5 +1,15 @@
 @import './dashboard.css';
-*{box-sizing:border-box} body{margin:0;font-family:Inter,Arial,sans-serif;background:#f7f8fb;color:#1e2740} button,input,select{font:inherit} a{text-decoration:none}.page-content{min-height:calc(100vh - 72px)} .table-wrap{overflow:auto}.clickable{cursor:pointer}.status-badge{white-space:nowrap}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}@media(max-width:768px){.form-grid{grid-template-columns:1fr}.topbar{padding:0 16px}.global-search{display:none}.profile-info{display:none}}
+*{box-sizing:border-box} 
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#f7f8fb;color:#1e2740} 
+button,input,select{font:inherit} 
+a{text-decoration:none}
+.page-content{min-height:calc(100vh - 72px)} 
+.table-wrap{overflow:auto}
+.clickable{cursor:pointer}
+.status-badge{white-space:nowrap}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}@media(max-width:768px)
+{.form-grid{grid-template-columns:1fr}.topbar{padding:0 16px}
+.global-search{display:none}.profile-info{display:none}}
 
 
 * {
@@ -424,6 +434,7 @@ th:has(.status-badge, .status-badge--active, .status-badge--inactive, .store-sta
     white-space: nowrap;
     margin-left: 0;
     padding-left: 0;
+    gap: 3px;
 }
 
 .pagination-info strong {
@@ -1098,18 +1109,6 @@ table th i,
   font-size: 11px !important;
 }
 
-/* Data Cells Baseline */
-table tbody td,
-.table tbody td {
-  height: 52px;
-  padding: 10px 14px !important;
-  border-bottom: 1px solid #e4e8ef;
-  color: #4d5970;
-  font-size: 13px;
-  line-height: 1.4;
-  vertical-align: middle !important;
-  box-sizing: border-box !important;
-}
 
 table tbody tr:hover,
 .table tbody tr:hover {
@@ -1161,18 +1160,6 @@ table tbody tr:last-child td,
   font-weight: 600 !important;
   font-size: 14px !important;
   white-space: nowrap !important;
-}
-
-/* Secondary muted identifiers (e.g. subordinate metadata under primary labels) */
-.merchant-name small,
-.employee-id,
-.store-cell small,
-.device-id,
-.vendor-code,
-.vendor-id {
-  font-weight: 400 !important;
-  color: #6b7280 !important;
-  font-size: 12px !important;
 }
 
 /* Status Column Sizing Standard: Size for 96px pill + padding

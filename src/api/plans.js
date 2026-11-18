@@ -527,6 +527,12 @@ export function normalizePlan(item) {
       item.description || "",
 
     /* Store type */
+    storeTypeName:
+      item.storeTypeName ||
+      item.store_type_name ||
+      (typeof item.storeType === "object" ? item.storeType?.name : "") ||
+      (typeof item.store_type === "object" ? item.store_type?.name : "") ||
+      "",
     storeType:
       item.store_type_id ||
       item.store_type ||

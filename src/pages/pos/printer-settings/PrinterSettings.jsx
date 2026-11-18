@@ -13,10 +13,36 @@ import { isStoredPosImage, posImageUrl, uploadStorePosImage } from "../storePosC
 
 const DEFAULTS = { header: "", footer: "", address: "", logo: "", logoName: "" };
 
+function mapGeneralSettings(record = {}) {
+  const logo = record.logo_url || record.image_url || "";
+  return {
+    ...DEFAULTS,
+    header: record.receipt_header || "",
+    footer: record.receipt_footer || "",
+    address: record.address || "",
+    logo,
+    logoName: logo ? logo.split("/").pop() : "",
+  };
+}
+
+function storeReceiptAddress(store = {}) {
+  const address = store.address && typeof store.address === "object" ? store.address : {};
+  const line1 = store.addressLine1 || store.address_line1 || store.address_line_1 || address.addressLine1 || address.line1 || address.street || address.streetAddress ||
+    (typeof store.address === "string" ? store.address : "");
+  const line2 = store.addressLine2 || store.address_line2 || store.address_line_2 || address.addressLine2 || address.line2 || address.unit || "";
+  const city = store.city || address.city || "";
+  const state = store.state || address.state || "";
+  const zip = store.zip || store.zipCode || store.zip_code || store.postalCode || store.postal_code || address.zipCode || address.zip_code || address.postalCode || address.postal_code || "";
+  const country = store.country || address.country || "";
+  const region = [city, [state, zip].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  return [line1, line2, region, country].filter(Boolean).join(", ");
+}
+
 export function PrinterSettings({ onBack }) {
   const settings = usePosSettings();
   const logoFile = useRef(null);
   const [draft, setDraft] = useConfigState("printerSettings", DEFAULTS);
+  const [generalSettings, setGeneralSettings] = useState({});
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const update = (field, value) => {
@@ -27,10 +53,19 @@ export function PrinterSettings({ onBack }) {
   useEffect(() => {
     if (!settings.storeId) return undefined;
     let active = true;
-    getPrinterSettings(settings.storeId)
+    getPrinterSettings(settings.merchantId, settings.storeId)
       .then((record) => {
         if (!active || !record || typeof record !== "object") return;
-        const loaded = { ...DEFAULTS, ...record };
+        const general = record || {};
+        setGeneralSettings(general);
+        const loaded = {
+          ...mapGeneralSettings(general),
+          header: general.receipt_header || "",
+          footer: general.receipt_footer ?? "",
+          address: general.address || storeReceiptAddress(settings.store) || "",
+          logo: general.logo_url || general.image_url || "",
+          logoName: (general.logo_url || general.image_url) ? (general.logo_url || general.image_url).split("/").pop() : "",
+        };
         setDraft(loaded);
         settings.session.saved.printerSettings = loaded;
         settings.session.baseline.printerSettings = loaded;
@@ -65,14 +100,24 @@ export function PrinterSettings({ onBack }) {
       setError("Choose a PNG, JPG, or WEBP logo up to 2 MB.");
       return false;
     }
-    const saved = await savePrinterSettings(settings.storeId, {
-      header: draft.header,
-      footer: draft.footer,
+    const generalPayload = {
+      ...generalSettings,
+      receipt_header: draft.header,
+      receipt_footer: draft.footer,
       address: draft.address,
-      logo,
-      logoName,
-    });
-    const next = { ...DEFAULTS, ...(saved && typeof saved === "object" ? saved : draft) };
+      logo_url: logo,
+    };
+    const saved = await savePrinterSettings(settings.merchantId, settings.storeId, generalPayload);
+    const nextGeneral = {
+      ...generalPayload,
+      ...(saved && typeof saved === "object" ? saved : {}),
+      receipt_header: draft.header,
+      receipt_footer: draft.footer,
+      address: draft.address,
+      logo_url: logo,
+    };
+    setGeneralSettings(nextGeneral);
+    const next = { ...draft, header: draft.header, footer: draft.footer, address: draft.address, logo, logoName };
     setDraft(next);
     settings.session.saved.printerSettings = next;
     settings.session.baseline.printerSettings = next;

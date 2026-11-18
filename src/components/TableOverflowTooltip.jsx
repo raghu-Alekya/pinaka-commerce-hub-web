@@ -5,11 +5,28 @@ const TABLE_CELL_SELECTOR = [
   "td",
   "th",
   "[data-pch-table-cell]",
+  "[data-truncate]",
+  "[data-tooltip]",
   ".plans-row > *",
   ".store-types-row > *",
   ".store-features-row > *",
   ".role-template-row > *",
   "[class*='-cell']",
+  "[class*='-chip']",
+  ".sf-key-features span",
+  ".sf-review-feature-list span",
+  ".sm-store-chip",
+  ".attribute-terms span",
+  ".attribute-terms .more-terms",
+  ".store-table-details",
+  ".store-cell",
+  ".merchant-name-cell",
+  ".store-name-info",
+  ".store-location",
+  ".store-customer-info",
+  ".store-customer-email",
+  ".fast-key-employee",
+  ".store-payment-title-link",
 ].join(", ");
 
 function isTruncatedByCSS(element) {
@@ -33,22 +50,36 @@ function isTruncatedByCSS(element) {
 function getOverflowingText(target) {
   if (!(target instanceof Element)) return null;
 
-  // Ignore action buttons, interactive controls, pills, and status badges
+  // Ignore form controls, action buttons/bars/icons/menus, status pills, and items explicitly marked no-tooltip
   if (
     target.closest(
-      "button, a, input, select, textarea, .list-actions, [class*='actions'], .status-badge, [class*='status-pill'], [class*='badge']"
+      "input, select, textarea, button, a, [role='button'], .list-actions, [class*='actions'], [class*='action-btn'], [class*='table-action'], [class*='btn-action'], button[class*='action'], .pagination-container button, .pch-filter-menu, .pch-filter-dropdown, .pch-filter-trigger, .device-select-wrapper, .device-select-trigger, .device-select-menu, .device-select-option, .role-multi-select-wrapper, .role-multi-select, .role-dropdown, .discount-product-picker, .discount-product-menu, .status-badge, [class*='status-pill'], [class*='badge'], [data-no-tooltip='true']"
     )
   ) {
     return null;
   }
 
-  const cell = target.closest(TABLE_CELL_SELECTOR);
+  // Check for explicit data-tooltip attribute
+  const tooltipTarget = target.hasAttribute("data-tooltip")
+    ? target
+    : target.closest("[data-tooltip]");
+  if (tooltipTarget) {
+    const tooltipText = tooltipTarget.getAttribute("data-tooltip")?.trim();
+    if (tooltipText) {
+      return {
+        element: tooltipTarget,
+        text: tooltipText,
+      };
+    }
+  }
+
+  const cell = target.closest(TABLE_CELL_SELECTOR) || target;
   if (!cell) return null;
 
-  // Never treat a row, table or wrapper as an overflowing cell
+  // Never treat a row, table or large wrapper as an overflowing cell
   if (
     cell.matches(
-      "tr, .plans-row, .store-types-row, .store-features-row, .role-template-row, [class*='-row'], [class*='-table']"
+      "tr, table, thead, tbody, .plans-row, .store-types-row, .store-features-row, .role-template-row, [class*='-row'], [class*='-table']"
     )
   ) {
     return null;
@@ -56,10 +87,10 @@ function getOverflowingText(target) {
 
   let element = target;
 
-  while (element && cell.contains(element)) {
+  while (element && (cell.contains(element) || element === cell)) {
     if (
       element.matches?.(
-        "tr, .plans-row, .store-types-row, .store-features-row, .role-template-row, [class*='-row'], [class*='-table']"
+        "tr, table, thead, tbody, .plans-row, .store-types-row, .store-features-row, .role-template-row, [class*='-row'], [class*='-table']"
       )
     ) {
       break;

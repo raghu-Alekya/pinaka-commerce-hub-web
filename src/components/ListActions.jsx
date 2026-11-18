@@ -28,7 +28,6 @@ export default function ListActions({
                         event.stopPropagation();
                         onView(event);
                     }}
-                    title={viewLabel}
                     aria-label={viewLabel}
                 >
                     <i className="bi bi-eye View-btn list-action-view-icon" aria-hidden="true" />
@@ -44,7 +43,6 @@ export default function ListActions({
                         event.stopPropagation();
                         onEdit(event);
                     }}
-                    title={editLabel}
                     aria-label={editLabel}
                 >
                     <i className="bi bi-pencil list-action-edit-icon" aria-hidden="true" />
@@ -60,7 +58,6 @@ export default function ListActions({
                         event.stopPropagation();
                         onActivate(event);
                     }}
-                    title={activateLabel}
                     aria-label={activateLabel}
                 >
                     <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
@@ -76,7 +73,6 @@ export default function ListActions({
                         event.stopPropagation();
                         onDelete(event);
                     }}
-                    title={deleteLabel}
                     aria-label={deleteLabel}
                 >
                     <i className={`${deleteIconClassName} list-action-delete-icon`} aria-hidden="true" />

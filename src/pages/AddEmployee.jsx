@@ -54,42 +54,6 @@ const storeRoleStyles = `
     margin-top: 20px;
   }
 
-  .employee-login-pin-field label {
-    display: block;
-    margin-bottom: 7px;
-    color: #17233d;
-    font-size: 15px;
-    font-weight: 600;
-  }
-
-  .employee-login-pin-field label span {
-    color: #e11d48;
-  }
-
-  .employee-login-pin-field input {
-    width: 100%;
-    height: 46px;
-    padding: 0 14px;
-    border: 1px solid #d4dfed;
-    border-radius: 8px;
-    background: #fff;
-    color: #1c3154;
-    font-size: 15px;
-    outline: none;
-    box-sizing: border-box;
-    letter-spacing: 2px;
-  }
-
-  .employee-login-pin-field input::placeholder {
-    color: #91a3bd;
-    letter-spacing: 0;
-  }
-
-  .employee-login-pin-field input:focus {
-    border-color: #8172ef;
-    box-shadow: 0 0 0 3px rgba(129, 114, 239, .10);
-  }
-
   .employee-login-pin-help {
     display: block;
     margin-top: 6px;
@@ -309,7 +273,7 @@ export default function AddEmployee() {
         return "";
 
       case "pinCode":
-        return trimmed ? "" : "PIN Code is required.";
+        return trimmed ? "" : "Postal Code is required.";
 
       case "country":
         if (!trimmed) return "Country is required.";
@@ -815,7 +779,7 @@ export default function AddEmployee() {
                   error={errors.address2}
                 />
                 <FormField
-                  label="PIN Code" required name="pinCode" placeholder="Enter PIN code"
+                  label="Postal Code" required name="pinCode" placeholder="Enter postal code"
                   value={formData.pinCode} onChange={handleChange} error={errors.pinCode}
                 />
               </div>

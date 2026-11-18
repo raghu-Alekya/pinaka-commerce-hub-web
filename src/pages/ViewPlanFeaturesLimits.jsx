@@ -188,7 +188,7 @@ useEffect(() => {
                            <h1> {plan.name || "Unnamed plan"} </h1>
                      </div>
 
-                     <p> {plan.description || "No description provided."} </p>
+                     <p>View plan details and configuration.</p>
                 </div>
                    
             </div>  
@@ -222,7 +222,6 @@ useEffect(() => {
               <div>
                 {" "}
                 <h2> Included Features </h2>{" "}
-                <p> View features included in this plan. </p>{" "}
               </div>{" "}
             </div>{" "}
             {/* ================================================= FEATURES TABLE ================================================= */}{" "}

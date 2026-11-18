@@ -453,10 +453,6 @@ async function confirmDeleteTender() {
               <h2>
                 {editingId ? "Edit Tender" : "Add Tender"}
               </h2>
-
-              <p>
-                Enter the tender details.
-              </p>
             </div>
           </div>
         </div>
@@ -605,7 +601,7 @@ async function confirmDeleteTender() {
                 setStatusFilter("All Statuses");
                 setSortBy("newest");
               }}
-              title="Reset filters"
+              data-tooltip="Reset filters"
               aria-label="Reset filters"
             >
               <i className="bi bi-arrow-counterclockwise" />

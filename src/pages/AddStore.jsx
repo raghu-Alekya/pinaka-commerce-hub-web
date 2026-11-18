@@ -29,6 +29,8 @@ import {
 } from "../api/storeRoleTemplatesApi";
 import FilterDropdown from "../components/FilterDropdown";
 import FiltersBar from "../components/FiltersBar";
+import Pagination from "../components/Pagination";
+import StatusBadge from "../components/StatusBadge";
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { endpoints } from "../api/endpoints";
 import { normalizeStore, storeListFromResponse } from "../api/stores";
@@ -96,6 +98,16 @@ function validatePostalCode(value, country) {
     ? countryRule.test(postalCode)
     : /^[A-Z0-9](?:[A-Z0-9 -]{0,10}[A-Z0-9])$/i.test(postalCode);
   return valid ? "" : `Enter a valid postal code for ${country || "this country"}.`;
+}
+
+function phoneInputValue(value, callingCode) {
+  const phone = String(value || "").trim();
+  if (!phone) return "";
+  const digits = phone.replace(/\D/g, "");
+  if (phone.startsWith("+")) return digits;
+  if (phone.startsWith("00")) return digits;
+  const dial = String(callingCode || "").replace(/\D/g, "");
+  return dial && !digits.startsWith(dial) ? `${dial}${digits}` : digits;
 }
 const STEPS = [
   "Store Details",
@@ -611,7 +623,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const appliedRoleSnapshot = useRef("");
   const lastLoadedStoreTypeRolesRef = useRef("");
   const [activeRole, setActiveRole] = useState("");
-  const [copyFromRole, setCopyFromRole] = useState("");
   const [permissions, setPermissions] = useState({});
   const [savedRolePermissions, setSavedRolePermissions] = useState([]);
   useEffect(() => {
@@ -654,6 +665,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const [featureCategory, setFeatureCategory] = useState("All Features");
   const [featurePage, setFeaturePage] = useState(1);
   const [featurePageSize, setFeaturePageSize] = useState(5);
+  const [rolePermissionPage, setRolePermissionPage] = useState(1);
+  const [rolePermissionPageSize, setRolePermissionPageSize] = useState(5);
 
   useEffect(() => {
     if (!error) return undefined;
@@ -1736,7 +1749,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setFeatureSearch("");
     setFeatureCategory("All Features");
     setFeaturePage(1);
-    setCopyFromRole("");
     setError("");
     setStep(0);
   };
@@ -2036,7 +2048,13 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       }
       const postalCodeError = validatePostalCode(store.zip, store.country);
       if (postalCodeError) addError("Zip / Postal Code", postalCodeError);
-      const phoneError = validatePhoneForCountry(store.phone, store.country);
+      if (String(store.phone || "").trim() && !String(store.country || "").trim())
+        addError("Country", "Select the store country for this phone number.");
+      const phoneError = validatePhoneForCountry(
+        store.phone,
+        store.country,
+        locationOptions.selectedCountry?.phoneCode,
+      );
       if (phoneError) addError("Store Phone", phoneError);
       if (store.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.email.trim()))
         addError("Store Email", "Enter a valid email address.");
@@ -2526,7 +2544,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <table className="sf-plan-details-table">
               <thead><tr><th>Plan</th><th>Price</th><th>Billing Type</th><th>Stores Used</th><th>Remaining to Map</th><th>Status</th><th>Key Features</th></tr></thead>
               <tbody><tr>
-                <td><span className="sf-plan-details-name"><span className="sf-icon-square bi bi-file-earmark-text" /><strong>{planName}</strong></span></td>
+                <td><span className="sf-plan-details-name"><span className="" /><strong>{planName}</strong></span></td>
                 <td>{planPrice == null ? "—" : `${subscription?.currency || currencyCode} ${planPrice}`}</td>
                 <td>{billing}</td>
                 <td>{used} / {limit}</td>
@@ -2546,7 +2564,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               : "Store allowance was not returned with this subscription."
           }
         >
-          <div className="sf-table-wrap">
+          <div className={`sf-table-wrap${merchantStores.length ? " sf-existing-stores-has-data" : ""}`}>
             <table className="sf-table">
               <thead>
                 <tr>
@@ -2844,7 +2862,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               </button>
             }
           >
-            <div className="sf-table-wrap">
+            <div className="sf-table-wrap sf-hours-table-wrap">
               <table className="sf-table sf-hours-table">
                 <thead>
                   <tr>
@@ -2954,17 +2972,16 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <div className={`sf-field sf-phone-field${invalidStoreFields.has("Store Phone") ? " sf-field-invalid" : ""}`}>
               <label htmlFor="store-phone">Store Phone <span style={{ color: "#ef3340" }}>*</span></label>
               <PhoneInput
+                key={locationOptions.selectedCountry?.iso2 || "store-phone"}
                 country={locationOptions.selectedCountry?.iso2?.toLowerCase() || "in"}
                 enableSearch
                 countryCodeEditable={false}
-                value={store.phone}
-                onChange={(value, countryData) => {
-                  updateStore("phone", value.replace(/\D/g, ""));
-                  if (countryData?.name && countryData.name !== store.country) {
-                    changeCountry(countryData.name);
-                  }
+                value={phoneInputValue(store.phone, locationOptions.selectedCountry?.phoneCode)}
+                onChange={(value) => {
+                  const digits = value.replace(/\D/g, "");
+                  updateStore("phone", digits ? `+${digits}` : "");
                 }}
-                inputProps={{ id: "store-phone", name: "phone", type: "tel", autoComplete: "tel", "aria-invalid": invalidStoreFields.has("Store Phone") }}
+                inputProps={{ id: "store-phone", name: "store-phone", type: "tel", autoComplete: "off", "aria-invalid": invalidStoreFields.has("Store Phone") }}
                 placeholder="Enter phone number"
               />
               {getFieldValidationMessage(error, "Store Phone") && <small className="sf-field-error" role="alert">{getFieldValidationMessage(error, "Store Phone")}</small>}
@@ -2976,7 +2993,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               optional
               value={store.email}
               onChange={(value) => updateStore("email", value)}
-              type="email"
+              type="text"
+              inputMode="email"
+              name="new-store-contact"
+              autoComplete="new-password"
               placeholder="store@example.com"
             />
             <Field
@@ -3064,7 +3084,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                     checked={allVisibleFeaturesSelected}
                     onChange={(event) => setEnabledFeatures((current) => event.target.checked ? [...new Set([...current, ...selectableFeatureNames])] : current.filter((name) => !selectableFeatureNames.includes(name)))}
                   />
-                  Select all eligible
+                  Select all features
                 </label>
               )}
             />
@@ -3090,15 +3110,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       <td>{feature.name}</td>
                       <td>{feature.description || "—"}</td>
                       <td>
-                        <span
-                          className={
-                            hasPlan
-                              ? "sf-access-included"
-                              : "sf-access-excluded"
-                          }
+                        <StatusBadge
+                          status={hasPlan ? "Active" : "Inactive"}
+                          className="sf-plan-access-badge"
                         >
                           {hasPlan ? "Included" : "Not included"}
-                        </span>
+                        </StatusBadge>
                       </td>
                       <td>
                         <input
@@ -3196,18 +3213,27 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             name: feature.name,
             id: feature.id || feature.name,
           }));
+    const rolePermissionPageCount = Math.max(1, Math.ceil(matrixRows.length / rolePermissionPageSize));
+    const currentRolePermissionPage = Math.min(rolePermissionPage, rolePermissionPageCount);
+    const pagedMatrixRows = matrixRows.slice(
+      (currentRolePermissionPage - 1) * rolePermissionPageSize,
+      currentRolePermissionPage * rolePermissionPageSize,
+    );
     const availability = permissionAvailability[active] || {};
     return (
       <>
         <Panel
           title="Role Templates"
           subtitle={readOnly ? "Role templates assigned to this store." : "Choose from merchant-selected role templates for this store."}
-          action={<label className="sf-select-all-label sf-panel-select-all"><input type="checkbox" disabled={readOnly || !selectableRoleDefinitions.length || storeTypeRolesLoading} checked={selectableRoleDefinitions.length > 0 && selectableRoleDefinitions.every((role) => roleIsSelected(role))} onChange={(event) => {
+          action={<div className="sf-role-panel-actions">
+            {readOnly && onEdit && <button type="button" className="store-config-btn" onClick={onEdit}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
+            <label className="sf-select-all-label sf-panel-select-all"><input type="checkbox" disabled={readOnly || !selectableRoleDefinitions.length || storeTypeRolesLoading} checked={selectableRoleDefinitions.length > 0 && selectableRoleDefinitions.every((role) => roleIsSelected(role))} onChange={(event) => {
             const ids = selectableRoleDefinitions.map((role) => role.id);
             const next = event.target.checked ? [...new Set([...roles, ...ids])] : roles.filter((roleId) => !ids.includes(roleId));
             setRoles(next);
             setActiveRole((current) => next.includes(current) ? current : next[0] || "");
-          }} />Select all roles</label>}
+          }} />Select all roles</label>
+          </div>}
         >
           {rolesError && (
             <p className="sf-empty" role="alert">
@@ -3250,7 +3276,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         <div className="sf-permissions-layout">
           <Panel
             title="Roles for This Store"
-            subtitle={readOnly ? "Select a role to view its saved permissions." : "Configure permissions for each selected role."}
           >
             <div className="sf-role-list">
               {roles.map((roleId) => (
@@ -3258,7 +3283,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   type="button"
                   key={roleId}
                   className={active === roleId ? "active" : ""}
-                  onClick={() => setActiveRole(roleId)}
+                  onClick={() => {
+                    setActiveRole(roleId);
+                    setRolePermissionPage(1);
+                  }}
                 >
                   <i className="bi bi-grip-vertical" />
                   <span>{roleName(roleId)}</span>
@@ -3305,21 +3333,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   }} />
                   Select all permissions
                 </label>
-                <label className="sf-copy-role-select">
-                  <FilterDropdown
-                    value={copyFromRole}
-                    onChange={(event) => setCopyFromRole(event.target.value)}
-                  >
-                    <option value="">Select a role</option>
-                    {roles
-                      .filter((roleId) => roleId !== active)
-                      .map((roleId) => (
-                        <option key={roleId} value={roleId}>
-                          {roleName(roleId)}
-                        </option>
-                      ))}
-                  </FilterDropdown>
-                </label>
               </div>
             }
           >
@@ -3338,7 +3351,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                     </tr>
                   </thead>
                   <tbody>
-                    {matrixRows.map((item) => {
+                    {pagedMatrixRows.map((item) => {
                       const name = item.name;
                       const values = permissions[active]?.[name] || {};
                       const available = availability[name] || {};
@@ -3376,6 +3389,18 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 </table>
               </div>
             )}
+            {active && !permissionsLoading && <Pagination
+              currentPage={currentRolePermissionPage}
+              totalPages={rolePermissionPageCount}
+              totalItems={matrixRows.length}
+              pageSize={rolePermissionPageSize}
+              onPageChange={setRolePermissionPage}
+              onPageSizeChange={(pageSize) => {
+                setRolePermissionPageSize(pageSize);
+                setRolePermissionPage(1);
+              }}
+              itemLabel="features"
+            />}
             {!active && (
               <p className="sf-empty">
                 Select a role to configure permissions.
@@ -3590,7 +3615,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                         ) : (
                           <div className="sf-pin-action">
                             {hasLoginPin && (
-                              <span className="sf-pin-set" title={!visiblePin ? "PIN is stored securely and is not returned by the API." : undefined}>
+                              <span className="sf-pin-set" data-tooltip={!visiblePin ? "PIN is stored securely and is not returned by the API." : undefined}>
                                 {visiblePin || "PIN set"}
                               </span>
                             )}
@@ -3610,9 +3635,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       <td>
                         <span
                           className={
-                            isAssigned
-                              ? "sf-status-assigned"
-                              : "sf-status-available"
+                            `sf-status-pill ${
+                              isAssigned
+                                ? "sf-status-assigned"
+                                : "sf-status-available"
+                            }`
                           }
                         >
                           {isAssigned ? "Assigned" : "Available"}
@@ -3941,17 +3968,17 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     const pending = saving || mastersLoading || merchantLoading || featuresLoading || subscriptionLoading || rolesLoading || storeTypeRolesLoading || permissionsLoading;
     const failure = loadError || merchantError || rolesError;
     return <div className={"sf-root store-section-editor" + (readOnly ? " store-section-readonly" : "")}>
-      <div className="store-panel-heading">
+      {step !== 3 && <div className="store-panel-heading">
         <div>
           <h2>{STEPS[step]}</h2>
           <p>{readOnly ? "View saved store information." : STEP_HINTS[step]}</p>
         </div>
         {readOnly && onEdit && <button type="button" className="store-config-btn" onClick={onEdit}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
-      </div>
+      </div>}
       {error && <ValidationSummary error={error} summaryRef={errorBannerRef} onDismiss={() => setError("")} />}
       {failure && <div className="alert alert-danger" role="alert">{failure}<button type="button" onClick={() => setReload(v => v + 1)}>Retry</button></div>}
       {pending && <p role="status">Loading store selections…</p>}
-      <form onSubmit={saveSection}><fieldset disabled={pending || Boolean(failure) || (readOnly && step < 2)} style={{border:0,padding:0,minWidth:0}}>{screens[step]()} {!readOnly && <div className="sf-footer"><button type="button" className="sf-outline" onClick={onDone}>Cancel</button><button type="submit" className="sf-primary">{saving ? "Saving…" : "Save Changes"}</button></div>}</fieldset></form>
+      <form onSubmit={saveSection}><fieldset disabled={pending || Boolean(failure) || (readOnly && step < 2)} style={{border:0,padding:0,minWidth:0}}>{screens[step]()} {!readOnly && <div className="sf-footer"><button type="button" className="sf-outline" onClick={onDone}>Cancel</button><button type="submit" className="sf-primary">{saving ? "Saving…" : step === 3 ? "Update Changes" : "Save Changes"}</button></div>}</fieldset></form>
     </div>;
   }
 

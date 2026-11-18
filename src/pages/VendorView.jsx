@@ -5,6 +5,7 @@ import ReadOnlyDetails from "../components/ReadOnlyDetails";
 
 const fields = (entries) => entries.map(([key, label]) => ({
   key, label,
+  ...(key === "status" ? { status: true } : {}),
   ...(key === "vendorType" ? {
     render: (value) => ["ORGANIZER", "ORGANIZATION"].includes(String(value || "").toUpperCase()) ? "Organizer" : "Supplier",
   } : {}),

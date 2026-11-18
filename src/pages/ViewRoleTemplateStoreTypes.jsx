@@ -360,9 +360,6 @@ export default function ViewRoleTemplateStoreTypes() {
 
             <div>
               <h2>Applicable Store Types</h2>
-              <p>
-                Select the store types where this role template can be used.
-              </p>
             </div>
           </div>
 

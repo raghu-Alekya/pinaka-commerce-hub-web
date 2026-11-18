@@ -372,7 +372,6 @@ export function CashbackSettings() {
                                             <button
                                                 type="button"
                                                 className="cashback-edit"
-                                                title="Edit"
                                             >
                                                 <i className="bi bi-pencil" />
                                             </button>
@@ -380,7 +379,6 @@ export function CashbackSettings() {
                                             <button
                                                 type="button"
                                                 className="cashback-delete"
-                                                title="Remove"
                                                 onClick={() =>
                                                     removeTier(
                                                         tier.id

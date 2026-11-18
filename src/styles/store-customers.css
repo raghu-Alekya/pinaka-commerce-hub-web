@@ -348,6 +348,13 @@
     vertical-align: middle;
 }
 
+.store-customers-table td.store-customers-empty-cell {
+    height: 250px;
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+}
+
 .store-customers-table tbody tr:hover {
     background: #fcfcfe;
 }
@@ -400,6 +407,28 @@
 .store-customer-phone {
     color: #59667d;
     font-size: 13px;
+    white-space: nowrap;
+}
+
+.store-customers-table td:not(:last-child) {
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.store-customer-info,
+.store-customer-info > div:last-child {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.store-customer-info strong,
+.store-customer-info small,
+.store-customer-email {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
@@ -526,7 +555,7 @@
 ========================================================= */
 
 .store-customers-empty {
-    padding: 55px 20px;
+    padding: 32px 16px;
     text-align: center;
 }
 
@@ -545,17 +574,14 @@
 
 .store-customers-empty h3 {
     margin: 0;
-    color: #354057;
-    font-size: 15px;
+    color: #929db0;
+    font-size: 14px;
+    font-weight: 400;
 }
 
-.store-customers-empty p {
-    margin: 7px 0 16px;
-    color: #8a94a5;
-    font-size: 12px;
-}
 
-.store-customers-empty button {
+
+/* .store-customers-empty button {
     height: 34px;
     padding: 0 13px;
     border: 1px solid #dcdfea;
@@ -570,7 +596,7 @@
     background: #f7f5ff;
     border-color: #cfc7f7;
     color: #5c45d5;
-}
+} */
 
 /* =========================================================
    FOOTER

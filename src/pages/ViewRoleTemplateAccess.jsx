@@ -608,9 +608,6 @@ function saveAndLeave() {
 
             <div>
               <h2>Features & Permissions</h2>
-              <p>
-                Select the features and permissions included in this role template.
-              </p>
             </div>
           </div>
 

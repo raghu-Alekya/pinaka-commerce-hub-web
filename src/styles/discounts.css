@@ -6,6 +6,29 @@
   margin-bottom: 18px;
 }
 
+.discounts-page .discount-sync-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.discounts-page .discount-sync-btn:hover:not(:disabled) { background: #f8fafc; }
+.discounts-page .discount-sync-btn:disabled { opacity: .65; cursor: not-allowed; }
+.discount-sync-spinning { animation: discount-sync-spin .8s linear infinite; }
+@keyframes discount-sync-spin { to { transform: rotate(360deg); } }
+
 .discounts-summary .coupon-summary-card {
   min-width: 0;
 }
@@ -36,7 +59,21 @@
 
 .discounts-table th:last-child,
 .discounts-table td:last-child {
-  text-align: right;
+  width: 140px;
+  min-width: 140px;
+  text-align: center;
+}
+
+.discounts-table .discounts-actions-heading,
+.discounts-table .coupon-row-actions {
+  width: 140px;
+  min-width: 140px;
+  text-align: center;
+}
+
+.discounts-table .coupon-row-actions .list-actions {
+  width: 100%;
+  justify-content: center;
 }
 
 .discount-name-cell strong,
@@ -66,19 +103,19 @@
   text-align: center;
   box-sizing: border-box;
   white-space: nowrap;
-  padding: 6px 9px;
-  border-radius: 6px;
+  padding: 12px 16px;
+  border-radius: 50px;
   background: #e8f6ed;
   color: #247447;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
 }
 
 .discount-status {
   display: inline-flex;
-  padding: 5px 9px;
-  border-radius: 6px;
-  font-size: 11px;
+  padding: 12px 16px;
+  border-radius: 50px;
+  font-size: 13px;
   font-weight: 600;
 }
 

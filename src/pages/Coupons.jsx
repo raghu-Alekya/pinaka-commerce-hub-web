@@ -8,7 +8,8 @@ import ListActions from "../components/ListActions";
 import { api, pendingStoreRead } from "../api/http";
 import { normalizeCatalog } from "../api/products";
 import { catalogProductId } from "./discountForm";
-import { getStoreCoupons, invalidateStoreCoupons } from "../api/storeCoupons";
+import { formatCurrency } from "../utils/currency";
+import { getStoreCoupons, invalidateStoreCoupons, syncStoreCoupons } from "../api/storeCoupons";
 import "../styles/coupons.css";
 
 const emptyCoupon = {
@@ -37,11 +38,24 @@ const emptyCoupon = {
 };
 
 const listValues = (value) => Array.isArray(value) ? value : [];
+const couponExpiryDate = (coupon = {}) => coupon.date_expires || coupon.dateExpires || coupon.expiryDate
+    || coupon.expiry_date || coupon.date_expires_gmt || coupon.dateExpiresGmt || "";
+const formatCouponExpiryDate = (value) => {
+    if (!value) return "";
+    const datePart = String(value).slice(0, 10);
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+    const date = match
+        ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+        : new Date(value);
+    return Number.isNaN(date.getTime())
+        ? String(value)
+        : new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
+};
 
 function normalizeCoupon(raw = {}) {
     const usageCount = Number(raw.usage_count ?? raw.usedCount ?? raw.used_count ?? 0);
     const usageLimit = raw.usage_limit ?? raw.usageLimit ?? "";
-    const expiryDate = raw.date_expires || raw.expiryDate || raw.expiry_date || "";
+    const expiryDate = couponExpiryDate(raw);
     const expired = expiryDate && new Date(expiryDate) < new Date();
     const usedUp = Number(usageLimit) > 0 && usageCount >= Number(usageLimit);
     const rawStatus = String(raw.status || "Active").toLowerCase();
@@ -74,15 +88,23 @@ function normalizeCoupon(raw = {}) {
     };
 }
 
+function formatCouponAmount(value, currency, currencySymbol) {
+    const text = String(value ?? "");
+    if (!text || text === "—" || text.includes("%")) return text || "—";
+    return formatCurrency(text.replace(/[^\d.-]/g, ""), currency, currencySymbol);
+}
+
 function couponToForm(coupon = {}) {
     const csv = (value) => Array.isArray(value) ? value.join(", ") : (value || "");
+    const limitValue = value => value == null || value === "" || value === "∞" ? "" : String(value);
+    const moneyValue = value => value == null || value === "" ? "" : (Number.isFinite(Number(value)) ? Number(value).toFixed(2) : String(value));
     return {
         ...emptyCoupon,
         ...coupon,
         code: coupon.code || "",
         discount_type: coupon.discount_type || coupon.discountType || "fixed_cart",
-        amount: String(coupon.amount ?? "").replace(/[$,%]/g, "").trim(),
-        date_expires: coupon.date_expires ? String(coupon.date_expires).slice(0, 10) : coupon.expiryDate || "",
+        amount: moneyValue(String(coupon.amount ?? "").replace(/[$,%]/g, "").trim()),
+        date_expires: couponExpiryDate(coupon) ? String(couponExpiryDate(coupon)).slice(0, 10) : "",
         product_ids: csv(coupon.product_ids || coupon.productIds),
         required_product_ids: csv(coupon.required_product_ids || coupon.requiredProductIds),
         individual_use: coupon.individual_use ?? coupon.individualUse ?? false,
@@ -92,11 +114,11 @@ function couponToForm(coupon = {}) {
         product_categories: csv(coupon.product_categories || coupon.productCategories),
         excluded_product_categories: csv(coupon.excluded_product_categories || coupon.excludedProductCategories),
         email_restrictions: csv(coupon.email_restrictions || coupon.emailRestrictions),
-        minimum_amount: String(coupon.minimum_amount ?? coupon.minimumAmount ?? ""),
-        maximum_amount: String(coupon.maximum_amount ?? coupon.maximumAmount ?? ""),
-        usage_limit: String(coupon.usage_limit ?? coupon.usageLimit ?? ""),
-        usage_limit_per_user: String(coupon.usage_limit_per_user ?? coupon.usageLimitPerUser ?? ""),
-        limit_usage_to_x_items: String(coupon.limit_usage_to_x_items ?? coupon.limitUsageToXItems ?? ""),
+        minimum_amount: moneyValue(coupon.minimum_amount ?? coupon.minimumAmount),
+        maximum_amount: moneyValue(coupon.maximum_amount ?? coupon.maximumAmount),
+        usage_limit: limitValue(coupon.usage_limit ?? coupon.usageLimit),
+        usage_limit_per_user: limitValue(coupon.usage_limit_per_user ?? coupon.usageLimitPerUser),
+        limit_usage_to_x_items: limitValue(coupon.limit_usage_to_x_items ?? coupon.limitUsageToXItems),
     };
 }
 
@@ -164,6 +186,7 @@ export default function Coupons({
 
     const [syncMessage, setSyncMessage] = useState("");
     const [syncError, setSyncError] = useState("");
+    const [syncingCoupons, setSyncingCoupons] = useState(false);
 
     // =========================================================
     // COUPONS
@@ -311,10 +334,32 @@ export default function Coupons({
     // LATEST COUPON UPDATES
     // =========================================================
 
-    const handleLatestCouponUpdates = () => {
+    const handleLatestCouponUpdates = async () => {
+        if (syncingCoupons) return;
         setSyncMessage("");
         setSyncError("");
-        setSyncMessage("WooCommerce sync will be connected after the coupon API is implemented.");
+        if (!ownerId || !storeId) {
+            setSyncError("Select a store with a merchant ID before syncing coupons.");
+            return;
+        }
+        setSyncingCoupons(true);
+        try {
+            const result = await syncStoreCoupons(ownerId, storeId);
+            if (result?.success === false) throw new Error(result.message || "Unable to sync coupons.");
+            invalidateStoreCoupons(ownerId, storeId);
+            setAttempt(value => value + 1);
+            const summary = result?.summary || result?.data?.summary || result;
+            const counts = ["created", "updated", "skipped", "failed"]
+                .filter(key => summary?.[key] != null)
+                .map(key => `${summary[key]} ${key}`);
+            setSyncMessage(counts.length
+                ? `Latest coupon updates completed: ${counts.join(", ")}.`
+                : "Latest coupon updates completed successfully.");
+        } catch (error) {
+            setSyncError(error.message || "Unable to sync coupons.");
+        } finally {
+            setSyncingCoupons(false);
+        }
     };
 
     const openCreate = () => {
@@ -365,7 +410,7 @@ export default function Coupons({
             };
             const payload = {
                 merchantId: ownerId, storeId, code: couponForm.code.trim(),
-                amount: String(couponForm.amount), discountType: couponForm.discount_type,
+                amount: Number(couponForm.amount).toFixed(2), discountType: couponForm.discount_type,
                 description: couponForm.description || "", individualUse: Boolean(couponForm.individual_use),
                 productIds: ids(couponForm.product_ids), requiredProductIds: ids(couponForm.required_product_ids),
                 excludedProductIds: ids(couponForm.excluded_product_ids),
@@ -373,7 +418,8 @@ export default function Coupons({
                 limitUsageToXItems: limit(couponForm.limit_usage_to_x_items),
                 freeShipping: Boolean(couponForm.free_shipping), productCategories: ids(couponForm.product_categories),
                 excludedProductCategories: ids(couponForm.excluded_product_categories), excludeSaleItems: Boolean(couponForm.exclude_sale_items),
-                minimumAmount: couponForm.minimum_amount || "0.00", maximumAmount: couponForm.maximum_amount || "0.00",
+                minimumAmount: couponForm.minimum_amount === "" ? "0.00" : Number(couponForm.minimum_amount).toFixed(2),
+                maximumAmount: couponForm.maximum_amount === "" ? "0.00" : Number(couponForm.maximum_amount).toFixed(2),
                 emailRestrictions: csv(couponForm.email_restrictions), dateExpires: couponForm.date_expires || null,
             };
             const response = editorMode === "edit"
@@ -466,10 +512,9 @@ export default function Coupons({
                         type="button"
                         className="coupon-sync-btn coupon-sync-update"
                         onClick={handleLatestCouponUpdates}
-                        disabled={!storeId}
+                        disabled={!storeId || syncingCoupons}
                     >
-                        <i className="bi bi-arrow-repeat" />
-                        Latest Updates
+                        {syncingCoupons ? <><span className="sync-spinner" /> Updating...</> : <><i className="bi bi-arrow-repeat" /> Latest Updates</>}
                     </button>
 
                 </div>
@@ -682,6 +727,8 @@ export default function Coupons({
                                     <CouponRow
                                         key={coupon.id}
                                         coupon={coupon}
+                                        currency={store?.currency}
+                                        currencySymbol={store?.currencySymbol}
                                         onView={() =>
                                             setSelectedCoupon(coupon)
                                         }
@@ -694,14 +741,13 @@ export default function Coupons({
                                     <td className="coupons-table-empty" colSpan="7">
                                         <div className="products-table-empty-state">
                                 
-                                            <strong>
+                                            <span>
                                                 {loading
                                                     ? "Loading coupons..."
                                                     : loadError
                                                         ? "Coupons could not be loaded."
                                                         : "No coupons found"}
-                                            </strong>
-                                            {!loading && !loadError && <span>Try changing your search or filters.</span>}
+                                            </span>
                                             
                                         </div>
                                     </td>
@@ -775,7 +821,7 @@ export default function Coupons({
                               metricValue: selectedCoupon.amount
                                   ? (String(selectedCoupon.type || "").toLowerCase().includes("percent")
                                         ? `${selectedCoupon.amount}%`
-                                        : `$${selectedCoupon.amount}`)
+                                        : formatCouponAmount(selectedCoupon.amount, store?.currency, store?.currencySymbol))
                                   : "—",
                           }
                         : null
@@ -824,7 +870,7 @@ export default function Coupons({
                                       },
                                       {
                                           label: "EXPIRATION DATE",
-                                          value: selectedCoupon.expiryDate,
+                                          value: formatCouponExpiryDate(selectedCoupon.expiryDate),
                                           emptyText: "No Expiration",
                                       },
                                       {
@@ -1071,7 +1117,7 @@ function CouponEditor({ mode, form, setForm, error, busy, products = [], catalog
 // COUPON ROW
 // =========================================================
 
-function CouponRow({ coupon, onView, onEdit, onDelete }) {
+function CouponRow({ coupon, currency, currencySymbol, onView, onEdit, onDelete }) {
     return (
         <tr
             className="coupon-row-clickable"
@@ -1156,7 +1202,7 @@ function CouponRow({ coupon, onView, onEdit, onDelete }) {
             <td>
 
                 <strong className="coupon-amount">
-                    {coupon.amount}
+                    {formatCouponAmount(coupon.amount, currency, currencySymbol)}
                 </strong>
 
             </td>
@@ -1190,7 +1236,7 @@ function CouponRow({ coupon, onView, onEdit, onDelete }) {
             <td>
 
                 <span className="coupon-expiry">
-                    {coupon.expiryDate || "—"}
+                    {formatCouponExpiryDate(coupon.expiryDate) || "—"}
                 </span>
 
             </td>

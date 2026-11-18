@@ -18,8 +18,9 @@ import { formatDate, listSubscriptions } from "../api/subscriptions";
 import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Download } from "lucide-react";
-import { listMerchants, getMerchant, updateMerchantStatus, deleteMerchant } from "../api/merchants";
+import { CalendarDays, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { listMerchants, getMerchant, updateMerchantStatus, deleteMerchant, isSubscriptionExpired } from "../api/merchants";
+import { storeTypesApi } from "../api/storeTypes";
 import { listMerchantEmployees, getEmployee, updateEmployee } from "../api/employees";
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { devicesApi } from "../api/devices";
@@ -39,8 +40,13 @@ function readValue(value) {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   return typeof value === 'object' ? (value.name || value.label || '—') : String(value);
 }
-function ViewSection({ title, children, actions }) {
-  return <section className="merchant-view-section">{actions ? <div className="merchant-section-heading"><h2>{title}</h2>{actions}</div> : <h2>{title}</h2>}{children}</section>;
+function ViewSection({ title, subtitle, children, actions }) {
+  const heading = subtitle
+    ? <div className="merchant-overview-section-heading"><div><h2>{title}</h2><p>{subtitle}</p></div>{actions}</div>
+    : actions
+      ? <div className="merchant-section-heading"><h2>{title}</h2>{actions}</div>
+      : <h2>{title}</h2>;
+  return <section className="merchant-view-section">{heading}{children}</section>;
 }
 function ViewFields({ items }) {
   return <dl className="merchant-view-fields">{items.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{readValue(value)}</dd></div>)}</dl>;
@@ -96,7 +102,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
     if(result?.success===false)throw new Error(result.message || 'Device creation failed.');
     const returned=result?.device || result?.data?.device || result?.data || result;
     const record=returned && typeof returned==='object' && !Array.isArray(returned)?returned:{};
-    const device={...record,id:record.id || record.uuid || record.deviceUuid || crypto.randomUUID(),deviceId:record.deviceId || record.device_id || values.deviceId || values.device_id || '',code:record.code || record.deviceCode || record.device_code || '',merchantId:record.merchantId || record.merchant_id || merchantId,name:record.name || record.deviceName || record.device_name || values.deviceName,type:record.type || record.deviceType || record.device_type || values.deviceType,serialNumber:record.serialNumber || record.serial_number || record.serial || values.serialNumber,storeId:record.storeId || record.store_id || values.storeId || values.store_id,storeName:record.storeName || record.store_name,status:record.connectionStatus || record.connection_status || record.status || values.status || 'Unknown'};
+    const device={...record,id:record.id || record.uuid || record.deviceUuid || crypto.randomUUID(),activationKey:record.device_active_code || record.authorization_code || record.activation_code || values.activationKey || '',code:record.code || record.deviceCode || record.device_code || '',merchantId:record.merchantId || record.merchant_id || merchantId,name:record.name || record.deviceName || record.device_name || values.deviceName,type:record.type || record.deviceType || record.device_type || values.deviceType,serialNumber:record.serialNumber || record.serial_number || record.serial || values.serialNumber,storeId:record.storeId || record.store_id || values.storeId || values.store_id,storeName:record.storeName || record.store_name,status:record.connectionStatus || record.connection_status || record.status || values.status || 'Unknown'};
     setCreatedDevices(old=>[device,...old.filter(item=>String(item.id)!==String(device.id))]);return result;
   }
   async function updateMerchantDevice(values) {
@@ -109,7 +115,7 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       ...editingDevice,
       ...record,
       id: record.id || record.uuid || record.deviceUuid || deviceId,
-      deviceId: record.deviceId || record.device_id || values.deviceId || "",
+      activationKey: record.device_active_code || record.authorization_code || record.activation_code || values.activationKey || "",
       code: record.code || record.deviceCode || record.device_code || editingDevice.code || "",
       name: record.name || record.deviceName || record.device_name || values.deviceName,
       type: record.type || record.deviceType || record.device_type || values.deviceType,
@@ -184,6 +190,15 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const [employeesError, setEmployeesError] = useState('');
   const [allSubscriptions, setAllSubscriptions] = useState([]);
   const [allPlans, setAllPlans] = useState([]);
+  const [masterStoreTypes, setMasterStoreTypes] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    storeTypesApi.getAll().then(response => {
+      if (active) setMasterStoreTypes(response.storeTypes || []);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (draft) { setLoading(false); setError(''); return; }
@@ -387,38 +402,34 @@ async function openEmployeeEdit(employee) {
       : String(rawCycle).charAt(0).toUpperCase() + String(rawCycle).slice(1).toLowerCase()
     : "Monthly";
 
-  const displayStoreType =
-    subMatch?.storeTypeName ||
-    (typeof subStoreType === "object" && subStoreType ? subStoreType.name || subStoreType.storeTypeName || subStoreType.code : subStoreType) ||
-    subscription.storeTypeName ||
-    subscription.store_type_name ||
-    matchedPlan?.storeTypeName ||
-    raw.storeTypeName ||
-    raw.storeType ||
-    summary.storeType ||
-    "Convenience Store";
-
-  const displayStatus =
-    subMatch?.status ||
-    subscription.status ||
-    saved?.subscriptionStatus ||
-    raw.status ||
-    "ACTIVE";
+  const storeTypeRefs = [
+    subMatch?.storeTypeId, subMatch?.storeTypeCode,
+    subscription.storeTypeId, subscription.store_type_id,
+    typeof subStoreType === "object" ? subStoreType.id || subStoreType.storeTypeId || subStoreType.store_type_id || subStoreType.code || subStoreType.storeTypeCode : subStoreType,
+    matchedPlan?.storeTypeId, matchedPlan?.store_type_id, matchedPlan?.storeType,
+  ].filter(Boolean).map(value => String(value).trim().toLowerCase());
+  const masterStoreType = masterStoreTypes.find(type => [type.id, type.storeTypeId, type.store_type_id, type.code, type.storeTypeCode, type.store_type_code, type.name]
+    .some(value => value && storeTypeRefs.includes(String(value).trim().toLowerCase())));
+  const explicitStoreTypeNames = [
+    typeof subStoreType === "object" ? subStoreType.name || subStoreType.storeTypeName || subStoreType.store_type_name : "",
+    subscription.storeTypeName, subscription.store_type_name,
+    matchedPlan?.storeTypeName, matchedPlan?.store_type_name,
+    raw.storeTypeName, summary.storeType,
+  ].filter(value => typeof value === "string" && value.trim() && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim()));
+  const displayStoreType = masterStoreType?.name || explicitStoreTypeNames[0] || "Store Type";
 
   const rawStartVal =
-    subMatch?.start ||
     subMatch?.rawStart ||
+    subMatch?.start ||
     subscription.startDate ||
     subscription.start_date ||
     subscription.createdAt ||
     subscription.created_at ||
     saved?.start;
 
-  const displayStartDate = rawStartVal ? String(rawStartVal).slice(0, 10) : undefined;
-
   const rawEndVal =
-    subMatch?.end ||
     subMatch?.rawEnd ||
+    subMatch?.end ||
     subscription.renewalDate ||
     subscription.renewal_date ||
     subscription.nextBillingDate ||
@@ -426,6 +437,18 @@ async function openEmployeeEdit(employee) {
     subscription.currentPeriodEnd ||
     subscription.current_period_end ||
     summary.renewal;
+
+  const statusValue =
+    subMatch?.status ||
+    subscription.status ||
+    saved?.subscriptionStatus ||
+    raw.status ||
+    "ACTIVE";
+  const displayStatus = String(statusValue).toLowerCase() === "active" && isSubscriptionExpired(rawEndVal)
+    ? "Inactive"
+    : statusValue;
+
+  const displayStartDate = rawStartVal ? String(rawStartVal).slice(0, 10) : undefined;
 
   const displayRenewalDate = rawEndVal ? String(rawEndVal).slice(0, 10) : undefined;
 
@@ -539,6 +562,9 @@ async function openEmployeeEdit(employee) {
       @media(max-width:650px){.merchant-readonly .page-header{flex-wrap:wrap;gap:16px;}.merchant-readonly .merchant-detail-actions{width:100%;}}
       .merchant-readonly .merchant-view-section{background:#fff;border:1px solid #e1e4eb;border-radius:10px;margin-bottom:16px;overflow:hidden;}
       .merchant-readonly .merchant-view-section h2{font-size:18px;padding:16px 20px;margin:0;border-bottom:1px solid #edf0f4;color:#17233e;}
+      .merchant-readonly .merchant-overview-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid #edf0f4;}
+      .merchant-readonly .merchant-overview-section-heading h2{padding:0;border:0;}
+      .merchant-readonly .merchant-overview-section-heading p{margin:5px 0 0;color:#758096;font-size:13px;line-height:1.5;}
       .merchant-readonly .merchant-view-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 28px;padding:20px;margin:0;}
       .merchant-readonly .merchant-view-fields dt{font-weight:500;color:#7c8495;font-size:13px;margin-bottom:5px;}
       .merchant-readonly .merchant-view-fields dd{margin:0;color:#17233e;font-size:15px;overflow-wrap:anywhere;}
@@ -551,7 +577,19 @@ async function openEmployeeEdit(employee) {
       @media(max-width:650px){.merchant-readonly .merchant-view-fields{grid-template-columns:1fr;}}
     `}</style>
     <header className="merchant-view-topbar">
-      {vendorFlow ? <><button type="button" className="merchant-view-back" onClick={() => vendorBackRef.current?.()}><i className="bi bi-arrow-left" /> Vendors</button><span>/</span><strong>{vendorFlow === "create" ? "Add New Vendor" : "Add Existing Vendor"}</strong></> : tenderFlow ? <><button type="button" className="merchant-view-back" onClick={() => tenderBackRef.current?.()}><i className="bi bi-arrow-left" /> Tenders</button><span>/</span><strong>Add Existing Tender</strong></> : addingEmployee ? <><button type="button" className="merchant-view-back" onClick={() => setAddingEmployee(false)}><i className="bi bi-arrow-left" /> Employees</button><span>/</span><strong>Add Employee</strong></> : addingDevice ? <><button type="button" className="merchant-view-back" onClick={() => setAddingDevice(false)}><i className="bi bi-arrow-left" /> Devices</button><span>/</span><strong>Add Device</strong></> : <button type="button" className="merchant-view-back" onClick={onBack}><i className="bi bi-arrow-left" /> Merchants</button>}
+      {activeTab === "vendors" && vendorFlow ? (
+        <><button type="button" className="merchant-view-back" onClick={() => vendorBackRef.current?.()}><i className="bi bi-arrow-left" /> Vendors</button><span>/</span><strong>{vendorFlow === "create" ? "Add New Vendor" : "Add Existing Vendor"}</strong></>
+      ) : activeTab === "tenders" && tenderFlow ? (
+        <><button type="button" className="merchant-view-back" onClick={() => tenderBackRef.current?.()}><i className="bi bi-arrow-left" /> Tenders</button><span>/</span><strong>Add Existing Tender</strong></>
+      ) : activeTab === "employees" && addingEmployee ? (
+        <><button type="button" className="merchant-view-back" onClick={() => setAddingEmployee(false)}><i className="bi bi-arrow-left" /> Employees</button><span>/</span><strong>Add Employee</strong></>
+      ) : activeTab === "employees" && editingEmployee ? (
+        <><button type="button" className="merchant-view-back" onClick={() => setEditingEmployee(null)}><i className="bi bi-arrow-left" /> Employees</button><span>/</span><strong>Edit Employee</strong></>
+      ) : activeTab === "devices" && (addingDevice || editingDevice) ? (
+        <><button type="button" className="merchant-view-back" onClick={() => { setAddingDevice(false); setEditingDevice(null); }}><i className="bi bi-arrow-left" /> Devices</button><span>/</span><strong>{editingDevice ? "Edit Device" : "Add Device"}</strong></>
+      ) : (
+        <button type="button" className="merchant-view-back" onClick={onBack}><i className="bi bi-arrow-left" /> Merchants</button>
+      )}
     </header>
     <div className="merchant-view-layout">
       {!loading && !error && <div className="merchant-view-tabs" role="tablist" aria-orientation="vertical" aria-label="Merchant details">
@@ -564,27 +602,27 @@ async function openEmployeeEdit(employee) {
     </div>
     {loading ? <p role="status">Loading merchant details…</p> : error ? <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div> : <>
       <div role="tabpanel" id="merchant-panel-overview" aria-labelledby="merchant-tab-overview" hidden={activeTab !== 'overview'} tabIndex={0}>
-        <ViewSection title="Business Details"><ViewFields items={[
+        <ViewSection title="Business Details" subtitle="Key business and registration information for this merchant."><ViewFields items={[
           ['Merchant Code', displayMerchantCode], ['Legal / Business Name', business],
           ['Business Display Name', businessDisplayName], ['Status', summary.status || raw.status],
           ['Joined Date', formatDate(summary.joined || raw.createdAt || raw.created_at)],
           ['Billing Cycle', billingCycle],
         ]} /></ViewSection>
-        <ViewSection title="Primary Contact"><ViewFields items={[
+        <ViewSection title="Primary Contact" subtitle="Contact details and the merchant's location."><ViewFields items={[
           ['Merchant Name', contact.name || raw.merchantName || raw.ownerName || [firstName, lastName].filter(Boolean).join(' ')],
           ['Email', contact.email || raw.merchantEmail || summary.email], ['Phone', contact.phone || raw.merchantPhoneNumber || summary.phone],
           ['Country', contact.country || raw.country || address.country || summary.country], ['City', contact.city || raw.city || address.city],
           ['State / Province', contact.state || raw.state || address.state || summary.state],
           ['Address', typeof address === 'string' ? address : fullAddress],
-          ['Postal Code', contact.postal || contact.postalCode || contact.postal_code || raw.postalCode || raw.postal_code || address.postalCode || address.postal_code || address.zipCode],
+          ['Zip / Postal Code', contact.postal || contact.postalCode || contact.postal_code || raw.postalCode || raw.postal_code || address.postalCode || address.postal_code || address.zipCode],
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-subscription" aria-labelledby="merchant-tab-subscription" hidden={activeTab !== 'subscription'} tabIndex={0}>
-        <ViewSection title="Subscription & Usage"><ViewFields items={[
+        <ViewSection title="Subscription & Usage" subtitle="Plan, usage limits, and current subscription activity."><ViewFields items={[
           ['Plan', displayPlanName], ['Billing Cycle', displayBillingCycle],
           ['Store Type', displayStoreType],
           ['Subscription Status', displayStatus], ['Start Date', displayStartDate],
-          ['Renewal Date', displayRenewalDate],
+          ['End Date', displayRenewalDate],
           ['Registered Stores', stores.length > 0 ? stores.length : (subMatch?.stores ?? summary.stores ?? raw.storeCount ?? (Array.isArray(raw.stores) ? raw.stores.length : 0))],
           ['Store Allowance', displayStoreAllowance],
           ['Registered Devices', devices.length > 0 ? devices.length : (registeredDeviceCount ?? subMatch?.devices ?? raw.deviceCount ?? (Array.isArray(raw.devices) ? raw.devices.length : 0))],
@@ -594,7 +632,7 @@ async function openEmployeeEdit(employee) {
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-stores" aria-labelledby="merchant-tab-stores" hidden={activeTab !== 'stores'} tabIndex={0}>
-        {activeTab === 'stores' && <MerchantStores merchantId={apiMerchantId || merchantId} merchantDetails={result?.merchant || merchant || raw} embedded />}
+        {activeTab === 'stores' && <MerchantStores merchantId={apiMerchantId || merchantId} merchantDetails={result?.merchant || merchant || raw} subscription={result?.subscription || subscription} embedded />}
       </div>
       <div role="tabpanel" id="merchant-panel-vendors" aria-labelledby="merchant-tab-vendors" hidden={activeTab !== 'vendors'} tabIndex={0}>
         {activeTab === 'vendors' && <MerchantVendors merchantId={merchantId} masterVendors={masterVendors} assignedVendorIds={vendorAssignments?.[merchantId] ?? saved?.vendorIds ?? raw.vendorIds ?? raw.vendors ?? []} onSaveAssignments={onSaveVendorAssignments} onNavigationChange={setVendorFlow} navigationBackRef={vendorBackRef} loading={vendorsLoading} error={vendorsError}/>}
@@ -802,12 +840,54 @@ function dateRangeMatch(merchant, value, from = '', to = '', now = new Date()) {
   return date >= start && date < end;
 }
 function CalendarField({ label, value, onChange, min, max }) {
-  const input = useRef(null);
-  return <label style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 180 }}>{label}
-    <span style={{ display: 'flex', gap: 6 }}><input ref={input} type="date" value={value} min={min} max={max} onChange={event => onChange(event.target.value)} style={{ minWidth: 145, padding: '8px 10px', border: '1px solid #dfe3ea', borderRadius: 6, colorScheme: 'light' }} />
-      <button type="button" aria-label={'Open ' + label.toLowerCase() + ' calendar'} onClick={() => { try { if (input.current.showPicker) input.current.showPicker(); else input.current.focus(); } catch { input.current.focus(); } }} style={{ padding: '8px 10px', border: '1px solid #dfe3ea', borderRadius: 6, background: '#fff' }}>▦</button></span>
-  </label>;
+  const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
+  const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(() => selectedDate || new Date());
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const daysInPreviousMonth = new Date(month.getFullYear(), month.getMonth(), 0).getDate();
+  const dateCells = Array.from({ length: 42 }, (_, index) => {
+    const dayOffset = index - firstDay + 1;
+    const date = dayOffset < 1
+      ? new Date(month.getFullYear(), month.getMonth() - 1, daysInPreviousMonth + dayOffset)
+      : dayOffset > daysInMonth
+        ? new Date(month.getFullYear(), month.getMonth() + 1, dayOffset - daysInMonth)
+        : new Date(month.getFullYear(), month.getMonth(), dayOffset);
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    return { date, iso, inMonth: date.getMonth() === month.getMonth() };
+  });
+  const displayValue = value ? `${value.slice(5, 7)}/${value.slice(8, 10)}/${value.slice(0, 4)}` : "mm/dd/yyyy";
+
+  return <div className="merchant-date-field">
+    <span>{label}</span>
+    <div className="merchant-date-picker">
+      <button type="button" className={`merchant-date-trigger${value ? " has-value" : ""}`} aria-label={`${label}: ${displayValue}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setOpen(current => !current); }}>
+        <span>{displayValue}</span><CalendarDays size={16} aria-hidden="true" />
+      </button>
+      {open && <div className="merchant-calendar-popover" role="dialog" aria-label={`${label} calendar`}>
+        <div className="merchant-calendar-heading">
+          <strong>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</strong>
+          <div>
+            <button type="button" aria-label="Previous month" onClick={() => setMonth(current => new Date(current.getFullYear(), current.getMonth() - 1, 1))}><ChevronLeft size={17} /></button>
+            <button type="button" aria-label="Next month" onClick={() => setMonth(current => new Date(current.getFullYear(), current.getMonth() + 1, 1))}><ChevronRight size={17} /></button>
+          </div>
+        </div>
+        <div className="merchant-calendar-grid merchant-calendar-weekdays" aria-hidden="true">{"Su Mo Tu We Th Fr Sa".split(" ").map(day => <span key={day}>{day}</span>)}</div>
+        <div className="merchant-calendar-grid">
+          {dateCells.map(({ date, iso, inMonth }) => {
+            const disabled = (min && iso < min) || (max && iso > max);
+            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); setOpen(false); }}>{date.getDate()}</button>;
+          })}
+        </div>
+        <div className="merchant-calendar-footer">
+          <button type="button" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
+          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); setOpen(false); setMonth(today); } }}>Today</button>
+        </div>
+      </div>}
+    </div>
+  </div>;
 }
+
 function storeLimitFor(merchant, masterPlans) {
   const plan = String(merchant.plan || "").toLowerCase();
 
@@ -924,7 +1004,19 @@ const [statusFilter, setStatusFilter] = useState("");
     setDateFrom(draftFrom); setDateTo(draftTo); setJoinedRange('custom'); setPage(1); setDatePickerOpen(false);
   }
   const [apiMerchants, setMerchants] = useState([]);
-  const merchants = useMemo(() => { const combined = new Map(apiMerchants.map(row => [String(row.id), row])); localMerchants.forEach(row => combined.set(String(row.id), row)); return [...combined.values()]; }, [apiMerchants, localMerchants]);
+  const merchants = useMemo(() => {
+    const combined = new Map(apiMerchants.map(row => [String(row.id), row]));
+    localMerchants.forEach(row => combined.set(String(row.id), row));
+    return [...combined.values()].map(row => {
+      const raw = row._raw || row;
+      const subscription = row.subscription || raw.subscription || raw.merchant?.subscription || {};
+      const renewal = subscription.renewalDate || subscription.renewal_date || subscription.currentPeriodEnd || subscription.current_period_end || row.renewalDate || row.renewal_date || raw._onboarding?.renewalDate || raw._onboarding?.renewal_date;
+      if (String(row.status || '').toLowerCase() === 'active' && isSubscriptionExpired(renewal)) {
+        return { ...row, status: 'Inactive' };
+      }
+      return row;
+    });
+  }, [apiMerchants, localMerchants]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -1095,34 +1187,20 @@ const [statusFilter, setStatusFilter] = useState("");
               <div className="stat-content">
                 <span>{x[2]}</span>
                 <strong>{x[3]}</strong>
-                <small
-                  className={
-                    i === 0 || i === 4 ? "positive" : i === 2 ? "negative" : ""
-                  }
-                >
+                <small className={`merchant-stat-change ${x[0]}`}>
                   <i
                     className={`bi ${i === 2 ? "bi-arrow-down" : "bi-arrow-up"}`}
                   />{" "}
                   {x[4]}
                 </small>
-                {(i === 1 || i === 3) && (
-                  <div className={`progress ${i === 3 ? "red-progress" : ""}`}>
-                    <div
-                      style={{
-                        width:
-                          i === 1
-                            ? `${total ? (activeCount / total) * 100 : 0}%`
-                            : `${total ? (inactiveCount / total) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-                )}
+            
               </div>
             </div>
           </div>
         ))}
       </div>
       <div className="merchant-table-card">
+        <div className="merchant-filters-anchor">
         <FiltersBar
     searchValue={q}
     onSearchChange={(value) => {
@@ -1233,15 +1311,15 @@ const [statusFilter, setStatusFilter] = useState("");
         setPage(1);
     }}
 />
-        {datePickerOpen && <section id="merchant-date-range" aria-label="Custom date range" style={{ padding: 16, background: '#f8f7ff', borderBottom: '1px solid #e1e4eb' }}>
-          <div style={{ display: 'flex', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
+        {datePickerOpen && <section id="merchant-date-range" className="merchant-date-range" aria-label="Custom date range">
+          <div className="merchant-date-range-fields">
             <CalendarField label="From date" value={draftFrom} max={draftTo || undefined} onChange={value => { setDraftFrom(value); setDateError(''); }} />
             <CalendarField label="To date" value={draftTo} min={draftFrom || undefined} onChange={value => { setDraftTo(value); setDateError(''); }} />
-            <button type="button" className="btn btn-primary" onClick={applyDateRange}>Apply date range</button>
-            <button type="button" className="btn btn-secondary" onClick={() => { setDatePickerOpen(false); setDateError(''); }}>Cancel</button>
-            <button type="button" className="btn btn-secondary" onClick={() => { setJoinedRange(''); setDateFrom(''); setDateTo(''); setDatePickerOpen(false); setDateError(''); setPage(1); }}>Clear dates</button>
-          </div>{dateError && <p role="alert" style={{ color: '#b42318', margin: '10px 0 0' }}>{dateError}</p>}
+            <div className="merchant-date-range-actions"><button type="button" className="merchant-date-apply" onClick={applyDateRange}>Apply date range</button>
+            <button type="button" className="merchant-date-secondary" onClick={() => { setJoinedRange(''); setDateFrom(''); setDateTo(''); setDatePickerOpen(false); setDateError(''); setPage(1); }}>Clear dates</button></div>
+          </div>{dateError && <p className="merchant-date-error" role="alert">{dateError}</p>}
         </section>}
+        </div>
         <div className="table-wrapper">
           <table className="merchant-table">
             <thead>
@@ -1267,13 +1345,7 @@ const [statusFilter, setStatusFilter] = useState("");
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="9"
-                    style={{
-                      textAlign: "center",
-                      padding: "40px",
-                    }}
-                  >
+                  <td colSpan="9" className="merchant-empty-cell">
                     No merchants found.
                   </td>
                 </tr>
@@ -1301,15 +1373,6 @@ const [statusFilter, setStatusFilter] = useState("");
                     <td>
                       <div
                         className="merchant-name clickable"
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => openView(m)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            openView(m);
-                          }
-                        }}
                       >
             
                         <div>
@@ -1320,8 +1383,8 @@ const [statusFilter, setStatusFilter] = useState("");
                     </td>
                     <td>
                       <div className="contact-info">
-                        <strong>{m.email || "—"}</strong>
-                        <span>{m.phone || "—"}</span>
+                        <strong>{m.phone || "—"}</strong>
+                        <span>{m.email || "—"}</span>
                       </div>
                     </td>
                     <td><div className="contact-info"><strong>{m.state || "—"}</strong><span>{m.country || "—"}</span></div></td>
@@ -1336,7 +1399,7 @@ const [statusFilter, setStatusFilter] = useState("");
                     <td>
                       <div className="plan-info">
                         <strong>{m.plan}</strong>
-                        {m.renewal ? <span>Renews on {m.renewal}</span> : null}
+                        {m.renewal ? <span>{m.renewalLabel || "Renews on"} {m.renewal}</span> : null}
                       </div>
                     </td>
                     <td>
@@ -1419,7 +1482,7 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
   const deleteLock = useRef(false);
   useEffect(() => {
     if (!notice) return undefined;
-    const timeout = window.setTimeout(() => setNotice(""), 2500);
+    const timeout = window.setTimeout(() => setNotice(""), 1800);
     return () => window.clearTimeout(timeout);
   }, [notice]);
   async function confirmDelete() {
@@ -1574,7 +1637,7 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
         }}
     >
         <td>
-            <strong>{employeeName(e)}</strong>
+            <span>{employeeName(e)}</span>
             {e.employeeCode && <small>{e.employeeCode}</small>}
         </td>
 
@@ -1738,7 +1801,7 @@ const [pageSize, setPageSize] = useState(5);
 const rows = devices
   .map((d) => ({
     ...d,
-    deviceIdentifier: d.deviceId || d.device_id || "—",
+    activationKey: d.activationKey || d.device_active_code || d.authorization_code || d.activation_code || "—",
     deviceCode: d.code || d.deviceCode || d.device_code || "—",
     name: d.name || d.deviceName || "—",
     type: d.type || d.deviceType || "—",
@@ -1748,7 +1811,7 @@ const rows = devices
   }))
   .filter((d) => {
     const searchText = [
-      d.deviceIdentifier,
+      d.activationKey,
       d.deviceCode,
       d.name,
       d.type,
@@ -1843,8 +1906,8 @@ return (
           <thead>
             <tr>
               {[
-                ['deviceIdentifier', 'Device ID'],
-                ['deviceCode', 'Device Code'],
+                ['deviceCode', 'Device ID'],
+                ['activationKey', 'Activation Key'],
                 ['name', 'Device Name'],
                 ['type', 'Type'],
                 ['storeLabel', 'Store'],
@@ -1900,11 +1963,11 @@ return (
                       setView(d);
                     }}
                   >
-                    <td>{d.deviceIdentifier}</td>
                     <td>{d.deviceCode}</td>
+                    <td>{d.activationKey}</td>
                     <td>
                       <span className="mdl-name">
-                        <strong>{d.name}</strong>
+                        <span>{d.name}</span>
                       </span>
                     </td>
                     <td>{d.type}</td>
@@ -1959,7 +2022,7 @@ return (
       onClose={() => setView(null)}
       headerIcon="bi-tablet"
       title="Device Details"
-      code={view?.deviceCode ? view.deviceCode : (view?.deviceIdentifier || "")}
+      code={view?.deviceCode || ""}
       size="compact"
       hero={
         view
@@ -1986,8 +2049,8 @@ return (
                 mono: true,
               },
               {
-                label: "DEVICE ID",
-                value: view.deviceIdentifier || view.id,
+                label: "ACTIVATION KEY",
+                value: view.activationKey,
                 mono: true,
               },
               {

@@ -77,9 +77,9 @@
 .add-device-header h1 {
   margin: 0;
   color: #132d50;
-  font-size: 27px;
-  line-height: 32px;
-  font-weight: 750;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
 }
 
 .add-device-header p {
@@ -153,14 +153,14 @@
 .device-card-header h2 {
   margin: 0 0 2px;
   color: #183354;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .device-card-header p {
   margin: 0;
   color: #8194ae;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 /* =========================================================
@@ -210,7 +210,7 @@
   color: #294668;
   outline: none;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .device-field input.device-code-readonly {
@@ -245,7 +245,6 @@
 .device-field input:focus,
 .device-field textarea:focus,
 .device-select-trigger:focus-visible {
-  border-color: #6744dc;
   box-shadow: 0 0 0 2px rgba(103, 68, 220, 0.08);
 }
 
@@ -451,7 +450,8 @@
 
 .device-cancel-btn,
 .device-save-btn {
-  height: 39px;
+  height: 40px;
+  min-width: 100px;
   padding: 0 19px;
   border-radius: 6px;
   font-family: inherit;
@@ -460,9 +460,9 @@
 }
 
 .device-cancel-btn {
-  border: 1px solid #d6e0ec;
-  background: #fff;
-  color: #334e70;
+  border: 1px solid #5143bc;
+  background: #f5f7fb;
+  color: #5143bc;
 }
 
 .device-save-btn {
@@ -505,7 +505,7 @@
   }
 
   .device-card-header p {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .device-field label {
@@ -515,7 +515,7 @@
   .device-field input,
   .device-select-trigger {
     height: 44px;
-    font-size: 12px;
+    font-size: 13px;
   }
 }
 
@@ -551,12 +551,12 @@
   }
 
   .device-card-header h2 {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
   }
 
   .device-card-header p {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 400;
   }
 
@@ -569,7 +569,7 @@
   .device-select-trigger {
     height: 44px;
     padding: 0 8px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .device-field textarea {

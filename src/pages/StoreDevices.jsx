@@ -54,7 +54,7 @@ export default function StoreDevices({
 
   useEffect(() => {
     if (!inactiveNotice) return undefined;
-    const timeout = window.setTimeout(() => setInactiveNotice(""), 2500);
+    const timeout = window.setTimeout(() => setInactiveNotice(""), 1800);
     return () => window.clearTimeout(timeout);
   }, [inactiveNotice]);
 
@@ -545,10 +545,7 @@ export default function StoreDevices({
             <div className="store-devices-empty-icon">
               <i className="bi bi-pc-display" />
             </div>
-
-            <h3>No devices found</h3>
-
-            <p>Try changing your search or filters.</p>
+            <p>No devices found</p>
 
             <button type="button" onClick={clearFilters}>
               Clear Filters
@@ -923,7 +920,6 @@ function DeviceRow({ device, onView, onEdit }) {
           <button
             type="button"
             className="store-device-action-btn"
-            title="View"
             aria-label={`View ${device.name}`}
             onClick={() => onView(device)}
           >
@@ -933,7 +929,6 @@ function DeviceRow({ device, onView, onEdit }) {
           <button
             type="button"
             className="store-device-action-btn edit"
-            title="Edit"
             aria-label={`Edit ${device.name}`}
             onClick={() => onEdit(device)}
           >

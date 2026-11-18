@@ -1,9 +1,23 @@
-import FilterDropdown from "../components/FilterDropdown";
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "../components/Pagination";
-import { customersSeed } from "../data/data";
 import BentoDetailModal from "../components/BentoDetailModal";
+import { apiRequest } from "../api/http";
+import { isUuid } from "../api/storeDetails";
 import "../styles/store-customers.css";
+
+function formatCustomerDate(value) {
+  if (!value || value === "—" || value === "â€”") return "—";
+  const isoDate = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const date = isoDate
+    ? new Date(Number(isoDate[1]), Number(isoDate[2]) - 1, Number(isoDate[3]))
+    : new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export default function StoreCustomers({
   embedded = false,
@@ -16,9 +30,10 @@ export default function StoreCustomers({
   // =========================================================
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [customerTypeFilter, setCustomerTypeFilter] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   // =========================================================
   // PAGINATION
@@ -31,22 +46,51 @@ export default function StoreCustomers({
   // CUSTOMER DATA
   // =========================================================
 
-  const customers = customersSeed || [];
+  const loyaltyMerchantId = merchantId || store?.merchantId || store?.merchant_id || store?.merchant?.id || store?.merchant?.merchantId || store?.merchant?.merchant_id || "";
+  const loyaltyStoreId = [store?.uuid, store?.storeUUID, store?.storeUuid, store?.store_uuid, store?.id, storeId].find(isUuid) || "";
+
+  useEffect(() => {
+    if (!loyaltyMerchantId || !loyaltyStoreId) {
+      setCustomers([]);
+      setLoading(false);
+      setLoadError("Merchant or store information is unavailable.");
+      return undefined;
+    }
+    let active = true;
+    setLoading(true);
+    setLoadError("");
+    apiRequest("/connector/api/v1/loyalty/get-all-customers", {
+      headers: {
+        "x-merchant-id": loyaltyMerchantId,
+        "x-store-id": loyaltyStoreId,
+      },
+    }).then((response) => {
+      if (!active) return;
+      const rows = Array.isArray(response) ? response
+        : Array.isArray(response?.data) ? response.data
+          : Array.isArray(response?.customers) ? response.customers
+            : Array.isArray(response?.data?.customers) ? response.data.customers : [];
+      setCustomers(rows.map((customer, index) => ({
+        ...customer,
+        id: customer.id ?? customer.user_id ?? customer.contact ?? index,
+        name: customer.name || customer.customer_name || "Unnamed Customer",
+        contact: customer.contact ?? customer.phone ?? customer.phone_number ?? "",
+        credited: Number(customer.credited) || 0,
+        redeemed: Number(customer.redeemed) || 0,
+        expired: Number(customer.expired) || 0,
+        available: Number(customer.available) || 0,
+        last_updated: customer.last_updated || customer.updated_at || "—",
+      })));
+    }).catch((error) => {
+      if (active) {
+        setCustomers([]);
+        setLoadError(error?.message || "Unable to load loyalty customers.");
+      }
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [loyaltyMerchantId, loyaltyStoreId]);
 
   // =========================================================
-  // CUSTOMER TYPES
-  // =========================================================
-
-  const customerTypes = useMemo(() => {
-    return [
-      ...new Set(
-        customers
-          .map((customer) => customer.type)
-          .filter(Boolean)
-      ),
-    ];
-  }, [customers]);
-
   // =========================================================
   // FILTER CUSTOMERS
   // =========================================================
@@ -55,11 +99,7 @@ export default function StoreCustomers({
     return customers.filter((customer) => {
       const searchText = `
         ${customer.name || ""}
-        ${customer.firstName || ""}
-        ${customer.lastName || ""}
-        ${customer.email || ""}
-        ${customer.phone || ""}
-        ${customer.customerId || ""}
+        ${customer.contact || ""}
         ${customer.id || ""}
       `.toLowerCase();
 
@@ -67,26 +107,9 @@ export default function StoreCustomers({
         !search ||
         searchText.includes(search.toLowerCase());
 
-      const matchesStatus =
-        !statusFilter ||
-        customer.status === statusFilter;
-
-      const matchesType =
-        !customerTypeFilter ||
-        customer.type === customerTypeFilter;
-
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesType
-      );
+      return matchesSearch;
     });
-  }, [
-    customers,
-    search,
-    statusFilter,
-    customerTypeFilter,
-  ]);
+  }, [customers, search]);
 
   // =========================================================
   // PAGINATION
@@ -94,9 +117,7 @@ export default function StoreCustomers({
 
   const totalItems = filteredCustomers.length;
 
-  const totalPages = Math.ceil(
-    totalItems / pageSize
-  );
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
   const paginatedCustomers = useMemo(() => {
     const startIndex =
@@ -121,11 +142,7 @@ export default function StoreCustomers({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [
-    search,
-    statusFilter,
-    customerTypeFilter,
-  ]);
+  }, [search]);
 
   // =========================================================
   // KEEP PAGE VALID
@@ -170,8 +187,6 @@ export default function StoreCustomers({
 
   const clearFilters = () => {
     setSearch("");
-    setStatusFilter("");
-    setCustomerTypeFilter("");
     setCurrentPage(1);
   };
 
@@ -189,11 +204,6 @@ export default function StoreCustomers({
       <div className="store-customers-header">
 
         <div className="store-customers-title-area">
-
-          <div className="store-customers-title-icon">
-      
-          </div>
-
           <div>
             <h1>Customers</h1>
 
@@ -299,28 +309,11 @@ export default function StoreCustomers({
             <i className="bi bi-search" />
             <input
               type="text"
-              placeholder="Search customer name, email or phone..."
+              placeholder="Search customer name or phone..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
           </div>
-          <FilterDropdown
-            value={customerTypeFilter}
-            onChange={(event) => setCustomerTypeFilter(event.target.value)}
-          >
-            <option value="">All Customer Types</option>
-            {customerTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </FilterDropdown>
-          <FilterDropdown
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-          >
-            <option value="">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </FilterDropdown>
           <button
             type="button"
             className="store-customers-clear-btn"
@@ -337,20 +330,18 @@ export default function StoreCustomers({
             TABLE
         =================================================== */}
 
-        {filteredCustomers.length > 0 ? (
-          <div className="store-customers-table-wrapper">
+        <div className="store-customers-table-wrapper">
 
             <table className="store-customers-table">
 
               <thead>
                 <tr>
-                  <th>Customer</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Type</th>
-                  <th>Orders</th>
-                  <th>Total Spent</th>
-                  <th>Status</th>
+                  <th>Customer Name</th>
+                  <th>Phone Number</th>
+                  <th>Credited</th>
+                  <th>Redeemed</th>
+                  <th>Expired</th>
+                  <th>Available</th>
                   <th>Last Updated</th>
                 </tr>
               </thead>
@@ -368,39 +359,22 @@ export default function StoreCustomers({
                     />
                   )
                 )}
+                {loading && <tr><td colSpan={7}>Loading customers...</td></tr>}
+                {!loading && loadError && <tr><td colSpan={7} role="alert">{loadError}</td></tr>}
+                {!loading && !loadError && filteredCustomers.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="store-customers-empty-cell">
+                      <div className="store-customers-empty">
+                        <h3>No customers found</h3>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
 
             </table>
 
           </div>
-        ) : (
-          /* =================================================
-             EMPTY STATE
-          ================================================= */
-
-          <div className="store-customers-empty">
-
-            <div className="store-customers-empty-icon">
-              <i className="bi bi-people" />
-            </div>
-
-            <h3>
-              No customers found
-            </h3>
-
-            <p>
-              Try changing your search or filters.
-            </p>
-
-            <button
-              type="button"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </button>
-
-          </div>
-        )}
 
         {/* ===================================================
             PAGINATION
@@ -427,7 +401,7 @@ export default function StoreCustomers({
         onClose={() => setSelectedCustomer(null)}
         headerIcon="bi-person"
         title="Customer Details"
-        code={selectedCustomer?.customerId || selectedCustomer?.id ? `ID: ${selectedCustomer.customerId || selectedCustomer.id}` : ""}
+        compactSpacing
         hero={
           selectedCustomer
             ? {
@@ -436,83 +410,32 @@ export default function StoreCustomers({
                   selectedCustomer.name ||
                   `${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}`.trim() ||
                   "Customer",
-                subtitle: selectedCustomer.type || "Retail Customer",
-                status: selectedCustomer.status || "Active",
-                metricLabel: "TOTAL SPENT",
-                metricValue:
-                  typeof selectedCustomer.totalSpent === "number"
-                    ? `$${selectedCustomer.totalSpent.toFixed(2)}`
-                    : selectedCustomer.totalSpent || "$0.00",
+                subtitle: selectedCustomer.contact || "Phone number unavailable",
+                metricLabel: "AVAILABLE POINTS",
+                metricValue: selectedCustomer.available,
               }
             : null
         }
-        layout="bento-3"
+        layout="bento-2"
         maxWidth="max-w-4xl"
         sections={
           selectedCustomer
             ? [
                 {
-                  title: "ACCOUNT IDENTITY",
+                  title: "LOYALTY POINTS",
                   fields: [
-                    {
-                      label: "CUSTOMER ID",
-                      value: selectedCustomer.customerId || selectedCustomer.id,
-                      mono: true,
-                    },
-                    {
-                      label: "CUSTOMER TYPE",
-                      value: selectedCustomer.type || "Retail Customer",
-                    },
-                    {
-                      label: "STATUS",
-                      value: selectedCustomer.status || "Active",
-                      render: (val) => (
-                        <span
-                          className={`bento-status-pill ${
-                            String(val).toLowerCase() === "active" ? "active" : "inactive"
-                          }`}
-                        >
-                          {val || "Active"}
-                        </span>
-                      ),
-                    },
+                    { label: "CREDITED", value: selectedCustomer.credited },
+                    { label: "REDEEMED", value: selectedCustomer.redeemed },
+                    { label: "EXPIRED", value: selectedCustomer.expired },
+                    { label: "AVAILABLE", value: selectedCustomer.available },
                   ],
                 },
                 {
-                  title: "COMMUNICATION",
+                  title: "CUSTOMER DETAILS",
                   fields: [
-                    {
-                      label: "EMAIL ADDRESS",
-                      value: selectedCustomer.email,
-                    },
-                    {
-                      label: "PHONE NUMBER",
-                      value: selectedCustomer.phone,
-                    },
-                    {
-                      label: "STORE SCOPE",
-                      value: store?.name || "Current Store",
-                    },
-                  ],
-                },
-                {
-                  title: "ORDER ACTIVITY",
-                  fields: [
-                    {
-                      label: "TOTAL ORDERS",
-                      value: `${selectedCustomer.ordersCount ?? 0} Orders`,
-                    },
-                    {
-                      label: "LIFETIME VALUE",
-                      value:
-                        typeof selectedCustomer.totalSpent === "number"
-                          ? `$${selectedCustomer.totalSpent.toFixed(2)}`
-                          : selectedCustomer.totalSpent || "$0.00",
-                    },
-                    {
-                      label: "LAST UPDATED",
-                      value: selectedCustomer.updatedAt || "Recently",
-                    },
+                    { label: "CUSTOMER NAME", value: selectedCustomer.name },
+                    { label: "PHONE NUMBER", value: selectedCustomer.contact },
+                    { label: "LAST UPDATED", value: selectedCustomer.last_updated },
                   ],
                 },
               ]
@@ -529,19 +452,7 @@ export default function StoreCustomers({
 // =========================================================
 
 function CustomerRow({ customer, onView }) {
-  const displayName =
-    customer.name ||
-    `${customer.firstName || ""} ${
-      customer.lastName || ""
-    }`.trim() ||
-    "Unnamed Customer";
-
-  const initials = getInitials(displayName);
-
-  const statusClass =
-    customer.status === "Active"
-      ? "active"
-      : "inactive";
+  const displayName = customer.name || "Unnamed Customer";
 
   return (
     <tr
@@ -557,100 +468,21 @@ function CustomerRow({ customer, onView }) {
       }}
     >
 
-      {/* CUSTOMER */}
-
       <td>
-
         <div className="store-customer-info">
           <div>
-            <strong>
-              {displayName}
-            </strong>
-
-            <small>
-              {customer.customerId ||
-                customer.id ||
-                "—"}
-            </small>
+            <strong>{displayName}</strong>
           </div>
-
         </div>
-
       </td>
-
-      {/* EMAIL */}
-
       <td>
-        <span className="store-customer-email">
-          {customer.email || "—"}
-        </span>
+        <span className="store-customer-phone">{customer.contact || "—"}</span>
       </td>
-
-      {/* PHONE */}
-
-      <td>
-        <span className="store-customer-phone">
-          {customer.phone || "—"}
-        </span>
-      </td>
-
-      {/* TYPE */}
-
-      <td>
-        <span className="store-customer-type">
-          {customer.type || "Regular"}
-        </span>
-      </td>
-
-      {/* ORDERS */}
-
-      <td>
-        <span className="store-customer-orders">
-          {customer.ordersCount ?? 0}
-        </span>
-      </td>
-
-      {/* TOTAL SPENT */}
-
-      <td>
-        <strong className="store-customer-spent">
-          {customer.totalSpent || "—"}
-        </strong>
-      </td>
-
-      {/* STATUS */}
-
-      <td>
-        <span
-          className={`store-customer-status ${statusClass}`}
-        >
-          <i className="bi bi-circle-fill" />
-          {customer.status || "Inactive"}
-        </span>
-      </td>
-
-      {/* UPDATED */}
-
-      <td>
-        <span className="store-customer-date">
-          {customer.updatedAt || "—"}
-        </span>
-      </td>
-
+      <td>{customer.credited}</td>
+      <td>{customer.redeemed}</td>
+      <td>{customer.expired}</td>
+      <td><strong className="store-customer-spent">{customer.available}</strong></td>
+      <td><span className="store-customer-date">{formatCustomerDate(customer.last_updated)}</span></td>
     </tr>
   );
-}
-
-
-// =========================================================
-// INITIALS
-// =========================================================
-
-function getInitials(name) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
 }

@@ -5,9 +5,11 @@ import BentoDetailModal from "../components/BentoDetailModal";
 import { listStorePosPayments } from "../api/storePosPayments";
 import { listStoreEmployees } from "../api/employees";
 import { isUuid } from "../api/storeDetails";
+import { formatCurrency } from "../utils/currency";
 import "../styles/store-payment-records.css";
  
 export default function StorePaymentRecords({ store, storeId: storeIdProp, merchantId }) {
+  const money = (value) => formatCurrency(value, store?.currency, store?.currencySymbol);
   const storeId = [
     store?.uuid,
     store?.storeUUID,
@@ -92,19 +94,28 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
     const query = search.trim().toLowerCase();
  
     return payments.filter((payment) => {
-      const matchesSearch =
-        !query ||
-        [
-          payment.title,
-          payment.orderId,
-          payment.transactionId,
-          payment.paymentAcceptedBy,
-          payment.paymentMethod,
-          payment.paymentType,
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
+      const searchableValues = [
+        payment.title,
+        payment.orderId,
+        payment.clientOrderId,
+        payment.transactionId,
+        payment.paymentAcceptedBy,
+        payment.paymentMethod,
+        payment.paymentType,
+        payment.status,
+        payment.date,
+        payment.dateTime,
+        payment.shiftId,
+        payment.orderTotal,
+        payment.tenderAmount,
+        payment.balanceAmount,
+        payment.changeAmount,
+      ];
+      const matchesSearch = !query || searchableValues
+        .filter((value) => value != null)
+        .map((value) => String(value).toLowerCase())
+        .join(" ")
+        .includes(query);
  
       const matchesDate =
         !dateFilter ||
@@ -193,29 +204,32 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                 <th>Client Order ID</th>
                 <th>Order Total</th>
                 <th>Tender Amount</th>
-                <th>Balance Amount</th>
+                <th>Remaining Amount</th>
                 <th>Change Amount</th>
                 <th>Payment Accepted By</th>
                 <th>Date</th>
+                <th>Status</th>
               </tr>
             </thead>
  
             <tbody>
               {loading ? (
-                <tr><td colSpan="10" className="store-payment-records-empty">Loading payment records…</td></tr>
+                <tr><td colSpan="11" className="store-payment-records-empty">Loading payment records…</td></tr>
               ) : error ? (
-                <tr><td colSpan="10" className="store-payment-records-empty">{error}</td></tr>
+                <tr><td colSpan="11" className="store-payment-records-empty">{error}</td></tr>
               ) : filteredPayments.length ? (
                 paginatedPayments.map((payment) => (
                   <PaymentRecordRow
                     key={payment.id}
                     payment={payment}
+                    currency={store?.currency}
+                    currencySymbol={store?.currencySymbol}
                     onView={() => setSelectedPayment(payment)}
                   />
                 ))
               ) : (
                 <tr>
-                  <td colSpan="10" className="store-payment-records-empty">
+                  <td colSpan="11" className="store-payment-records-empty">
                     No payment records found.
                   </td>
                 </tr>
@@ -242,18 +256,14 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
         onClose={() => setSelectedPayment(null)}
         headerIcon="bi-receipt"
         title="Payment Details"
-        code={
-          selectedPayment?.transactionId && selectedPayment.transactionId !== "—"
-            ? `Ref: ${selectedPayment.transactionId}`
-            : (selectedPayment?.id ? `ID: ${selectedPayment.id}` : "")
-        }
+        compactSpacing
         hero={
           selectedPayment
             ? {
                 icon: "bi-credit-card",
-                title: selectedPayment.paymentMethod ? `${selectedPayment.paymentMethod} Payment` : "Payment Record",
+                title: selectedPayment.title,
                 subtitle: `Order #${selectedPayment.orderId || "—"}`,
-                status: selectedPayment.status || "Completed",
+                status: formatPaymentStatus(selectedPayment.status),
                 metricLabel: "AMOUNT PAID",
                 metricValue: money(selectedPayment.tenderAmount || selectedPayment.orderTotal || 0),
               }
@@ -275,11 +285,12 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                       value: money(selectedPayment.tenderAmount),
                     },
                     {
-                      label: "CHANGE / BALANCE",
-                      value:
-                        selectedPayment.changeAmount > 0
-                          ? `Change: ${money(selectedPayment.changeAmount)}`
-                          : `Balance: ${money(selectedPayment.balanceAmount)}`,
+                      label: "REMAINING AMOUNT",
+                      value: money(selectedPayment.balanceAmount),
+                    },
+                    {
+                      label: "CHANGE AMOUNT",
+                      value: money(selectedPayment.changeAmount),
                     },
                   ],
                 },
@@ -291,7 +302,7 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                       value: selectedPayment.paymentMethod,
                     },
                     {
-                      label: "ORDER NUMBER",
+                      label: "ORDER ID",
                       value: selectedPayment.orderId,
                       mono: true,
                     },
@@ -316,7 +327,11 @@ export default function StorePaymentRecords({ store, storeId: storeIdProp, merch
                     },
                     {
                       label: "PAYMENT DATE",
-                      value: selectedPayment.date,
+                      value: (
+                        <span className="payment-date">
+                          {formatPaymentTimestamp(selectedPayment.dateTime, selectedPayment.date)}
+                        </span>
+                      ),
                     },
                   ],
                 },
@@ -332,22 +347,25 @@ function mapPaymentRecord(payment, employeeNames = {}) {
   const orderId = payment.order_number || "—";
   const clientOrderId = payment.client_order_id || "—";
   const method = payment.payment_method_title || payment.payment_method || "Payment";
+  const methodName = String(method).trim().replace(/^pos[\s_-]*/i, "").replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
  
   return {
     id: payment.id,
-    title: `${method} Payment for Order ${orderId}`,
+    title: `POS ${methodName}`,
     orderId,
     clientOrderId,
     orderTotal: Number(payment.order_total || 0),
     tenderAmount: Number(payment.amount || 0),
     balanceAmount: Number(payment.remaining || 0),
-    changeAmount: Number(payment.change_amount || 0),
+    changeAmount: Number(payment.change_amount || payment.pos_change_returned || metaValue(payment.metadata, "pos_change_returned") || 0),
     transactionId: payment.providerTransactionId || payment.provider_transaction_id || payment.transactionId || payment.transaction_id ||
       payment.transactionNumber || payment.transaction_number || payment.txnId || payment.txn_id ||
       payment.transactionReference || payment.transaction_reference || payment.paymentReference || payment.payment_reference ||
       payment.reference || payment.transaction?.id || payment.provider_transaction?.id || payment.localId || payment.local_id || "—",
     paymentAcceptedBy: acceptedByName(payment, employeeNames),
     status: payment.status || "—",
+    dateTime: payment.payment_at,
     date: formatPaymentDate(payment.payment_at),
     paymentMethod: method,
     paymentType: payment.payment_type || "—",
@@ -414,7 +432,7 @@ function formatPaymentDate(value) {
   return `${datePart} at ${timePart}`;
 }
  
-function PaymentRecordRow({ payment, onView }) {
+function PaymentRecordRow({ payment, currency = "USD", currencySymbol, onView }) {
   return (
     <tr
       className="store-payment-record-clickable"
@@ -443,23 +461,59 @@ function PaymentRecordRow({ payment, onView }) {
  
       <td>{payment.orderId}</td>
       <td>{payment.clientOrderId}</td>
-      <td>{money(payment.orderTotal)}</td>
-      <td>{money(payment.tenderAmount)}</td>
-      <td>{money(payment.balanceAmount)}</td>
+      <td>{formatCurrency(payment.orderTotal, currency, currencySymbol)}</td>
+      <td>{formatCurrency(payment.tenderAmount, currency, currencySymbol)}</td>
+      <td>{formatCurrency(payment.balanceAmount, currency, currencySymbol)}</td>
       <td className={payment.changeAmount > 0 ? "change-positive" : ""}>
-        {money(payment.changeAmount)}
+        {formatCurrency(payment.changeAmount, currency, currencySymbol)}
       </td>
       <td>{payment.paymentAcceptedBy}</td>
       <td>
-        <span className="payment-status">{payment.status}</span>
-        <span className="payment-date">{payment.date}</span>
+        <span className="payment-date">
+          {formatPaymentTimestamp(payment.dateTime, payment.date)}
+        </span>
+      </td>
+      <td>
+        <span className={`payment-status ${paymentStatusClass(payment.status)}`}>
+          <i className="bi bi-circle-fill" aria-hidden="true" />
+          {payment.status}
+        </span>
       </td>
     </tr>
   );
 }
- 
-function money(value) {
-  return `$${Number(value || 0).toFixed(2)}`;
+
+function formatPaymentTimestamp(value, fallback) {
+  if (!value) return fallback;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+  return <>
+    <span>{date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+    <small>{date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</small>
+  </>;
+}
+
+function paymentStatusClass(status) {
+  const value = String(status || "").toLowerCase();
+  if (value.includes("complete")) return "completed";
+  if (value.includes("pending")) return "pending";
+  if (value.includes("cancel")) return "cancelled";
+  if (value.includes("refund")) return "refunded";
+  if (value.includes("partial")) return "partial";
+  if (value.includes("create")) return "created";
+  return "processing";
+}
+
+function formatPaymentStatus(status) {
+  const label = String(status || "Completed").replace(/[_-]+/g, " ").trim().toLowerCase();
+  return label.replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function metaValue(metadata, key) {
+  if (Array.isArray(metadata)) {
+    return metadata.find((entry) => entry?.key === key)?.value;
+  }
+  return metadata && typeof metadata === "object" ? metadata[key] : undefined;
 }
  
  

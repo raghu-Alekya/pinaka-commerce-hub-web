@@ -408,7 +408,7 @@ async function confirmDeleteFeature() {
           className="store-features-back"
           onClick={() => navigate("/store-types/new")}
           aria-label="Back to Store Types"
-          title="Back to Store Types"
+          data-tooltip="Back to Store Types"
         >
           <i className="bi bi-arrow-left" />
         </button>
@@ -418,7 +418,7 @@ async function confirmDeleteFeature() {
             <h1>{storeType.name}</h1>
           </div>
 
-          <p>{storeType.description}</p>
+          <p>Manage features available for this store type.</p>
         </div>
       </div>
 

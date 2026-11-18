@@ -5,8 +5,10 @@ import Pagination from "../components/Pagination";
 import FiltersBar from "../components/FiltersBar";
 import ListActions from "../components/ListActions";
 import { listMerchants } from "../api/merchants";
-import { listMerchantStores } from "../api/stores";
-import { listAllMerchantOrders, listOrders } from "../api/orders";
+import { listMerchantStores, listStores } from "../api/stores";
+import { listScopedOrders } from "../api/orders";
+import { loadStorePosConfiguration } from "./pos/storePosConfiguration";
+import { formatCurrency, getCurrencySymbol } from "../utils/currency";
 import OrderDetail from "./OrderDetail";
 import "../styles/orders.css";
 
@@ -34,6 +36,45 @@ function matchesDate(createdAt, dateFilter) {
   return orderDate >= from;
 }
 
+async function applyStorePosCurrencies(orders) {
+  if (!orders.length) return orders;
+  const { stores = [] } = await listStores();
+  const aliases = new Map();
+  stores.forEach((store) => {
+    [store.uuid, store.storeUUID, store.storeUuid, store.store_uuid, store.storeId, store.storeID, store.store_id, store.id, store.storeCode, store.store_code]
+      .filter(Boolean)
+      .forEach((id) => aliases.set(String(id), store));
+  });
+
+  const relevantStores = new Map();
+  orders.forEach((order) => {
+    const store = aliases.get(String(order.storeId || ""));
+    const configStoreId = store?.uuid || store?.storeUUID || store?.storeUuid || store?.store_uuid || store?.id || store?.storeId;
+    if (configStoreId) relevantStores.set(String(configStoreId), configStoreId);
+  });
+
+  const currencyByStore = new Map();
+  await Promise.all([...relevantStores].map(async ([key, id]) => {
+    try {
+      const config = await pendingStoreRead(`pos-currency:${id}`, () => loadStorePosConfiguration(id, "currency_taxes"));
+      const currency = config?.currency || config?.currencyCode || config?.currency_code;
+      if (currency) currencyByStore.set(key, {
+        currency,
+        currencySymbol: config.currencySymbol || config.currency_symbol || getCurrencySymbol(currency),
+      });
+    } catch {
+      // Keep the order's API currency when the store's POS setting is unavailable.
+    }
+  }));
+
+  return orders.map((order) => {
+    const store = aliases.get(String(order.storeId || ""));
+    const configStoreId = store?.uuid || store?.storeUUID || store?.storeUuid || store?.store_uuid || store?.id || store?.storeId;
+    const configured = configStoreId && currencyByStore.get(String(configStoreId));
+    return configured ? { ...order, ...configured } : order;
+  });
+}
+
 export default function Orders({
   embedded = false,
   merchantId,
@@ -52,8 +93,6 @@ export default function Orders({
     storeId || (!embedded && searchParams.get("store")) || "",
   );
   const [orders, setOrders] = useState([]);
-  const [overviewCards, setOverviewCards] = useState(null);
-  const [serverPagination, setServerPagination] = useState(null);
   const [viewedOrder, setViewedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -112,32 +151,33 @@ export default function Orders({
     let active = true;
     setLoading(true);
     setError("");
-    pendingStoreRead(`all-merchant-orders:${currentPage}:${pageSize}`, () =>
-      listAllMerchantOrders({ page: currentPage, perPage: pageSize }),
+    setOrders([]);
+    pendingStoreRead("all-orders:database-rows", () =>
+      listScopedOrders(),
     )
-      .then((result) => {
+      .then(async ({ orders: rows }) => {
+        let ordersWithCurrencies = rows;
+        try {
+          ordersWithCurrencies = await applyStorePosCurrencies(rows);
+        } catch {
+          // Store lookup failures should not prevent the all-orders list from loading.
+        }
         if (!active) return;
-        setOrders(result.orders);
-        setOverviewCards(result.cards);
-        setServerPagination(result.pagination);
+        setOrders(ordersWithCurrencies);
       })
       .catch((loadError) => {
         if (!active) return;
         setOrders([]);
-        setOverviewCards(null);
-        setServerPagination(null);
         setError(loadError?.message || "Failed to load orders.");
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [embedded, selectedMerchant, selectedStore, currentPage, pageSize]);
+  }, [embedded, selectedMerchant, selectedStore]);
 
   useEffect(() => {
     if (!selectedStore) {
       if (embedded || selectedMerchant) {
         setOrders([]);
-        setOverviewCards(null);
-        setServerPagination(null);
         setError("");
         setLoading(false);
       }
@@ -146,15 +186,20 @@ export default function Orders({
     let active = true;
     setLoading(true);
     setError("");
-    setOverviewCards(null);
-    setServerPagination(null);
-    pendingStoreRead(`store-orders:${selectedStore}`, () => listOrders(selectedStore))
-      .then((rows) => {
+    setOrders([]);
+    pendingStoreRead(
+      `scoped-orders:${selectedMerchant || "all"}:${selectedStore}`,
+      () => listScopedOrders({ merchantId: selectedMerchant, storeId: selectedStore }),
+    )
+      .then(async ({ orders: rows }) => {
+        let ordersWithCurrencies = rows;
+        try {
+          ordersWithCurrencies = await applyStorePosCurrencies(rows);
+        } catch {
+          // Store lookup failures should not prevent the orders list from loading.
+        }
         if (!active) return;
-        const merchantOrders = selectedMerchant
-          ? rows.filter((order) => !order.merchantId || String(order.merchantId) === String(selectedMerchant))
-          : rows;
-        setOrders(merchantOrders);
+        setOrders(ordersWithCurrencies);
       })
       .catch((loadError) => {
         if (!active) return;
@@ -187,14 +232,12 @@ export default function Orders({
     });
   }, [orders, search, statusFilter, authorFilter, dateFilter]);
 
-  const isServerPaginated = Boolean(serverPagination && !selectedStore && !selectedMerchant && !embedded);
-  const totalItems = isServerPaginated ? Number(serverPagination.total ?? filteredOrders.length) : filteredOrders.length;
+  const totalItems = filteredOrders.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const paginatedOrders = useMemo(() => {
-    if (isServerPaginated) return filteredOrders;
     const start = (currentPage - 1) * pageSize;
     return filteredOrders.slice(start, start + pageSize);
-  }, [filteredOrders, currentPage, pageSize, isServerPaginated]);
+  }, [filteredOrders, currentPage, pageSize]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -204,12 +247,12 @@ export default function Orders({
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, totalPages]);
 
-  const completedCount = overviewCards?.completed ?? orders.filter((order) => statusClass(order.status) === "completed").length;
-  const pendingCount = overviewCards?.pending_payment ?? orders.filter((order) => statusClass(order.status) === "pending").length;
-  const totalOrderCount = overviewCards?.total_orders ?? orders.length;
-  const totalAmount = Number(overviewCards?.total_value ?? orders.reduce((sum, order) => sum + Number(order.totalValue || 0), 0));
-  const completedPercentage = overviewCards?.completed_percent ?? (totalOrderCount ? ((completedCount / totalOrderCount) * 100).toFixed(1) : "0.0");
-  const pendingPercentage = overviewCards?.pending_payment_percent ?? (totalOrderCount ? ((pendingCount / totalOrderCount) * 100).toFixed(1) : "0.0");
+  const completedCount = orders.filter((order) => statusClass(order.status) === "completed").length;
+  const pendingCount = orders.filter((order) => statusClass(order.status) === "pending").length;
+  const refundedCount = orders.filter((order) => statusClass(order.status) === "refunded").length;
+  const totalOrderCount = orders.length;
+  const completedPercentage = totalOrderCount ? ((completedCount / totalOrderCount) * 100).toFixed(1) : "0.0";
+  const pendingPercentage = totalOrderCount ? ((pendingCount / totalOrderCount) * 100).toFixed(1) : "0.0";
   function rememberFilters(nextMerchant, nextStore) {
     if (embedded) return;
     const next = new URLSearchParams(searchParams);
@@ -323,6 +366,8 @@ export default function Orders({
     navigate(`/orders/${encodeURIComponent(order.id)}?${new URLSearchParams({
       ...((selectedMerchant || order.merchantId) ? { merchant: selectedMerchant || order.merchantId } : {}),
       ...((selectedStore || order.storeId) ? { store: selectedStore || order.storeId } : {}),
+      ...((order.currency || store?.currency) ? { currency: order.currency || store.currency } : {}),
+      ...((order.currencySymbol || store?.currencySymbol) ? { currencySymbol: order.currencySymbol || store.currencySymbol } : {}),
       number: order.wooOrderId,
     }).toString()}`, { state: { from: `${location.pathname}${location.search}` } });
   };
@@ -334,6 +379,8 @@ export default function Orders({
       orderNumber={viewedOrder.wooOrderId}
       storeId={selectedStore}
       merchantId={selectedMerchant}
+      currency={viewedOrder.currency || store?.currency}
+      currencySymbol={viewedOrder.currencySymbol || store?.currencySymbol}
       onBack={() => setViewedOrder(null)}
     />;
   }
@@ -353,9 +400,9 @@ export default function Orders({
 
       <div className="orders-summary">
         <SummaryCard icon="bi-bag-fill" tone="purple" label="Total Orders" value={totalOrderCount} meta="Live Records" metaTone="positive" />
-        <SummaryCard icon="bi-check-circle-fill" tone="green" label="Completed" value={completedCount} meta={`${completedPercentage}% of total`} metaTone="positive" />
+        <SummaryCard icon="bi-check-circle-fill" tone="green" label="Completed" value={completedCount} meta={`${completedPercentage}% of total`} metaTone="success" />
         <SummaryCard icon="bi-clock-fill" tone="orange" label="Pending Payment" value={pendingCount} meta={`${pendingPercentage}% of total`} metaTone="warning" />
-        <SummaryCard icon="bi-cash-stack" tone="blue" label="Total Value" value={`$${totalAmount.toFixed(2)}`} meta="Across loaded orders" metaTone="info" />
+        <SummaryCard icon="bi-arrow-counterclockwise" tone="red" label="Refunded Orders" value={refundedCount} meta="Live Records" metaTone="info" />
       </div>
 
       <div className={`orders-card ${!embedded ? "orders-standalone-card" : ""} w-full max-w-full min-w-0 overflow-hidden`}>
@@ -374,10 +421,10 @@ export default function Orders({
                   <tr>
                     <th>Order ID</th>
                     <th>Client Order ID</th>
-                    <th>Date</th>
-                    <th>Status</th>
                     <th>Customer</th>
                     <th>Total</th>
+                    <th>Date</th>
+                    <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -403,6 +450,12 @@ export default function Orders({
                       </td>
                       <td><span className="offline-order-id">{order.offlineOrderId || "—"}</span></td>
                       <td>
+                        <div className="order-author">
+                          <span>{embedded ? String(order.author || "").replace(/^\s*\.\s*/, "").trim() || "Walk-in Customer" : order.author}</span>
+                        </div>
+                      </td>
+                      <td><strong className="order-total">{formatCurrency(order.totalValue, order.currency || store?.currency, order.currencySymbol || store?.currencySymbol)}</strong></td>
+                      <td>
                         <div className="order-date">
                           <strong>{order.date}</strong>
                           {order.time && <small>{order.time}</small>}
@@ -414,12 +467,6 @@ export default function Orders({
                           {order.status}
                         </span>
                       </td>
-                      <td>
-                        <div className="order-author">
-                          <span>{embedded ? String(order.author || "").replace(/^\s*\.\s*/, "").trim() || "Walk-in Customer" : order.author}</span>
-                        </div>
-                      </td>
-                      <td><strong className="order-total">{order.total}</strong></td>
                       <td className="orders-actions-cell">
                         <ListActions
                           onView={() => handleViewOrder(order)}
@@ -431,19 +478,12 @@ export default function Orders({
                     <tr>
                       <td className="orders-table-empty" colSpan="7">
                         <div className="products-table-empty-state">
-                          <strong>
-                            {!selectedStore && (embedded || selectedMerchant)
-                              ? "Select a store to view orders"
-                              : error
-                                ? "Orders could not be loaded"
-                                : "No orders found"}
-                          </strong>
                           <span>
                             {!selectedStore && (embedded || selectedMerchant)
                               ? "Choose a merchant and store to load that store's orders."
                               : error
                                 ? error
-                                : "Try changing your search or filters."}
+                                : "No orders found"}
                           </span>
                         </div>
                       </td>

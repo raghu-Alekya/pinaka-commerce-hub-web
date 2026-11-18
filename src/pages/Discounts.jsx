@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api, pendingStoreRead } from "../api/http";
 import { normalizeCatalog } from "../api/products";
+import { syncWordpressDiscounts } from "../api/storeConnector";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
 import { buildDiscountPayload, catalogProductId, storedProductId, validateDiscountForm } from "./discountForm";
+import { formatCurrency } from "../utils/currency";
 import "../styles/coupons.css";
 import "../styles/discounts.css";
 
@@ -58,9 +60,9 @@ const discountStatus = (discount) => {
   if (discount.date_expires && discount.date_expires < today) return "Expired";
   return "Active";
 };
-const amountLabel = (discount) => {
+const amountLabel = (discount, currency, currencySymbol) => {
   if (discount.discount_type === "percent") return `${discount.amount}%`;
-  return `$${Number(discount.amount || 0).toFixed(2)}`;
+  return formatCurrency(discount.amount, currency, currencySymbol);
 };
 const inputDate = value => {
   const text = String(value ?? "").slice(0, 10);
@@ -72,6 +74,9 @@ const formatSystemDate = (value) => {
   const date = new Date(`${value}T00:00:00`);
   return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date);
 };
+// Read and manage PCH's saved discount records through the app API. WooCommerce
+// changes are imported only by the explicit connector sync action below.
+const storeDiscountsPath = (storeId) => `/api/v1/stores/${encodeURIComponent(storeId)}/discounts`;
 
 function DiscountProductPicker({ products, value, onChange, multiple = false, disabled }) {
   const [open, setOpen] = useState(false);
@@ -107,7 +112,7 @@ function DiscountProductPicker({ products, value, onChange, multiple = false, di
     </div>}
   </div>;
 }
-export default function Discounts({ embedded = false, storeId: storeIdProp }) {
+export default function Discounts({ embedded = false, storeId: storeIdProp, store }) {
   const { storeId: routeStoreId } = useParams();
   const storeId = storeIdProp || routeStoreId;
   const [discounts, setDiscounts] = useState([]);
@@ -119,6 +124,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
   const catalogCache = useRef({});
   const [catalogProducts, setCatalogProducts] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const saveLock = useRef(false);
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -133,6 +139,8 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
   const deleteLock = useRef(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const [knownTotals, setKnownTotals] = useState({});
+  const [summaryDiscounts, setSummaryDiscounts] = useState({});
 
   useEffect(() => {
     let active = true;
@@ -144,12 +152,54 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
     setLoading(true);
     setLoadError("");
     setCatalogError("");
-    const path = `/stores/${storeId}/discounts?page=${currentPage}&per_page=${pageSize}`;
+    const apiPageSize = 100;
+    const path = `${storeDiscountsPath(storeId)}?page=1&per_page=${apiPageSize}`;
     pendingStoreRead(`discounts:${path}`, () => api.get(path, { headers: { Accept: "application/json" } }))
       .then(async response => {
         if (!active) return;
         if (response?.success === false || response?.status === "error") throw new Error(response.message || "Unable to load discounts.");
         const data = response?.data ?? response;
+        const rowsFrom = value => {
+          const pageData = value?.data ?? value;
+          return Array.isArray(pageData) ? pageData : ["auto", "mix_match", "multipack"].flatMap(type =>
+            (Array.isArray(pageData?.[type]) ? pageData[type] : []).map(item => ({ ...item, type }))
+          );
+        };
+        const paginationFrom = value => {
+          const pageData = value?.data ?? value;
+          return value?.pagination || pageData?.pagination || value?.meta || pageData?.meta || {};
+        };
+        let rows = rowsFrom(response);
+        const responsePagination = paginationFrom(response);
+        const pageCount = meta => Number(meta.total_pages ?? meta.totalPages ?? meta.last_page ?? meta.lastPage);
+        const recordCount = (value, pageData, meta) => Number(
+          meta.total_items ?? meta.totalItems ?? meta.total ?? meta.total_count ?? meta.totalCount ??
+          meta.total_records ?? meta.totalRecords ?? value?.total_records ?? value?.totalRecords ??
+          pageData?.total_records ?? pageData?.totalRecords
+        );
+        let lastPage = pageCount(responsePagination);
+        const reportedRecordCount = recordCount(response, data, responsePagination);
+        if (!(Number.isFinite(lastPage) && lastPage > 0) && Number.isFinite(reportedRecordCount) && reportedRecordCount > apiPageSize) {
+          lastPage = Math.ceil(reportedRecordCount / apiPageSize);
+        }
+        let hasMore = responsePagination.has_more ?? responsePagination.hasMore;
+        for (let page = 2; page <= 1000; page += 1) {
+          const shouldLoadPage = Number.isFinite(lastPage) && lastPage > 0
+            ? page <= lastPage
+            : hasMore === true || (hasMore == null && rows.length >= (page - 1) * apiPageSize);
+          if (!shouldLoadPage) break;
+          const nextPath = `${storeDiscountsPath(storeId)}?page=${page}&per_page=${apiPageSize}`;
+          const nextResponse = await pendingStoreRead(`discounts:${nextPath}`, () => api.get(nextPath, { headers: { Accept: "application/json" } }));
+          if (nextResponse?.success === false || nextResponse?.status === "error") throw new Error(nextResponse.message || "Unable to load discounts.");
+          const nextRows = rowsFrom(nextResponse);
+          if (!nextRows.length) break;
+          rows = [...rows, ...nextRows];
+          const nextPagination = paginationFrom(nextResponse);
+          const nextPageCount = pageCount(nextPagination);
+          if (Number.isFinite(nextPageCount) && nextPageCount > 0) lastPage = nextPageCount;
+          hasMore = nextPagination.has_more ?? nextPagination.hasMore;
+          if (!(Number.isFinite(lastPage) && lastPage > 0) && hasMore !== true && nextRows.length < apiPageSize) break;
+        }
         if (!catalogCache.current[storeId]) {
           catalogCache.current[storeId] = pendingStoreRead(`store-products:${storeId}`, () => api.get(`/stores/${encodeURIComponent(storeId)}/catalog`))
             .then(result => normalizeCatalog(result).products)
@@ -174,8 +224,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
             return productNames.get(String(item)) || (/^\d+$/.test(String(item)) ? "Product unavailable" : String(item));
           }).join(", ");
         };
-        const rows = Array.isArray(data) ? data : ["auto", "mix_match", "multipack"].flatMap(type => (Array.isArray(data?.[type]) ? data[type] : []).map(item => ({ ...item, type })));
-        setDiscounts(rows.map(item => ({
+        const normalizedDiscounts = rows.map(item => ({
           ...item,
           id: item.id ?? item.discount_id,
           type: item.type || "auto",
@@ -186,13 +235,54 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
           discounted_products: names(item.discounted_products ?? item.discount_products ?? item.discount_product_ids),
           date_starts: inputDate(item.date_starts ?? item.start_date),
           date_expires: inputDate(item.date_expires ?? item.expiry_date),
-        })));
-        setPagination(response?.pagination || {});
+        }));
+        setDiscounts(normalizedDiscounts);
+        setSummaryDiscounts(previous => {
+          const discountKey = item => `${item.type}-${item.id ?? item.code}`;
+          const byId = new Map((previous[storeId] || []).map(item => [discountKey(item), item]));
+          normalizedDiscounts.forEach(item => byId.set(discountKey(item), item));
+          return { ...previous, [storeId]: [...byId.values()] };
+        });
+        const responseTotal = Number(
+          responsePagination.total_items
+            ?? responsePagination.totalItems
+            ?? responsePagination.total
+            ?? responsePagination.total_count
+            ?? responsePagination.totalCount
+            ?? responsePagination.total_records
+            ?? responsePagination.totalRecords
+            ?? response?.total_records
+            ?? response?.totalRecords
+            ?? data?.total_records
+            ?? data?.totalRecords
+        );
+        setKnownTotals(previous => ({
+          ...previous,
+          [storeId]: Math.max(
+            previous[storeId] || 0,
+            rows.length,
+            Number.isFinite(responseTotal) && responseTotal >= 0 ? responseTotal : 0
+          ),
+        }));
+        setPagination({
+          ...responsePagination,
+          total_records: responsePagination.total_records
+            ?? responsePagination.totalRecords
+            ?? response?.total_records
+            ?? response?.totalRecords
+            ?? data?.total_records
+            ?? data?.totalRecords,
+        });
       })
       .catch(error => { if (active) setLoadError(error.message || "Unable to load discounts."); })
-      .finally(() => { if (active) setLoading(false); });
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+          setSyncing(false);
+        }
+      });
     return () => { active = false; };
-  }, [storeId, currentPage, pageSize, retry]);
+  }, [storeId, retry]);
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return discounts.filter((item) => {
@@ -203,8 +293,26 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
       return matchesType && matchesStatus && matchesSearch;
     });
   }, [discounts, search, typeFilter, statusFilter]);
-  const totalPages = Math.max(1, Number(pagination.total_pages ?? pagination.totalPages) || (pagination.has_more ? currentPage + 1 : currentPage));
-  const visibleDiscounts = filtered;
+  const reportedTotalItems = Number(
+    pagination.total_items
+      ?? pagination.totalItems
+      ?? pagination.total
+      ?? pagination.total_count
+      ?? pagination.totalCount
+      ?? pagination.total_records
+      ?? pagination.totalRecords
+  );
+  const totalItems = Math.max(
+    filtered.length,
+    knownTotals[storeId] || 0,
+    Number.isFinite(reportedTotalItems) && reportedTotalItems >= 0
+      ? reportedTotalItems
+      : 0
+  );
+  const hasActiveFilters = Boolean(search.trim() || typeFilter || statusFilter);
+  const paginationTotalItems = hasActiveFilters ? filtered.length : totalItems;
+  const totalPages = Math.max(1, Math.ceil(paginationTotalItems / pageSize));
+  const visibleDiscounts = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const resetFilters = () => {
     setSearch("");
     setTypeFilter("");
@@ -274,7 +382,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
       saveLock.current = true;
       setSaving(true);
       try {
-        const basePath = `/stores/${encodeURIComponent(storeId)}/discounts`;
+        const basePath = storeDiscountsPath(storeId);
         const response = mode === "edit"
           ? await api.put(`${basePath}/${encodeURIComponent(form.type)}/${encodeURIComponent(form.id)}`, payload)
           : await api.post(basePath, payload);
@@ -282,6 +390,8 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
         setNotice(response?.message || (mode === "edit" ? "Discount updated successfully." : "Discount created successfully."));
         setMode("");
         setCurrentPage(1);
+        setSummaryDiscounts(previous => ({ ...previous, [storeId]: [] }));
+        setKnownTotals(previous => ({ ...previous, [storeId]: 0 }));
         setRetry(value => value + 1);
       } catch (error) {
         setFormError(error.message || "Unable to save discount.");
@@ -299,10 +409,15 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
     setDeleting(true);
     setDeleteError("");
     try {
-      const response = await api.delete(`/stores/${encodeURIComponent(storeId)}/discounts/${encodeURIComponent(deleteTarget.type)}/${encodeURIComponent(deleteTarget.id)}`);
+      const response = await api.delete(`${storeDiscountsPath(storeId)}/${encodeURIComponent(deleteTarget.type)}/${encodeURIComponent(deleteTarget.id)}`);
       if (response?.success === false || ["error", "failed"].includes(response?.status)) throw new Error(response.message || "Unable to delete discount.");
       setNotice(response?.message || "Discount deleted successfully.");
       setDeleteTarget(null);
+      setSummaryDiscounts(previous => ({
+        ...previous,
+        [storeId]: (previous[storeId] || []).filter(item => !(item.type === deleteTarget.type && String(item.id) === String(deleteTarget.id))),
+      }));
+      setKnownTotals(previous => ({ ...previous, [storeId]: 0 }));
       if (discounts.length === 1 && currentPage > 1) setCurrentPage(page => page - 1);
       else setRetry(value => value + 1);
     } catch (error) {
@@ -313,6 +428,24 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
     }
   };
   const updateForm = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const syncDiscounts = async () => {
+    if (syncing || loading) return;
+    setNotice("");
+    setSyncing(true);
+    try {
+      const response = await syncWordpressDiscounts(storeId);
+      if (response?.success === false || ["error", "failed"].includes(String(response?.status || "").toLowerCase())) {
+        throw new Error(response.message || "Unable to sync discounts.");
+      }
+      setNotice(response?.message || "Discounts synced successfully.");
+      setSummaryDiscounts(previous => ({ ...previous, [storeId]: [] }));
+      setKnownTotals(previous => ({ ...previous, [storeId]: 0 }));
+      setRetry(value => value + 1);
+    } catch (error) {
+      setNotice(error.message || "Unable to sync discounts.");
+      setSyncing(false);
+    }
+  };
   const selectedProduct = catalogProducts.find(product => catalogProductId(product) === String(form.product));
   const selectedProductPrice = selectedProduct?.price ?? selectedProduct?.payload?.price ?? "";
   const numericProductPrice = Number.parseFloat(String(selectedProductPrice).replace(/[^\d.-]/g, ""));
@@ -337,17 +470,17 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
             <div className="discount-editor-body">
                 <h2>Discount details</h2>
                 <div className="coupon-editor-grid">
-                  {mode === "create" ? <label className="coupon-form-field"><span className="discount-field-label">Select discount <span className="discount-required" title="Required" aria-label="Required">*</span></span>
-                    <select value={form.type} onChange={(event) => changeProgramType(event.target.value)} required>
+                  {mode === "create" ? <label className="coupon-form-field"><span className="discount-field-label">Select discount <span className="discount-required" data-tooltip="Required" aria-label="Required">*</span></span>
+                    <FilterDropdown aria-label="Select discount" value={form.type} onChange={(event) => changeProgramType(event.target.value)} required>
                       <option value="" disabled>Select a discount</option>
                       {TYPES.filter((type) => type.id !== "all").map((type) => <option key={type.id} value={type.id}>{type.label}</option>)}
-                    </select>
+                    </FilterDropdown>
                   </label> : <div className="coupon-form-field"><span>Select discount</span><div className="discount-program-readonly">{typeLabel(form.type)}</div></div>}
                   {form.type ? <>
-                  <label className="coupon-form-field"><span className="discount-field-label">Discount name <span className="discount-required" title="Required" aria-label="Required">*</span></span>
+                  <label className="coupon-form-field"><span className="discount-field-label">Discount name <span className="discount-required" data-tooltip="Required" aria-label="Required">*</span></span>
                     <input autoFocus value={form.code} onChange={(event) => updateForm("code", event.target.value)} placeholder="e.g. Weekend special" required />
                   </label>
-                  <div className="coupon-form-field discount-full-width"><span className="discount-field-label">{form.type === "mix_match" ? "Main product (trigger)" : "Product"} <span className="discount-required" title="Required" aria-label="Required">*</span></span>
+                  <div className="coupon-form-field discount-full-width"><span className="discount-field-label">{form.type === "mix_match" ? "Main product (trigger)" : "Product"} <span className="discount-required" data-tooltip="Required" aria-label="Required">*</span></span>
                     <DiscountProductPicker products={catalogProducts} value={form.product} onChange={value => { updateForm("product", value); setFormError(""); }} disabled={saving || !catalogProducts.length} />
                     <small>{catalogError || (catalogProducts.length ? "Choose a product to see its price and configure a discount." : "No store products are available. Sync products before creating a discount.")}</small>
                   </div>
@@ -355,12 +488,12 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
                     <input value={selectedProductPrice === "" ? "Price unavailable" : selectedProductPrice} disabled readOnly aria-label="Product price" />
                   </label>}
                   {form.product && <>
-                  <label className="coupon-form-field"><span className="discount-field-label">Discount type <span className="discount-required text-red-500" title="Required" aria-label="Required">*</span></span>
+                  <label className="coupon-form-field"><span className="discount-field-label">Discount type <span className="discount-required text-red-500" data-tooltip="Required" aria-label="Required">*</span></span>
                     <select value={form.discount_type} onChange={(event) => updateForm("discount_type", event.target.value)} required>
                       {typeOptions[form.type].map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                     </select>
                   </label>
-                  <label className="coupon-form-field"><span className="discount-field-label">Amount {form.discount_type === "percent" ? "(%)" : ""} <span className="discount-required text-red-500" title="Required" aria-label="Required">*</span></span>
+                  <label className="coupon-form-field"><span className="discount-field-label">Amount {form.discount_type === "percent" ? "(%)" : ""} <span className="discount-required text-red-500" data-tooltip="Required" aria-label="Required">*</span></span>
                     <input type="number" min="0.01" max={form.discount_type === "percent" ? 100 : undefined} step="0.01" value={form.amount} aria-invalid={amountExceedsProductPrice} onChange={(event) => { updateForm("amount", event.target.value); setFormError(""); }} placeholder="0.00" required />
                     <small>{form.discount_type === "percent" ? "Enter a percentage from 0 to 100." : "Enter the fixed discount amount."}</small>
                     {amountExceedsProductPrice && <small className="discount-amount-error" role="alert">The discount amount must be less than the selected product price.</small>}
@@ -376,7 +509,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
                     <DiscountProductPicker products={catalogProducts} value={form.discounted_products} onChange={value => updateForm("discounted_products", value)} multiple disabled={saving} />
                     <small>These products receive the discount when the trigger product is present.</small>
                   </div>}
-                  {form.type === "multipack" && <label className="coupon-form-field"><span className="discount-field-label">Pack quantity <span className="discount-required text-red-500" title="Required" aria-label="Required">*</span></span>
+                  {form.type === "multipack" && <label className="coupon-form-field"><span className="discount-field-label">Pack quantity <span className="discount-required text-red-500" data-tooltip="Required" aria-label="Required">*</span></span>
                     <input type="number" min="1" step="1" value={form.qty} onChange={(event) => updateForm("qty", event.target.value)} placeholder="e.g. 3" required />
                   </label>}
                   <label className="coupon-form-field">Start date
@@ -395,7 +528,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
             </div>
             <div className="coupon-editor-actions">
               <button type="button" className="coupon-form-cancel" onClick={closeEditor}>Cancel</button>
-              <button type="submit" className="coupon-form-save" disabled={saving || (mode === "create" && !form.type)}><i className="bi bi-check2" />{saving ? "Saving…" : mode === "edit" ? "Save changes" : "Create discount"}</button>
+              <button type="submit" className="coupon-form-save" disabled={saving || (mode === "create" && !form.type)}>{saving ? "Saving…" : mode === "edit" ? "Save changes" : "Create discount"}</button>
             </div>
           </div>
         </form>
@@ -410,6 +543,10 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
           <div><h1>Discounts</h1><p>Create and manage automatic, mix 'n match, and multipack discounts for this store.</p></div>
         </div>
         <div className="coupons-header-actions">
+          <button type="button" className="discount-sync-btn" onClick={syncDiscounts} disabled={syncing || loading}>
+            <i className={`bi ${syncing ? "bi-arrow-repeat discount-sync-spinning" : "bi-arrow-repeat"}`} />
+            {syncing ? "Syncing…" : "Sync discounts"}
+          </button>
           <button type="button" className="coupon-create-btn" onClick={openCreate}><i className="bi bi-plus-lg" />Create discount</button>
         </div>
       </div>
@@ -419,10 +556,10 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
 
       <div className="coupons-summary discounts-summary">
         {[
-          { label: "All Discounts", count: discounts.length, icon: "bi-percent", tone: "purple" },
-          { label: "Auto Discount", count: discounts.filter((item) => item.type === "auto").length, icon: "bi-lightning-charge", tone: "green" },
-          { label: "Mix 'n Match", count: discounts.filter((item) => item.type === "mix_match").length, icon: "bi-intersect", tone: "orange" },
-          { label: "Multipack", count: discounts.filter((item) => item.type === "multipack").length, icon: "bi-boxes", tone: "red" },
+          { label: "All Discounts", count: totalItems, icon: "bi-percent", tone: "purple" },
+          { label: "Auto Discount", count: (summaryDiscounts[storeId] || discounts).filter((item) => item.type === "auto").length, icon: "bi-lightning-charge", tone: "green" },
+          { label: "Mix 'n Match", count: (summaryDiscounts[storeId] || discounts).filter((item) => item.type === "mix_match").length, icon: "bi-intersect", tone: "orange" },
+          { label: "Multipack", count: (summaryDiscounts[storeId] || discounts).filter((item) => item.type === "multipack").length, icon: "bi-boxes", tone: "red" },
         ].map((card) => <div className="coupon-summary-card" key={card.label}>
           <div className={`coupon-summary-icon ${card.tone}`}><i className={`bi ${card.icon}`} /></div>
           <div><span>{card.label}</span><strong>{card.count}</strong></div>
@@ -452,24 +589,30 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
                 <th>Discount type</th>
                 <th>Amount</th>
                 <th>Product</th>
-                <th>Usage / limit</th>
+                <th>Usage / Limit</th>
                 <th>Start date</th>
                 <th>Expiry date</th>
-                <th>Actions</th>
+                <th className="discounts-actions-heading">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr><td className="discount-table-empty" colSpan="8">Loading discounts…</td></tr>
               ) : loadError ? (
-                <tr><td className="discount-table-empty" colSpan="8"><div className="products-table-empty-state"><strong>Unable to load discounts</strong><span>{loadError}</span></div></td></tr>
+                <tr><td className="discount-table-empty" colSpan="8"><div className="products-table-empty-state"><span>Unable to load discounts</span></div></td></tr>
               ) : visibleDiscounts.length ? visibleDiscounts.map((discount) => (
                 <tr key={`${discount.type}-${discount.id}`}>
                   <td><div className="discount-name-cell"><strong>{discount.code}</strong><small>{typeLabel(discount.type)}</small></div></td>
                   <td><span className="discount-type-pill">{discount.type || "—"}</span></td>
-                  <td><strong className="discount-amount">{amountLabel(discount)}</strong></td>
+                  <td><strong className="discount-amount">{amountLabel(discount, store?.currency, store?.currencySymbol)}</strong></td>
                   <td><span className="discount-product-cell">{`${discount.product}${discount.type === "mix_match" && discount.discounted_products ? ` → ${discount.discounted_products}` : ""}${discount.type === "multipack" ? ` · ${discount.qty} items` : ""}`}</span></td>
-                  <td>{discount.usage_limit === 0 || discount.usage_limit ? discount.usage_limit : "∞"}</td>
+                  <td>{(() => {
+                    const limit = Number(discount.usage_limit ?? discount.usageLimit);
+                    const used = Number(discount.usage_count ?? discount.usageCount ?? 0);
+                    const usageCount = Number.isFinite(used) ? Math.max(0, used) : 0;
+                    const usageLimit = Number.isFinite(limit) && limit > 0 ? limit : "∞";
+                    return `${usageCount} / ${usageLimit}`;
+                  })()}</td>
                   <td>{formatSystemDate(discount.date_starts)}</td>
                   <td>{formatSystemDate(discount.date_expires)}</td>
                   <td className="coupon-row-actions">
@@ -494,7 +637,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp }) {
             </tbody>
           </table>
         </div>
-        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filtered.length} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }} itemLabel="Discounts" showWhenEmpty />
+        <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={paginationTotalItems} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }} itemLabel="Discounts" showWhenEmpty />
       </div>
 
       <DeleteConfirmationDialog isOpen={Boolean(deleteTarget)} title="Delete discount?" message={deleteTarget ? `Delete “${deleteTarget.code}”?` : ""} busy={deleting} busyLabel="Deleting…" error={deleteError} onCancel={() => { if (deleteLock.current) return; setDeleteTarget(null); setDeleteError(""); }} onConfirm={deleteDiscount} />

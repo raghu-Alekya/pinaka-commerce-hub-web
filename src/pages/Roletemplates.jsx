@@ -417,10 +417,6 @@ async function confirmDeleteTemplate() {
                   ? "Edit Role Template"
                   : "Add Role Template"}
               </h2>
-              <p>
-                Provide the basic details and configuration for this role
-                template.
-              </p>
             </div>
           </div>
  
@@ -611,7 +607,7 @@ async function confirmDeleteTemplate() {
               <button
                 type="button"
                 className="role-reset-icon-btn pch-master-reset pch-master-control"
-                title="Reset filters"
+                data-tooltip="Reset filters"
                 aria-label="Reset filters"
                 onClick={resetFilters}
               >

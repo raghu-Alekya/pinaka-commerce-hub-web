@@ -1146,10 +1146,6 @@ const paginatedPermissions = filteredPermissions.slice(
                   ? "Edit Permission"
                   : "Add Permission"}
               </h2>
-
-              <p>
-                Enter the permission details.
-              </p>
             </div>
           </div>
         </div>
@@ -1480,7 +1476,7 @@ const paginatedPermissions = filteredPermissions.slice(
             <button
               type="button"
               className="fp-reset-btn pch-master-reset pch-master-control"
-              title="Reset filters"
+              data-tooltip="Reset filters"
               aria-label="Reset filters"
               onClick={
                 resetFilters

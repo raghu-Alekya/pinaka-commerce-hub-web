@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Pagination from "../../../components/Pagination";
 import FiltersBar from "../../../components/FiltersBar";
 import ListActions from "../../../components/ListActions";
+import StatusBadge from "../../../components/StatusBadge";
 import { devicesApi } from "../../../api/devices";
 import { createStoreDeviceMapping, deleteStoreDeviceMapping, getStoreDeviceMappings } from "../../../api/storeDeviceMappings";
 import "../../../styles/merchant-vendors.css";
@@ -25,6 +26,7 @@ async function combineMappings(rows, devices) {
       deviceId,
       mappingId: mapping.mappingId || mapping.mapping_id || mapping.id,
       code: device?.code || device?.deviceCode || mapping.code || mapping.device_code || "",
+      activationKey: device?.activationKey || device?.device_active_code || device?.authorization_code || device?.activation_code || mapping.activationKey || mapping.device_active_code || mapping.authorization_code || mapping.activation_code || "",
       name: device?.name || mapping.name || mapping.device_name || "",
       type: device?.type || mapping.type || mapping.device_type || "",
       serial: device?.serial || mapping.serial || mapping.serial_number || "",
@@ -76,10 +78,17 @@ export function DeviceMapping({ onBack }) {
       setDevices(activeDevices);
       if (!Array.isArray(mappingRows)) return;
       const hydrated = await combineMappings(mappingRows, merchantDevices);
-      setServerMappings(hydrated);
-      setMappings(hydrated);
-      settings.session.baseline.deviceMappings = hydrated;
-      settings.session.draft.deviceMappings = hydrated;
+      const inactiveMappings = hydrated.filter((mapping) => String(mapping.status || "").toLowerCase() === "inactive");
+      // Remove the assignment when an inactive device is encountered. This prevents
+      // reactivation from silently restoring its previous store assignment.
+      await Promise.allSettled(inactiveMappings
+        .filter((mapping) => mapping.mappingId)
+        .map((mapping) => deleteStoreDeviceMapping(mapping.mappingId)));
+      const activeMappings = hydrated.filter((mapping) => String(mapping.status || "").toLowerCase() !== "inactive");
+      setServerMappings(activeMappings);
+      setMappings(activeMappings);
+      settings.session.baseline.deviceMappings = activeMappings;
+      settings.session.draft.deviceMappings = activeMappings;
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [settings.merchantId, settings.storeId]);
@@ -88,8 +97,10 @@ export function DeviceMapping({ onBack }) {
   const mappedIds = useMemo(() => new Set(safeMappings.map((item) => String(item.deviceId))), [safeMappings]);
   const availableTypes = useMemo(() => [...new Set(devices.map((device) => String(device.type || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [devices]);
   const mappedTypes = useMemo(() => [...new Set(safeMappings.map((device) => String(device.type || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [safeMappings]);
-  const available = useMemo(() => devices.filter((device) => !mappedIds.has(String(device.id)) && [device.name, device.type, device.serial, device.code, device.deviceCode, device.status].join(" ").toLowerCase().includes(search.trim().toLowerCase()) && (deviceTypeFilter === "all" || String(device.type || "") === deviceTypeFilter) && (deviceStatusFilter === "all" || String(device.status || "Active").toLowerCase() === deviceStatusFilter)), [devices, mappedIds, search, deviceTypeFilter, deviceStatusFilter]);
-  const filteredMappings = useMemo(() => safeMappings.filter((device) => [device.name, device.type, device.serial, device.code].join(" ").toLowerCase().includes(mappedSearch.trim().toLowerCase()) && (mappedTypeFilter === "all" || String(device.type || "") === mappedTypeFilter) && (mappedStatusFilter === "all" || String(device.status || "Active").toLowerCase() === mappedStatusFilter)), [safeMappings, mappedSearch, mappedTypeFilter, mappedStatusFilter]);
+  const available = useMemo(() => devices.filter((device) => !mappedIds.has(String(device.id)) && [device.name, device.type, device.serial, device.code, device.deviceCode, device.activationKey, device.device_active_code, device.authorization_code, device.activation_code, device.status].join(" ").toLowerCase().includes(search.trim().toLowerCase()) && (deviceTypeFilter === "all" || String(device.type || "") === deviceTypeFilter) && (deviceStatusFilter === "all" || String(device.status || "Active").toLowerCase() === deviceStatusFilter)), [devices, mappedIds, search, deviceTypeFilter, deviceStatusFilter]);
+  // A mapped device stops belonging in this store as soon as its merchant deactivates it.
+  const activeMappings = useMemo(() => safeMappings.filter((device) => String(device.status || "Active").toLowerCase() !== "inactive"), [safeMappings]);
+  const filteredMappings = useMemo(() => activeMappings.filter((device) => [device.name, device.type, device.serial, device.code, device.activationKey].join(" ").toLowerCase().includes(mappedSearch.trim().toLowerCase()) && (mappedTypeFilter === "all" || String(device.type || "") === mappedTypeFilter) && (mappedStatusFilter === "all" || String(device.status || "Active").toLowerCase() === mappedStatusFilter)), [activeMappings, mappedSearch, mappedTypeFilter, mappedStatusFilter]);
   const pageCount = Math.max(1, Math.ceil(available.length / pageSize));
   const mappedPageCount = Math.max(1, Math.ceil(filteredMappings.length / pageSize));
   const pageRows = available.slice((page - 1) * pageSize, page * pageSize);
@@ -132,6 +143,7 @@ export function DeviceMapping({ onBack }) {
           deviceIdentifier: device.deviceId || device.device_id || "",
           name: device.name,
           code: device.code || device.deviceCode || device.device_code || "",
+          activationKey: device.activationKey || device.device_active_code || device.authorization_code || device.activation_code || "",
           type: device.type,
           serial: device.serial,
           status: device.status || "Active",
@@ -228,59 +240,57 @@ export function DeviceMapping({ onBack }) {
       <button type="button" className="pc-button pos-config-heading-back" onClick={backToMapped}><i className="bi bi-arrow-left" aria-hidden="true" /> Back to Mapped Devices</button>
     </header>
     <div className="mv-existing-content">
-      <p className="mv-device-scope">Only active devices registered to this merchant are available.</p>
       {error && <p role="alert" className="mv-error">{error}</p>}
       <FiltersBar
         searchValue={search}
         onSearchChange={(value) => { setSearch(value); setPage(1); }}
-        searchPlaceholder="Search devices by name, code, type or serial…"
+        searchPlaceholder="Search devices by name, code, activation key, type or serial…"
         filters={[
           { key: "deviceType", label: "Device type", value: deviceTypeFilter, options: [{ value: "all", label: "All Device Types" }, ...availableTypes.map((value) => ({ value, label: value }))], onChange: (value) => { setDeviceTypeFilter(value); setPage(1); } },
           { key: "status", label: "Status", value: deviceStatusFilter, options: [{ value: "all", label: "All Statuses" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "online", label: "Online" }, { value: "offline", label: "Offline" }], onChange: (value) => { setDeviceStatusFilter(value); setPage(1); } },
         ]}
         onClear={() => { setSearch(""); setDeviceTypeFilter("all"); setDeviceStatusFilter("all"); setPage(1); setSelection([]); }}
       />
-      <div className="mv-picker-summary"><span>{available.length} matching devices · {selection.length} selected</span></div>
+      <div className="mv-picker-summary"></div>
       <div className="mv-existing-table-wrap"><table>
-        <thead><tr><th>Select</th><th>Device ID</th><th>Device Code</th><th>Device Name</th><th>Device Type</th><th>Serial Number</th><th>Status</th></tr></thead>
+        <thead><tr><th>Select</th><th>Device ID</th><th>Device Code</th><th>Activation Key</th><th>Device Name</th><th>Device Type</th><th>Serial Number</th><th>Status</th></tr></thead>
         <tbody>
           {pageRows.map((device) => { const selected = selection.includes(String(device.id)); return <tr key={device.id} className={selected ? "mv-row-selected" : ""} aria-selected={selected} onClick={(event) => { if (!event.target.closest("input,button,a,select")) toggleSelection(device.id); }}>
             <td><input type="checkbox" aria-label={`Select ${device.name}`} checked={selected} onChange={() => toggleSelection(device.id)} /></td>
-            <td>{device.deviceId || device.device_id || "—"}</td><td>{device.code || device.deviceCode || device.device_code || "—"}</td><td><strong>{device.name || "—"}</strong></td><td>{device.type || "—"}</td><td>{device.serial || "—"}</td><td>{device.status || "Active"}</td>
+            <td>{device.deviceId || device.device_id || device.id || "—"}</td><td>{device.code || device.deviceCode || device.device_code || "—"}</td><td>{device.activationKey || device.device_active_code || device.authorization_code || device.activation_code || "—"}</td><td><strong>{device.name || "—"}</strong></td><td>{device.type || "—"}</td><td>{device.serial || "—"}</td><td><StatusBadge status={device.status || "Active"} /></td>
           </tr>; })}
-          {!loading && !pageRows.length && <tr><td colSpan="7">No unassigned devices found for this merchant.</td></tr>}
-          {loading && <tr><td colSpan="7" role="status">Loading merchant devices…</td></tr>}
+          {!loading && !pageRows.length && <tr><td colSpan="8">No unassigned devices found for this merchant.</td></tr>}
+          {loading && <tr><td colSpan="8" role="status">Loading merchant devices…</td></tr>}
         </tbody>
       </table></div>
       <Pagination currentPage={page} totalPages={pageCount} totalItems={available.length}
         pageSize={pageSize} onPageChange={setPage} onPageSizeChange={changePageSize}
         itemLabel="devices" showWhenEmpty pageSizeOptions={[5, 10, 25, 50, 100]} />
     </div>
-    <footer className="mv-existing-footer"><span>{selection.length} devices selected</span><div className="mv-popup-actions"><button type="button" disabled={savingSelection} onClick={backToMapped}>Cancel</button><button type="button" disabled={!selection.length || savingSelection} className="mv-primary" onClick={addSelected}>{savingSelection ? "Saving…" : "Add Selected"}</button></div></footer>
+    <footer className="mv-existing-footer"><div className="mv-popup-actions"><button type="button" disabled={savingSelection} onClick={backToMapped}>Cancel</button><button type="button" disabled={!selection.length || savingSelection} className="mv-primary" onClick={addSelected}>{savingSelection ? "Saving…" : "Add Selected"}</button></div></footer>
   </section>;
 
   return <section className="merchant-vendors mv-device-mapped-page">
-    <header className="mv-card mv-header"><div><h2>Devices</h2><p>These are the devices mapped to this store.</p></div><div className="mv-device-header-actions"><button type="button" className="pc-button pos-config-heading-back" onClick={onBack}><i className="bi bi-arrow-left" aria-hidden="true" /> Back</button><button type="button" className="mv-primary" onClick={openPicker}>＋ Add Existing Device</button></div></header>
+    <header className="mv-card mv-header pc-heading"><div className="pc-heading-title"><span className="pc-icon"><i className="bi bi-pc-display" aria-hidden="true" /></span><div><h2>Devices</h2><p>These are the devices mapped to this store.</p></div></div><div className="mv-device-header-actions pc-heading-actions"><button type="button" className="pc-button pos-config-heading-back" onClick={onBack}><i className="bi bi-arrow-left" aria-hidden="true" /> Back</button><button type="button" className="mv-primary" onClick={openPicker}>＋ Add Existing Device</button></div></header>
     {error && <p role="alert" className="mv-error">{error}</p>}
     <section className="mv-card mv-device-list-card">
-      <h3>Mapped Device List</h3>
       <FiltersBar
         searchValue={mappedSearch}
         onSearchChange={(value) => { setMappedSearch(value); setMappedPage(1); }}
-        searchPlaceholder="Search devices by name, type or serial…"
+        searchPlaceholder="Search devices by name, activation key, type or serial…"
         filters={[
           { key: "deviceType", label: "Device type", value: mappedTypeFilter, options: [{ value: "all", label: "All Device Types" }, ...mappedTypes.map((value) => ({ value, label: value }))], onChange: (value) => { setMappedTypeFilter(value); setMappedPage(1); } },
           { key: "status", label: "Status", value: mappedStatusFilter, options: [{ value: "all", label: "All Statuses" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "online", label: "Online" }, { value: "offline", label: "Offline" }], onChange: (value) => { setMappedStatusFilter(value); setMappedPage(1); } },
         ]}
         onClear={() => { setMappedSearch(""); setMappedTypeFilter("all"); setMappedStatusFilter("all"); setMappedPage(1); }}
       />
-      <div className="mv-scroll"><table><thead><tr><th>Device Code</th><th>Device ID</th><th>Device Name</th><th>Serial Number</th><th>Device Type</th><th>Actions</th></tr></thead><tbody>
-        {mappedRows.map((device) => <tr key={device.deviceId}><td>{device.code || "—"}</td><td>{device.deviceIdentifier || "—"}</td><td><strong>{device.name || "—"}</strong></td><td>{device.serial || "—"}</td><td>{device.type || "—"}</td><td><ListActions onDelete={() => removeMapping(device)} deleteLabel={`Remove ${device.name || "device"} from this store`} deleteDisabled={deletingMappingId === String(device.deviceId)} /></td></tr>)}
-        {!mappedRows.length && <tr><td colSpan="6">No mapped devices match. Use Add Existing Device to select from merchant devices.</td></tr>}
+      <div className="mv-scroll"><table><thead><tr><th>Device Code</th><th>Activation Key</th><th>Device ID</th><th>Device Name</th><th>Serial Number</th><th>Device Type</th><th>Actions</th></tr></thead><tbody>
+        {mappedRows.map((device) => <tr key={device.deviceId}><td>{device.code || "—"}</td><td>{device.activationKey || "—"}</td><td>{device.deviceIdentifier || "—"}</td><td><strong>{device.name || "—"}</strong></td><td>{device.serial || "—"}</td><td>{device.type || "—"}</td><td><ListActions onDelete={() => removeMapping(device)} deleteLabel={`Remove ${device.name || "device"} from this store`} deleteDisabled={deletingMappingId === String(device.deviceId)} /></td></tr>)}
+        {!mappedRows.length && <tr><td colSpan="7">No mapped devices match. Use Add Existing Device to select from merchant devices.</td></tr>}
       </tbody></table></div>
       <Pagination currentPage={mappedPage} totalPages={mappedPageCount} totalItems={filteredMappings.length}
         pageSize={pageSize} onPageChange={setMappedPage} onPageSizeChange={changePageSize}
         itemLabel="entries" showWhenEmpty pageSizeOptions={[5, 10, 25, 50, 100]} />
     </section>
   </section>;
-}  
+}

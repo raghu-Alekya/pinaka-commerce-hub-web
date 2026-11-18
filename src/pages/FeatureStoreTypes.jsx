@@ -729,12 +729,6 @@ useEffect(() => {
  
     'Feature';
  
-  const desc =
- 
-    feature?.description ||
- 
-    '';
- 
   return (
  
     <div className="store-types-page feature-detail-page">
@@ -759,7 +753,7 @@ useEffect(() => {
  
             aria-label="Back to Features"
  
-            title="Back to Features"
+            data-tooltip="Back to Features"
  
           >
  
@@ -771,7 +765,7 @@ useEffect(() => {
  
             <h1>{name}</h1>
  
-            <p>{desc}</p>
+            <p>Select the store types where this feature will be available.</p>
  
           </div>
  
@@ -882,14 +876,6 @@ useEffect(() => {
                 Applicable Store Types
  
               </h2>
- 
-              <p>
- 
-                Select the store types where this
- 
-                feature will be available.
- 
-              </p>
  
             </div>
  

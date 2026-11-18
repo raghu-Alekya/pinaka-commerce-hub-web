@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../../styles/pos-configuration.css";
 import { ApiError, pendingStoreRead } from "../../api/http";
+import { getCurrencySymbol } from "../../utils/currency";
 import { CashRegisterIcon, PosSettingsContext, SettingsChangeDialog, snapshotKey } from "./shared";
 import { OpeningBalanceSettings } from "./opening-balance/OpeningBalanceSettings";
 import { TaxConfiguration } from "./currency-tax/TaxConfiguration";
@@ -13,9 +14,12 @@ import { RegisterConfiguration, registerRows } from "./cash-registers/RegisterCo
 import { MappingConfiguration, mappingRows } from "./terminal-mappings/MappingConfiguration";
 import { SafeConfiguration } from "./safe-drop/SafeConfiguration";
 import { PrinterSettings } from "./printer-settings/PrinterSettings";
+import { CustomerDisplayPromotionalImages } from "./customer-display-promotional-images/promotional_images";
+import { LoyaltySettings } from "./loyalty/LoyaltySettings";
+import { FunctionalitySettings } from "./pos/functionality-settings/FunctionalitySettings";
 import { getPosCashRegisters } from "./cash-registers/api";
 import { getPosTerminalMappings } from "./terminal-mappings/api";
-
+ 
 const configurationCards = [
     {
         id: "currency-tax",
@@ -116,8 +120,35 @@ const configurationCards = [
         component: "printer-settings",
         enabled: true,
     },
+    {
+        id: "customer-display-promotional-images",
+        icon: "images",
+        iconClass: "pink",
+        title: "Customer Display Promotional Images",
+        description: "Manage promotional images shown on customer displays.",
+        component: "customer-display-promotional-images",
+        enabled: true,
+    },
+    {
+        id: "loyalty-settings",
+        icon: "award",
+        iconClass: "purple",
+        title: "Loyalty Settings",
+        description: "Manage customer loyalty points, earning rules, and redemption settings.",
+        component: "loyalty-settings",
+        enabled: true,
+    },
+    {
+        id: "functionality-settings",
+        icon: "sliders",
+        iconClass: "blue",
+        title: "Functionality Settings",
+        description: "Enable or disable POS functions for this store.",
+        component: "functionality-settings",
+        enabled: true,
+    },
 ];
-
+ 
 const initialRegisters = [
     { id: "reg-1", name: "REG-01", pos: "SUNMI-D3-001", maxCash: "500", safeDrop: true, status: "Active" },
     { id: "reg-2", name: "REG-02", pos: "SUNMI-D3-002", maxCash: "500", safeDrop: true, status: "Active" },
@@ -134,14 +165,14 @@ const initialSafeSettings = {
     threshold: "400", minimum: "100", maximum: "1000", managerApproval: true,
     cashierInitiated: true, reasonRequired: true, tubeSize: "", tubes: [], drops: [],
 };
-
-export default function PosConfiguration({ merchantId, storeId, store, embedded = false } = {}) {
+ 
+export default function PosConfiguration({ merchantId, storeId, store, onCurrencyChange, embedded = false } = {}) {
     const [registers, setRegisters] = useState(() => (storeId ? [] : initialRegisters));
     const [mappings, setMappings] = useState(() => (storeId ? [] : initialMappings));
     const [safeSettings, setSafeSettings] = useState(initialSafeSettings);
     const [selectedConfig, setSelectedConfig] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
-
+ 
     useEffect(() => {
         if (!storeId) return undefined;
         let active = true;
@@ -161,9 +192,12 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
             });
         return () => { active = false; };
     }, [storeId]);
-
-
+ 
+ 
     const [storeCurrency, setStoreCurrency] = useState(store?.currency || "USD");
+    useEffect(() => {
+        if (store?.currency) setStoreCurrency(store.currency);
+    }, [store?.currency]);
     const savedScreens = useRef({});
     const [pendingLeave, setPendingLeave] = useState(null);
     const [busy, setBusy] = useState(false);
@@ -171,7 +205,7 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
     const saveLock = useRef(false);
     useEffect(() => {
         if (!notice) return undefined;
-        const timeout = window.setTimeout(() => setNotice(""), 3000);
+        const timeout = window.setTimeout(() => setNotice(""), 1800);
         return () => window.clearTimeout(timeout);
     }, [notice]);
     const session = useMemo(() => ({ saved: savedScreens.current[selectedConfig] || {}, baseline: {}, draft: {}, resets: {}, save: null, editorDirty: null, resetEditor: null }), [selectedConfig]);
@@ -196,7 +230,10 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
             if (await session.save() !== true) { setPendingLeave(null); return; }
             // Newer screens already save through their existing parent setters.
             if (!["cash-register", "terminal-mapping", "safe-drop"].includes(selectedConfig)) savedScreens.current[selectedConfig] = { ...session.draft };
-            if (selectedConfig === "tax") setStoreCurrency(session.draft.currency);
+            if (selectedConfig === "tax") {
+                setStoreCurrency(session.draft.currency);
+                onCurrencyChange?.(session.draft.currency);
+            }
             session.baseline = { ...session.draft };
             setPendingLeave(null);
             setNotice("Changes are updated.");
@@ -210,79 +247,88 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
         window.addEventListener("beforeunload", preventLoss);
         return () => window.removeEventListener("beforeunload", preventLoss);
     }, [session]);
-    const currencySymbol = new Intl.NumberFormat("en", { style: "currency", currency: storeCurrency, currencyDisplay: "narrowSymbol" }).formatToParts(0).find((part) => part.type === "currency").value;
-    const settings = { session, currency: storeCurrency, currencySymbol, merchantId, storeId, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) };
-
+    const currencySymbol = getCurrencySymbol(storeCurrency);
+    const settings = useMemo(() => ({ session, currency: storeCurrency, currencySymbol, merchantId, storeId, store, requestLeave, saveChanges, clearNotice: () => setNotice(""), card: configurationCards.find((card) => card.component === selectedConfig) }), [session, storeCurrency, currencySymbol, merchantId, storeId, store, selectedConfig, requestLeave, saveChanges]);
+ 
     const filteredCards = configurationCards.filter((card) => {
         if (card.component === "device-mapping" && !embedded) return false;
         const search = searchQuery.trim().toLowerCase();
-
+ 
         if (!search) {
             return true;
         }
-
+ 
         return (
             card.title.toLowerCase().includes(search) ||
             card.description.toLowerCase().includes(search)
         );
     });
-
+ 
     const renderSelectedContent = () => {
         switch (selectedConfig) {
             case "tax":
                 return <TaxConfiguration />;
-
+ 
             case "service":
                 return <ServiceChargeSettings />;
-
+ 
             case "cashback":
                 return <CashbackSettings />;
-
+ 
             case "opening-balance":
                 return <OpeningBalanceSettings />;
-
+ 
             case "cash-denominations":
                 return <DenominationSettings key="cash" section="cash" />;
-
+ 
             case "safe-drop":
                 return <SafeConfiguration value={safeSettings} onSave={setSafeSettings} onBack={() => requestLeave(null)} />;
-
+ 
             case "payments":
                 return <PaymentSettings />;
-
+ 
             case "cash-register":
                 return <RegisterConfiguration value={registers} mappings={mappings} onSave={setRegisters} onBack={() => requestLeave(null)} />;
-
+ 
             case "terminal-mapping":
                 return <MappingConfiguration value={mappings} registers={registers} onSave={setMappings} onBack={() => requestLeave(null)} onManageRegisters={() => requestLeave("cash-register")} />;
-
+ 
             case "device-mapping":
                 return <DeviceMapping onBack={() => requestLeave(null)} />;
-
+ 
             case "printer-settings":
                 return <PrinterSettings onBack={() => requestLeave(null)} />;
-
+ 
+            case "customer-display-promotional-images":
+                return <CustomerDisplayPromotionalImages onBack={() => requestLeave(null)} />;
+ 
+            case "loyalty-settings":
+                return <LoyaltySettings />;
+ 
+            case "functionality-settings":
+                return <FunctionalitySettings />;
+ 
             default:
                 return null;
         }
     };
-
+ 
     if (selectedConfig) {
     return (
         <PosSettingsContext.Provider value={settings}>
         <div className="page-content pos-page-content">
-
-            <div className="pos-config-detail-card">
+ 
+            <div className={`pos-config-detail-card${selectedConfig === "device-mapping" ? " pos-config-device-mapping-card" : ""}`}>
                 <fieldset className="pos-screen-lock" disabled={busy} aria-busy={busy}>{renderSelectedContent()}</fieldset>
             </div>
             {notice && <div className="pos-update-notice" role="status">{notice}</div>}
-
+ 
         </div>
         {pendingLeave && <SettingsChangeDialog busy={busy} onSave={saveChanges} onDiscard={discardChanges} onStay={() => setPendingLeave(null)} />}
         </PosSettingsContext.Provider>
     );
 }
-
+ 
     return (
         <div className="page-content pos-page-content">
             <div className="page-header pos-config-page-header">
@@ -292,10 +338,10 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
                         Configure point-of-sale settings for your merchant stores.
                     </p>
                 </div>
-
+ 
                 <div className="pos-config-search">
                     <i className="bi bi-search" />
-
+ 
                     <input
                         type="text"
                         value={searchQuery}
@@ -307,7 +353,7 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
                     />
                 </div>
             </div>
-
+ 
             <div className="pos-config-card pos-config-cards-container">
                 <div className="pos-config-cards-grid">
                     {filteredCards.map((card) => (
@@ -329,17 +375,17 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
                             >
                                 {card.icon === "cash-register" ? <CashRegisterIcon /> : <i className={`bi bi-${card.icon}`} />}
                             </div>
-
+ 
                             <div className="pos-config-option-content">
                                 <h3>{card.title}</h3>
                                 <p>{card.description}</p>
                             </div>
-
+ 
                             <i className="bi bi-chevron-right pos-config-option-arrow" />
                         </button>
                     ))}
                 </div>
-
+ 
                 {filteredCards.length === 0 && (
                     <div className="pos-config-no-results">
                         <i className="bi bi-search" />
@@ -353,4 +399,3 @@ export default function PosConfiguration({ merchantId, storeId, store, embedded 
         </div>
     );
 }
-

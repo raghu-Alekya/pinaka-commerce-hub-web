@@ -52,7 +52,7 @@ export default function Devices() {
 
   useEffect(() => {
     if (!statusNotice) return undefined;
-    const timeout = window.setTimeout(() => setStatusNotice(null), 2500);
+    const timeout = window.setTimeout(() => setStatusNotice(null), 1800);
     return () => window.clearTimeout(timeout);
   }, [statusNotice]);
  
@@ -380,51 +380,32 @@ export default function Devices() {
         {" "}
  
         <StatCard
- 
           icon={<i className="bi bi-laptop-fill" aria-hidden="true" />}
- 
           title="Total Devices"
- 
           value={totalDevices}
- 
+          description="Across all stores"
           variant="purple"
- 
         />{" "}
- 
         <StatCard
- 
           icon={<i className="bi bi-check-circle-fill" aria-hidden="true" />}
- 
           title="Online Devices"
- 
           value={onlineDevices}
- 
+          description={`${totalDevices ? Math.round((onlineDevices / totalDevices) * 100) : 0}% of total`}
           variant="green"
- 
         />{" "}
- 
         <StatCard
- 
           icon={<i className="bi bi-pause-circle-fill" aria-hidden="true" />}
- 
           title="Offline Devices"
- 
           value={offlineDevices}
- 
+          description={`${offlineDevices} currently`}
           variant="orange"
- 
         />{" "}
- 
         <StatCard
- 
           icon={<i className="bi bi-x-circle-fill" aria-hidden="true" />}
- 
           title="Inactive Devices"
- 
           value={inactiveDevices}
- 
+          description={`${totalDevices ? Math.round((inactiveDevices / totalDevices) * 100) : 0}% of total`}
           variant="red"
- 
         />{" "}
  
       </div>{" "}
@@ -520,7 +501,7 @@ export default function Devices() {
                 {" "}
 
  
-                <th>Device Code</th> <th>Device ID</th> <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
+                <th>Device Code</th> <th>Activation Key</th> <th>Device Name</th> <th>Device Type</th> <th>Serial Number</th>{" "}
  
                 <th>Merchant Name</th> <th>Connection Status</th>{" "}
  
@@ -648,6 +629,8 @@ export default function Devices() {
   title,
  
   value,
+
+  description,
  
   variant,
  
@@ -668,6 +651,7 @@ export default function Devices() {
         <div className="device-stat-title"> {title} </div>{" "}
  
         <div className="device-stat-value"> {value} </div>{" "}
+        <div className={`device-stat-description ${variant}`}><i className="bi bi-circle-fill" aria-hidden="true" />{description}</div>
  
       </div>{" "}
  
@@ -754,8 +738,8 @@ function DeviceRow({
       {/* DEVICE CODE */}
       <td>{device.code || device.deviceCode || "-"}</td>
 
-      {/* DEVICE ID */}
-      <td>{device.deviceId || device.device_id || "-"}</td>
+      {/* ACTIVATION KEY */}
+      <td>{device.activationKey || device.device_active_code || device.authorization_code || device.activation_code || "-"}</td>
   
      {/* DEVICE NAME */}
       <td>

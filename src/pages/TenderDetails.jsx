@@ -103,7 +103,7 @@ export default function TenderDetails() {
           className="tender-details-back"
           onClick={() => navigate("/tenders")}
           aria-label="Back to Tenders"
-          title="Back to Tenders"
+          data-tooltip="Back to Tenders"
         >
           <i className="bi bi-arrow-left" />
         </button>
@@ -145,7 +145,6 @@ export default function TenderDetails() {
 
               <div>
                 <h2>Tender Details</h2>
-                <p>View the saved tender information.</p>
               </div>
             </div>
 

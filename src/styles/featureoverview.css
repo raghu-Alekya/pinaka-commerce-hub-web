@@ -334,18 +334,18 @@
   align-items: center;
   justify-content: space-between;
 
-  padding: 0 9px 0 10px;
+  padding: 0 10px;
 
-  background: #f1fbf7;
+  background: #f8fafc;
 
-  border: 1px solid #cdeee0;
-  border-radius: 5px;
+  border: 1px solid #d5e0ed;
+  border-radius: 7px;
 
-  color: #079653;
+  color: #00a870;
 
-  font-size: 10px;
-  line-height: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
 }
 
 .feature-status-value {
@@ -353,21 +353,6 @@
   align-items: center;
   gap: 7px;
 }
-
-.feature-status-dot {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
-
-  background: #10ae61;
-  border-radius: 50%;
-}
-
-.feature-status-chevron {
-  color: #009c60;
-  flex-shrink: 0;
-}
-
 
 /* =========================================================
    DESCRIPTION

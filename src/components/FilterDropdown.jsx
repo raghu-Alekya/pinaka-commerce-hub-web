@@ -17,7 +17,6 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
   const [position, setPosition] = useState(null);
   const [triggerStyle, setTriggerStyle] = useState({});
   const [triggerPosition, setTriggerPosition] = useState(null);
-  const [tooltip, setTooltip] = useState(null);
   const flatten = (nodes) => Children.toArray(nodes).flatMap((child) => child?.type === Fragment ? flatten(child.props.children) : [child]);
   const optionText = (nodes) => Children.toArray(nodes).map((node) => typeof node === "object" ? optionText(node.props?.children) : String(node)).join("");
   const rawOptions = flatten(children).filter((child) => child?.type === "option").map((child) => ({
@@ -87,7 +86,6 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
       menu.style.top = nextPosition.top === undefined ? "auto" : `${nextPosition.top}px`;
       menu.style.bottom = nextPosition.bottom === undefined ? "auto" : `${nextPosition.bottom}px`;
       setPosition(nextPosition);
-      setTooltip(null);
     };
     place();
     const observer = new ResizeObserver(place);
@@ -110,15 +108,11 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
         if (optionTop < menu.scrollTop) menu.scrollTop = optionTop;
         else if (optionBottom > menu.scrollTop + menu.clientHeight) menu.scrollTop = optionBottom - menu.clientHeight;
       }
-      const frame = requestAnimationFrame(() => {
-        if (element) showTooltip({ currentTarget: element }, options[active].label);
-      });
-      return () => cancelAnimationFrame(frame);
     }
   }, [open, active, Boolean(position)]);
 
   const close = (restore = true) => {
-    setOpen(false); setPosition(null); setTooltip(null);
+    setOpen(false); setPosition(null);
     if (restore) triggerRef.current?.focus();
   };
   useEffect(() => {
@@ -171,12 +165,6 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
       if (next >= 0) { if (open) setActive(next); else choose(next); }
     }
   };
-  const showTooltip = (event, label) => {
-    const element = event.currentTarget;
-    if (element.scrollWidth <= element.clientWidth) { setTooltip(null); return; }
-    const rect = element.getBoundingClientRect();
-    setTooltip({ label, left: Math.max(8, Math.min(rect.left, window.innerWidth - 260)), top: rect.top > 50 ? rect.top - 38 : rect.bottom + 4 });
-  };
   const sizingControl = <select {...props} ref={nativeRef} value={selectedValue} disabled={disabled} onChange={() => {}}
       id={undefined} aria-hidden="true" tabIndex={-1} className={`${props.className || ""} ${preserveToolbarLayout ? "pch-master-filter-sizing" : "pch-filter-sizing"}`}>
       {placeholder && !rawOptions.some((o) => o.value === "") && <option value="" disabled hidden>{placeholder}</option>}
@@ -186,7 +174,7 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
       disabled={disabled} role="combobox" aria-haspopup="listbox" aria-expanded={open}
       aria-controls={open ? id : undefined} aria-label={props["aria-label"] || options[0]?.label || "Filter"}
       aria-required={props["aria-required"]}
-      title={options[selected]?.label || placeholder} onKeyDown={keyDown}
+      onKeyDown={keyDown}
       onClick={() => { if (open) close(); else { setActive(selected >= 0 && !options[selected].disabled ? selected : options.findIndex((option) => !option.disabled && !option.hidden)); setOpen(true); } }}>
       {triggerIcon}<span>{options[selected]?.label || placeholder || ""}</span>
       {(!preserveToolbarLayout || !triggerStyle.backgroundImage || triggerStyle.backgroundImage === "none") && <i className="bi bi-chevron-down" aria-hidden="true" />}
@@ -198,14 +186,12 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
     </> : <span className="pch-filter-dropdown">{sizingControl}{trigger}</span>}
     {open && createPortal(<div ref={menuRef} id={id} role="listbox" aria-label={props["aria-label"] || "Filter options"}
       className="pch-filter-menu" style={position || { visibility: "hidden" }} onKeyDown={keyDown}>
-      {options.map((option, index) => option.hidden ? null : <button type="button" role="option" key={`${option.value}-${index}`}
+      {options.map((option, index) => option.hidden ? null : <button
+        type="button" role="option" key={`${option.value}-${index}`}
         ref={(element) => { optionRefs.current[index] = element; }} tabIndex={index === active ? 0 : -1}
         disabled={option.disabled} aria-selected={index === selected} className="pch-filter-option"
-        onFocus={(event) => { setActive(index); showTooltip(event, option.label); }}
-        onMouseEnter={(event) => showTooltip(event, option.label)} onMouseLeave={() => setTooltip(null)}
         onClick={() => choose(index)}>{option.label}</button>)}
       {renderFooter && <div className="pch-filter-footer">{renderFooter(() => close())}</div>}
     </div>, document.body)}
-    {tooltip && open && createPortal(<div role="tooltip" className="pch-filter-tooltip" style={{ left: tooltip.left, top: tooltip.top }}>{tooltip.label}</div>, document.body)}
   </>;
 }

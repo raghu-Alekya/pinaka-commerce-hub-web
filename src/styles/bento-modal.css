@@ -99,6 +99,15 @@ body:has(.sidebar-collapsed) .bento-modal-overlay,
   box-sizing: border-box;
 }
 
+.bento-modal-container.compact-spacing .bento-modal-header {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.bento-modal-container.compact-spacing .bento-modal-body {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
 .bento-header-left {
   display: flex;
   align-items: center;
@@ -353,6 +362,11 @@ body:has(.sidebar-collapsed) .bento-modal-overlay,
   gap: 14px;
 }
 
+.bento-grid-vertical {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
 /* Column Card: p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm space-y-3 */
 .bento-card {
   padding: 14px 16px;
@@ -456,6 +470,15 @@ body:has(.sidebar-collapsed) .bento-modal-overlay,
   color: #4f46e5;
   text-decoration: none;
   word-break: break-all;
+}
+
+.bento-field a[href^="mailto:"] {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bento-field-value a:hover {
@@ -666,6 +689,14 @@ body:has(.sidebar-collapsed) .bento-modal-overlay,
   color: #64748b;
 }
 
+.sd-modal-shift-id {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-wrap: anywhere;
+}
+
 .sd-modal-hero-metric {
   text-align: right;
   flex-shrink: 0;
@@ -692,7 +723,7 @@ body:has(.sidebar-collapsed) .bento-modal-overlay,
 /* Two Columns Grid */
 .sd-modal-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   margin-top: 16px;
 }

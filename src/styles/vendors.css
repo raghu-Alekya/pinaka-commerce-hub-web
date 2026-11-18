@@ -8,7 +8,6 @@
   min-height: calc(100vh - 72px);
   padding: 18px 28px 30px;
   background: #f6f7fb;
-  color: #10264d;
 }
 
 .vendors-status-notice {
@@ -185,14 +184,14 @@
 .vendors-form h2 {
   margin: 0 0 3px;
   color: #10264d;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
 }
 
 .vendors-heading-content p {
   margin: 0;
   color: #5b79ad;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.4;
 }
 
@@ -309,7 +308,7 @@
 .vendors-field-error {
   margin: 2px 0 0;
   color: #ed304d;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -496,93 +495,18 @@
 
 .vendors-table th,
 .vendors-table td {
-  height: 58px;
+  height: 45px;
   padding: 12px 16px;
   box-sizing: border-box;
   border-bottom: 1px solid #e4e8ef;
   text-align: left;
   vertical-align: middle;
-  color: #29466f;
-  font-size: 14px;
-  line-height: 20px;
   overflow: visible;
-  white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.vendors-table th:nth-child(1),
-.vendors-table td:nth-child(1) {
-  width: 120px;
-  min-width: 110px;
-}
-
-.vendors-table th:nth-child(2),
-.vendors-table td:nth-child(2) {
-  width: 140px;
-  min-width: 130px;
-}
-
-.vendors-table th:nth-child(3),
-.vendors-table td:nth-child(3) {
-  width: 160px;
-  min-width: 150px;
-}
-
-.vendors-table th:nth-child(4),
-.vendors-table td:nth-child(4) {
-  width: 140px;
-  min-width: 130px;
-}
-
-.vendors-table th:nth-child(5),
-.vendors-table td:nth-child(5) {
-  width: 150px;
-  min-width: 145px;
-}
-
-.vendors-table th:nth-child(6),
-.vendors-table td:nth-child(6) {
-  width: 160px;
-  min-width: 150px;
-}
-
-.vendors-table th:nth-child(7),
-.vendors-table td:nth-child(7) {
-  width: 170px;
-  min-width: 160px;
-}
-
-.vendors-table th:nth-child(8),
-.vendors-table td:nth-child(8) {
-  width: 130px;
-  min-width: 120px;
-}
-
-.vendors-table th:nth-child(9),
-.vendors-table td:nth-child(9) {
-  width: 135px;
-  min-width: 135px;
-  white-space: nowrap;
-}
-
-.vendors-table th:nth-child(10),
-.vendors-table td:nth-child(10) {
-  width: 150px;
-  min-width: 150px;
-  white-space: nowrap;
-}
-
-.vendors-table th {
-  height: 44px;
-  padding: 0 16px;
-  background: #f1f3fd;
-  color: #23426e;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 16px;
-  text-overflow: clip;
-  white-space: nowrap;
 }
+
 
 .vendors-table tbody tr:hover td {
   background: #fbfdff;
@@ -611,13 +535,18 @@
   font-size: 11px;
 }
 
+/* =========================================================
+   TABLE CELL VALUE
+   ========================================================= */
+
 .vendors-table td .vendors-cell-value {
   display: block;
   width: 100%;
   overflow: hidden;
-  color: inherit;
-  font-size: 14px;
-  line-height: 1.45;
+  color: #10264d;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -872,7 +801,7 @@
   padding: 38px;
   text-align: center;
   color: #8994aa;
-  font-size: 10px;
+  font-size: 16px;
 }
 
 
@@ -1350,32 +1279,7 @@
   max-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
-
-.vendors-table td .vendors-cell-value {
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* =========================================================
-   TABLE CELL VALUE
-   ========================================================= */
-
-.vendors-table td .vendors-cell-value {
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  color: inherit;
-  font-size: 12px;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 
 /* =========================================================
    FINAL VENDOR FORM / TABLE UX OVERRIDES
@@ -1469,7 +1373,6 @@
   min-height: calc(100vh - 64px);
   padding: 24px;
   background: #f5f7fb;
-  color: #193354;
   box-sizing: border-box;
 }
 
@@ -1618,12 +1521,23 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  height: 35px;
 }
 
 
+.vendors-list-card > .filters-bar .filter-select-wrapper {
+  height: 35px;
+  display: flex;
+  align-items: center;
+  width: auto;
+  min-width: 180px;
+  flex: 0 0 auto;
+}
+
 .vendors-list-card > .filters-bar .filter-select-wrapper select {
   height: 35px;
-  min-width: 130px;
+  min-width: 180px;
+  width: 100%;
   padding: 0 30px 0 11px;
   box-sizing: border-box;
   border: 1px solid #e1e4eb;
@@ -1649,6 +1563,10 @@
   background: #fff;
   color: #5b79ad;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .vendors-list-card > .filters-bar .filter-reset-btn:hover,
@@ -1667,24 +1585,6 @@
   border-color: #aeb7ff;
   outline: none;
   box-shadow: 0 0 0 2px rgba(104, 78, 227, 0.06);
-}
-
-.vendors-table th {
-  height: 40px;
-  padding: 0 12px;
-  font-size: 12px;
-}
-
-.vendors-table td {
-  height: 50px;
-  padding: 10px 12px;
-  font-size: 12px;
-  line-height: 18px;
-}
-
-.vendors-table td .vendors-cell-value {
-  font-size: 12px;
-  line-height: 18px;
 }
 
 .vendors-create-page .vendors-navigation {
@@ -1793,8 +1693,9 @@
 }
 
 .vendors-create-page .vendors-clear-button {
-  border-color: #d6e0ec;
-  color: #334e70;
+  border-color: #5143bc;
+  color: #5143bc;
+  background: #f5f7fb;
 }
 
 .vendors-create-page .vendors-form-actions button:focus-visible,
@@ -1892,6 +1793,25 @@
   font-weight: 750;
   line-height: 25px;
 }
+
+.vendors-stat-description {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.vendors-stat-description i {
+  font-size: 6px;
+}
+
+.vendors-stat-description.purple { color: #674ed9; }
+.vendors-stat-description.green { color: #2eaa62; }
+.vendors-stat-description.orange { color: #e99b2b; }
+.vendors-stat-description.red { color: #df5c66; }
 
 .vendors-table-wrap {
   width: calc(100% - 24px);
@@ -2130,13 +2050,13 @@
   font-weight: 600;
   line-height: 1.15;
   white-space: nowrap;
+  margin-bottom: 4px;
 }
 
 .vendors-audit-time {
-  color: #7890ba;
-  font-size: 9px;
-  font-weight: 500;
-  line-height: 1.1;
+  color: #5f728e;
+  font-size: 12px;
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -2438,13 +2358,13 @@
 .vendors-create-page .vendors-form h2 {
   margin-bottom: 2px;
   color: #183354;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
 }
 
 .vendors-create-page .vendors-heading-content p {
   color: #8194ae;
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .vendors-create-page .vendors-form-grid {
@@ -2456,12 +2376,13 @@
 .vendors-create-page .vendors-form label {
   gap: 0;
   color: #243e60;
+  font-size: 13px;
 }
 
 .vendors-create-page .vendors-form label span {
   margin-bottom: 6px;
   color: #243e60;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -2473,7 +2394,7 @@
   border-radius: 5px;
   color: #294668;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
 }
 
@@ -2687,7 +2608,7 @@
   padding: 0 35px 0 12px !important;
   border: 1px solid #d9e1f0 !important;
   border-radius: 6px !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
 }
 
 .vendors-form .pch-filter-trigger {
@@ -2700,7 +2621,7 @@
   background: #fff !important;
   color: #24314a !important;
   font-family: inherit !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   text-align: left !important;
   display: flex !important;
   align-items: center !important;
@@ -2755,7 +2676,7 @@
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   font-weight: 400 !important;
   color: #24314a !important;
 }
@@ -2778,45 +2699,52 @@
 
 /* Status dropdown styles inside .vendors-form */
 .vendors-form .vendors-status-select.active + .pch-filter-trigger,
-.vendors-form .pch-filter-dropdown:has(.vendors-status-select.active) .pch-filter-trigger {
-  border-color: #b9ead2 !important;
-  background: #f7fffb !important;
+.vendors-form .pch-filter-dropdown:has(.vendors-status-select.active) .pch-filter-trigger,
+.vendors-form .pch-filter-dropdown:has(.vendors-status-select.active) .pch-filter-trigger > span {
   color: #08a961 !important;
   font-weight: 600 !important;
+  opacity: 1 !important;
 }
 
 .vendors-form .vendors-status-select.inactive + .pch-filter-trigger,
-.vendors-form .pch-filter-dropdown:has(.vendors-status-select.inactive) .pch-filter-trigger {
-  border-color: #f3c0c8 !important;
-  background: #fff8f9 !important;
+.vendors-form .pch-filter-dropdown:has(.vendors-status-select.inactive) .pch-filter-trigger,
+.vendors-form .pch-filter-dropdown:has(.vendors-status-select.inactive) .pch-filter-trigger > span {
   color: #ed304d !important;
   font-weight: 600 !important;
+  opacity: 1 !important;
 }
 
 /* Toolbar filters in Vendors list */
 .vendors-list-card > .filters-bar .filter-select-wrapper > .pch-filter-dropdown {
   width: 100%;
+  height: 35px;
+  display: inline-grid;
+  align-items: center;
 }
 
 .vendors-list-card > .filters-bar .pch-filter-sizing {
   height: 35px !important;
   box-sizing: border-box !important;
-  border: 1px solid #d9e1f0 !important;
-  border-radius: 6px !important;
-  font-size: 13px !important;
+  border: 1px solid #e1e4eb !important;
+  border-radius: 5px !important;
+  font-size: 12px !important;
+  min-width: 180px !important;
+  width: 100% !important;
 }
 
 .vendors-list-card > .filters-bar .pch-filter-trigger {
   height: 35px !important;
+  top: 0 !important;
   box-sizing: border-box !important;
-  border: 1px solid #d9e1f0 !important;
-  border-radius: 6px !important;
+  border: 1px solid #e1e4eb !important;
+  border-radius: 5px !important;
   background: #fff !important;
   color: #24314a !important;
   font-size: 12px !important;
   font-family: inherit !important;
   transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
-  width:130px !important;
+  min-width: 180px !important;
+  width: 100% !important;
 }
 
 .vendors-list-card > .filters-bar .pch-filter-trigger:hover:not(:disabled) {

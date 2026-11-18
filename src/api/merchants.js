@@ -320,6 +320,7 @@ export function toFlatMerchantPayload(data) {
 
   return {
     ein: m.ein || m.EIN || "",
+    ...(data.password ? { password: data.password } : {}),
       firstName: m.firstName || "",
       lastName: m.lastName || "",
     merchantName,
@@ -374,6 +375,14 @@ function titleCase(value) {
     .toLowerCase()
     .replace(/_/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+export function isSubscriptionExpired(value, now = new Date()) {
+  if (!value) return false;
+  const dateText = String(value).trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateText)) return false;
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return dateText < today;
 }
 
 function toInitials(name) {
@@ -511,6 +520,10 @@ export function mapMerchantToRow(item) {
     merchant.status ||
     merchant.onboardingStatus ||
     "ACTIVE";
+  const normalizedStatus = titleCase(status);
+  const displayStatus = normalizedStatus.toLowerCase() === "active" && isSubscriptionExpired(renewal)
+    ? "Inactive"
+    : normalizedStatus;
 
   const createdAt =
     merchant.createdAt || merchant.created_at || merchant.createdDate ||
@@ -553,7 +566,7 @@ export function mapMerchantToRow(item) {
     stores,
     plan: planName,
     renewal: renewal ? formatDate(renewal) : "—",
-    status: titleCase(status),
+    status: displayStatus,
     joined: formatDate(createdAt),
     active: formatRelative(updatedAt),
     initials: toInitials(name),
@@ -640,14 +653,12 @@ function mapStoreToRow(store) {
 
 export async function createMerchant(data) {
   const flatPayload = toFlatMerchantPayload(data);
-  console.log("[CREATE MERCHANT PAYLOAD]", flatPayload);
   const result = await api.post(endpoints.merchants, flatPayload);
 
   if (result && result.success === false) {
     throw new Error(result.message || "Unable to create merchant.");
   }
 
-  console.log("[CREATE MERCHANT API RESPONSE]", result);
   return result;
 }
 
@@ -659,7 +670,6 @@ export async function updateMerchant(id, data) {
     throw new Error(result.message || "Unable to update merchant.");
   }
 
-  console.log("[UPDATE MERCHANT API RESPONSE]", result);
   return result;
 }
 

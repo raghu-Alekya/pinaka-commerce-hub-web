@@ -24,6 +24,8 @@ import EmployeeAttendance, { AttendanceDetails } from "./EmployeeAttendance";
 
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { endpoints } from "../api/endpoints";
+import { getPosCurrencyTax } from "./pos/currency-tax/api";
+import { getCurrencySymbol } from "../utils/currency";
 
 
 import {
@@ -32,6 +34,7 @@ import {
   saveWordpressConnector,
   syncWordpressAttributes,
   syncWordpressCategories,
+  syncWordpressDiscounts,
   syncWordpressProducts,
   syncWordpressTags,
 } from "../api/storeConnector";
@@ -119,13 +122,48 @@ const navGroups = [
   },
 ];
 
+const sectionIntro = {
+  features: ["Features", "Review the features available to this store and update its access when needed."],
+  roles: ["Roles & Permissions", "Manage the roles and permissions that control access to this store."],
+  users: ["Employees", "Manage employee assignments, store roles, and login access."],
+  attendance: ["Employee Attendance", "Review attendance records and working hours for this store."],
+  customers: ["Customers", "Browse customer profiles and activity associated with this store."],
+  vendors: ["Vendors", "Manage the vendors that supply this store."],
+  overview: ["Website Connection", "Manage the store website connection and sync catalog data."],
+  pos: ["POS Configuration", "Configure point of sale settings used by this store."],
+  categories: ["Categories", "Organize the product categories available at this store."],
+  products: ["Products", "Manage the products listed in this store's catalog."],
+  fastkeys: ["Fast Keys", "Configure quick access keys used by the store's point of sale."],
+  orders: ["Orders", "Review and manage orders placed through this store."],
+  paymentrecords: ["Payment History", "Review payment transactions recorded for this store."],
+  vendorhistory: ["Vendor History", "Review payment history for this store's vendors."],
+  coupons: ["Coupons", "Create and manage coupon offers available at this store."],
+  discounts: ["Discounts", "Manage the discount offers applied to this store's catalog."],
+  shifts: ["Shift Management", "Set up and review employee shifts for this store."],
+  safedrops: ["Safe Drops", "Review and manage safe drop records for this store."],
+};
+
+// These embedded pages already render their own page heading and description.
+const sectionsWithPageHeading = new Set([
+  "features", "roles", "users", "attendance", "customers", "vendors",
+  "overview", "pos", "categories", "products", "fastkeys", "vendorhistory",
+  "paymentrecords", "coupons", "discounts", "shifts", "safedrops", "orders",
+]);
+
 /* =========================================================
    STORE CONFIGURATION
    ========================================================= */
 
-function SummaryFields({ title, items }) {
-  return <section className="store-overview-card">
+function StoreOverviewCardHeading({ title, subtitle }) {
+  return <div className="store-overview-card-heading">
     <h2>{title}</h2>
+    <p>{subtitle}</p>
+  </div>;
+}
+
+function SummaryFields({ title, subtitle, items }) {
+  return <section className="store-overview-card">
+    <StoreOverviewCardHeading title={title} subtitle={subtitle} />
     <dl>{items.map(([label, value]) => <div key={label}>
       <dt>{label}</dt><dd>{value == null || value === "" ? "—" : value}</dd>
     </div>)}</dl>
@@ -136,20 +174,22 @@ function StoreDetailsSummary({ store, merchant }) {
   const address = typeof store.address === "object" && store.address ? store.address : {};
   const hours = store.hours || store.onboardingSetup?.hours || [];
   return <>
-    <SummaryFields title="Store Details" items={[
+    <SummaryFields title="Store Details" subtitle="Basic information about this store." items={[
       ["Store Name", store.name], ["Store Code", store.storeCode || store.id],
       ["Merchant", merchant?.name || store.merchantName],
       ["Store Type", typeof store.type === "object" ? store.type.name || store.type.code : store.type],
-      ["Status", store.status], ["Currency", store.currency],
+      ["Status", store.status], ["Currency", store.currency ? `${store.currency} (${store.currencySymbol || getCurrencySymbol(store.currency)})` : "—"],
     ]} />
-    <SummaryFields title="Contact & Location" items={[
+    <SummaryFields title="Contact & Location" subtitle="Contact details and the store's physical location." items={[
       ["Phone", store.phone], ["Email", store.email || store.storeEmail], ["Website", store.url],
+      ["Country", store.country || address.country], ["State / Province", store.state || address.state],
+      ["City", store.city || address.city],
       ["Address", store.addressLine1 || address.street || address.addressLine1 || (typeof store.address === "string" ? store.address : "")],
       ["Address Line 2", store.addressLine2 || address.addressLine2],
-      ["City", store.city || address.city], ["State / Province", store.state || address.state],
-      ["Country", store.country || address.country], ["Postal Code", store.zip || store.postalCode || address.zipCode || address.postalCode],
+      ["Zip / Postal Code", store.zip || store.postalCode || address.zipCode || address.postalCode],
     ]} />
-    <section className="store-overview-card"><h2>Operating Hours</h2>
+    <section className="store-overview-card">
+      <StoreOverviewCardHeading title="Operating Hours" subtitle="View the store's weekly opening times and shifts." />
       <div className="store-overview-table"><table>
         <thead><tr>{["Day", "Status", "Open", "Close", "Shifts"].map(label => <th key={label}>{label}</th>)}</tr></thead>
         <tbody>{Array.isArray(hours) && hours.length ? hours.map((row, index) => <tr key={row.day || index}>
@@ -184,14 +224,17 @@ function StoreSubscriptionSummary({ merchantId }) {
   }, [merchantId, attempt]);
   if (loading) return <p role="status">Loading subscription…</p>;
   if (error) return <div className="alert alert-danger" role="alert">{error} <button type="button" className="btn btn-secondary" onClick={() => setAttempt(value => value + 1)}>Retry</button></div>;
-  if (!subscription) return <section className="store-overview-card"><h2>Subscription</h2><p className="store-overview-empty">No active subscription found.</p></section>;
+  if (!subscription) return <section className="store-overview-card">
+    <StoreOverviewCardHeading title="Subscription" subtitle="Plan and billing details for this store." />
+    <p className="store-overview-empty">No active subscription found.</p>
+  </section>;
   const plan = subscription.plan || subscription.subscriptionPlan || {};
-  return <SummaryFields title="Subscription" items={[
+  return <SummaryFields title="Subscription" subtitle="Plan and billing details for this store." items={[
     ["Plan", subscription.planName || plan.name || (typeof plan === "string" ? plan : "")],
-    ["Status", subscription.status], ["Billing", subscription.billingCycle || subscription.billingPeriod || plan.billingCycle],
+    ["Status", subscription.status], ["Billing Cycle", subscription.billingCycle || subscription.billingPeriod || plan.billingCycle],
     ["Price", subscription.price ?? subscription.amount ?? plan.price], ["Currency", subscription.currency || plan.currency],
     ["Start Date", subscription.startDate || subscription.startsAt],
-    ["Renewal / End Date", subscription.renewalDate || subscription.endDate || subscription.expiresAt],
+    ["End Date", subscription.renewalDate || subscription.endDate || subscription.expiresAt],
     ["Store Limit", subscription.storeLimit ?? subscription.locationLimit ?? plan.includedStores ?? plan.included_stores],
   ]} />;
 }
@@ -239,6 +282,9 @@ export default function StoreConfiguration() {
   const [merchant, setMerchant] = useState(null);
   const [storeResponse, setStoreResponse] = useState(null);
   const [store, setStore] = useState(null);
+  const updateStoreCurrency = (currency, currencySymbol = getCurrencySymbol(currency)) => {
+    if (currency) setStore((current) => current ? { ...current, currency, currencySymbol } : current);
+  };
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -272,14 +318,9 @@ export default function StoreConfiguration() {
   }, [section]);
   const [openGroups, setOpenGroups] = useState(() => new Set([activeGroupId]));
 
-  /*
-   * Keep the active section's group open without collapsing other groups.
-   */
+  /* Keep the active section's group open and collapse other groups. */
   useLayoutEffect(() => {
-    setOpenGroups((current) => {
-      if (current.has(activeGroupId)) return current;
-      return new Set([...current, activeGroupId]);
-    });
+    setOpenGroups(new Set([activeGroupId]));
   }, [activeGroupId]);
 
   /* =======================================================
@@ -335,6 +376,19 @@ export default function StoreConfiguration() {
       cancelled = true;
     };
   }, [merchantId, storeId, revision]);
+
+  useEffect(() => {
+    if (!store?.uuid) return undefined;
+    let active = true;
+    getPosCurrencyTax(store.uuid)
+      .then((settings) => {
+        if (active && settings?.currency) {
+          updateStoreCurrency(settings.currency, settings.currencySymbol || getCurrencySymbol(settings.currency));
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [store?.uuid]);
 
   /* =======================================================
      LOAD WORDPRESS CONNECTOR
@@ -487,20 +541,40 @@ export default function StoreConfiguration() {
     "Categories, attributes, and tags synced.",
   );
 
+  const handleSyncDiscounts = async () => {
+    if (syncing || saving || !connected) return;
+    setSyncing(true);
+    setMessage("");
+    setSyncProgress({ label: "Syncing Discounts", percent: 0 });
+    try {
+      const response = await syncWordpressDiscounts(storeId);
+      if (response?.success === false || ["error", "failed"].includes(String(response?.status || "").toLowerCase())) {
+        throw new Error(response.message || "Unable to sync discounts.");
+      }
+      setSyncProgress({ label: "Sync complete", percent: 100 });
+      setMessage(response?.message || "Discounts synced successfully.");
+    } catch (err) {
+      setMessage(err?.message || "Unable to sync discounts.");
+      setSyncProgress(null);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   /* =======================================================
      BACK TO STORES
      ======================================================= */
 
   const backToStores = () => {
+    if (merchantId) {
+      nav("/merchants", { replace: true });
+      return;
+    }
     if (location.state?.returnTo) {
       nav(location.state.returnTo);
       return;
     }
-    if (merchantId) {
-      nav(`/merchants?view=${encodeURIComponent(merchantId)}&tab=stores`);
-    } else {
-      nav("/stores");
-    }
+    nav("/stores");
   };
 
   const statusClass = useMemo(
@@ -542,7 +616,6 @@ export default function StoreConfiguration() {
           <span>/</span><span>Store Details &amp; Configuration</span><span>/</span><span>Employee Attendance</span><span>/</span><strong>View Details</strong>
         </> : <>
           <button className="link-button" onClick={backToStores}><i className="bi bi-arrow-left" />Stores</button>
-          <span>/</span><strong>Store Details &amp; Configuration</strong>
         </>}
 
       </header>
@@ -580,6 +653,7 @@ export default function StoreConfiguration() {
               {navGroups.map((group) => {
 
                 const isCollapsible = group.collapsible !== false;
+                const isActive = group.items.some(([id]) => id === section);
                 const isOpen =
                   !isCollapsible || openGroups.has(group.id);
 
@@ -597,12 +671,11 @@ export default function StoreConfiguration() {
                       type="button"
                       className={`store-subnav-group-header ${
                         isOpen ? "open" : ""
-                      }`}
+                      } ${isActive ? "active" : ""}`}
                       onClick={() => setOpenGroups((current) => {
-                        const next = new Set(current);
-                        if (next.has(group.id)) next.delete(group.id);
-                        else next.add(group.id);
-                        return next;
+                        return current.has(group.id)
+                          ? new Set()
+                          : new Set([group.id]);
                       })}
                       aria-expanded={isOpen}
                     >
@@ -698,6 +771,10 @@ export default function StoreConfiguration() {
                   =========================================== */}
 
               <div className="store-workspace-card">
+              {sectionIntro[section] && !sectionsWithPageHeading.has(section) && <header className="store-section-intro">
+                <h2>{sectionIntro[section][0]}</h2>
+                <p>{sectionIntro[section][1]}</p>
+              </header>}
               {section === "attendance" && attendanceDetailRecord ? (
                 <AttendanceDetails record={attendanceDetailRecord} store={store} onBack={() => setAttendanceDetailRecord(null)} />
               ) : section === "details" ? (
@@ -717,6 +794,7 @@ export default function StoreConfiguration() {
                       {connected && <>
                         <button type="button" className="sf-outline" onClick={handleSyncCategories} disabled={syncing || saving}>Sync Category</button>
                         <button type="button" className="sf-outline" onClick={handleSyncProducts} disabled={syncing || saving}>Sync Product</button>
+                        <button type="button" className="sf-outline" onClick={handleSyncDiscounts} disabled={syncing || saving}>Sync Discount</button>
                       </>}
                       {!editingSection && <button type="button" className="store-config-btn" onClick={() => {restoreConnection();setEditingSection(true);}}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
                     </div>
@@ -740,7 +818,7 @@ export default function StoreConfiguration() {
                         </label>
                         <div className="store-form-actions">
                           <button type="button" className="sf-outline" onClick={() => {restoreConnection();setEditingSection(false);}}>Cancel</button>
-                          <button type="submit" className="store-config-btn">{saving ? "Saving…" : "Save Changes"}</button>
+                          <button type="submit" className="store-config-btn">{saving ? "Saving…" : "Update Changes"}</button>
                         </div>
                       </fieldset>
                     </form>
@@ -763,6 +841,7 @@ export default function StoreConfiguration() {
                   merchantId={merchant?.id || merchant?.merchantId || merchant?.merchant_id || store?.merchantId || store?.merchant_id || store?.merchant?.id || merchantId}
                   storeId={store?.uuid || ""}
                   store={store}
+                  onCurrencyChange={updateStoreCurrency}
                   embedded
                 />
 
@@ -801,6 +880,8 @@ export default function StoreConfiguration() {
                 <MerchantVendors
                   storeId={store?.uuid || storeId}
                   merchantId={merchant?.id || merchant?.merchantId || merchant?.merchant_id || store?.merchantId || store?.merchant_id || store?.merchant?.id || merchantId}
+                  currency={store?.currency}
+                  currencySymbol={store?.currencySymbol}
                 />
 
               ) : section === "vendorhistory" ? (

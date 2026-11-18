@@ -74,8 +74,8 @@
   height: 25px;
   padding: 0 10px;
   border-radius: 14px;
-  color: #00a762;
-  background: #ddf8e9;
+  color: #047857;
+  background: #ecfdf5;
   font-size: 11px;
   font-weight: 600;
 }
@@ -220,12 +220,16 @@
 }
 
 .plan-details-status {
-  color: #00a762 !important;
+  color: #00a870 !important;
+  border-color: #d5e0ed !important;
+  background: #f8fafc !important;
   font-weight: 600 !important;
 }
 
 .plan-details-status-inactive {
   color: #e5455d !important;
+  border-color: #d5e0ed !important;
+  background: #f8fafc !important;
   font-weight: 600 !important;
 }
 

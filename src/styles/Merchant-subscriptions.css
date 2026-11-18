@@ -275,7 +275,7 @@
 }
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .positive {
 
-  color: var(--green);
+  color:#5143bc;
 
 }
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .negative {
@@ -286,6 +286,12 @@
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .warning {
 
   color: var(--orange);
+
+}
+
+:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .success {
+
+  color:#00ad78;
 
 }
 /* ========================================
@@ -473,8 +479,9 @@
 }:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscription-table-card td {
 
   height: 52px;
-  color: #234d88;
+  color: #10264d;
   font-size: 13px;
+  font-weight: 600;
   line-height: 18px;
   padding: 10px 14px;
   border-bottom: 1px solid #e4e8ef;
@@ -518,7 +525,8 @@
 
   display: block;
   color: #8199bd;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 450;
 
 }
 
@@ -531,16 +539,17 @@
 
 .subscription-merchant-cell strong {
   display: block;
-  color: #344057;
+  color: #10264d;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .subscription-merchant-cell small {
   display: block;
   font-size: 12px;
-  color: #979eac;
+  color: #5f728e; 
   margin-top: 3px;
+  font-weight: 400;
 }
 
 /* ========================================
@@ -953,7 +962,7 @@
 }:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-plan-btn:hover {
 
   border-color: var(--primary);
-  background: #f3f7ff;
+  background: #f5f3ff;
 
 }:is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .select-plan-btn.chosen {
 
@@ -1342,7 +1351,7 @@
 
 }}
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
 
   .merchant-subscriptions-page,
 
@@ -1354,7 +1363,7 @@
 
   :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .subscriptions-heading-row {
 
-    flex-direction: column;
+    flex-direction: row;
 
   }
 
@@ -1994,8 +2003,8 @@
 
   margin: 0 0 6px;
   color: #081b3a;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   line-height: 1.2;
 
 }.subscription-details-redesign .subscription-details-heading .flow-subtitle {
@@ -2519,7 +2528,7 @@
 
 ======================================== */.merchant-subscriptions-page .subscriptions-heading-row {
 
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 12px;
 
 }.merchant-subscriptions-page .subscriptions-heading-row h1 {
@@ -2615,7 +2624,7 @@
 
 }.merchant-subscriptions-page .subscription-overview-refined .overview-card small {
 
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
 
 }.merchant-subscriptions-page .overview-meta {
@@ -2867,7 +2876,7 @@
    CHOOSE SUBSCRIPTION PLAN — LATEST UI
    UI-only overrides; API/flow logic unchanged
 ======================================== */.choose-plan-redesign { max-width:none; width:100%; margin:0; padding:0 0 28px; background:#f7f9fd; }.choose-plan-back-strip { min-height:64px; display:flex; align-items:center; padding:0 28px; background:#fff; border-bottom:1px solid #e3e9f3; }.choose-plan-redesign .choose-plan-back-strip .page-back { margin:0; color:#5143bc; font-size:14px; font-weight:600; }.choose-plan-layout { display:grid; grid-template-columns:280px minmax(0,1fr); min-height:calc(100vh - 140px); }.subscription-stepper { position:relative; padding:18px 14px 24px; background:#fff; border-right:1px solid #e1e8f2; }.subscription-stepper::before { content:""; position:absolute; left:43px; top:48px; bottom:calc(100% - 310px); width:1px; background:#d8e2f0; }.subscription-step { position:relative; z-index:1; display:grid; grid-template-columns:42px minmax(0,1fr); gap:12px; align-items:start; min-height:86px; padding:10px 10px; border-radius:8px; }.subscription-step.active { border: 1px solid #c4b9ff; border-radius: 9px; background: #e7e1ff; color: #5143bc; }.step-number { display:flex; align-items:center; justify-content:center; width:38px; height:38px; border:2px solid #c9d6e8; border-radius:50%; background:#fff; color:#173d73; font-weight:700; }.subscription-step.active .step-number { border-color: #5937e8; background: #5937e8; color: #fff; }.subscription-step strong { display:block; margin:6px 0 5px; color:#0b1c39; font-size:14px; line-height:1.25; }.subscription-step.active strong { color: #5143bc; font-weight: 700; }
-.subscription-step.active p { color: #8994aa; }.subscription-step p { margin:0; color:#5774a7; font-size:12px; line-height:1.4; }.choose-plan-main { min-width:0; padding:22px 20px 28px; }.choose-plan-heading h1 { margin:0 0 4px; color:#08182f; font-size:30px; font-weight:600; line-height:1.2; letter-spacing: -.035em; }.choose-plan-redesign .choose-plan-heading .flow-subtitle { margin:0 0 16px; color:#4f6796; font-size:15px; }.choose-plan-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:0; align-items:stretch; }.choose-plan-card { min-height:530px; padding:20px 18px 18px; border-color:#dbe4f0; border-radius:8px; box-shadow:0 2px 8px rgba(24,48,84,.025); }.choose-plan-card.selected,.choose-plan-card.current { padding:19px 17px 17px; border:2px solid #5143bc; box-shadow:0 2px 10px rgba(8,113,255,.08); }.choose-plan-card-top { display:flex; align-items:flex-start; justify-content:space-between; min-height:58px; }.plan-visual-icon { display:flex; align-items:center; justify-content:center; width:58px; height:58px; border-radius:10px; color:#5143bc; background:#f5f3ff; }.plan-tone-1 .plan-visual-icon { color:#5143bc; background:#f4ebff; }.plan-tone-2 .plan-visual-icon { color:#ff7900; background:#fff0e3; }.choose-plan-card .current-plan-badge { position:static; margin-top:2px; padding:7px 10px; border-radius:7px; background:#e6f3ff; color:#0871ef; font-size:11px; }.choose-plan-card .plan-card-header { min-height:auto; margin-top:14px; }.choose-plan-card .plan-card-header h3 { margin:0 0 5px; color:#07182f; font-size:20px; font-weight:700; }.choose-plan-card .plan-card-header p { min-height:38px; margin:0; color:#4e6da3; font-size:13px; line-height:1.45; }.choose-plan-card .plan-divider { margin:14px 0 16px; background:#dbe4f0; }.choose-plan-card .plan-price { margin:0; color:#06162f; font-size:30px; line-height:1.1; }.choose-plan-card .plan-price span { color:#506b9c; font-size:13px; }.choose-plan-card .plan-yearly { margin-top:7px; color:#506b9c; font-size:13px; }.plan-capacity-row { display:grid; grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:10px; align-items:center; margin:18px 0 14px; padding:10px 12px; border-radius:8px; background:#f5f9fe; }.plan-capacity-divider { width:1px; height:42px; background:#dce6f2; }.plan-capacity-item { display:flex; align-items:center; gap:9px; min-width:0; }.capacity-icon { display:flex; align-items:center; justify-content:center; flex:0 0 34px; width:34px; height:34px; border-radius:7px; color:#5143bc; background:#e7f3ff; }.plan-tone-1 .capacity-icon { color:#5143bc; background:#f1e8ff; }.plan-tone-2 .capacity-icon { color:#ff7900; background:#fff0e3; }.plan-capacity-item strong,.plan-capacity-item small { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.plan-capacity-item strong { margin-bottom:3px; color:#385582; font-size:12px; font-weight:500; }.plan-capacity-item small { color:#3f5d8d; font-size:10px; }.choose-plan-card .choose-plan-features { margin:2px 0 16px; }.choose-plan-card .choose-plan-features li { padding:6px 0; color:#122a4e; font-size:13px; }.choose-plan-card .choose-plan-features li svg { color:#00ad78; }.choose-plan-card .select-plan-btn { min-height:48px; margin-top:auto; padding:11px; border-color:#cfdbea; border-radius:7px; color:#07182f; background:#fff; font-size:13px; }.choose-plan-card .select-plan-btn:disabled { background:#edf6ff; color:#77aaff; border-color:#e2efff; }.choose-plan-card .select-plan-btn.chosen:not(:disabled) { background:#f5f3ff; color:#5143bc; border-color:#9fc5ff; }.choose-plan-info-banner { margin:18px 0 0; padding:14px 18px; border-radius:8px; background:#eaf5ff; color:#173f79; }.choose-plan-info-banner strong { color:#123d79; }.choose-plan-info-banner p { margin-top:4px; }.choose-plan-actions { margin-top:14px; }.choose-plan-actions .primary-flow-button {
+.subscription-step.active p { color: #8994aa; }.subscription-step p { margin:0; color:#5774a7; font-size:12px; line-height:1.4; }.choose-plan-main { min-width:0; padding:22px 20px 28px; }.choose-plan-heading h1 { margin:0 0 4px; color:#08182f; font-size:30px; font-weight:600; line-height:1.2; letter-spacing: -.035em; }.choose-plan-redesign .choose-plan-heading .flow-subtitle { margin:0 0 16px; color:#4f6796; font-size:15px; }.choose-plan-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:0; align-items:stretch; }.choose-plan-card { min-height:530px; padding:20px 18px 18px; border-color:#dbe4f0; border-radius:8px; box-shadow:0 2px 8px rgba(24,48,84,.025); }.choose-plan-card.selected,.choose-plan-card.current { padding:19px 17px 17px; border:2px solid #5143bc; box-shadow:0 2px 10px rgba(8,113,255,.08); }.choose-plan-card-top { display:flex; align-items:flex-start; justify-content:space-between; min-height:58px; }.plan-visual-icon { display:flex; align-items:center; justify-content:center; width:58px; height:58px; border-radius:10px; color:#5143bc; background:#f5f3ff; }.plan-tone-1 .plan-visual-icon { color:#5143bc; background:#f4ebff; }.plan-tone-2 .plan-visual-icon { color:#ff7900; background:#fff0e3; }.choose-plan-card .current-plan-badge { position:static; margin-top:2px; padding:7px 10px; border-radius:7px; background:#e6f3ff; color:#0871ef; font-size:11px; }.choose-plan-card .plan-card-header { min-height:auto; margin-top:14px; }.choose-plan-card .plan-card-header h3 { margin:0 0 5px; color:#07182f; font-size:20px; font-weight:700; }.choose-plan-card .plan-card-header p { min-height:38px; margin:0; color:#4e6da3; font-size:13px; line-height:1.45; }.choose-plan-card .plan-divider { margin:14px 0 16px; background:#dbe4f0; }.choose-plan-card .plan-price { margin:0; color:#06162f; font-size:30px; line-height:1.1; }.choose-plan-card .plan-price span { color:#506b9c; font-size:13px; }.choose-plan-card .plan-yearly { margin-top:7px; color:#506b9c; font-size:13px; }.plan-capacity-row { display:grid; grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:10px; align-items:center; margin:18px 0 14px; padding:10px 12px; border-radius:8px; background:#f5f9fe; }.plan-capacity-divider { width:1px; height:42px; background:#dce6f2; }.plan-capacity-item { display:flex; align-items:center; gap:9px; min-width:0; }.capacity-icon { display:flex; align-items:center; justify-content:center; flex:0 0 34px; width:34px; height:34px; border-radius:7px; color:#5143bc; background:#e7f3ff; }.plan-tone-1 .capacity-icon { color:#5143bc; background:#f1e8ff; }.plan-tone-2 .capacity-icon { color:#ff7900; background:#fff0e3; }.plan-capacity-item strong,.plan-capacity-item small { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.plan-capacity-item strong { margin-bottom:3px; color:#385582; font-size:12px; font-weight:500; }.plan-capacity-item small { color:#3f5d8d; font-size:10px; }.choose-plan-card .choose-plan-features { margin:2px 0 16px; }.choose-plan-card .choose-plan-features li { padding:6px 0; color:#122a4e; font-size:13px; }.choose-plan-card .choose-plan-features li svg { color:#00ad78; }.choose-plan-card .select-plan-btn { min-height:48px; margin-top:auto; padding:11px; border-color:#c4b9ff; border-radius:7px; color:#5143bc; background:#fff; font-size:13px; }.choose-plan-card .select-plan-btn:disabled { background:#f1edff; color:#5143bc; border-color:#c4b9ff; }.choose-plan-card .select-plan-btn.chosen:not(:disabled) { background:#5143bc; color:#fff; border-color:#5143bc; }.choose-plan-info-banner { margin:18px 0 0; padding:14px 18px; border-radius:8px; background:#eaf5ff; color:#173f79; }.choose-plan-info-banner strong { color:#123d79; }.choose-plan-info-banner p { margin-top:4px; }.choose-plan-actions { margin-top:14px; }.choose-plan-actions .primary-flow-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3851,7 +3860,8 @@
 }/* Keep card inner dimensions stable when the current card loses the selection border. */.choose-plan-redesign .choose-plan-grid:has(.choose-plan-card.selected:not(.current))
   .choose-plan-card.current:not(.selected) {
   padding: 20px 18px 18px;
-}/* 3) Stores / Devices: stacked rows for clear dynamic limits. */.choose-plan-redesign .capacity-icon {
+}
+/* 3) Stores / Devices: stacked rows for clear dynamic limits. */.choose-plan-redesign .capacity-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4538,7 +4548,7 @@
 }.payment-page-redesign .payment-total {
   margin: 10px -4px -4px;
   padding: 12px;
-  background: #f3f8ff;
+  background: #f5f3ff;
   border: 0;
   border-radius: 7px;
 }.payment-page-redesign .payment-total strong {
@@ -5309,6 +5319,7 @@
   justify-content: center;
   gap: 8px;
   min-height: 40px;
+  min-width: 106px;
   padding: 10px 16px;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -5327,9 +5338,9 @@
   background: #40339e;
 }
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .btn-secondary {
-  border-color: #d7e1ef;
-  background: #fff;
-  color: #25436e;
+  border-color: #5143bc;
+  background: #f7f9fd;
+  color: #5143bc;
 }
 :is(.merchant-subscriptions-page, .subscription-flow-page, .subscription-page) .btn-secondary:hover:not(:disabled) {
   border-color: #aebdd2;
@@ -5422,6 +5433,103 @@
    Global selectors are intentional: the dialog may render
    outside .merchant-subscriptions-page (e.g. via a portal).
 ========================================================= */
+.subscription-create-screen .subscription-create-form {
+  width: 100%;
+  padding: 24px 28px;
+  border: 1px solid #e4eaf3;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 14px rgba(20, 42, 78, .04);
+  color: #172b4d;
+}
+
+.subscription-create-screen .subscription-create-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 20px 28px;
+}
+
+.subscription-create-screen .subscription-create-form .form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  color: #344563;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.subscription-create-screen .subscription-create-form .form-group input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #172b4d;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  outline: none;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.subscription-create-screen .subscription-create-form .form-group input:focus {
+  border-color: #6558cf;
+  box-shadow: 0 0 0 3px rgba(81, 67, 188, .13);
+}
+
+.subscription-create-screen .subscription-create-form .form-group input[readonly] {
+  background: #f4f6fa;
+  color: #66758c;
+  cursor: not-allowed;
+}
+
+.subscription-create-screen .subscription-create-form .form-group .pch-filter-dropdown {
+  width: 100%;
+}
+
+.subscription-create-screen .subscription-create-form .form-group .pch-filter-sizing {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  height: 42px;
+  padding: 9px 32px 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #172b4d;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.subscription-create-screen .subscription-create-form .form-group .pch-filter-dropdown .pch-filter-trigger {
+  min-height: 42px;
+  height: 42px;
+  font-size: 14px;
+}
+
+.subscription-create-screen .subscription-create-form .form-actions {
+  margin-top: 28px !important;
+  padding-top: 20px;
+  border-top: 1px solid #edf0f5;
+}
+
+.subscription-create-screen .subscription-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 [role="dialog"][aria-labelledby="subscription-crud-title"] {
   box-sizing: border-box;
   background: rgba(15, 23, 42, .48) !important;
@@ -5444,9 +5552,9 @@
 
 [role="dialog"][aria-labelledby="subscription-crud-title"] h2 {
   color: #142746;
-  font-size: 30px;
-  font-weight: 650;
-  line-height: 1.2;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
   letter-spacing: -.025em;
 }
 
@@ -5584,6 +5692,33 @@
 }
 
 @media (max-width: 680px) {
+  .subscription-create-screen .subscription-create-form {
+    padding: 20px 16px;
+  }
+
+  .subscription-create-screen .subscription-create-form .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .subscription-create-screen .subscription-create-form .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .subscription-create-screen .subscription-create-form .form-actions .btn {
+    width: 100%;
+  }
+
+  .subscription-create-screen .subscription-create-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .subscription-create-screen .subscription-create-actions .btn {
+    width: 100%;
+  }
+
   [role="dialog"][aria-labelledby="subscription-crud-title"] {
     align-items: flex-start !important;
     overflow-y: auto;
@@ -5667,7 +5802,7 @@
 }
 .merchant-subscriptions-page .subscription-overview-refined .overview-card small {
   margin-top: 2px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
   line-height: 14px;
 }
@@ -5935,4 +6070,270 @@
   justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
+}
+/* Custom date range picker in the subscriptions list */
+.subscription-filter-anchor {
+  position: relative;
+  z-index: 5;
+}
+
+.subscription-table-card:has(.subscription-custom-range) {
+  overflow: visible;
+}
+
+.subscription-custom-range {
+  position: absolute;
+  top: calc(100% - 4px);
+  left: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: end;
+  flex-wrap: nowrap;
+  gap: 12px;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: calc(100vw - 380px);
+  padding: 14px;
+  border: 1px solid #d7e1ef;
+  border-radius: 10px;
+  background: #f8f7ff;
+  box-shadow: 0 10px 28px rgba(31, 41, 75, .16);
+}
+
+.subscription-custom-range label {
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 170px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.subscription-custom-range input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 42px;
+  padding: 0 10px;
+  border: 1px solid #d7e1ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  color-scheme: light;
+  font: inherit;
+  font-weight: 400;
+}
+
+.subscription-custom-range input:focus {
+  outline: none;
+  border-color: #5143bc;
+  box-shadow: 0 0 0 3px rgba(81, 67, 188, .12);
+}
+
+.subscription-custom-range > button {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.subscription-range-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: end;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.subscription-range-actions button {
+  flex: 0 0 auto;
+  height: 42px;
+  padding: 0 15px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.subscription-custom-range .subscription-range-apply {
+  border: 1px solid #5143bc;
+  background: #5143bc;
+  color: #fff;
+}
+
+.subscription-custom-range .subscription-range-clear {
+  border: 1px solid #d7e1ef;
+  background: #fff;
+  color: #475467;
+}
+
+.subscription-custom-range > p {
+  flex-basis: 100%;
+  margin: 0;
+  color: #b42318;
+  font-size: 12px;
+}
+
+.subscription-date-field {
+  display: flex;
+  flex: 0 0 190px;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.subscription-date-picker {
+  position: relative;
+}
+
+.subscription-date-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d7e1ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #52617a;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.subscription-date-trigger:hover,
+.subscription-date-trigger[aria-expanded="true"] {
+  border-color: #a8a0df;
+}
+
+.subscription-date-trigger svg {
+  color: #65748b;
+}
+
+.subscription-calendar-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 280px;
+  padding: 12px;
+  border: 1px solid #dfe3f0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(31, 41, 75, .16);
+}
+
+.subscription-calendar-heading,
+.subscription-calendar-heading > div,
+.subscription-calendar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.subscription-calendar-heading {
+  margin-bottom: 10px;
+  color: #24324b;
+  font-size: 14px;
+}
+
+.subscription-calendar-heading > div {
+  gap: 4px;
+}
+
+.subscription-calendar-heading button,
+.subscription-calendar-grid button,
+.subscription-calendar-footer button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.subscription-calendar-heading button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 6px;
+  color: #52617a;
+}
+
+.subscription-calendar-heading button:hover,
+.subscription-calendar-grid button:not(:disabled):hover {
+  background: #f0effa;
+}
+
+.subscription-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.subscription-calendar-weekdays {
+  margin-bottom: 4px;
+  color: #77839a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.subscription-calendar-weekdays span {
+  padding: 5px 0;
+}
+
+.subscription-calendar-grid button {
+  height: 32px;
+  border-radius: 6px;
+  color: #344054;
+  font-size: 12px;
+}
+
+.subscription-calendar-grid button.outside-month {
+  color: #a7afbd;
+}
+
+.subscription-calendar-grid button.selected {
+  background: #5143bc;
+  color: #fff;
+}
+
+.subscription-calendar-grid button:disabled {
+  color: #c6cbd4;
+  cursor: not-allowed;
+}
+
+.subscription-calendar-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eef0f5;
+}
+
+.subscription-calendar-footer button {
+  padding: 5px 4px;
+  color: #5143bc;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .subscription-custom-range {
+    flex-wrap: wrap;
+    max-width: calc(100vw - 48px);
+  }
+
+  .subscription-date-field {
+    flex: 1 1 220px;
+  }
 }

@@ -99,6 +99,13 @@ function DetailField({ label, children, fullWidth = false }) {
         />
       ) : (
         <input
+          className={
+            label === "Status"
+              ? String(children || "").toLowerCase() === "active"
+                ? "plan-details-status"
+                : "plan-details-status-inactive"
+              : undefined
+          }
           value={children || ""}
           readOnly
         />
@@ -197,7 +204,7 @@ export default function FeaturePermissionsOverview() {
           className="fpo-back-button"
           onClick={goBack}
           aria-label="Back to Feature Permissions"
-          title="Back to Feature Permissions"
+          data-tooltip="Back to Feature Permissions"
         >
           <i className="bi bi-arrow-left" />
         </button>
@@ -255,7 +262,6 @@ export default function FeaturePermissionsOverview() {
 
               <div>
                 <h2>Permission Details</h2>
-                <p>View permission details.</p>
               </div>
             </div>
 
@@ -299,4 +305,3 @@ export default function FeaturePermissionsOverview() {
     </section>
   );
 }
-

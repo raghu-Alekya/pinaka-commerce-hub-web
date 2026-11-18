@@ -464,7 +464,7 @@ export default function MerchantTenders({
       setModal(null);
       setSnackbar(`${removedTender?.name || "Tender"} was Inactive.`);
       window.clearTimeout(snackbarTimer.current);
-      snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 3000);
+      snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 1800);
     } catch (e) {
       console.error("Failed to remove merchant tendor:", e);
 
@@ -479,10 +479,10 @@ export default function MerchantTenders({
     <div className="merchant-tenders">
       {snackbar && <div className="mt-snackbar" role="status" aria-live="polite">{snackbar}</div>}
       {modal?.type === "select" ? (
-        <section className="mt-card mt-existing-page">
+        <section className="mt-existing-page">
           <header className="mt-existing-heading">
             <div>
-              <h2>Add Tender</h2>
+              <h2>Add Existing Tender</h2>
               <p>Choose one or more tenders to add to this merchant.</p>
             </div>
             <button type="button" disabled={busy} onClick={close}>
@@ -490,105 +490,109 @@ export default function MerchantTenders({
             </button>
           </header>
           <div className="mt-existing-content">
-          {masterLoading && <p role="status">Loading master tenders…</p>}
-          {masterError && <p role="alert" className="mt-error">{masterError}</p>}
-          <FiltersBar
-            className="mt-picker-toolbar"
-            searchValue={search}
-            onSearchChange={(value) => {
-              setSearch(value);
-              setPickerPage(1);
-            }}
-            searchPlaceholder="Search tenders by name or code"
-            searchAriaLabel="Search master tenders"
-            searchDisabled={busy || masterLoading}
-            searchAutoFocus
-            onClear={() => {
-              setSearch("");
-              setPickerPage(1);
-            }}
-            clearLabel="Reset"
-          />
-          <div className="mt-scroll mt-options">
-            <table>
-              <thead>
-                <tr>
-                  <th>Select</th>
-                  <th>Tender Code</th>
-                  <th>Tender Name</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pickerRows.map((tender) => (
-                  <tr
-                    key={tender.id}
-                    className={active(tender) ? "mt-selectable-row" : ""}
-                    onClick={(event) => {
-                      if (event.target.closest("input,button,a,select")) return;
-                      if (!busy && active(tender)) toggleSelection(setSelection, tender.id);
-                    }}
-                  >
-                    <td>
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${tender.name}`}
-                        disabled={busy || !active(tender)}
-                        checked={selection.includes(tender.id)}
-                        onChange={() => toggleSelection(setSelection, tender.id)}
-                      />
-                    </td>
-                    <td>{tender.code}</td>
-                    <td>
-                      <strong>{tender.name}</strong>
-                    </td>
-                    <td>{badge(tender)}</td>
-                  </tr>
-                ))}
-                {!available.length && !masterLoading && (
-                  <tr>
-                    <td colSpan={4}>No unassigned tenders found in master data.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <Pagination
-            currentPage={currentPickerPage}
-            totalPages={pickerPages}
-            totalItems={available.length}
-            pageSize={pickerPageSize}
-            onPageChange={setPickerPage}
-            onPageSizeChange={(size) => {
-              setPickerPageSize(size);
-              setPickerPage(1);
-            }}
-            itemLabel="tenders"
-            showWhenEmpty={true}
-          />
-          {saveError && <p role="alert" className="mt-error">{saveError}</p>}
+            <div className="mt-existing-selection-card">
+              {masterLoading && <p role="status">Loading master tenders…</p>}
+              {masterError && <p role="alert" className="mt-error">{masterError}</p>}
+              <FiltersBar
+                className="mt-picker-toolbar"
+                searchValue={search}
+                onSearchChange={(value) => {
+                  setSearch(value);
+                  setPickerPage(1);
+                }}
+                searchPlaceholder="Search tenders by name or code"
+                searchAriaLabel="Search master tenders"
+                searchDisabled={busy || masterLoading}
+                searchAutoFocus
+                onClear={() => {
+                  setSearch("");
+                  setPickerPage(1);
+                }}
+                clearLabel="Reset"
+              />
+              <div className="mt-scroll mt-options">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Select</th>
+                      <th>Tender Code</th>
+                      <th>Tender Name</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pickerRows.map((tender) => (
+                      <tr
+                        key={tender.id}
+                        className={active(tender) ? "mt-selectable-row" : ""}
+                        onClick={(event) => {
+                          if (event.target.closest("input,button,a,select")) return;
+                          if (!busy && active(tender)) toggleSelection(setSelection, tender.id);
+                        }}
+                      >
+                        <td>
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${tender.name}`}
+                            disabled={busy || !active(tender)}
+                            checked={selection.includes(tender.id)}
+                            onChange={() => toggleSelection(setSelection, tender.id)}
+                          />
+                        </td>
+                        <td>{tender.code}</td>
+                        <td>
+                          <strong>{tender.name}</strong>
+                        </td>
+                        <td>{badge(tender)}</td>
+                      </tr>
+                    ))}
+                    {!available.length && !masterLoading && (
+                      <tr>
+                        <td colSpan={4}>No unassigned tenders found in master data.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination
+                currentPage={currentPickerPage}
+                totalPages={pickerPages}
+                totalItems={available.length}
+                pageSize={pickerPageSize}
+                onPageChange={setPickerPage}
+                onPageSizeChange={(size) => {
+                  setPickerPageSize(size);
+                  setPickerPage(1);
+                }}
+                itemLabel="tenders"
+                showWhenEmpty={true}
+              />
+              {saveError && <p role="alert" className="mt-error">{saveError}</p>}
+            </div>
           </div>
           <footer className="mt-existing-footer">
-            <button type="button" disabled={busy} onClick={close}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="mt-primary"
-              disabled={busy || !selection.length || masterLoading}
-              onClick={() =>
-                save([
-                  ...new Set([
-                    ...ids,
-                    ...selection.filter((id) =>
-                      tenders.some((value) => value.id === id && active(value))
-                    ),
-                  ]),
-                ])
-              }
-            >
-              {busy ? "Saving…" : "Add Selected"}
-            </button>
+            <div className="mt-existing-actions">
+              <button type="button" disabled={busy} onClick={close}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="mt-primary"
+                disabled={busy || !selection.length || masterLoading}
+                onClick={() =>
+                  save([
+                    ...new Set([
+                      ...ids,
+                      ...selection.filter((id) =>
+                        tenders.some((value) => value.id === id && active(value))
+                      ),
+                    ]),
+                  ])
+                }
+              >
+                {busy ? "Saving…" : "Add Selected"}
+              </button>
+            </div>
           </footer>
         </section>
       ) : (

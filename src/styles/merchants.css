@@ -749,7 +749,7 @@ a {
 }
 
 .positive {
-    color: #35a467;
+    color: #674ed9;
 }
 
 .negative {
@@ -961,11 +961,16 @@ a {
     min-height: 52px;
     padding: 10px 14px;
     border-bottom: 1px solid #f1f2f5;
-    color: #697285;
+    color: #10264d;
     font-size: 13px;
     vertical-align: middle;
     white-space: nowrap;
 
+}
+
+.merchant-table tbody td.merchant-empty-cell {
+    padding: 40px;
+    text-align: center!important;
 }
 
 .merchant-table tbody tr:last-child td {
@@ -1042,7 +1047,7 @@ a {
 
 .merchant-name small {
     font-size: 12px;
-    color: #9aa1ae;
+    color: #5f728e;
     margin-top: 2px;
 }
 
@@ -1060,15 +1065,15 @@ a {
 .contact-info strong {
     font-size: 12px;
 
-    color: #596276;
+    color: #10264d ;
 
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .contact-info span {
     font-size: 12px;
 
-    color: #9aa1ae;
+    color: #5f728e;
 
     margin-top: 3px;
 }
@@ -1085,9 +1090,9 @@ a {
 .merchant-table td:nth-child(3) strong {
     display: block;
 
-    color: #364159;
+    color: #10264d;
 
-    font-size: 12px;
+    font-size: 13px;
 
     font-weight: 600;
 }
@@ -1113,14 +1118,14 @@ a {
 }
 
 .plan-info strong {
-    font-size: 12px;
-    color: #3f4a60;
+    font-size: 13px;
+    color: #10264d;
     font-weight: 600;
 }
 
 .plan-info span {
-    font-size: 12px;
-    color: #9aa1ae;
+    font-size: 13px;
+    color: #5f728e;
     margin-top: 3px;
 }
 
@@ -1205,6 +1210,16 @@ a {
 }
 
 .status.inactive i {
+    background-color: #b91c1c !important;
+    color: #b91c1c !important;
+}
+
+.status.expired {
+    color: #b91c1c !important;
+    background-color: #fee2e2 !important;
+}
+
+.status.expired i {
     background-color: #b91c1c !important;
     color: #b91c1c !important;
 }
@@ -1600,6 +1615,8 @@ dialog.merchant-delete-dialog::backdrop {
 .page-content:has(> .merchant-table-card) > .stats-grid {
   --bs-gutter-x: 10px;
   --bs-gutter-y: 10px;
+  margin-right: 0;
+  margin-left: 0;
   margin-bottom: 16px;
 }
 .page-content:has(> .merchant-table-card) .stat-card {
@@ -1640,9 +1657,14 @@ dialog.merchant-delete-dialog::backdrop {
 }
 .page-content:has(> .merchant-table-card) .stat-content>small {
   margin-top: 2px;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 14px;
 }
+.page-content:has(> .merchant-table-card) .merchant-stat-change.purple { color: #674ed9; }
+.page-content:has(> .merchant-table-card) .merchant-stat-change.green { color: #2eaa62; }
+.page-content:has(> .merchant-table-card) .merchant-stat-change.orange { color: #e99b2b; }
+.page-content:has(> .merchant-table-card) .merchant-stat-change.blue { color: #4185dd; }
+.page-content:has(> .merchant-table-card) .merchant-stat-change.red { color: #df5c66; }
 .page-content:has(> .merchant-table-card) .stat-content small i {
   font-size: 10px;
 }
@@ -1869,6 +1891,13 @@ dialog.merchant-delete-dialog::backdrop {
   font-size: 12px;
   font-weight: 600;
 }
+
+.mel td span {
+  font-weight: 500;
+  color: #102d59;
+  font-size: 13px;
+}
+
 .mel td small {
   display: block;
   color: #81899a;
@@ -2136,6 +2165,64 @@ dialog.merchant-delete-dialog::backdrop {
     background: #fff;
 }
 
+.merchant-table-card > .table-wrapper > .merchant-table {
+    width: 100%;
+    min-width: 1600px;
+    table-layout: fixed;
+}
+
+.merchant-table-card > .table-wrapper > .merchant-table th,
+.merchant-table-card > .table-wrapper > .merchant-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(1),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) { width: 16%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(2),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(2) { width: 20%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(3),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(3) { width: 9%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(4),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(4) { width: 5%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(5),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(5) { width: 12%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(6),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(6) { width: 8%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(7),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(7),
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(8),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(8) { width: 10%; }
+.merchant-table-card > .table-wrapper > .merchant-table th:nth-child(9),
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(9) { width: 10%; }
+
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) .merchant-name,
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(2) .contact-info {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) .merchant-name > div,
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(2) .contact-info > * {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) .merchant-name > div {
+    flex: 1 1 0;
+}
+
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) .merchant-name strong,
+.merchant-table-card > .table-wrapper > .merchant-table td:nth-child(1) .merchant-name small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .merchant-table-card > .filter-bar {
     border-bottom: 0;
 }
@@ -2324,7 +2411,280 @@ dialog.merchant-delete-dialog::backdrop {
 
 .merchant-timestamp { display: inline-flex; flex-direction: column; gap: 3px; line-height: 1.5; white-space: nowrap; }
 .merchant-timestamp > span { font-size: 12px; font-weight: 600; color: #10264d; }
-.merchant-timestamp small { font-size: 10px; font-weight: 400; color:#7290ba; }
+.merchant-timestamp small { font-size: 12px; font-weight: 400; color:#5f728e; }
 
 .merchant-notice { display: flex; align-items: center; }
 .merchant-notice-deactivated { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+
+/* Merchant custom date range */
+.merchant-table-card > .merchant-date-range {
+  box-sizing: border-box;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  margin: 8px 12px 12px;
+  padding: 14px;
+  background: #f8f7ff;
+  border: 1px solid #e1e4eb;
+  border-radius: 10px;
+}
+
+.merchant-date-range-fields {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.merchant-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 190px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.merchant-date-field input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d7dced;
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  font: inherit;
+  font-weight: 400;
+  color-scheme: light;
+}
+
+.merchant-date-field input:focus {
+  outline: none;
+  border-color: #5948c7;
+  box-shadow: 0 0 0 3px rgba(89, 72, 199, .12);
+}
+
+.merchant-date-range-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.merchant-date-range-actions button {
+  height: 42px;
+  padding: 0 15px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.merchant-date-range-actions .merchant-date-apply {
+  border: 1px solid #5544c5;
+  background: #5544c5;
+  color: #fff;
+}
+
+.merchant-date-range-actions .merchant-date-apply:hover {
+  background: #4636b2;
+}
+
+.merchant-date-range-actions .merchant-date-secondary {
+  border: 1px solid #d7dced;
+  background: #fff;
+  color: #475467;
+}
+
+.merchant-date-range-actions .merchant-date-secondary:hover {
+  border-color: #a9afd0;
+  background: #fdfdff;
+}
+
+.merchant-date-error {
+  margin: 10px 0 0;
+  color: #b42318;
+  font-size: 13px;
+}
+
+.merchant-filters-anchor {
+  position: relative;
+  z-index: 5;
+}
+
+.merchant-table-card > .merchant-filters-anchor > .filter-bar {
+  min-height: 48px;
+  padding: 12px 12px 16px;
+  gap: 10px;
+  margin: 0;
+  border-bottom: 0;
+}
+
+.merchant-table-card > .merchant-filters-anchor > .filters-bar {
+  min-height: 48px;
+  padding: 12px 12px 16px;
+  gap: 10px;
+  margin: 0;
+  border-bottom: 0;
+}
+
+.merchant-filters-anchor > .merchant-date-range {
+  position: absolute;
+  top: calc(100% - 4px);
+  left: 12px;
+  z-index: 10;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: calc(100vw - 48px);
+  padding: 14px;
+  margin: 0;
+  border: 1px solid #e1e4eb;
+  border-radius: 10px;
+  background: #f8f7ff;
+  box-shadow: 0 10px 28px rgba(31, 41, 75, .16);
+}
+
+@media (max-width: 640px) {
+  .merchant-date-field {
+    flex: 1 1 100%;
+  }
+}
+
+.merchant-date-picker {
+  position: relative;
+}
+
+.merchant-date-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d7dced;
+  border-radius: 8px;
+  background: #fff;
+  color: #52617a;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.merchant-date-trigger:hover,
+.merchant-date-trigger[aria-expanded="true"] {
+  border-color: #a8a0df;
+}
+
+.merchant-date-trigger svg {
+  color: #65748b;
+}
+
+.merchant-calendar-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 280px;
+  padding: 12px;
+  border: 1px solid #dfe3f0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(31, 41, 75, .16);
+}
+
+.merchant-calendar-heading,
+.merchant-calendar-heading > div,
+.merchant-calendar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.merchant-calendar-heading {
+  margin-bottom: 10px;
+  color: #4e5766;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.merchant-calendar-heading > div {
+  gap: 4px;
+}
+
+.merchant-calendar-heading button,
+.merchant-calendar-grid button,
+.merchant-calendar-footer button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.merchant-calendar-heading button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 6px;
+  color: #52617a;
+}
+
+.merchant-calendar-heading button:hover,
+.merchant-calendar-grid button:not(:disabled):hover {
+  background: #f0effa;
+}
+
+.merchant-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.merchant-calendar-weekdays {
+  margin-bottom: 4px;
+  color: #77839a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.merchant-calendar-weekdays span {
+  padding: 5px 0;
+}
+
+.merchant-calendar-grid button {
+  height: 32px;
+  border-radius: 6px;
+  color: #344054;
+  font-size: 12px;
+}
+
+.merchant-calendar-grid button.outside-month {
+  color: #a7afbd;
+}
+
+.merchant-calendar-grid button.selected {
+  background: #5544c5;
+  color: #fff;
+}
+
+.merchant-calendar-grid button:disabled {
+  color: #c6cbd4;
+  cursor: not-allowed;
+}
+
+.merchant-calendar-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eef0f5;
+}
+
+.merchant-calendar-footer button {
+  padding: 5px 4px;
+  color: #5544c5;
+  font-size: 12px;
+  font-weight: 600;
+}

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "../components/Pagination";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { storeTypesApi } from "../api/storeTypes";
 import { createPlan, deletePlan, listPlans, updatePlan } from "../api/plans";
 
@@ -25,6 +26,68 @@ const emptyForm = {
   trialPeriod: "",
   effectiveFrom: "",
 };
+
+function PlanEffectiveDateField({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const selectedDate = value ? new Date(value + "T00:00:00") : null;
+  const [month, setMonth] = useState(() => selectedDate || new Date());
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const previousMonthDays = new Date(month.getFullYear(), month.getMonth(), 0).getDate();
+  const dateCells = Array.from({ length: 42 }, (_, index) => {
+    const dayOffset = index - firstDay + 1;
+    const date = dayOffset < 1
+      ? new Date(month.getFullYear(), month.getMonth() - 1, previousMonthDays + dayOffset)
+      : dayOffset > daysInMonth
+        ? new Date(month.getFullYear(), month.getMonth() + 1, dayOffset - daysInMonth)
+        : new Date(month.getFullYear(), month.getMonth(), dayOffset);
+    const iso = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+    return { date, iso, inMonth: date.getMonth() === month.getMonth() };
+  });
+  const displayValue = value ? value.slice(5, 7) + "/" + value.slice(8, 10) + "/" + value.slice(0, 4) : "mm/dd/yyyy";
+
+  return (
+    <div className="plan-date-picker">
+      <button type="button" className="plan-date-trigger" aria-label={`Effective Date: ${displayValue}`} aria-expanded={open} onClick={() => {
+        if (!open && selectedDate) setMonth(selectedDate);
+        setOpen((current) => !current);
+      }}>
+        <span>{displayValue}</span><CalendarDays size={16} aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="plan-calendar-popover" role="dialog" aria-label="Effective date calendar">
+          <div className="plan-calendar-heading">
+            <strong>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</strong>
+            <div>
+              <button type="button" aria-label="Previous month" onClick={() => setMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}><ChevronLeft size={17} /></button>
+              <button type="button" aria-label="Next month" onClick={() => setMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}><ChevronRight size={17} /></button>
+            </div>
+          </div>
+          <div className="plan-calendar-grid plan-calendar-weekdays" aria-hidden="true">
+            {"Su Mo Tu We Th Fr Sa".split(" ").map((day) => <span key={day}>{day}</span>)}
+          </div>
+          <div className="plan-calendar-grid">
+            {dateCells.map(({ date, iso, inMonth }) => (
+              <button key={iso} type="button" aria-pressed={value === iso} className={(inMonth ? "" : "outside-month") + (value === iso ? " selected" : "")} onClick={() => { onChange(iso); setOpen(false); }}>
+                {date.getDate()}
+              </button>
+            ))}
+          </div>
+          <div className="plan-calendar-footer">
+            <button type="button" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
+            <button type="button" onClick={() => {
+              const today = new Date();
+              const iso = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-");
+              onChange(iso);
+              setOpen(false);
+              setMonth(today);
+            }}>Today</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function normalizeStoreTypeFeatures(response) {
   const source =
@@ -169,6 +232,8 @@ export default function CreatePlan() {
   const [planStep, setPlanStep] = useState(1);
   const [editingId, setEditingId] = useState(null);
   const [includedFeatures, setIncludedFeatures] = useState([]);
+  const [featurePage, setFeaturePage] = useState(1);
+  const [featurePageSize, setFeaturePageSize] = useState(10);
 
   const [pendingIncludedFeatureNames, setPendingIncludedFeatureNames] =
     useState([]);
@@ -177,6 +242,16 @@ export default function CreatePlan() {
   const [storeTypeFeaturesLoading, setStoreTypeFeaturesLoading] =
     useState(false);
   const [storeTypeFeaturesError, setStoreTypeFeaturesError] = useState("");
+
+  const featureTotalPages = Math.max(1, Math.ceil(storeTypeFeatures.length / featurePageSize));
+  const visibleStoreTypeFeatures = storeTypeFeatures.slice(
+    (featurePage - 1) * featurePageSize,
+    featurePage * featurePageSize,
+  );
+
+  useEffect(() => {
+    if (featurePage > featureTotalPages) setFeaturePage(featureTotalPages);
+  }, [featurePage, featureTotalPages]);
 
   const [search, setSearch] = useState("");
   const [billingFilter, setBillingFilter] = useState("");
@@ -464,6 +539,7 @@ export default function CreatePlan() {
 
   function updateField(event) {
     const { name, value } = event.target;
+    if (name === "applicableStoreType") setFeaturePage(1);
     setForm((current) => ({
       ...current,
       [name]: name === "code" ? value.toUpperCase() : value,
@@ -485,6 +561,19 @@ export default function CreatePlan() {
       current.includes(featureId)
         ? current.filter((id) => id !== featureId)
         : [...current, featureId],
+    );
+  }
+
+  function toggleAllIncludedFeatures() {
+    const featureIds = storeTypeFeatures.map(({ featureId }) => featureId);
+    const allSelected =
+      featureIds.length > 0 &&
+      featureIds.every((featureId) => includedFeatures.includes(featureId));
+
+    setIncludedFeatures((current) =>
+      allSelected
+        ? current.filter((featureId) => !featureIds.includes(featureId))
+        : [...new Set([...current, ...featureIds])],
     );
   }
 
@@ -654,7 +743,6 @@ export default function CreatePlan() {
             </div>
             <div>
               <h2>{editingId ? "Edit Plan" : "Create Plan"}</h2>
-              <p>Enter the subscription plan details.</p>
             </div>
           </div>
 
@@ -787,7 +875,6 @@ export default function CreatePlan() {
             </div>
             <div>
               <h2>Pricing & Limits</h2>
-              <p>Set pricing, included limits, and the trial period.</p>
             </div>
           </div>
 
@@ -964,12 +1051,9 @@ export default function CreatePlan() {
 
             <label className="plan-field">
               <span>Effective Date</span>
-              <input
-                {...textInputProps}
-                name="effectiveFrom"
-                type="date"
+              <PlanEffectiveDateField
                 value={form.effectiveFrom}
-                onChange={updateField}
+                onChange={(value) => setForm((current) => ({ ...current, effectiveFrom: value }))}
               />
             </label>
 
@@ -1005,15 +1089,34 @@ export default function CreatePlan() {
             </div>
             <div>
               <h2>Included Features</h2>
-              <p>Select the features included in this plan.</p>
             </div>
           </div>
 
           <div className="plan-features-limits-grid">
             <section className="plan-feature-panel">
-              <h3>
-                Available Features <span className="text-red-500">*</span>
-              </h3>
+              <div className="plan-feature-panel-heading">
+                <h3>
+                  Available Features <span className="text-red-500">*</span>
+                </h3>
+                <label className="plan-feature-select-all">
+                  <input
+                    type="checkbox"
+                    checked={
+                      storeTypeFeatures.length > 0 &&
+                      storeTypeFeatures.every(({ featureId }) =>
+                        includedFeatures.includes(featureId),
+                      )
+                    }
+                    disabled={
+                      storeTypeFeaturesLoading ||
+                      Boolean(storeTypeFeaturesError) ||
+                      storeTypeFeatures.length === 0
+                    }
+                    onChange={toggleAllIncludedFeatures}
+                  />
+                  Select all features
+                </label>
+              </div>
 
               {storeTypeFeaturesLoading && (
                 <p className="plan-review-empty">
@@ -1043,7 +1146,7 @@ export default function CreatePlan() {
                 )}
 
               {!storeTypeFeaturesLoading &&
-                storeTypeFeatures.map(
+                visibleStoreTypeFeatures.map(
                   ({ featureId, name, category, description, icon }) => (
                     <label className="plan-feature-check" key={featureId}>
                       <input
@@ -1065,6 +1168,22 @@ export default function CreatePlan() {
                     </label>
                   ),
                 )}
+
+              {!storeTypeFeaturesLoading && storeTypeFeatures.length > 0 && (
+                <Pagination
+                  currentPage={featurePage}
+                  totalPages={featureTotalPages}
+                  totalItems={storeTypeFeatures.length}
+                  pageSize={featurePageSize}
+                  onPageChange={setFeaturePage}
+                  onPageSizeChange={(size) => {
+                    setFeaturePageSize(size);
+                    setFeaturePage(1);
+                  }}
+                  itemLabel="features"
+                  pageSizeOptions={[5, 10, 25, 50, 100]}
+                />
+              )}
 
               <div className="plan-feature-summary">
                 <span className="plan-feature-summary-label">
@@ -1117,7 +1236,6 @@ export default function CreatePlan() {
 
             <div>
               <h2>Review & Confirm</h2>
-              <p>Review the plan details before saving.</p>
             </div>
           </div>
 

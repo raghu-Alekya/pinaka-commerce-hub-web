@@ -605,7 +605,7 @@ useEffect(() => {
             if (removingVendor) {
                 setSnackbar(`${removingVendor.name} was Inactive.`);
                 window.clearTimeout(snackbarTimer.current);
-                snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 3000);
+                snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 1800);
             }
         } catch (e) {
             console.error(
@@ -647,7 +647,7 @@ useEffect(() => {
 
     const name = (vendor) => (
         <span className="mv-name">
-            <strong>{vendor.name}</strong>
+            <span className="mv-name-text">{vendor.name}</span>
         </span>
     );
 
@@ -764,7 +764,10 @@ useEffect(() => {
     if (modal?.type === "create") return (
         <section className="merchant-vendors mv-create-page">
             <header className="mv-card mv-header">
-                <h2>Add New Vendor</h2>
+                <div className="mv-create-header-copy">
+                    <h2>Add New Vendor</h2>
+                    <p>Add vendor details for this merchant.</p>
+                </div>
                 <button type="button" className="store-config-back-button" disabled={busy} onClick={close}>← Back to Vendors</button>
             </header>
             <div className="mv-create-content"><Vendors formOnly onCreate={createAndAssignVendor} onCancel={close} /></div>
@@ -782,72 +785,74 @@ useEffect(() => {
             </header>
 
             <div className="mv-existing-content">
-                {masterLoading && <p role="status">Loading master vendors…</p>}
-                {masterError && <p role="alert" className="mv-error">{masterError}</p>}
+                <div className="mv-existing-selection-card">
+                    {masterLoading && <p role="status">Loading master vendors…</p>}
+                    {masterError && <p role="alert" className="mv-error">{masterError}</p>}
 
-                <FiltersBar
-                    className="mv-existing-toolbar"
-                    searchValue={search}
-                    onSearchChange={value => { setSearch(value); setPickerPage(1); }}
-                    searchPlaceholder="Search vendors by name, code, contact or product"
-                    searchAriaLabel="Search master vendors"
-                    searchDisabled={busy || masterLoading}
-                    filters={[
-                        { key: "country", label: "Filter by country", value: countryFilter, disabled: busy || masterLoading, options: [{ value: "", label: "All countries" }, ...countries.map(country => ({ value: locationKey(country), label: country }))], onChange: value => { setCountryFilter(value); setStateFilter(""); setPickerPage(1); } },
-                        { key: "state", label: "Filter by state", value: stateFilter, disabled: busy || masterLoading, options: [{ value: "", label: "All states" }, ...states.map(state => ({ value: locationKey(state), label: state }))], onChange: value => { setStateFilter(value); setPickerPage(1); } },
-                    ]}
-                    onClear={() => { setSearch(""); setCountryFilter(""); setStateFilter(""); setPickerPage(1); }}
-                />
+                    <FiltersBar
+                        className="mv-existing-toolbar"
+                        searchValue={search}
+                        onSearchChange={value => { setSearch(value); setPickerPage(1); }}
+                        searchPlaceholder="Search vendors by name, code, contact or product"
+                        searchAriaLabel="Search master vendors"
+                        searchDisabled={busy || masterLoading}
+                        filters={[
+                            { key: "country", label: "Filter by country", value: countryFilter, disabled: busy || masterLoading, options: [{ value: "", label: "All countries" }, ...countries.map(country => ({ value: locationKey(country), label: country }))], onChange: value => { setCountryFilter(value); setStateFilter(""); setPickerPage(1); } },
+                            { key: "state", label: "Filter by state", value: stateFilter, disabled: busy || masterLoading, options: [{ value: "", label: "All states" }, ...states.map(state => ({ value: locationKey(state), label: state }))], onChange: value => { setStateFilter(value); setPickerPage(1); } },
+                        ]}
+                        onClear={() => { setSearch(""); setCountryFilter(""); setStateFilter(""); setPickerPage(1); }}
+                    />
 
-                <div className="mv-picker-summary">
-                    <span></span>
+                    <div className="mv-picker-summary">
+                        <span></span>
+                    </div>
+
+                    <div className="mv-existing-table-wrap">
+                        <table>
+                            <thead><tr><th>Select</th><th>Vendor Code</th><th>Vendor Name</th><th>Vendor Type</th><th>Products Supplied</th><th>Contact</th></tr></thead>
+                            <tbody>
+                                {pickerRows.map(vendor => {
+                                    const selected = selection.includes(vendor.id);
+                                    return (
+                                        <tr
+                                            key={vendor.id}
+                                            className={`${selected ? "mv-row-selected" : ""} ${!active(vendor) ? "mv-row-disabled" : ""}`}
+                                            aria-selected={selected}
+                                            data-tooltip={active(vendor) ? "Click to select or deselect this vendor" : "Inactive vendors cannot be selected"}
+                                            onClick={event => {
+                                                if (event.target.closest("input,button,a,select")) return;
+                                                toggleVendorSelection(vendor);
+                                            }}
+                                        >
+                                            <td><input type="checkbox" aria-label={`Select ${vendor.name}`} disabled={busy || !active(vendor)} checked={selected} onChange={() => toggleVendorSelection(vendor)} /></td>
+                                            <td><span className="mv-cell-ellipsis">{displayValue(vendor.code)}</span></td>
+                                            <td><strong className="mv-cell-ellipsis">{vendor.name}</strong></td>
+                                            <td><span className="mv-cell-ellipsis">{displayValue(vendor.type)}</span></td>
+                                            <td><span className="mv-cell-ellipsis">{displayValue(vendor.products)}</span></td>
+                                            <td><span className="mv-cell-ellipsis">{vendor.phone || vendor.contact || "—"}</span></td>
+                                        </tr>
+                                    );
+                                })}
+                                {!available.length && <tr><td colSpan={6}>{storeScope ? "No unassigned vendors mapped to this merchant." : "No unassigned vendors found in master data."}</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <Pagination
+                        currentPage={currentPickerPage}
+                        totalPages={pickerPages}
+                        totalItems={available.length}
+                        pageSize={pickerPageSize}
+                        onPageChange={setPickerPage}
+                        onPageSizeChange={(size) => {
+                            setPickerPageSize(size);
+                            setPickerPage(1);
+                        }}
+                        itemLabel="vendors"
+                        showWhenEmpty={true}
+                    />
+                    {saveError && <p role="alert" className="mv-error">{saveError}</p>}
                 </div>
-
-                <div className="mv-existing-table-wrap">
-                    <table>
-                        <thead><tr><th>Select</th><th>Vendor Code</th><th>Vendor Name</th><th>Vendor Type</th><th>Products Supplied</th><th>Contact</th></tr></thead>
-                        <tbody>
-                            {pickerRows.map(vendor => {
-                                const selected = selection.includes(vendor.id);
-                                return (
-                                    <tr
-                                        key={vendor.id}
-                                        className={`${selected ? "mv-row-selected" : ""} ${!active(vendor) ? "mv-row-disabled" : ""}`}
-                                        aria-selected={selected}
-                                        title={active(vendor) ? "Click to select or deselect this vendor" : "Inactive vendors cannot be selected"}
-                                        onClick={event => {
-                                            if (event.target.closest("input,button,a,select")) return;
-                                            toggleVendorSelection(vendor);
-                                        }}
-                                    >
-                                        <td><input type="checkbox" aria-label={`Select ${vendor.name}`} disabled={busy || !active(vendor)} checked={selected} onChange={() => toggleVendorSelection(vendor)} /></td>
-                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.code)}>{displayValue(vendor.code)}</span></td>
-                                        <td><strong className="mv-cell-ellipsis" title={vendor.name}>{vendor.name}</strong></td>
-                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.type)}>{displayValue(vendor.type)}</span></td>
-                                        <td><span className="mv-cell-ellipsis" title={displayValue(vendor.products)}>{displayValue(vendor.products)}</span></td>
-                                        <td><span className="mv-cell-ellipsis" title={vendor.phone || vendor.contact || "—"}>{vendor.phone || vendor.contact || "—"}</span></td>
-                                    </tr>
-                                );
-                            })}
-                            {!available.length && <tr><td colSpan={6}>{storeScope ? "No unassigned vendors mapped to this merchant." : "No unassigned vendors found in master data."}</td></tr>}
-                        </tbody>
-                    </table>
-                </div>
-
-                <Pagination
-                    currentPage={currentPickerPage}
-                    totalPages={pickerPages}
-                    totalItems={available.length}
-                    pageSize={pickerPageSize}
-                    onPageChange={setPickerPage}
-                    onPageSizeChange={(size) => {
-                        setPickerPageSize(size);
-                        setPickerPage(1);
-                    }}
-                    itemLabel="vendors"
-                    showWhenEmpty={true}
-                />
-                {saveError && <p role="alert" className="mv-error">{saveError}</p>}
             </div>
 
             <footer className="mv-existing-footer">
@@ -1021,9 +1026,7 @@ useEffect(() => {
                                         <tr>
                                             <td colSpan={storeScope ? 7 : 8}>
                                                 No assigned vendors
-                                                match. Use Add Existing Vendor
-                                                to select from master
-                                                data.
+                                                match. 
                                             </td>
                                         </tr>
                                     )}
@@ -1427,10 +1430,10 @@ useEffect(() => {
                 hero={modal?.vendor ? {
                     icon: "bi-shop-window",
                     title: modal.vendor.name || "Vendor",
-                    subtitle: `${modal.vendor.type || "Organization"} • Master Account`,
-                    status: modal.vendor.status || "Verified Active",
-                    metricLabel: "TOTAL REVENUE",
-                    metricValue: modal.vendor.totalSpend ? `$${Number(modal.vendor.totalSpend).toLocaleString()}` : (modal.vendor.assignedStoreCount ? `${modal.vendor.assignedStoreCount} Stores` : "$12,450.00"),
+                    subtitle: `${modal.vendor.type || "Vendor"} • Master Vendor`,
+                    status: modal.vendor.status || "Not specified",
+                    metricLabel: "ASSIGNED STORES",
+                    metricValue: `${modal.vendor.assignedStoreCount || 0} ${modal.vendor.assignedStoreCount === 1 ? "Store" : "Stores"}`,
                 } : null}
                 layout="bento-3"
                 maxWidth="max-w-4xl"
@@ -1484,7 +1487,7 @@ useEffect(() => {
                         fields: [
                             { label: "DIRECT PHONE", value: modal.vendor.phone },
                             { label: "EMAIL ADDRESS", value: modal.vendor.email },
-                            { label: "SYNCED AT", value: modal.vendor.updatedTime ? new Date(modal.vendor.updatedTime).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Today, 03:02 PM" }
+                            { label: "UPDATED AT", value: modal.vendor.updatedTime ? new Date(modal.vendor.updatedTime).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Not available" }
                         ]
                     }
                 ] : []}
@@ -1494,11 +1497,11 @@ useEffect(() => {
 <DeleteConfirmationDialog
     isOpen={modal?.type === "remove"}
     title="Remove Vendor Assignment?"
-    message={`Are you sure you want to Inactive ${
+    message={`Are you sure you want to inactivate ${
         modal?.vendor?.name || "this vendor"
     } from this ${entityName}? The vendor will remain available in Master Data.`}
     cancelLabel="Cancel"
-    confirmLabel="Inactive"
+    confirmLabel="Remove"
     busyLabel="Inactivating..."
     busy={busy}
     error={saveError}

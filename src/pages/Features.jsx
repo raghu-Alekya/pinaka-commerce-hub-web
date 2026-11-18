@@ -333,7 +333,6 @@ const confirmDeleteFeature = async () => {
           </div>
           <div>
             <h2>{isEditing ? "Edit Feature" : "Add Feature"}</h2>
-            <p>Enter the feature details.</p>
           </div>
         </div>
 

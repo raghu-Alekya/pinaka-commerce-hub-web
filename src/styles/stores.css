@@ -133,6 +133,8 @@
 ========================================================= */
 
 .summary-row {
+    margin-right: 0;
+    margin-left: 0;
     margin-bottom: 16px;
 }
 
@@ -210,7 +212,7 @@
 .summary-card small {
     display: block;
     margin-top: 5px;
-    color: #8d95a5;
+    color: #674ed9;
     font-size: 12px;
 }
 
@@ -256,10 +258,11 @@
     height: 52px;
     padding: 10px 14px;
     font-size: 13px;
+    font-weight: 600!important;
     vertical-align: middle;
     white-space: nowrap;
     border-bottom: 1px solid #e4e8ef;
-    color: #697285;
+    color: #10264d;
 }
 
 .store-table-details {
@@ -268,19 +271,49 @@
     gap: 3px;
 }
 
-.store-table-details strong {
-    color: #394256;
-    font-weight: 500;
-}
 
 .store-table-datetime strong {
     color: #10264d;
     font-weight: 600;
+    font-size: 12px;
 }
 
 .store-table-details small {
-    color: #7a8498;
+    color: #5f728e;
     font-size: 12px;
+    font-weight: 400;
+}
+
+.stores-card .stores-table td:not(:last-child) {
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stores-card .stores-name-button {
+    max-width: 100%;
+    min-width: 0;
+}
+
+.store-cell,
+.store-cell > div,
+.merchant-name-cell,
+.merchant-name-cell > div,
+.store-table-details {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.store-cell strong,
+.store-cell small,
+.merchant-name-cell strong,
+.store-table-details strong,
+.store-table-details small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .stores-table tbody tr:hover {
@@ -325,15 +358,16 @@
 }
 
 .store-cell strong {
-    color: #344057;
-    font-size: 12px;
+    color: #10264d;
+    font-size: 13px;
     font-weight: 600;
 }
 
 .store-cell small {
-    color: #979eac;
+    color: #5f728e;
     font-size: 12px;
     margin-top: 3px;
+    font-weight: 400;
 }
 
 /* =========================================================

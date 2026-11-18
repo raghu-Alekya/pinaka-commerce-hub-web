@@ -84,7 +84,13 @@ export default function DeviceView() {
   const deviceType = device.type || "-";
   const serialNumber = device.serial || "-";
   const merchant = device.merchant || "-";
-  const store = device.store || "-";
+  const storeValue = device.store;
+  const store =
+    storeValue == null ||
+    (typeof storeValue === "string" &&
+      (!storeValue.trim() || storeValue.trim() === "-" || storeValue.trim() === "—"))
+      ? "Not provided"
+      : storeValue;
   const status = device.status || "-";
   const lastSeen = device.lastSeen || "-";
   const notes = device.notes || "";
@@ -116,7 +122,7 @@ export default function DeviceView() {
           {" "}
           <Info label="Device Name" value={deviceName} />{" "}
           <Info label="Device Code" value={deviceCode} />{" "}
-          <Info label="Device ID" value={device.deviceId || "—"} />{" "}
+          <Info label="Activation Key" value={device.activationKey || "—"} />{" "}
           <Info label="Device Type" value={deviceType} />{" "}
           <Info label="Serial Number" value={serialNumber} />{" "}
           <Info label="Merchant" value={merchant} />{" "}
@@ -137,7 +143,7 @@ export default function DeviceView() {
           {" "}
           <div className="device-view-section-title">
             {" "}
-            <FileText size={17} /> Additional Information{" "}
+             Additional Information{" "}
           </div>{" "}
           <div className="device-view-notes">
             {" "}

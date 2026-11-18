@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { listStoreVendorPayments } from "../api/vendorPayments";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
+import { formatCurrency } from "../utils/currency";
 import "../styles/vendor-payments.css";
 
 const initialVendors = [
@@ -99,12 +101,42 @@ const initialPayments = [
   },
 ];
 
-export default function VendorPayments({ viewMode } = {}) {
+function formatVendorTimestamp(value, fallback) {
+  if (!value) return fallback || "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback || "—";
+  return (
+    <span className="vendor-audit-timestamp">
+      <span>{date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+      <small>{date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</small>
+    </span>
+  );
+}
+
+export default function VendorPayments({ viewMode, merchantId, storeId, store } = {}) {
   const [selectedView, setView] = useState("vendors");
   const view = viewMode || selectedView;
 
   const [vendors, setVendors] = useState(initialVendors);
-  const [payments, setPayments] = useState(initialPayments);
+  const [payments, setPayments] = useState(storeId ? [] : initialPayments);
+
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const ownerId = merchantId || store?.merchantId || store?.merchant_id || store?.merchant?.id;
+  useEffect(() => {
+    if (!storeId || view !== "payments") return undefined;
+    const controller = new AbortController();
+    setPayments([]);
+    setLoading(true);
+    setLoadError("");
+    setCurrentPage(1);
+    listStoreVendorPayments(ownerId, storeId, { signal: controller.signal })
+      .then(rows => { if (!controller.signal.aborted) setPayments(rows); })
+      .catch(error => { if (!controller.signal.aborted) setLoadError(error.message || "Unable to load vendor payments."); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [ownerId, storeId, view, attempt]);
 
   const [search, setSearch] = useState("");
   const [methodFilter, setMethodFilter] = useState("");
@@ -138,7 +170,7 @@ export default function VendorPayments({ viewMode } = {}) {
     const term = search.toLowerCase().trim();
 
     return payments.filter((payment) => {
-      const matchesSearch = `${payment.title} ${payment.vendor} ${payment.purpose} ${payment.method} ${payment.amount} ${payment.date}`
+      const matchesSearch = `${payment.title} ${payment.vendor} ${payment.purpose} ${payment.method} ${payment.amount} ${payment.createdAt || payment.date || ""} ${payment.updatedAt || ""} ${payment.createdBy || ""} ${payment.updatedBy || ""}`
         .toLowerCase()
         .includes(term);
       const matchesMethod = !methodFilter || payment.method === methodFilter;
@@ -203,13 +235,16 @@ export default function VendorPayments({ viewMode } = {}) {
 
   return (
     <div className={`vendor-screen ${viewMode ? "vendor-history-screen" : ""}`}>
+      {loadError && <div role="alert">{loadError} <button type="button" onClick={() => setAttempt(value => value + 1)}>Retry</button></div>}
 
       {/* Header */}
       <div className="vendor-title-row">
-
-        <h2>
-          {view === "vendors" ? "Vendors" : viewMode ? "Vendor History" : "Vendor Payments"}
-        </h2>
+        <div className="vendor-title-copy">
+          <h2>
+            {view === "vendors" ? "Vendors" : viewMode ? "Vendor History" : "Vendor Payments"}
+          </h2>
+          {viewMode && <p className="vendor-history-description">Review payment history and transactions for this store's vendors.</p>}
+        </div>
 
         <div className="vendor-actions">
 
@@ -231,12 +266,7 @@ export default function VendorPayments({ viewMode } = {}) {
             </button>
           )}
 
-          {view === "payments" && (
-            <button className="vendor-primary-action" onClick={() => { setFieldErrors({}); setShowPaymentForm(true); }}>
-              <i className="bi bi-plus-lg" aria-hidden="true" />
-              Add New Vendor Payment
-            </button>
-          )}
+
 
         </div>
       </div>
@@ -294,14 +324,14 @@ export default function VendorPayments({ viewMode } = {}) {
 
       {/* Vendors Table */}
       {view === "vendors" && (
-        <div className="vendor-history-table-scroll">
-        <table className="vendor-table">
+        <div className="vendor-history-table-scroll" style={{ width: "100%", overflowX: "auto" }}>
+        <table className="vendor-table" style={{ width: "100%", minWidth: "900px", tableLayout: "auto" }}>
 
           <thead>
             <tr>
-              <th>□</th>
-              <th>Title ↕</th>
-              <th>Date ↕</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>□</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Title ↕</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Date ↕</th>
             </tr>
           </thead>
 
@@ -310,16 +340,17 @@ export default function VendorPayments({ viewMode } = {}) {
             {filteredVendors.map((vendor) => (
               <tr key={vendor.id}>
 
-                <td>□</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>□</td>
 
-                <td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>
                   <strong>{vendor.name}</strong>
                 </td>
 
-                <td>
-                  Published
-                  <br />
-                  {vendor.date}
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>
+                  <div className="vendor-date-cell">
+                    <span className="vendor-date-status">Published</span>
+                    <span className="vendor-date-time">{vendor.date}</span>
+                  </div>
                 </td>
 
               </tr>
@@ -333,17 +364,20 @@ export default function VendorPayments({ viewMode } = {}) {
 
       {/* Vendor Payments Table */}
       {view === "payments" && (
-        <div className="vendor-history-table-scroll">
-        <table className="vendor-table">
+        <div className="vendor-history-table-scroll" style={{ width: "100%", overflowX: "auto" }}>
+        <table className="vendor-table" style={{ width: "100%", minWidth: "900px", tableLayout: "auto" }}>
 
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Vendor Name</th>
-              <th>Payment Purpose</th>
-              <th>Payment Method</th>
-              <th>Payment Amount</th>
-              <th>Date</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Title</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Vendor Name</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Payment Purpose</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Payment Method</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Payment Amount</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Created By</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Updated By</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Created At</th>
+              <th style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>Updated At</th>
             </tr>
           </thead>
 
@@ -352,26 +386,61 @@ export default function VendorPayments({ viewMode } = {}) {
             {paginatedPayments.length ? paginatedPayments.map((payment) => (
               <tr key={payment.id}>
 
-                <td>
-                  <strong title={payment.title}>{payment.title}</strong>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>
+                  <strong
+                    className="vendor-title-cell"
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget;
+                      if (el.scrollWidth > el.clientWidth) {
+                        el.setAttribute("data-tooltip", payment.title);
+                      } else {
+                        el.removeAttribute("data-tooltip");
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.removeAttribute("data-tooltip");
+                    }}
+                  >
+                    {payment.title}
+                  </strong>
                 </td>
 
-                <td>{payment.vendor}</td>
-
-                <td>{payment.purpose}</td>
-
-                <td>{payment.method}</td>
-
-                <td>$ {payment.amount}</td>
-
-                <td>
-                  Published
-                  <br />
-                  {payment.date}
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>
+                  <span
+                    className="vendor-name-cell"
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget;
+                      if (el.scrollWidth > el.clientWidth) {
+                        el.setAttribute("data-tooltip", payment.vendor);
+                      } else {
+                        el.removeAttribute("data-tooltip");
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.removeAttribute("data-tooltip");
+                    }}
+                  >
+                    {payment.vendor}
+                  </span>
                 </td>
 
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.purpose}</td>
+
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.method}</td>
+
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{formatCurrency(payment.amount, store?.currency, store?.currencySymbol)}</td>
+
+
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.createdBy || "—"}</td>
+                <td style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{payment.updatedBy || "—"}</td>
+                <td className="vendor-audit-date-cell">
+                  {formatVendorTimestamp(payment.createdAtValue, payment.createdAt || payment.date)}
+                </td>
+                <td className="vendor-audit-date-cell">
+                  {formatVendorTimestamp(payment.updatedAtValue, payment.updatedAt)}
+                </td>
               </tr>
-            )) : <tr><td colSpan={6} className="vendor-empty-row">No vendor payments match these filters.</td></tr>}
+            )) : <tr><td colSpan={9} className="vendor-empty-row" style={{ whiteSpace: "nowrap", padding: "12px 16px" }}>{loading ? "Loading vendor payments…" : loadError ? "Vendor payments could not be loaded." : payments.length ? "No vendor payments match these filters." : "No vendor payments found for this store."}</td></tr>}
 
           </tbody>
 

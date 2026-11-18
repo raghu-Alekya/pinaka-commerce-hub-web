@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import FiltersBar from "../components/FiltersBar";
 import Pagination from "../components/Pagination";
 import { listStoreSafeDrops } from "../api/storeSafeDrops";
+import { formatCurrency } from "../utils/currency";
 import { listStoreEmployees } from "../api/employees";
 import { isUuid } from "../api/storeDetails";
 import BentoDetailModal from "../components/BentoDetailModal";
 import ListActions from "../components/ListActions";
 import "../styles/safe-drops.css";
 
-const currency = (value) => `$${Number(value || 0).toFixed(2)}`;
 const dateParts = (value) => {
   const date = new Date(value);
   if (!value || Number.isNaN(date.getTime())) return { date: "-", time: "" };
@@ -52,6 +52,7 @@ function mapSafeDrop(record, employeeNames) {
 }
 
 export default function SafeDrops({ store, storeId: storeIdProp, merchantId }) {
+  const currency = (value) => formatCurrency(value, store?.currency, store?.currencySymbol);
   const storeId = [store?.uuid, store?.storeUUID, store?.storeUuid, store?.store_uuid, store?.id, storeIdProp, store?.storeId, store?.storeID].find(isUuid);
   const [records, setRecords] = useState([]);
   const [employeeNames, setEmployeeNames] = useState({});
@@ -148,9 +149,9 @@ export default function SafeDrops({ store, storeId: storeIdProp, merchantId }) {
       {showCustomDate && <div className="sd-custom-date"><label>From<input type="date" value={draftFrom} max={draftTo || undefined} onChange={(event) => { setDraftFrom(event.target.value); setDateError(""); }} /></label><label>To<input type="date" value={draftTo} min={draftFrom || undefined} onChange={(event) => { setDraftTo(event.target.value); setDateError(""); }} /></label><button type="button" onClick={applyCustomDate}>Apply date range</button><button className="sd-cancel-date" type="button" onClick={() => { setShowCustomDate(false); setDateError(""); }}>Cancel</button>{dateError && <p role="alert">{dateError}</p>}</div>}
       <div className="sd-table-wrap mb-0"><table className="sd-table"><thead><tr><th>Safe Drop / Shift</th><th>Employee</th><th>Denominations</th><th>Total Amount</th><th>Created At</th><th>Updated At</th><th>Actions</th></tr></thead>
         <tbody>{!loading && !error && visibleRows.map((row, index) => { const created = dateParts(row.created); const updated = dateParts(row.updated); return <tr key={row.id || index} style={{ cursor: "pointer" }} onClick={(event) => { if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) return; setSelected(row); }}>
-          <td><strong className="sd-record-name" title={row.shiftId}>Safe Drop – Shift {row.shift}</strong></td>
-          <td title={row.employee === "Unknown employee" ? row.createdBy : undefined}>{row.employee}</td>
-          <td>{row.denominations.length ? row.denominations.map((item, itemIndex) => <span className="sd-denomination" key={`${item.count}-${item.amount}-${itemIndex}`}>{item.count} × {currency(item.amount)} = {currency(item.total)}</span>) : "-"}</td>
+          <td><strong className="sd-record-name">Safe Drop – Shift {row.shift}</strong></td>
+          <td data-tooltip={row.employee === "Unknown employee" ? row.createdBy : undefined}>{row.employee}</td>
+          <td>{row.denominations.length ? <div className="sd-denominations-list"><span className="sd-denomination"><strong>{currency(row.denominations[0].amount)}</strong><small>× {row.denominations[0].count} {row.denominations[0].count === 1 ? "note" : "notes"}</small></span>{row.denominations.length > 1 && <button type="button" className="sd-more-denominations" aria-label={`Show ${row.denominations.length - 1} more denominations`} onClick={(event) => { event.stopPropagation(); setSelected(row); }}>+{row.denominations.length - 1}</button>}</div> : "-"}</td>
           <td className="sd-total">{currency(row.total)}</td><td>{created.date}<small>{created.time}</small></td><td>{updated.date}<small>{updated.time}</small></td>
           <td><ListActions onView={() => setSelected(row)} viewLabel={`View safe drop ${row.id}`} /></td>
         </tr>; })}
@@ -167,8 +168,8 @@ export default function SafeDrops({ store, storeId: storeIdProp, merchantId }) {
       onClose={() => setSelected(null)}
       headerIcon="bi-safe"
       title="Safe Drop Details"
-      code={selected?.shiftId ? `Shift ID: ${selected.shiftId}` : (selected?.id ? `Drop ID: ${selected.id}` : "")}
-      maxWidth="max-w-3xl"
+      compactSpacing
+      maxWidth="max-w-4xl"
       size="medium"
     >
       {selected && (
@@ -203,12 +204,13 @@ export default function SafeDrops({ store, storeId: storeIdProp, merchantId }) {
                 <p className="sd-modal-hero-sub">
                   {selected.employee || "Staff"} • {dateParts(selected.created).date} {dateParts(selected.created).time}
                 </p>
+                <p className="sd-modal-shift-id">Shift ID: {selected.shiftId || "—"}</p>
               </div>
             </div>
 
             <div className="sd-modal-hero-metric">
               <span className="sd-modal-metric-label">
-                TOTAL DROP VALUE
+                TOTAL AMOUNT
               </span>
               <p className="sd-modal-metric-val">
                 {currency(selected.total || 0)}
@@ -218,52 +220,7 @@ export default function SafeDrops({ store, storeId: storeIdProp, merchantId }) {
 
           {/* Two Columns Grid */}
           <div className="sd-modal-grid">
-            {/* Left Card: SHIFT & AUDIT SPECS */}
-            <div className="sd-modal-card">
-              <div>
-                <h4 className="sd-modal-card-title">
-                  SHIFT & AUDIT SPECS
-                </h4>
-                <div className="sd-modal-specs">
-                  <div className="sd-spec-item">
-                    <span className="sd-spec-label">
-                      SHIFT REFERENCE
-                    </span>
-                    <p className="sd-spec-val mono">
-                      {selected.shiftId || "—"}
-                    </p>
-                  </div>
-                  <div className="sd-spec-item">
-                    <span className="sd-spec-label">
-                      AUTHORIZED CASHIER
-                    </span>
-                    <p className="sd-spec-val bold">
-                      {selected.employee || "Staff"}
-                    </p>
-                  </div>
-                  <div className="sd-spec-item">
-                    <span className="sd-spec-label">
-                      DROPPED AT
-                    </span>
-                    <p className="sd-spec-val">
-                      {dateParts(selected.created).date} {dateParts(selected.created).time}
-                    </p>
-                  </div>
-                  <div className="sd-spec-item">
-                    <span className="sd-spec-label">
-                      STATUS
-                    </span>
-                    <div>
-                      <span className="sd-spec-pill">
-                        Completed
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Card: DENOMINATIONS BREAKDOWN */}
+            {/* Full-width denominations breakdown */}
             <div className="sd-modal-card">
               <div>
                 <h4 className="sd-modal-card-title">
@@ -272,7 +229,7 @@ export default function SafeDrops({ store, storeId: storeIdProp, merchantId }) {
                 {/* Table Header */}
                 <div className="sd-denom-table-head">
                   <span>DENOMINATION</span>
-                  <span className="text-center">COUNT</span>
+                  <span className="text-center">NOTES</span>
                   <span className="text-right">AMOUNT</span>
                 </div>
 

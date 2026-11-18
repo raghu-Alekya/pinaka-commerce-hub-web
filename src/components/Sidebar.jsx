@@ -85,7 +85,6 @@ export default function Sidebar({
     location.pathname.startsWith("/permissions") ||
     location.pathname.startsWith("/role-templates") ||
     location.pathname.startsWith("/plans") ||
-    location.pathname.startsWith("/vendors") ||
     location.pathname.startsWith("/tenders");
 
   const [masterSetupOpen, setMasterSetupOpen] = useState(isMasterSetupRoute);

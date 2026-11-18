@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import FiltersBar from "../components/FiltersBar";
+import ListActions from "../components/ListActions";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
 import {
@@ -884,20 +885,10 @@ export default function StoreCategories({
 
                     <td>
 
-                      <button
-                        type="button"
-                        className="table-action"
-                        title="View Category"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openView(
-                            item,
-                            "category"
-                          );
-                        }}
-                      >
-                        <i className="bi bi-eye" />
-                      </button>
+                      <ListActions
+                        onView={() => openView(item, "category")}
+                        viewLabel={`View ${item.name} category`}
+                      />
 
                     </td>
 
@@ -913,10 +904,6 @@ export default function StoreCategories({
                 <td colSpan="6">
 
                   <div className="categories-empty-state">
-                    <h3>
-                      No categories found
-                    </h3>
-
                     <p>
                       No categories match your current search.
                     </p>
@@ -1039,11 +1026,6 @@ export default function StoreCategories({
 
                       <div className="category-name-cell">
 
-                        <div className="category-icon tag-icon">
-
-                          <i className="bi bi-tag" />
-
-                        </div>
 
                         <div>
 
@@ -1103,20 +1085,10 @@ export default function StoreCategories({
 
                     <td>
 
-                      <button
-                        type="button"
-                        className="table-action"
-                        title="View Tag"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openView(
-                            item,
-                            "tag"
-                          );
-                        }}
-                      >
-                        <i className="bi bi-eye" />
-                      </button>
+                      <ListActions
+                        onView={() => openView(item, "tag")}
+                        viewLabel={`View ${item.name} tag`}
+                      />
 
                     </td>
 
@@ -1320,7 +1292,10 @@ export default function StoreCategories({
                         {item.terms?.length >
                         3 ? (
 
-                          <span className="more-terms">
+                          <span
+                            className="more-terms"
+                            data-tooltip={item.terms.slice(3).map((term) => (typeof term === "object" ? term.name || term.value || "" : String(term))).filter(Boolean).join(", ")}
+                          >
                             +
                             {item.terms.length -
                               3}
@@ -1369,20 +1344,10 @@ export default function StoreCategories({
 
                     <td>
 
-                      <button
-                        type="button"
-                        className="table-action"
-                        title="View Attribute"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openView(
-                            item,
-                            "attribute"
-                          );
-                        }}
-                      >
-                        <i className="bi bi-eye" />
-                      </button>
+                      <ListActions
+                        onView={() => openView(item, "attribute")}
+                        viewLabel={`View ${item.name} attribute`}
+                      />
 
                     </td>
 
@@ -1570,7 +1535,7 @@ export default function StoreCategories({
           clearLabel="Reset"
           trailingAction={activeTab === "attributes" && (
             <>
-              <button
+              {/* <button
                 type="button"
                 className="categories-clear-btn"
                 onClick={handleFetchAttributes}
@@ -1587,7 +1552,7 @@ export default function StoreCategories({
               >
                 <i className="bi bi-arrow-repeat" aria-hidden="true" />
                 {attributeAction === "sync" ? "Syncing…" : "Sync Attributes"}
-              </button>
+              </button> */}
             </>
           )}
         />

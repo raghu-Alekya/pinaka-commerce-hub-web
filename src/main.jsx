@@ -5,10 +5,6 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./auth/AuthContext";
 import TableOverflowTooltip from "./components/TableOverflowTooltip";
-<>
-  <App />
-  <TableOverflowTooltip />
-</>
 
 import "./styles/global.css";
 import "./styles/merchants.css";
