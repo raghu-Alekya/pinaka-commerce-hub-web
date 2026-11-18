@@ -806,8 +806,8 @@
   overflow-x: auto;
   border: 1px solid #e3ecf5;
   border-radius: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f1f5f9;
+  scrollbar-width: 7px;
+  scrollbar-color: #8b8b8b #f1f5f9;
 }
 .employees-table-wrap::-webkit-scrollbar { height: 6px; }
 .employees-table-wrap::-webkit-scrollbar-track { background: #f1f5f9; }
