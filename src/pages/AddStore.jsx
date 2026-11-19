@@ -591,6 +591,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
 
   const roleResponses = useRef(new Map());
   const [merchantStores, setMerchantStores] = useState([]);
+  const activeMerchantStoreCount = merchantStores.filter(
+    (item) => item.status === "ACTIVE" && !item.isDeleted && !item.is_deleted,
+  ).length;
   const [storeTypes, setStoreTypes] = useState([]);
   const [storeTypesLoading, setStoreTypesLoading] = useState(false);
   const [catalog, setCatalog] = useState([]);
@@ -2123,7 +2126,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         !editing &&
         Number.isFinite(subStoreLimit) &&
         subStoreLimit >= 0 &&
-        merchantStores.length >= subStoreLimit
+        activeMerchantStoreCount >= subStoreLimit
       )
         return "This merchant has reached its store limit.";
     }
@@ -2452,7 +2455,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   }
 
   const subscriptionScreen = () => {
-    const used = merchantStores.length;
+    const used = activeMerchantStoreCount;
     const limit = Number.isFinite(storeLimit) ? storeLimit : "—";
     const planTypeValue =
       matchedPlan?.applicableStoreType ??
@@ -3739,10 +3742,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           <Detail label="Subscription Plan">{planName}</Detail>
           <Detail label="Plan Billing">{billing}</Detail>
           <Detail label="Store Entitlement">
-            {merchantStores.length} /{" "}
+            {activeMerchantStoreCount} /{" "}
             {Number.isFinite(storeLimit) ? storeLimit : "Unlimited"} stores used
             {Number.isFinite(storeLimit)
-              ? `, ${Math.max(0, storeLimit - merchantStores.length)} remaining`
+              ? `, ${Math.max(0, storeLimit - activeMerchantStoreCount)} remaining`
               : ""}
           </Detail>
         </Panel>

@@ -192,6 +192,7 @@ export function PaymentSettings() {
                   const assignedElsewhere = payment.deviceMappings.some((other, otherIndex) => otherIndex !== index && other.storeDeviceId === device.id);
                   return <option key={device.id} value={device.id} disabled={assignedElsewhere}>{device.name}{device.identifier ? ` · ${device.identifier}` : ""}{assignedElsewhere ? " · already assigned" : ""}</option>;
                 })}</select>
+                <select aria-label={`Store device for mapping ${index + 1}`} value={mapping.storeDeviceId} onChange={(event) => updateDeviceMapping(payment.provider, index, { storeDeviceId: event.target.value })}><option value="">Select a store device</option>{storeDevices.map((device) => <option key={device.id} value={device.id}>{device.name}{device.identifier ? ` · ${device.identifier}` : ""}</option>)}</select>
                 <button type="button" className="card-payment-remove-mapping" onClick={() => removeDeviceMapping(payment.provider, index)} aria-label={`Remove mapping ${index + 1}`}><i className="bi bi-trash3" /></button>
               </div>)}
             </div>}

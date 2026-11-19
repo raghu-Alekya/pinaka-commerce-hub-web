@@ -68,9 +68,11 @@ export function mapSubscriptionToRow(item, index = 0) {
     `MID${String(index + 1).padStart(3, "0")}`;
 
   const merchantApiId =
+    item.merchantUuid ||
+    item.merchant_uuid ||
+    m.id ||
     item.merchantId ||
     item.merchant_id ||
-    m.id ||
     m._id ||
     "";
 

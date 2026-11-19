@@ -479,16 +479,18 @@ export function mapMerchantToRow(item) {
   const id = uuid || merchant.id || merchant.merchantId || merchant.merchant_id || merchant.merchantCode || merchant.merchant_code || "";
   const email = merchant.merchantEmail || merchant.email || "";
   const phone = merchant.merchantPhoneNumber || merchant.phone || "";
-  const stores = Array.isArray(merchant.stores || item.stores)
-    ? (merchant.stores || item.stores).length
-    : (item.storeCount ??
-      item.store_count ??
-      subscription.storeCount ??
-      subscription.store_count ??
-      merchant.storeCount ??
-      merchant.store_count ??
-      merchant.storesCount ??
-      0);
+  const stores = item.store_count ??
+    item.storeCount ??
+    (Array.isArray(merchant.stores || item.stores)
+      ? (merchant.stores || item.stores).filter((store) =>
+          String(store.status || "").toUpperCase() === "ACTIVE" && !store.isDeleted && !store.is_deleted,
+        ).length
+      : (subscription.storeCount ??
+        subscription.store_count ??
+        merchant.storeCount ??
+        merchant.store_count ??
+        merchant.storesCount ??
+        0));
 
   const planName =
     subscription.planName ||
