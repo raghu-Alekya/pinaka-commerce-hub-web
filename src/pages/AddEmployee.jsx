@@ -22,8 +22,16 @@ import {
 
 import "../styles/add-employee.css";
 import FilterDropdown from "../components/FilterDropdown";
+import { CalendarField } from "./Merchants";
 import { createEmployee } from "../api/employees";
 import { listMerchants } from "../api/merchants";
+
+function latestEligibleEmployeeDob() {
+  const today = new Date();
+  const date = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+  date.setDate(date.getDate() - 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
 
 const storeRoleStyles = `
   .field-error {
@@ -48,10 +56,6 @@ const storeRoleStyles = `
 
   .work-merchant-field {
     margin-top: 24px;
-  }
-
-  .employee-login-pin-field {
-    margin-top: 20px;
   }
 
   .employee-login-pin-help {
@@ -136,24 +140,6 @@ export default function AddEmployee() {
 
   const selectedCountry = locations.find(country => country.name === formData.country);
   const stateOptions = selectedCountry?.states || [];
-  const selectedState = stateOptions.find(state => state.name === formData.state);
-  const cityOptions = [...new Set((selectedState?.cities || []).map(city => city.name))];
-  const getPhoneCountryMismatchError = (
-    addressCountry = formData.country,
-    selectedPhoneCountry = phoneCountry,
-  ) => {
-    if (!addressCountry || !selectedPhoneCountry?.name) return "";
-    const addressCountryRecord = locations.find(
-      (country) => country.name.toLowerCase() === addressCountry.toLowerCase(),
-    );
-    const countryMatches = addressCountryRecord?.iso2 && selectedPhoneCountry.iso2
-      ? addressCountryRecord.iso2.toLowerCase() === selectedPhoneCountry.iso2.toLowerCase()
-      : addressCountry.toLowerCase() === selectedPhoneCountry.name.toLowerCase();
-    return countryMatches
-      ? ""
-      : `Address country must match the phone number country (${selectedPhoneCountry.name}).`;
-  };
-
   // Store + role assignments.
   // Nothing is pre-populated: the user adds a store and then selects
   // one or more roles for that store.
@@ -238,8 +224,8 @@ export default function AddEmployee() {
         if (Number.isNaN(new Date(trimmed).getTime())) {
           return "Enter a valid date of birth.";
         }
-        if (new Date(trimmed) > new Date()) {
-          return "Date of Birth cannot be in the future.";
+        if (trimmed > latestEligibleEmployeeDob()) {
+          return "Employee must be older than 18 years.";
         }
         return "";
 
@@ -264,7 +250,6 @@ export default function AddEmployee() {
 
       case "city":
         if (!trimmed) return "City is required.";
-        if (!cityOptions.includes(trimmed)) return "Select a city for the selected state.";
         if (trimmed.length > 50) return "City cannot exceed 50 characters.";
         return "";
 
@@ -340,9 +325,6 @@ export default function AddEmployee() {
       const error = validateField(name, formData[name]);
       if (error) nextErrors[name] = error;
     });
-
-    const phoneCountryError = getPhoneCountryMismatchError();
-    if (phoneCountryError) nextErrors.country = phoneCountryError;
 
     if (formData.address2) {
       const error = validateField("address2", formData.address2);
@@ -450,11 +432,11 @@ export default function AddEmployee() {
     }));
 
     if (name === "country") {
+      const addressCountry = locations.find((country) => country.name === nextValue);
+      if (addressCountry?.iso2) setPhoneCountry({ iso2: addressCountry.iso2.toLowerCase(), name: addressCountry.name });
       setErrors((prev) => ({
         ...prev,
-        country:
-          getPhoneCountryMismatchError(nextValue) ||
-          validateField(name, nextValue),
+        country: validateField(name, nextValue),
       }));
     } else if (errors[name]) {
       setErrors((prev) => ({
@@ -640,7 +622,7 @@ export default function AddEmployee() {
 
                   <PhoneInput
                     containerClass={errors.phone ? "employee-phone-invalid" : ""}
-                    country="in"
+                    country={phoneCountry.iso2 || "in"}
                     enableSearch
                     countryCodeEditable={false}
                     autoFormat
@@ -655,17 +637,9 @@ export default function AddEmployee() {
                       setFormData((prev) => ({
                         ...prev,
                         phone: value,
+                        ...(nextPhoneCountry.name ? { country: nextPhoneCountry.name, state: "", city: "" } : {}),
                       }));
-                      setErrors((prev) => {
-                        const countryError =
-                          getPhoneCountryMismatchError(
-                            formData.country,
-                            nextPhoneCountry,
-                          ) || validateField("country", formData.country);
-                        return prev.country === countryError
-                          ? prev
-                          : { ...prev, country: countryError };
-                      });
+                      setErrors((prev) => ({ ...prev, country: "", state: "", city: "" }));
                     }}
                     inputProps={{
                       name: "phone",
@@ -683,19 +657,10 @@ export default function AddEmployee() {
                 <div className="employee-field">
                   {/* <label>Date of Birth</label> */}
                   <label>
-                    Date of Birth <span className="text-red-500">*</span>
+                    Date of Birth
                   </label>
 
-                  <div className="input-with-icon">
-                    <input
-                      type="date"
-                      name="dob"
-                      value={formData.dob}
-                      onChange={handleChange}
-                      className={errors.dob ? "field-invalid" : ""}
-                    />
-
-                  </div>
+                  <CalendarField value={formData.dob} onChange={(dob) => { setFormData((current) => ({ ...current, dob })); setErrors((current) => ({ ...current, dob: "" })); }} label="Date of Birth" max={latestEligibleEmployeeDob()} showLabel={false} invalid={Boolean(errors.dob)} allowManualEntry />
                   {errors.dob && (
                     <span className="field-error">{errors.dob}</span>
                   )}
@@ -736,25 +701,21 @@ export default function AddEmployee() {
                   label="Country" required name="country" value={formData.country}
                   onChange={handleChange} error={errors.country}
                   options={locations.map(country => country.name)}
+                  searchable
                   placeholder={locationsLoading ? "Loading countries..." : "Select country"}
                   disabled={locationsLoading}
                 />
                 <SelectField
                   label="State" required name="state" value={formData.state}
                   onChange={handleChange} error={errors.state}
+                  searchable
                   placeholder={formData.country ? "Select state" : "Select country first"} options={stateOptions.map(state => state.name)}
-                  disabled={locationsLoading || !formData.country}
                 />
               </div>
 
               {locationError && <p role="alert" className="field-error">{locationError}</p>}
               <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
-                <SelectField
-                  label="City" required name="city" value={formData.city}
-                  onChange={handleChange} error={errors.city} options={cityOptions}
-                  placeholder={formData.state ? "Select city" : "Select state first"}
-                  disabled={locationsLoading || !formData.state}
-                />
+                <FormField label="City" required name="city" placeholder="Enter city" value={formData.city} onChange={handleChange} error={errors.city} />
                 <FormField
                   label={
                     <>
@@ -957,7 +918,7 @@ export default function AddEmployee() {
                 )}
               </div>
 
-              <div className="employee-field" style={{ marginTop: "24px" }}>
+              <div className="employee-field" style={{ marginTop: "14px" }}>
                 <label htmlFor="create-employee-code">Employee Code</label>
                 <input
                   id="create-employee-code"
@@ -1189,6 +1150,7 @@ function SelectField({
   placeholder,
   error,
   disabled = false,
+  searchable = false,
   className = "",
 }) {
   const safeOptions = Array.isArray(options) ? options : [];
@@ -1202,6 +1164,7 @@ function SelectField({
         <FilterDropdown
           name={name}
           disabled={disabled}
+          searchable={searchable}
           value={value || ""}
           onChange={onChange}
           className={`${error ? "field-invalid" : ""}${!value ? " employee-select-placeholder" : ""}`}

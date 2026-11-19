@@ -1753,6 +1753,7 @@ function UserEditForm({
 
             <form
                 className="user-form"
+                autoComplete="off"
                 onSubmit={
                     onSubmit
                 }

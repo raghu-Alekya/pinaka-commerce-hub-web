@@ -611,7 +611,7 @@ export default function StoreDevices({
 
             {/* FORM */}
 
-            <form onSubmit={handleSaveDevice}>
+            <form onSubmit={handleSaveDevice} autoComplete="off">
               <div className="store-device-form-body">
                 {/* DEVICE NAME */}
 

@@ -470,7 +470,7 @@ const confirmDeletePermission = async () => {
               </button>
             </div>
 
-            <form className="fp-create-form" onSubmit={saveNewPermission}>
+            <form className="fp-create-form" onSubmit={saveNewPermission} autoComplete="off">
               <div className="fp-create-grid">
                 <label>
                   Permission Key <span>*</span>

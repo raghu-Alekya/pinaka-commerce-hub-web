@@ -77,7 +77,8 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
   }, [scopedMerchantId, scopedMerchant]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { value, type, checked } = e.target;
+    const name = e.target.dataset.formField || e.target.name;
 
     setFormData((prev) => ({
       ...prev,
@@ -183,7 +184,9 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
             {/* DEVICE NAME */}
             <FormField label="Device Name" required invalid={validationErrors.deviceName} error={validationErrors.deviceName && "Device Name is required."}>
               <input
-                name="deviceName"
+                name="device-name-entry"
+                data-form-field="deviceName"
+                data-autocomplete="off"
                 autoComplete="off"
                 value={formData.deviceName}
                 onChange={handleChange}
@@ -207,7 +210,10 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
             {/* SERIAL NUMBER */}
             <FormField label="Device Serial Number">
               <input
-                name="serialNumber"
+                name="device-serial-number-entry"
+                data-form-field="serialNumber"
+                data-autocomplete="off"
+                autoComplete="off"
                 value={formData.serialNumber}
                 onChange={handleChange}
                 placeholder="Enter device serial number"
@@ -278,6 +284,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
             <FormField label="Notes">
               <textarea
                 name="notes"
+                autoComplete="new-password"
                 value={formData.notes}
                 onChange={handleChange}
                 placeholder="Enter notes (optional)"

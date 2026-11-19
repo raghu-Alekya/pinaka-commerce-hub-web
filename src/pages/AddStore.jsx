@@ -2743,6 +2743,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <div className="sf-form-grid sf-address-grid">
               <SelectField
                 label="Country *"
+                searchable
                 invalid={invalidStoreFields.has("Country")}
                 error={getFieldValidationMessage(error, "Country")}
                 value={store.country}
@@ -2757,6 +2758,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               />
               <SelectField
                 label="State / Province *"
+                searchable
                 invalid={invalidStoreFields.has("State / Province")}
                 error={getFieldValidationMessage(error, "State / Province")}
                 value={store.state}
@@ -2978,9 +2980,15 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 enableSearch
                 countryCodeEditable={false}
                 value={phoneInputValue(store.phone, locationOptions.selectedCountry?.phoneCode)}
-                onChange={(value) => {
+                onChange={(value, data) => {
                   const digits = value.replace(/\D/g, "");
                   updateStore("phone", digits ? `+${digits}` : "");
+                  const matchedAddressCountry = locationOptions.locationRecords.find(
+                    (country) => country.iso2?.toLowerCase() === data?.countryCode?.toLowerCase(),
+                  );
+                  if (matchedAddressCountry && store.country !== matchedAddressCountry.name) {
+                    changeCountry(matchedAddressCountry.name);
+                  }
                 }}
                 inputProps={{ id: "store-phone", name: "store-phone", type: "tel", autoComplete: "off", "aria-invalid": invalidStoreFields.has("Store Phone") }}
                 placeholder="Enter phone number"
@@ -3962,7 +3970,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       {error && <ValidationSummary error={error} summaryRef={errorBannerRef} onDismiss={() => setError("")} />}
       {failure && <div className="alert alert-danger" role="alert">{failure}<button type="button" onClick={() => setReload(v => v + 1)}>Retry</button></div>}
       {pending && <p role="status">Loading store selections…</p>}
-      <form onSubmit={saveSection}><fieldset disabled={pending || Boolean(failure) || (readOnly && step < 2)} style={{border:0,padding:0,minWidth:0}}>{screens[step]()} {!readOnly && <div className="sf-footer"><button type="button" className="sf-outline" onClick={onDone}>Cancel</button><button type="submit" className="sf-primary">{saving ? "Saving…" : step === 3 ? "Update Changes" : "Save Changes"}</button></div>}</fieldset></form>
+      <form onSubmit={saveSection} autoComplete="off"><fieldset disabled={pending || Boolean(failure) || (readOnly && step < 2)} style={{border:0,padding:0,minWidth:0}}>{screens[step]()} {!readOnly && <div className="sf-footer"><button type="button" className="sf-outline" onClick={onDone}>Cancel</button><button type="submit" className="sf-primary">{saving ? "Saving…" : step === 3 ? "Update Changes" : "Save Changes"}</button></div>}</fieldset></form>
     </div>;
   }
 
@@ -4051,7 +4059,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   : "Loading merchant setup…"}
             </div>
           )}
-          <form onSubmit={submit} noValidate>
+          <form onSubmit={submit} autoComplete="off" noValidate>
             <fieldset
               disabled={
                 saving ||
