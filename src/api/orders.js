@@ -64,37 +64,24 @@ export async function listOrders(storeId) {
   return result.orders;
 }
 
-// Load every matching database row so the UI can count the same records it
-// displays, without relying on a separate summary/count value.
-export async function listScopedOrders({ merchantId, storeId, perPage = 100 } = {}) {
+export async function listScopedOrders({ merchantId, storeId, page = 1, perPage = 5, search, status, author, createdAfter } = {}) {
   const headers = {
     ...(merchantId ? { "x-merchant-id": String(merchantId) } : {}),
     ...(storeId ? { "x-store-id": String(storeId) } : {}),
   };
-  const orders = [];
-  const seenOrderIds = new Set();
-  let page = 1;
-  do {
-    const query = new URLSearchParams({ page: String(page), per_page: String(perPage) });
-    if (storeId) query.set("storeId", String(storeId));
-    const response = await api.get(`${endpoints.allMerchantOrders}?${query}`, { headers });
-    const payload = response?.data?.data && typeof response.data.data === "object"
-      ? response.data.data
-      : response?.data && typeof response.data === "object" ? response.data : response;
-    if (payload?.success === false) throw new Error(payload.message || "Unable to load orders.");
-    const rows = Array.isArray(payload?.orders) ? payload.orders : [];
-    if (!rows.length) break;
-    const newRows = rows.filter((row, index) => {
-      const id = String(row?.id ?? row?.order_id ?? `page-${page}-row-${index}`);
-      if (seenOrderIds.has(id)) return false;
-      seenOrderIds.add(id);
-      return true;
-    });
-    if (!newRows.length) break;
-    orders.push(...newRows.map(normalizeOrder));
-    page += 1;
-  } while (true);
-  return { orders, total: orders.length };
+  const query = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+  if (storeId) query.set("storeId", String(storeId));
+  if (search) query.set("search", search);
+  if (status) query.set("status", status);
+  if (author) query.set("author", author);
+  if (createdAfter) query.set("created_after", createdAfter);
+  const response = await api.get(`${endpoints.allMerchantOrders}?${query}`, { headers });
+  const payload = response?.data?.data && typeof response.data.data === "object"
+    ? response.data.data
+    : response?.data && typeof response.data === "object" ? response.data : response;
+  if (payload?.success === false) throw new Error(payload.message || "Unable to load orders.");
+  const orders = (Array.isArray(payload?.orders) ? payload.orders : []).map(normalizeOrder);
+  return { orders, total: Number(payload?.pagination?.total ?? payload?.cards?.total_orders ?? orders.length) };
 }
 
 export async function getOrder(orderId, storeId) {
