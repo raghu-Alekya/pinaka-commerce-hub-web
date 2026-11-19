@@ -945,10 +945,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     );
   };
   const roleName = (id) => roleById[id]?.name || id;
-  const categories = [
-    "All Features",
-    ...new Set(featureRows.map((row) => row.category).filter((category) => String(category).toLowerCase() !== "more")),
-  ];
   const entitled = (name) => {
     const target = String(name || "")
       .trim()
@@ -1000,7 +996,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       return true;
     return false;
   };
-  const filteredFeatures = featureRows.filter((row) => {
+  const planFeatureRows = featureRows.filter((row) => entitled(row.name));
+  const categories = [
+    "All Features",
+    ...new Set(planFeatureRows.map((row) => row.category).filter((category) => String(category).toLowerCase() !== "more")),
+  ];
+  const filteredFeatures = planFeatureRows.filter((row) => {
     const matchesCategory =
       featureCategory === "All Features" || row.category === featureCategory;
     return (
@@ -3015,9 +3016,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   );
 
   const featuresScreen = () => {
-    const includedCount = featureRows.filter((row) =>
-      entitled(row.name),
-    ).length;
     return (
       <>
         <Panel className="sf-plan-summary">
@@ -3031,15 +3029,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           </div>
           <div>
             <span className="sf-feature-summary-icon green"><i className="bi bi-grid" aria-hidden="true" /></span>
-            <div><small>Total Features</small><strong>{featureRows.length}</strong></div>
+            <div><small>Total Features</small><strong>{planFeatureRows.length}</strong></div>
           </div>
           <div>
             <span className="sf-feature-summary-icon purple"><i className="bi bi-check-circle" aria-hidden="true" /></span>
-            <div><small>Included</small><strong className="sf-green">{includedCount}</strong></div>
-          </div>
-          <div>
-            <span className="sf-feature-summary-icon orange"><i className="bi bi-exclamation-circle" aria-hidden="true" /></span>
-            <div><small>Not Included</small><strong className="sf-amber">{Math.max(0, featureRows.length - includedCount)}</strong></div>
+            <div><small>Included</small><strong className="sf-green">{planFeatureRows.length}</strong></div>
           </div>
         </Panel>
         <Panel
@@ -3062,7 +3056,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   value: featureCategory,
                   options: categories.map((category) => ({
                     value: category,
-                    label: `${category} (${category === "All Features" ? featureRows.length : featureRows.filter((row) => row.category === category).length})`,
+                    label: `${category} (${category === "All Features" ? planFeatureRows.length : planFeatureRows.filter((row) => row.category === category).length})`,
                   })),
                   onChange: (value) => {
                     setFeatureCategory(value);
@@ -3096,13 +3090,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   <th>#</th>
                   <th>Feature</th>
                   <th>Description</th>
-                  <th>Plan Access</th>
                   <th>Enable For This Store</th>
                 </tr>
               </thead>
               <tbody>
                 {pagedFeatures.map((feature, index) => {
-                  const hasPlan = entitled(feature.name);
                   const checked = enabledFeatures.includes(feature.name);
                   return (
                     <tr key={feature.id || feature.name}>
@@ -3110,19 +3102,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       <td>{feature.name}</td>
                       <td>{feature.description || "—"}</td>
                       <td>
-                        <StatusBadge
-                          status={hasPlan ? "Active" : "Inactive"}
-                          className="sf-plan-access-badge"
-                        >
-                          {hasPlan ? "Included" : "Not included"}
-                        </StatusBadge>
-                      </td>
-                      <td>
                         <input
                           type="checkbox"
                           aria-label={`Enable ${feature.name} for this store`}
                           checked={checked}
-                          disabled={readOnly || !hasPlan || mastersLoading}
+                          disabled={readOnly || mastersLoading}
                           onChange={() => toggleFeature(feature.name)}
                         />
                       </td>
@@ -3131,7 +3115,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 })}
                 {!pagedFeatures.length && (
                   <tr>
-                    <td colSpan="5" className="sf-empty">
+                    <td colSpan="4" className="sf-empty">
                       No features match this search.
                     </td>
                   </tr>
