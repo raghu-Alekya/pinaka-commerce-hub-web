@@ -119,7 +119,7 @@ export function MappingConfiguration({ value, registers, onSave, onBack, onManag
             <button type="button" className="pc-button pc-primary" disabled={!!editor}
                 onClick={() => { setEditor({ id: newRecordId(), registerId: registers.find((register) => !rows.some((row) => row.registerId === register.id))?.id || "", terminal: "", printer: "", drawer: "", status: "Setup" }); setError(""); setMessage(""); }}>+ Add Mapping</button>
         </ConfigHeader>
-        {editor && <form className="pc-editor cash-register-editor" onSubmit={apply}>
+        {editor && <form className="pc-editor cash-register-editor" onSubmit={apply} autoComplete="off">
             <div className="cash-register-editor-heading">
                 <div>
                     <h3>{rows.some((row) => row.id === editor.id) ? "Edit Mapping" : "Add Mapping"}</h3>

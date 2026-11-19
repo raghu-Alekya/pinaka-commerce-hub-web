@@ -115,7 +115,7 @@ export function RegisterConfiguration({ value, mappings, onSave, onBack }) {
             <button type="button" className="pc-button pc-primary" disabled={!!editor}
                 onClick={() => openEditor({ id: newRecordId(), name: "", pos: "", maxCash: "", safeDrop: true, status: "Active" })}>+ Add Register</button>
         </ConfigHeader>
-        {editor && <form className="pc-editor" onSubmit={apply}>
+        {editor && <form className="pc-editor" onSubmit={apply} autoComplete="off">
             <h3>{rows.some((row) => row.id === editor.id) ? "Edit Register" : "Add Register"}</h3>
             <div className="pc-form-grid">
                 <ConfigField label="Register"><input autoFocus required value={editor.name} onChange={(e) => update("name", e.target.value)} placeholder="REG-04" /></ConfigField>

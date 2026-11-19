@@ -3861,6 +3861,23 @@ body:has(.store-workspace-page),
   flex: 1 1 280px;
   min-width: 0;
 }
+.store-workspace-page .store-workspace-card .products-toolbar .filter-search input,
+.store-workspace-page .store-workspace-card .products-toolbar .filter-search input:focus,
+.store-workspace-page .store-workspace-card .products-toolbar .filter-search input:focus-visible,
+.store-workspace-page .store-workspace-card .categories-toolbar .filter-search input,
+.store-workspace-page .store-workspace-card .categories-toolbar .filter-search input:focus,
+.store-workspace-page .store-workspace-card .categories-toolbar .filter-search input:focus-visible,
+.store-workspace-page .store-workspace-card .vendor-toolbar .filter-search input,
+.store-workspace-page .store-workspace-card .vendor-toolbar .filter-search input:focus,
+.store-workspace-page .store-workspace-card .vendor-toolbar .filter-search input:focus-visible,
+.store-workspace-page .store-workspace-card .fast-key-toolbar .filter-search input,
+.store-workspace-page .store-workspace-card .fast-key-toolbar .filter-search input:focus,
+.store-workspace-page .store-workspace-card .fast-key-toolbar .filter-search input:focus-visible {
+  border: 0;
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+}
 .store-workspace-page .store-workspace-card .products-toolbar .filter-options {
   display: contents;
 }
@@ -4092,6 +4109,14 @@ body:has(.store-workspace-page),
   border-radius: 0;
   outline: none !important;
   background: transparent;
+  box-shadow: none !important;
+}
+.store-workspace-page .store-workspace-card .merchant-vendors .mv-list-card > .filters-bar .filter-search input,
+.store-workspace-page .store-workspace-card .merchant-vendors .mv-list-card > .filters-bar .filter-search input:focus,
+.store-workspace-page .store-workspace-card .merchant-vendors .mv-list-card > .filters-bar .filter-search input:focus-visible {
+  border: 0 !important;
+  outline: none !important;
+  outline-offset: 0;
   box-shadow: none !important;
 }
 .store-workspace-page .store-workspace-card .merchant-vendors .mv-toolbar button { height: 40px; }

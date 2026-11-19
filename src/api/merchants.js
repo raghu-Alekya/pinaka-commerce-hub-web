@@ -46,11 +46,7 @@ function normalizePhoneNumber(phone, country) {
   if (raw.startsWith("+")) return raw;
   const digits = raw.replace(/\D/g, "");
   const countryCode = normalizeCountryCode(country);
-  let dialCode = "+1";
-  if (countryCode === "IND") dialCode = "+91";
-  else if (countryCode === "GBR") dialCode = "+44";
-  else if (countryCode === "AUS") dialCode = "+61";
-  else if (countryCode === "CAN") dialCode = "+1";
+  const dialCode = COUNTRY_DIAL_CODE_MAP[countryCode] || "+1";
   return `${dialCode}${digits}`;
 }
 

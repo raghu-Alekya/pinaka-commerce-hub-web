@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, User, BriefcaseBusiness, MapPin, Settings } from "lucide-react";
 import { getEmployee } from "../api/employees";
+import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
 import "../styles/employee-view.css";
 
 function displayValue(value) {
@@ -86,7 +87,7 @@ export default function EmployeeView() {
         <Section title="Personal Information" icon={User} fields={[
           ["Name", employee.name],
           ["First Name", employee.firstName], ["Last Name", employee.lastName],
-          ["Email", employee.email], ["Phone", employee.phone],
+          ["Email", employee.email], ["Phone", formatPhoneDisplay(employee.phone, employee.country)],
           ["Date of Birth", employee.dateOfBirth || employee.dob], ["Gender", employee.gender],
         ]}>
           {/* {photo && !photoError && <img className="employee-view-photo" src={photo}

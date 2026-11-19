@@ -188,7 +188,10 @@ export function PaymentSettings() {
               <div className="card-payment-mapping-columns"><span>Card terminal Device ID</span><span>Store device</span><span aria-hidden="true" /></div>
               {payment.deviceMappings.map((mapping, index) => <div className="card-payment-mapping-row" key={`${payment.provider}-${index}`}>
                 <input aria-label={`Card terminal Device ID for mapping ${index + 1}`} value={mapping.deviceId} onChange={(event) => updateDeviceMapping(payment.provider, index, { deviceId: event.target.value })} placeholder="Enter terminal device ID" />
-                <select aria-label={`Store device for mapping ${index + 1}`} value={mapping.storeDeviceId} onChange={(event) => updateDeviceMapping(payment.provider, index, { storeDeviceId: event.target.value })}><option value="">Select a store device</option>{storeDevices.map((device) => <option key={device.id} value={device.id}>{device.name}{device.identifier ? ` · ${device.identifier}` : ""}</option>)}</select>
+                <select aria-label={`Store device for mapping ${index + 1}`} value={mapping.storeDeviceId} onChange={(event) => updateDeviceMapping(payment.provider, index, { storeDeviceId: event.target.value })}><option value="">Select a store device</option>{storeDevices.map((device) => {
+                  const assignedElsewhere = payment.deviceMappings.some((other, otherIndex) => otherIndex !== index && other.storeDeviceId === device.id);
+                  return <option key={device.id} value={device.id} disabled={assignedElsewhere}>{device.name}{device.identifier ? ` · ${device.identifier}` : ""}{assignedElsewhere ? " · already assigned" : ""}</option>;
+                })}</select>
                 <button type="button" className="card-payment-remove-mapping" onClick={() => removeDeviceMapping(payment.provider, index)} aria-label={`Remove mapping ${index + 1}`}><i className="bi bi-trash3" /></button>
               </div>)}
             </div>}

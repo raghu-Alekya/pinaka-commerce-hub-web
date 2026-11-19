@@ -290,6 +290,24 @@
     flex: 1 1 0;
 }
 
+.merchant-vendors .mv-list-card > .filters-bar .filter-search input,
+.merchant-vendors .mv-list-card > .filters-bar .filter-search input:focus,
+.merchant-vendors .mv-list-card > .filters-bar .filter-search input:focus-visible {
+    border: 0 !important;
+    outline: none !important;
+    outline-offset: 0;
+    box-shadow: none !important;
+}
+
+.merchant-vendors .mv-card > .filters-bar .filter-search input,
+.merchant-vendors .mv-card > .filters-bar .filter-search input:focus,
+.merchant-vendors .mv-card > .filters-bar .filter-search input:focus-visible {
+    border: 0 !important;
+    outline: none !important;
+    outline-offset: 0;
+    box-shadow: none !important;
+}
+
 .merchant-vendors :is(.mv-card, .mv-list-card) > .pagination-container {
     height: auto;
     margin: 0;

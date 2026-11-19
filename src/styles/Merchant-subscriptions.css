@@ -5457,9 +5457,9 @@
   gap: 8px;
   min-width: 0;
   margin: 0;
-  color: #344563;
+  color: #596276;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.4;
 }
 
@@ -6190,8 +6190,60 @@
   font-weight: 600;
 }
 
+.subscription-date-field-compact {
+  flex: 0 1 auto;
+  width: 100%;
+}
+
 .subscription-date-picker {
   position: relative;
+}
+
+.subscription-calendar-popover.has-time {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 142px;
+  gap: 12px;
+  width: 450px;
+}
+
+.subscription-calendar-main {
+  min-width: 0;
+}
+
+.subscription-calendar-time {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 12px;
+  border-left: 1px solid #eef0f5;
+}
+
+.subscription-calendar-time > strong {
+  color: #24324b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.subscription-calendar-time label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #77839a;
+  font-size: 12px!important;
+  font-weight: 500!important;
+}
+
+.subscription-calendar-time select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 34px;
+  padding: 4px 7px;
+  border: 1px solid #d7e1ef;
+  border-radius: 6px;
+  background: #fff;
+  color: #344054;
+  font: inherit;
+  font-size: 13px;
 }
 
 .subscription-date-trigger {
@@ -6246,6 +6298,7 @@
   margin-bottom: 10px;
   color: #24324b;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .subscription-calendar-heading > div {
@@ -6325,6 +6378,25 @@
   color: #5143bc;
   font-size: 12px;
   font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .subscription-calendar-popover.has-time {
+    grid-template-columns: minmax(0, 1fr);
+    width: min(320px, calc(100vw - 40px));
+  }
+
+  .subscription-calendar-time {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 10px 0 0;
+    border-left: 0;
+    border-top: 1px solid #eef0f5;
+  }
+
+  .subscription-calendar-time > strong {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 900px) {

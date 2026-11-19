@@ -258,7 +258,7 @@ export function LoyaltySettings() {
               <Pagination currentPage={Math.min(page, totalPages)} totalPages={totalPages} totalItems={filteredCustomers.length} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} itemLabel="customers" showWhenEmpty />
             </section>
           ) : (
-            <form className="loyalty-settings-form" onSubmit={save}>
+            <form className="loyalty-settings-form" onSubmit={save} autoComplete="off">
           <section className="loyalty-card">
             <h2 className="loyalty-section-title"><Award size={20} /> Loyalty Program Settings</h2>
             <div className="loyalty-form-grid">

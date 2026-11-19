@@ -21,8 +21,16 @@ import {
 } from "lucide-react";
 
 import FilterDropdown from "../components/FilterDropdown";
+import { CalendarField } from "./Merchants";
 import "../styles/add-merchant-employee.css";
 import "../styles/merchant-form-shared.css";
+
+function latestEligibleEmployeeDob() {
+  const today = new Date();
+  const date = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+  date.setDate(date.getDate() - 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
 
 export default function AddMerchantEmployee({ onSave }) {
   const navigate = useNavigate();
@@ -89,6 +97,7 @@ export function MerchantEmployeeForm({
     sendCredentials: true,
   });
   const locationOptions = useLocationOptions(formData);
+  const [phoneCountry, setPhoneCountry] = useState("in");
 
 
   const [errors, setErrors] = useState({});
@@ -142,8 +151,8 @@ export function MerchantEmployeeForm({
         if (Number.isNaN(new Date(trimmed).getTime())) {
           return "Enter a valid date of birth.";
         }
-        if (new Date(trimmed) > new Date()) {
-          return "Date of Birth cannot be in the future.";
+        if (trimmed > latestEligibleEmployeeDob()) {
+          return "Employee must be older than 18 years.";
         }
         return "";
 
@@ -276,6 +285,11 @@ export function MerchantEmployeeForm({
         : type === "checkbox"
           ? checked
           : value;
+
+    if (name === "country") {
+      const addressCountry = locationOptions.locationRecords.find((country) => country.name === nextValue);
+      if (addressCountry?.iso2) setPhoneCountry(addressCountry.iso2.toLowerCase());
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -488,18 +502,22 @@ export function MerchantEmployeeForm({
                     </label>
 
                     <PhoneInput
-                      country="in"
+                      country={phoneCountry}
                       enableSearch
                       countryCodeEditable={false}
                       autoFormat
                       placeholder="Enter phone number"
                       value={formData.phone}
-                      onChange={(value) =>
+                      onChange={(value, country) => {
+                        const nextCountry = country?.countryCode?.toLowerCase();
                         setFormData((prev) => ({
                           ...prev,
                           phone: value,
-                        }))
-                      }
+                          ...(country?.name ? { country: country.name, state: "", city: "" } : {}),
+                        }));
+                        if (nextCountry) setPhoneCountry(nextCountry);
+                        setErrors((prev) => ({ ...prev, country: "", state: "", city: "" }));
+                      }}
                       inputProps={{
                         name: "phone",
                         required: true,
@@ -515,19 +533,10 @@ export function MerchantEmployeeForm({
 
                   <div className="employee-field">
                     <label>
-                      Date of Birth <span className="text-red-500">*</span>
+                      Date of Birth
                     </label>
 
-                    <div className="input-with-icon">
-                      <input
-                        type="date"
-                        name="dob"
-                        value={formData.dob}
-                        onChange={handleChange}
-                        className={errors.dob ? "field-invalid" : ""}
-                      />
-
-                    </div>
+                    <CalendarField value={formData.dob} onChange={(dob) => { setFormData((current) => ({ ...current, dob })); setErrors((current) => ({ ...current, dob: "" })); }} label="Date of Birth" max={latestEligibleEmployeeDob()} showLabel={false} invalid={Boolean(errors.dob)} allowManualEntry />
                     {errors.dob && (
                       <span className="field-error">{errors.dob}</span>
                     )}
@@ -566,13 +575,12 @@ export function MerchantEmployeeForm({
               <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
                 <SelectField label="Country" required name="country" value={formData.country}
                   onChange={handleChange} error={errors.country} options={locationOptions.countries}
-                  placeholder={locationOptions.loading ? "Loading countries..." : "Select country"} disabled={locationOptions.loading} />
+                  placeholder={locationOptions.loading ? "Loading countries..." : "Select country"} disabled={locationOptions.loading} searchable />
                 <SelectField label="State" required name="state" value={formData.state}
                   onChange={handleChange} error={errors.state} options={locationOptions.states}
-                  placeholder={formData.country ? "Select state" : "Select country first"} disabled={locationOptions.loading || !formData.country} />
-                <SelectField label="City" required name="city" value={formData.city}
-                  onChange={handleChange} error={errors.city} options={locationOptions.cities}
-                  placeholder={formData.state ? "Select city" : "Select state first"} disabled={locationOptions.loading || !formData.state} />
+                  placeholder={formData.country ? "Select state" : "Select country first"} searchable />
+                <FormField label="City" required name="city" placeholder="Enter city" value={formData.city}
+                  onChange={handleChange} error={errors.city} />
                 <FormField
                   label={<>Address Line 1 <span className="text-red-500">*</span></>}
                   name="address1"
@@ -819,6 +827,7 @@ function SelectField({
   placeholder,
   error,
   disabled = false,
+  searchable = false,
 }) {
   const safeOptions = Array.isArray(options) ? options : [];
   return (
@@ -831,6 +840,7 @@ function SelectField({
         <FilterDropdown
           name={name}
           disabled={disabled}
+          searchable={searchable}
           value={value || ""}
           onChange={onChange}
           className={`${error ? "field-invalid" : ""}${!value ? " employee-select-placeholder" : ""}`}

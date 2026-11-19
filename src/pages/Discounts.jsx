@@ -465,7 +465,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
           </div>
           <button type="button" className="coupon-form-cancel coupon-editor-back store-config-back-button" onClick={closeEditor}><i className="bi bi-arrow-left" /> Back to Discounts</button>
         </div>
-        <form className="discount-editor-layout" onSubmit={saveDiscount}>
+        <form className="discount-editor-layout" onSubmit={saveDiscount} autoComplete="off">
           <div className="discount-editor-main">
             <div className="discount-editor-body">
                 <h2>Discount details</h2>
