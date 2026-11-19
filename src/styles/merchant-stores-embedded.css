@@ -289,7 +289,7 @@
 ========================================================= */
 
 .merchant-stores-embedded .store-table-wrapper {
-    overflow-x: hidden !important;
+    overflow-x: auto !important;
     overflow-y: hidden;
 
     border: 1px solid #e5ebf4;
@@ -309,7 +309,7 @@
     width: 100%;
     min-width: 860px;
 
-    table-layout: auto;
+    table-layout: fixed;
 }
 
 
@@ -453,10 +453,10 @@
 
     margin: 0;
 
-    color: #17233e;
+    color: #102d59;
 
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
 
     white-space: nowrap;
     overflow: hidden;
@@ -473,7 +473,7 @@
 
     margin-top: 2px;
 
-    color: #81899a;
+    color: #5f728e;
 
     font-size: 12px;
 
@@ -486,7 +486,7 @@
 ========================================================= */
 
 .merchant-stores-embedded .store-type {
-    color: #64748b;
+    color: #102d59;
     font-size: 14px;
 }
 
@@ -500,7 +500,7 @@
 
     max-width: 100%;
 
-    color: #64748b;
+    color: #102d59;
 
     font-size: 14px;
 
@@ -799,11 +799,11 @@
 @media (max-width: 900px) {
 
     .merchant-stores-embedded .store-table-wrapper {
-        overflow-x: hidden;
+        overflow-x: auto;
     }
 
     .merchant-stores-embedded .store-table {
-        min-width: 0;
+        min-width: 860px;
     }
 
     .merchant-stores-embedded .store-table th,

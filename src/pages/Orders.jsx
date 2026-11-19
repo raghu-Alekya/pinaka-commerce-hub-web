@@ -421,10 +421,10 @@ export default function Orders({
                   <tr>
                     <th>Order ID</th>
                     <th>Client Order ID</th>
-                    <th>Date</th>
-                    <th>Status</th>
                     <th>Customer</th>
                     <th>Total</th>
+                    <th>Date</th>
+                    <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -450,6 +450,12 @@ export default function Orders({
                       </td>
                       <td><span className="offline-order-id">{order.offlineOrderId || "—"}</span></td>
                       <td>
+                        <div className="order-author">
+                          <span>{embedded ? String(order.author || "").replace(/^\s*\.\s*/, "").trim() || "Walk-in Customer" : order.author}</span>
+                        </div>
+                      </td>
+                      <td><strong className="order-total">{formatCurrency(order.totalValue, order.currency || store?.currency, order.currencySymbol || store?.currencySymbol)}</strong></td>
+                      <td>
                         <div className="order-date">
                           <strong>{order.date}</strong>
                           {order.time && <small>{order.time}</small>}
@@ -461,12 +467,6 @@ export default function Orders({
                           {order.status}
                         </span>
                       </td>
-                      <td>
-                        <div className="order-author">
-                          <span>{embedded ? String(order.author || "").replace(/^\s*\.\s*/, "").trim() || "Walk-in Customer" : order.author}</span>
-                        </div>
-                      </td>
-                      <td><strong className="order-total">{formatCurrency(order.totalValue, order.currency || store?.currency, order.currencySymbol || store?.currencySymbol)}</strong></td>
                       <td className="orders-actions-cell">
                         <ListActions
                           module="orders"

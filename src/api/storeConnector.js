@@ -159,6 +159,10 @@ export function syncWordpressTags(storeId) {
   return postStoreSync(storeId, "tags");
 }
 
+export function syncWordpressDiscounts(storeId) {
+  return postStoreSync(storeId, "discounts");
+}
+
 // export async function syncWordpressCatalog(storeId, { siteUrl, jwtToken, merchantId } = {}) {
 //   const result = await testWordpressConnection(siteUrl, jwtToken, storeId, merchantId);
 //   if (!result?.ok) {

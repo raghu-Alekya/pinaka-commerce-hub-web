@@ -78,10 +78,17 @@ export function DeviceMapping({ onBack }) {
       setDevices(activeDevices);
       if (!Array.isArray(mappingRows)) return;
       const hydrated = await combineMappings(mappingRows, merchantDevices);
-      setServerMappings(hydrated);
-      setMappings(hydrated);
-      settings.session.baseline.deviceMappings = hydrated;
-      settings.session.draft.deviceMappings = hydrated;
+      const inactiveMappings = hydrated.filter((mapping) => String(mapping.status || "").toLowerCase() === "inactive");
+      // Remove the assignment when an inactive device is encountered. This prevents
+      // reactivation from silently restoring its previous store assignment.
+      await Promise.allSettled(inactiveMappings
+        .filter((mapping) => mapping.mappingId)
+        .map((mapping) => deleteStoreDeviceMapping(mapping.mappingId)));
+      const activeMappings = hydrated.filter((mapping) => String(mapping.status || "").toLowerCase() !== "inactive");
+      setServerMappings(activeMappings);
+      setMappings(activeMappings);
+      settings.session.baseline.deviceMappings = activeMappings;
+      settings.session.draft.deviceMappings = activeMappings;
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [settings.merchantId, settings.storeId]);
@@ -91,7 +98,9 @@ export function DeviceMapping({ onBack }) {
   const availableTypes = useMemo(() => [...new Set(devices.map((device) => String(device.type || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [devices]);
   const mappedTypes = useMemo(() => [...new Set(safeMappings.map((device) => String(device.type || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [safeMappings]);
   const available = useMemo(() => devices.filter((device) => !mappedIds.has(String(device.id)) && [device.name, device.type, device.serial, device.code, device.deviceCode, device.activationKey, device.device_active_code, device.authorization_code, device.activation_code, device.status].join(" ").toLowerCase().includes(search.trim().toLowerCase()) && (deviceTypeFilter === "all" || String(device.type || "") === deviceTypeFilter) && (deviceStatusFilter === "all" || String(device.status || "Active").toLowerCase() === deviceStatusFilter)), [devices, mappedIds, search, deviceTypeFilter, deviceStatusFilter]);
-  const filteredMappings = useMemo(() => safeMappings.filter((device) => [device.name, device.type, device.serial, device.code, device.activationKey].join(" ").toLowerCase().includes(mappedSearch.trim().toLowerCase()) && (mappedTypeFilter === "all" || String(device.type || "") === mappedTypeFilter) && (mappedStatusFilter === "all" || String(device.status || "Active").toLowerCase() === mappedStatusFilter)), [safeMappings, mappedSearch, mappedTypeFilter, mappedStatusFilter]);
+  // A mapped device stops belonging in this store as soon as its merchant deactivates it.
+  const activeMappings = useMemo(() => safeMappings.filter((device) => String(device.status || "Active").toLowerCase() !== "inactive"), [safeMappings]);
+  const filteredMappings = useMemo(() => activeMappings.filter((device) => [device.name, device.type, device.serial, device.code, device.activationKey].join(" ").toLowerCase().includes(mappedSearch.trim().toLowerCase()) && (mappedTypeFilter === "all" || String(device.type || "") === mappedTypeFilter) && (mappedStatusFilter === "all" || String(device.status || "Active").toLowerCase() === mappedStatusFilter)), [activeMappings, mappedSearch, mappedTypeFilter, mappedStatusFilter]);
   const pageCount = Math.max(1, Math.ceil(available.length / pageSize));
   const mappedPageCount = Math.max(1, Math.ceil(filteredMappings.length / pageSize));
   const pageRows = available.slice((page - 1) * pageSize, page * pageSize);

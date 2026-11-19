@@ -56,42 +56,6 @@ const storeRoleStyles = `
     overflow: visible;
   }
  
-  .employee-login-pin-field label {
-    display: block;
-    margin-bottom: 7px;
-    color: #17233d;
-    font-size: 15px;
-    font-weight: 600;
-  }
- 
-  .employee-login-pin-field label span {
-    color: #e11d48;
-  }
- 
-  .employee-login-pin-field input {
-    width: 100%;
-    height: 46px;
-    padding: 0 14px;
-    border: 1px solid #d4dfed;
-    border-radius: 8px;
-    background: #fff;
-    color: #1c3154;
-    font-size: 15px;
-    outline: none;
-    box-sizing: border-box;
-    letter-spacing: 2px;
-  }
- 
-  .employee-login-pin-field input::placeholder {
-    color: #91a3bd;
-    letter-spacing: 0;
-  }
- 
-  .employee-login-pin-field input:focus {
-    border-color: #8172ef;
-    box-shadow: 0 0 0 3px rgba(129, 114, 239, .10);
-  }
- 
   .employee-login-pin-help {
     display: block;
     margin-top: 6px;
@@ -190,6 +154,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
   const [detailLoadError, setDetailLoadError] = useState(false);
 
   const [phoneDialCode, setPhoneDialCode] = useState("");
+  const [phoneCountryName, setPhoneCountryName] = useState(employee.country || "");
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState("");
   const [notice, setNotice] = useState("");
@@ -294,6 +259,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
     if (!country?.iso2 || !country?.phoneCode) return;
     const nextDialCode = String(country.phoneCode).replace(/\D/g, "");
     setPhoneDialCode(nextDialCode);
+    setPhoneCountryName(country.name || "");
     setFormData((current) => {
       const nationalNumber = getNationalPhone(current.phone, phoneDialCode);
       const nextPhone = `${nextDialCode}${nationalNumber}`;
@@ -346,7 +312,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
       case "phone": {
         if (!trimmed) return "Phone Number is required.";
-        return validatePhoneForCountry(trimmed, country);
+        return validatePhoneForCountry(trimmed, phoneCountryName || country, phoneDialCode);
       }
 
       case "dob":
@@ -485,30 +451,19 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
     }
   };
 
-  const handlePhoneChange = (event) => {
-    const nationalNumber = event.target.value.replace(/\D/g, "");
-    const value = `${phoneDialCode}${nationalNumber}`;
-    setFormData((prev) => ({
-      ...prev,
-      phone: value,
-    }));
+  const handlePhoneChange = (value, country) => {
+    const nextDialCode = String(country?.dialCode || phoneDialCode).replace(/\D/g, "");
+    const nextCountryName = country?.name || phoneCountryName;
+    setPhoneDialCode(nextDialCode);
+    setPhoneCountryName(nextCountryName);
+    setFormData((prev) => ({ ...prev, phone: value }));
 
     if (errors.phone) {
       setErrors((prev) => ({
         ...prev,
-        phone: validateField("phone", value),
+        phone: validatePhoneForCountry(value, nextCountryName || formData.country, nextDialCode),
       }));
     }
-  };
-
-  const handlePhoneCountryChange = (value, country) => {
-    if (!country?.dialCode) return;
-    const nextDialCode = country.dialCode;
-    setPhoneDialCode(nextDialCode);
-    setFormData((prev) => ({
-      ...prev,
-      phone: `${nextDialCode}${getNationalPhone(prev.phone, phoneDialCode)}`,
-    }));
   };
 
   /* =========================================================
@@ -779,45 +734,31 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
                 />
 
                 {/* PHONE */}
-                <div
-                  className={`employee-field ${
-                    errors.phone ? "employee-phone-invalid" : ""
-                  }`}
-                >
+                <div className={`employee-field employee-phone-field${errors.phone ? " employee-phone-invalid" : ""}`}>
                   <label>
                     Phone Number <span className="text-red-500">*</span>
                   </label>
-
-                  <div className={`employee-phone-control ${errors.phone ? "employee-phone-control-invalid" : ""}`}>
-                    <div className="employee-phone-country">
-                      <PhoneInput
-                        key={locationOptions.selectedCountry?.iso2 || "in"}
-                        country={locationOptions.selectedCountry?.iso2?.toLowerCase() || "in"}
-                        enableSearch
-                        countryCodeEditable={false}
-                        value={locationOptions.selectedCountry?.phoneCode || phoneDialCode}
-                        inputStyle={{ display: "none" }}
-                        buttonStyle={{ width: "48px", height: "46px" }}
-                        onMount={(_, country) => {
-                          if (country?.dialCode) setPhoneDialCode(country.dialCode);
-                        }}
-                        onChange={handlePhoneCountryChange}
-                        inputProps={{ tabIndex: -1, "aria-hidden": true }}
-                      />
-                    </div>
-                    <span className="employee-phone-code">+{phoneDialCode}</span>
-                    <input
-                      id="employee-phone"
-                      name="phone"
-                      type="tel"
-                      value={getNationalPhone(formData.phone, phoneDialCode)}
-                      onChange={handlePhoneChange}
-                      placeholder="Enter phone number"
-                      required
-                      autoComplete="tel-national"
-                      aria-label="Phone Number"
-                    />
-                  </div>
+                  <PhoneInput
+                    country={locationOptions.selectedCountry?.iso2?.toLowerCase() || "in"}
+                    enableSearch
+                    countryCodeEditable={false}
+                    autoFormat
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onMount={(_value, country) => {
+                      if (country?.dialCode) setPhoneDialCode(country.dialCode);
+                      if (country?.name) setPhoneCountryName(country.name);
+                    }}
+                    onChange={handlePhoneChange}
+                    inputProps={{
+                      id: "employee-phone",
+                      name: "phone",
+                      required: true,
+                      autoComplete: "tel",
+                      "aria-label": "Phone Number",
+                      "aria-invalid": Boolean(errors.phone),
+                    }}
+                  />
 
                   {errors.phone && (
                     <span className="field-error">{errors.phone}</span>

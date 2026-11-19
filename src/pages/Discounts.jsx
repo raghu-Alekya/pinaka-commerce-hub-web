@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api, pendingStoreRead } from "../api/http";
 import { normalizeCatalog } from "../api/products";
+import { syncWordpressDiscounts } from "../api/storeConnector";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
@@ -74,6 +75,9 @@ const formatSystemDate = (value) => {
   const date = new Date(`${value}T00:00:00`);
   return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date);
 };
+// Read and manage PCH's saved discount records through the app API. WooCommerce
+// changes are imported only by the explicit connector sync action below.
+const storeDiscountsPath = (storeId) => `/api/v1/stores/${encodeURIComponent(storeId)}/discounts`;
 
 function DiscountProductPicker({ products, value, onChange, multiple = false, disabled }) {
   const [open, setOpen] = useState(false);
@@ -121,6 +125,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
   const catalogCache = useRef({});
   const [catalogProducts, setCatalogProducts] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const saveLock = useRef(false);
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -149,7 +154,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
     setLoadError("");
     setCatalogError("");
     const apiPageSize = 100;
-    const path = `/stores/${encodeURIComponent(storeId)}/discounts?page=1&per_page=${apiPageSize}`;
+    const path = `${storeDiscountsPath(storeId)}?page=1&per_page=${apiPageSize}`;
     pendingStoreRead(`discounts:${path}`, () => api.get(path, { headers: { Accept: "application/json" } }))
       .then(async response => {
         if (!active) return;
@@ -184,7 +189,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
             ? page <= lastPage
             : hasMore === true || (hasMore == null && rows.length >= (page - 1) * apiPageSize);
           if (!shouldLoadPage) break;
-          const nextPath = `/stores/${encodeURIComponent(storeId)}/discounts?page=${page}&per_page=${apiPageSize}`;
+          const nextPath = `${storeDiscountsPath(storeId)}?page=${page}&per_page=${apiPageSize}`;
           const nextResponse = await pendingStoreRead(`discounts:${nextPath}`, () => api.get(nextPath, { headers: { Accept: "application/json" } }));
           if (nextResponse?.success === false || nextResponse?.status === "error") throw new Error(nextResponse.message || "Unable to load discounts.");
           const nextRows = rowsFrom(nextResponse);
@@ -271,7 +276,12 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
         });
       })
       .catch(error => { if (active) setLoadError(error.message || "Unable to load discounts."); })
-      .finally(() => { if (active) setLoading(false); });
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+          setSyncing(false);
+        }
+      });
     return () => { active = false; };
   }, [storeId, retry]);
   const filtered = useMemo(() => {
@@ -373,7 +383,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
       saveLock.current = true;
       setSaving(true);
       try {
-        const basePath = `/stores/${encodeURIComponent(storeId)}/discounts`;
+        const basePath = storeDiscountsPath(storeId);
         const response = mode === "edit"
           ? await api.put(`${basePath}/${encodeURIComponent(form.type)}/${encodeURIComponent(form.id)}`, payload)
           : await api.post(basePath, payload);
@@ -400,7 +410,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
     setDeleting(true);
     setDeleteError("");
     try {
-      const response = await api.delete(`/stores/${encodeURIComponent(storeId)}/discounts/${encodeURIComponent(deleteTarget.type)}/${encodeURIComponent(deleteTarget.id)}`);
+      const response = await api.delete(`${storeDiscountsPath(storeId)}/${encodeURIComponent(deleteTarget.type)}/${encodeURIComponent(deleteTarget.id)}`);
       if (response?.success === false || ["error", "failed"].includes(response?.status)) throw new Error(response.message || "Unable to delete discount.");
       setNotice(response?.message || "Discount deleted successfully.");
       setDeleteTarget(null);
@@ -419,6 +429,24 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
     }
   };
   const updateForm = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const syncDiscounts = async () => {
+    if (syncing || loading) return;
+    setNotice("");
+    setSyncing(true);
+    try {
+      const response = await syncWordpressDiscounts(storeId);
+      if (response?.success === false || ["error", "failed"].includes(String(response?.status || "").toLowerCase())) {
+        throw new Error(response.message || "Unable to sync discounts.");
+      }
+      setNotice(response?.message || "Discounts synced successfully.");
+      setSummaryDiscounts(previous => ({ ...previous, [storeId]: [] }));
+      setKnownTotals(previous => ({ ...previous, [storeId]: 0 }));
+      setRetry(value => value + 1);
+    } catch (error) {
+      setNotice(error.message || "Unable to sync discounts.");
+      setSyncing(false);
+    }
+  };
   const selectedProduct = catalogProducts.find(product => catalogProductId(product) === String(form.product));
   const selectedProductPrice = selectedProduct?.price ?? selectedProduct?.payload?.price ?? "";
   const numericProductPrice = Number.parseFloat(String(selectedProductPrice).replace(/[^\d.-]/g, ""));
@@ -516,7 +544,11 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
           <div><h1>Discounts</h1><p>Create and manage automatic, mix 'n match, and multipack discounts for this store.</p></div>
         </div>
         <div className="coupons-header-actions">
-          <Permit module="discounts" action="create"><button type="button" className="coupon-create-btn" onClick={openCreate}><i className="bi bi-plus-lg" />Create discount</button></Permit>
+          <button type="button" className="discount-sync-btn" onClick={syncDiscounts} disabled={syncing || loading}>
+            <i className={`bi ${syncing ? "bi-arrow-repeat discount-sync-spinning" : "bi-arrow-repeat"}`} />
+            {syncing ? "Syncing…" : "Sync discounts"}
+          </button>
+          <button type="button" className="coupon-create-btn" onClick={openCreate}><i className="bi bi-plus-lg" />Create discount</button>
         </div>
       </div>
 

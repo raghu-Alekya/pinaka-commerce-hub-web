@@ -208,7 +208,8 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
         const timeout = window.setTimeout(() => setNotice(""), 1800);
         return () => window.clearTimeout(timeout);
     }, [notice]);
-    const session = useMemo(() => ({ saved: savedScreens.current[selectedConfig] || {}, baseline: {}, draft: {}, resets: {}, save: null, editorDirty: null, resetEditor: null }), [selectedConfig]);
+    const screenKey = `${storeId || "global"}:${selectedConfig || "overview"}`;
+    const session = useMemo(() => ({ saved: savedScreens.current[screenKey] || {}, baseline: {}, draft: {}, resets: {}, save: null, editorDirty: null, resetEditor: null }), [screenKey]);
     const isDirty = () => snapshotKey(session.draft) !== snapshotKey(session.baseline) || !!session.editorDirty?.();
     const leave = (target) => { setPendingLeave(null); setNotice(""); setSelectedConfig(target); };
     const discardChanges = () => {
@@ -229,7 +230,7 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
         try {
             if (await session.save() !== true) { setPendingLeave(null); return; }
             // Newer screens already save through their existing parent setters.
-            if (!["cash-register", "terminal-mapping", "safe-drop"].includes(selectedConfig)) savedScreens.current[selectedConfig] = { ...session.draft };
+            if (!["cash-register", "terminal-mapping", "safe-drop"].includes(selectedConfig)) savedScreens.current[screenKey] = { ...session.draft };
             if (selectedConfig === "tax") {
                 setStoreCurrency(session.draft.currency);
                 onCurrencyChange?.(session.draft.currency);

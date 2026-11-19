@@ -19,7 +19,8 @@ import { listPlans } from "../api/plans";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CalendarDays, ChevronLeft, ChevronRight, Download } from "lucide-react";
-import { listMerchants, getMerchant, updateMerchantStatus, deleteMerchant } from "../api/merchants";
+import { listMerchants, getMerchant, updateMerchantStatus, deleteMerchant, isSubscriptionExpired } from "../api/merchants";
+import { storeTypesApi } from "../api/storeTypes";
 import { listMerchantEmployees, getEmployee, updateEmployee } from "../api/employees";
 import { api, ApiError, pendingStoreRead } from "../api/http";
 import { devicesApi } from "../api/devices";
@@ -189,6 +190,15 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
   const [employeesError, setEmployeesError] = useState('');
   const [allSubscriptions, setAllSubscriptions] = useState([]);
   const [allPlans, setAllPlans] = useState([]);
+  const [masterStoreTypes, setMasterStoreTypes] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    storeTypesApi.getAll().then(response => {
+      if (active) setMasterStoreTypes(response.storeTypes || []);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (draft) { setLoading(false); setError(''); return; }
@@ -392,38 +402,34 @@ async function openEmployeeEdit(employee) {
       : String(rawCycle).charAt(0).toUpperCase() + String(rawCycle).slice(1).toLowerCase()
     : "Monthly";
 
-  const displayStoreType =
-    subMatch?.storeTypeName ||
-    (typeof subStoreType === "object" && subStoreType ? subStoreType.name || subStoreType.storeTypeName || subStoreType.code : subStoreType) ||
-    subscription.storeTypeName ||
-    subscription.store_type_name ||
-    matchedPlan?.storeTypeName ||
-    raw.storeTypeName ||
-    raw.storeType ||
-    summary.storeType ||
-    "Convenience Store";
-
-  const displayStatus =
-    subMatch?.status ||
-    subscription.status ||
-    saved?.subscriptionStatus ||
-    raw.status ||
-    "ACTIVE";
+  const storeTypeRefs = [
+    subMatch?.storeTypeId, subMatch?.storeTypeCode,
+    subscription.storeTypeId, subscription.store_type_id,
+    typeof subStoreType === "object" ? subStoreType.id || subStoreType.storeTypeId || subStoreType.store_type_id || subStoreType.code || subStoreType.storeTypeCode : subStoreType,
+    matchedPlan?.storeTypeId, matchedPlan?.store_type_id, matchedPlan?.storeType,
+  ].filter(Boolean).map(value => String(value).trim().toLowerCase());
+  const masterStoreType = masterStoreTypes.find(type => [type.id, type.storeTypeId, type.store_type_id, type.code, type.storeTypeCode, type.store_type_code, type.name]
+    .some(value => value && storeTypeRefs.includes(String(value).trim().toLowerCase())));
+  const explicitStoreTypeNames = [
+    typeof subStoreType === "object" ? subStoreType.name || subStoreType.storeTypeName || subStoreType.store_type_name : "",
+    subscription.storeTypeName, subscription.store_type_name,
+    matchedPlan?.storeTypeName, matchedPlan?.store_type_name,
+    raw.storeTypeName, summary.storeType,
+  ].filter(value => typeof value === "string" && value.trim() && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim()));
+  const displayStoreType = masterStoreType?.name || explicitStoreTypeNames[0] || "Store Type";
 
   const rawStartVal =
-    subMatch?.start ||
     subMatch?.rawStart ||
+    subMatch?.start ||
     subscription.startDate ||
     subscription.start_date ||
     subscription.createdAt ||
     subscription.created_at ||
     saved?.start;
 
-  const displayStartDate = rawStartVal ? String(rawStartVal).slice(0, 10) : undefined;
-
   const rawEndVal =
-    subMatch?.end ||
     subMatch?.rawEnd ||
+    subMatch?.end ||
     subscription.renewalDate ||
     subscription.renewal_date ||
     subscription.nextBillingDate ||
@@ -431,6 +437,18 @@ async function openEmployeeEdit(employee) {
     subscription.currentPeriodEnd ||
     subscription.current_period_end ||
     summary.renewal;
+
+  const statusValue =
+    subMatch?.status ||
+    subscription.status ||
+    saved?.subscriptionStatus ||
+    raw.status ||
+    "ACTIVE";
+  const displayStatus = String(statusValue).toLowerCase() === "active" && isSubscriptionExpired(rawEndVal)
+    ? "Inactive"
+    : statusValue;
+
+  const displayStartDate = rawStartVal ? String(rawStartVal).slice(0, 10) : undefined;
 
   const displayRenewalDate = rawEndVal ? String(rawEndVal).slice(0, 10) : undefined;
 
@@ -559,7 +577,19 @@ async function openEmployeeEdit(employee) {
       @media(max-width:650px){.merchant-readonly .merchant-view-fields{grid-template-columns:1fr;}}
     `}</style>
     <header className="merchant-view-topbar">
-      {vendorFlow ? <><button type="button" className="merchant-view-back" onClick={() => vendorBackRef.current?.()}><i className="bi bi-arrow-left" /> Vendors</button><span>/</span><strong>{vendorFlow === "create" ? "Add New Vendor" : "Add Existing Vendor"}</strong></> : tenderFlow ? <><button type="button" className="merchant-view-back" onClick={() => tenderBackRef.current?.()}><i className="bi bi-arrow-left" /> Tenders</button><span>/</span><strong>Add Existing Tender</strong></> : addingEmployee ? <><button type="button" className="merchant-view-back" onClick={() => setAddingEmployee(false)}><i className="bi bi-arrow-left" /> Employees</button><span>/</span><strong>Add Employee</strong></> : addingDevice ? <><button type="button" className="merchant-view-back" onClick={() => setAddingDevice(false)}><i className="bi bi-arrow-left" /> Devices</button><span>/</span><strong>Add Device</strong></> : <button type="button" className="merchant-view-back" onClick={onBack}><i className="bi bi-arrow-left" /> Merchants</button>}
+      {activeTab === "vendors" && vendorFlow ? (
+        <><button type="button" className="merchant-view-back" onClick={() => vendorBackRef.current?.()}><i className="bi bi-arrow-left" /> Vendors</button><span>/</span><strong>{vendorFlow === "create" ? "Add New Vendor" : "Add Existing Vendor"}</strong></>
+      ) : activeTab === "tenders" && tenderFlow ? (
+        <><button type="button" className="merchant-view-back" onClick={() => tenderBackRef.current?.()}><i className="bi bi-arrow-left" /> Tenders</button><span>/</span><strong>Add Existing Tender</strong></>
+      ) : activeTab === "employees" && addingEmployee ? (
+        <><button type="button" className="merchant-view-back" onClick={() => setAddingEmployee(false)}><i className="bi bi-arrow-left" /> Employees</button><span>/</span><strong>Add Employee</strong></>
+      ) : activeTab === "employees" && editingEmployee ? (
+        <><button type="button" className="merchant-view-back" onClick={() => setEditingEmployee(null)}><i className="bi bi-arrow-left" /> Employees</button><span>/</span><strong>Edit Employee</strong></>
+      ) : activeTab === "devices" && (addingDevice || editingDevice) ? (
+        <><button type="button" className="merchant-view-back" onClick={() => { setAddingDevice(false); setEditingDevice(null); }}><i className="bi bi-arrow-left" /> Devices</button><span>/</span><strong>{editingDevice ? "Edit Device" : "Add Device"}</strong></>
+      ) : (
+        <button type="button" className="merchant-view-back" onClick={onBack}><i className="bi bi-arrow-left" /> Merchants</button>
+      )}
     </header>
     <div className="merchant-view-layout">
       {!loading && !error && <div className="merchant-view-tabs" role="tablist" aria-orientation="vertical" aria-label="Merchant details">
@@ -602,7 +632,7 @@ async function openEmployeeEdit(employee) {
         ]} /></ViewSection>
       </div>
       <div role="tabpanel" id="merchant-panel-stores" aria-labelledby="merchant-tab-stores" hidden={activeTab !== 'stores'} tabIndex={0}>
-        {activeTab === 'stores' && <MerchantStores merchantId={apiMerchantId || merchantId} merchantDetails={result?.merchant || merchant || raw} embedded />}
+        {activeTab === 'stores' && <MerchantStores merchantId={apiMerchantId || merchantId} merchantDetails={result?.merchant || merchant || raw} subscription={result?.subscription || subscription} embedded />}
       </div>
       <div role="tabpanel" id="merchant-panel-vendors" aria-labelledby="merchant-tab-vendors" hidden={activeTab !== 'vendors'} tabIndex={0}>
         {activeTab === 'vendors' && <MerchantVendors merchantId={merchantId} masterVendors={masterVendors} assignedVendorIds={vendorAssignments?.[merchantId] ?? saved?.vendorIds ?? raw.vendorIds ?? raw.vendors ?? []} onSaveAssignments={onSaveVendorAssignments} onNavigationChange={setVendorFlow} navigationBackRef={vendorBackRef} loading={vendorsLoading} error={vendorsError}/>}
@@ -974,7 +1004,19 @@ const [statusFilter, setStatusFilter] = useState("");
     setDateFrom(draftFrom); setDateTo(draftTo); setJoinedRange('custom'); setPage(1); setDatePickerOpen(false);
   }
   const [apiMerchants, setMerchants] = useState([]);
-  const merchants = useMemo(() => { const combined = new Map(apiMerchants.map(row => [String(row.id), row])); localMerchants.forEach(row => combined.set(String(row.id), row)); return [...combined.values()]; }, [apiMerchants, localMerchants]);
+  const merchants = useMemo(() => {
+    const combined = new Map(apiMerchants.map(row => [String(row.id), row]));
+    localMerchants.forEach(row => combined.set(String(row.id), row));
+    return [...combined.values()].map(row => {
+      const raw = row._raw || row;
+      const subscription = row.subscription || raw.subscription || raw.merchant?.subscription || {};
+      const renewal = subscription.renewalDate || subscription.renewal_date || subscription.currentPeriodEnd || subscription.current_period_end || row.renewalDate || row.renewal_date || raw._onboarding?.renewalDate || raw._onboarding?.renewal_date;
+      if (String(row.status || '').toLowerCase() === 'active' && isSubscriptionExpired(renewal)) {
+        return { ...row, status: 'Inactive' };
+      }
+      return row;
+    });
+  }, [apiMerchants, localMerchants]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -1357,7 +1399,7 @@ const [statusFilter, setStatusFilter] = useState("");
                     <td>
                       <div className="plan-info">
                         <strong>{m.plan}</strong>
-                        {m.renewal ? <span>Renews on {m.renewal}</span> : null}
+                        {m.renewal ? <span>{m.renewalLabel || "Renews on"} {m.renewal}</span> : null}
                       </div>
                     </td>
                     <td>
@@ -1595,7 +1637,7 @@ function MerchantEmployeeList({employees,merchantName,onAdd,onRefresh,onEdit}) {
         }}
     >
         <td>
-            <strong>{employeeName(e)}</strong>
+            <span>{employeeName(e)}</span>
             {e.employeeCode && <small>{e.employeeCode}</small>}
         </td>
 
@@ -1864,8 +1906,8 @@ return (
           <thead>
             <tr>
               {[
+                ['deviceCode', 'Device ID'],
                 ['activationKey', 'Activation Key'],
-                ['deviceCode', 'Device Code'],
                 ['name', 'Device Name'],
                 ['type', 'Type'],
                 ['storeLabel', 'Store'],
@@ -1921,11 +1963,11 @@ return (
                       setView(d);
                     }}
                   >
-                    <td>{d.activationKey}</td>
                     <td>{d.deviceCode}</td>
+                    <td>{d.activationKey}</td>
                     <td>
                       <span className="mdl-name">
-                        <strong>{d.name}</strong>
+                        <span>{d.name}</span>
                       </span>
                     </td>
                     <td>{d.type}</td>

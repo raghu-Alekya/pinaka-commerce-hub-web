@@ -2544,7 +2544,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <table className="sf-plan-details-table">
               <thead><tr><th>Plan</th><th>Price</th><th>Billing Type</th><th>Stores Used</th><th>Remaining to Map</th><th>Status</th><th>Key Features</th></tr></thead>
               <tbody><tr>
-                <td><span className="sf-plan-details-name"><span className="sf-icon-square bi bi-file-earmark-text" /><strong>{planName}</strong></span></td>
+                <td><span className="sf-plan-details-name"><span className="" /><strong>{planName}</strong></span></td>
                 <td>{planPrice == null ? "—" : `${subscription?.currency || currencyCode} ${planPrice}`}</td>
                 <td>{billing}</td>
                 <td>{used} / {limit}</td>
@@ -2564,7 +2564,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               : "Store allowance was not returned with this subscription."
           }
         >
-          <div className="sf-table-wrap">
+          <div className={`sf-table-wrap${merchantStores.length ? " sf-existing-stores-has-data" : ""}`}>
             <table className="sf-table">
               <thead>
                 <tr>
@@ -2981,7 +2981,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   const digits = value.replace(/\D/g, "");
                   updateStore("phone", digits ? `+${digits}` : "");
                 }}
-                inputProps={{ id: "store-phone", name: "phone", type: "tel", autoComplete: "tel", "aria-invalid": invalidStoreFields.has("Store Phone") }}
+                inputProps={{ id: "store-phone", name: "store-phone", type: "tel", autoComplete: "off", "aria-invalid": invalidStoreFields.has("Store Phone") }}
                 placeholder="Enter phone number"
               />
               {getFieldValidationMessage(error, "Store Phone") && <small className="sf-field-error" role="alert">{getFieldValidationMessage(error, "Store Phone")}</small>}
@@ -2993,7 +2993,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               optional
               value={store.email}
               onChange={(value) => updateStore("email", value)}
-              type="email"
+              type="text"
+              inputMode="email"
+              name="new-store-contact"
+              autoComplete="new-password"
               placeholder="store@example.com"
             />
             <Field

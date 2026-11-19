@@ -651,11 +651,11 @@ const handlePageSizeChange = (size) => {
                     {/* CONTACT */}
                     <td>
                       <div className="employee-contact">
-                        <div>{employee.email}</div>
-                        <div>{employee.phone}</div>
+                        <div><strong> {employee.phone}</strong></div>
+                        <div><span>{employee.email}</span></div>
                       </div>
                     </td>
-                    <td>{employee.loginPin || "—"}</td>
+                   <td>{employee.loginPin || "—"}</td>
                     {/* ROLE */}
 
                     {/* MERCHANT */}

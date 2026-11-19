@@ -133,6 +133,8 @@
 ========================================================= */
 
 .summary-row {
+    margin-right: 0;
+    margin-left: 0;
     margin-bottom: 16px;
 }
 
@@ -256,10 +258,11 @@
     height: 52px;
     padding: 10px 14px;
     font-size: 13px;
+    font-weight: 600!important;
     vertical-align: middle;
     white-space: nowrap;
     border-bottom: 1px solid #e4e8ef;
-    color: #697285;
+    color: #10264d;
 }
 
 .store-table-details {
@@ -276,9 +279,9 @@
 }
 
 .store-table-details small {
-    color: #7a8498;
-    font-size: 11px;
-    font-weight: 450;
+    color: #5f728e;
+    font-size: 12px;
+    font-weight: 400;
 }
 
 .stores-card .stores-table td:not(:last-child) {
@@ -355,15 +358,16 @@
 }
 
 .store-cell strong {
-    color: #344057;
-    font-size: 12px;
+    color: #10264d;
+    font-size: 13px;
     font-weight: 600;
 }
 
 .store-cell small {
-    color: #979eac;
+    color: #5f728e;
     font-size: 12px;
     margin-top: 3px;
+    font-weight: 400;
 }
 
 /* =========================================================
