@@ -25,17 +25,6 @@ function statusClass(status) {
   return "processing";
 }
 
-function matchesDate(createdAt, dateFilter) {
-  if (!dateFilter) return true;
-  const orderDate = new Date(createdAt);
-  if (Number.isNaN(orderDate.getTime())) return false;
-  const today = new Date();
-  if (dateFilter === "today") return orderDate.toDateString() === today.toDateString();
-  const from = new Date(today);
-  from.setDate(today.getDate() - (dateFilter === "7days" ? 7 : 30));
-  return orderDate >= from;
-}
-
 async function applyStorePosCurrencies(orders) {
   if (!orders.length) return orders;
   const { stores = [] } = await listStores();
@@ -93,6 +82,7 @@ export default function Orders({
     storeId || (!embedded && searchParams.get("store")) || "",
   );
   const [orders, setOrders] = useState([]);
+  const [orderTotal, setOrderTotal] = useState(0);
   const [viewedOrder, setViewedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -102,13 +92,26 @@ export default function Orders({
   const [authorFilter, setAuthorFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const createdAfter = useMemo(() => {
+    if (!dateFilter) return "";
+    const start = new Date();
+    if (dateFilter === "today") start.setHours(0, 0, 0, 0);
+    else start.setDate(start.getDate() - (dateFilter === "7days" ? 7 : 30));
+    return start.toISOString();
+  }, [dateFilter]);
 
   useEffect(() => {
-    if (merchantId) setSelectedMerchant(merchantId);
+    if (merchantId) {
+      setSelectedMerchant(merchantId);
+      setCurrentPage(1);
+    }
   }, [merchantId]);
 
   useEffect(() => {
-    if (storeId) setSelectedStore(storeId);
+    if (storeId) {
+      setSelectedStore(storeId);
+      setCurrentPage(1);
+    }
   }, [storeId]);
 
   useEffect(() => {
@@ -136,7 +139,10 @@ export default function Orders({
       .then((rows) => {
         if (!active) return;
         setStores(rows);
-        if (rows.length === 1) setSelectedStore(rows[0].value);
+        if (rows.length === 1) {
+          setSelectedStore(rows[0].value);
+          setCurrentPage(1);
+        }
       })
       .catch(() => {
         if (active) setStores([]);
@@ -147,40 +153,11 @@ export default function Orders({
   }, [selectedMerchant, embedded]);
 
   useEffect(() => {
-    if (embedded || selectedMerchant || selectedStore) return undefined;
-    let active = true;
-    setLoading(true);
-    setError("");
-    setOrders([]);
-    pendingStoreRead("all-orders:database-rows", () =>
-      listScopedOrders(),
-    )
-      .then(async ({ orders: rows }) => {
-        let ordersWithCurrencies = rows;
-        try {
-          ordersWithCurrencies = await applyStorePosCurrencies(rows);
-        } catch {
-          // Store lookup failures should not prevent the all-orders list from loading.
-        }
-        if (!active) return;
-        setOrders(ordersWithCurrencies);
-      })
-      .catch((loadError) => {
-        if (!active) return;
-        setOrders([]);
-        setError(loadError?.message || "Failed to load orders.");
-      })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [embedded, selectedMerchant, selectedStore]);
-
-  useEffect(() => {
-    if (!selectedStore) {
-      if (embedded || selectedMerchant) {
-        setOrders([]);
-        setError("");
-        setLoading(false);
-      }
+    if (!selectedStore && (embedded || selectedMerchant)) {
+      setOrders([]);
+      setOrderTotal(0);
+      setError("");
+      setLoading(false);
       return undefined;
     }
     let active = true;
@@ -188,10 +165,10 @@ export default function Orders({
     setError("");
     setOrders([]);
     pendingStoreRead(
-      `scoped-orders:${selectedMerchant || "all"}:${selectedStore}`,
-      () => listScopedOrders({ merchantId: selectedMerchant, storeId: selectedStore }),
+      `scoped-orders:${selectedMerchant || "all"}:${selectedStore || "all"}:${currentPage}:${pageSize}:${search}:${statusFilter}:${authorFilter}:${createdAfter}`,
+      () => listScopedOrders({ merchantId: selectedMerchant, storeId: selectedStore, page: currentPage, perPage: pageSize, search: search.trim(), status: statusFilter, author: authorFilter, createdAfter }),
     )
-      .then(async ({ orders: rows }) => {
+      .then(async ({ orders: rows, total }) => {
         let ordersWithCurrencies = rows;
         try {
           ordersWithCurrencies = await applyStorePosCurrencies(rows);
@@ -200,10 +177,12 @@ export default function Orders({
         }
         if (!active) return;
         setOrders(ordersWithCurrencies);
+        setOrderTotal(total);
       })
       .catch((loadError) => {
         if (!active) return;
         setOrders([]);
+        setOrderTotal(0);
         setError(loadError?.message || "Failed to load orders.");
       })
       .finally(() => {
@@ -212,47 +191,23 @@ export default function Orders({
     return () => {
       active = false;
     };
-  }, [selectedStore, selectedMerchant, embedded]);
+  }, [selectedStore, selectedMerchant, embedded, currentPage, pageSize, search, statusFilter, authorFilter, createdAfter]);
 
   const authors = useMemo(
     () => [...new Set(orders.map((order) => order.author).filter(Boolean))],
     [orders],
   );
 
-  const filteredOrders = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return orders.filter((order) => {
-      const searchText = `${order.wooOrderId} ${order.offlineOrderId} ${order.author} ${order.status}`.toLowerCase();
-      return (
-        (!query || searchText.includes(query)) &&
-        (!statusFilter || order.status === statusFilter) &&
-        (!authorFilter || order.author === authorFilter) &&
-        matchesDate(order.createdAt, dateFilter)
-      );
-    });
-  }, [orders, search, statusFilter, authorFilter, dateFilter]);
-
-  const totalItems = filteredOrders.length;
+  const totalItems = orderTotal;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  const paginatedOrders = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredOrders.slice(start, start + pageSize);
-  }, [filteredOrders, currentPage, pageSize]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, statusFilter, dateFilter, authorFilter, selectedMerchant, selectedStore]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(totalPages);
-  }, [currentPage, totalPages]);
+  const paginatedOrders = orders;
 
   const completedCount = orders.filter((order) => statusClass(order.status) === "completed").length;
   const pendingCount = orders.filter((order) => statusClass(order.status) === "pending").length;
   const refundedCount = orders.filter((order) => statusClass(order.status) === "refunded").length;
-  const totalOrderCount = orders.length;
-  const completedPercentage = totalOrderCount ? ((completedCount / totalOrderCount) * 100).toFixed(1) : "0.0";
-  const pendingPercentage = totalOrderCount ? ((pendingCount / totalOrderCount) * 100).toFixed(1) : "0.0";
+  const totalOrderCount = orderTotal;
+  const completedPercentage = orders.length ? ((completedCount / orders.length) * 100).toFixed(1) : "0.0";
+  const pendingPercentage = orders.length ? ((pendingCount / orders.length) * 100).toFixed(1) : "0.0";
   function rememberFilters(nextMerchant, nextStore) {
     if (embedded) return;
     const next = new URLSearchParams(searchParams);
@@ -281,7 +236,7 @@ export default function Orders({
   const ordersToolbar = (
     <FiltersBar
       searchValue={search}
-      onSearchChange={setSearch}
+      onSearchChange={(value) => { setSearch(value); setCurrentPage(1); }}
       searchPlaceholder="Search order ID, client order ID, customer..."
       filters={[
         ...(!embedded ? [
@@ -298,6 +253,7 @@ export default function Orders({
             ],
             onChange: (value) => {
               setSelectedMerchant(value);
+              setCurrentPage(1);
               setSelectedStore("");
               setOrders([]);
               rememberFilters(value, "");
@@ -313,6 +269,7 @@ export default function Orders({
             ],
             onChange: (value) => {
               setSelectedStore(value);
+              setCurrentPage(1);
               rememberFilters(selectedMerchant, value);
             },
           },
@@ -327,7 +284,7 @@ export default function Orders({
             { label: "Last 7 Days", value: "7days" },
             { label: "Last 30 Days", value: "30days" },
           ],
-          onChange: setDateFilter,
+          onChange: (value) => { setDateFilter(value); setCurrentPage(1); },
         },
         {
           key: "author",
@@ -337,7 +294,7 @@ export default function Orders({
             { label: "All Customers", value: "" },
             ...authors.map((author) => ({ label: author, value: author })),
           ],
-          onChange: setAuthorFilter,
+          onChange: (value) => { setAuthorFilter(value); setCurrentPage(1); },
         },
         {
           key: "status",
@@ -350,7 +307,7 @@ export default function Orders({
               value: status,
             })),
           ],
-          onChange: setStatusFilter,
+          onChange: (value) => { setStatusFilter(value); setCurrentPage(1); },
         },
       ]}
       onClear={clearFilters}
@@ -400,9 +357,9 @@ export default function Orders({
 
       <div className="orders-summary">
         <SummaryCard icon="bi-bag-fill" tone="purple" label="Total Orders" value={totalOrderCount} meta="Live Records" metaTone="positive" />
-        <SummaryCard icon="bi-check-circle-fill" tone="green" label="Completed" value={completedCount} meta={`${completedPercentage}% of total`} metaTone="success" />
-        <SummaryCard icon="bi-clock-fill" tone="orange" label="Pending Payment" value={pendingCount} meta={`${pendingPercentage}% of total`} metaTone="warning" />
-        <SummaryCard icon="bi-arrow-counterclockwise" tone="red" label="Refunded Orders" value={refundedCount} meta="Live Records" metaTone="info" />
+        <SummaryCard icon="bi-check-circle-fill" tone="green" label="Completed" value={completedCount} meta={`${completedPercentage}% of this page`} metaTone="success" />
+        <SummaryCard icon="bi-clock-fill" tone="orange" label="Pending Payment" value={pendingCount} meta={`${pendingPercentage}% of this page`} metaTone="warning" />
+        <SummaryCard icon="bi-arrow-counterclockwise" tone="red" label="Refunded Orders" value={refundedCount} meta="On this page" metaTone="info" />
       </div>
 
       <div className={`orders-card ${!embedded ? "orders-standalone-card" : ""} w-full max-w-full min-w-0 overflow-hidden`}>
