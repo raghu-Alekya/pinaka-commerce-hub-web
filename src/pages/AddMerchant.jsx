@@ -200,7 +200,7 @@ function phoneInputValue(value, phoneCode) {
   const digits = raw.replace(/\D/g, "");
   const callingCode = String(phoneCode || "").replace(/\D/g, "");
 
-  if (!digits) return "";
+  if (!digits) return callingCode;
 
   // react-phone-input-2 expects the dial code to be part of `value`.
   // A national US number such as 5125550101 must be passed as 15125550101;
@@ -529,7 +529,15 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     setError("");
     setSubmitting(true);
     const data = {
-      merchant: { ...merchant, countryCode: locationOptions.selectedCountry?.iso3 || merchant.country, phoneDialCode, name: [merchant.firstName, merchant.lastName].filter(Boolean).join(" ") },
+      merchant: {
+        ...merchant,
+        countryCode: locationOptions.selectedCountry?.iso3 || merchant.country,
+        phoneDialCode,
+        phone: merchant.phone && phoneDialCode
+          ? `+${phoneDialCode}${String(merchant.phone).replace(/\D/g, "")}`
+          : merchant.phone,
+        name: [merchant.firstName, merchant.lastName].filter(Boolean).join(" "),
+      },
       password: String(merchant.password || "") || undefined,
       planId: plan.id,
       planDetails: plan,
