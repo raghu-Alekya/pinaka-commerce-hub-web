@@ -30,6 +30,7 @@ const sections = [
           ["/role-templates", "bi-person-badge", "Role Templates"],
           ["/plans/new", "bi-credit-card", "Plans"],
           ["/tenders", "bi-cash-coin", "Tenders"],
+          ["/pch-users", "bi-people", "PCH Users"],
         ],
       ],
     ],
@@ -85,7 +86,8 @@ export default function Sidebar({
     location.pathname.startsWith("/permissions") ||
     location.pathname.startsWith("/role-templates") ||
     location.pathname.startsWith("/plans") ||
-    location.pathname.startsWith("/tenders");
+    location.pathname.startsWith("/tenders") ||
+    location.pathname.startsWith("/pch-users");
 
   const [masterSetupOpen, setMasterSetupOpen] = useState(isMasterSetupRoute);
 

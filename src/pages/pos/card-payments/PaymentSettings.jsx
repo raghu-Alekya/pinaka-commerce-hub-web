@@ -36,11 +36,12 @@ function normalizePayments(records = []) {
       deviceMappings: Array.isArray(record.deviceMappings || record.device_mappings)
         ? (record.deviceMappings || record.device_mappings).map((mapping) => ({
           storeDeviceId: String(mapping.storeDeviceId || mapping.store_device_id || ""),
-          deviceId: mapping.deviceId || mapping.device_id || "",
+          cardTerminalDeviceId: mapping.cardTerminalDeviceId || mapping.card_terminal_device_id || mapping.deviceId || mapping.device_id || "",
+          deviceCode: mapping.deviceCode || mapping.device_code || "",
           storeDeviceActivationKey: mapping.storeDeviceActivationKey || mapping.store_device_activation_key || mapping.activationKey || mapping.activation_key || mapping.device_active_code || "",
           storeDeviceName: mapping.storeDeviceName || mapping.store_device_name || "",
         }))
-        : (record.deviceIds || record.device_ids || []).map((id) => ({ storeDeviceId: String(id), deviceId: "" })),
+        : (record.deviceIds || record.device_ids || []).map((id) => ({ storeDeviceId: String(id), cardTerminalDeviceId: "", deviceCode: "" })),
     };
   });
 }
@@ -49,6 +50,7 @@ export function PaymentSettings() {
   const settings = usePosSettings();
   const [payments, setPayments] = useConfigState("payments", DEFAULT_PAYMENTS);
   const [storeDevices, setStoreDevices] = useState([]);
+  const [openProvider, setOpenProvider] = useState(PROVIDERS[0]);
 
   useEffect(() => {
     if (!settings.storeId) return undefined;
@@ -56,7 +58,13 @@ export function PaymentSettings() {
     getPosCardPayments(settings.storeId)
       .then((records) => {
         if (!active) return;
-        setPayments(normalizePayments(records));
+        const normalized = normalizePayments(records);
+        setPayments(normalized);
+        setOpenProvider(
+          normalized.find((payment) => payment.isDefault)?.provider
+            || normalized.find((payment) => payment.enabled)?.provider
+            || PROVIDERS[0],
+        );
         settings.session.baseline = { ...settings.session.draft };
       })
       .catch((error) => {
@@ -103,7 +111,9 @@ export function PaymentSettings() {
   const updateDeviceMapping = (provider, index, changes) => setPayments((current) => current.map((item) => item.provider === provider
     ? { ...item, deviceMappings: item.deviceMappings.map((mapping, mappingIndex) => mappingIndex === index ? { ...mapping, ...changes } : mapping) }
     : item));
-  const addDeviceMapping = (provider) => updateProvider(provider, { deviceMappings: [...(payments.find((item) => item.provider === provider)?.deviceMappings || []), { storeDeviceId: "", deviceId: "" }] });
+  const findStoreDeviceForMapping = (mapping) => storeDevices.find((device) => device.id === String(mapping.storeDeviceId || ""))
+    || storeDevices.find((device) => mapping.deviceCode && device.code === mapping.deviceCode);
+  const addDeviceMapping = (provider) => updateProvider(provider, { deviceMappings: [...(payments.find((item) => item.provider === provider)?.deviceMappings || []), { storeDeviceId: "", cardTerminalDeviceId: "", deviceCode: "" }] });
   const removeDeviceMapping = (provider, index) => updateProvider(provider, { deviceMappings: (payments.find((item) => item.provider === provider)?.deviceMappings || []).filter((_, mappingIndex) => mappingIndex !== index) });
 
   const setEnabled = (provider, enabled) => setPayments((current) => {
@@ -129,7 +139,7 @@ export function PaymentSettings() {
       return;
     }
     const enabledPayments = payments.filter((item) => item.enabled);
-    if (enabledPayments.some((item) => (item.provider === "Payroc" && (!item.deviceMappings.length || item.deviceMappings.some((mapping) => !mapping.storeDeviceId || !mapping.deviceId.trim()))) || !item.processorMerchantId.trim() || !item.secretKey.trim() || (item.provider === "Kickback" && !item.webhookUrl.trim()) || (item.provider === "Payroc" && !item.terminalId.trim()))) {
+    if (enabledPayments.some((item) => (item.provider === "Payroc" && (!item.deviceMappings.length || item.deviceMappings.some((mapping) => !findStoreDeviceForMapping(mapping)?.code || !mapping.cardTerminalDeviceId.trim()))) || !item.processorMerchantId.trim() || !item.secretKey.trim() || (item.provider === "Kickback" && !item.webhookUrl.trim()) || (item.provider === "Payroc" && !item.terminalId.trim()))) {
       alert("Complete the required credentials for each enabled payment provider.");
       return;
     }
@@ -142,11 +152,10 @@ export function PaymentSettings() {
       return {
         ...configuration,
         deviceMappings: item.deviceMappings.map((mapping) => {
-          const storeDevice = storeDevices.find((device) => device.id === String(mapping.storeDeviceId));
+          const storeDevice = findStoreDeviceForMapping(mapping);
           return {
-            storeDeviceId: mapping.storeDeviceId,
-            deviceId: mapping.deviceId.trim(),
-            storeDeviceName: storeDevice?.name || mapping.storeDeviceName || "",
+            cardTerminalDeviceId: mapping.cardTerminalDeviceId.trim(),
+            deviceCode: storeDevice?.code || mapping.deviceCode || "",
             storeDeviceActivationKey: storeDevice?.activationKey || mapping.storeDeviceActivationKey || "",
           };
         }),
@@ -162,35 +171,51 @@ export function PaymentSettings() {
   return <div className="pos-panel card-payment-panel card-payment-settings-v2">
     <ConfigHeader />
     <p className="pc-help card-payment-help">Enable one or both gateways, configure their credentials, then choose the default gateway.</p>
-    <div className="card-payment-provider-grid">
-      {payments.map((payment) => <section className={`pc-card card-payment-provider-card${payment.enabled ? " is-enabled" : ""}`} key={payment.provider}>
-        <div className="card-payment-provider-heading">
-          <div>
-            <h3>{payment.provider}</h3>
-            <p>{payment.enabled ? "Available for card payments" : "Disabled for this store"}</p>
-          </div>
+    <div className="card-payment-accordion">
+      {payments.map((payment) => {
+        const isOpen = openProvider === payment.provider;
+        const panelId = `card-payment-${payment.provider.toLowerCase()}-panel`;
+        return <section className={`pc-card card-payment-provider-card${payment.enabled ? " is-enabled" : ""}${isOpen ? " is-open" : ""}`} key={payment.provider}>
+        <button
+          type="button"
+          className="card-payment-accordion-trigger"
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          onClick={() => setOpenProvider(isOpen ? "" : payment.provider)}
+        >
+          <span className="card-payment-accordion-title">
+            <strong>{payment.provider}</strong>
+            <small>{payment.enabled ? "Available for card payments" : "Disabled for this store"}</small>
+          </span>
+          <i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"}`} aria-hidden="true" />
+        </button>
+        <div className="card-payment-accordion-panel" id={panelId} hidden={!isOpen}>
+        <div className="card-payment-provider-controls">
+          <label className={`card-payment-default${!payment.enabled ? " is-disabled" : ""}`}>
+            <input
+              type="radio"
+              name="defaultCardPaymentProvider"
+              checked={payment.isDefault}
+              disabled={!payment.enabled}
+              onChange={() => chooseDefault(payment.provider)}
+            />
+            <span>Use as default gateway</span>
+          </label>
           <ConfigSwitch label="Enabled" checked={payment.enabled} onChange={(enabled) => setEnabled(payment.provider, enabled)} />
         </div>
-        <label className={`card-payment-default${!payment.enabled ? " is-disabled" : ""}`}>
-          <input
-            type="radio"
-            name="defaultCardPaymentProvider"
-            checked={payment.isDefault}
-            disabled={!payment.enabled}
-            onChange={() => chooseDefault(payment.provider)}
-          />
-          <span>Use as default gateway</span>
-        </label>
         <div className="card-payment-provider-fields">
           {payment.provider === "Payroc" && <div className="card-payment-device-mapping">
             <div className="card-payment-device-mapping-heading"><div><strong>Terminal device mapping</strong><span>Pair each card terminal Device ID with a device mapped to this store.</span></div><button type="button" className="card-payment-add-mapping" onClick={() => addDeviceMapping(payment.provider)} disabled={!storeDevices.length}>＋ Add mapping</button></div>
             {payment.deviceMappings.length > 0 && <div className="card-payment-mapping-list">
               <div className="card-payment-mapping-columns"><span>Card terminal Device ID</span><span>Store device</span><span aria-hidden="true" /></div>
               {payment.deviceMappings.map((mapping, index) => <div className="card-payment-mapping-row" key={`${payment.provider}-${index}`}>
-                <input aria-label={`Card terminal Device ID for mapping ${index + 1}`} value={mapping.deviceId} onChange={(event) => updateDeviceMapping(payment.provider, index, { deviceId: event.target.value })} placeholder="Enter terminal device ID" />
-                <select aria-label={`Store device for mapping ${index + 1}`} value={mapping.storeDeviceId} onChange={(event) => updateDeviceMapping(payment.provider, index, { storeDeviceId: event.target.value })}><option value="">Select a store device</option>{storeDevices.map((device) => {
-                  const assignedElsewhere = payment.deviceMappings.some((other, otherIndex) => otherIndex !== index && other.storeDeviceId === device.id);
-                  return <option key={device.id} value={device.id} disabled={assignedElsewhere}>{device.name}{device.identifier ? ` · ${device.identifier}` : ""}{assignedElsewhere ? " · already assigned" : ""}</option>;
+                <input aria-label={`Card terminal Device ID for mapping ${index + 1}`} value={mapping.cardTerminalDeviceId} onChange={(event) => updateDeviceMapping(payment.provider, index, { cardTerminalDeviceId: event.target.value })} placeholder="Enter terminal device ID" />
+                <select aria-label={`Store device for mapping ${index + 1}`} value={findStoreDeviceForMapping(mapping)?.id || mapping.storeDeviceId} onChange={(event) => {
+                  const selectedDevice = storeDevices.find((device) => device.id === event.target.value);
+                  updateDeviceMapping(payment.provider, index, { storeDeviceId: event.target.value, deviceCode: selectedDevice?.code || "", storeDeviceActivationKey: selectedDevice?.activationKey || "" });
+                }}><option value="">Select a store device</option>{storeDevices.map((device) => {
+                  const assignedElsewhere = payment.deviceMappings.some((other, otherIndex) => otherIndex !== index && findStoreDeviceForMapping(other)?.id === device.id);
+                  return <option key={device.id} value={device.id} disabled={assignedElsewhere}>{device.code ? `${device.code} · ` : ""}{device.name}{assignedElsewhere ? " · already assigned" : ""}</option>;
                 })}</select>
                 <button type="button" className="card-payment-remove-mapping" onClick={() => removeDeviceMapping(payment.provider, index)} aria-label={`Remove mapping ${index + 1}`}><i className="bi bi-trash3" /></button>
               </div>)}
@@ -203,7 +228,9 @@ export function PaymentSettings() {
           <SettingInput label="Secret Key" value={payment.secretKey} onChange={(value) => updateProvider(payment.provider, { secretKey: value })} placeholder="Enter secret key" type="password" />
           {payment.provider === "Kickback" && <SettingInput label="Webhook URL" value={payment.webhookUrl} onChange={(value) => updateProvider(payment.provider, { webhookUrl: value })} placeholder="Enter webhook URL" />}
         </div>
-      </section>)}
+        </div>
+      </section>;
+      })}
     </div>
     <div className="settings-actions pos-form-actions">
       <button type="button" className="pc-button" onClick={() => settings.requestLeave(null)}>Cancel</button>
