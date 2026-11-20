@@ -1,3 +1,5 @@
+import { countryCallingCode } from "../data/countryCallingCodes.js";
+
 export function formatPhoneDisplay(value, country = "") {
   const raw = String(value || "").trim();
   if (!raw) return raw;
@@ -37,6 +39,10 @@ export function formatPhoneDisplay(value, country = "") {
       }
       return `+${callingCode} ${national || "—"}`;
     }
+    const countryCode = countryCallingCode(country);
+    if (countryCode && digits.startsWith(countryCode)) {
+      return `+${countryCode} ${digits.slice(countryCode.length)}`;
+    }
   }
 
   const countryName = String(country || "").trim().toLowerCase();
@@ -56,6 +62,11 @@ export function formatPhoneDisplay(value, country = "") {
   }
   if (digits.length === 11 && digits.startsWith("1")) {
     return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+  }
+
+  const callingCode = countryCallingCode(country);
+  if (digits.length > 10 && callingCode && digits.startsWith(callingCode) && digits.length - callingCode.length >= 7) {
+    return `+${callingCode} ${digits.slice(callingCode.length)}`;
   }
 
   // Keep any supplied international calling code and group the national part
