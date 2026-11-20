@@ -88,7 +88,7 @@ export function MerchantEmployeeForm({
     city: "",
     state: "",
     pinCode: "",
-    country: "",
+    country: "India",
     merchant: merchantId,
     manager: "",
     username: "",
@@ -98,6 +98,7 @@ export function MerchantEmployeeForm({
   });
   const locationOptions = useLocationOptions(formData);
   const [phoneCountry, setPhoneCountry] = useState("in");
+  const [phoneDialCode, setPhoneDialCode] = useState("91");
 
 
   const [errors, setErrors] = useState({});
@@ -510,13 +511,17 @@ export function MerchantEmployeeForm({
                       value={formData.phone}
                       onChange={(value, country) => {
                         const nextCountry = country?.countryCode?.toLowerCase();
+                        const nextDialCode = String(country?.dialCode || phoneDialCode).replace(/\D/g, "");
+                        const dialCodeChanged = Boolean(phoneDialCode && nextDialCode && nextDialCode !== phoneDialCode);
+                        const matchingCountry = locationOptions.locationRecords.find((item) => item.iso2?.toLowerCase() === nextCountry);
                         setFormData((prev) => ({
                           ...prev,
-                          phone: value,
-                          ...(country?.name ? { country: country.name, state: "", city: "" } : {}),
+                          phone: dialCodeChanged ? "" : value,
+                          ...(matchingCountry?.name ? { country: matchingCountry.name, state: "", city: "" } : country?.name ? { country: country.name, state: "", city: "" } : {}),
                         }));
                         if (nextCountry) setPhoneCountry(nextCountry);
-                        setErrors((prev) => ({ ...prev, country: "", state: "", city: "" }));
+                        setPhoneDialCode(nextDialCode);
+                        setErrors((prev) => ({ ...prev, phone: "", country: "", state: "", city: "" }));
                       }}
                       inputProps={{
                         name: "phone",
@@ -573,9 +578,8 @@ export function MerchantEmployeeForm({
 
                 {locationOptions.error && <p role="alert" className="field-error">{locationOptions.error}</p>}
               <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
-                <SelectField label="Country" required name="country" value={formData.country}
-                  onChange={handleChange} error={errors.country} options={locationOptions.countries}
-                  placeholder={locationOptions.loading ? "Loading countries..." : "Select country"} disabled={locationOptions.loading} searchable />
+                <FormField label="Country" required name="country" value={formData.country || "India"}
+                  onChange={handleChange} error={errors.country} disabled />
                 <SelectField label="State" required name="state" value={formData.state}
                   onChange={handleChange} error={errors.state} options={locationOptions.states}
                   placeholder={formData.country ? "Select state" : "Select country first"} searchable />
@@ -792,6 +796,7 @@ function FormField({
   value,
   onChange,
   error,
+  disabled = false,
 }) {
   return (
     <div className="employee-field">
@@ -805,6 +810,7 @@ function FormField({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        disabled={disabled}
         className={error ? "field-invalid" : ""}
       />
 

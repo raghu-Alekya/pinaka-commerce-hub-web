@@ -660,7 +660,7 @@ export default function AddEmployee() {
                     Date of Birth
                   </label>
 
-                  <CalendarField value={formData.dob} onChange={(dob) => { setFormData((current) => ({ ...current, dob })); setErrors((current) => ({ ...current, dob: "" })); }} label="Date of Birth" max={latestEligibleEmployeeDob()} showLabel={false} invalid={Boolean(errors.dob)} allowManualEntry />
+                  <CalendarField value={formData.dob} onChange={(dob) => { setFormData((current) => ({ ...current, dob })); setErrors((current) => ({ ...current, dob: "" })); }} label="Date of Birth" max={latestEligibleEmployeeDob()} showLabel={false} invalid={Boolean(errors.dob)} allowManualEntry yearMonthSelect />
                   {errors.dob && (
                     <span className="field-error">{errors.dob}</span>
                   )}

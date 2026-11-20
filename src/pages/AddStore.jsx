@@ -109,6 +109,16 @@ function phoneInputValue(value, callingCode) {
   const dial = String(callingCode || "").replace(/\D/g, "");
   return dial && !digits.startsWith(dial) ? `${dial}${digits}` : digits;
 }
+
+function findInternationalPhoneCountry(phone, countries = []) {
+  const raw = String(phone || "").trim();
+  if (!raw.startsWith("+") && !raw.startsWith("00")) return null;
+  const digits = raw.replace(/\D/g, "");
+  return [...countries]
+    .filter((country) => country.phoneCode)
+    .sort((left, right) => String(right.phoneCode).length - String(left.phoneCode).length)
+    .find((country) => digits.startsWith(String(country.phoneCode).replace(/\D/g, ""))) || null;
+}
 const STEPS = [
   "Store Details",
   "Subscription",
@@ -246,15 +256,15 @@ const blankStore = (merchantId = "") => ({
   email: "",
   url: "",
   logo: "",
-  currency: "",
+  currency: "INR",
   status: "Active",
   addressLine1: "",
   addressLine2: "",
   city: "",
   state: "",
   zip: "",
-  country: "",
-  timezone: "",
+  country: "India",
+  timezone: "Asia/Kolkata",
   defaultLanguage: "",
   hours: blankHours(),
 });
@@ -611,7 +621,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const hoursRef = useRef(blankHours());
   const permissionsRef = useRef({});
   const editedPermissionRoles = useRef(new Set());
-  const featureDefaultsScope = useRef("");
   const loadedFeatureType = useRef("");
   const imageReads = useRef(0);
   const imageGeneration = useRef(0);
@@ -1331,9 +1340,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             merchantId,
             type: info.typeName,
             storeTypeId: info.typeId,
-            country: "",
-            currency: "",
-            timezone: "",
+            country: "India",
+            currency: "INR",
+            timezone: "Asia/Kolkata",
             defaultLanguage: info.owner.defaultLanguage || "",
           }));
           setRoles([]);
@@ -1690,39 +1699,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       .then(rows => setMasterPlans(Array.isArray(rows) ? rows : []))
       .catch(error => setLoadError(error.message || "Unable to load plan entitlements."));
   }, [featuresOnly, needsFeatures, loading, merchantLoading, merchantInfo, subscription, plan, merchant, matchedPlan, masterPlans.length, merchantId]);
-  // Default Enable Entitled Features
-  useEffect(() => {
-    if (
-      editing ||
-      loading ||
-      merchantLoading ||
-      featuresLoading ||
-      !merchantInfo ||
-      !activeStoreTypeId ||
-      loadedFeatureType.current !==
-        JSON.stringify([merchantId, activeStoreTypeId])
-    )
-      return;
-    const scope = JSON.stringify([merchantId, activeStoreTypeId]);
-    if (featureDefaultsScope.current === scope) return;
-    featureDefaultsScope.current = scope;
-    setEnabledFeatures(
-      featureRows.filter((row) => entitled(row.name)).map((row) => row.name),
-    );
-  }, [
-    editing,
-    loading,
-    merchantLoading,
-    featuresLoading,
-    merchantInfo,
-    merchantId,
-    activeStoreTypeId,
-    featureRows,
-  ]);
-
   const changeMerchant = (id) => {
     if (saveLock.current) return;
-    featureDefaultsScope.current = "";
     imageGeneration.current += 1;
     loadedRolePermissions.current = new Set();
     setStore(blankStore(id));
@@ -1786,6 +1764,13 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       timezone: COUNTRIES[country]?.zones[0] || "",
     }));
   };
+  useEffect(() => {
+    if (!editing || loading || locationOptions.loading) return;
+    const phoneCountry = findInternationalPhoneCountry(store.phone, locationOptions.locationRecords);
+    if (phoneCountry?.name && phoneCountry.name !== store.country) {
+      changeCountry(phoneCountry.name);
+    }
+  }, [editing, loading, locationOptions.loading, locationOptions.locationRecords, store.phone, store.country]);
   const copyScheduleToAll = () => {
     const base = hoursRef.current[0] || blankHours()[0];
     const hours = DAYS.map((day) => ({ ...base, day }));
@@ -2548,7 +2533,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <table className="sf-plan-details-table">
               <thead><tr><th>Plan</th><th>Price</th><th>Billing Type</th><th>Stores Used</th><th>Remaining to Map</th><th>Status</th><th>Key Features</th></tr></thead>
               <tbody><tr>
-                <td><span className="sf-plan-details-name"><span className="" /><strong>{planName}</strong></span></td>
+                <td><span className="sf-plan-details-name"><span className="" /><strong title={planName} data-tooltip={planName}>{planName}</strong></span></td>
                 <td>{planPrice == null ? "—" : `${subscription?.currency || currencyCode} ${planPrice}`}</td>
                 <td>{billing}</td>
                 <td>{used} / {limit}</td>
@@ -2683,7 +2668,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       String(item.code) === value ||
                       String(item.name).toLowerCase() === value.toLowerCase(),
                   );
-                  featureDefaultsScope.current = "";
                   setStore((current) => ({
                     ...current,
                     storeTypeId: value,
@@ -2744,20 +2728,15 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             subtitle="Enter the complete address of the store."
           >
             <div className="sf-form-grid sf-address-grid">
-              <SelectField
+              <Field
                 label="Country *"
-                searchable
                 invalid={invalidStoreFields.has("Country")}
                 error={getFieldValidationMessage(error, "Country")}
                 value={store.country}
-                onChange={changeCountry}
-                options={[
-                  { value: "", label: "Select country" },
-                  ...locationOptions.countries.map((value) => ({
-                    value,
-                    label: value,
-                  })),
-                ]}
+                onChange={() => {}}
+                readOnly
+                aria-readonly="true"
+                disabled={saving || readOnly}
               />
               <SelectField
                 label="State / Province *"
@@ -2984,10 +2963,13 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 countryCodeEditable={false}
                 value={phoneInputValue(store.phone, locationOptions.selectedCountry?.phoneCode)}
                 onChange={(value, data) => {
+                  const nextIso2 = data?.countryCode?.toLowerCase() || locationOptions.selectedCountry?.iso2?.toLowerCase() || "in";
+                  const currentIso2 = locationOptions.selectedCountry?.iso2?.toLowerCase() || "in";
+                  const dialCodeChanged = nextIso2 !== currentIso2;
                   const digits = value.replace(/\D/g, "");
-                  updateStore("phone", digits ? `+${digits}` : "");
+                  updateStore("phone", !dialCodeChanged && digits ? `+${digits}` : "");
                   const matchedAddressCountry = locationOptions.locationRecords.find(
-                    (country) => country.iso2?.toLowerCase() === data?.countryCode?.toLowerCase(),
+                    (country) => country.iso2?.toLowerCase() === nextIso2,
                   );
                   if (matchedAddressCountry && store.country !== matchedAddressCountry.name) {
                     changeCountry(matchedAddressCountry.name);

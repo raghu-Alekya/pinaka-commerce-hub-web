@@ -12,7 +12,6 @@ import { useLocationOptions } from "../data/useLocationOptions";
 import { storeTypesApi } from "../api/storeTypes";
 import FilterDropdown from "../components/FilterDropdown";
 import StatusBadge from "../components/StatusBadge";
-import BentoDetailModal from "../components/BentoDetailModal";
 import PhoneInputModule from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import "../styles/merchant-form.css";
@@ -41,7 +40,7 @@ const blankMerchant = () => ({
   city: "",
   state: "",
   postal: "",
-  country: "",
+  country: "India",
 });
 
 function merchantDetailToDraft(result, fallback = {}) {
@@ -330,7 +329,6 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const [submitting, setSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [saved, setSaved] = useState(null);
-  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
   const phoneCountryInitializedRef = useRef(false);
   useEffect(() => {
@@ -338,6 +336,9 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     const resolved = resolvePhoneDetails(merchant.phone, locationOptions.locationRecords, merchant.country);
     if (resolved.country?.iso2) setPhoneCountry(resolved.country.iso2.toLowerCase());
     if (resolved.dialCode) setPhoneDialCode(resolved.dialCode);
+    if (resolved.country?.name && resolved.country.name !== merchant.country) {
+      setMerchant((current) => ({ ...current, country: resolved.country.name, state: "", city: "" }));
+    }
     if (resolved.nationalNumber && resolved.nationalNumber !== String(merchant.phone || "").replace(/\D/g, "")) {
       setMerchant((current) => ({ ...current, phone: resolved.nationalNumber }));
     }
@@ -348,28 +349,12 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     if (!canonicalCountry || merchant.country === canonicalCountry) return;
     setMerchant((current) => current.country === canonicalCountry ? current : { ...current, country: canonicalCountry });
   }, [locationOptions.selectedCountry?.name, merchant.country]);
-  const initialDraftRef = useRef(null);
   const editing = Boolean(merchantId);
-  const currentDraftSnapshot = JSON.stringify({ merchant, planId, cycle, start, paymentMethod });
   const cancel = () => {
     if (submitting) return;
-    if (
-      !saved &&
-      initialDraftRef.current !== null &&
-      initialDraftRef.current !== currentDraftSnapshot
-    ) {
-      setShowUnsavedDialog(true);
-      return;
-    }
     navigate("/merchants");
   };
   const goToStep = (index) => setStep(index);
-
-  useEffect(() => {
-    if (!loading && initialDraftRef.current === null) {
-      initialDraftRef.current = currentDraftSnapshot;
-    }
-  }, [loading, currentDraftSnapshot]);
 
   useEffect(() => {
     let active = true;
@@ -438,6 +423,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       const resolvedPhone = resolvePhoneDetails(draft.merchant.phone, locationOptions.locationRecords, draft.merchant.country);
       if (resolvedPhone.country?.iso2) setPhoneCountry(resolvedPhone.country.iso2.toLowerCase());
       if (resolvedPhone.dialCode) setPhoneDialCode(resolvedPhone.dialCode);
+      if (resolvedPhone.country?.name) draft.merchant.country = resolvedPhone.country.name;
       if (resolvedPhone.nationalNumber) draft.merchant.phone = resolvedPhone.nationalNumber;
       phoneCountryInitializedRef.current = true;
       setMerchant(draft.merchant);
@@ -642,15 +628,21 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
               <Field label="Password *" type="password" name="merchant-entry-token" placeholder={editing ? "Enter a new password" : "Enter password"} value={merchant.password} required={!editing} autoComplete="one-time-code" error={fieldErrors.password} onChange={(v) => updateField("password", v)} />
               <div className={`pch-field pch-phone-field${fieldErrors.phone ? " pch-field-invalid" : ""}`}>
                 <label htmlFor="merchant-phone">Phone Number <span className="text-red-500" style={{ color: "#dc2626" }}>*</span></label>
-              <PhoneInput key={`${merchantId || "new"}-${loading ? "loading" : "ready"}-${phoneCountry || "unresolved"}`} country={phoneCountry || undefined} disableCountryGuess enableSearch countryCodeEditable={false} autoFormat value={phoneInputValue(merchant.phone, phoneDialCode)} onChange={(value, data) => { const nextCountry = data?.countryCode || phoneCountry; const nextDialCode = String(data?.dialCode || phoneDialCode).replace(/\D/g, ""); const digits = String(value || "").replace(/\D/g, ""); const nationalNumber = nextDialCode && digits.startsWith(nextDialCode) ? digits.slice(nextDialCode.length) : digits; updateField("phone", nationalNumber); setPhoneCountry(nextCountry); setPhoneDialCode(nextDialCode); setFieldErrors((previous) => ({ ...previous, phone: validatePhone(nextDialCode, value) })); }} inputProps={{ id: "merchant-phone", name: "merchant-phone-entry", required: true, autoComplete: "new-password", "aria-invalid": Boolean(fieldErrors.phone) }} />
+              <PhoneInput key={`${merchantId || "new"}-${loading ? "loading" : "ready"}-${phoneCountry || "unresolved"}`} country={phoneCountry || undefined} disableCountryGuess enableSearch countryCodeEditable={false} autoFormat value={phoneInputValue(merchant.phone, phoneDialCode)} onChange={(value, data) => {
+                const nextCountry = data?.countryCode || phoneCountry;
+                const nextDialCode = String(data?.dialCode || phoneDialCode).replace(/\D/g, "");
+                const dialCodeChanged = Boolean(phoneDialCode && nextDialCode && nextDialCode !== phoneDialCode);
+                const digits = String(value || "").replace(/\D/g, "");
+                const nationalNumber = dialCodeChanged ? "" : nextDialCode && digits.startsWith(nextDialCode) ? digits.slice(nextDialCode.length) : digits;
+                const matchedCountry = locationOptions.locationRecords.find((country) => country.iso2?.toLowerCase() === nextCountry?.toLowerCase());
+                setPhoneCountry(nextCountry);
+                setPhoneDialCode(nextDialCode);
+                setMerchant((current) => ({ ...current, phone: nationalNumber, ...(matchedCountry ? { country: matchedCountry.name, state: "", city: "" } : {}) }));
+                setFieldErrors((previous) => ({ ...previous, phone: validatePhone(nextDialCode, nationalNumber), ...(matchedCountry ? { country: "", state: "", city: "" } : {}) }));
+              }} inputProps={{ id: "merchant-phone", name: "merchant-phone-entry", required: true, autoComplete: "new-password", "aria-invalid": Boolean(fieldErrors.phone) }} />
                 {fieldErrors.phone && <span className="pch-field-error" role="alert">{fieldErrors.phone}</span>}
               </div>
-              <Select label="Country *" value={merchant.country} options={locationOptions.countries.map((value) => ({ value, label: value }))} required error={fieldErrors.country} onChange={(v) => {
-                const selectedCountry = locationOptions.locationRecords.find((country) => country.name === v);
-                updateField("country", v);
-                updateField("state", "");
-                updateField("city", "");
-              }} />
+              <Field label="Country *" value={merchant.country || locationOptions.selectedCountry?.name || ""} required error={fieldErrors.country} readOnly aria-readonly="true" />
               <Select label="State / Province *" value={merchant.state} placeholder={merchant.country ? "Select state or province" : "Select country first"} options={locationOptions.states.map((value) => ({ value, label: value }))} required error={fieldErrors.state} onChange={(v) => { updateField("state", v); updateField("city", ""); }} />
               <Field label="City *" placeholder="Enter city" value={merchant.city} required error={fieldErrors.city} onChange={(v) => updateField("city", v)} />
               <Field label="Address Line 1 *" placeholder="Enter street address" value={merchant.addressLine1} required error={fieldErrors.addressLine1} onChange={(v) => updateField("addressLine1", v)} />
@@ -753,21 +745,6 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
           </section>
         </main>
       </div>
-      {showUnsavedDialog && <BentoDetailModal
-        open
-        onClose={() => setShowUnsavedDialog(false)}
-        title="Unsaved changes"
-        headerIcon="bi-exclamation-circle"
-        maxWidth="max-w-[480px]"
-        compactSpacing
-        containerClassName="pch-unsaved-modal"
-      >
-        <p className="pch-unsaved-modal-message">You have unsaved changes. Are you sure you want to leave this page?</p>
-        <div className="pch-unsaved-modal-actions">
-          <button type="button" className="pch-unsaved-stay" onClick={() => setShowUnsavedDialog(false)}>Keep Editing</button>
-          <button type="button" className="pch-unsaved-leave" onClick={() => { setShowUnsavedDialog(false); navigate("/merchants"); }}>Leave Page</button>
-        </div>
-      </BentoDetailModal>}
     </div>
   );
 }

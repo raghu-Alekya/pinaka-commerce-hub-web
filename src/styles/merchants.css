@@ -2691,6 +2691,14 @@ dialog.merchant-delete-dialog::backdrop {
   color: #52617a;
 }
 
+.merchant-calendar-heading .merchant-calendar-title {
+  display: inline-flex;
+  width: auto;
+  min-width: 0;
+  padding: 0 6px;
+  font-weight: 600;
+}
+
 .merchant-calendar-heading button:hover,
 .merchant-calendar-grid button:not(:disabled):hover {
   background: #f0effa;
@@ -2733,6 +2741,20 @@ dialog.merchant-delete-dialog::backdrop {
 .merchant-calendar-grid button:disabled {
   color: #c6cbd4;
   cursor: not-allowed;
+}
+
+.merchant-calendar-choice-grid {
+  max-height: 220px;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.merchant-calendar-year-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.merchant-calendar-month-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .merchant-calendar-footer {
