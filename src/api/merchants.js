@@ -34,20 +34,21 @@ const COUNTRY_CODE_MAP = {
 
 function normalizeCountryCode(value) {
   if (!value) return "USA";
-  const str = String(value).trim().toLowerCase();
+  const original = String(value).trim();
+  const str = original.toLowerCase();
   return (
-    COUNTRY_CODE_MAP[str] || (str.length === 3 ? str.toUpperCase() : "USA")
+    COUNTRY_CODE_MAP[str] || (str.length === 3 ? str.toUpperCase() : original)
   );
 }
 
-function normalizePhoneNumber(phone, country) {
-  let raw = String(phone || "").trim();
+function normalizePhoneNumber(phone, phoneDialCode) {
+  const raw = String(phone || "").trim();
   if (!raw) return "+15552345678";
   if (raw.startsWith("+")) return raw;
   const digits = raw.replace(/\D/g, "");
-  const countryCode = normalizeCountryCode(country);
-  const dialCode = COUNTRY_DIAL_CODE_MAP[countryCode] || "+1";
-  return `${dialCode}${digits}`;
+  const dialCode = String(phoneDialCode || "").replace(/\D/g, "");
+  if (!dialCode) throw new Error("Select a phone country code.");
+  return `+${dialCode}${digits}`;
 }
 
 function computeRenewalDate(startDateStr, billingCycleStr) {
@@ -223,10 +224,10 @@ export function toFlatMerchantPayload(data) {
   const merchantEmail = m.email || m.merchantEmail || data.email || "";
 
   let rawPhone = m.phone || m.merchantPhoneNumber || data.phone || "";
-  let rawCountry = m.country || data.country || "USA";
+  let rawCountry = m.countryCode || m.country || data.country || "USA";
 
   const country = normalizeCountryCode(rawCountry);
-  const merchantPhoneNumber = normalizePhoneNumber(rawPhone, rawCountry);
+  const merchantPhoneNumber = normalizePhoneNumber(rawPhone, m.phoneDialCode);
 
   const addressLine1 =
     m.addressLine1 ||
