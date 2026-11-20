@@ -16,6 +16,7 @@ function MerchantStoresRedirect() {
 import Subscriptions from "./pages/Subscriptions";
 import Stores from "./pages/Stores";
 import Users from "./pages/Users";
+import PchUsers from "./pages/PchUsers";
 import PosConfiguration from "./pages/pos/PosConfiguration";
 import AddMerchant from "./pages/AddMerchant";
 import AddStore from "./pages/AddStore";
@@ -303,6 +304,7 @@ export default function App() {
         <Route path="/orders/:orderId" element={<OrderDetail />} />
         {/* Users and POS */}
         <Route path="/users" element={<Users />} />
+        <Route path="/pch-users" element={<PchUsers />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
         {/* Employees */}
         <Route path="/employees" element={<Employees />} />
