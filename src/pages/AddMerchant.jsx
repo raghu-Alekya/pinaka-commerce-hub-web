@@ -218,13 +218,12 @@ function phoneInputValue(value, phoneCode) {
   return `${callingCode}${internationalDigits}`;
 }
 
-// Merchant APIs may return a national `phone` and an international `contact_no`
-// without a leading '+'. Resolve the phone country from the international prefix,
-// independently of the merchant's business-address country.
-function resolvePhoneDetails(value, countries = []) {
+// New records carry an explicit international prefix. For older national-only
+// values, use the saved merchant country as the fallback phone country.
+function resolvePhoneDetails(value, countries = [], merchantCountry = "") {
   const raw = String(value || "").trim();
   const digits = raw.replace(/\D/g, "");
-  const hasInternationalForm = raw.startsWith("+") || raw.startsWith("00") || digits.length > 10;
+  const hasInternationalForm = raw.startsWith("+") || raw.startsWith("00");
   const normalizedDigits = raw.startsWith("00") ? digits.slice(2) : digits;
 
   if (hasInternationalForm) {
@@ -242,9 +241,12 @@ function resolvePhoneDetails(value, countries = []) {
     }
   }
 
-  // Never infer the phone country from the merchant's address country.
-  // A national-only number has no reliable country prefix, so leave its
-  // country unresolved instead of displaying a potentially incorrect flag.
+  const country = countries.find((item) => [item.name, item.iso2, item.iso3]
+    .some((value) => String(value || "").toLowerCase() === String(merchantCountry || "").toLowerCase()));
+  if (!hasInternationalForm && country) {
+    const dialCode = String(country.phoneCode || country.phone_code || country.dialCode || "").replace(/\D/g, "");
+    if (dialCode) return { country, dialCode, nationalNumber: digits };
+  }
   return { country: null, dialCode: "", nationalNumber: digits };
 }
 
@@ -333,7 +335,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const phoneCountryInitializedRef = useRef(false);
   useEffect(() => {
     if (locationOptions.loading || !locationOptions.locationRecords.length || loading || phoneCountryInitializedRef.current) return;
-    const resolved = resolvePhoneDetails(merchant.phone, locationOptions.locationRecords);
+    const resolved = resolvePhoneDetails(merchant.phone, locationOptions.locationRecords, merchant.country);
     if (resolved.country?.iso2) setPhoneCountry(resolved.country.iso2.toLowerCase());
     if (resolved.dialCode) setPhoneDialCode(resolved.dialCode);
     if (resolved.nationalNumber && resolved.nationalNumber !== String(merchant.phone || "").replace(/\D/g, "")) {
@@ -433,7 +435,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       const draft = merchantDetailToDraft(result, selected || result.merchant);
       // Use the detailed API phone value. List-row phone values may be
       // national-only and must not overwrite the international number.
-      const resolvedPhone = resolvePhoneDetails(draft.merchant.phone, locationOptions.locationRecords);
+      const resolvedPhone = resolvePhoneDetails(draft.merchant.phone, locationOptions.locationRecords, draft.merchant.country);
       if (resolvedPhone.country?.iso2) setPhoneCountry(resolvedPhone.country.iso2.toLowerCase());
       if (resolvedPhone.dialCode) setPhoneDialCode(resolvedPhone.dialCode);
       if (resolvedPhone.nationalNumber) draft.merchant.phone = resolvedPhone.nationalNumber;
