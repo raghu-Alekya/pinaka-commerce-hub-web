@@ -238,13 +238,6 @@
   font-size: 12px;
 }
 
-.sf-sidebar nav small {
-  display: block;
-  margin-top: 3px;
-  color: #8994aa;
-  font-size: 10px;
-  line-height: 1.25;
-}
 
 .sf-sidebar-foot {
   margin-top: auto;
@@ -858,7 +851,7 @@
 }
 .sf-hours-table-wrap {
   box-sizing: border-box;
-  padding: 0 16px 16px;
+  padding: 14px 12px 12px;
   overflow-x: auto;
 }
 .sf-hours-table-wrap .sf-hours-table {
@@ -2016,8 +2009,8 @@
 .sf-step-number { display: inline-grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border: 1px solid #dce2ed; border-radius: 50%; background: #fff; color: #76829a; font-size: 12px; font-weight: 700; }
 .sf-sidebar nav button.active .sf-step-number { border-color: var(--sf-purple); background: var(--sf-purple); color: #fff; }
 .sf-sidebar nav button > span:last-child { min-width: 0; }
-.sf-sidebar nav strong { display: block; font-size: 12px; }
-.sf-sidebar nav small { display: block; margin-top: 3px; color: #8994aa; font-size: 10px; line-height: 1.25; }
+.sf-sidebar nav strong { display: block; font-size: 14px; font-weight: 500; }
+.sf-sidebar nav small { display: block; margin-top: 3px; color: #535860; font-size: 11px; line-height: 1.25; }
 .sf-sidebar-foot { margin-top: auto; padding: 20px 10px 0; color: #98a2b5; font-size: 11px; }
 .sf-main { min-width: 0; padding: 24px; }
 .sf-root form { margin: 0; }
@@ -2033,9 +2026,9 @@
 .sf-screen { min-height: 400px; }
 .sf-panel { min-width: 0; margin-bottom: 16px; overflow: hidden; border: 1px solid var(--sf-border); border-radius: 10px; background: #fff; box-shadow: 0 3px 12px rgba(30, 46, 80, .025); }
 .sf-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 58px; padding: 10px 12px 4px; }
-.sf-panel-head h2 { margin: 0; color: #26344f; font-size: 14px; font-weight: 700; }
+.sf-panel-head h2 { margin: 0; color: #102144; font-size: 18px; font-weight: 600; }
 .sf-panel-head h2 > i { margin-right: 7px; color: var(--sf-purple); }
-.sf-panel-head p { margin: 3px 0 0; color: #8994a8; font-size: 11px; }
+.sf-panel-head p { margin: 3px 0 0; color: #7184a3; font-size: 13px; font-weight: 400; }
 .sf-outline, .sf-primary { display: inline-flex; min-height: 40px; min-width: 120px; align-items: center; justify-content: center; gap: 7px; padding: 0 13px; border: 1px solid #5143bc; border-radius: 7px; background: #f6f8fc; color:#5143bc; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .sf-outline:hover { background: #fafbfc; }
 .sf-primary { min-height: 40px; padding: 0 20px; border-color:#5143bc; background: #5143bc; color: #fff; box-shadow: 0 4px 10px #5937e82b; }
@@ -2051,9 +2044,9 @@
 .sf-three-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .sf-five-cols { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .sf-address-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.sf-field { display: grid; min-width: 0; gap: 6px; color: #53617b; font-size: 11px; font-weight: 700; }
+.sf-field { display: grid; min-width: 0; gap: 6px; color: #53617b; font-size: 13px; font-weight: 500; }
 .sf-field small { color: #98a2b6; font-size: 10px; font-weight: 500; }
-.sf-field input, .sf-field select, .sf-table select, .sf-table input:not([type="checkbox"]), .sf-id-field input { width: 100%; min-width: 0; height: 38px; padding: 0 10px; border: 1px solid #dfe4ee; border-radius: 6px; background: #fff; color: #293650; font-size: 12px; font-weight: 400; }
+.sf-field input, .sf-field select, .sf-table select, .sf-table input:not([type="checkbox"]), .sf-id-field input { width: 100%; min-width: 0; height: 38px; padding: 0 10px; border: 1px solid #dfe4ee; border-radius: 6px; background: #fff; color: #293650; font-size: 13px; font-weight: 400; }
 .sf-field input::placeholder, .sf-search input::placeholder { color: #a6afc0; }
 .sf-id-field { display: grid; gap: 3px; }
 .sf-id-field input { background: #f7f8fb; }

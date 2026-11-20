@@ -34,6 +34,8 @@ import BentoDetailModal from "../components/BentoDetailModal";
 import "../styles/merchants.css";
 import "../styles/merchant-details.css";
 import "../styles/global.css";
+import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
+import { countryNameFor, loadLocations } from "../data/locations";
 
 function readValue(value) {
   if (value === null || value === undefined || value === '') return '—';
@@ -610,7 +612,7 @@ async function openEmployeeEdit(employee) {
         ]} /></ViewSection>
         <ViewSection title="Primary Contact" subtitle="Contact details and the merchant's location."><ViewFields items={[
           ['Merchant Name', contact.name || raw.merchantName || raw.ownerName || [firstName, lastName].filter(Boolean).join(' ')],
-          ['Email', contact.email || raw.merchantEmail || summary.email], ['Phone', contact.phone || raw.merchantPhoneNumber || summary.phone],
+          ['Email', contact.email || raw.merchantEmail || summary.email], ['Phone', formatPhoneDisplay(contact.phone || raw.merchantPhoneNumber || summary.phone, contact.country || raw.country || address.country || summary.country)],
           ['Country', contact.country || raw.country || address.country || summary.country], ['City', contact.city || raw.city || address.city],
           ['State / Province', contact.state || raw.state || address.state || summary.state],
           ['Address', typeof address === 'string' ? address : fullAddress],
@@ -839,10 +841,12 @@ function dateRangeMatch(merchant, value, from = '', to = '', now = new Date()) {
   else return true;
   return date >= start && date < end;
 }
-function CalendarField({ label, value, onChange, min, max }) {
+export function CalendarField({ label, value, onChange, min, max, showLabel = true, invalid = false, allowManualEntry = false }) {
   const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => selectedDate || new Date());
+  const [manualValue, setManualValue] = useState(value ? `${value.slice(5, 7)}/${value.slice(8, 10)}/${value.slice(0, 4)}` : "");
+  const manualEditing = useRef(false);
   const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const daysInPreviousMonth = new Date(month.getFullYear(), month.getMonth(), 0).getDate();
@@ -857,13 +861,45 @@ function CalendarField({ label, value, onChange, min, max }) {
     return { date, iso, inMonth: date.getMonth() === month.getMonth() };
   });
   const displayValue = value ? `${value.slice(5, 7)}/${value.slice(8, 10)}/${value.slice(0, 4)}` : "mm/dd/yyyy";
+  useEffect(() => {
+    if (!manualEditing.current) setManualValue(value ? `${value.slice(5, 7)}/${value.slice(8, 10)}/${value.slice(0, 4)}` : "");
+  }, [value]);
 
-  return <div className="merchant-date-field">
-    <span>{label}</span>
+  function handleManualDateChange(event) {
+    const digits = event.target.value.replace(/\D/g, "").slice(0, 8);
+    const formatted = digits.length > 4
+      ? `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`
+      : digits.length > 2
+        ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+        : digits;
+    manualEditing.current = true;
+    setManualValue(formatted);
+    if (digits.length !== 8) {
+      onChange("");
+      return;
+    }
+    const monthNumber = Number(digits.slice(0, 2));
+    const dayNumber = Number(digits.slice(2, 4));
+    const yearNumber = Number(digits.slice(4));
+    const date = new Date(yearNumber, monthNumber - 1, dayNumber);
+    if (date.getFullYear() !== yearNumber || date.getMonth() !== monthNumber - 1 || date.getDate() !== dayNumber) {
+      onChange("");
+      return;
+    }
+    const iso = `${yearNumber}-${String(monthNumber).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
+    onChange(iso);
+    setMonth(date);
+  }
+
+  return <div className={`merchant-date-field${showLabel ? "" : " merchant-date-field-compact"}`}>
+    {showLabel && <span>{label}</span>}
     <div className="merchant-date-picker">
-      <button type="button" className={`merchant-date-trigger${value ? " has-value" : ""}`} aria-label={`${label}: ${displayValue}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setOpen(current => !current); }}>
+      {allowManualEntry ? <div className={`merchant-date-manual-row${invalid ? " invalid" : ""}`}>
+        <input type="text" inputMode="numeric" placeholder="mm/dd/yyyy" aria-label={`${label} (MM/DD/YYYY)`} value={manualValue} maxLength={10} onChange={handleManualDateChange} onBlur={() => { manualEditing.current = false; }} />
+        <button type="button" className="merchant-date-trigger" aria-label={`Open ${label} calendar`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setOpen(current => !current); }}><CalendarDays size={16} aria-hidden="true" /></button>
+      </div> : <button type="button" className={`merchant-date-trigger${value ? " has-value" : ""}${invalid ? " invalid" : ""}`} aria-label={`${label}: ${displayValue}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setOpen(current => !current); }}>
         <span>{displayValue}</span><CalendarDays size={16} aria-hidden="true" />
-      </button>
+      </button>}
       {open && <div className="merchant-calendar-popover" role="dialog" aria-label={`${label} calendar`}>
         <div className="merchant-calendar-heading">
           <strong>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</strong>
@@ -876,12 +912,12 @@ function CalendarField({ label, value, onChange, min, max }) {
         <div className="merchant-calendar-grid">
           {dateCells.map(({ date, iso, inMonth }) => {
             const disabled = (min && iso < min) || (max && iso > max);
-            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); setOpen(false); }}>{date.getDate()}</button>;
+            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { manualEditing.current = false; onChange(iso); setOpen(false); }}>{date.getDate()}</button>;
           })}
         </div>
         <div className="merchant-calendar-footer">
-          <button type="button" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
-          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); setOpen(false); setMonth(today); } }}>Today</button>
+          <button type="button" onClick={() => { manualEditing.current = false; setManualValue(""); onChange(""); setOpen(false); }}>Clear</button>
+          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { manualEditing.current = false; onChange(iso); setOpen(false); setMonth(today); } }}>Today</button>
         </div>
       </div>}
     </div>
@@ -918,6 +954,12 @@ function storeLimitFor(merchant, masterPlans) {
 export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [countryRecords, setCountryRecords] = useState([]);
+  useEffect(() => {
+    let active = true;
+    loadLocations().then((records) => { if (active) setCountryRecords(records); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
   const viewedId = searchParams.get('view');
   function openView(merchant) {
     setSearchParams(previous => { const next = new URLSearchParams(previous); next.set('view', String(merchant.id)); return next; });
@@ -1059,7 +1101,7 @@ const [statusFilter, setStatusFilter] = useState("");
               .toLowerCase()
               .includes(q.toLowerCase())) &&
           (!status || String(m.status || '').toLowerCase() === String(status).toLowerCase()) &&
-          (!plan || m.plan === plan) && (!storeCount || (storeCount === 'none' ? Number(m.stores) === 0 : storeCount === 'one' ? Number(m.stores) === 1 : Number(m.stores) > 1)) && (!location || `${m.country || ''} ${m.state || ''}`.trim().toLowerCase() === location.toLowerCase()) && (!joinedRange || dateRangeMatch(m, joinedRange, dateFrom, dateTo)),
+          (!plan || m.plan === plan) && (!storeCount || (storeCount === 'none' ? Number(m.stores) === 0 : storeCount === 'one' ? Number(m.stores) === 1 : Number(m.stores) > 1)) && (!location || `${countryNameFor(m.country, countryRecords)} ${m.state || ''}`.trim().toLowerCase() === location.toLowerCase()) && (!joinedRange || dateRangeMatch(m, joinedRange, dateFrom, dateTo)),
       ),
     [merchants, q, status, plan, joinedRange, storeCount, location, dateFrom, dateTo],
   );
@@ -1144,7 +1186,7 @@ const [statusFilter, setStatusFilter] = useState("");
     ),
   ];
   const statuses = ["Pending Setup", "Active", "Suspended", "Inactive"];
-  const locations = [...new Set(merchants.map(m => `${m.country || ''} ${m.state || ''}`.trim()).filter(Boolean))];
+  const locations = [...new Set(merchants.map(m => `${countryNameFor(m.country, countryRecords)} ${m.state || ''}`.trim()).filter(Boolean))];
 
   if (viewedId) return <MerchantReadOnly masterTenders={masterTenders} tenderAssignments={tenderAssignments} onSaveTenderAssignments={onSaveTenderAssignments} tendersLoading={tendersLoading} tendersError={tendersError} masterVendors={masterVendors} vendorAssignments={vendorAssignments} onSaveVendorAssignments={onSaveVendorAssignments} vendorsLoading={vendorsLoading} vendorsError={vendorsError} key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
     merchant={merchants.find(item => String(item.id) === viewedId || String(item.merchantId) === viewedId || String(item.merchantCode) === viewedId)} onBack={closeView}
@@ -1266,6 +1308,7 @@ const [statusFilter, setStatusFilter] = useState("");
             key: "location",
             label: "Location",
             value: location,
+            searchable: true,
             options: [
                 { label: "All Locations", value: "" },
                 ...locations.map((item) => ({
@@ -1383,11 +1426,11 @@ const [statusFilter, setStatusFilter] = useState("");
                     </td>
                     <td>
                       <div className="contact-info">
-                        <strong>{m.phone || "—"}</strong>
+                        <strong>{formatPhoneDisplay(m.phone, m.country) || "—"}</strong>
                         <span>{m.email || "—"}</span>
                       </div>
                     </td>
-                    <td><div className="contact-info"><strong>{m.state || "—"}</strong><span>{m.country || "—"}</span></div></td>
+                    <td><div className="contact-info"><strong>{m.state || "—"}</strong><span>{countryNameFor(m.country, countryRecords) || "—"}</span></div></td>
                     <td>
                       <strong>
                         {m.stores}

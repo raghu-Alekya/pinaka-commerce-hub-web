@@ -79,6 +79,31 @@ export default function App() {
   const [localMerchants, setLocalMerchants] = useState([]);
 
   useEffect(() => {
+    const suppressFormSuggestions = (form) => {
+      if (!(form instanceof HTMLFormElement) || form.getAttribute("autocomplete")?.toLowerCase() !== "off") return;
+      form.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"])').forEach((input) => {
+        const autocomplete = input.dataset.autocomplete === "off" ? "off" : "new-password";
+        if (input.getAttribute("autocomplete") !== autocomplete) input.setAttribute("autocomplete", autocomplete);
+      });
+    };
+    document.querySelectorAll('form[autocomplete="off"]').forEach(suppressFormSuggestions);
+    const autocompleteObserver = new MutationObserver((records) => {
+      records.forEach((record) => {
+        if (record.type === "attributes") {
+          suppressFormSuggestions(record.target instanceof HTMLFormElement ? record.target : record.target.form);
+          return;
+        }
+        record.addedNodes.forEach((node) => {
+          if (!(node instanceof Element)) return;
+          if (node.matches("form[autocomplete='off']")) suppressFormSuggestions(node);
+          node.querySelectorAll?.("form[autocomplete='off']").forEach(suppressFormSuggestions);
+          const parentForm = node.closest("form[autocomplete='off']");
+          if (parentForm) suppressFormSuggestions(parentForm);
+          if (node instanceof HTMLInputElement && node.form?.getAttribute("autocomplete")?.toLowerCase() === "off") suppressFormSuggestions(node.form);
+        });
+      });
+    });
+    autocompleteObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["autocomplete"] });
     const messageFor = (input) => {
       const validity = input.validity;
       const labelNode = input.labels?.[0]?.cloneNode(true);
@@ -141,6 +166,7 @@ export default function App() {
     document.addEventListener("input", onInput, true);
     document.addEventListener("change", onInput, true);
     return () => {
+      autocompleteObserver.disconnect();
       document.removeEventListener("invalid", onInvalid, true);
       document.removeEventListener("input", onInput, true);
       document.removeEventListener("change", onInput, true);

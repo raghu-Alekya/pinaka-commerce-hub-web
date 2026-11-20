@@ -108,7 +108,7 @@ export function MappingConfiguration({ value, registers, onSave, onBack, onManag
                 onClick={() => { setEditor({ id: newRecordId(), registerId: registers.find((register) => !rows.some((row) => row.registerId === register.id))?.id || "", terminal: "", printer: "", drawer: "", status: "Setup" }); setError(""); setMessage(""); }}>+ Add Mapping</button>
         </ConfigHeader>
         <p className="pc-help">POS devices come from Cash Register Settings. Add a register there before mapping its peripherals.</p>
-        {editor && <form className="pc-editor" onSubmit={apply}><h3>{rows.some((row) => row.id === editor.id) ? "Edit Mapping" : "Add Mapping"}</h3>
+        {editor && <form className="pc-editor" onSubmit={apply} autoComplete="off"><h3>{rows.some((row) => row.id === editor.id) ? "Edit Mapping" : "Add Mapping"}</h3>
             {!registers.some((register) => !rows.some((row) => row.id !== editor.id && row.registerId === register.id)) && <div className="pc-mapping-notice" role="status">
                 <p>{registers.length ? "All registers already have a mapping. Cancel to edit an existing mapping, or add and save a new register first." : "Add and save a register before creating its device mapping."}</p>
                 <button type="button" className="pc-button" onClick={onManageRegisters}>Open Cash Register Settings</button>

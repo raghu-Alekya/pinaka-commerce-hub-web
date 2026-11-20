@@ -13,6 +13,14 @@ export function loadLocations() {
   return locationsPromise;
 }
 const matches = (value, ...keys) => keys.some(key => key != null && String(key).toLowerCase() === String(value).trim().toLowerCase());
+export function countryNameFor(value, countries = []) {
+  const identifier = value && typeof value === "object"
+    ? value.name || value.countryName || value.iso2 || value.iso3 || value.code || value.id
+    : value;
+  if (!identifier) return "";
+  const country = countries.find(item => matches(identifier, item.name, item.iso2, item.iso3, item.id));
+  return country?.name || String(identifier);
+}
 export async function getCountries() {
   return (await loadLocations()).map(({states, ...country}) => country);
 }

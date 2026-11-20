@@ -4937,6 +4937,14 @@
 .pc-denomination > .pc-button { margin-top: 26px; min-height: 39px; }
 .pc-denomination input[type="file"] { height: 39px; padding: 7px 10px; }
 @media (max-width: 700px) { .pc-denomination > .pc-button { margin-top: 0; } }
+.pc-denomination > .list-actions { align-self: start; margin-top: 26px; }
+.pc-image-file-control { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; height: 39px; box-sizing: border-box; padding: 4px 8px; border: 1px solid #d9e1f0; border-radius: 6px; background: #fff; }
+.pc-image-file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+.pc-image-file-button { flex: 0 0 auto; padding: 6px 10px; border: 1px solid #d9e1f0; border-radius: 4px; background: #f8f9fc; color: #35445e; font-size: 11px; font-weight: 600; cursor: pointer; }
+.pc-image-file-button:hover { background: #f0edff; border-color: #c9c2f3; }
+.pc-image-file-input:focus-visible + .pc-image-file-button { outline: 2px solid #5143bc; outline-offset: 2px; }
+.pc-image-file-name { min-width: 0; overflow: hidden; color: #52637b; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 700px) { .pc-denomination > .list-actions { margin-top: 0; justify-self: start; } .pc-image-file-control { min-height: 39px; height: auto; } }
 .pos-change-dialog h2 { margin: 0 0 10px; font-size: 21px; font-weight: 600; line-height: 1.35; }
 .pos-change-dialog p { margin: 0 0 22px; color: #7c8799; font-size: 12px; line-height: 1.6; }
 .pos-change-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }

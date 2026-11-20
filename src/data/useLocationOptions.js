@@ -15,7 +15,7 @@ export function useLocationOptions(form) {
   const equals = (left, right) => String(left ?? "").trim().toLowerCase() === String(right ?? "").trim().toLowerCase();
   const country = locations.find(item => [item.name, item.iso2, item.iso3].some(value => equals(value, form.country)));
   const state = country?.states.find(item => [item.name, item.code].some(value => equals(value, form.state)));
-  return { loading, error,
+  return { loading, error, locationRecords: locations,
     selectedCountry: country || null,
     countries: retain(locations.map(item => item.name), form.country),
     states: retain((country?.states || []).map(item => item.name), form.state),

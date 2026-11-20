@@ -26,6 +26,7 @@ import { api, ApiError, pendingStoreRead } from "../api/http";
 import { endpoints } from "../api/endpoints";
 import { getPosCurrencyTax } from "./pos/currency-tax/api";
 import { getCurrencySymbol } from "../utils/currency";
+import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
 
 
 import {
@@ -181,7 +182,7 @@ function StoreDetailsSummary({ store, merchant }) {
       ["Status", store.status], ["Currency", store.currency ? `${store.currency} (${store.currencySymbol || getCurrencySymbol(store.currency)})` : "—"],
     ]} />
     <SummaryFields title="Contact & Location" subtitle="Contact details and the store's physical location." items={[
-      ["Phone", store.phone], ["Email", store.email || store.storeEmail], ["Website", store.url],
+      ["Phone", formatPhoneDisplay(store.phone, store.country || address.country)], ["Email", store.email || store.storeEmail], ["Website", store.url],
       ["Country", store.country || address.country], ["State / Province", store.state || address.state],
       ["City", store.city || address.city],
       ["Address", store.addressLine1 || address.street || address.addressLine1 || (typeof store.address === "string" ? store.address : "")],

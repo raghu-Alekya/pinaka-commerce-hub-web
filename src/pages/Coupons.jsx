@@ -1035,7 +1035,7 @@ function CouponEditor({ mode, form, setForm, error, busy, products = [], catalog
                             </button>
                         ))}
                     </nav>
-                    <form className="coupon-editor-form" onSubmit={onSubmit}>
+                    <form className="coupon-editor-form" onSubmit={onSubmit} autoComplete="off">
                         <div className="coupon-editor-body">
                             {activeTab === "general" && <>
                                 <h2>General</h2>

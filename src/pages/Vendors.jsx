@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, } from "react";
+import PhoneInputModule from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import Pagination from "../components/Pagination";
 import FiltersBar from "../components/FiltersBar";
 import FilterDropdown from "../components/FilterDropdown";
@@ -8,6 +10,10 @@ import ListActions from "../components/ListActions";
 import Permit from "../auth/Permit";
 import { useLocationOptions } from "../data/useLocationOptions";
 import { getVendor, getVendors, createVendor, updateVendor, updateVendorStatus, deleteVendor as deleteVendorApi, } from "../api/vendors";
+import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
+import { validatePhoneForCountry } from "../utils/phoneValidation";
+
+const PhoneInput = PhoneInputModule.default || PhoneInputModule;
 
 const emptyForm = {
   code: "",
@@ -205,6 +211,12 @@ export default function Vendors({
   const [form, setForm] =
     useState(emptyForm);
   const locationOptions = useLocationOptions(form);
+  const [phoneCountry, setPhoneCountry] = useState("us");
+  const selectedPhoneCountry = locationOptions.selectedCountry;
+
+  useEffect(() => {
+    if (selectedPhoneCountry?.iso2) setPhoneCountry(selectedPhoneCountry.iso2.toLowerCase());
+  }, [selectedPhoneCountry?.iso2]);
 
   // Keeps the last saved values while editing so the Update button
   // remains disabled until the user actually changes a field.
@@ -464,12 +476,6 @@ export default function Vendors({
       |--------------------------------------------------------------------------
       */
 
-      if (name === "phone") {
-        updated.phone = value
-          .replace(/\D/g, "")
-          .slice(0, 10);
-      }
-
       /*
       |--------------------------------------------------------------------------
       | SUPPLIER
@@ -507,6 +513,7 @@ export default function Vendors({
     });
     setError("");
     setValidationErrors({});
+    setPhoneCountry("us");
     setShowForm(false);
   }
 
@@ -594,7 +601,8 @@ export default function Vendors({
       if (!String(form[field] || "").trim()) nextValidationErrors[field] = true;
     }
     if (form.vendorType === "Organizer" && !form.contactPerson.trim()) nextValidationErrors.contactPerson = true;
-    if (form.phone.trim() && !/^\d{10}$/.test(form.phone)) nextValidationErrors.phone = true;
+    const phoneError = validatePhoneForCountry(form.phone, form.country, selectedPhoneCountry?.phoneCode);
+    if (phoneError) nextValidationErrors.phone = phoneError;
     if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) nextValidationErrors.email = true;
     setValidationErrors(nextValidationErrors);
     if (Object.keys(nextValidationErrors).length) {
@@ -1128,21 +1136,29 @@ export default function Vendors({
               Phone Number <span className="text-red-500">*</span>
             </span>
 
-            <input
-              type="tel"
-              name="phone"
-              placeholder="Enter phone number"
-              value={form.phone}
-              onChange={handleChange}
-              inputMode="numeric"
-              pattern="[0-9]{10}"
-              maxLength={10}
-              autoComplete="off"
-              required
-              disabled={saving || viewingId !== null}
-              aria-invalid={Boolean(validationErrors.phone) || (Boolean(form.phone) && !/^\d{10}$/.test(form.phone))}
-            />
-            {validationErrors.phone && <small className="vendors-field-error">{form.phone.trim() ? "Phone Number must contain exactly 10 digits." : "Phone Number is required."}</small>}
+              {viewingId !== null ? (
+                <input type="tel" name="phone" value={formatPhoneDisplay(form.phone, form.country)} disabled />
+              ) : (
+                <div className={`vendors-phone-field${validationErrors.phone ? " is-invalid" : ""}`}>
+                  <PhoneInput
+                    country={phoneCountry}
+                    enableSearch
+                    countryCodeEditable={false}
+                    autoFormat
+                    value={form.phone}
+                    onChange={(value, data) => {
+                      const nextPhoneCountry = data?.countryCode || phoneCountry;
+                      const matched = locationOptions.locationRecords.find((country) => country.iso2?.toLowerCase() === nextPhoneCountry.toLowerCase());
+                      setPhoneCountry(nextPhoneCountry);
+                      setValidationErrors((current) => ({ ...current, phone: "", ...(matched && matched.name !== form.country ? { country: "", state: "" } : {}) }));
+                      setForm((current) => ({ ...current, phone: value, ...(matched && matched.name !== current.country ? { country: matched.name, state: "" } : {}) }));
+                    }}
+                    inputProps={{ name: "phone", placeholder: "Enter phone number", required: true, autoComplete: "tel", "aria-invalid": Boolean(validationErrors.phone) }}
+                    disabled={saving}
+                  />
+                </div>
+              )}
+              {validationErrors.phone && <small className="vendors-field-error">{typeof validationErrors.phone === "string" ? validationErrors.phone : "Phone Number is required."}</small>}
 
           </label>
 
@@ -1209,6 +1225,7 @@ export default function Vendors({
               name="country"
               value={form.country}
               onChange={handleChange}
+              searchable
               required
               disabled={saving || viewingId !== null}
               aria-invalid={Boolean(validationErrors.country)}
@@ -1234,6 +1251,7 @@ export default function Vendors({
               name="state"
               value={form.state}
               onChange={handleChange}
+              searchable
               required
               disabled={saving || viewingId !== null}
               aria-invalid={Boolean(validationErrors.state)}
@@ -1713,7 +1731,7 @@ export default function Vendors({
 
                       <td>
                         <VendorCell
-                          value={vendor.phone}
+                          value={formatPhoneDisplay(vendor.phone, vendor.country)}
                         />
                       </td>
 

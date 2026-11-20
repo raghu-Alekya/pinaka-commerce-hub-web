@@ -318,7 +318,7 @@ function DetailRow({ label, value }) {
 
 }
 
-function SubscriptionCalendarField({ label, value, onChange, min, max }) {
+function SubscriptionCalendarField({ label, value, onChange, min, max, showLabel = true, timeValue, onTimeChange }) {
   const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => selectedDate || new Date());
@@ -336,14 +336,25 @@ function SubscriptionCalendarField({ label, value, onChange, min, max }) {
     return { date, iso, inMonth: date.getMonth() === month.getMonth() };
   });
   const displayValue = value ? `${value.slice(5, 7)}/${value.slice(8, 10)}/${value.slice(0, 4)}` : "mm/dd/yyyy";
+  const hasTime = timeValue !== undefined;
+  const [hour24 = "00", minute = "00"] = String(timeValue || "00:00").split(":");
+  const hour12 = Number(hour24) % 12 || 12;
+  const meridiem = Number(hour24) >= 12 ? "PM" : "AM";
+  const displayTime = timeValue ? `${String(hour12).padStart(2, "0")}:${minute} ${meridiem}` : "--:-- --";
+  const updateTimeParts = (nextHour, nextMinute, nextMeridiem) => {
+    let convertedHour = Number(nextHour) % 12;
+    if (nextMeridiem === "PM") convertedHour += 12;
+    onTimeChange?.(`${String(convertedHour).padStart(2, "0")}:${nextMinute}`);
+  };
 
-  return <div className="subscription-date-field">
-    <span>{label}</span>
+  return <div className={`subscription-date-field${showLabel ? "" : " subscription-date-field-compact"}`}>
+    {showLabel && <span>{label}</span>}
     <div className="subscription-date-picker">
-      <button type="button" className="subscription-date-trigger" aria-label={`${label}: ${displayValue}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setOpen(current => !current); }}>
-        <span>{displayValue}</span><CalendarDays size={16} aria-hidden="true" />
+      <button type="button" className="subscription-date-trigger" aria-label={`${label}: ${displayValue}${hasTime ? ` ${displayTime}` : ""}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setOpen(current => !current); }}>
+        <span>{displayValue}{hasTime ? `  ${displayTime}` : ""}</span><CalendarDays size={16} aria-hidden="true" />
       </button>
-      {open && <div className="subscription-calendar-popover" role="dialog" aria-label={`${label} calendar`}>
+      {open && <div className={`subscription-calendar-popover${hasTime ? " has-time" : ""}`} role="dialog" aria-label={`${label} calendar`}>
+        <div className="subscription-calendar-main">
         <div className="subscription-calendar-heading">
           <strong>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</strong>
           <div>
@@ -355,15 +366,41 @@ function SubscriptionCalendarField({ label, value, onChange, min, max }) {
         <div className="subscription-calendar-grid">
           {dateCells.map(({ date, iso, inMonth }) => {
             const disabled = (min && iso < min) || (max && iso > max);
-            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); setOpen(false); }}>{date.getDate()}</button>;
+            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); if (!hasTime) setOpen(false); }}>{date.getDate()}</button>;
           })}
         </div>
         <div className="subscription-calendar-footer">
           <button type="button" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
-          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); setOpen(false); setMonth(today); } }}>Today</button>
+          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); if (!hasTime) setOpen(false); setMonth(today); } }}>Today</button>
         </div>
+        </div>
+        {hasTime && <div className="subscription-calendar-time">
+          <strong>Time (UTC)</strong>
+          <label>Hour<select aria-label={`${label} hour`} value={String(hour12).padStart(2, "0")} onChange={(event) => updateTimeParts(event.target.value, minute, meridiem)}>{Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, "0")).map((hour) => <option key={hour} value={hour}>{hour}</option>)}</select></label>
+          <label>Minute<select aria-label={`${label} minute`} value={minute} onChange={(event) => updateTimeParts(String(hour12).padStart(2, "0"), event.target.value, meridiem)}>{Array.from({ length: 60 }, (_, index) => String(index).padStart(2, "0")).map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+          <label>AM / PM<select aria-label={`${label} AM or PM`} value={meridiem} onChange={(event) => updateTimeParts(String(hour12).padStart(2, "0"), minute, event.target.value)}><option>AM</option><option>PM</option></select></label>
+        </div>}
       </div>}
     </div>
+  </div>;
+}
+
+function SubscriptionDateTimeField({ label, value, onChange }) {
+  const date = value ? String(value).slice(0, 10) : "";
+  const [time, setTime] = useState(value ? String(value).slice(11, 16) || "00:00" : "");
+  useEffect(() => {
+    if (value) setTime(String(value).slice(11, 16) || "00:00");
+  }, [value]);
+
+  const updateDate = (nextDate) => onChange(nextDate ? `${nextDate}T${time || "00:00"}:00Z` : "");
+  const updateTime = (nextTime) => {
+    setTime(nextTime);
+    if (date) onChange(`${date}T${nextTime || "00:00"}:00Z`);
+  };
+
+  return <div className="form-group">
+    <span>{label}</span>
+    <SubscriptionCalendarField label={label} value={date} onChange={updateDate} showLabel={false} timeValue={time} onTimeChange={updateTime} />
   </div>;
 }
 
@@ -2237,6 +2274,7 @@ function SubscriptionCrudForm({
         id={createPage ? "subscription-create-form" : undefined}
         className={createPage ? "subscription-create-form" : ""}
         onSubmit={onSubmit}
+        autoComplete={createPage ? "off" : undefined}
         style={createPage ? undefined : {
           width: "min(920px, 100%)",
           maxHeight: "90vh",
@@ -2376,23 +2414,9 @@ function SubscriptionCrudForm({
               </FilterDropdown>
             </label>
 
-            <label className="form-group">
-              Period start (UTC)
-              <input
-                type="datetime-local"
-                value={form.currentPeriodStart ? String(form.currentPeriodStart).slice(0, 16) : ""}
-                onChange={(event) => field("currentPeriodStart", event.target.value ? `${event.target.value}:00Z` : "")}
-              />
-            </label>
+            <SubscriptionDateTimeField label="Period start (UTC)" value={form.currentPeriodStart} onChange={(value) => field("currentPeriodStart", value)} />
 
-            <label className="form-group">
-              Period end (UTC)
-              <input
-                type="datetime-local"
-                value={form.currentPeriodEnd ? String(form.currentPeriodEnd).slice(0, 16) : ""}
-                onChange={(event) => field("currentPeriodEnd", event.target.value ? `${event.target.value}:00Z` : "")}
-              />
-            </label>
+            <SubscriptionDateTimeField label="Period end (UTC)" value={form.currentPeriodEnd} onChange={(value) => field("currentPeriodEnd", value)} />
 
             <label className="form-group" style={{ gridColumn: "1 / -1" }}>
               Entitlements (comma-separated)

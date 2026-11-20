@@ -4,7 +4,7 @@ import "../styles/filter-dropdown.css";
 
 // The noninteractive select retains each screen's existing CSS sizing. Only the
 // overlaid trigger and portalled listbox receive user interaction.
-export default function FilterDropdown({ children, value, defaultValue, onChange, disabled, renderFooter, triggerIcon, preserveToolbarLayout = false, placeholder, ...props }) {
+export default function FilterDropdown({ children, value, defaultValue, onChange, disabled, renderFooter, triggerIcon, preserveToolbarLayout = false, placeholder, searchable = false, ...props }) {
   const id = useId();
   const nativeRef = useRef(null);
   const triggerRef = useRef(null);
@@ -17,6 +17,7 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
   const [position, setPosition] = useState(null);
   const [triggerStyle, setTriggerStyle] = useState({});
   const [triggerPosition, setTriggerPosition] = useState(null);
+  const [searchText, setSearchText] = useState("");
   const flatten = (nodes) => Children.toArray(nodes).flatMap((child) => child?.type === Fragment ? flatten(child.props.children) : [child]);
   const optionText = (nodes) => Children.toArray(nodes).map((node) => typeof node === "object" ? optionText(node.props?.children) : String(node)).join("");
   const rawOptions = flatten(children).filter((child) => child?.type === "option").map((child) => ({
@@ -29,6 +30,8 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
   const selectedValue = String(value ?? localValue ?? options[0]?.value ?? "");
   const selected = options.findIndex((option) => option.value === selectedValue);
   const isPlaceholder = !selectedValue || Boolean(options[selected]?.hidden);
+  const visibleOptions = options.map((option, index) => ({ option, index }))
+    .filter(({ option }) => !searchable || !searchText || option.label.toLowerCase().includes(searchText.toLowerCase()));
 
   useLayoutEffect(() => {
     const syncStyle = () => {
@@ -132,12 +135,15 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
     setLocalValue(option.value);
     nativeRef.current.value = option.value;
     onChange?.({ target: nativeRef.current, currentTarget: nativeRef.current, type: "change" });
+    setSearchText("");
     close();
   };
   const move = (step) => {
-    for (let i = 1; i <= options.length; i++) {
-      const next = (active + step * i + options.length) % options.length;
-      if (!options[next].disabled && !options[next].hidden) { setActive(next); break; }
+    const visible = visibleOptions.filter(({ option }) => !option.disabled && !option.hidden).map(({ index }) => index);
+    const current = visible.indexOf(active);
+    if (visible.length) {
+      const next = (current + step + visible.length) % visible.length;
+      setActive(visible[next]);
     }
   };
   const keyDown = (event) => {
@@ -154,8 +160,8 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
         setOpen(true);
       } else if (event.key === "ArrowDown") move(1);
       else if (event.key === "ArrowUp") move(-1);
-      else if (event.key === "Home") setActive(options.findIndex((option) => !option.disabled && !option.hidden));
-      else if (event.key === "End") setActive(options.findLastIndex((option) => !option.disabled && !option.hidden));
+      else if (event.key === "Home") setActive(visibleOptions.find(({ option }) => !option.disabled && !option.hidden)?.index ?? -1);
+      else if (event.key === "End") setActive(visibleOptions.findLast(({ option }) => !option.disabled && !option.hidden)?.index ?? -1);
       else choose(active);
     } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault();
@@ -175,7 +181,7 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
       aria-controls={open ? id : undefined} aria-label={props["aria-label"] || options[0]?.label || "Filter"}
       aria-required={props["aria-required"]}
       onKeyDown={keyDown}
-      onClick={() => { if (open) close(); else { setActive(selected >= 0 && !options[selected].disabled ? selected : options.findIndex((option) => !option.disabled && !option.hidden)); setOpen(true); } }}>
+      onClick={() => { if (open) close(); else { setSearchText(""); setActive(selected >= 0 && !options[selected].disabled ? selected : options.findIndex((option) => !option.disabled && !option.hidden)); setOpen(true); } }}>
       {triggerIcon}<span>{options[selected]?.label || placeholder || ""}</span>
       {(!preserveToolbarLayout || !triggerStyle.backgroundImage || triggerStyle.backgroundImage === "none") && <i className="bi bi-chevron-down" aria-hidden="true" />}
     </button>;
@@ -186,11 +192,13 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
     </> : <span className="pch-filter-dropdown">{sizingControl}{trigger}</span>}
     {open && createPortal(<div ref={menuRef} id={id} role="listbox" aria-label={props["aria-label"] || "Filter options"}
       className="pch-filter-menu" style={position || { visibility: "hidden" }} onKeyDown={keyDown}>
-      {options.map((option, index) => option.hidden ? null : <button
+      {searchable && <input className="pch-filter-search" type="search" placeholder="Search..." aria-label={`Search ${props["aria-label"] || "options"}`} value={searchText} onChange={(event) => { setSearchText(event.target.value); setActive(-1); }} onKeyDown={(event) => { if (event.key === "ArrowDown") { event.preventDefault(); setActive(visibleOptions.find(({ option }) => !option.disabled && !option.hidden)?.index ?? -1); optionRefs.current[visibleOptions.find(({ option }) => !option.disabled && !option.hidden)?.index]?.focus(); } }} />}
+      {visibleOptions.map(({ option, index }) => option.hidden ? null : <button
         type="button" role="option" key={`${option.value}-${index}`}
         ref={(element) => { optionRefs.current[index] = element; }} tabIndex={index === active ? 0 : -1}
         disabled={option.disabled} aria-selected={index === selected} className="pch-filter-option"
         onClick={() => choose(index)}>{option.label}</button>)}
+      {searchable && visibleOptions.every(({ option }) => option.hidden || option.disabled) && <div className="pch-filter-empty">No options found.</div>}
       {renderFooter && <div className="pch-filter-footer">{renderFooter(() => close())}</div>}
     </div>, document.body)}
   </>;

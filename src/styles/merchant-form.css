@@ -311,17 +311,17 @@
     min-width: 0;
 }
 
-#pch-new .pch-rail-description {
-    display: block;
-    margin-top: 3px;
-    color: #8994aa;
-    font-size:10px;
-    font-weight:400;
-    line-height:1.25;
+#pch-new .pch-rail-description,
+.rs-page .rs-step small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.25;
 }
 
 #pch-new .pch-rail button.pch-current .pch-rail-description {
-    color: #8994aa;
+    color: #535860;
 }
  
 
@@ -509,6 +509,11 @@
     width: 100%;
 }
 
+#pch-new .pch-field > .pch-filter-dropdown > .pch-filter-sizing {
+    box-sizing: border-box;
+    height: 34px;
+}
+
 #pch-new .pch-field input:focus,
 #pch-new .pch-field select:focus {
     border-color: #8b7ce0;
@@ -574,10 +579,6 @@
     align-items: center;
     gap: 14px;
 
-}
-
-#pch-new button:hover:not(:disabled) {
-    background: #f7f8fb;
 }
 
 #pch-new button.pch-primary {
@@ -1391,6 +1392,25 @@
   border:0;
 }
 
+#pch-new .pch-panel-heading-copy{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  min-width:0;
+}
+
+#pch-new .pch-panel-heading .pch-panel-subtitle{
+  margin:0;
+  color:#7184a3;
+  font-size:14px;
+  font-weight:400;
+  line-height:20px;
+}
+
+#pch-new .pch-panel-heading:has(.pch-panel-subtitle){
+  align-items:flex-start;
+}
+
 #pch-new .pch-panel-heading button{flex:none;}
 #pch-new .pch-row{
   display:flex;
@@ -1602,10 +1622,6 @@
   font: inherit;
   cursor: pointer;
 }
-
-#pch-new .pch-breadcrumb button:hover {
-   text-decoration: underline; 
-  }
 
 #pch-new .pch-breadcrumb button:focus-visible {
   outline: 2px solid #5143bc;
@@ -3232,14 +3248,7 @@
   line-height: 1.45;
 }
 
-#pch-new .pch-rail-description,
-.rs-page .rs-step small {
-  display: block;
-  margin-top: 3px;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.25;
-}
+
 
 /* Fix title and subtitle appearing on one line in Step 3 */
 .rs-page .rs-step > span:not(.rs-step-circle) {

@@ -8,6 +8,7 @@ import FiltersBar from "../components/FiltersBar";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getEmployeeList, updateEmployee } from "../api/employees";
+import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
 
 import {
   Search,
@@ -651,7 +652,7 @@ const handlePageSizeChange = (size) => {
                     {/* CONTACT */}
                     <td>
                       <div className="employee-contact">
-                        <div><strong> {employee.phone}</strong></div>
+                        <div><strong> {formatPhoneDisplay(employee.phone, employee.country)}</strong></div>
                         <div><span>{employee.email}</span></div>
                       </div>
                     </td>

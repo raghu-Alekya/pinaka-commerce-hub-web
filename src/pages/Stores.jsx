@@ -10,6 +10,7 @@ import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import { getStoreDeviceMappings } from "../api/storeDeviceMappings";
 import { listMerchants } from "../api/merchants";
 import { useAuth } from "../auth/AuthContext";
+import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
 
 const title = (value) =>
   String(value || "")
@@ -488,7 +489,7 @@ useEffect(() => {
                     </td>
                     <td>
                       <div className="store-table-details">
-                        <span>{s.phone || "—"}</span>
+                        <span>{formatPhoneDisplay(s.phone, s.country || s.address?.country) || "—"}</span>
                         <small>{s.email || "—"}</small>
                       </div>
                     </td>
