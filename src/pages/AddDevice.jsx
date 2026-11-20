@@ -78,7 +78,7 @@ export default function AddDevice({ merchantId: scopedMerchantId = "", merchant:
 
   const handleChange = (e) => {
     const { value, type, checked } = e.target;
-    const name = e.target.dataset.formField || e.target.name;
+    const name = e.target.dataset?.formField || e.target.name;
 
     setFormData((prev) => ({
       ...prev,

@@ -24,8 +24,6 @@ import {
 
   Upload,
 
-  CalendarDays,
-
   ChevronDown,
 
   ArrowLeft,
@@ -44,6 +42,8 @@ import "../styles/add-employee.css";
 
 import FilterDropdown from "../components/FilterDropdown";
 
+import { CalendarField } from "./Merchants";
+
 import "../styles/editemployee.css";
 
 
@@ -61,6 +61,13 @@ import {
   deleteEmployeeProfileImage,
 
 } from "../api/employees";
+
+function latestEligibleEmployeeDob() {
+  const today = new Date();
+  const date = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+  date.setDate(date.getDate() - 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
 
 
 
@@ -525,7 +532,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
           pinCode: savedEmployee.postalCode || savedEmployee.postal_code || savedEmployee.pinCode || savedEmployee.pin_code || address.zipCode || current.pinCode,
 
-          country: savedCountryRecord?.name || savedCountry || current.country,
+          country: savedPhoneCountryRecord?.name || savedCountryRecord?.name || savedCountry || current.country,
 
           merchantId: savedEmployee.merchantId || savedEmployee.merchant_id || merchant?.id || merchant?.uuid || current.merchantId,
 
@@ -676,8 +683,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
 
       case "dob":
-
-        if (!trimmed) return "Date of Birth is required.";
+        if (!trimmed) return "";
 
         if (Number.isNaN(new Date(trimmed).getTime())) {
 
@@ -922,12 +928,21 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
       );
 
       const nextDialCode = String(selectedCountry?.phoneCode || "").replace(/\D/g, "");
+      const dialCodeChanged = nextDialCode !== phoneDialCode;
 
       setPhoneDialCode(nextDialCode);
 
       setPhoneCountryName(selectedCountry?.name || nextValue);
 
-      setFormData((prev) => ({ ...prev, country: nextValue, state: "", city: "" }));
+      setPhoneCountryIso2(selectedCountry?.iso2?.toLowerCase() || "");
+
+      setFormData((prev) => ({
+        ...prev,
+        country: nextValue,
+        ...(dialCodeChanged ? { phone: "" } : {}),
+        state: "",
+        city: "",
+      }));
 
       setErrors((prev) => ({
 
@@ -979,7 +994,8 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
   const handlePhoneChange = (value, country) => {
     const nextDialCode = String(country?.dialCode || "").replace(/\D/g, "");
-    const nationalNumber = getPhoneInputNational(value, nextDialCode);
+    const dialCodeChanged = Boolean(phoneDialCode && nextDialCode !== phoneDialCode);
+    const nationalNumber = dialCodeChanged ? "" : getPhoneInputNational(value, nextDialCode);
     const matchingCountry = locationOptions.locationRecords.find(
       (item) => item.iso2?.toLowerCase() === country?.countryCode?.toLowerCase()
     );
@@ -987,9 +1003,18 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
     setPhoneDialCode(nextDialCode);
     setPhoneCountryIso2(country?.countryCode?.toLowerCase() || matchingCountry?.iso2?.toLowerCase() || "");
     setPhoneCountryName(matchingCountry?.name || country?.name || phoneCountryName);
-    setFormData((prev) => ({ ...prev, phone: nationalNumber }));
+    setFormData((prev) => ({
+      ...prev,
+      phone: nationalNumber,
+      ...(matchingCountry && matchingCountry.name !== prev.country
+        ? { country: matchingCountry.name, state: "", city: "" }
+        : {}),
+    }));
     setErrors((prev) => ({
       ...prev,
+      ...(matchingCountry && matchingCountry.name !== formData.country
+        ? { country: "", state: "", city: "" }
+        : {}),
       phone: validatePhoneForCountry(
         nationalNumber,
         matchingCountry?.name || country?.name || phoneCountryName,
@@ -1574,29 +1599,16 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
                   <label>
 
-                    Date of Birth <span className="text-red-500">*</span>
+                    Date of Birth
 
                   </label>
 
 
 
-                  <div className="input-with-icon">
-
-                    <input
-
-                      type="date"
-
-                      name="dob"
-
-                      value={formData.dob}
-
-                      onChange={handleChange}
-
-                      className={errors.dob ? "field-invalid" : ""}
-
-                    />
-
-                  </div>
+                  <CalendarField value={formData.dob} onChange={(dob) => {
+                    setFormData((current) => ({ ...current, dob }));
+                    setErrors((current) => ({ ...current, dob: "" }));
+                  }} label="Date of Birth" max={latestEligibleEmployeeDob()} showLabel={false} invalid={Boolean(errors.dob)} allowManualEntry />
 
 
 
@@ -1660,23 +1672,20 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
               <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
 
-                <SelectField label="Country" required name="country" value={formData.country}
+                <FormField label="Country" required name="country"
 
-                  onChange={handleChange} error={errors.country} options={locationOptions.countries}
-
-                  placeholder={locationOptions.loading ? "Loading countries..." : "Select country"} disabled={locationOptions.loading} searchable />
+                  value={selectedPhoneCountry?.name || formData.country} onChange={handleChange}
+                  error={errors.country} disabled />
 
                 <SelectField label="State" required name="state" value={formData.state}
 
                   onChange={handleChange} error={errors.state} options={locationOptions.states}
 
-                  placeholder={formData.country ? "Select state" : "Select country first"} disabled={locationOptions.loading || !formData.country} />
+                  placeholder={formData.country ? "Select state" : "Select country first"} disabled={locationOptions.loading || !formData.country} searchable />
 
-                <SelectField label="City" required name="city" value={formData.city}
+                <FormField label="City" required name="city" placeholder="Enter city"
 
-                  onChange={handleChange} error={errors.city} options={locationOptions.cities}
-
-                  placeholder={formData.state ? "Select city" : "Select state first"} disabled={locationOptions.loading || !formData.state} />
+                  value={formData.city} onChange={handleChange} error={errors.city} />
 
                 <FormField
 
@@ -2174,6 +2183,8 @@ function FormField({
 
   error,
 
+  disabled = false,
+
 }) {
 
   return (
@@ -2201,6 +2212,8 @@ function FormField({
         value={value}
 
         onChange={onChange}
+
+        disabled={disabled}
 
         autoComplete={name === "username" ? "off" : undefined}
 

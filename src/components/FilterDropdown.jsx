@@ -9,6 +9,7 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
   const nativeRef = useRef(null);
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
+  const searchRef = useRef(null);
   const optionRefs = useRef([]);
   const typed = useRef({ text: "", time: 0 });
   const [localValue, setLocalValue] = useState(defaultValue);
@@ -127,6 +128,9 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
     document.addEventListener("focusin", outside);
     return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("focusin", outside); };
   }, [open]);
+  useEffect(() => {
+    if (open && searchable) searchRef.current?.focus();
+  }, [open, searchable]);
   useEffect(() => { if (disabled) close(false); }, [disabled]);
 
   const choose = (index) => {
@@ -147,6 +151,10 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
     }
   };
   const keyDown = (event) => {
+    if (event.target.matches?.("input, textarea")) {
+      if (event.key === "Escape") { event.preventDefault(); close(); }
+      return;
+    }
     if (event.target.closest(".pch-filter-footer") && event.key !== "Escape") return;
     if (event.key === "Tab") {
       if (renderFooter && open && !event.shiftKey) return;
@@ -192,7 +200,7 @@ export default function FilterDropdown({ children, value, defaultValue, onChange
     </> : <span className="pch-filter-dropdown">{sizingControl}{trigger}</span>}
     {open && createPortal(<div ref={menuRef} id={id} role="listbox" aria-label={props["aria-label"] || "Filter options"}
       className="pch-filter-menu" style={position || { visibility: "hidden" }} onKeyDown={keyDown}>
-      {searchable && <input className="pch-filter-search" type="search" placeholder="Search..." aria-label={`Search ${props["aria-label"] || "options"}`} value={searchText} onChange={(event) => { setSearchText(event.target.value); setActive(-1); }} onKeyDown={(event) => { if (event.key === "ArrowDown") { event.preventDefault(); setActive(visibleOptions.find(({ option }) => !option.disabled && !option.hidden)?.index ?? -1); optionRefs.current[visibleOptions.find(({ option }) => !option.disabled && !option.hidden)?.index]?.focus(); } }} />}
+      {searchable && <input ref={searchRef} className="pch-filter-search" type="search" placeholder="Search..." aria-label={`Search ${props["aria-label"] || "options"}`} value={searchText} onChange={(event) => { setSearchText(event.target.value); setActive(-1); }} onKeyDown={(event) => { if (event.key === "ArrowDown") { event.preventDefault(); setActive(visibleOptions.find(({ option }) => !option.disabled && !option.hidden)?.index ?? -1); optionRefs.current[visibleOptions.find(({ option }) => !option.disabled && !option.hidden)?.index]?.focus(); } }} />}
       {visibleOptions.map(({ option, index }) => option.hidden ? null : <button
         type="button" role="option" key={`${option.value}-${index}`}
         ref={(element) => { optionRefs.current[index] = element; }} tabIndex={index === active ? 0 : -1}
