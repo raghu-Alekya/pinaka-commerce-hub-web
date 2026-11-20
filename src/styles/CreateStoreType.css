@@ -698,7 +698,7 @@
 .store-type-date-cell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   line-height: 1.2;
 }
 
@@ -706,11 +706,13 @@
   font-size: 12px;
   font-weight: 600;
   color: #10264d;
+ 
 }
 
 .store-type-date-cell span {
   font-size: 11px;
-  color: #7290ba;
+  font-weight: 400;
+  color: #5f728e;
 }
 
 
