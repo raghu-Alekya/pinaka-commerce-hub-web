@@ -2363,11 +2363,11 @@ body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn i
    ========================================================= */
 
 .feature-permissions-page .fp-date-value {
-  color: #10264d !important;
-  font-size: 13px !important;
-  line-height: 18px !important;
-  font-weight: 600 !important;
-  white-space: nowrap !important;
+  color: #10264d;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 
@@ -2376,11 +2376,11 @@ body .feature-permissions-page .fp-delete-modal-actions .fp-delete-confirm-btn i
    ========================================================= */
 
 .feature-permissions-page .fp-time-value {
-  color: #7290ba !important;
-  font-size: 11px !important;
-  line-height: 16px !important;
-  font-weight: 400 !important;
-  white-space: nowrap !important;
+  color: #5f728e;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 400;
+  white-space: nowrap;
 }
 
 

@@ -470,6 +470,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   };
   const validatePhone = (selectedDialCode = phoneDialCode, phoneValue = merchant.phone) => {
     const phoneDigits = String(phoneValue || "").replace(/\D/g, "");
+    if (!selectedDialCode) return "Select a phone country code.";
     if (!phoneDigits || phoneDigits.length <= selectedDialCode.length) return "Phone Number is required.";
     const nationalDigits = phoneDigits.startsWith(selectedDialCode) ? phoneDigits.slice(selectedDialCode.length) : phoneDigits;
     if (nationalDigits.length < 7 || phoneDigits.length > 15) return "Enter a valid phone number.";
@@ -528,7 +529,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     setError("");
     setSubmitting(true);
     const data = {
-      merchant: { ...merchant, name: [merchant.firstName, merchant.lastName].filter(Boolean).join(" ") },
+      merchant: { ...merchant, countryCode: locationOptions.selectedCountry?.iso3 || merchant.country, phoneDialCode, name: [merchant.firstName, merchant.lastName].filter(Boolean).join(" ") },
       password: String(merchant.password || "") || undefined,
       planId: plan.id,
       planDetails: plan,
@@ -638,8 +639,9 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
                 const selectedCountry = locationOptions.locationRecords.find((country) => country.name === v);
                 updateField("country", v);
                 updateField("state", "");
+                updateField("city", "");
               }} />
-              <Select label="State / Province *" value={merchant.state} placeholder={merchant.country ? "Select state or province" : "Select country first"} options={locationOptions.states.map((value) => ({ value, label: value }))} required error={fieldErrors.state} onChange={(v) => updateField("state", v)} />
+              <Select label="State / Province *" value={merchant.state} placeholder={merchant.country ? "Select state or province" : "Select country first"} options={locationOptions.states.map((value) => ({ value, label: value }))} required error={fieldErrors.state} onChange={(v) => { updateField("state", v); updateField("city", ""); }} />
               <Field label="City *" placeholder="Enter city" value={merchant.city} required error={fieldErrors.city} onChange={(v) => updateField("city", v)} />
               <Field label="Address Line 1 *" placeholder="Enter street address" value={merchant.addressLine1} required error={fieldErrors.addressLine1} onChange={(v) => updateField("addressLine1", v)} />
               <Field label="Address Line 2" placeholder="Apartment, suite, etc. (optional)" value={merchant.addressLine2} onChange={(v) => updateField("addressLine2", v)} />
