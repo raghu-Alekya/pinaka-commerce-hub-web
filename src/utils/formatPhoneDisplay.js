@@ -6,6 +6,11 @@ export function formatPhoneDisplay(value, country = "") {
 
   const digits = raw.replace(/\D/g, "");
   if (!digits) return raw;
+  if (!raw.startsWith("+")) {
+    if (raw.startsWith("00")) return formatPhoneDisplay(`+${digits.slice(2)}`, country);
+    const callingCode = countryCallingCode(country);
+    if (callingCode) return formatPhoneDisplay(`+${callingCode}${digits}`, country);
+  }
   if (raw.startsWith("+")) {
     const callingCodes = [
       "355", "213", "376", "244", "54", "374", "61", "43", "994", "973",
