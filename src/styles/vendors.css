@@ -2808,3 +2808,7 @@
 .vendors-form .vendors-phone-field.is-invalid .react-tel-input .flag-dropdown {
   border-color: #dc3545;
 }
+
+.vendors-form input.vendors-country-readonly {
+  cursor: default;
+}

@@ -14,6 +14,7 @@ export default function MerchantRoles({ merchantId }) {
   const [templates, setTemplates] = useState([]);
   const [selected, setSelected] = useState(() => new Set());
   const [baseline, setBaseline] = useState(() => new Set());
+  const [editing, setEditing] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function MerchantRoles({ merchantId }) {
     setLoading(true);
     setError("");
     setMessage("");
+    setEditing(false);
     merchantRoleTemplatesApi
       .getAvailable(merchantId)
       .then((response) => {
@@ -55,6 +57,10 @@ export default function MerchantRoles({ merchantId }) {
     for (const id of selected) if (!baseline.has(id)) return true;
     return false;
   }, [selected, baseline]);
+  const displayTemplates = useMemo(
+    () => [...templates].sort((left, right) => Number(selected.has(right.id)) - Number(selected.has(left.id))),
+    [templates, selected],
+  );
 
   const storeTypeLabel = storeTypes.length
     ? storeTypes.map((type) => type.name || type.storeTypeCode || type.id).join(", ")
@@ -79,6 +85,7 @@ export default function MerchantRoles({ merchantId }) {
     setSelected(new Set(baseline));
     setMessage("");
     setError("");
+    setEditing(false);
   }
 
   async function save() {
@@ -97,6 +104,7 @@ export default function MerchantRoles({ merchantId }) {
         previous.map((row) => ({ ...row, selected: roleTemplateIds.includes(row.id) })),
       );
       setMessage("Role templates saved.");
+      setEditing(false);
     } catch (failure) {
       setError(failure.message || "Unable to save role templates.");
     } finally {
@@ -116,15 +124,18 @@ export default function MerchantRoles({ merchantId }) {
               Select which roles apply to this merchant.
             </p>
           </div>
-          <label className="mr-select-all">
-            <input
-              type="checkbox"
-              checked={templates.length > 0 && templates.every((row) => selected.has(row.id))}
-              disabled={loading || saving || !templates.length}
-              onChange={(event) => toggleAll(event.target.checked)}
-            />
-            <span>Select all</span>
-          </label>
+          <div className="mr-header-actions">
+            <label className="mr-select-all">
+              <input
+                type="checkbox"
+                checked={templates.length > 0 && templates.every((row) => selected.has(row.id))}
+                disabled={loading || saving || !editing || !templates.length}
+                onChange={(event) => toggleAll(event.target.checked)}
+              />
+              <span>Select all</span>
+            </label>
+            {!editing && <button type="button" className="mr-edit" onClick={() => { setEditing(true); setMessage(""); setError(""); }} disabled={loading || saving || !templates.length}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
+          </div>
         </div>
 
         {loading && <p role="status">Loading role templates…</p>}
@@ -158,15 +169,15 @@ export default function MerchantRoles({ merchantId }) {
 
         {!loading && templates.length > 0 && (
           <ul className="mr-list" aria-label="Role templates">
-            {templates.map((row) => {
+            {displayTemplates.map((row) => {
               const checked = selected.has(row.id);
               return (
                 <li key={row.id} className={checked ? "mr-item is-checked" : "mr-item"}>
-                  <label className="mr-check">
+                  <label className={`mr-check${editing ? "" : " is-readonly"}`}>
                     <input
                       type="checkbox"
                       checked={checked}
-                      disabled={saving}
+                      disabled={!editing || saving}
                       onChange={() => toggle(row.id)}
                     />
                     <span className="mr-copy">
@@ -189,14 +200,14 @@ export default function MerchantRoles({ merchantId }) {
           </ul>
         )}
       </div>
-      <div className="mr-footer-actions">
-        <button type="button" onClick={cancel} disabled={loading || saving || !dirty}>
+      {editing && <div className="mr-footer-actions">
+        <button type="button" onClick={cancel} disabled={loading || saving}>
           Cancel
         </button>
         <button type="button" className="mr-primary" onClick={save} disabled={loading || saving || !dirty}>
           {saving ? "Saving..." : "Save roles"}
         </button>
-      </div>
+      </div>}
     </section>
   );
 }
