@@ -361,6 +361,18 @@
   grid-column: 1 / -1;
 }
 
+.discounted-product-selection-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.discounted-product-selection-row .coupon-form-field {
+  min-width: 0;
+}
+
 .discount-amount-error {
   color: #b42318 !important;
 }
@@ -392,6 +404,12 @@
 
   .discount-editor-body {
     padding: 19px;
+  }
+}
+
+@media (max-width: 700px) {
+  .discounted-product-selection-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

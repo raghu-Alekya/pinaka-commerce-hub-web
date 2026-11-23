@@ -14,11 +14,14 @@ const EMPTY_FORM = {
 };
 
 export default function PchUsers() {
-  const users = [];
+  const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [adding, setAdding] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [pendingStatusUser, setPendingStatusUser] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -36,23 +39,61 @@ export default function PchUsers() {
 
   const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
-  const handleAddUser = (event) => {
+  const handleSaveUser = (event) => {
     event.preventDefault();
-    setNotice(form.password === form.confirmPassword
-      ? "This form is UI-only and does not create an account yet. User creation will be connected later."
-      : "Passwords do not match.");
+    setError("");
+    if ((form.password || form.confirmPassword) && form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    const savedUser = {
+      ...editingUser,
+      ...form,
+      id: editingUser?.id || `pch-user-${Date.now()}`,
+      status: editingUser?.status || "Active",
+    };
+    delete savedUser.confirmPassword;
+    setUsers((current) => editingUser
+      ? current.map((user) => user.id === editingUser.id ? savedUser : user)
+      : [...current, savedUser]);
+    setAdding(false);
+    setEditingUser(null);
+    setForm(EMPTY_FORM);
+    setNotice(editingUser ? "PCH user updated in this UI preview." : "PCH user added in this UI preview.");
   };
 
   const openAddForm = () => {
     setForm(EMPTY_FORM);
+    setEditingUser(null);
     setNotice("");
+    setError("");
+    setAdding(true);
+  };
+
+  const openEditForm = (user) => {
+    setForm({ ...EMPTY_FORM, ...user, password: "", confirmPassword: "" });
+    setEditingUser(user);
+    setNotice("");
+    setError("");
     setAdding(true);
   };
 
   const closeAddForm = () => {
     setForm(EMPTY_FORM);
+    setEditingUser(null);
     setNotice("");
+    setError("");
     setAdding(false);
+  };
+
+  const confirmStatusChange = () => {
+    if (!pendingStatusUser) return;
+    const nextStatus = pendingStatusUser.status === "Active" ? "Inactive" : "Active";
+    setUsers((current) => current.map((user) => user.id === pendingStatusUser.id
+      ? { ...user, status: nextStatus }
+      : user));
+    setNotice(`PCH user ${nextStatus === "Active" ? "activated" : "deactivated"} in this UI preview.`);
+    setPendingStatusUser(null);
   };
 
   if (adding) {
@@ -62,13 +103,13 @@ export default function PchUsers() {
           <button type="button" className="pch-users-back" onClick={closeAddForm}>
             <i className="bi bi-arrow-left" /> PCH Users
           </button>
-          <h1>Add PCH User</h1>
-          <p>Create a user account for the PCH platform.</p>
+          <h1>{editingUser ? "Edit PCH User" : "Add PCH User"}</h1>
+          <p>{editingUser ? "Update this user's account details." : "Create a user account for the PCH platform."}</p>
         </div>
       </header>
 
-      <form className="pch-user-form" onSubmit={handleAddUser} autoComplete="off">
-        {notice && <p className="pch-user-notice" role="status">{notice}</p>}
+      <form className="pch-user-form" onSubmit={handleSaveUser} autoComplete="off">
+        {error && <p className="pch-user-error" role="alert">{error}</p>}
         <section className="pch-user-card">
           <div className="pch-user-card-heading">
             <span><i className="bi bi-person-vcard" /></span>
@@ -77,7 +118,7 @@ export default function PchUsers() {
           <div className="pch-user-fields">
             <label>First Name<input autoComplete="given-name" maxLength={100} required value={form.firstName} onChange={(event) => setField("firstName", event.target.value)} placeholder="Enter first name" /></label>
             <label>Last Name<input autoComplete="family-name" maxLength={100} required value={form.lastName} onChange={(event) => setField("lastName", event.target.value)} placeholder="Enter last name" /></label>
-            <label>Username<input autoComplete="username" maxLength={100} required value={form.username} onChange={(event) => setField("username", event.target.value)} placeholder="Choose a username" /></label>
+            <label>Username<input autoComplete="username" maxLength={100} required disabled={Boolean(editingUser)} value={form.username} onChange={(event) => setField("username", event.target.value)} placeholder="Choose a username" /></label>
             <label>Phone Number<input type="tel" autoComplete="tel" maxLength={30} required value={form.phoneNumber} onChange={(event) => setField("phoneNumber", event.target.value)} placeholder="Enter phone number" /></label>
             <label>Email Address<input type="email" autoComplete="email" maxLength={255} required value={form.email} onChange={(event) => setField("email", event.target.value)} placeholder="name@example.com" /></label>
             <label>Role<select required value={form.role} onChange={(event) => setField("role", event.target.value)}><option value="" disabled>Select a role</option>{PCH_ROLES.map((role) => <option key={role} value={role}>{role}</option>)}</select></label>
@@ -90,14 +131,14 @@ export default function PchUsers() {
             <div><h2>Login Details</h2><p>Set a password for the new account.</p></div>
           </div>
           <div className="pch-user-fields">
-            <label>Password<input type="password" autoComplete="new-password" minLength={8} required value={form.password} onChange={(event) => setField("password", event.target.value)} placeholder="Create a password" /></label>
-            <label>Confirm Password<input type="password" autoComplete="new-password" minLength={8} required value={form.confirmPassword} onChange={(event) => setField("confirmPassword", event.target.value)} placeholder="Confirm password" /></label>
+            <label>Password<input type="password" autoComplete="new-password" minLength={8} required={!editingUser} value={form.password} onChange={(event) => setField("password", event.target.value)} placeholder={editingUser ? "Leave blank to keep current password" : "Create a password"} /></label>
+            <label>Confirm Password<input type="password" autoComplete="new-password" minLength={8} required={!editingUser && Boolean(form.password)} value={form.confirmPassword} onChange={(event) => setField("confirmPassword", event.target.value)} placeholder="Confirm password" /></label>
           </div>
         </section>
 
         <div className="pch-user-actions">
           <button type="button" className="pch-user-cancel" onClick={closeAddForm}>Cancel</button>
-          <button type="submit" className="pch-user-primary">Add PCH User</button>
+          <button type="submit" className="pch-user-primary">{editingUser ? "Save Changes" : "Add PCH User"}</button>
         </div>
       </form>
     </main>;
@@ -114,6 +155,8 @@ export default function PchUsers() {
       </button>
     </header>
 
+    {notice && <p className="pch-user-notice" role="status">{notice}</p>}
+
     <section className="pch-users-list-card">
       <div className="pch-users-toolbar">
         <div className="pch-users-search">
@@ -125,7 +168,7 @@ export default function PchUsers() {
 
       <div className="pch-users-table-wrap">
         <table className="pch-users-table">
-          <thead><tr><th>User</th><th>Name</th><th>Role</th><th>Email</th><th>Phone</th><th>Status</th></tr></thead>
+          <thead><tr><th>User</th><th>Name</th><th>Role</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
             {filteredUsers.length ? filteredUsers.map((user) => <tr key={user.id || user.email}>
                 <td><strong>{user.username || "—"}</strong></td>
@@ -133,12 +176,34 @@ export default function PchUsers() {
                 <td><span className="pch-user-role">{user.role}</span></td>
                 <td>{user.email || "—"}</td>
                 <td>{user.phoneNumber || "—"}</td>
-                <td><span className={`pch-user-status ${user.status.toLowerCase()}`}>{user.status}</span></td>
+                <td><span className={`pch-user-status ${String(user.status || "Active").toLowerCase()}`}>{user.status || "Active"}</span></td>
+                <td className="pch-user-row-actions">
+                  <button type="button" className="pch-user-action-edit" onClick={() => openEditForm(user)}><i className="bi bi-pencil" /> Edit</button>
+                  <button type="button" className={user.status === "Active" ? "pch-user-action-deactivate" : "pch-user-action-activate"} onClick={() => setPendingStatusUser(user)}>
+                    <i className={`bi ${user.status === "Active" ? "bi-person-dash" : "bi-person-check"}`} /> {user.status === "Active" ? "Deactivate" : "Activate"}
+                  </button>
+                </td>
               </tr>)
-                : <tr><td className="pch-users-table-message" colSpan={6}>No PCH users to display yet. User list integration will be added later.</td></tr>}
+                : <tr><td className="pch-users-table-message" colSpan={7}>No PCH users to display yet. User list integration will be added later.</td></tr>}
           </tbody>
         </table>
       </div>
     </section>
+
+    {pendingStatusUser && <div className="pch-user-confirm-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPendingStatusUser(null); }}>
+      <section className="pch-user-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="pch-user-confirm-title">
+        <span className="pch-user-confirm-icon"><i className={`bi ${pendingStatusUser.status === "Active" ? "bi-person-dash" : "bi-person-check"}`} /></span>
+        <h2 id="pch-user-confirm-title">{pendingStatusUser.status === "Active" ? "Deactivate" : "Activate"} PCH user?</h2>
+        <p>{pendingStatusUser.status === "Active"
+          ? <><strong>{pendingStatusUser.username}</strong> will be marked inactive. Their account will remain in the user list.</>
+          : <><strong>{pendingStatusUser.username}</strong> will be marked active again.</>}</p>
+        <div className="pch-user-confirm-actions">
+          <button type="button" className="pch-user-cancel" onClick={() => setPendingStatusUser(null)}>Cancel</button>
+          <button type="button" className={pendingStatusUser.status === "Active" ? "pch-user-confirm-deactivate" : "pch-user-confirm-activate"} onClick={confirmStatusChange}>
+            {pendingStatusUser.status === "Active" ? "Deactivate User" : "Activate User"}
+          </button>
+        </div>
+      </section>
+    </div>}
   </main>;
 }

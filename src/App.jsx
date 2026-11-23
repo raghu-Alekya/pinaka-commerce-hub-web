@@ -5,6 +5,7 @@ import GuestRoute from "./auth/GuestRoute";
 import AppLayout from "./layouts/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import MerchantDashboard from "./pages/MerchantDashboard";
 import Merchants from "./pages/Merchants";
 import MerchantStores from "./pages/MerchantStores";
 import { useParams } from "react-router-dom";
@@ -224,6 +225,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/merchant-dashboard" element={<MerchantDashboard />} />
         {/* Merchant list, creation, and editing */}
         <Route
           path="/merchants"

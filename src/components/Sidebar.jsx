@@ -4,7 +4,10 @@ import { NavLink, useLocation } from "react-router-dom";
 const sections = [
   {
     title: "",
-    items: [["/dashboard", "bi-house-fill", "Dashboard"]],
+    items: [
+      ["/dashboard", "bi-house-fill", "Dashboard"],
+      ["/merchant-dashboard", "bi-graph-up-arrow", "Sales Dashboard"],
+    ],
   },
   {
     title: "MANAGE",

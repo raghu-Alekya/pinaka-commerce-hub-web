@@ -411,6 +411,25 @@
   font-size: 12px;
 }
 
+.category-name-cell .category-hierarchy-dash {
+  display: inline;
+  margin: 0 5px 0 calc(var(--category-depth, 1) * 12px);
+  color: #a0a8b6;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: pre;
+}
+
+.category-name-cell.is-parent-category strong {
+  color: #263753;
+  font-weight: 650;
+}
+
+.category-name-cell.is-child-category strong {
+  color: #536077;
+  font-weight: 500;
+}
+
 .category-subcategory-list {
   display: flex;
   align-items: center;
