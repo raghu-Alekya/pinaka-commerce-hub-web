@@ -110,15 +110,6 @@ function phoneInputValue(value, callingCode) {
   return dial && !digits.startsWith(dial) ? `${dial}${digits}` : digits;
 }
 
-function findInternationalPhoneCountry(phone, countries = []) {
-  const raw = String(phone || "").trim();
-  if (!raw.startsWith("+") && !raw.startsWith("00")) return null;
-  const digits = raw.replace(/\D/g, "");
-  return [...countries]
-    .filter((country) => country.phoneCode)
-    .sort((left, right) => String(right.phoneCode).length - String(left.phoneCode).length)
-    .find((country) => digits.startsWith(String(country.phoneCode).replace(/\D/g, ""))) || null;
-}
 const STEPS = [
   "Store Details",
   "Subscription",
@@ -1764,13 +1755,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       timezone: COUNTRIES[country]?.zones[0] || "",
     }));
   };
-  useEffect(() => {
-    if (!editing || loading || locationOptions.loading) return;
-    const phoneCountry = findInternationalPhoneCountry(store.phone, locationOptions.locationRecords);
-    if (phoneCountry?.name && phoneCountry.name !== store.country) {
-      changeCountry(phoneCountry.name);
-    }
-  }, [editing, loading, locationOptions.loading, locationOptions.locationRecords, store.phone, store.country]);
   const copyScheduleToAll = () => {
     const base = hoursRef.current[0] || blankHours()[0];
     const hours = DAYS.map((day) => ({ ...base, day }));
@@ -2957,7 +2941,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <div className={`sf-field sf-phone-field${invalidStoreFields.has("Store Phone") ? " sf-field-invalid" : ""}`}>
               <label htmlFor="store-phone">Store Phone <span style={{ color: "#ef3340" }}>*</span></label>
               <PhoneInput
-                key={locationOptions.selectedCountry?.iso2 || "store-phone"}
                 country={locationOptions.selectedCountry?.iso2?.toLowerCase() || "in"}
                 enableSearch
                 countryCodeEditable={false}
@@ -2965,14 +2948,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 onChange={(value, data) => {
                   const nextIso2 = data?.countryCode?.toLowerCase() || locationOptions.selectedCountry?.iso2?.toLowerCase() || "in";
                   const currentIso2 = locationOptions.selectedCountry?.iso2?.toLowerCase() || "in";
-                  const dialCodeChanged = nextIso2 !== currentIso2;
+                  const countryChanged = nextIso2 !== currentIso2;
                   const digits = value.replace(/\D/g, "");
-                  updateStore("phone", !dialCodeChanged && digits ? `+${digits}` : "");
-                  const matchedAddressCountry = locationOptions.locationRecords.find(
+                  updateStore("phone", !countryChanged && digits ? `+${digits}` : "");
+                  const matchedCountry = locationOptions.locationRecords.find(
                     (country) => country.iso2?.toLowerCase() === nextIso2,
                   );
-                  if (matchedAddressCountry && store.country !== matchedAddressCountry.name) {
-                    changeCountry(matchedAddressCountry.name);
+                  if (countryChanged && matchedCountry && store.country !== matchedCountry.name) {
+                    changeCountry(matchedCountry.name);
                   }
                 }}
                 inputProps={{ id: "store-phone", name: "store-phone", type: "tel", autoComplete: "off", "aria-invalid": invalidStoreFields.has("Store Phone") }}
