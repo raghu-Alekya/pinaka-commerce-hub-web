@@ -1,0 +1,22 @@
+.access-page { padding: 8px 4px 32px; color: #1f2937; }
+.access-header, .access-save-row, .access-matrix-actions, .access-fields { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+.access-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 12px; }
+.access-fields label, .access-roles button { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.access-fields input, .access-matrix select { width: 100%; border: 1px solid #d0d5dd; border-radius: 8px; padding: 8px 10px; }
+.access-layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; margin: 16px 0 28px; }
+.access-roles { display: flex; flex-direction: column; gap: 8px; }
+.access-roles button, .access-matrix-actions button, .access-danger { border: 1px solid #d0d5dd; background: #fff; border-radius: 8px; padding: 10px 12px; }
+.access-roles button.is-selected { border-color: #6941c6; background: #f4f3ff; }
+.access-primary { border: 0; background: #6941c6; color: #fff; border-radius: 8px; padding: 10px 14px; }
+.access-danger { color: #b42318; }
+.access-matrix { width: 100%; border-collapse: collapse; background: #fff; }
+.access-matrix th, .access-matrix td { border-bottom: 1px solid #eaecf0; padding: 10px 12px; text-align: left; }
+.access-matrix td:not(:first-child), .access-matrix th:not(:first-child) { text-align: center; }
+.access-notice, .access-error, .access-role-note { margin: 12px 0; }
+.access-error { color: #b42318; }
+.access-merchant-picker { display: flex; align-items: center; gap: 10px; margin: 16px 0; }
+.access-merchant-picker select { min-width: 240px; padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 8px; background: #fff; }
+.access-notice { color: #067647; }
+@media (max-width: 800px) {
+  .access-layout, .access-fields { grid-template-columns: 1fr; }
+}

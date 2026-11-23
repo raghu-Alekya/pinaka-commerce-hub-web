@@ -192,7 +192,12 @@
 
 .pch-user-form { max-width: 1040px; }
 
-.pch-user-card { margin-bottom: 18px; }
+.pch-user-card {
+  position: relative;
+  overflow: visible;
+  margin-bottom: 18px;
+}
+.pch-user-card:first-of-type { z-index: 2; }
 
 .pch-user-card-heading {
   display: flex;
@@ -255,6 +260,23 @@
 .pch-user-fields select:focus {
   border-color: #5143bc;
   box-shadow: 0 0 0 3px #5143bc14;
+}
+
+.pch-user-phone { position: relative; z-index: 3; }
+.pch-user-phone .react-tel-input { width: 100%; }
+.pch-user-phone .react-tel-input .country-list { z-index: 4; }
+.pch-user-phone .react-tel-input .form-control {
+  width: 100%;
+  height: 44px;
+  padding-left: 52px;
+  border-color: #d9e1f0;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.pch-user-phone .react-tel-input .flag-dropdown {
+  border-color: #d9e1f0;
+  border-radius: 6px 0 0 6px;
+  background: #fff;
 }
 
 .pch-user-actions {
