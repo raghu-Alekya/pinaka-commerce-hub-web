@@ -1497,6 +1497,9 @@ a {
 .dashboard-primary:hover { background:#4938d9; }
 
 .super-admin-dashboard .dashboard-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-auto-rows:1fr; gap:16px; margin-bottom:16px; }
+.super-admin-dashboard.merchant-dashboard .dashboard-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); }
+@media (max-width:1200px) { .super-admin-dashboard.merchant-dashboard .dashboard-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:650px) { .super-admin-dashboard.merchant-dashboard .dashboard-kpis { grid-template-columns:1fr; } }
 .super-admin-dashboard .dashboard-kpi {
   --kpi-color:#1683ef;
   --kpi-tint:#e8f2ff;

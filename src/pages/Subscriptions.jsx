@@ -1,6 +1,7 @@
 import { pendingStoreRead } from "../api/http";
 import { useMemo, useState, useEffect } from "react";
 import { listMerchants } from "../api/merchants";
+import { useAuth } from "../auth/AuthContext";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
 import FiltersBar from "../components/FiltersBar";
@@ -412,6 +413,7 @@ function SubscriptionDateTimeField({ label, value, onChange }) {
 
 function SubscriptionList({
   subscriptions,
+  scopedToMerchant,
   loading,
   error,
   onReload,
@@ -782,16 +784,16 @@ const handleDateRangeChange = (value) => {
       <div className="subscriptions-heading-row">
 
         <div>
-          <h1>Merchant Subscriptions</h1>
+          <h1>{scopedToMerchant ? "My Subscriptions" : "Merchant Subscriptions"}</h1>
 
           <p>
-            View and manage subscription details for all merchants.
+            {scopedToMerchant ? "View and manage subscriptions for your merchant account." : "View and manage subscription details for all merchants."}
           </p>
         </div>
 
         <div>
 
- <button
+ {!scopedToMerchant && <button
             type="button"
             className="flow-button primary"
             onClick={onAdd}
@@ -800,7 +802,7 @@ const handleDateRangeChange = (value) => {
           >
              <i className="bi bi-plus-lg" />
             Add Subscription
-          </button>
+          </button>}
 
           <button
             type="button"
@@ -1211,7 +1213,7 @@ const handleDateRangeChange = (value) => {
 
 \======================================== */
 
-function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
+function SubscriptionDetails({ merchant, onBack, onChangePlan, canChangePlan = true }) {
 
 
   if (!merchant) return null;
@@ -1430,7 +1432,7 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
       </div>
 
-      <div className="subscription-change-plan-bar">
+      {canChangePlan && <div className="subscription-change-plan-bar">
 
         <div className="subscription-change-message">
 
@@ -1452,7 +1454,7 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
         </button>
 
-      </div>
+      </div>}
 
     </section>
 
@@ -2485,6 +2487,8 @@ function SubscriptionCrudForm({
 \======================================== */
 
 export default function MerchantSubscriptions() {
+  const { user } = useAuth();
+  const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee";
 
 
 
@@ -2587,6 +2591,7 @@ export default function MerchantSubscriptions() {
   }, [Boolean(crudForm), crudEditing]);
 
   const openAddSubscription = () => {
+    if (scopedToMerchant) return;
     setCrudEditing(null);
     setCrudForm({ ...emptySubscription });
     setCrudError("");
@@ -2628,7 +2633,7 @@ export default function MerchantSubscriptions() {
 
   const saveSubscription = async (event) => {
     event.preventDefault();
-    if (!crudForm) return;
+    if (!crudForm || (scopedToMerchant && !crudEditing)) return;
 
     setCrudBusy(true);
     setCrudError("");
@@ -2864,6 +2869,8 @@ export default function MerchantSubscriptions() {
 
   const openChoosePlan = () => {
 
+    if (scopedToMerchant) return;
+
     setPlans([]);
 
     setSelectedPlan(selectedMerchant?.planId || "");
@@ -3032,7 +3039,7 @@ export default function MerchantSubscriptions() {
 
   };
 
-  if (screen === "details") {
+  if (screen === "details" || (scopedToMerchant && ["choose", "confirm", "payment", "success"].includes(screen))) {
 
     return (
 
@@ -3043,6 +3050,8 @@ export default function MerchantSubscriptions() {
         onBack={() => setScreen("list")}
 
         onChangePlan={openChoosePlan}
+
+        canChangePlan={!scopedToMerchant}
 
       />
 
@@ -3188,6 +3197,7 @@ export default function MerchantSubscriptions() {
     <>
       <SubscriptionList
         subscriptions={subscriptions}
+        scopedToMerchant={scopedToMerchant}
         loading={loading}
         error={error || crudError}
         onReload={loadData}

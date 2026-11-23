@@ -101,7 +101,7 @@ export async function listMerchantStores(merchantId) {
   };
   return findList(response)
     .map((store) => ({
-      value: String(store.storeId || store.id || store._id || ""),
+      value: String(store.id || store.uuid || store.storeId || store._id || ""),
       label: store.name || store.storeName || store.storeId || store.id || "",
     }))
     .filter((store) => store.value && store.label);
