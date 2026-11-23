@@ -298,15 +298,6 @@ const unwrapMerchant = (result) => {
     plan,
   };
 };
-const normalizePermissionAction = (value) => {
-  const key = String(value || "").toLowerCase();
-  if (!key) return "";
-  if (/(view|read|list|get)/.test(key)) return "View";
-  if (/(create|add|insert)/.test(key)) return "Create";
-  if (/(edit|update|write|modify)/.test(key)) return "Edit";
-  if (/(delete|remove|destroy)/.test(key)) return "Delete";
-  return "";
-};
 const levelForRole = (role) => {
   const scope = String(role?.scopeType || role?.level || "").toUpperCase();
   if (scope.includes("MERCHANT") || scope.includes("FULL"))
@@ -315,6 +306,14 @@ const levelForRole = (role) => {
   if (scope.includes("SALE") || scope.includes("CASH")) return "Sales";
   if (scope.includes("STORE")) return "Store";
   return role?.level || scope || "Custom";
+};
+const isStoreAdminOrMerchantRole = (role) => {
+  const scope = String(role?.scopeType || role?.level || "").trim().toUpperCase();
+  if (!scope.includes("STORE") || scope.includes("MERCHANT") || scope.includes("FULL")) return false;
+  const identity = String(role?.name || role?.roleName || role?.roleCode || role?.code || "")
+    .trim()
+    .toLowerCase();
+  return ["admin", "merchant"].includes(identity);
 };
 const readMerchantSelectedTemplates = (response) => {
   const available = readAvailableRoleTemplates(response);
@@ -382,15 +381,6 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
     const available = Object.fromEntries(
       STANDARD_ACTIONS.map((action) => [action, true]),
     );
-    for (const permission of feature.permissions || []) {
-      const action =
-        normalizePermissionAction(permission.name) ||
-        normalizePermissionAction(permission.permissionKey) ||
-        normalizePermissionAction(permission.action);
-      if (!action) continue;
-      if (permission.checked || permission.defaultAllowed)
-        actions[action] = true;
-    }
     matrix[name] = actions;
     availability[name] = available;
     rows.push({
@@ -1598,17 +1588,24 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       .then((response) => {
         if (cancelled) return;
         const built = buildRolePermissionState(response, enabledFeatures);
-        const roleName =
-          roleDefinitions.find((role) => role.id === activeRole)?.name || "";
+        const roleDefinition = roleDefinitions.find((role) => role.id === activeRole);
+        const roleName = roleDefinition?.name || "";
         const matrix = applySavedRolePermissions(
           built.matrix,
           savedRolePermissions,
           activeRole,
           roleName,
         );
+        if (isStoreAdminOrMerchantRole(roleDefinition)) {
+          for (const feature of built.rows) {
+            if (!enabledFeatures.includes(feature.name) || !entitled(feature.name)) continue;
+            matrix[feature.name] = Object.fromEntries(
+              STANDARD_ACTIONS.map((action) => [action, true]),
+            );
+          }
+        }
         loadedRolePermissions.current.add(activeRole);
         setPermissions((current) => {
-          if (current[activeRole]) return current;
           return { ...current, [activeRole]: matrix };
         });
         setPermissionAvailability((current) => ({
