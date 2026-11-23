@@ -3,9 +3,15 @@ import { ApiError } from "../../../api/http";
 import { devicesApi } from "../../../api/devices";
 import { getStoreDeviceMappings } from "../../../api/storeDeviceMappings";
 import { ConfigHeader, ConfigSwitch, SettingInput, useConfigState, usePosSettings, useSaveAction } from "../shared";
-import { getPosCardPayments, savePosCardPaymentSettings } from "./api";
+import { getPosCardPaymentConfiguration, savePosCardPaymentSettings } from "./api";
 
 const PROVIDERS = ["Kickback", "Payroc"];
+const EMPTY_CARD_URLS = {
+  uatIdentity: "",
+  uatApi: "",
+  productionIdentity: "",
+  productionApi: "",
+};
 const blankProvider = (provider) => ({
   provider,
   enabled: false,
@@ -16,21 +22,27 @@ const blankProvider = (provider) => ({
   terminalId: "",
   secretKey: "",
   webhookUrl: "",
+  payrocEnvironment: "uat",
+  terminalUrls: { ...EMPTY_CARD_URLS },
 });
 const DEFAULT_PAYMENTS = PROVIDERS.map(blankProvider);
 
 function normalizePayments(records = []) {
   const byProvider = new Map(records.map((record) => [record.provider, record]));
+  const providerNames = [...new Set([...PROVIDERS, ...records.map((record) => record?.provider).filter(Boolean)])];
+  const isEnabled = (record) => record.payrocEnvironment === "production";
   const hasExplicitDefault = records.some((record) => record.isDefault !== undefined || record.is_default !== undefined || record.default !== undefined);
-  const defaultProvider = records.find((record) => (record.isDefault || record.is_default || record.default) && record.enabled !== false)?.provider
-    || (!hasExplicitDefault ? records.find((record) => record.enabled !== false)?.provider : "");
-  return PROVIDERS.map((provider) => {
+  const defaultProvider = records.find((record) => (record.isDefault || record.is_default || record.default) && isEnabled(record))?.provider
+    || (!hasExplicitDefault ? records.find(isEnabled)?.provider : "");
+  return providerNames.map((provider) => {
     const record = byProvider.get(provider);
     if (!record) return blankProvider(provider);
     return {
       ...blankProvider(provider),
       ...record,
-      enabled: record.enabled === undefined ? true : Boolean(record.enabled),
+      payrocEnvironment: record.payrocEnvironment === "production" ? "production" : "uat",
+      terminalUrls: { ...EMPTY_CARD_URLS, ...record.payrocUrls, ...record.terminalUrls },
+      enabled: isEnabled(record),
       isDefault: provider === defaultProvider,
       processorMerchantId: record.processorMerchantId || record.merchantId || "",
       deviceMappings: Array.isArray(record.deviceMappings || record.device_mappings)
@@ -55,9 +67,10 @@ export function PaymentSettings() {
   useEffect(() => {
     if (!settings.storeId) return undefined;
     let active = true;
-    getPosCardPayments(settings.storeId)
-      .then((records) => {
+    getPosCardPaymentConfiguration(settings.storeId)
+      .then((configuration) => {
         if (!active) return;
+        const records = configuration.cardPayments || (configuration.provider ? [configuration] : []);
         const normalized = normalizePayments(records);
         setPayments(normalized);
         setOpenProvider(
@@ -117,7 +130,7 @@ export function PaymentSettings() {
   const removeDeviceMapping = (provider, index) => updateProvider(provider, { deviceMappings: (payments.find((item) => item.provider === provider)?.deviceMappings || []).filter((_, mappingIndex) => mappingIndex !== index) });
 
   const setEnabled = (provider, enabled) => setPayments((current) => {
-    const next = current.map((item) => item.provider === provider ? { ...item, enabled } : item);
+    const next = current.map((item) => item.provider === provider ? { ...item, enabled, payrocEnvironment: enabled ? "production" : "uat" } : item);
     if (enabled && !next.some((item) => item.isDefault)) {
       return next.map((item) => ({ ...item, isDefault: item.provider === provider }));
     }
@@ -138,17 +151,15 @@ export function PaymentSettings() {
       alert("Open Card Payment Settings from a store before saving.");
       return;
     }
-    const enabledPayments = payments.filter((item) => item.enabled);
-    if (enabledPayments.some((item) => (item.provider === "Payroc" && (!item.deviceMappings.length || item.deviceMappings.some((mapping) => !findStoreDeviceForMapping(mapping)?.code || !mapping.cardTerminalDeviceId.trim()))) || !item.processorMerchantId.trim() || !item.secretKey.trim() || (item.provider === "Kickback" && !item.webhookUrl.trim()) || (item.provider === "Payroc" && !item.terminalId.trim()))) {
-      alert("Complete the required credentials for each enabled payment provider.");
-      return;
-    }
-    if (enabledPayments.length && !enabledPayments.some((item) => item.isDefault)) {
-      alert("Select an enabled provider as the default payment gateway.");
+    if (payments.some((payment) => Object.values(payment.terminalUrls).some((url) => {
+      if (url == null || !String(url).trim()) return false;
+      try { return new URL(String(url).trim()).protocol !== "https:"; } catch { return true; }
+    }))) {
+      alert("Any card payment URL you enter must be a valid HTTPS URL.");
       return;
     }
     await savePosCardPaymentSettings(settings.storeId, payments.map((item) => {
-      const { deviceId, deviceIds, webhookUrl, ...configuration } = item;
+      const { deviceId, deviceIds, payrocUrls, ...configuration } = item;
       return {
         ...configuration,
         deviceMappings: item.deviceMappings.map((mapping) => {
@@ -159,10 +170,11 @@ export function PaymentSettings() {
             storeDeviceActivationKey: storeDevice?.activationKey || mapping.storeDeviceActivationKey || "",
           };
         }),
-        processorMerchantId: item.processorMerchantId.trim(),
-        terminalId: item.terminalId.trim(),
-        secretKey: item.secretKey.trim(),
-        ...(item.provider === "Kickback" ? { webhookUrl: item.webhookUrl.trim() } : {}),
+        processorMerchantId: String(item.processorMerchantId ?? "").trim(),
+        terminalId: String(item.terminalId ?? "").trim(),
+        secretKey: String(item.secretKey ?? "").trim(),
+        terminalUrls: Object.fromEntries(Object.entries(item.terminalUrls).map(([key, value]) => [key, String(value ?? "").trim()])),
+        ...(item.provider === "Kickback" ? { webhookUrl: String(item.webhookUrl ?? "").trim() } : {}),
       };
     }));
     return true;
@@ -201,7 +213,11 @@ export function PaymentSettings() {
             />
             <span>Use as default gateway</span>
           </label>
-          <ConfigSwitch label="Enabled" checked={payment.enabled} onChange={(enabled) => setEnabled(payment.provider, enabled)} />
+          <div className="card-payment-control-options">
+            <label><input type="checkbox" checked={payment.payrocEnvironment === "uat"} onChange={() => setEnabled(payment.provider, false)} /> UAT</label>
+            <label><input type="checkbox" checked={payment.payrocEnvironment === "production"} onChange={() => setEnabled(payment.provider, true)} /> Production</label>
+            <ConfigSwitch label="Enabled" checked={payment.enabled} onChange={(enabled) => setEnabled(payment.provider, enabled)} />
+          </div>
         </div>
         <div className="card-payment-provider-fields">
           {payment.provider === "Payroc" && <div className="card-payment-device-mapping">
@@ -227,6 +243,13 @@ export function PaymentSettings() {
           {payment.provider === "Payroc" && <SettingInput label="Terminal ID" value={payment.terminalId} onChange={(value) => updateProvider(payment.provider, { terminalId: value })} placeholder="Enter terminal ID" />}
           <SettingInput label="Secret Key" value={payment.secretKey} onChange={(value) => updateProvider(payment.provider, { secretKey: value })} placeholder="Enter secret key" type="password" />
           {payment.provider === "Kickback" && <SettingInput label="Webhook URL" value={payment.webhookUrl} onChange={(value) => updateProvider(payment.provider, { webhookUrl: value })} placeholder="Enter webhook URL" />}
+          <div className="card-payment-provider-endpoints">
+            <strong>Card payment URLs</strong>
+            <SettingInput label="Identity authorize API (UAT)" value={payment.terminalUrls.uatIdentity} onChange={(value) => updateProvider(payment.provider, { terminalUrls: { ...payment.terminalUrls, uatIdentity: value } })} />
+            <SettingInput label="Identity API (UAT)" value={payment.terminalUrls.uatApi} onChange={(value) => updateProvider(payment.provider, { terminalUrls: { ...payment.terminalUrls, uatApi: value } })} />
+            <SettingInput label="Identity authorize API (production)" value={payment.terminalUrls.productionIdentity} onChange={(value) => updateProvider(payment.provider, { terminalUrls: { ...payment.terminalUrls, productionIdentity: value } })} />
+            <SettingInput label="Identity API (production)" value={payment.terminalUrls.productionApi} onChange={(value) => updateProvider(payment.provider, { terminalUrls: { ...payment.terminalUrls, productionApi: value } })} />
+          </div>
         </div>
         </div>
       </section>;
