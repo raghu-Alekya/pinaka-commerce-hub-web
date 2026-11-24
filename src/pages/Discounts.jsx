@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api, pendingStoreRead } from "../api/http";
+import { useAuth } from "../auth/AuthContext";
 import { normalizeCatalog } from "../api/products";
 import { syncWordpressDiscounts } from "../api/storeConnector";
 import FilterDropdown from "../components/FilterDropdown";
@@ -76,7 +77,8 @@ const formatSystemDate = (value) => {
 };
 // Read and manage PCH's saved discount records through the app API. WooCommerce
 // changes are imported only by the explicit connector sync action below.
-const storeDiscountsPath = (storeId) => `/api/v1/stores/${encodeURIComponent(storeId)}/discounts`;
+const storeDiscountsPath = (storeId, merchantSession) =>
+  `/api/v1/stores/${encodeURIComponent(storeId)}/${merchantSession ? "merchant/" : ""}discounts`;
 
 function DiscountProductPicker({ products, value, onChange, multiple = false, disabled }) {
   const [open, setOpen] = useState(false);
@@ -113,6 +115,8 @@ function DiscountProductPicker({ products, value, onChange, multiple = false, di
   </div>;
 }
 export default function Discounts({ embedded = false, storeId: storeIdProp, store }) {
+  const { user } = useAuth();
+  const merchantSession = user?.accountType === "merchant" || user?.accountType === "employee";
   const { storeId: routeStoreId } = useParams();
   const storeId = storeIdProp || routeStoreId;
   const [discounts, setDiscounts] = useState([]);
@@ -153,7 +157,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
     setLoadError("");
     setCatalogError("");
     const apiPageSize = 100;
-    const path = `${storeDiscountsPath(storeId)}?page=1&per_page=${apiPageSize}`;
+    const path = `${storeDiscountsPath(storeId, merchantSession)}?page=1&per_page=${apiPageSize}`;
     pendingStoreRead(`discounts:${path}`, () => api.get(path, { headers: { Accept: "application/json" } }))
       .then(async response => {
         if (!active) return;
@@ -188,7 +192,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
             ? page <= lastPage
             : hasMore === true || (hasMore == null && rows.length >= (page - 1) * apiPageSize);
           if (!shouldLoadPage) break;
-          const nextPath = `${storeDiscountsPath(storeId)}?page=${page}&per_page=${apiPageSize}`;
+          const nextPath = `${storeDiscountsPath(storeId, merchantSession)}?page=${page}&per_page=${apiPageSize}`;
           const nextResponse = await pendingStoreRead(`discounts:${nextPath}`, () => api.get(nextPath, { headers: { Accept: "application/json" } }));
           if (nextResponse?.success === false || nextResponse?.status === "error") throw new Error(nextResponse.message || "Unable to load discounts.");
           const nextRows = rowsFrom(nextResponse);
@@ -282,7 +286,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
         }
       });
     return () => { active = false; };
-  }, [storeId, retry]);
+  }, [storeId, retry, merchantSession]);
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return discounts.filter((item) => {
@@ -382,7 +386,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
       saveLock.current = true;
       setSaving(true);
       try {
-        const basePath = storeDiscountsPath(storeId);
+        const basePath = storeDiscountsPath(storeId, merchantSession);
         const response = mode === "edit"
           ? await api.put(`${basePath}/${encodeURIComponent(form.type)}/${encodeURIComponent(form.id)}`, payload)
           : await api.post(basePath, payload);
@@ -409,7 +413,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
     setDeleting(true);
     setDeleteError("");
     try {
-      const response = await api.delete(`${storeDiscountsPath(storeId)}/${encodeURIComponent(deleteTarget.type)}/${encodeURIComponent(deleteTarget.id)}`);
+      const response = await api.delete(`${storeDiscountsPath(storeId, merchantSession)}/${encodeURIComponent(deleteTarget.type)}/${encodeURIComponent(deleteTarget.id)}`);
       if (response?.success === false || ["error", "failed"].includes(response?.status)) throw new Error(response.message || "Unable to delete discount.");
       setNotice(response?.message || "Discount deleted successfully.");
       setDeleteTarget(null);

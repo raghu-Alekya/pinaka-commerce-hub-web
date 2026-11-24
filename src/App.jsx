@@ -5,6 +5,7 @@ import GuestRoute from "./auth/GuestRoute";
 import AppLayout from "./layouts/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import AccessPermissions from "./pages/AccessPermissions";
 import Merchants from "./pages/Merchants";
 import MerchantStores from "./pages/MerchantStores";
 import { useParams } from "react-router-dom";
@@ -16,6 +17,7 @@ function MerchantStoresRedirect() {
 import Subscriptions from "./pages/Subscriptions";
 import Stores from "./pages/Stores";
 import Users from "./pages/Users";
+import PchUsers from "./pages/PchUsers";
 import PosConfiguration from "./pages/pos/PosConfiguration";
 import AddMerchant from "./pages/AddMerchant";
 import AddStore from "./pages/AddStore";
@@ -223,6 +225,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/access" element={<AccessPermissions />} />
         {/* Merchant list, creation, and editing */}
         <Route
           path="/merchants"
@@ -303,6 +306,7 @@ export default function App() {
         <Route path="/orders/:orderId" element={<OrderDetail />} />
         {/* Users and POS */}
         <Route path="/users" element={<Users />} />
+        <Route path="/pch-users" element={<PchUsers />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
         {/* Employees */}
         <Route path="/employees" element={<Employees />} />

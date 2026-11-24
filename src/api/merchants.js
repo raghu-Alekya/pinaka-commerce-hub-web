@@ -318,27 +318,27 @@ export function toFlatMerchantPayload(data) {
   return {
     ein: m.ein || m.EIN || "",
     ...(data.password ? { password: data.password } : {}),
-      firstName: m.firstName || "",
-      lastName: m.lastName || "",
-    merchantName,
-    merchantEmail,
-    merchantPhoneNumber,
-    businessName,
-    businessDisplayName,
-    addressLine1,
-    addressLine2,
+    first_name: m.firstName || m.first_name || "",
+    last_name: m.lastName || m.last_name || "",
+    merchant_name: merchantName,
+    merchant_email: merchantEmail,
+    merchant_phone_number: merchantPhoneNumber,
+    business_name: businessName,
+    business_display_name: businessDisplayName,
+    address_line1: addressLine1,
+    address_line2: addressLine2,
     city,
     state,
-    pinCode,
+    pin_code: pinCode,
     country,
-    planId,
-    billingCycle,
-    startDate,
-    renewalDate,
-    agreementPrice,
+    plan_id: planId,
+    billing_cycle: billingCycle,
+    start_date: startDate,
+    renewal_date: renewalDate,
+    agreement_price: agreementPrice,
     tax,
-    totalDueToday,
-    paymentMethod,
+    total_due_today: totalDueToday,
+    payment_method: paymentMethod,
   };
 }
 
@@ -526,10 +526,11 @@ export function mapMerchantToRow(item) {
 
   const createdAt =
     merchant.createdAt || merchant.created_at || merchant.createdDate ||
-    merchant.created_date || merchant.joined || "";
+    merchant.created_date || merchant.joined || item.createdAt || item.created_at || item.createdDate || item.created_date || "";
   const updatedAt =
     merchant.updatedAt || merchant.updated_at || merchant.updatedDate ||
-    merchant.updated_date || createdAt;
+    merchant.updated_date || merchant.updatedOn || merchant.updated_on || merchant.lastUpdatedAt || merchant.last_updated_at ||
+    item.updatedAt || item.updated_at || item.updatedDate || item.updated_date || item.updatedOn || item.updated_on || item.lastUpdatedAt || item.last_updated_at || createdAt;
 
   const address = merchant.businessAddress || merchant.address || {};
   const firstName = merchant.firstName || merchant.first_name || "";
@@ -562,6 +563,8 @@ export function mapMerchantToRow(item) {
     name,
     email,
     phone,
+    phoneDialCode: String(merchant.phoneDialCode || merchant.phone_dial_code || merchant.dialCode || merchant.dial_code || "").replace(/\D/g, ""),
+    phoneCountry: merchant.phoneCountry || merchant.phone_country || merchant.phoneCountryCode || merchant.phone_country_code || "",
     stores,
     plan: planName,
     renewal: renewal ? formatDate(renewal) : "—",

@@ -1,6 +1,7 @@
 import { pendingStoreRead } from "../api/http";
 import { useMemo, useState, useEffect } from "react";
 import { listMerchants } from "../api/merchants";
+import { useAuth } from "../auth/AuthContext";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
 import FiltersBar from "../components/FiltersBar";
@@ -43,7 +44,6 @@ import {
 
   changeSubscriptionPlan,
   listSubscriptions,
-  listSubscriptionPlans,
   getSubscription,
   createSubscription,
   updateSubscription,
@@ -366,12 +366,12 @@ function SubscriptionCalendarField({ label, value, onChange, min, max, showLabel
         <div className="subscription-calendar-grid">
           {dateCells.map(({ date, iso, inMonth }) => {
             const disabled = (min && iso < min) || (max && iso > max);
-            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); if (!hasTime) setOpen(false); }}>{date.getDate()}</button>;
+            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); setOpen(false); }}>{date.getDate()}</button>;
           })}
         </div>
         <div className="subscription-calendar-footer">
           <button type="button" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
-          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); if (!hasTime) setOpen(false); setMonth(today); } }}>Today</button>
+          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); setOpen(false); setMonth(today); } }}>Today</button>
         </div>
         </div>
         {hasTime && <div className="subscription-calendar-time">
@@ -412,6 +412,7 @@ function SubscriptionDateTimeField({ label, value, onChange }) {
 
 function SubscriptionList({
   subscriptions,
+  scopedToMerchant,
   loading,
   error,
   onReload,
@@ -782,16 +783,16 @@ const handleDateRangeChange = (value) => {
       <div className="subscriptions-heading-row">
 
         <div>
-          <h1>Merchant Subscriptions</h1>
+          <h1>{scopedToMerchant ? "My Subscriptions" : "Merchant Subscriptions"}</h1>
 
           <p>
-            View and manage subscription details for all merchants.
+            {scopedToMerchant ? "View and manage subscriptions for your merchant account." : "View and manage subscription details for all merchants."}
           </p>
         </div>
 
         <div>
 
- <button
+ {!scopedToMerchant && <button
             type="button"
             className="flow-button primary"
             onClick={onAdd}
@@ -800,7 +801,7 @@ const handleDateRangeChange = (value) => {
           >
              <i className="bi bi-plus-lg" />
             Add Subscription
-          </button>
+          </button>}
 
           <button
             type="button"
@@ -1211,7 +1212,7 @@ const handleDateRangeChange = (value) => {
 
 \======================================== */
 
-function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
+function SubscriptionDetails({ merchant, onBack, onChangePlan, canChangePlan = true }) {
 
 
   if (!merchant) return null;
@@ -1430,7 +1431,7 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
       </div>
 
-      <div className="subscription-change-plan-bar">
+      {canChangePlan && <div className="subscription-change-plan-bar">
 
         <div className="subscription-change-message">
 
@@ -1452,7 +1453,7 @@ function SubscriptionDetails({ merchant, onBack, onChangePlan }) {
 
         </button>
 
-      </div>
+      </div>}
 
     </section>
 
@@ -2485,6 +2486,8 @@ function SubscriptionCrudForm({
 \======================================== */
 
 export default function MerchantSubscriptions() {
+  const { user } = useAuth();
+  const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee";
 
 
 
@@ -2554,7 +2557,7 @@ export default function MerchantSubscriptions() {
     let active = true;
 
     if (!crudForm) return;
-    Promise.all([crudEditing ? Promise.resolve([]) : pendingStoreRead("subscription-form-merchants", () => listMerchants()), listSubscriptionPlans()])
+    Promise.all([crudEditing ? Promise.resolve([]) : pendingStoreRead("subscription-form-merchants", () => listMerchants()), listPlans()])
       .then(([merchantResponse, planResponse]) => {
         if (!active) return;
 
@@ -2587,6 +2590,7 @@ export default function MerchantSubscriptions() {
   }, [Boolean(crudForm), crudEditing]);
 
   const openAddSubscription = () => {
+    if (scopedToMerchant) return;
     setCrudEditing(null);
     setCrudForm({ ...emptySubscription });
     setCrudError("");
@@ -2628,7 +2632,7 @@ export default function MerchantSubscriptions() {
 
   const saveSubscription = async (event) => {
     event.preventDefault();
-    if (!crudForm) return;
+    if (!crudForm || (scopedToMerchant && !crudEditing)) return;
 
     setCrudBusy(true);
     setCrudError("");
@@ -2641,7 +2645,10 @@ export default function MerchantSubscriptions() {
         throw new Error("Select an active master plan.");
       }
 
-      const payload = subscriptionPayload(crudForm);
+      const planRecord = selectedPlan.plan || selectedPlan.subscriptionPlan || selectedPlan.subscription_plan || {};
+      const selectedPlanId = selectedPlan.id || selectedPlan._id || selectedPlan.uuid || selectedPlan.planUuid || selectedPlan.plan_uuid || selectedPlan.planId || selectedPlan.plan_id || selectedPlan.subscriptionPlanId || selectedPlan.subscription_plan_id || planRecord.id || planRecord._id || planRecord.uuid || planRecord.planId || planRecord.plan_id || crudPlanCode(selectedPlan);
+      if (!selectedPlanId) throw new Error("The selected plan is missing its plan ID. Reload the plan list and try again.");
+      const payload = subscriptionPayload(crudForm, selectedPlanId);
 
       if (crudEditing) {
         await updateSubscription(crudEditing, payload);
@@ -2864,6 +2871,8 @@ export default function MerchantSubscriptions() {
 
   const openChoosePlan = () => {
 
+    if (scopedToMerchant) return;
+
     setPlans([]);
 
     setSelectedPlan(selectedMerchant?.planId || "");
@@ -3032,7 +3041,7 @@ export default function MerchantSubscriptions() {
 
   };
 
-  if (screen === "details") {
+  if (screen === "details" || (scopedToMerchant && ["choose", "confirm", "payment", "success"].includes(screen))) {
 
     return (
 
@@ -3043,6 +3052,8 @@ export default function MerchantSubscriptions() {
         onBack={() => setScreen("list")}
 
         onChangePlan={openChoosePlan}
+
+        canChangePlan={!scopedToMerchant}
 
       />
 
@@ -3188,6 +3199,7 @@ export default function MerchantSubscriptions() {
     <>
       <SubscriptionList
         subscriptions={subscriptions}
+        scopedToMerchant={scopedToMerchant}
         loading={loading}
         error={error || crudError}
         onReload={loadData}

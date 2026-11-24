@@ -28,6 +28,7 @@ import { storeListFromResponse, normalizeStore } from "../api/stores";
 import { getStoreDeviceMappings } from "../api/storeDeviceMappings";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
+import { useAuth } from "../auth/AuthContext";
 import FiltersBar from "../components/FiltersBar";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import BentoDetailModal from "../components/BentoDetailModal";
@@ -844,8 +845,15 @@ function dateRangeMatch(merchant, value, from = '', to = '', now = new Date()) {
 export function CalendarField({ label, value, onChange, min, max, showLabel = true, invalid = false, allowManualEntry = false, yearMonthSelect = false }) {
   const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
   const [open, setOpen] = useState(false);
-  const [month, setMonth] = useState(() => selectedDate || new Date());
-  const [calendarView, setCalendarView] = useState("days");
+  const [month, setMonth] = useState(() => {
+    if (selectedDate) return selectedDate;
+    const today = new Date();
+    const minDate = min ? new Date(`${min}T00:00:00`) : null;
+    const maxDate = max ? new Date(`${max}T00:00:00`) : null;
+    if (minDate && today < minDate) return minDate;
+    if (maxDate && today > maxDate) return maxDate;
+    return today;
+  });
   const [manualValue, setManualValue] = useState(value ? `${value.slice(5, 7)}/${value.slice(8, 10)}/${value.slice(0, 4)}` : "");
   const manualEditing = useRef(false);
   const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
@@ -904,6 +912,7 @@ export function CalendarField({ label, value, onChange, min, max, showLabel = tr
     const iso = `${yearNumber}-${String(monthNumber).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
     onChange(iso);
     setMonth(date);
+    setOpen(false);
   }
 
   return <div className={`merchant-date-field${showLabel ? "" : " merchant-date-field-compact"}`}>
@@ -975,6 +984,8 @@ function storeLimitFor(merchant, masterPlans) {
   return null;
 }
 export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
+  const { user, can } = useAuth();
+  const scopedToMerchant = user?.accountType === 'merchant' || user?.accountType === 'employee';
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [countryRecords, setCountryRecords] = useState([]);
@@ -1071,8 +1082,12 @@ const [statusFilter, setStatusFilter] = useState("");
   const [apiMerchants, setMerchants] = useState([]);
   const merchants = useMemo(() => {
     const combined = new Map(apiMerchants.map(row => [String(row.id), row]));
-    localMerchants.forEach(row => combined.set(String(row.id), row));
-    return [...combined.values()].map(row => {
+    if (!scopedToMerchant) localMerchants.forEach(row => combined.set(String(row.id), row));
+    const ownIds = [user?.merchantId, user?.merchantCode].filter(Boolean).map(value => String(value).toLowerCase());
+    return [...combined.values()].filter(row => !scopedToMerchant || [
+      row.id, row.uuid, row.merchantId, row.merchantCode,
+      row._raw?.merchant?.id, row._raw?.merchant?.merchant_code,
+    ].some(value => value && ownIds.includes(String(value).toLowerCase()))).map(row => {
       const raw = row._raw || row;
       const subscription = row.subscription || raw.subscription || raw.merchant?.subscription || {};
       const renewal = subscription.renewalDate || subscription.renewal_date || subscription.currentPeriodEnd || subscription.current_period_end || row.renewalDate || row.renewal_date || raw._onboarding?.renewalDate || raw._onboarding?.renewal_date;
@@ -1081,7 +1096,7 @@ const [statusFilter, setStatusFilter] = useState("");
       }
       return row;
     });
-  }, [apiMerchants, localMerchants]);
+  }, [apiMerchants, localMerchants, scopedToMerchant, user?.merchantId, user?.merchantCode]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -1211,7 +1226,7 @@ const [statusFilter, setStatusFilter] = useState("");
   const statuses = ["Pending Setup", "Active", "Suspended", "Inactive"];
   const locations = [...new Set(merchants.map(m => `${countryNameFor(m.country, countryRecords)} ${m.state || ''}`.trim()).filter(Boolean))];
 
-  if (viewedId) return <MerchantReadOnly masterTenders={masterTenders} tenderAssignments={tenderAssignments} onSaveTenderAssignments={onSaveTenderAssignments} tendersLoading={tendersLoading} tendersError={tendersError} masterVendors={masterVendors} vendorAssignments={vendorAssignments} onSaveVendorAssignments={onSaveVendorAssignments} vendorsLoading={vendorsLoading} vendorsError={vendorsError} key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
+  if (viewedId && (!scopedToMerchant || merchants.some(item => [item.id, item.merchantId, item.merchantCode].some(value => String(value) === viewedId)))) return <MerchantReadOnly masterTenders={masterTenders} tenderAssignments={tenderAssignments} onSaveTenderAssignments={onSaveTenderAssignments} tendersLoading={tendersLoading} tendersError={tendersError} masterVendors={masterVendors} vendorAssignments={vendorAssignments} onSaveVendorAssignments={onSaveVendorAssignments} vendorsLoading={vendorsLoading} vendorsError={vendorsError} key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
     merchant={merchants.find(item => String(item.id) === viewedId || String(item.merchantId) === viewedId || String(item.merchantCode) === viewedId)} onBack={closeView}
     />;
 
@@ -1224,15 +1239,15 @@ const [statusFilter, setStatusFilter] = useState("");
         <div>
           <h1>Merchants</h1>
            <p className="page-subtitle">
-             Manage merchant accounts, subscriptions, stores, and business details. </p>
+             {scopedToMerchant ? 'View your merchant account and related details.' : 'Manage merchant accounts, subscriptions, stores, and business details.'} </p>
         </div>
         <div className="page-actions">
-          <button
+          {can('merchants', 'create') && <button
             className="btn btn-primary"
             type="button" onClick={() => nav("/merchants/new")}
           >
             <i className="bi bi-plus-lg" /> Add Merchant
-          </button>
+          </button>}
           <button
             className="btn btn-secondary merchants-export-btn"
             type="button"
@@ -1478,6 +1493,7 @@ const [statusFilter, setStatusFilter] = useState("");
                     <td>{merchantTimestamp(m.updatedAt || m.updated_at || m.updatedDate || m._raw?.merchant?.updated_at)}</td>
                     <td>
     <ListActions
+        module="merchants"
         onView={() => openView(m)}
         onEdit={() => openEdit(m)}
         onActivate={

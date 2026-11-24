@@ -121,6 +121,7 @@ export async function apiRequest(
     signal,
     headers: {
       Accept: "application/json",
+      "X-PCH-Web-Console": "1",
       ...(payload !== undefined && !isFormData ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,

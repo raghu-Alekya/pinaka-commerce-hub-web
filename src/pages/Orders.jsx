@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Pagination from "../components/Pagination";
 import FiltersBar from "../components/FiltersBar";
 import ListActions from "../components/ListActions";
+import { useAuth } from "../auth/AuthContext";
 import { listMerchants } from "../api/merchants";
 import { listMerchantStores, listStores } from "../api/stores";
 import { listScopedOrders } from "../api/orders";
@@ -70,13 +71,16 @@ export default function Orders({
   storeId,
   store,
 }) {
+  const { user } = useAuth();
+  const scopedToMerchant = user?.accountType === 'merchant' || user?.accountType === 'employee';
+  const ownMerchantId = scopedToMerchant ? String(user?.merchantId || '') : '';
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [merchants, setMerchants] = useState([]);
   const [stores, setStores] = useState([]);
   const [selectedMerchant, setSelectedMerchant] = useState(
-    merchantId || (!embedded && searchParams.get("merchant")) || "",
+    ownMerchantId || merchantId || (!embedded && searchParams.get("merchant")) || "",
   );
   const [selectedStore, setSelectedStore] = useState(
     storeId || (!embedded && searchParams.get("store")) || "",
@@ -101,11 +105,16 @@ export default function Orders({
   }, [dateFilter]);
 
   useEffect(() => {
+    if (scopedToMerchant) {
+      setSelectedMerchant(ownMerchantId);
+      setCurrentPage(1);
+      return;
+    }
     if (merchantId) {
       setSelectedMerchant(merchantId);
       setCurrentPage(1);
     }
-  }, [merchantId]);
+  }, [merchantId, scopedToMerchant, ownMerchantId]);
 
   useEffect(() => {
     if (storeId) {
@@ -115,7 +124,7 @@ export default function Orders({
   }, [storeId]);
 
   useEffect(() => {
-    if (embedded) return undefined;
+    if (embedded || scopedToMerchant) return undefined;
     let active = true;
     listMerchants()
       .then((rows) => {
@@ -127,7 +136,7 @@ export default function Orders({
     return () => {
       active = false;
     };
-  }, [embedded]);
+  }, [embedded, scopedToMerchant]);
 
   useEffect(() => {
     if (!selectedMerchant || embedded) {
@@ -139,7 +148,9 @@ export default function Orders({
       .then((rows) => {
         if (!active) return;
         setStores(rows);
-        if (rows.length === 1) {
+        if (scopedToMerchant) {
+          setSelectedStore((current) => current && !rows.some((row) => row.value === current) ? "" : current);
+        } else if (rows.length === 1) {
           setSelectedStore(rows[0].value);
           setCurrentPage(1);
         }
@@ -150,10 +161,10 @@ export default function Orders({
     return () => {
       active = false;
     };
-  }, [selectedMerchant, embedded]);
+  }, [selectedMerchant, embedded, scopedToMerchant]);
 
   useEffect(() => {
-    if (!selectedStore && (embedded || selectedMerchant)) {
+    if (!selectedStore && embedded) {
       setOrders([]);
       setOrderTotal(0);
       setError("");
@@ -209,7 +220,7 @@ export default function Orders({
   const completedPercentage = orders.length ? ((completedCount / orders.length) * 100).toFixed(1) : "0.0";
   const pendingPercentage = orders.length ? ((pendingCount / orders.length) * 100).toFixed(1) : "0.0";
   function rememberFilters(nextMerchant, nextStore) {
-    if (embedded) return;
+    if (embedded || scopedToMerchant) return;
     const next = new URLSearchParams(searchParams);
     if (nextMerchant) next.set("merchant", nextMerchant);
     else next.delete("merchant");
@@ -224,9 +235,9 @@ export default function Orders({
     setDateFilter("");
     setAuthorFilter("");
     if (!embedded) {
-      setSelectedMerchant("");
+      setSelectedMerchant(ownMerchantId);
       setSelectedStore("");
-      setStores([]);
+      if (!scopedToMerchant) setStores([]);
       setOrders([]);
       rememberFilters("", "");
     }
@@ -239,7 +250,7 @@ export default function Orders({
       onSearchChange={(value) => { setSearch(value); setCurrentPage(1); }}
       searchPlaceholder="Search order ID, client order ID, customer..."
       filters={[
-        ...(!embedded ? [
+        ...(!embedded && !scopedToMerchant ? [
           {
             key: "merchant",
             label: "Merchant",
@@ -274,6 +285,16 @@ export default function Orders({
             },
           },
         ] : []),
+        ...(!embedded && scopedToMerchant ? [{
+          key: "store",
+          label: "Store",
+          value: selectedStore,
+          options: [
+            { label: "All Stores", value: "" },
+            ...stores.map((item) => ({ label: item.label, value: item.value })),
+          ],
+          onChange: (value) => { setSelectedStore(value); setCurrentPage(1); },
+        }] : []),
         {
           key: "date",
           label: "Date",
@@ -426,6 +447,7 @@ export default function Orders({
                       </td>
                       <td className="orders-actions-cell">
                         <ListActions
+                          module="orders"
                           onView={() => handleViewOrder(order)}
                           viewLabel={`View order ${order.wooOrderId}`}
                         />
@@ -436,7 +458,7 @@ export default function Orders({
                       <td className="orders-table-empty" colSpan="7">
                         <div className="products-table-empty-state">
                           <span>
-                            {!selectedStore && (embedded || selectedMerchant)
+                            {!selectedStore && embedded
                               ? "Choose a merchant and store to load that store's orders."
                               : error
                                 ? error
