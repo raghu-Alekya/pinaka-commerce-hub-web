@@ -1,26 +1,28 @@
 import { api, pendingStoreRead } from "./http";
 import { endpoints } from "./endpoints";
-import { buildStoreSetupPayload } from "./storeDetails";
+import { buildStoreSetupPayload, toSnakeCaseApiPayload } from "./storeDetails";
 
 export function toStorePayload(store, merchantId) {
-  return {
-    merchantId: merchantId || store.merchantId || store.merchant,
+  return toSnakeCaseApiPayload({
+    merchant_id: merchantId || store.merchantId || store.merchant_id || store.merchant,
     name: store.name || store.storeName,
-    storeId: store.id || store.storeID,
-    type: store.type || store.storeType,
+    store_code: store.storeCode || store.store_code || store.id || store.storeID,
+    store_type_id: store.storeTypeId || store.store_type_id || store.type || store.storeType,
     phone: store.phone,
-    url: store.url,
+    store_website_url: store.url || store.store_website_url,
     currency: store.currency,
     status: store.status,
-    address: store.address,
+    address_line1: store.addressLine1 || store.address_line1 || store.address,
+    address_line2: store.addressLine2 || store.address_line2,
     timezone: store.timezone,
     city: store.city,
     state: store.state,
-    zip: store.zip,
+    postal_code: store.zip || store.postalCode || store.postal_code,
+    country: store.country,
     devices: store.devices || [],
     features: store.features || [],
     roles: store.roles || [],
-  };
+  });
 }
 
 export function storeListFromResponse(response) {
@@ -43,7 +45,8 @@ export function normalizeStore(item) {
   const merchantValue = store.merchant || wrapper.merchant;
   const merchant = merchantValue && typeof merchantValue === "object" ? merchantValue : {};
   const address = store.address && typeof store.address === "object" ? store.address : {};
-  const storeType = store.storeType && typeof store.storeType === "object" ? store.storeType : {};
+  const storeTypeValue = store.storeType || store.store_type;
+  const storeType = storeTypeValue && typeof storeTypeValue === "object" ? storeTypeValue : {};
   return {
     ...store,
     id: store.id || store._id || store.storeUUID || store.storeUuid || store.store_uuid || store.storeId || store.storeID || store.store_id || store.storeCode || store.store_code || store.code || "",
@@ -52,8 +55,8 @@ export function normalizeStore(item) {
     storeName: store.storeName || store.store_name || store.name || "",
     merchantId: store.merchantId || store.merchant_id || merchant.id || merchant.merchantId || merchant.merchant_id || (typeof store.merchant === "string" ? store.merchant : ""),
     merchantName: store.merchantName || store.merchant_name || merchant.name || merchant.businessDisplayName || merchant.business_display_name || merchant.businessName || "",
-    storeTypeName: store.storeTypeName || store.store_type_name || storeType.name || store.store_type?.name || store.type?.name || (typeof store.storeType === "string" ? store.storeType : "") || (typeof store.store_type === "string" ? store.store_type : "") || store.type || "",
-    storeTypeId: store.storeTypeId || store.store_type_id || storeType.id || "",
+    storeTypeName: store.storeTypeName || store.store_type_name || storeType.name || storeType.storeTypeName || storeType.store_type_name || storeType.storeTypeCode || storeType.store_type_code || storeType.code || store.type?.name || (typeof store.storeType === "string" ? store.storeType : "") || (typeof store.store_type === "string" ? store.store_type : "") || store.type || "",
+    storeTypeId: store.storeTypeId || store.store_type_id || storeType.id || storeType.storeTypeId || storeType.store_type_id || "",
     addressLine1: store.addressLine1 || store.address_line1 || address.addressLine1 || address.street || (typeof store.address === "string" ? store.address : ""),
     addressLine2: store.addressLine2 || store.address_line2 || address.addressLine2 || address.unit || "",
     address: store.address || [store.addressLine1 || store.address_line1 || address.street, store.addressLine2 || store.address_line2 || address.addressLine2].filter(Boolean).join(", "),

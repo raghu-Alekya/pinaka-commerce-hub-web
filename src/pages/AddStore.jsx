@@ -1,4 +1,5 @@
-import { buildStoreSetupPayload } from "../api/storeDetails";
+import { buildStoreSetupPayload, toSnakeCaseApiPayload } from "../api/storeDetails";
+import { allocateId } from "../api/ids";
 import { useLocationOptions } from "../data/useLocationOptions";
 import { validatePhoneForCountry } from "../utils/phoneValidation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -84,6 +85,21 @@ const COUNTRIES = {
     ],
   },
 };
+const TIME_ZONE_OPTIONS = (() => {
+  let supported = [];
+  try {
+    supported = typeof Intl.supportedValuesOf === "function"
+      ? Intl.supportedValuesOf("timeZone")
+      : [];
+  } catch {
+    // Use the country defaults below in browsers without timezone enumeration.
+  }
+  return [...new Set([
+    "UTC",
+    ...Object.values(COUNTRIES).flatMap((country) => country.zones),
+    ...supported,
+  ])];
+})();
 const POSTAL_CODE_RULES = {
   India: /^\d{6}$/,
   "United States": /^\d{5}(?:-\d{4})?$/,
@@ -137,6 +153,22 @@ const STEP_HINTS = [
   "Review and create store",
 ];
 const STANDARD_ACTIONS = ["View", "Create", "Edit", "Delete"];
+const formatBillingLabel = (value) => {
+  const key = String(value || "").trim().toUpperCase().replace(/[\s-]+/g, "_");
+  const labels = {
+    PER_STORE: "Per store",
+    PER_DEVICE: "Per device",
+    PER_TERMINAL: "Per terminal",
+    FLAT: "Flat rate",
+    FLAT_RATE: "Flat rate",
+    MONTHLY: "Monthly",
+    QUARTERLY: "Quarterly",
+    ANNUAL: "Annual",
+    YEARLY: "Annual",
+    FREE_TRIAL: "Free trial",
+  };
+  return labels[key] || String(value || "").trim();
+};
 const listFrom = (value) => {
   if (Array.isArray(value)) return value;
   const containers = [
@@ -164,6 +196,8 @@ const featureName = (item) =>
     : (item?.name ??
       item?.featureName ??
       item?.feature_name ??
+      item?.featureLabel ??
+      item?.feature_label ??
       item?.featureKey ??
       item?.feature_key ??
       item?.code ??
@@ -174,7 +208,7 @@ const featureActions = (item) =>
         .map((action) =>
           typeof action === "string"
             ? action
-            : (action?.name ?? action?.action ?? action?.code),
+            : (action?.name ?? action?.action_name ?? action?.action ?? action?.code),
         )
         .filter(Boolean)
     : [];
@@ -182,6 +216,9 @@ const featureActions = (item) =>
 const idOf = (value) =>
   String(
     value?.merchantId ??
+      value?.merchant_id ??
+      value?.merchantCode ??
+      value?.merchant_code ??
       value?.id ??
       value?._id ??
       (typeof value === "string" || typeof value === "number" ? value : ""),
@@ -223,8 +260,34 @@ const normalizeHours = (value) => {
   });
 };
 const flattenRolePermissions = (value) => {
+  if (value && !Array.isArray(value) && typeof value === "object") {
+    const nested =
+      value.role_permissions ||
+      value.rolePermissions ||
+      value.role_permission ||
+      value.rolePermission ||
+      value.permissions ||
+      value.data ||
+      value.result ||
+      value.payload;
+    if (Array.isArray(nested) || (nested && typeof nested === "object"))
+      return flattenRolePermissions(nested);
+    return Object.entries(value).flatMap(([roleId, permissions]) =>
+      permissions && typeof permissions === "object"
+        ? flattenRolePermissions([{ role_template_id: roleId, permissions }])
+        : [],
+    );
+  }
   if (!Array.isArray(value)) return [];
-  if (value.some((row) => row?.permissionAction)) return value;
+  if (value.some((row) => row?.permission_action || row?.permissionAction)) {
+    return value.map((row) => ({
+      role_template_id: row.role_template_id || row.roleTemplateId || row.role_template?.id || "",
+      role_name: row.role_name || row.roleName || row.role_template?.name || "",
+      feature_name: row.feature_name || row.featureName || row.feature_label || row.featureLabel || row.feature_key || row.featureKey || row.feature?.name || row.feature?.feature_name || "",
+      permission_action: row.permission_action || row.permissionAction || row.action || row.permission_name || row.permissionName || row.permission_key || "",
+      allowed: row.allowed ?? row.is_allowed ?? row.isAllowed ?? row.enabled,
+    }));
+  }
   const flat = [];
   for (const role of value) {
     const matrix =
@@ -232,14 +295,15 @@ const flattenRolePermissions = (value) => {
         ? role.permissions
         : {};
     for (const [featureName, actions] of Object.entries(matrix)) {
-      for (const action of STANDARD_ACTIONS) {
-        if (actions?.[action] === undefined) continue;
+      for (const [rawAction, allowed] of Object.entries(actions || {})) {
+        const action = STANDARD_ACTIONS.includes(rawAction) ? rawAction : normalizePermissionAction(rawAction);
+        if (!action) continue;
         flat.push({
-          roleTemplateId: role.roleTemplateId || role.id || "",
-          roleName: role.name || role.roleName || "",
-          featureName,
-          permissionAction: action,
-          allowed: actions[action],
+          role_template_id: role.role_template_id || role.roleTemplateId || role.id || "",
+          role_name: role.name || role.role_name || role.roleName || "",
+          feature_name: featureName,
+          permission_action: action,
+          allowed,
         });
       }
     }
@@ -353,25 +417,37 @@ const readMerchantSelectedTemplates = (response) => {
       }));
     }
   }
-  const listed = Array.isArray(response?.roleTemplates)
-    ? response.roleTemplates.filter(
-        (row) => row.sourceRoleTemplateId || row.roleTemplateId,
+  const responseRoot = response?.data ?? response ?? {};
+  const listedTemplates =
+    responseRoot.roleTemplates ??
+    responseRoot.role_templates ??
+    responseRoot.items ??
+    [];
+  const listed = Array.isArray(listedTemplates)
+    ? listedTemplates.filter(
+        (row) =>
+          row.sourceRoleTemplateId ||
+          row.source_role_template_id ||
+          row.roleTemplateId ||
+          row.role_template_id,
       )
     : [];
   return listed
     .map((row, index) => {
       const id = String(
         row.sourceRoleTemplateId ||
+          row.source_role_template_id ||
           row.roleTemplateId ||
+          row.role_template_id ||
           row.id ||
           `merchant-role-${index}`,
       );
       return {
         id,
-        name: String(row.name || row.roleName || "Unnamed role").trim(),
+        name: String(row.name || row.roleName || row.role_name || "Unnamed role").trim(),
         description: String(row.description || "").trim(),
-        roleCode: String(row.roleCode || "").trim(),
-        scopeType: String(row.scopeType || "STORE"),
+        roleCode: String(row.roleCode || row.role_code || "").trim(),
+        scopeType: String(row.scopeType || row.scope_type || "STORE"),
         level: levelForRole(row),
         required: false,
         defaultEnabled: false,
@@ -380,11 +456,26 @@ const readMerchantSelectedTemplates = (response) => {
     .filter((row) => row.id && row.name);
 };
 const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
-  const features = Array.isArray(featuresPayload?.features)
-    ? featuresPayload.features
-    : Array.isArray(featuresPayload)
-      ? featuresPayload
-      : [];
+  const listedFeatures = listFrom(featuresPayload);
+  const responseContainers = [
+    featuresPayload,
+    featuresPayload?.data,
+    featuresPayload?.result,
+    featuresPayload?.roleTemplate,
+    featuresPayload?.role_template,
+    featuresPayload?.data?.roleTemplate,
+    featuresPayload?.data?.role_template,
+  ].filter(Boolean);
+  const features = listedFeatures.length
+    ? listedFeatures
+    : responseContainers
+        .flatMap((container) => [
+          container?.featurePermissions,
+          container?.feature_permissions,
+          container?.roleTemplateFeatures,
+          container?.role_template_features,
+        ])
+        .find(Array.isArray) || [];
   const enabled = new Set(
     (enabledNames || []).map((name) => String(name).toLowerCase()),
   );
@@ -392,7 +483,15 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
   const availability = {};
   const rows = [];
   for (const item of features) {
-    const feature = item?.feature || item?.featureDetails || item;
+    const feature =
+      item?.feature ||
+      item?.featureDetails ||
+      item?.feature_definition ||
+      item?.featureDefinition ||
+      item?.store_type_feature?.feature ||
+      item?.storeTypeFeature?.feature ||
+      item?.data?.feature ||
+      item;
     const name = featureName(feature) || featureName(item);
     if (!name) continue;
     if (enabled.size && !enabled.has(name.toLowerCase())) continue;
@@ -402,28 +501,35 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
     const available = Object.fromEntries(
       STANDARD_ACTIONS.map((action) => [action, true]),
     );
-    for (const permission of feature.permissions || []) {
+    const rawPermissions = feature.permissions || feature.feature_permissions || feature.featurePermissions || [];
+    const permissions = Array.isArray(rawPermissions)
+      ? rawPermissions
+      : Object.entries(rawPermissions || {}).map(([name, allowed]) => ({ name, allowed }));
+    for (const permission of permissions) {
       const action =
-        normalizePermissionAction(permission.name) ||
-        normalizePermissionAction(permission.permissionKey) ||
-        normalizePermissionAction(permission.action);
+        normalizePermissionAction(permission.name || permission.permission_name) ||
+        normalizePermissionAction(permission.permissionKey || permission.permission_key) ||
+        normalizePermissionAction(permission.action || permission.permission_type);
       if (!action) continue;
-      if (permission.checked || permission.defaultAllowed)
+      if ([permission.checked, permission.is_checked, permission.defaultAllowed,
+        permission.default_allowed, permission.allowed, permission.is_allowed,
+        permission.isAllowed].some(permissionAllowed))
         actions[action] = true;
     }
     matrix[name] = actions;
     availability[name] = available;
     rows.push({
-      id: item?.featureId || item?.feature_id || feature.id || name,
+      id: item?.featureId || item?.feature_id || feature.id || feature.feature_id || name,
       name,
-      description: feature.description || "",
-      category: feature.category || "More",
+      description: feature.description || feature.feature_description || "",
+      category: feature.category || feature.category_name || feature.feature_category || "More",
     });
   }
   return { matrix, availability, rows };
 };
 const permissionAllowed = (value) =>
-  value === true || value === "true" || value === "t" || value === 1;
+  value === true || value === "true" || value === "t" || value === 1 || value === "1" || value === "yes";
+const permissionFeatureKey = (value) => String(value || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
 const roleTemplateKeys = (role) => [
   role?.id,
   role?.roleTemplateId,
@@ -453,22 +559,46 @@ const applySavedRolePermissions = (
     ]),
   );
   for (const row of savedRows) {
-    const templateId = String(row.roleTemplateId || "").toLowerCase();
-    const rowName = String(row.roleName || "")
+    const templateId = String(row.role_template_id || row.roleTemplateId || row.role_template?.id || row.role_id || "").toLowerCase();
+    const rowName = String(row.role_name || "")
+      .trim()
+      .toLowerCase();
+    const normalizedRowName = String(row.role_name || row.roleName || row.name || row.role_template?.name || "")
       .trim()
       .toLowerCase();
     const idMatch = Boolean(templateId) && templateId === roleKey;
-    const nameMatch = Boolean(nameKey) && rowName === nameKey;
+    const nameMatch = Boolean(nameKey) && (rowName === nameKey || normalizedRowName === nameKey);
     if (!idMatch && !nameMatch) continue;
-    if (!STANDARD_ACTIONS.includes(row.permissionAction)) continue;
-    const featureName = String(row.featureName || "");
+    const rawAction = row.permission_action || row.permissionAction || row.action || row.permission_name || row.permissionName || row.permission_key;
+    const action = STANDARD_ACTIONS.includes(rawAction) ? rawAction : normalizePermissionAction(rawAction);
+    if (!action) continue;
+    const savedFeatureName = String(row.feature_name || row.featureName || row.feature_label || row.featureLabel || row.feature_key || row.featureKey || row.feature?.name || row.feature?.feature_name || "");
     const match = Object.keys(next).find(
-      (name) => name.toLowerCase() === featureName.toLowerCase(),
+      (name) => permissionFeatureKey(name) === permissionFeatureKey(savedFeatureName),
     );
     if (!match) continue;
-    next[match][row.permissionAction] = permissionAllowed(row.allowed);
+    next[match][action] = permissionAllowed(row.allowed ?? row.is_allowed ?? row.isAllowed ?? row.enabled);
   }
   return next;
+};
+const savedPermissionMatrixForRole = (savedRows, roleId, roleName = "") => {
+  const matrix = {};
+  const roleKey = String(roleId || "").toLowerCase();
+  const nameKey = String(roleName || "").trim().toLowerCase();
+  for (const row of Array.isArray(savedRows) ? savedRows : []) {
+    const rowRoleId = String(row.role_template_id || row.roleTemplateId || row.role_template?.id || row.role_id || "").toLowerCase();
+    const rowRoleName = String(row.role_name || row.roleName || row.name || row.role_template?.name || "").trim().toLowerCase();
+    if (!(rowRoleId && rowRoleId === roleKey) && !(nameKey && rowRoleName === nameKey)) continue;
+    const feature = String(row.feature_name || row.featureName || row.feature_label || row.featureLabel || row.feature_key || row.featureKey || row.feature?.name || row.feature?.feature_name || "");
+    const rawAction = row.permission_action || row.permissionAction || row.action || row.permission_name || row.permissionName || row.permission_key;
+    const action = STANDARD_ACTIONS.includes(rawAction) ? rawAction : normalizePermissionAction(rawAction);
+    if (!feature || !action) continue;
+    matrix[feature] = {
+      ...(matrix[feature] || {}),
+      [action]: permissionAllowed(row.allowed ?? row.is_allowed ?? row.isAllowed ?? row.enabled),
+    };
+  }
+  return matrix;
 };
 const renderFieldLabel = (label) => { if (label == null || typeof label !== "string") return label; if (!label.includes("*")) return label; const parts = label.split("*"); return (<>{parts.map((part, index) => (<span key={index}>{part}{index < parts.length - 1 && (<span className="text-red-500" style={{ color: "#dc2626" }}>*</span>)}</span>))}</>); };
 
@@ -794,11 +924,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     plan?.planName ||
     merchant?.plan ||
     "No active plan";
-  const billing =
-    subscription?.billingCycle ||
-    subscription?.billingType ||
-    plan?.billingCycle ||
-    "—";
   const planPrice =
     subscription?.price ??
     subscription?.agreementPrice ??
@@ -839,6 +964,26 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       ) || null
     );
   }, [masterPlans, subscription, plan, merchant]);
+
+  const billingModel = formatBillingLabel(
+    subscription?.billingModel ||
+      subscription?.billing_model ||
+      subscription?.billingType ||
+      plan?.billingModel ||
+      plan?.billing_model ||
+      matchedPlan?.billingModel ||
+      matchedPlan?.billing_model,
+  );
+  const billingCycle = formatBillingLabel(
+    subscription?.billingCycle ||
+      subscription?.billing_cycle ||
+      plan?.billingCycle ||
+      plan?.billing_cycle ||
+      matchedPlan?.billingCycle ||
+      matchedPlan?.billing_cycle,
+  );
+  const billing = billingCycle || billingModel || "—";
+  const billingType = billingModel || billingCycle || "—";
 
   // Prefer the selected master plan. Subscription entitlements can be stale,
   // and store-type feature flags describe availability rather than plan access.
@@ -882,6 +1027,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         feature?.feature_id,
         feature?.featureKey,
         feature?.feature_key,
+        feature?.feature_code,
         feature?.code,
         feature?.featureCode,
       ]
@@ -949,12 +1095,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           name,
           actions: featureActions(nested),
           category:
-            nested.category || nested.categoryName || row.category || "More",
-          description: nested.description || nested.featureDescription || "",
+            nested.category || nested.category_name || nested.feature_category || nested.categoryName || row.category || row.category_name || "More",
+          description: nested.description || nested.feature_description || nested.featureDescription || "",
           included: nested.included ?? row.included,
-          planAccess: nested.planAccess ?? row.planAccess,
-          enabledForStore: nested.enabledForStore ?? row.enabledForStore,
-          defaultEnabled: row.defaultEnabled !== false,
+          planAccess: nested.planAccess ?? nested.plan_access ?? row.planAccess ?? row.plan_access,
+          enabledForStore: nested.enabledForStore ?? nested.enabled_for_store ?? row.enabledForStore ?? row.enabled_for_store,
+          defaultEnabled: (row.defaultEnabled ?? row.default_enabled) !== false,
         });
     });
     return [...unique.values()];
@@ -1023,6 +1169,49 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     return false;
   };
   const planFeatureRows = featureRows.filter((row) => entitled(row.name));
+  useEffect(() => {
+    if (
+      !editing ||
+      loading ||
+      merchantLoading ||
+      subscriptionLoading ||
+      mastersLoading ||
+      featuresLoading ||
+      !activeStoreTypeId ||
+      loadedFeatureType.current !== JSON.stringify([merchantId, activeStoreTypeId]) ||
+      (planFeatureList == null && !matchedPlan)
+    ) return;
+
+    // Older store records may retain features that were later removed from
+    // the merchant's plan. Keep the editable selection aligned with the
+    // features currently available to this merchant.
+    const available = new Map();
+    planFeatureRows.forEach((row) => {
+      [row.name, row.id, row.code, row.featureKey]
+        .filter((value) => value != null && value !== "")
+        .forEach((value) => available.set(String(value).trim().toLowerCase(), row.name));
+    });
+    setEnabledFeatures((current) => {
+      const next = [...new Set(current
+        .map((value) => available.get(String(value || "").trim().toLowerCase()))
+        .filter(Boolean))];
+      return next.length === current.length && next.every((value, index) => value === current[index])
+        ? current
+        : next;
+    });
+  }, [
+    editing,
+    loading,
+    merchantLoading,
+    subscriptionLoading,
+    mastersLoading,
+    featuresLoading,
+    activeStoreTypeId,
+    merchantId,
+    planFeatureList,
+    matchedPlan,
+    planFeatureRows,
+  ]);
   const categories = [
     "All Features",
     ...new Set(planFeatureRows.map((row) => row.category).filter((category) => String(category).toLowerCase() !== "more")),
@@ -1133,44 +1322,49 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           const response = existingStore || await pendingStoreRead(`store:${storeId}`, () => api.get(endpoints.store(encodeURIComponent(storeId))));
           const saved = response?.store || response;
           if (!cancelled) {
+            const normalizedStore = normalizeStore(saved);
             const address =
               saved.address && typeof saved.address === "object"
                 ? saved.address
                 : {};
             const savedStore = {
               ...blankStore(
-                routeMerchantId || saved.merchantId || saved.merchant,
+                routeMerchantId || normalizedStore.merchantId || saved.merchant,
               ),
               ...saved,
               merchantId:
-                routeMerchantId || idOf(saved.merchantId || saved.merchant),
-              id: saved.storeID || saved.storeId || saved.id || "",
-              name: saved.storeName || saved.name || "",
+                routeMerchantId || idOf(normalizedStore.merchantId || saved.merchant),
+              id: normalizedStore.id || saved.storeID || saved.storeId || saved.store_id || saved.id || "",
+              name: normalizedStore.storeName || saved.store_name || saved.name || "",
               type:
                 saved.storeType?.storeTypeCode || saved.storeType?.code ||
-                saved.storeTypeCode || saved.storeTypeName ||
-                (typeof saved.storeType === "string" ? saved.storeType : "") || saved.type || "",
+                saved.store_type?.store_type_code || saved.store_type?.code ||
+                saved.storeTypeCode || saved.store_type_code ||
+                normalizedStore.storeTypeName || saved.store_type_name ||
+                (typeof saved.storeType === "string" ? saved.storeType : "") ||
+                (typeof saved.store_type === "string" ? saved.store_type : "") || saved.type || "",
               storeTypeId: String(
-                saved.storeTypeId || saved.storeType?.id || "",
+                normalizedStore.storeTypeId || saved.store_type_id || saved.storeType?.id || saved.store_type?.id || "",
               ),
-              storeCode: saved.storeCode || saved.code || "",
-              phone: saved.phone || "",
-              email: saved.email || saved.storeEmail || "",
-              url: saved.baseUrl || saved.url || saved.websiteUrl || "",
-              logo: saved.logoUrl || saved.logo || "",
+              storeCode: normalizedStore.storeCode || saved.code || "",
+              phone: normalizedStore.phone || "",
+              email: normalizedStore.email || "",
+              url: normalizedStore.url || "",
+              logo: saved.logoUrl || saved.logo_url || saved.logo || "",
               addressLine1:
-                saved.addressLine1 ||
+                normalizedStore.addressLine1 || saved.address_line1 ||
                 address.addressLine1 ||
+                address.address_line1 ||
                 address.street ||
                 (typeof saved.address === "string" ? saved.address : ""),
-              addressLine2: saved.addressLine2 || address.addressLine2 || "",
-              city: saved.city || address.city || "",
-              state: saved.state || address.state || "",
-              zip: saved.zip || saved.postalCode || address.zipCode || "",
-              country: saved.country || address.country || "",
-              timezone: saved.timezone || "",
-              currency: saved.currency || "",
-              defaultLanguage: saved.defaultLanguage || "",
+              addressLine2: normalizedStore.addressLine2 || saved.address_line2 || address.addressLine2 || address.address_line2 || "",
+              city: normalizedStore.city || address.city || "",
+              state: normalizedStore.state || address.state || "",
+              zip: normalizedStore.zip || saved.postal_code || address.zipCode || address.zip_code || "",
+              country: normalizedStore.country || address.country || "",
+              timezone: normalizedStore.timezone || "",
+              currency: normalizedStore.currency || "",
+              defaultLanguage: normalizedStore.defaultLanguage || "",
               status: String(saved.status || "ACTIVE").toUpperCase() === "INACTIVE"
                 ? "Inactive"
                 : "Active",
@@ -1183,8 +1377,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             setEnabledFeatures(
               (
                 saved.features ||
+                saved.enabled_features ||
                 saved.enabledFeatures ||
                 saved.onboardingSetup?.features ||
+                saved.onboarding_setup?.features ||
                 []
               )
                 .map(featureName)
@@ -1192,7 +1388,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             );
             setSavedRolePermissions(
               flattenRolePermissions(
-                saved.rolePermissions || saved.onboardingSetup?.rolePermissions,
+                saved.role_permissions || saved.rolePermissions ||
+                  saved.onboarding_setup?.role_permissions ||
+                  saved.onboardingSetup?.rolePermissions,
               ),
             );
           }
@@ -1256,7 +1454,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE",
             );
             if (!cancelled)
-              setStoreTypes(merchantTypes.length ? merchantTypes : masterTypes);
+              // The Add Store selector should offer every active store type.
+              // The merchant-scoped endpoint can be narrower (for example,
+              // returning only one assigned type), so use it only if the
+              // global active list is unavailable.
+              setStoreTypes(masterTypes.length ? masterTypes : merchantTypes);
             return;
           } catch {
             // Fall back to the master store-type list for platform admins.
@@ -1554,12 +1756,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     pendingStoreRead(`store-role-permissions:${merchantId}:${storeId}`, () => listStoreRolePermissions(merchantId, storeId))
       .then((response) => {
         if (cancelled) return;
-        const rows =
-          response?.rolePermissions ?? response?.data?.rolePermissions ?? [];
-        setSavedRolePermissions(Array.isArray(rows) ? rows : []);
+        const rows = flattenRolePermissions(response);
+        if (rows.length) setSavedRolePermissions(rows);
       })
       .catch(() => {
-        if (!cancelled) setSavedRolePermissions([]);
+        // Keep permissions already hydrated from store detail if this optional
+        // flat permissions read is unavailable.
       });
     return () => {
       cancelled = true;
@@ -1584,6 +1786,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         setRoles(assigned);
         setActiveRole(assigned[0] || "");
         loadedRolePermissions.current = new Set();
+        // A role may have been edited earlier in this mounted wizard. Clear
+        // that local-edit guard before hydrating the persisted permission
+        // rows, or the edit screen will keep stale unchecked/default values.
+        editedPermissionRoles.current = new Set();
       })
       .catch((err) => {
         if (!cancelled)
@@ -1647,8 +1853,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         );
         loadedRolePermissions.current.add(activeRole);
         setPermissions((current) => {
-          if (current[activeRole]) return current;
-          return { ...current, [activeRole]: matrix };
+          const next = { ...current, [activeRole]: matrix };
+          permissionsRef.current = next;
+          return next;
         });
         setPermissionAvailability((current) => ({
           ...current,
@@ -1699,8 +1906,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       .then((data) => {
         if (!cancelled) {
           loadedFeatureType.current = featureScope;
-          const rows = listFrom(data);
-          setTypeFeatures(rows.length ? rows : listFrom(data?.all));
+          // This endpoint returns the merchant's selected feature assignments.
+          // An empty selection is meaningful: do not substitute the full
+          // store-type catalog (`all`) or the screen will expose unselected
+          // features as if the merchant had enabled them.
+          setTypeFeatures(listFrom(data));
         }
       })
       .catch((err) => {
@@ -2289,17 +2499,37 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setSaving(true);
     setError("");
     try {
-      const generatedStoreId =
-        `STR-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`.slice(
-          0,
-          50,
-        );
+      const suppliedStoreCode = String(store.storeCode || "").trim();
+      const allocatedStoreCode = !editing && !/^STR-\d{5}$/.test(suppliedStoreCode)
+        ? await allocateId("store")
+        : "";
+      const usedStoreCodes = new Set(
+        merchantStores
+          .map((item) => item.storeCode || item.store_code || item.code || "")
+          .map((code) => String(code).trim().toUpperCase())
+          .filter(Boolean),
+      );
+      const validUnusedCode = (code) =>
+        /^STR-\d{5}$/.test(String(code || "").trim().toUpperCase()) &&
+        !usedStoreCodes.has(String(code).trim().toUpperCase());
+      let generatedStoreId = validUnusedCode(suppliedStoreCode)
+        ? suppliedStoreCode
+        : validUnusedCode(allocatedStoreCode)
+          ? String(allocatedStoreCode).trim().toUpperCase()
+          : "";
+      for (let attempt = 0; !editing && !generatedStoreId && attempt < 100; attempt += 1) {
+        const candidate = `STR-${10000 + Math.floor(Math.random() * 90000)}`;
+        if (validUnusedCode(candidate)) generatedStoreId = candidate;
+      }
+      if (!editing && !generatedStoreId) {
+        throw new Error("Unable to generate an unused store code. Please try again.");
+      }
       // The onboarding store API keys updates by the immutable store code in
       // the request body/path. The router parameter is the UI/database UUID.
       const storeCode =
         (editing
           ? String(store.storeCode || store.id || storeId || "")
-          : String(store.storeCode || "")
+          : generatedStoreId
         )
           .trim()
           .slice(0, 50) || generatedStoreId;
@@ -2316,7 +2546,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       const storePayload = buildStoreSetupPayload(store, {
         merchantId,
         storeId: storeCode,
-        type: String(selectedType?.storeTypeCode || selectedType?.code || store.type || typeName || "Retail").slice(0, 50),
+        storeTypeId: selectedType?.id || selectedType?.storeTypeId || selectedType?.store_type_id || activeStoreTypeId || selectedType?.storeTypeCode || selectedType?.code || store.type || typeName || "Retail",
         currency: currencyCode,
         status: saveDraft ? "PENDING" : String(store.status || "Active").toUpperCase(),
         hours,
@@ -2325,17 +2555,37 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         rolePermissions: roles.map(roleId => ({
           roleTemplateId: roleId,
           name: roleName(roleId),
-          permissions: permissionState[roleId] || {},
+          permissions: permissionState[roleId] && Object.keys(permissionState[roleId]).length
+            ? permissionState[roleId]
+            : savedPermissionMatrixForRole(savedRolePermissions, roleId, roleName(roleId)),
         })),
       });
+      // Keep the write contract snake_case even if a form value or future
+      // override adds the UI's camelCase merchantId back into the payload.
+      const { merchantId: _uiMerchantId, ...storeRequest } = storePayload;
+      const apiStorePayload = toSnakeCaseApiPayload({
+        ...storeRequest,
+        merchant_id: merchantId || storePayload.merchant_id,
+      });
+      if (storePayload.rolePermissions !== undefined) {
+        apiStorePayload.role_permissions = Array.isArray(storePayload.rolePermissions)
+          ? storePayload.rolePermissions.map((role) => ({
+              role_template_id: role.roleTemplateId || role.role_template_id || role.id,
+              name: role.name || role.roleName || role.role_name,
+              // Keep permission actions in their API-defined case.
+              permissions: role.permissions ?? {},
+            }))
+          : storePayload.rolePermissions;
+        delete apiStorePayload.rolePermissions;
+      }
       const path = editing
         ? endpoints.store(encodeURIComponent(storeCode))
         : merchantId
           ? endpoints.merchantStores(merchantId)
           : endpoints.stores;
       const saved = editing
-        ? await api.put(path, storePayload)
-        : await api.post(path, storePayload);
+        ? await api.put(path, apiStorePayload)
+        : await api.post(path, apiStorePayload);
       const createdStore =
         saved?.store || saved?.data?.store || saved?.data || saved;
       const persistedStoreId = editing
@@ -2418,7 +2668,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           defaultLanguage: current?.defaultLanguage || previous.defaultLanguage,
           hours: normalizeHours(current?.hours || previous.hours),
         }));
-        const refreshedFeatures = current?.features || current?.enabledFeatures;
+        const refreshedFeatures = current?.features || current?.enabled_features || current?.enabledFeatures || current?.onboarding_setup?.features || current?.onboardingSetup?.features;
         if (Array.isArray(refreshedFeatures))
           setEnabledFeatures(
             refreshedFeatures.map(featureName).filter(Boolean),
@@ -2455,7 +2705,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           defaultLanguage: current?.defaultLanguage || previous.defaultLanguage,
           hours: normalizeHours(current?.hours || previous.hours),
         }));
-        const refreshedFeatures = current?.features || current?.enabledFeatures;
+        const refreshedFeatures = current?.features || current?.enabled_features || current?.enabledFeatures || current?.onboarding_setup?.features || current?.onboardingSetup?.features;
         if (Array.isArray(refreshedFeatures)) setEnabledFeatures(refreshedFeatures.map(featureName).filter(Boolean));
       }
       saveLock.current = false;
@@ -2569,7 +2819,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
               <tbody><tr>
                 <td><span className="sf-plan-details-name"><span className="" /><strong title={planName} data-tooltip={planName}>{planName}</strong></span></td>
                 <td>{planPrice == null ? "—" : `${subscription?.currency || currencyCode} ${planPrice}`}</td>
-                <td>{billing}</td>
+                <td>{billingType}</td>
                 <td>{used} / {limit}</td>
                 <td>{Number.isFinite(storeLimit) ? Math.max(0, storeLimit - used) : "—"}</td>
                 <td><span className={`sf-status-pill ${String(subscription?.status || "").trim().toLowerCase() === "inactive" ? "inactive" : "active"}`}>{subscription?.status || "Not provided"}</span></td>
@@ -2615,7 +2865,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                     <td>
                       {(typeof item.storeType === "string"
                         ? item.storeType
-                        : item.storeType?.name) ||
+                        : item.storeType?.name || item.storeType?.storeTypeName || item.storeType?.store_type_name) ||
+                        item.storeTypeName ||
+                        item.store_type_name ||
+                        item.type?.name ||
                         item.type ||
                         "—"}
                     </td>
@@ -2836,11 +3089,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       [
                         store.timezone,
                         ...(countrySettings?.zones || []),
+                        ...TIME_ZONE_OPTIONS,
                       ].filter(Boolean),
                     ),
                   ].map((value) => ({
                     value,
-                    label: value.replaceAll("_", " "),
+                    label: value.replaceAll("_", " ").replaceAll("/", " / "),
                   })),
                 ]}
               />
@@ -3965,7 +4219,17 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
         const saved = response?.store || response?.data?.store || response?.data || response;
         const code = store.storeCode || store.id || storeId;
-        const changes = step === 2 ? {features:enabledFeatures} : {rolePermissions:roles.map(roleId => ({roleTemplateId:roleId,name:roleName(roleId),permissions:permissionsRef.current[roleId] || {}}))};
+        const permissionState = Object.keys(permissionsRef.current).length ? permissionsRef.current : permissions;
+        const changes = {
+          features: enabledFeatures,
+          rolePermissions: roles.map(roleId => ({
+            roleTemplateId: roleId,
+            name: roleName(roleId),
+            permissions: permissionState[roleId] && Object.keys(permissionState[roleId]).length
+              ? permissionState[roleId]
+              : savedPermissionMatrixForRole(savedRolePermissions, roleId, roleName(roleId)),
+          })),
+        };
         const payload = buildStoreSetupPayload(saved, {merchantId, storeId:code, ...changes});
         await api.put(endpoints.store(encodeURIComponent(code)), payload);
         if (step === 3) await storeRoleTemplatesApi.save(merchantId,storeId,roles);

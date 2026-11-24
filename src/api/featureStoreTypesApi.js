@@ -18,7 +18,7 @@ export const listMappedStoreTypes = (featureId) =>
 
 export const addStoreTypeToFeature = (featureId, payload) =>
   api.post(`/store-types/${encodeURIComponent(payload.storeTypeId)}/features`, {
-    featureId,
+    feature_id: featureId,
   });
 
 export const bulkAddStoreTypes = (featureId, storeTypeIds) =>
