@@ -144,6 +144,15 @@ const STEP_HINTS = [
   "Review and create store",
 ];
 const STANDARD_ACTIONS = ["View", "Create", "Edit", "Delete"];
+const normalizePermissionAction = (value) => {
+  const key = String(value || "").toLowerCase();
+  if (!key) return "";
+  if (/(view|read|list|get)/.test(key)) return "View";
+  if (/(create|add|insert)/.test(key)) return "Create";
+  if (/(edit|update|write|modify)/.test(key)) return "Edit";
+  if (/(delete|remove|destroy)/.test(key)) return "Delete";
+  return "";
+};
 const formatBillingLabel = (value) => {
   const key = String(value || "").trim().toUpperCase().replace(/[\s-]+/g, "_");
   const labels = {
@@ -382,13 +391,15 @@ const levelForRole = (role) => {
   if (scope.includes("STORE")) return "Store";
   return role?.level || scope || "Custom";
 };
-const isStoreAdminOrMerchantRole = (role) => {
+const isDefaultPermissionRole = (role) => {
   const scope = String(role?.scopeType || role?.level || "").trim().toUpperCase();
-  if (!scope.includes("STORE") || scope.includes("MERCHANT") || scope.includes("FULL")) return false;
   const identity = String(role?.name || role?.roleName || role?.roleCode || role?.code || "")
     .trim()
-    .toLowerCase();
-  return ["admin", "merchant"].includes(identity);
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  if (!["admin", "merchant"].includes(identity)) return false;
+  // Admin and Merchant receive the same initial permission defaults for a store.
+  return !scope || scope.includes("STORE") || scope.includes("MERCHANT") || scope.includes("FULL");
 };
 const readMerchantSelectedTemplates = (response) => {
   const available = readAvailableRoleTemplates(response);
@@ -1835,7 +1846,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           activeRole,
           roleName,
         );
-        if (isStoreAdminOrMerchantRole(roleDefinition)) {
+        if (isDefaultPermissionRole(roleDefinition)) {
           for (const feature of built.rows) {
             if (!enabledFeatures.includes(feature.name) || !entitled(feature.name)) continue;
             matrix[feature.name] = Object.fromEntries(
