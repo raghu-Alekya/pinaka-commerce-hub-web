@@ -349,12 +349,39 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
   const discountLines = [
     ...lineItems.flatMap((item) => {
       const itemMeta = item.meta_data || item.metaData;
-      const amount = item.discountAmount ?? item.discount_amount ?? item.discount
-        ?? metaValueFrom(itemMeta, ["_pos_auto_discount", "pos_auto_discount", "discount_amount"]);
-      const value = Number(amount);
+      const discountType = item.discountType || item.discount_type
+        || metaValueFrom(itemMeta, ["_pos_discount_type", "pos_discount_type"]);
+      const explicitAmount = numericPrice(
+        item.discountAmount,
+        item.discount_amount,
+        item.discount,
+        metaValueFrom(itemMeta, ["_pos_auto_discount", "pos_auto_discount", "discount_amount"]),
+      );
+      const itemSubtotal = numericPrice(item.orderSubtotal, item.subtotal);
+      const itemTotal = numericPrice(item.orderTotal, item.total);
+      const value = explicitAmount ?? (itemSubtotal !== undefined && itemTotal !== undefined && itemSubtotal > itemTotal
+        ? itemSubtotal - itemTotal
+        : undefined);
+      const discountedProductName = metaValueFrom(itemMeta, [
+        "_pos_discount_product_name", "pos_discount_product_name",
+        "_pos_discounted_product_name", "discounted_product_name",
+      ]) || item.discountProductName || item.discount_product_name;
+      const discountedProductIds = [
+        item.discountProductIds, item.discount_product_ids,
+        item.discountProductId, item.discount_product_id,
+        metaValueFrom(itemMeta, ["_pos_discount_product_ids", "pos_discount_product_ids", "discount_product_ids", "discount_product_id"]),
+      ].flatMap((ids) => Array.isArray(ids) ? ids : String(ids ?? "").split(/[,\s]+/)).filter(Boolean).map(String);
+      const targetLine = lineItems.find((candidate) => [
+        candidate.id, candidate.productId, candidate.product_id,
+        candidate.product?.id, candidate.productDetails?.id, candidate.product_details?.id,
+        candidate.sku,
+      ].some((id) => id != null && discountedProductIds.includes(String(id))));
+      const displayName = /mix[\s_-]*match/i.test(String(discountType || ""))
+        ? (discountedProductName || targetLine?.name || item.name)
+        : item.name;
       return Number.isFinite(value) && value > 0 ? [{
-        name: item.name,
-        type: titleCase(item.discountType || item.discount_type || metaValueFrom(itemMeta, ["_pos_discount_type", "pos_discount_type"])) || "Item discount",
+        name: displayName,
+        type: titleCase(discountType) || "Item discount",
         amount: value,
       }] : [];
     }),
@@ -628,10 +655,46 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
         }
         if (storeId && (nextView.hasDiscount || nextView.lineItems.some((item) => !item.sku))) {
           try {
-            const catalog = await productsApi.getCatalog(storeId);
+            const [catalog, discountsResponse] = await Promise.all([
+              productsApi.getCatalog(storeId),
+              nextView.hasDiscount
+                ? apiRequest(`/api/v1/stores/${encodeURIComponent(storeId)}/discounts?per_page=100`)
+                : Promise.resolve(null),
+            ]);
             const productByKey = productCatalogMap(catalog);
+            const discountData = asObject(discountsResponse?.data ?? discountsResponse);
+            const discountRows = asArray(discountsResponse?.data ?? discountsResponse).length
+              ? asArray(discountsResponse?.data ?? discountsResponse)
+              : ["auto", "mix_match", "multipack"].flatMap((type) =>
+                asArray(discountData[type]).map((discount) => ({ ...discount, type })),
+              );
+            const discountByRuleId = new Map();
+            discountRows.forEach((discount) => {
+              const id = discount.id ?? discount.discount_id ?? discount.rule_id;
+              if (id != null) {
+                const keys = [String(id), `${discount.type === "mix_match" ? "MM" : ""}_${id}`];
+                keys.forEach((key) => discountByRuleId.set(key.toLowerCase(), discount));
+              }
+              if (discount.code) discountByRuleId.set(String(discount.code).toLowerCase(), discount);
+            });
+            const discountLines = nextView.discountLines.map((line) => {
+              if (!/mix[\s_-]*match/i.test(line.type)) return line;
+              const item = nextView.lineItems.find((candidate) => candidate.name === line.name
+                && /mix[\s_-]*match/i.test(String(candidate.discountType || candidate.discount_type
+                  || metaValueFrom(candidate.meta_data || candidate.metaData, ["_pos_discount_type", "pos_discount_type"]) || "")));
+              const meta = item?.meta_data || item?.metaData;
+              const ruleId = metaValueFrom(meta, ["_pos_discount_rule_id", "pos_discount_rule_id"]);
+              const rule = discountByRuleId.get(String(ruleId || "").toLowerCase());
+              const productIds = rule?.discount_product_ids ?? rule?.discounted_products ?? rule?.discount_products;
+              const targetIds = (Array.isArray(productIds) ? productIds : String(productIds || "").split(/[,\s]+/))
+                .map((product) => typeof product === "object" ? product.product_id ?? product.id : product)
+                .filter((id) => id != null && id !== "");
+              const targetProduct = targetIds.map((id) => productByKey.get(String(id).toLowerCase())).find(Boolean);
+              return targetProduct?.name ? { ...line, name: targetProduct.name } : line;
+            });
             nextView = {
               ...nextView,
+              discountLines,
               lineItems: nextView.lineItems.map((item) => ({
                 item,
                 catalogProduct: catalogProductForLineItem(item, productByKey),

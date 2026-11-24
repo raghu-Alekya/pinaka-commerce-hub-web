@@ -5,6 +5,7 @@ import GuestRoute from "./auth/GuestRoute";
 import AppLayout from "./layouts/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import MerchantDashboard from "./pages/MerchantDashboard";
 import AccessPermissions from "./pages/AccessPermissions";
 import Merchants from "./pages/Merchants";
 import MerchantStores from "./pages/MerchantStores";
@@ -225,7 +226,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/access" element={<AccessPermissions />} />
+        <Route path="/merchant-dashboard" element={<MerchantDashboard />} />
         {/* Merchant list, creation, and editing */}
         <Route
           path="/merchants"

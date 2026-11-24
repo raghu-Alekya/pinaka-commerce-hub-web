@@ -1,6 +1,6 @@
 .pch-users-page {
   min-width: 0;
-  padding: 28px 32px 40px;
+  padding: 24px;
   color: #17233e;
 }
 
@@ -9,13 +9,14 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 18px;
-  margin-bottom: 22px;
+  margin-bottom: 13px;
 }
 
 .pch-users-header h1 {
   margin: 0 0 7px;
-  font-size: 28px;
+  font-size: 20px;
   line-height: 1.2;
+  font-weight:600;
 }
 
 .pch-users-header p {
@@ -151,6 +152,33 @@
 
 .pch-user-status.pending { background: #fff7e6; color: #9a6700; }
 .pch-user-status.disabled { background: #f1f3f6; color: #69758a; }
+.pch-user-status.inactive,
+.pch-user-status.deactivated { background: #fff1f2; color: #b4233b; }
+
+.pch-user-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.pch-user-row-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 9px;
+  border: 1px solid #dfe3ea;
+  border-radius: 6px;
+  background: #fff;
+  color: #536077;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pch-user-row-actions .pch-user-action-edit { color: #5547c7; }
+.pch-user-row-actions .pch-user-action-deactivate { border-color: #f0c9ce; color: #b4233b; }
+.pch-user-row-actions .pch-user-action-activate { border-color: #bce8d3; color: #047857; }
+.pch-user-row-actions button:hover { background: #f8f9fc; }
 
 .pch-users-table .pch-users-table-message {
   height: 110px;
@@ -172,6 +200,75 @@
   color: #9b2c2c;
   font-size: 13px;
 }
+
+.pch-user-error {
+  margin: 0 0 16px;
+  padding: 11px 13px;
+  border: 1px solid #efc0c0;
+  border-radius: 7px;
+  background: #fff4f4;
+  color: #9b2c2c;
+  font-size: 13px;
+}
+
+.pch-user-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(18, 28, 55, 0.42);
+}
+
+.pch-user-confirm-dialog {
+  width: min(430px, 100%);
+  box-sizing: border-box;
+  padding: 26px;
+  border: 1px solid #e1e5ec;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(18, 28, 55, 0.22);
+}
+
+.pch-user-confirm-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 14px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff1f2;
+  color: #b4233b;
+  font-size: 18px;
+}
+
+.pch-user-confirm-dialog h2 { margin: 0 0 8px; color: #24314a; font-size: 18px; }
+.pch-user-confirm-dialog p { margin: 0; color: #68758a; font-size: 13px; line-height: 1.55; }
+.pch-user-confirm-dialog p strong { color: #354159; }
+
+.pch-user-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.pch-user-confirm-deactivate,
+.pch-user-confirm-activate {
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid #b4233b;
+  border-radius: 6px;
+  background: #b4233b;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pch-user-confirm-activate { border-color: #047857; background: #047857; }
 
 .pch-users-error button {
   flex: 0 0 auto;
@@ -318,4 +415,12 @@
   .pch-users-search { width: 100%; }
   .pch-user-actions { flex-direction: column-reverse; }
   .pch-user-actions button { width: 100%; }
+}
+
+@media (max-width: 1200px) {
+  .pch-users-page { padding: 16px; }
+}
+
+@media (max-width: 600px) {
+  .pch-users-page { padding: 12px; }
 }

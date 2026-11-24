@@ -164,6 +164,7 @@ export default function StoreCategories({
       return {
       ...item,
       id: categoryId(item),
+      parentId: parentId == null || parentId === 0 || parentId === "0" ? "" : String(parentId),
       name: item.name || item.title || "Unnamed category",
       slug: item.slug || "—",
       parent: (rawParent && typeof rawParent === "object" ? rawParent.name : null) || categoryNames.get(String(parentId)) || item.parent_name || "",
@@ -258,11 +259,32 @@ export default function StoreCategories({
   ========================================================= */
 
   const filteredCategories = useMemo(() => {
-
     const value =
       search.trim().toLowerCase();
 
-    return categories.filter(
+    const categoriesById = new Map(categories.map((item) => [String(item.id), item]));
+    const childrenByParent = new Map();
+    categories.forEach((item) => {
+      const parentKey = String(item.parentId || "");
+      if (!parentKey || !categoriesById.has(parentKey)) return;
+      const siblings = childrenByParent.get(parentKey) || [];
+      siblings.push(item);
+      childrenByParent.set(parentKey, siblings);
+    });
+    const ordered = [];
+    const visited = new Set();
+    const appendTree = (item, depth) => {
+      const key = String(item.id);
+      if (visited.has(key)) return;
+      visited.add(key);
+      ordered.push({ ...item, depth });
+      (childrenByParent.get(key) || []).forEach((child) => appendTree(child, depth + 1));
+    };
+    categories.filter((item) => !item.parentId || !categoriesById.has(String(item.parentId)))
+      .forEach((item) => appendTree(item, 0));
+    categories.forEach((item) => appendTree(item, item.parentId ? 1 : 0));
+
+    return ordered.filter(
       (item) => {
         const matchesSearch = !value || [
           item.name,
@@ -809,14 +831,6 @@ export default function StoreCategories({
               </th>
 
               <th>
-                Parent Category
-              </th>
-
-              <th>
-                Subcategories
-              </th>
-
-              <th>
                 Products
               </th>
 
@@ -854,10 +868,11 @@ export default function StoreCategories({
 
                     <td>
 
-                      <div className="category-name-cell">
+                      <div className={`category-name-cell${item.depth > 0 ? " is-child-category" : " is-parent-category"}`} style={{ "--category-depth": item.depth }}>
                         <div>
 
                           <strong>
+                            {item.depth > 0 && <span className="category-hierarchy-dash" aria-hidden="true">{"— ".repeat(item.depth)}</span>}
                             {item.name}
                           </strong>
 
@@ -882,24 +897,6 @@ export default function StoreCategories({
                         {item.slug}
                       </span>
 
-                    </td>
-
-
-                    <td>
-                      {item.parent ||
-                        "—"}
-                    </td>
-
-                    <td>
-                      {Array.isArray(item.subcategories) && item.subcategories.length ? (
-                        <div className="category-subcategory-list" title={item.subcategories.map((child) => typeof child === "object" ? child.name : child).join(", ")}>
-                          {item.subcategories.slice(0, 3).map((child) => {
-                            const name = typeof child === "object" ? child.name : child;
-                            return <span className="category-subcategory-chip" key={name}>{name}</span>;
-                          })}
-                          {item.subcategories.length > 3 ? <span className="category-subcategory-more">+{item.subcategories.length - 3}</span> : null}
-                        </div>
-                      ) : <span className="category-no-subcategories">—</span>}
                     </td>
 
 
