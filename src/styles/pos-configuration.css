@@ -4898,7 +4898,6 @@
 .card-payment-provider-controls .pc-switch-field input:checked + .pc-switch-track { background: #5143bc; }
 .card-payment-default { display: flex; align-items: center; gap: 8px; min-height: 40px; margin: 0; color: #5143bc; font-size: 12px; font-weight: 600; cursor: pointer; }
 .card-payment-default input { accent-color: #5143bc; }
-.card-payment-default.is-disabled { color: #98a3b4; cursor: not-allowed; }
 .card-payment-provider-fields .settings-row { grid-template-columns: minmax(100px, 125px) minmax(0, 1fr); column-gap: 14px; margin-bottom: 14px; }
 .card-payment-provider-fields .settings-label { padding-top: 11px; }
 .card-payment-control-options { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
