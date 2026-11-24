@@ -226,7 +226,7 @@ export function toFlatMerchantPayload(data) {
   let rawPhone = m.phone || m.merchantPhoneNumber || data.phone || "";
   let rawCountry = m.countryCode || m.country || data.country || "USA";
 
-  const country = normalizeCountryCode(rawCountry);
+  const country = m.countryCode || data.countryCode || normalizeCountryCode(rawCountry);
   const merchantPhoneNumber = normalizePhoneNumber(rawPhone, m.phoneDialCode);
 
   const addressLine1 =

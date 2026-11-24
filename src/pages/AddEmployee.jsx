@@ -123,7 +123,7 @@ export default function AddEmployee() {
     city: "",
     state: "",
     pinCode: "",
-    country: "",
+    country: "India",
     role: "",
     merchant: "",
     store: "",
@@ -660,7 +660,7 @@ export default function AddEmployee() {
                     Date of Birth
                   </label>
 
-                  <CalendarField value={formData.dob} onChange={(dob) => { setFormData((current) => ({ ...current, dob })); setErrors((current) => ({ ...current, dob: "" })); }} label="Date of Birth" max={latestEligibleEmployeeDob()} showLabel={false} invalid={Boolean(errors.dob)} allowManualEntry />
+                  <CalendarField value={formData.dob} onChange={(dob) => { setFormData((current) => ({ ...current, dob })); setErrors((current) => ({ ...current, dob: "" })); }} label="Date of Birth" max={latestEligibleEmployeeDob()} showLabel={false} invalid={Boolean(errors.dob)} allowManualEntry yearMonthSelect />
                   {errors.dob && (
                     <span className="field-error">{errors.dob}</span>
                   )}
@@ -697,14 +697,8 @@ export default function AddEmployee() {
               />
 
               <div className="employee-form-grid two-columns" style={{ columnGap: "28px", rowGap: "18px", marginTop: "24px" }}>
-                <SelectField
-                  label="Country" required name="country" value={formData.country}
-                  onChange={handleChange} error={errors.country}
-                  options={locations.map(country => country.name)}
-                  searchable
-                  placeholder={locationsLoading ? "Loading countries..." : "Select country"}
-                  disabled={locationsLoading}
-                />
+                <FormField label="Country" required name="country" value={formData.country || phoneCountry.name}
+                  onChange={handleChange} error={errors.country} disabled />
                 <SelectField
                   label="State" required name="state" value={formData.state}
                   onChange={handleChange} error={errors.state}
@@ -1115,6 +1109,7 @@ function FormField({
   value,
   onChange,
   error,
+  disabled = false,
 }) {
   return (
     <div className="employee-field">
@@ -1128,6 +1123,7 @@ function FormField({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        disabled={disabled}
         className={error ? "field-invalid" : ""}
       />
 

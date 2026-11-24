@@ -2257,13 +2257,13 @@
 
 .role-date-value {
   color: #10264d;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .role-time-value {
   margin-top: 2px;
-  color: #7290ba;
+  color: #5f728e;
   font-size: 11px;
   font-weight: 400;
 }

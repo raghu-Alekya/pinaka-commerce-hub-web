@@ -19,6 +19,9 @@ export const merchantRoleTemplatesApi = {
   getAvailable: (merchantId) =>
     readMerchantRoles(`/merchants/${encodeURIComponent(merchantId)}/role-templates/available`),
 
+  getFeatures: (merchantId, roleTemplateId, storeTypeId) =>
+    readMerchantRoles(`/merchants/${encodeURIComponent(merchantId)}/role-templates/${encodeURIComponent(roleTemplateId)}/features?storeTypeIds=${encodeURIComponent(storeTypeId)}`),
+
   list: (merchantId, status = "ACTIVE") =>
     readMerchantRoles(
       `/merchants/${encodeURIComponent(merchantId)}/role-templates${status ? `?status=${encodeURIComponent(status)}` : ""}`,

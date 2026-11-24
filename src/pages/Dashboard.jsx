@@ -1,6 +1,10 @@
 import FilterDropdown from "../components/FilterDropdown";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+import { listStores } from "../api/stores";
+import { listEmployees } from "../api/employees";
+import { listSubscriptions, mapSubscriptionToRow } from "../api/subscriptions";
 import {
     getAdministrationOverview,
   getDashboardFeatures,
@@ -313,8 +317,70 @@ function SectionHeader({
    DASHBOARD
 ========================================================= */
 
+function MerchantDashboard() {
+  const nav = useNavigate();
+  const [counts, setCounts] = useState({});
+
+  useEffect(() => {
+    let active = true;
+    Promise.allSettled([listStores(), listEmployees(), listSubscriptions()]).then((results) => {
+      if (!active) return;
+      const rows = results.map((result, index) => {
+        if (result.status !== "fulfilled") return null;
+        const value = result.value;
+        if (index === 0) return value?.stores ?? [];
+        if (index === 1) return value;
+        const subscriptions = Array.isArray(value) ? value : value?.subscriptions ?? value?.data?.subscriptions ?? [];
+        return (Array.isArray(subscriptions) ? subscriptions : []).map((subscription) => mapSubscriptionToRow(subscription));
+      });
+      const next = {};
+      ["Stores", "Employees", "Subscriptions"].forEach((label, index) => {
+        if (!Array.isArray(rows[index])) return;
+        const total = rows[index].length;
+        const activeCount = rows[index].filter((row) => String(row.status || "").toUpperCase() === "ACTIVE").length;
+        next[label] = { total, active: activeCount, inactive: total - activeCount };
+      });
+      setCounts(next);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const cards = [
+    { label: "Stores", icon: "bi-buildings", tone: "green", path: "/stores" },
+    { label: "Employees", icon: "bi-people", tone: "orange", path: "/employees" },
+    { label: "Subscriptions", icon: "bi-credit-card-2-front", tone: "purple", path: "/subscriptions" },
+  ];
+
+  return (
+    <div className="page-content super-admin-dashboard merchant-dashboard">
+      <div className="super-dashboard-head">
+        <div><h1>Merchant Dashboard</h1><p>Overview of your stores, employees, and subscriptions</p></div>
+      </div>
+      <section className="dashboard-kpis">
+        {cards.map((card) => (
+          <article className={`dashboard-kpi ${card.tone}`} key={card.label} role="button" tabIndex={0}
+            onClick={() => nav(card.path)} onKeyDown={(event) => event.key === "Enter" && nav(card.path)}
+            style={{ cursor: "pointer" }}>
+            <div className="dashboard-kpi-icon"><i className={`bi ${card.icon}`} /></div>
+            <div className="dashboard-kpi-body">
+              <span>{card.label}</span>
+              <div className="dashboard-kpi-value-row"><strong>{displayNumber(counts[card.label]?.total)}</strong></div>
+              <div className="dashboard-kpi-details">
+                <b className="is-good"><strong>{displayNumber(counts[card.label]?.active)}</strong> active</b>
+                <span><strong>{displayNumber(counts[card.label]?.inactive)}</strong> inactive</span>
+              </div>
+            </div>
+          </article>
+        ))}
+      </section>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const nav = useNavigate();
+  const { user } = useAuth();
+  const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee";
 
   const [health, setHealth] = useState(defaultHealth);
   const [features, setFeatures] = useState(defaultFeatures);
@@ -325,6 +391,7 @@ export default function Dashboard() {
   const [administrationLoadError, setAdministrationLoadError] = useState("");
 
   const loadDashboard = useCallback(async () => {
+    if (scopedToMerchant) return;
     const [healthResult, featuresResult, sharedMetricsResult, administrationResult] = await Promise.allSettled([
       getDashboardPlatformHealth(),
       getDashboardFeatures(),
@@ -363,7 +430,7 @@ export default function Dashboard() {
         administrationResult.reason?.message || "Could not load Administration Overview."
       );
     }
-  }, []);
+  }, [scopedToMerchant]);
 
   useEffect(() => {
     loadDashboard().catch(() => {
@@ -386,8 +453,10 @@ export default function Dashboard() {
     }
   };
 
-  const kpis = buildKpis(administrationOverview);
-  const adminModules = buildAdminModules(administrationOverview);
+  const kpis = buildKpis(administrationOverview).filter((item) => !scopedToMerchant || item.label !== "Merchants");
+  const adminModules = buildAdminModules(administrationOverview).filter((module) => !scopedToMerchant || module.path !== "/merchants");
+
+  if (scopedToMerchant) return <MerchantDashboard />;
 
   return (
     <div className="page-content super-admin-dashboard">
@@ -753,8 +822,8 @@ export default function Dashboard() {
           <SectionHeader
             icon="bi-grid"
             title="Administration Overview"
-            action="View all modules"
-            onAction={() => nav("/merchants")}
+            action={scopedToMerchant ? undefined : "View all modules"}
+            onAction={scopedToMerchant ? undefined : () => nav("/merchants")}
           />
 
           {administrationLoadError && (

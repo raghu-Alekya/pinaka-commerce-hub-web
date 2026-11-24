@@ -14,6 +14,10 @@ export async function getPosCardPayments(storeId) {
   return paymentsFrom(record);
 }
 
+export function getPosCardPaymentConfiguration(storeId) {
+  return loadStorePosConfiguration(storeId, NAME);
+}
+
 async function saveCardPayment(storeId, payload) {
   let current = [];
   try {
