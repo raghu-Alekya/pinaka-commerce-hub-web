@@ -1,7 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPchUser, listPchUsers } from "../api/pchUsers";
+import PhoneInputModule from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import "../styles/pch-users.css";
 
-const PCH_ROLES = ["Admin", "Owner", "Super-admin", "Agent"];
+const PhoneInput = PhoneInputModule.default || PhoneInputModule;
+
+const PCH_ROLES = [
+  ["ADMIN", "Admin"], ["OWNER", "Owner"],
+  ["SUPER_ADMIN", "Super-admin"], ["AGENT", "Agent"],
+];
 const EMPTY_FORM = {
   firstName: "",
   lastName: "",
@@ -15,6 +23,9 @@ const EMPTY_FORM = {
 
 export default function PchUsers() {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [phoneDialCode, setPhoneDialCode] = useState("91");
   const [search, setSearch] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -22,6 +33,14 @@ export default function PchUsers() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    listPchUsers().then((rows) => { if (active) setUsers(rows); })
+      .catch((error) => { if (active) setNotice(error.message || "Unable to load PCH users."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -81,6 +100,7 @@ export default function PchUsers() {
   const closeAddForm = () => {
     setForm(EMPTY_FORM);
     setEditingUser(null);
+    setPhoneDialCode("91");
     setNotice("");
     setError("");
     setAdding(false);
@@ -121,7 +141,7 @@ export default function PchUsers() {
             <label>Username<input autoComplete="username" maxLength={100} required disabled={Boolean(editingUser)} value={form.username} onChange={(event) => setField("username", event.target.value)} placeholder="Choose a username" /></label>
             <label>Phone Number<input type="tel" autoComplete="tel" maxLength={30} required value={form.phoneNumber} onChange={(event) => setField("phoneNumber", event.target.value)} placeholder="Enter phone number" /></label>
             <label>Email Address<input type="email" autoComplete="email" maxLength={255} required value={form.email} onChange={(event) => setField("email", event.target.value)} placeholder="name@example.com" /></label>
-            <label>Role<select required value={form.role} onChange={(event) => setField("role", event.target.value)}><option value="" disabled>Select a role</option>{PCH_ROLES.map((role) => <option key={role} value={role}>{role}</option>)}</select></label>
+            <label>Role<select required value={form.role} onChange={(event) => setField("role", event.target.value)}><option value="" disabled>Select a role</option>{PCH_ROLES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           </div>
         </section>
 
@@ -145,6 +165,7 @@ export default function PchUsers() {
   }
 
   return <main className="pch-users-page">
+    {notice && <p className="pch-user-notice" role="status">{notice}</p>}
     <header className="pch-users-header">
       <div>
         <h1>PCH Users</h1>
@@ -173,7 +194,7 @@ export default function PchUsers() {
             {filteredUsers.length ? filteredUsers.map((user) => <tr key={user.id || user.email}>
                 <td><strong>{user.username || "—"}</strong></td>
                 <td>{`${user.firstName} ${user.lastName}`.trim() || "—"}</td>
-                <td><span className="pch-user-role">{user.role}</span></td>
+                <td><span className="pch-user-role">{PCH_ROLES.find(([value]) => value === user.role)?.[1] || user.role}</span></td>
                 <td>{user.email || "—"}</td>
                 <td>{user.phoneNumber || "—"}</td>
                 <td><span className={`pch-user-status ${String(user.status || "Active").toLowerCase()}`}>{user.status || "Active"}</span></td>

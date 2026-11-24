@@ -4898,9 +4898,14 @@
 .card-payment-provider-controls .pc-switch-field input:checked + .pc-switch-track { background: #5143bc; }
 .card-payment-default { display: flex; align-items: center; gap: 8px; min-height: 40px; margin: 0; color: #5143bc; font-size: 12px; font-weight: 600; cursor: pointer; }
 .card-payment-default input { accent-color: #5143bc; }
-.card-payment-default.is-disabled { color: #98a3b4; cursor: not-allowed; }
 .card-payment-provider-fields .settings-row { grid-template-columns: minmax(100px, 125px) minmax(0, 1fr); column-gap: 14px; margin-bottom: 14px; }
 .card-payment-provider-fields .settings-label { padding-top: 11px; }
+.card-payment-control-options { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.card-payment-control-options > label { display: flex; align-items: center; gap: 6px; margin: 0; color: #243451; font-size: 12px; font-weight: 600; cursor: pointer; }
+.card-payment-control-options > label input { accent-color: #5546d9; }
+.card-payment-provider-endpoints { margin-top: 18px; padding: 16px; border: 1px solid #e1e6f0; border-radius: 9px; background: #fafbfe; }
+.card-payment-provider-endpoints > strong { display: block; margin-bottom: 14px; color: #243451; }
+.card-payment-provider-fields .card-payment-provider-endpoints .settings-row { grid-template-columns: minmax(180px, 235px) minmax(0, 1fr); gap: 14px; margin-bottom: 14px; }
 .card-payment-device-mapping { grid-column: 1 / -1; margin: 2px 0 16px; padding: 15px; border: 1px solid #e1e6f0; border-radius: 9px; background: #fafbfe; }
 .card-payment-device-mapping-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .card-payment-device-mapping-heading > div { display: flex; flex-direction: column; gap: 4px; }

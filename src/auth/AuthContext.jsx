@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
+  getConsoleProfile,
   login as loginRequest,
   logout as logoutRequest,
   refreshSession,
@@ -8,9 +9,12 @@ import {
   clearSession,
   getAccessToken,
   getRefreshToken,
+  getRememberMe,
   getStoredUser,
   setRememberMe,
+  setStoredUser,
 } from "./tokenStore";
+import { can as userCan, isUnrestricted } from "./permissions";
 
 const AuthContext = createContext(null);
 
@@ -34,8 +38,17 @@ export function AuthProvider({ children }) {
           }
         }
 
+        let nextUser = getStoredUser();
+        if (nextUser && !nextUser.accountType && !isUnrestricted(nextUser)) {
+          throw new Error("An unscoped session must sign in again");
+        }
+        if (nextUser?.accountType) {
+          const profile = await getConsoleProfile();
+          nextUser = profile?.user || nextUser;
+          setStoredUser(nextUser, getRememberMe());
+        }
+
         if (!cancelled) {
-          const nextUser = getStoredUser();
           setUser(nextUser);
           setIsAuthenticated(Boolean(getAccessToken() || nextUser));
         }
@@ -97,6 +110,9 @@ export function AuthProvider({ children }) {
           setUser(null);
           setIsAuthenticated(false);
         }
+      },
+      can(moduleName, action = "view") {
+        return userCan(user, moduleName, action);
       },
     }),
     [user, isReady, isAuthenticated]

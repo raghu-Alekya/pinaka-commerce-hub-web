@@ -2,13 +2,34 @@ import { api, pendingStoreRead } from "./http";
 
 const path = (id) => `/subscriptions/${encodeURIComponent(id)}`;
 
+function normalizeBillingCycle(value) {
+  const cycle = String(value || "").trim().toUpperCase();
+  if (cycle === "YEARLY" || cycle === "ANNUAL" || cycle === "ANNUALLY") return "YEARLY";
+  if (cycle === "QUARTERLY") return "QUARTERLY";
+  if (cycle === "MONTHLY") return "MONTHLY";
+  return cycle || "MONTHLY";
+}
+
 export const listSubscriptions = (params) => pendingStoreRead(`subscription-list:${JSON.stringify(params || {})}`, () => api.get("/subscriptions", { params }));
 export const listSubscriptionPlans = () => pendingStoreRead("subscription-plans", () => api.get("/subscription-plans"));
 export const changeSubscriptionPlan = (data) =>
   api.post("/subscriptions/subscription-plan-changes", data);
 export const getSubscription = (id) => pendingStoreRead(`subscription:${id}`, () => api.get(path(id)));
-export const createSubscription = (data) => api.post("/subscriptions", data);
-export const updateSubscription = (id, data) => api.put(path(id), data);
+function toSubscriptionApiPayload(data = {}) {
+  return {
+    merchant_id: data.merchant_id ?? data.merchantId,
+    plan_id: data.plan_id ?? data.planId,
+    billing_cycle: normalizeBillingCycle(data.billing_cycle ?? data.billingCycle),
+    start_date: data.start_date ?? data.startDate,
+    renewal_date: data.renewal_date ?? data.renewalDate,
+    price: data.price ?? data.agreement_price ?? data.agreementPrice,
+    autoRenew: data.autoRenew,
+    status: data.status,
+  };
+}
+
+export const createSubscription = (data) => api.post("/subscriptions", toSubscriptionApiPayload(data));
+export const updateSubscription = (id, data) => api.put(path(id), toSubscriptionApiPayload(data));
 export const deleteSubscription = (id) => api.delete(path(id));
 
 export function formatDate(dateStr) {
@@ -194,30 +215,13 @@ export function mapSubscriptionToRow(item, index = 0) {
   };
 }
 
-export function subscriptionPayload(form) {
+export function subscriptionPayload(form, planId) {
   return {
-    planCode: form.planCode,
-    planName: form.planName,
-    maxStoresAllowed: Number(form.maxStoresAllowed),
-    entitlements: Array.isArray(form.entitlements)
-      ? form.entitlements
-      : [
-          ...new Set(
-            form.entitlements
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean)
-          ),
-        ],
-    billingCycle: form.billingCycle,
-    trialDays: Number(form.trialDays),
+    planId,
+    billingCycle: normalizeBillingCycle(form.billingCycle),
+    startDate: form.currentPeriodStart ? String(form.currentPeriodStart).slice(0, 10) : undefined,
+    renewalDate: form.currentPeriodEnd ? String(form.currentPeriodEnd).slice(0, 10) : undefined,
     price: Number(form.price),
     status: form.status,
-    ...(form.currentPeriodStart
-      ? { currentPeriodStart: new Date(form.currentPeriodStart).toISOString() }
-      : {}),
-    ...(form.currentPeriodEnd
-      ? { currentPeriodEnd: new Date(form.currentPeriodEnd).toISOString() }
-      : {}),
   };
 }

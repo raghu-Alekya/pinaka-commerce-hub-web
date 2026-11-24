@@ -6,6 +6,7 @@ import AppLayout from "./layouts/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import MerchantDashboard from "./pages/MerchantDashboard";
+import AccessPermissions from "./pages/AccessPermissions";
 import Merchants from "./pages/Merchants";
 import MerchantStores from "./pages/MerchantStores";
 import { useParams } from "react-router-dom";

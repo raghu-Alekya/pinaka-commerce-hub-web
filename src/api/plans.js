@@ -643,8 +643,10 @@ export function normalizePlan(item) {
 
     /* Effective date */
     effectiveFrom:
-      item.effective_from ||
-      item.effectiveFrom ||
+      item.effective_from ??
+      item.effectiveFrom ??
+      item.effective_date ??
+      item.effectiveDate ??
       "",
 
     planEndDate: item.plan_end_date ?? item.planEndDate ?? "",

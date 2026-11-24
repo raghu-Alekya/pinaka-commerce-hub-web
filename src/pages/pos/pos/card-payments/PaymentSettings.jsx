@@ -21,16 +21,15 @@ const DEFAULT_PAYMENTS = PROVIDERS.map(blankProvider);
 
 function normalizePayments(records = []) {
   const byProvider = new Map(records.map((record) => [record.provider, record]));
-  const hasExplicitDefault = records.some((record) => record.isDefault !== undefined || record.is_default !== undefined || record.default !== undefined);
-  const defaultProvider = records.find((record) => (record.isDefault || record.is_default || record.default) && record.enabled !== false)?.provider
-    || (!hasExplicitDefault ? records.find((record) => record.enabled !== false)?.provider : "");
+  const activeProvider = records.find((record) => record.enabled === true || record.enabled === "true")?.provider || "";
+  const defaultProvider = records.find((record) => record.isDefault === true || record.isDefault === "true" || record.is_default === true)?.provider || "";
   return PROVIDERS.map((provider) => {
     const record = byProvider.get(provider);
     if (!record) return blankProvider(provider);
     return {
       ...blankProvider(provider),
       ...record,
-      enabled: record.enabled === undefined ? true : Boolean(record.enabled),
+      enabled: provider === activeProvider,
       isDefault: provider === defaultProvider,
       processorMerchantId: record.processorMerchantId || record.merchantId || "",
       deviceMappings: Array.isArray(record.deviceMappings || record.device_mappings)
@@ -106,18 +105,10 @@ export function PaymentSettings() {
   const addDeviceMapping = (provider) => updateProvider(provider, { deviceMappings: [...(payments.find((item) => item.provider === provider)?.deviceMappings || []), { storeDeviceId: "", deviceId: "" }] });
   const removeDeviceMapping = (provider, index) => updateProvider(provider, { deviceMappings: (payments.find((item) => item.provider === provider)?.deviceMappings || []).filter((_, mappingIndex) => mappingIndex !== index) });
 
-  const setEnabled = (provider, enabled) => setPayments((current) => {
-    const next = current.map((item) => item.provider === provider ? { ...item, enabled } : item);
-    if (enabled && !next.some((item) => item.isDefault)) {
-      return next.map((item) => ({ ...item, isDefault: item.provider === provider }));
-    }
-    if (!enabled && next.find((item) => item.provider === provider)?.isDefault) {
-      const replacement = next.find((item) => item.enabled);
-      return next.map((item) => ({ ...item, isDefault: item.provider === replacement?.provider }));
-    }
-    return next;
-  });
-
+  const setEnabled = (provider, enabled) => setPayments((current) => current.map((item) => ({
+    ...item,
+    enabled: item.provider === provider ? enabled : enabled ? false : item.enabled,
+  })));
   const chooseDefault = (provider) => setPayments((current) => current.map((item) => ({
     ...item,
     isDefault: item.provider === provider,
@@ -131,10 +122,6 @@ export function PaymentSettings() {
     const enabledPayments = payments.filter((item) => item.enabled);
     if (enabledPayments.some((item) => (item.provider === "Payroc" && (!item.deviceMappings.length || item.deviceMappings.some((mapping) => !mapping.storeDeviceId || !mapping.deviceId.trim()))) || !item.processorMerchantId.trim() || !item.secretKey.trim() || (item.provider === "Kickback" && !item.webhookUrl.trim()) || (item.provider === "Payroc" && !item.terminalId.trim()))) {
       alert("Complete the required credentials for each enabled payment provider.");
-      return;
-    }
-    if (enabledPayments.length && !enabledPayments.some((item) => item.isDefault)) {
-      alert("Select an enabled provider as the default payment gateway.");
       return;
     }
     await savePosCardPaymentSettings(settings.storeId, payments.map((item) => {
@@ -161,7 +148,7 @@ export function PaymentSettings() {
 
   return <div className="pos-panel card-payment-panel card-payment-settings-v2">
     <ConfigHeader />
-    <p className="pc-help card-payment-help">Enable one or both gateways, configure their credentials, then choose the default gateway.</p>
+    <p className="pc-help card-payment-help">Enable one gateway and configure its credentials.</p>
     <div className="card-payment-provider-grid">
       {payments.map((payment) => <section className={`pc-card card-payment-provider-card${payment.enabled ? " is-enabled" : ""}`} key={payment.provider}>
         <div className="card-payment-provider-heading">
@@ -171,12 +158,12 @@ export function PaymentSettings() {
           </div>
           <ConfigSwitch label="Enabled" checked={payment.enabled} onChange={(enabled) => setEnabled(payment.provider, enabled)} />
         </div>
-        <label className={`card-payment-default${!payment.enabled ? " is-disabled" : ""}`}>
+        <label className="card-payment-default">
           <input
             type="radio"
             name="defaultCardPaymentProvider"
             checked={payment.isDefault}
-            disabled={!payment.enabled}
+            onClick={() => { if (payment.isDefault) chooseDefault(""); }}
             onChange={() => chooseDefault(payment.provider)}
           />
           <span>Use as default gateway</span>

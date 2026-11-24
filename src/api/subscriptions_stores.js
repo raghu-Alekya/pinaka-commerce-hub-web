@@ -2,8 +2,7 @@ import { api } from "./http";
 import { endpoints } from "./endpoints";
 
 /**
- * Fetch active subscriptions for a merchant from connector API
- * Endpoint: /connector/api/v1/merchants/subscriptions/active?merchantId=...
+ * Fetch active subscriptions through the merchant-scoped subscriptions API.
  */
 export async function getActiveSubscriptions(merchantId) {
   if (!merchantId) return null;
