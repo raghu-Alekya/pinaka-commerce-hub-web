@@ -53,7 +53,7 @@ export const endpoints = {
 
   // Subscriptions (Connector API)
   merchantActiveSubscriptions: (merchantId) =>
-    `/connector/api/v1/merchants/subscriptions/active?merchantId=${encodeURIComponent(merchantId)}`,
+    `/connector/api/v1/merchants/subscriptions/active?merchant_id=${encodeURIComponent(merchantId)}`,
 
   // Store Types & Features
   storeTypes: "/store-types",

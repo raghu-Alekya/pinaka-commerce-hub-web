@@ -56,9 +56,21 @@ export function storeListFromResponse(response) {
 
 export function normalizeStoreForConfiguration(store) {
   const address = store.address && typeof store.address === "object" ? store.address : {};
+  const addressLine1 = store.addressLine1 || store.address_line1 || store.address_line_1 ||
+    address.addressLine1 || address.address_line1 || address.address_line_1 || address.street ||
+    (typeof store.address === "string" ? store.address : "");
+  const addressLine2 = store.addressLine2 || store.address_line2 || store.address_line_2 ||
+    address.addressLine2 || address.address_line2 || address.address_line_2 || address.unit || "";
+  const zip = store.zip || store.postalCode || store.postal_code || store.pinCode || store.pin_code ||
+    address.zipCode || address.zip_code || address.postalCode || address.postal_code || "";
+  const storeType = store.storeType ?? store.store_type ?? store.type ?? store.storeTypeName ??
+    store.store_type_name ?? store.storeTypeCode ?? store.store_type_code ?? "";
+  const type = typeof storeType === "object"
+    ? storeType.name || storeType.storeTypeName || storeType.store_type_name ||
+      storeType.code || storeType.storeTypeCode || storeType.store_type_code || ""
+    : storeType;
   const storeCode = [store.storeCode, store.store_code, store.code, store.storeId, store.storeID]
     .find(value => value && !isUuid(value)) || "";
-  const type = store.storeType?.name || store.storeType || store.type?.name || store.type || "";
   const location = [
     address.street || (typeof store.address === "string" ? store.address : ""),
     address.city || store.city,
@@ -71,6 +83,10 @@ export function normalizeStoreForConfiguration(store) {
     storeCode,
     name: store.storeName || store.name || storeCode || "Store",
     type,
+    storeTypeName: type,
+    addressLine1,
+    addressLine2,
+    zip,
     location: location || store.location || "—",
     status: store.status || store.operationalStatus || "Unknown",
     url: store.baseUrl || store.websiteUrl || store.url || "",
