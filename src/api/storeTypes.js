@@ -4,34 +4,40 @@ const readStoreType = path => pendingStoreRead(`store-type-read:${path}`, () => 
 
 export function normalizeStoreType(item) {
   if (!item) return item;
+  const createdAt = item.createdAt || item.created_at || null;
+  const updatedAt = item.updatedAt || item.updated_at || null;
+  const storeTypeCode = item.storeTypeCode || item.store_type_code || item.code || "";
+  const storeTypeId = item.id || item.storeTypeId || item.store_type_id || item._id || "";
   return {
     ...item,
-    id: item.id,
-    code: item.storeTypeCode || item.code || "",
-    storeTypeCode: item.storeTypeCode || item.code || "",
-    name: item.name || "",
-    description: item.description || "",
+    id: storeTypeId,
+    code: storeTypeCode,
+    storeTypeCode,
+    name: item.name || item.storeTypeName || item.store_type_name || "",
+    description: item.description || item.storeTypeDescription || item.store_type_description || "",
     status:
       (item.status || "ACTIVE").toUpperCase() === "ACTIVE"
         ? "Active"
         : "Inactive",
-    createdOn: item.createdAt
-      ? new Date(item.createdAt).toLocaleDateString()
+    createdAt,
+    updatedAt,
+    createdOn: createdAt
+      ? new Date(createdAt).toLocaleDateString()
       : "—",
-    createdDate: item.createdAt
-      ? new Date(item.createdAt).toLocaleDateString()
+    createdDate: createdAt
+      ? new Date(createdAt).toLocaleDateString()
       : "—",
-    createdTime: item.createdAt
-      ? new Date(item.createdAt).toLocaleTimeString([], {
+    createdTime: createdAt
+      ? new Date(createdAt).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         })
       : "",
-    updatedDate: item.updatedAt
-      ? new Date(item.updatedAt).toLocaleDateString()
+    updatedDate: updatedAt
+      ? new Date(updatedAt).toLocaleDateString()
       : "—",
-    updatedTime: item.updatedAt
-      ? new Date(item.updatedAt).toLocaleTimeString([], {
+    updatedTime: updatedAt
+      ? new Date(updatedAt).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         })
@@ -49,16 +55,29 @@ const payload = (form) => ({
   status: (form.status || "Active").toUpperCase(),
 });
 
+const unwrapStoreType = (response) =>
+  response?.storeType ?? response?.store_type ??
+  response?.data?.storeType ?? response?.data?.store_type ??
+  response?.data ?? response;
+
+const unwrapStoreTypes = (response) => {
+  const candidates = [
+    response?.storeTypes, response?.store_types, response?.items,
+    response?.data?.storeTypes, response?.data?.store_types,
+    response?.data?.items, response?.data?.data, response?.data,
+  ];
+  return candidates.find(Array.isArray) || (Array.isArray(response) ? response : []);
+};
+
 export const listStoreTypes = async () => {
   const res = await readStoreType("/store-types");
-  const items =
-    res?.storeTypes || res?.data?.storeTypes || (Array.isArray(res) ? res : []);
+  const items = unwrapStoreTypes(res);
   return items.map(normalizeStoreType);
 };
 
 export const getStoreType = async (id) => {
   const res = await readStoreType(path(id));
-  return normalizeStoreType(res?.storeType || res?.data?.storeType || res);
+  return normalizeStoreType(unwrapStoreType(res));
 };
 
 export const createStoreType = async (form) => {
@@ -76,15 +95,11 @@ export const deleteStoreType = (id) => api.delete(path(id));
 export const storeTypesApi = {
   getAll: async () => {
     const res = await readStoreType("/store-types");
-    const storeTypes = (
-      res?.storeTypes ||
-      res?.data?.storeTypes ||
-      (Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [])
-    ).map(normalizeStoreType);
+    const storeTypes = unwrapStoreTypes(res).map(normalizeStoreType);
     return {
       success: true,
       storeTypes,
-      nextStoreTypeCode: res?.nextStoreTypeCode || res?.data?.nextStoreTypeCode || "",
+      nextStoreTypeCode: res?.nextStoreTypeCode || res?.next_store_type_code || res?.data?.nextStoreTypeCode || res?.data?.next_store_type_code || "",
       data: storeTypes,
     };
   },
@@ -106,23 +121,17 @@ export const storeTypesApi = {
   },
   getById: async (id) => {
     const res = await readStoreType(path(id));
-    const storeType = normalizeStoreType(
-      res?.storeType || res?.data?.storeType || res,
-    );
+    const storeType = normalizeStoreType(unwrapStoreType(res));
     return { success: true, storeType, data: storeType };
   },
   create: async (form) => {
     const res = await api.post("/store-types", payload(form));
-    const storeType = normalizeStoreType(
-      res?.storeType || res?.data?.storeType || res,
-    );
+    const storeType = normalizeStoreType(unwrapStoreType(res));
     return { success: true, storeType, data: storeType };
   },
   update: async (id, form) => {
     const res = await api.put(path(id), payload(form));
-    const storeType = normalizeStoreType(
-      res?.storeType || res?.data?.storeType || res,
-    );
+    const storeType = normalizeStoreType(unwrapStoreType(res));
     return { success: true, storeType, data: storeType };
   },
   delete: async (id) => {
@@ -151,7 +160,7 @@ export const storeTypesApi = {
   addFeaturesBulk: async (storeTypeId, featureIds) => {
     return api.post(
       `/store-types/${encodeURIComponent(storeTypeId)}/features/bulk`,
-      { featureIds },
+      { items: featureIds.map((featureId) => ({ feature_id: featureId })) },
     );
   },
   removeFeature: async (storeTypeId, featureId) => {

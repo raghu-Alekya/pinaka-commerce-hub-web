@@ -9,6 +9,7 @@ import ListActions from "../components/ListActions";
 import { Store, Search, Plus, X } from 'lucide-react';
  
 import { getFeature } from '../api/features';
+import { storeTypesApi } from '../api/storeTypes';
  
 import {
  
@@ -74,7 +75,7 @@ import '../styles/feature-detail-header.css';
  
 const mapStore = (item = {}) => {
  
-  const nestedStoreType = item?.storeType || {};
+  const nestedStoreType = item?.storeType || item?.store_type || {};
  
   /*
  
@@ -127,6 +128,7 @@ const mapStore = (item = {}) => {
       nestedStoreType?.code ||
  
       nestedStoreType?.storeTypeCode ||
+      nestedStoreType?.store_type_code ||
  
       item?.storeTypeCode ||
  
@@ -141,6 +143,7 @@ const mapStore = (item = {}) => {
       nestedStoreType?.name ||
  
       nestedStoreType?.storeTypeName ||
+      nestedStoreType?.store_type_name ||
  
       item?.storeTypeName ||
  
@@ -181,6 +184,8 @@ const mapStore = (item = {}) => {
       item?.isSelected ??
       item?.is_mapped ??
       item?.isMapped ??
+      item?.mapped ??
+      item?.checked ??
       nestedStoreType?.is_assigned ??
       nestedStoreType?.isAssigned ??
       item?.selected ??
@@ -282,11 +287,12 @@ const FeatureStoreTypes = () => {
  
       setError('');
  
-      const [f, featureStoreTypes] = await Promise.all([
+      const [f, featureStoreTypes, catalogResponse] = await Promise.all([
  
         suppliedFeature ? Promise.resolve(suppliedFeature) : getFeature(featureId),
  
         pendingStoreRead(`feature-store-types:${featureId}`, () => listMappedStoreTypes(featureId)),
+        pendingStoreRead("store-types-catalog", () => storeTypesApi.getAll()),
  
       ]);
  
@@ -302,8 +308,14 @@ const FeatureStoreTypes = () => {
         ? featureStoreTypes.map(mapStore)
         : [];
       const availableById = new Map(
-        scopedStoreTypes.map((storeType) => [String(storeType.id), storeType]),
+        (Array.isArray(catalogResponse?.storeTypes) ? catalogResponse.storeTypes : [])
+          .map((storeType) => mapStore({ ...storeType, mapped: false }))
+          .filter((storeType) => storeType.id)
+          .map((storeType) => [String(storeType.id), storeType]),
       );
+      scopedStoreTypes.forEach((storeType) => {
+        availableById.set(String(storeType.id), { ...storeType, isAssigned: true });
+      });
       readRemovedStoreTypes(featureId).forEach((storeType) => {
         if (!availableById.has(String(storeType.id))) {
           availableById.set(String(storeType.id), { ...storeType, isAssigned: false });

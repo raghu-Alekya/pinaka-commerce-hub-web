@@ -22,6 +22,7 @@ function normalizeRole(role, index) {
   return {
     id:
       role.roleTemplateId ??
+      role.role_template_id ??
       template.id ??
       template._id ??
       role.id ??

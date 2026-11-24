@@ -844,7 +844,15 @@ function dateRangeMatch(merchant, value, from = '', to = '', now = new Date()) {
 export function CalendarField({ label, value, onChange, min, max, showLabel = true, invalid = false, allowManualEntry = false }) {
   const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
   const [open, setOpen] = useState(false);
-  const [month, setMonth] = useState(() => selectedDate || new Date());
+  const [month, setMonth] = useState(() => {
+    if (selectedDate) return selectedDate;
+    const today = new Date();
+    const minDate = min ? new Date(`${min}T00:00:00`) : null;
+    const maxDate = max ? new Date(`${max}T00:00:00`) : null;
+    if (minDate && today < minDate) return minDate;
+    if (maxDate && today > maxDate) return maxDate;
+    return today;
+  });
   const [manualValue, setManualValue] = useState(value ? `${value.slice(5, 7)}/${value.slice(8, 10)}/${value.slice(0, 4)}` : "");
   const manualEditing = useRef(false);
   const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
@@ -889,6 +897,7 @@ export function CalendarField({ label, value, onChange, min, max, showLabel = tr
     const iso = `${yearNumber}-${String(monthNumber).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
     onChange(iso);
     setMonth(date);
+    setOpen(false);
   }
 
   return <div className={`merchant-date-field${showLabel ? "" : " merchant-date-field-compact"}`}>

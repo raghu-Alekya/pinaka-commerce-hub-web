@@ -48,11 +48,15 @@ const normalizePermission = (permission, featureId, permissionIndex) => {
     {};
   const backendPermissionId =
     permission?.permissionId ??
+    permission?.permissionID ??
     permission?.permission_id ??
+    permissionRecord.permissionID ??
     permissionRecord.permissionId ??
     permissionRecord.permission_id ??
     permissionRecord.id ??
+    permissionRecord._id ??
     permission?.id ??
+    permission?._id ??
     permissionRecord.uuid;
   const permissionId = backendPermissionId;
 
@@ -63,8 +67,10 @@ const normalizePermission = (permission, featureId, permissionIndex) => {
     name:
       permissionRecord.name ??
       permissionRecord.permissionName ??
+      permissionRecord.permission_name ??
       permission?.name ??
       permission?.permissionName ??
+      permission?.permission_name ??
       permissionRecord.label ??
       permissionRecord.permissionKey ??
       permissionRecord.key ??
@@ -72,8 +78,10 @@ const normalizePermission = (permission, featureId, permissionIndex) => {
     code:
       permissionRecord.code ??
       permissionRecord.permissionCode ??
+      permissionRecord.permission_code ??
       permission?.code ??
       permission?.permissionCode ??
+      permission?.permission_code ??
       permissionRecord.permissionKey ??
       permissionRecord.key ??
       permissionRecord.name ??
@@ -115,10 +123,14 @@ const normalizeFeature = (feature, featureIndex) => {
     {};
   const backendFeatureId =
     feature?.featureId ??
+    feature?.featureID ??
     feature?.feature_id ??
+    featureRecord.featureID ??
     featureRecord.featureId ??
     featureRecord.feature_id ??
     featureRecord.id ??
+    featureRecord._id ??
+    feature?._id ??
     feature?.id;
   const featureId = backendFeatureId ?? `feature-${featureIndex}`;
 
@@ -135,12 +147,16 @@ const normalizeFeature = (feature, featureIndex) => {
       featureRecord.name ??
       feature?.name ??
       featureRecord.featureName ??
+      featureRecord.feature_name ??
+      feature?.feature_name ??
       "Feature",
     code:
       featureRecord.code ??
       featureRecord.featureCode ??
+      featureRecord.feature_code ??
       feature?.code ??
       feature?.featureCode ??
+      feature?.feature_code ??
       featureRecord.featureKey ??
       feature?.featureKey ??
       "FEATURE",

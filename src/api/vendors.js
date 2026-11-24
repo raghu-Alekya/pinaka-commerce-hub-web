@@ -1,5 +1,6 @@
 import { apiRequest, pendingStoreRead } from "./http";
 import { endpoints } from "./endpoints";
+import { toSnakeCaseApiPayload } from "./storeDetails";
 
 /*
 |--------------------------------------------------------------------------
@@ -156,6 +157,23 @@ function toUiStatus(status, vendor = {}) {
 */
 
 function normalizeVendor(vendor = {}) {
+  // Some vendor responses include a country calling code in `phone` while
+  // the complete number is stored under one of the legacy phone fields.
+  // Prefer the most complete value so editing a record does not load only
+  // the flag/calling code and then overwrite the full number.
+  const phone = [
+    vendor.phone,
+    vendor.phoneNumber,
+    vendor.phone_number,
+    vendor.mobile,
+    vendor.mobileNumber,
+    vendor.mobile_number,
+    vendor.contactPhone,
+    vendor.contact_phone,
+  ]
+    .filter((value) => value !== null && value !== undefined && String(value).trim())
+    .sort((left, right) => String(right).replace(/\D/g, "").length - String(left).replace(/\D/g, "").length)[0] ?? "";
+
   return {
     ...vendor,
 
@@ -181,13 +199,7 @@ function normalizeVendor(vendor = {}) {
 
     contactPerson: vendor.contactPerson ?? vendor.contact_person ?? "",
 
-    phone:
-      vendor.phone ??
-      vendor.mobile ??
-      vendor.mobileNumber ??
-      vendor.phoneNumber ??
-      vendor.contactPhone ??
-      "",
+    phone,
 
     email: vendor.email ?? "",
 
@@ -357,7 +369,8 @@ function prepareVendorPayload(values = {}) {
     payload.code = codeVal;
   }
 
-  return payload;
+  // Vendor write endpoints expect snake_case fields.
+  return toSnakeCaseApiPayload(payload);
 }
 
 /*
