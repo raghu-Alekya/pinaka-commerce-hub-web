@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/http";
 import { listMerchants } from "../api/merchants";
-import { isUnrestricted } from "../auth/permissions";
+import { isPchAgent, isUnrestricted } from "../auth/permissions";
 import {
   assignEmployeeRole,
   createMerchantRole,
@@ -25,7 +25,7 @@ function messageOf(error) {
 
 export default function AccessPermissions() {
   const { user, can } = useAuth();
-  const admin = isUnrestricted(user);
+  const admin = isUnrestricted(user) || isPchAgent(user);
   const [merchantOptions, setMerchantOptions] = useState([]);
   const [selectedMerchantId, setSelectedMerchantId] = useState("");
   const merchantId = admin ? selectedMerchantId : user?.merchantId;
@@ -45,9 +45,12 @@ export default function AccessPermissions() {
   useEffect(() => {
     if (!admin) return;
     listMerchants()
-      .then((rows) => setMerchantOptions(rows))
+      .then((rows) => {
+        setMerchantOptions(rows);
+        if (isPchAgent(user) && rows.length) setSelectedMerchantId((current) => current || rows[0].uuid || rows[0].id);
+      })
       .catch((err) => setError(err?.message || "Unable to load merchants."));
-  }, [admin]);
+  }, [admin, user]);
 
   const load = async () => {
     if (!merchantId) return;

@@ -2,6 +2,7 @@ import { pendingStoreRead } from "../api/http";
 import { useMemo, useState, useEffect } from "react";
 import { listMerchants } from "../api/merchants";
 import { useAuth } from "../auth/AuthContext";
+import { isPchAgent } from "../auth/permissions";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
 import FiltersBar from "../components/FiltersBar";
@@ -2488,7 +2489,7 @@ function SubscriptionCrudForm({
 
 export default function MerchantSubscriptions() {
   const { user } = useAuth();
-  const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee";
+  const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee" || isPchAgent(user);
 
 
 

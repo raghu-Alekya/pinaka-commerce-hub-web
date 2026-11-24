@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { MENU_MODULES } from "../auth/permissions";
+import { isPchAdmin, isPchAgent, MENU_MODULES } from "../auth/permissions";
 
 const sections = [
   {
@@ -70,16 +70,31 @@ export default function Sidebar({
 }) {
   const location = useLocation();
   const { user, can } = useAuth();
+  const agent = isPchAgent(user);
   const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee";
-  const visibleSections = scopedToMerchant
+  const merchantId = user?.merchantId || user?.merchantCode;
+  const visibleSections = agent ? sections.filter((section) => section.title !== "MASTER SETUP" && section.title !== "INTEGRATIONS").map((section) => ({
+    ...section,
+    items: section.items.filter(([path]) => can(MENU_MODULES[path], "view")),
+  })).filter((section) => section.items.length) : scopedToMerchant
     ? sections.filter((section) => section.title !== "MASTER SETUP").map((section) => ({
         ...section,
-        items: section.items.filter(([path]) => path !== "/merchants" && can(MENU_MODULES[path], "view")),
+        items: section.items.flatMap(([path, icon, label, ...rest]) => {
+          if (path === "/merchants") return user?.accountType === "merchant" && merchantId
+            ? [[`/merchants?view=${encodeURIComponent(merchantId)}&tab=overview`, "bi-person-gear", "Merchant Settings"]]
+            : [];
+          return can(MENU_MODULES[path], "view") ? [[path, icon, label, ...rest]] : [];
+        }),
       })).filter((section) => section.items.length)
     : sections;
   const originPath = location.state?.from?.split("?")[0] || "";
 
   function isContextActive(path, isRouteActive) {
+    if (path.startsWith("/merchants?")) {
+      const target = new URL(path, window.location.origin);
+      const currentView = new URLSearchParams(location.search).get("view");
+      return location.pathname === "/merchants" && (target.searchParams.get("view") || "") === (currentView || "");
+    }
     // Order details are routed through /orders/:id even when opened from an
     // embedded merchant or store view. Keep the originating sidebar section
     // selected while the detail page is open.
@@ -171,7 +186,7 @@ export default function Sidebar({
 
                       {!collapsed && masterSetupOpen && (
                         <div id="master-setup-submenu" className="master-setup-submenu">
-                          {subItems.map(([subTo, subIcon, subLabel]) => (
+          {subItems.filter(([subTo]) => subTo !== "/pch-users" || isPchAdmin(user)).map(([subTo, subIcon, subLabel]) => (
                             <NavLink
                               key={subTo}
                               to={subTo}

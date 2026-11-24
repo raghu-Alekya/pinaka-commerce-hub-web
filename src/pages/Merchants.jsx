@@ -29,6 +29,7 @@ import { getStoreDeviceMappings } from "../api/storeDeviceMappings";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
 import { useAuth } from "../auth/AuthContext";
+import { isPchAgent } from "../auth/permissions";
 import FiltersBar from "../components/FiltersBar";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import BentoDetailModal from "../components/BentoDetailModal";
@@ -57,7 +58,7 @@ function ViewFields({ items }) {
 function ViewTable({ headings, rows }) {
   return rows.length ? <div className="table-wrapper"><table className="merchant-table"><thead><tr>{headings.map(title => <th key={title}>{title}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, column) => <td key={column}>{readValue(cell)}</td>)}</tr>)}</tbody></table></div> : <p className="merchant-view-empty">No records provided.</p>;
 }
-function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSaveDevice, masterVendors, vendorAssignments, onSaveVendorAssignments, vendorsLoading, vendorsError, masterTenders, tenderAssignments, onSaveTenderAssignments, tendersLoading, tendersError }) {
+function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSaveDevice, masterVendors, vendorAssignments, onSaveVendorAssignments, vendorsLoading, vendorsError, masterTenders, tenderAssignments, onSaveTenderAssignments, tendersLoading, tendersError, agentMode = false }) {
  const [editingEmployee, setEditingEmployee] = useState(null);
   const [addingEmployee, setAddingEmployee] = useState(false);
   const [editingEmployeeLoading, setEditingEmployeeLoading] = useState(false);
@@ -170,7 +171,8 @@ function MerchantReadOnly({ merchantId, merchant, onBack, onSaveEmployee, onSave
       return next;
     }, { replace: true });
   }
-  const tabs = [['overview', 'Overview'], ['subscription', 'Subscription & Usage'], ['stores', 'Stores'], ['employees', 'Employees'], ['devices', 'Devices'], ['vendors', 'Vendors'], ['tenders', 'Tenders'], ['roles', 'Roles & Permissions'], ['payments', 'Payment History']];
+  const allTabs = [['overview', 'Overview'], ['subscription', 'Subscription & Usage'], ['stores', 'Stores'], ['employees', 'Employees'], ['devices', 'Devices'], ['vendors', 'Vendors'], ['tenders', 'Tenders'], ['roles', 'Roles & Permissions'], ['payments', 'Payment History']];
+  const tabs = allTabs;
   function tabKeyDown(event, index) {
     let next;
     if (event.key === 'ArrowDown') next = (index + 1) % tabs.length;
@@ -1074,7 +1076,7 @@ const [statusFilter, setStatusFilter] = useState("");
   const [apiMerchants, setMerchants] = useState([]);
   const merchants = useMemo(() => {
     const combined = new Map(apiMerchants.map(row => [String(row.id), row]));
-    if (!scopedToMerchant) localMerchants.forEach(row => combined.set(String(row.id), row));
+    if (!scopedToMerchant && !isPchAgent(user)) localMerchants.forEach(row => combined.set(String(row.id), row));
     const ownIds = [user?.merchantId, user?.merchantCode].filter(Boolean).map(value => String(value).toLowerCase());
     return [...combined.values()].filter(row => !scopedToMerchant || [
       row.id, row.uuid, row.merchantId, row.merchantCode,
@@ -1218,7 +1220,7 @@ const [statusFilter, setStatusFilter] = useState("");
   const statuses = ["Pending Setup", "Active", "Suspended", "Inactive"];
   const locations = [...new Set(merchants.map(m => `${countryNameFor(m.country, countryRecords)} ${m.state || ''}`.trim()).filter(Boolean))];
 
-  if (viewedId && (!scopedToMerchant || merchants.some(item => [item.id, item.merchantId, item.merchantCode].some(value => String(value) === viewedId)))) return <MerchantReadOnly masterTenders={masterTenders} tenderAssignments={tenderAssignments} onSaveTenderAssignments={onSaveTenderAssignments} tendersLoading={tendersLoading} tendersError={tendersError} masterVendors={masterVendors} vendorAssignments={vendorAssignments} onSaveVendorAssignments={onSaveVendorAssignments} vendorsLoading={vendorsLoading} vendorsError={vendorsError} key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
+  if (viewedId && (!scopedToMerchant || [user?.merchantId, user?.merchantCode].some(value => value && String(value).toLowerCase() === viewedId.toLowerCase()))) return <MerchantReadOnly agentMode={isPchAgent(user)} masterTenders={masterTenders} tenderAssignments={tenderAssignments} onSaveTenderAssignments={onSaveTenderAssignments} tendersLoading={tendersLoading} tendersError={tendersError} masterVendors={masterVendors} vendorAssignments={vendorAssignments} onSaveVendorAssignments={onSaveVendorAssignments} vendorsLoading={vendorsLoading} vendorsError={vendorsError} key={viewedId} merchantId={viewedId} onSaveEmployee={onSaveEmployee} onSaveDevice={onSaveDevice}
     merchant={merchants.find(item => String(item.id) === viewedId || String(item.merchantId) === viewedId || String(item.merchantCode) === viewedId)} onBack={closeView}
     />;
 

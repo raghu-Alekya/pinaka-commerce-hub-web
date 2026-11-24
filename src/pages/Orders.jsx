@@ -5,6 +5,7 @@ import Pagination from "../components/Pagination";
 import FiltersBar from "../components/FiltersBar";
 import ListActions from "../components/ListActions";
 import { useAuth } from "../auth/AuthContext";
+import { isPchAgent } from "../auth/permissions";
 import { listMerchants } from "../api/merchants";
 import { listMerchantStores, listStores } from "../api/stores";
 import { listScopedOrders } from "../api/orders";
@@ -72,6 +73,7 @@ export default function Orders({
   store,
 }) {
   const { user } = useAuth();
+  const agent = isPchAgent(user);
   const scopedToMerchant = user?.accountType === 'merchant' || user?.accountType === 'employee';
   const ownMerchantId = scopedToMerchant ? String(user?.merchantId || '') : '';
   const location = useLocation();
@@ -139,21 +141,26 @@ export default function Orders({
   }, [embedded, scopedToMerchant]);
 
   useEffect(() => {
-    if (!selectedMerchant || embedded) {
-      if (!embedded) setStores([]);
+    if (embedded) {
       return undefined;
     }
     let active = true;
-    listMerchantStores(selectedMerchant)
+    const storeRequest = agent
+      ? listStores().then((result) => {
+          const selected = merchants.find((merchant) => String(merchant.id) === String(selectedMerchant));
+          const aliases = new Set([selectedMerchant, selected?.id, selected?.uuid, selected?.merchantId, selected?.merchantCode]
+            .filter(Boolean).map((value) => String(value).toLowerCase()));
+          return (result.stores || [])
+            .filter((row) => !selectedMerchant || [row.merchantId, row.merchantCode, row.merchant_id, row.merchant_code]
+              .some((value) => value && aliases.has(String(value).toLowerCase())))
+            .map((row) => ({ value: String(row.id), label: row.storeName || row.storeCode || row.id }));
+        })
+      : selectedMerchant ? listMerchantStores(selectedMerchant) : Promise.resolve([]);
+    storeRequest
       .then((rows) => {
         if (!active) return;
         setStores(rows);
-        if (scopedToMerchant) {
-          setSelectedStore((current) => current && !rows.some((row) => row.value === current) ? "" : current);
-        } else if (rows.length === 1) {
-          setSelectedStore(rows[0].value);
-          setCurrentPage(1);
-        }
+        setSelectedStore((current) => current && !rows.some((row) => row.value === current) ? "" : current);
       })
       .catch(() => {
         if (active) setStores([]);
@@ -161,7 +168,7 @@ export default function Orders({
     return () => {
       active = false;
     };
-  }, [selectedMerchant, embedded, scopedToMerchant]);
+  }, [selectedMerchant, embedded, agent, merchants]);
 
   useEffect(() => {
     if (!selectedStore && embedded) {

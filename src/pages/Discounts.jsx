@@ -370,14 +370,13 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
       setFormError(validation.message);
       return;
     }
-    if (form.discount_type !== "percent") {
-      const productPrice = Number.parseFloat(String(selectedProductPrice).replace(/[^\d.-]/g, ""));
-      if (!Number.isFinite(productPrice) || productPrice <= 0) {
-        setFormError("The selected product price is unavailable, so the discount cannot be validated.");
+    if (requiresPriceCheck) {
+      if (!Number.isFinite(comparisonPrice) || comparisonPrice <= 0) {
+        setFormError("The discounted product price is unavailable. Sync products and try again.");
         return;
       }
-      if (Number(form.amount) >= productPrice) {
-        setFormError("The discount amount must be less than the selected product price.");
+      if (Number(form.amount) >= comparisonPrice) {
+        setFormError("The discount amount must be less than the qualifying product price.");
         return;
       }
     }
@@ -452,12 +451,18 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
   };
   const selectedProduct = catalogProducts.find(product => catalogProductId(product) === String(form.product));
   const selectedProductPrice = selectedProduct?.price ?? selectedProduct?.payload?.price ?? "";
-  const numericProductPrice = Number.parseFloat(String(selectedProductPrice).replace(/[^\d.-]/g, ""));
-  const amountExceedsProductPrice = form.discount_type !== "percent"
+  const requiresPriceCheck = form.type === "multipack" && form.discount_type !== "percent"
+    || form.type === "mix_match" && form.discount_type === "fixed_item";
+  const priceOf = product => Number.parseFloat(String(product?.price ?? product?.payload?.price ?? "").replace(/[^\d.-]/g, ""));
+  const discountedProducts = String(form.discounted_products || "").split(",").filter(Boolean);
+  const comparisonPrice = form.type === "mix_match"
+    ? discountedProducts.reduce((sum, id) => sum + priceOf(catalogProducts.find(product => catalogProductId(product) === id)), 0)
+    : priceOf(selectedProduct) * Number(form.qty || 1);
+  const amountExceedsProductPrice = requiresPriceCheck
     && form.amount !== ""
-    && Number.isFinite(numericProductPrice)
-    && numericProductPrice > 0
-    && Number(form.amount) >= numericProductPrice;
+    && Number.isFinite(comparisonPrice)
+    && comparisonPrice > 0
+    && Number(form.amount) >= comparisonPrice;
 
   if (mode) {
     return (
@@ -500,7 +505,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
                   <label className="coupon-form-field"><span className="discount-field-label">Amount {form.discount_type === "percent" ? "(%)" : ""} <span className="discount-required text-red-500" data-tooltip="Required" aria-label="Required">*</span></span>
                     <input type="number" min="0.01" max={form.discount_type === "percent" ? 100 : undefined} step="0.01" value={form.amount} aria-invalid={amountExceedsProductPrice} onChange={(event) => { updateForm("amount", event.target.value); setFormError(""); }} placeholder="0.00" required />
                     <small>{form.discount_type === "percent" ? "Enter a percentage from 0 to 100." : "Enter the fixed discount amount."}</small>
-                    {amountExceedsProductPrice && <small className="discount-amount-error" role="alert">The discount amount must be less than the selected product price.</small>}
+                    {amountExceedsProductPrice && <small className="discount-amount-error" role="alert">The discount amount must be less than the qualifying product price.</small>}
                   </label>
                   {form.type === "auto" && <label className="coupon-form-toggle discount-auto-toggle">
                     <input type="checkbox" checked={Boolean(form.auto_apply)} onChange={(event) => updateForm("auto_apply", event.target.checked)} />
@@ -603,7 +608,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
               {loading ? (
                 <tr><td className="discount-table-empty" colSpan="8">Loading discounts…</td></tr>
               ) : loadError ? (
-                <tr><td className="discount-table-empty" colSpan="8"><div className="products-table-empty-state"><span>Unable to load discounts</span></div></td></tr>
+                <tr><td className="discount-table-empty" colSpan="8"><div className="products-table-empty-state"><strong>Unable to load discounts</strong><span>{loadError}</span><button type="button" onClick={() => setRetry(value => value + 1)}>Retry</button></div></td></tr>
               ) : visibleDiscounts.length ? visibleDiscounts.map((discount) => (
                 <tr key={`${discount.type}-${discount.id}`}>
                   <td><div className="discount-name-cell"><strong>{discount.code}</strong><small>{typeLabel(discount.type)}</small></div></td>

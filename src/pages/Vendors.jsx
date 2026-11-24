@@ -8,7 +8,10 @@ import { Download } from "lucide-react";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
 import { useLocationOptions } from "../data/useLocationOptions";
-import { getVendor, getVendors, createVendor, updateVendor, updateVendorStatus, deleteVendor as deleteVendorApi, } from "../api/vendors";
+import { getVendor, getVendors, getMappedMerchantVendors, createVendor, updateVendor, updateVendorStatus, deleteVendor as deleteVendorApi, } from "../api/vendors";
+import { listMerchants } from "../api/merchants";
+import { useAuth } from "../auth/AuthContext";
+import { isPchAgent } from "../auth/permissions";
 import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
 import { validatePhoneForCountry } from "../utils/phoneValidation";
 
@@ -212,6 +215,8 @@ export default function Vendors({
   onCreate,
   onCancel,
 }) {
+  const { user } = useAuth();
+  const agent = isPchAgent(user);
   const [vendors, setVendors] =
     useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -303,7 +308,17 @@ export default function Vendors({
 
       let resultList = [];
 
-      if (activeStatus === "Inactive") {
+      if (agent) {
+        const assignedMerchants = await listMerchants();
+        const mapped = await Promise.allSettled(assignedMerchants.map((merchant) => getMappedMerchantVendors(merchant.uuid || merchant.id)));
+        const successes = mapped.filter((result) => result.status === "fulfilled");
+        if (assignedMerchants.length && !successes.length) throw mapped[0].reason;
+        const unique = new Map();
+        successes.forEach((result) => result.value.forEach((vendor) => unique.set(String(vendor.id), vendor)));
+        resultList = [...unique.values()].filter((vendor) => activeStatus === "Inactive"
+          ? String(vendor.status || "").toUpperCase() === "INACTIVE"
+          : activeStatus === "Active" ? String(vendor.status || "").toUpperCase() === "ACTIVE" : true);
+      } else if (activeStatus === "Inactive") {
         const [deletedList, inactiveStatusList] = await Promise.all([
           getVendors({ deleted_at: true }).catch(() => []),
           getVendors({ status: "INACTIVE" }).catch(() => []),
@@ -357,7 +372,7 @@ export default function Vendors({
 
   useEffect(() => {
     loadVendors();
-  }, [statusFilter]);
+  }, [statusFilter, agent, user?.id]);
 
   /*
   |--------------------------------------------------------------------------
@@ -1532,7 +1547,7 @@ export default function Vendors({
           </p>
         </div>
         <div className="vendors-header-actions">
-          <button type="button" className="vendors-primary-button" onClick={() => { resetForm(); setShowForm(true); }}><i className="bi bi-plus-lg" /> Add Vendor</button>
+          {!agent && <button type="button" className="vendors-primary-button" onClick={() => { resetForm(); setShowForm(true); }}><i className="bi bi-plus-lg" /> Add Vendor</button>}
           <button type="button" className="vendors-export-button" onClick={exportVendors}><Download size={20} aria-hidden="true" /> Export</button>
         </div>
       </div>
@@ -1801,9 +1816,9 @@ export default function Vendors({
                       <td>
                         <ListActions
                           onView={() => viewVendor(vendor)}
-                          onEdit={() => editVendor(vendor)}
-                          onDelete={isVendorInactive(vendor) ? undefined : () => confirmDelete(vendor)}
-                          onActivate={isVendorInactive(vendor) ? () => restoreVendor(vendor) : undefined}
+                          onEdit={agent ? undefined : () => editVendor(vendor)}
+                          onDelete={agent || isVendorInactive(vendor) ? undefined : () => confirmDelete(vendor)}
+                          onActivate={agent || !isVendorInactive(vendor) ? undefined : () => restoreVendor(vendor)}
                           deleteButtonClassName="vendors-delete-action"
                           viewLabel={`View ${vendor.name}`}
                           editLabel={`Edit ${vendor.name}`}

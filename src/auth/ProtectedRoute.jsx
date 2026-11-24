@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-import { isUnrestricted, moduleForRoute } from "./permissions";
+import { isPchAdmin, isPchAgent, moduleForRoute } from "./permissions";
 
 export default function ProtectedRoute({ children }) {
   const { isReady, isAuthenticated, user, can } = useAuth();
@@ -14,16 +14,27 @@ export default function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (location.pathname === "/pch-users" && !isUnrestricted(user)) {
+  if (location.pathname === "/pch-users" && !isPchAdmin(user)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (isPchAgent(user) && location.pathname.startsWith("/pch-users")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (isPchAgent(user) && (/^\/(master-setup|store-types|features|feature-permissions|role-templates|plans|tenders|integrations|synchronization|reconciliation|notifications)(\/|$)/.test(location.pathname))) {
     return <Navigate to="/dashboard" replace />;
   }
 
   if (user?.accountType === "merchant" || user?.accountType === "employee") {
-    if (/^\/merchants(?:\/new|\/[^/]+\/edit)?\/?$/.test(location.pathname)) {
+    const ownMerchantIds = [user?.merchantId, user?.merchantCode].filter(Boolean).map(value => String(value).toLowerCase());
+    const viewedMerchantId = new URLSearchParams(location.search).get("view");
+    const ownMerchantOverview = user?.accountType === "merchant" && location.pathname === "/merchants" && viewedMerchantId && ownMerchantIds.includes(viewedMerchantId.toLowerCase());
+    if (/^\/merchants(?:\/new|\/[^/]+\/edit)?\/?$/.test(location.pathname) && !ownMerchantOverview) {
       return <Navigate to="/dashboard" replace />;
     }
     const moduleName = moduleForRoute(location.pathname);
-    if (moduleName && !can(moduleName, "view")) return <Navigate to="/dashboard" replace />;
+    if (moduleName && !ownMerchantOverview && !can(moduleName, "view")) return <Navigate to="/dashboard" replace />;
   }
 
   return children;

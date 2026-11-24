@@ -62,7 +62,8 @@ export async function login(email, password, remember = false) {
       if (path === endpoints.login) {
         const fallbackUser = unwrapAuthPayload(data)?.user;
         const role = String(fallbackUser?.role || "").toUpperCase();
-        if (!fallbackUser?.accountType && !["OWNER", "ADMIN", "SUPER_ADMIN"].includes(role)) {
+        const platformAgent = role === "AGENT" && !fallbackUser?.accountId && !fallbackUser?.merchantId && !fallbackUser?.employeeId;
+        if (!fallbackUser?.accountType && !["OWNER", "ADMIN", "SUPER_ADMIN"].includes(role) && !platformAgent) {
           throw new ApiError("Use your merchant or employee console login.", 403, data);
         }
       }

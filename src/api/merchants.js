@@ -339,6 +339,7 @@ export function toFlatMerchantPayload(data) {
     tax,
     totalDueToday,
     paymentMethod,
+    agentUserId: m.agentUserId || m.agent_user_id || data.agentUserId || null,
   };
 }
 
@@ -584,6 +585,7 @@ export function mapMerchantToRow(item) {
     business: merchant.legalBusinessName || merchant.businessName || merchant.business_name || name,
     display: merchant.businessDisplayName || merchant.business_display_name || merchant.businessName || name,
     ein: merchant.ein || merchant.EIN || merchant.taxId || merchant.tax_id || "",
+    agentUserId: merchant.agentUserId || merchant.agent_user_id || "",
     _raw: item,
   };
 }

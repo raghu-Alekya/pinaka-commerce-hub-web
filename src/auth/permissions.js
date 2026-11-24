@@ -55,8 +55,24 @@ export function isUnrestricted(user) {
   return accountType === "admin" || accountType === "super_admin" || (!accountType && ["owner", "admin", "super_admin"].includes(role));
 }
 
+export function isPchAdmin(user) {
+  return !["merchant", "employee"].includes(String(user?.accountType || "").toLowerCase())
+    && !user?.merchantId && !user?.employeeId
+    && ["OWNER", "ADMIN", "SUPER_ADMIN"].includes(String(user?.role || "").toUpperCase());
+}
+
+export function isPchAgent(user) {
+  return !user?.accountType && !user?.accountId && !user?.merchantId && !user?.employeeId
+    && String(user?.role || "").toUpperCase() === "AGENT";
+}
+
 export function can(user, moduleName, action = "view") {
   if (!moduleName || isUnrestricted(user)) return true;
+  if (isPchAgent(user)) {
+    if (action === "create" && ["merchants", "stores"].includes(moduleName)) return true;
+    if (action === "update" && moduleName === "merchants") return true;
+    if (action === "view" && ["dashboard", "merchants", "stores", "subscriptions", "vendors", "orders", "employees", "devices", "access-permissions"].includes(moduleName)) return true;
+  }
   const grants = user?.permissions || user?.grants || [];
   const grant = grants.find((item) => item.menuKey === moduleName);
   return Boolean(grant?.actions?.includes(action));
