@@ -1,6 +1,5 @@
 import { apiRequest, pendingStoreRead } from "./http";
 import { endpoints } from "./endpoints";
-import { toSnakeCaseApiPayload } from "./storeDetails";
 
 /*
 |--------------------------------------------------------------------------
@@ -62,11 +61,11 @@ async function request(path, { token, signal, ...options } = {}) {
 function toApiVendorType(vendorType) {
   const value = String(vendorType || "").trim();
 
-  if (value.toLowerCase() === "organization") {
+  if (value.toLowerCase() === "organizer" || value.toLowerCase() === "organization") {
     return "ORGANIZER";
   }
 
-  if (value.toLowerCase() === "individual") {
+  if (value.toLowerCase() === "supplier" || value.toLowerCase() === "individual") {
     return "SUPPLIER";
   }
 
@@ -369,8 +368,7 @@ function prepareVendorPayload(values = {}) {
     payload.code = codeVal;
   }
 
-  // Vendor write endpoints expect snake_case fields.
-  return toSnakeCaseApiPayload(payload);
+  return payload;
 }
 
 /*
