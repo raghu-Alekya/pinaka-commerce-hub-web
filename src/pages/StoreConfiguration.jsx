@@ -178,7 +178,7 @@ function StoreDetailsSummary({ store, merchant }) {
     <SummaryFields title="Store Details" subtitle="Basic information about this store." items={[
       ["Store Name", store.name], ["Store Code", store.storeCode || store.id],
       ["Merchant", merchant?.name || store.merchantName],
-      ["Store Type", typeof store.type === "object" ? store.type.name || store.type.code : store.type],
+      ["Store Type", store.storeTypeName || (typeof store.type === "object" ? store.type.name || store.type.storeTypeName || store.type.code : store.type)],
       ["Status", store.status], ["Currency", store.currency ? `${store.currency} (${store.currencySymbol || getCurrencySymbol(store.currency)})` : "—"],
     ]} />
     <SummaryFields title="Contact & Location" subtitle="Contact details and the store's physical location." items={[

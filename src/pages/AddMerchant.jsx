@@ -240,6 +240,20 @@ function resolvePhoneDetails(value, countries = [], preferredDialCode = "") {
   const normalizedDigits = raw.startsWith("00") ? digits.slice(2) : digits;
 
   if (hasInternationalForm) {
+    const addressCountry = countries.find((country) =>
+      [country.name, country.iso2, country.iso3].some(
+        (value) => String(value || "").trim().toLowerCase() === String(merchantCountry || "").trim().toLowerCase(),
+      ),
+    );
+    const addressDialCode = String(addressCountry?.phoneCode || addressCountry?.phone_code || addressCountry?.dialCode || "").replace(/\D/g, "");
+    if (addressCountry && addressDialCode && normalizedDigits.startsWith(addressDialCode)) {
+      return {
+        country: addressCountry,
+        dialCode: addressDialCode,
+        nationalNumber: normalizedDigits.slice(addressDialCode.length),
+      };
+    }
+
     const matches = countries
       .map((country) => ({
         country,

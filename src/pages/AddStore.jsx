@@ -127,15 +127,6 @@ function phoneInputValue(value, callingCode) {
   return dial && !digits.startsWith(dial) ? `${dial}${digits}` : digits;
 }
 
-function findInternationalPhoneCountry(phone, countries = []) {
-  const raw = String(phone || "").trim();
-  if (!raw.startsWith("+") && !raw.startsWith("00")) return null;
-  const digits = raw.replace(/\D/g, "");
-  return [...countries]
-    .filter((country) => country.phoneCode)
-    .sort((left, right) => String(right.phoneCode).length - String(left.phoneCode).length)
-    .find((country) => digits.startsWith(String(country.phoneCode).replace(/\D/g, ""))) || null;
-}
 const STEPS = [
   "Store Details",
   "Subscription",
@@ -153,6 +144,15 @@ const STEP_HINTS = [
   "Review and create store",
 ];
 const STANDARD_ACTIONS = ["View", "Create", "Edit", "Delete"];
+const normalizePermissionAction = (value) => {
+  const key = String(value || "").toLowerCase();
+  if (!key) return "";
+  if (/(view|read|list|get)/.test(key)) return "View";
+  if (/(create|add|insert)/.test(key)) return "Create";
+  if (/(edit|update|write|modify)/.test(key)) return "Edit";
+  if (/(delete|remove|destroy)/.test(key)) return "Delete";
+  return "";
+};
 const formatBillingLabel = (value) => {
   const key = String(value || "").trim().toUpperCase().replace(/[\s-]+/g, "_");
   const labels = {
@@ -382,15 +382,6 @@ const unwrapMerchant = (result) => {
     plan,
   };
 };
-const normalizePermissionAction = (value) => {
-  const key = String(value || "").toLowerCase();
-  if (!key) return "";
-  if (/(view|read|list|get)/.test(key)) return "View";
-  if (/(create|add|insert)/.test(key)) return "Create";
-  if (/(edit|update|write|modify)/.test(key)) return "Edit";
-  if (/(delete|remove|destroy)/.test(key)) return "Delete";
-  return "";
-};
 const levelForRole = (role) => {
   const scope = String(role?.scopeType || role?.level || "").toUpperCase();
   if (scope.includes("MERCHANT") || scope.includes("FULL"))
@@ -399,6 +390,16 @@ const levelForRole = (role) => {
   if (scope.includes("SALE") || scope.includes("CASH")) return "Sales";
   if (scope.includes("STORE")) return "Store";
   return role?.level || scope || "Custom";
+};
+const isDefaultPermissionRole = (role) => {
+  const scope = String(role?.scopeType || role?.level || "").trim().toUpperCase();
+  const identity = String(role?.name || role?.roleName || role?.roleCode || role?.code || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  if (!["admin", "merchant"].includes(identity)) return false;
+  // Admin and Merchant receive the same initial permission defaults for a store.
+  return !scope || scope.includes("STORE") || scope.includes("MERCHANT") || scope.includes("FULL");
 };
 const readMerchantSelectedTemplates = (response) => {
   const available = readAvailableRoleTemplates(response);
@@ -501,19 +502,13 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
     const available = Object.fromEntries(
       STANDARD_ACTIONS.map((action) => [action, true]),
     );
-    const rawPermissions = feature.permissions || feature.feature_permissions || feature.featurePermissions || [];
-    const permissions = Array.isArray(rawPermissions)
-      ? rawPermissions
-      : Object.entries(rawPermissions || {}).map(([name, allowed]) => ({ name, allowed }));
-    for (const permission of permissions) {
+    for (const permission of feature.permissions || []) {
       const action =
-        normalizePermissionAction(permission.name || permission.permission_name) ||
-        normalizePermissionAction(permission.permissionKey || permission.permission_key) ||
-        normalizePermissionAction(permission.action || permission.permission_type);
+        normalizePermissionAction(permission.name) ||
+        normalizePermissionAction(permission.permissionKey) ||
+        normalizePermissionAction(permission.action);
       if (!action) continue;
-      if ([permission.checked, permission.is_checked, permission.defaultAllowed,
-        permission.default_allowed, permission.allowed, permission.is_allowed,
-        permission.isAllowed].some(permissionAllowed))
+      if (permission.checked || permission.defaultAllowed)
         actions[action] = true;
     }
     matrix[name] = actions;
@@ -1843,19 +1838,26 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       .then((response) => {
         if (cancelled) return;
         const built = buildRolePermissionState(response, enabledFeatures);
-        const roleName =
-          roleDefinitions.find((role) => role.id === activeRole)?.name || "";
+        const roleDefinition = roleDefinitions.find((role) => role.id === activeRole);
+        const roleName = roleDefinition?.name || "";
         const matrix = applySavedRolePermissions(
           built.matrix,
           savedRolePermissions,
           activeRole,
           roleName,
         );
+        if (isDefaultPermissionRole(roleDefinition)) {
+          for (const feature of built.rows) {
+            if (!enabledFeatures.includes(feature.name) || !entitled(feature.name)) continue;
+            matrix[feature.name] = Object.fromEntries(
+              STANDARD_ACTIONS.map((action) => [action, true]),
+            );
+          }
+        }
         loadedRolePermissions.current.add(activeRole);
         setPermissions((current) => {
-          const next = { ...current, [activeRole]: matrix };
-          permissionsRef.current = next;
-          return next;
+          if (current[activeRole]) return current;
+          return { ...current, [activeRole]: matrix };
         });
         setPermissionAvailability((current) => ({
           ...current,
@@ -2008,13 +2010,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       timezone: COUNTRIES[country]?.zones[0] || "",
     }));
   };
-  useEffect(() => {
-    if (!editing || loading || locationOptions.loading) return;
-    const phoneCountry = findInternationalPhoneCountry(store.phone, locationOptions.locationRecords);
-    if (phoneCountry?.name && phoneCountry.name !== store.country) {
-      changeCountry(phoneCountry.name);
-    }
-  }, [editing, loading, locationOptions.loading, locationOptions.locationRecords, store.phone, store.country]);
   const copyScheduleToAll = () => {
     const base = hoursRef.current[0] || blankHours()[0];
     const hours = DAYS.map((day) => ({ ...base, day }));
@@ -3245,7 +3240,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <div className={`sf-field sf-phone-field${invalidStoreFields.has("Store Phone") ? " sf-field-invalid" : ""}`}>
               <label htmlFor="store-phone">Store Phone <span style={{ color: "#ef3340" }}>*</span></label>
               <PhoneInput
-                key={locationOptions.selectedCountry?.iso2 || "store-phone"}
                 country={locationOptions.selectedCountry?.iso2?.toLowerCase() || "in"}
                 enableSearch
                 countryCodeEditable={false}
@@ -3253,14 +3247,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 onChange={(value, data) => {
                   const nextIso2 = data?.countryCode?.toLowerCase() || locationOptions.selectedCountry?.iso2?.toLowerCase() || "in";
                   const currentIso2 = locationOptions.selectedCountry?.iso2?.toLowerCase() || "in";
-                  const dialCodeChanged = nextIso2 !== currentIso2;
+                  const countryChanged = nextIso2 !== currentIso2;
                   const digits = value.replace(/\D/g, "");
-                  updateStore("phone", !dialCodeChanged && digits ? `+${digits}` : "");
-                  const matchedAddressCountry = locationOptions.locationRecords.find(
+                  updateStore("phone", !countryChanged && digits ? `+${digits}` : "");
+                  const matchedCountry = locationOptions.locationRecords.find(
                     (country) => country.iso2?.toLowerCase() === nextIso2,
                   );
-                  if (matchedAddressCountry && store.country !== matchedAddressCountry.name) {
-                    changeCountry(matchedAddressCountry.name);
+                  if (countryChanged && matchedCountry && store.country !== matchedCountry.name) {
+                    changeCountry(matchedCountry.name);
                   }
                 }}
                 inputProps={{ id: "store-phone", name: "store-phone", type: "tel", autoComplete: "off", "aria-invalid": invalidStoreFields.has("Store Phone") }}
