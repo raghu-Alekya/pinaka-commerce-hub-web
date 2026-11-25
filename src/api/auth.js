@@ -46,7 +46,7 @@ function applyAuthResponse(data, remember = getRememberMe()) {
 
 export async function login(email, password, remember = false) {
   const attempts = [
-    "/api/v1/pos/auth/merchant-login",
+    "/api/v1/pos/auth/pch-merchant-login",
     "/api/v1/pos/auth/employee-console-login",
     endpoints.login,
   ];
@@ -69,7 +69,11 @@ export async function login(email, password, remember = false) {
       }
       return applyAuthResponse(data, remember);
     } catch (error) {
-      if (error instanceof ApiError && (error.status === 401 || error.status === 404)) {
+      const employeeLoginRequired = path === attempts[0]
+        && error instanceof ApiError
+        && error.status === 403
+        && /use employee console login/i.test(error.message || "");
+      if (error instanceof ApiError && (error.status === 401 || error.status === 404 || employeeLoginRequired)) {
         lastError = error;
         continue;
       }

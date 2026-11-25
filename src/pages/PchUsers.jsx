@@ -15,6 +15,7 @@ const PCH_ROLES = [
   ["ADMIN", "Admin"], ["OWNER", "Owner"],
   ["SUPER_ADMIN", "Super-admin"], ["AGENT", "Agent"],
 ];
+const CREATE_ROLES = PCH_ROLES.filter(([value]) => value !== "ADMIN");
 const EMPTY_FORM = {
   firstName: "",
   lastName: "",
@@ -218,7 +219,7 @@ export default function PchUsers() {
                 inputProps={{ name: "phoneNumber", required: true, autoComplete: "tel", "aria-label": "Phone number with country code" }} />
             </label>
             <label>Email Address<input type="email" autoComplete="email" maxLength={255} required value={form.email} onChange={(event) => setField("email", event.target.value)} placeholder="name@example.com" /></label>
-            <label>Role<select required value={form.role} onChange={(event) => setField("role", event.target.value)}><option value="" disabled>Select a role</option>{PCH_ROLES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+            <label>Role<select required value={form.role} onChange={(event) => setField("role", event.target.value)}><option value="" disabled>Select a role</option>{(editingUser ? PCH_ROLES : CREATE_ROLES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           </div>
         </section>
 

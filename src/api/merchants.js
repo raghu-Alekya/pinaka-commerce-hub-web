@@ -339,7 +339,7 @@ export function toFlatMerchantPayload(data) {
     tax,
     total_due_today: totalDueToday,
     payment_method: paymentMethod,
-    agentUserId: m.agentUserId || m.agent_user_id || data.agentUserId || null,
+    agent_user_id: m.agentUserId || m.agent_user_id || data.agentUserId || null,
   };
 }
 

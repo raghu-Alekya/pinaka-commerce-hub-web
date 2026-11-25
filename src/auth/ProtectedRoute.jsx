@@ -33,7 +33,9 @@ export default function ProtectedRoute({ children }) {
   if (user?.accountType === "merchant" || user?.accountType === "employee") {
     const ownMerchantIds = [user?.merchantId, user?.merchantCode].filter(Boolean).map(value => String(value).toLowerCase());
     const viewedMerchantId = new URLSearchParams(location.search).get("view");
-    const ownMerchantOverview = user?.accountType === "merchant" && location.pathname === "/merchants" && viewedMerchantId && ownMerchantIds.includes(viewedMerchantId.toLowerCase());
+    const ownMerchantOverview = location.pathname === "/merchants" && viewedMerchantId
+      && ownMerchantIds.includes(viewedMerchantId.toLowerCase())
+      && (user?.accountType === "merchant" || can("merchants", "view"));
     if (/^\/merchants(?:\/new|\/[^/]+\/edit)?\/?$/.test(location.pathname) && !ownMerchantOverview) {
       return <Navigate to="/dashboard" replace />;
     }

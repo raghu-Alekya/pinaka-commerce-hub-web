@@ -1,6 +1,7 @@
 import { isUuid, normalizeStoreForConfiguration } from "../api/storeDetails";
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { NavLink, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
 import { getMerchant } from "../api/merchants";
 import { getStoreCoupons } from "../api/storeCoupons";
@@ -260,6 +261,10 @@ function StoreCouponOverview({ merchantId, storeId }) {
 }
 
 export default function StoreConfiguration() {
+  const { user } = useAuth();
+  const canManageConnector = user?.accountType === "merchant"
+    || (!["employee", "merchant"].includes(String(user?.accountType || "").toLowerCase())
+      && ["OWNER", "ADMIN", "SUPER_ADMIN"].includes(String(user?.role || "").toUpperCase()));
   const {
     merchantId,
     storeId,
@@ -411,9 +416,7 @@ export default function StoreConfiguration() {
           setConnected(Boolean(saved.connected));
           setJwtConfigured(Boolean(saved.wordpressJwtConfigured || saved.jwtToken));
 
-          if (saved.lastTestMessage) {
-            setMessage(saved.lastTestMessage);
-          }
+          setMessage("");
         }
       } catch (err) {
         console.warn(
@@ -792,12 +795,12 @@ export default function StoreConfiguration() {
                   <div className="store-panel-heading">
                     <div><h2>Website Connection</h2><p>{editingSection ? "Update the website URL and JWT token for this store." : "View the saved JWT connection status."}</p></div>
                     <div className="store-panel-actions">
-                      {connected && <>
+                      {connected && canManageConnector && <>
                         <button type="button" className="sf-outline" onClick={handleSyncCategories} disabled={syncing || saving}>Sync Category</button>
                         <button type="button" className="sf-outline" onClick={handleSyncProducts} disabled={syncing || saving}>Sync Product</button>
                         <button type="button" className="sf-outline" onClick={handleSyncDiscounts} disabled={syncing || saving}>Sync Discount</button>
                       </>}
-                      {!editingSection && <button type="button" className="store-config-btn" onClick={() => {restoreConnection();setEditingSection(true);}}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
+                      {!editingSection && canManageConnector && <button type="button" className="store-config-btn" onClick={() => {restoreConnection();setEditingSection(true);}}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
                     </div>
                   </div>
                   {!editingSection ? (

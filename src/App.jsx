@@ -308,6 +308,7 @@ export default function App() {
         {/* Users and POS */}
         <Route path="/users" element={<Users />} />
         <Route path="/pch-users" element={<PchUsers />} />
+        <Route path="/access" element={<AccessPermissions />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
         {/* Employees */}
         <Route path="/employees" element={<Employees />} />
