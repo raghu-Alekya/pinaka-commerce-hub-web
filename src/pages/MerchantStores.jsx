@@ -51,7 +51,7 @@ function toStoreRow(store, subscription) {
     uuid: storeUuid,
     storeId: storeCode,
     storeCode,
-    name: store.storeName || store.name || "Unnamed Store",
+    name: store.storeName || store.store_name || store.name || store.displayName || store.display_name || "Unnamed Store",
     type,
     storeType: type,
     location: location || "—",
