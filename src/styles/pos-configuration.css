@@ -1083,14 +1083,15 @@
     border: 0;
     border-radius: 3px;
 
-    background: #4b83b4;
+    background: #5143bc;
+    border: 1px solid #5143bc;
 
     color: #ffffff;
 
     font-family: "Inter", sans-serif;
 
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 13px !important;
+    font-weight: 500 !important;
 
     cursor: pointer;
 }
@@ -2008,7 +2009,7 @@
 
     padding: 0 16px;
 
-    border: 1px solid #d9e1f0;
+    border: 1px solid #5143bc;
     border-radius: 6px;
 
     background: #ffffff;
@@ -2017,8 +2018,8 @@
 
     font-family: inherit;
 
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 13px !important;
+    font-weight: 500 !important;
 
     cursor: pointer;
 }
@@ -2046,8 +2047,8 @@
 
     font-family: inherit;
 
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 13px !important;
+    font-weight: 500 !important;
 
     cursor: pointer;
 }
@@ -2842,14 +2843,14 @@
 
     font-family: inherit;
 
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 13px !important;
+    font-weight: 500 !important;
 
     cursor: pointer;
 }
 
 .service-charge-cancel-button {
-    border: 1px solid #d9e1f0;
+    border: 1px solid #5143bc;
 
     background: #ffffff;
 
@@ -3457,14 +3458,14 @@
 
     font-family: inherit;
 
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 13px !important;
+    font-weight: 500 !important;
 
     cursor: pointer;
 }
 
 .cashback-cancel-button {
-    border: 1px solid #d9e1f0;
+    border: 1px solid #5143bc;
 
     background: #ffffff;
 
@@ -3841,14 +3842,14 @@
 
     font-family: inherit;
 
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 13px !important;
+    font-weight: 500 !important;
 
     cursor: pointer;
 }
 
 .opening-balance-back {
-    border: 1px solid #d9e1f0;
+    border: 1px solid #5143bc;
 
     background: #ffffff;
 
@@ -4610,13 +4611,13 @@
     align-items: center; 
     justify-content: center; 
     padding: 8px 16px; 
-    border: 1px solid #d9e2ef; 
+    border: 1px solid #5143bc; 
     border-radius: 6px; 
     background: white; 
     color: #5143BC; 
     font: inherit; 
-    font-size: 12px; 
-    font-weight: 600; 
+    font-size: 13px !important; 
+    font-weight: 500 !important; 
     cursor: pointer; 
 }
 .pc-button:hover:not(:disabled) { 
@@ -4727,7 +4728,7 @@
 .pc-field:focus-within > .pch-filter-dropdown > .pch-filter-trigger { transform: translateY(-1px); }
 .pc-field input:focus, .pc-field select:focus { transform: translateY(-1px); box-shadow: 0 0 0 3px rgba(81, 67, 188, 0.08); }
 .pc-screen input:disabled, .pc-screen input:read-only { background: #f3f6fa; color: #708096; }
-.pc-switch-field { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 40px; font-size: 12px; font-weight: 600; color: #475c78; cursor: pointer; }
+.pc-switch-field { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 40px; font-size: 13px !important; font-weight: 600; color: #475c78; cursor: pointer; }
 .pc-switch-field input { position: absolute; right: 0; width: 38px; height: 24px; opacity: 0; }
 .pc-switch-track { width: 36px; height: 21px; flex: 0 0 36px; border-radius: 20px; background: #bac6d6; transition: background .15s; pointer-events: none; }
 .pc-switch-track::after { content: ''; display: block; width: 15px; height: 15px; margin: 3px; border-radius: 50%; background: white; box-shadow: 0 1px 3px #17233e30; transition: transform .15s; }
@@ -4749,7 +4750,7 @@
 .cash-register-editor .pc-field > span { color: #173d70; }
 .cash-register-editor input:not([type=checkbox]) { min-height: 44px; }
 .cash-register-editor-actions { gap: 12px; margin-top: 20px; padding-top: 8px; }
-.cash-register-editor-actions .pc-button { min-width: 180px; height: 44px; border-radius: 7px; font-size: 14px; font-weight: 500; }
+.cash-register-editor-actions .pc-button { min-width: 120px; height: 40px; border-radius: 7px; font-size: 14px !important; font-weight: 500; }
 .pc-table-wrap { width: 100%; overflow-x: auto; border: 1px solid #e0e7f1; border-radius: 7px; }
 .pc-table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 12px; text-align: left; }
 .pc-table thead { background: #f1f3fd; }
@@ -5294,7 +5295,7 @@
 .pc-promo-name { display: block; overflow: hidden; margin-top: 6px; color: #687894; text-overflow: ellipsis; white-space: nowrap; }
 .pc-promo-remove { margin-top: 8px; border: 0; background: transparent; color: #d92d20; font: inherit; cursor: pointer; }
 .pc-promo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 28px; }
-.pc-promo-actions > .pc-button, .pc-promo-url > .pc-button { min-height: 48px; padding: 11px 20px; border-color: #6957d5; color: #5143bc; font-size: 13px; }
+.pc-promo-actions > .pc-button, .pc-promo-url > .pc-button { min-height: 40px; padding: 11px 20px; border-color: #6957d5; color: #5143bc; font-size: 13px; }
 .pc-promo-screen .pc-promo-actions > .pc-button.pc-primary,
 .pc-promo-screen .pc-promo-url > .pc-button.pc-primary { border-color: #5143bc; background: #5143bc; color: #fff; gap: 8px; }
 .pc-promo-screen .pc-promo-actions > .pc-button.pc-primary:hover:not(:disabled),

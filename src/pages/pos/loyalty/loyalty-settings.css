@@ -47,14 +47,15 @@
     gap:8px;
     border-radius:8px;
     padding:10px 16px;
-    font-weight:600;
-    font-size:14px;
+    font-weight:500;
+    font-size:13px;
     cursor:pointer
 }
 .loyalty-back-button,.loyalty-cancel{
-    border:1px solid #d7deec;
+    border:1px solid #5143bc;
     background:#fff;
-    color:#43536f
+    color:#5143bc;
+    min-width: 100px;
 }
 .loyalty-tabs{
     display:flex;
@@ -330,7 +331,7 @@
     border:1px solid #5143bc;
     background:#5143bc;
     color:#fff;
-    min-width:140px
+    min-width:120px
 }
 .loyalty-save:disabled,.loyalty-cancel:disabled{
     opacity:.65;

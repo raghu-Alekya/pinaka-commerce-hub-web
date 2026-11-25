@@ -285,7 +285,7 @@ export function LoyaltySettings() {
               <ToggleField label="Allow Loyalty with Coupons?" name="allow_with_coupons" checked={settings.allow_with_coupons} onChange={updateField} help="Customers can earn loyalty points when coupons are applied." />
             </div>
           </section>
-          <div className="loyalty-form-actions"><button type="button" className="loyalty-cancel" onClick={reset}>Reset</button><button type="submit" className="loyalty-save">Enable Loyalty &amp; Save Settings</button></div>
+          <div className="loyalty-form-actions"><button type="button" className="loyalty-cancel" onClick={reset}>Reset</button><button type="submit" className="loyalty-save">Save Settings</button></div>
             </form>
           )}
         </>
