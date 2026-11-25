@@ -203,7 +203,7 @@ const handlePageSizeChange = (size) => {
         `${s.storeName} ${displayStoreId(s)}`
           .toLowerCase()
           .includes(query.toLowerCase())) &&
-      (!merchant || String(s.merchantId) === String(merchant)) &&
+      (!merchant || [s.merchantId, s.merchant_id, s.merchantCode, s.merchant_code].some((value) => value && String(value) === String(merchant)) || merchants.some((m) => String(m.id) === String(merchant) && [m.id, m.merchantId, m.merchantCode, m.uuid].some((value) => value && String(value) === String(s.merchantId)))) &&
       (!status || s.status === status) &&
       (!location || locationOf(s) === location),
   );

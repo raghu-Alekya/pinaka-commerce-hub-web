@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Eye, EyeOff, Pencil } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+import { isPchAgent } from "../auth/permissions";
 import {
   createMerchant,
   getMerchant,
@@ -8,6 +10,7 @@ import {
   updateMerchant,
 } from "../api/merchants";
 import { listPlans } from "../api/plans";
+import { listPchUsers } from "../api/pchUsers";
 import { useLocationOptions } from "../data/useLocationOptions";
 import { storeTypesApi } from "../api/storeTypes";
 import FilterDropdown from "../components/FilterDropdown";
@@ -41,6 +44,7 @@ const blankMerchant = () => ({
   state: "",
   postal: "",
   country: "India",
+  agentUserId: "",
 });
 
 function merchantDetailToDraft(result, fallback = {}) {
@@ -82,6 +86,7 @@ function merchantDetailToDraft(result, fallback = {}) {
       business: field(raw.legalBusinessName, raw.legal_business_name, raw.businessName, raw.business_name, fallback.name),
       display: field(raw.businessDisplayName, raw.business_display_name, raw.display, raw.businessName, raw.business_name, raw.name, fallback.name),
       email: field(raw.email, raw.merchantEmail, raw.merchant_email, fallback.email),
+      agentUserId: field(raw.agent_user_id, raw.agentUserId, fallback.agentUserId),
       password: field(raw.actual_password, raw.actualPassword, raw.password),
       phone: normalizePhone(phone),
       addressLine1: addressField(raw.addressLine1, raw.address_line_1, raw.address_line1, typeof address === "object" && (address.addressLine1 || address.address_line1 || address.street || address.streetAddress)),
@@ -332,6 +337,8 @@ export default function AddMerchant({ localMerchants = [], onSave }) {
 }
 
 function MerchantEditor({ merchantId, localMerchants, onSave }) {
+  const { user } = useAuth();
+  const agentLogin = isPchAgent(user);
   const navigate = useNavigate();
   const location = useLocation();
   const selected = merchantId
@@ -345,6 +352,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   );
   const locationOptions = useLocationOptions(merchant);
   const [plans, setPlans] = useState([]);
+  const [agents, setAgents] = useState([]);
   const [planId, setPlanId] = useState(selected?._onboarding?.planId || "");
   const [cycle, setCycle] = useState(normalizeCycle(selected?._onboarding?.cycle || "Monthly"));
   const [start, setStart] = useState(selected?._onboarding?.start || today());
@@ -406,6 +414,15 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     }).catch(() => {});
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (agentLogin) return undefined;
+    let active = true;
+    listPchUsers().then((users) => {
+      if (active) setAgents(users.filter((user) => user.role === "AGENT" && user.status === "ACTIVE"));
+    }).catch(() => { if (active) setAgents([]); });
+    return () => { active = false; };
+  }, [agentLogin]);
 
   useEffect(() => {
     if (!plans.length) return;
@@ -572,6 +589,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       start,
       renewalDate: renewalDate(start, cycle),
       agreementPrice: total,
+      agentUserId: agentLogin ? user?.id || null : merchant.agentUserId || null,
       tax: Math.round(total * (TAX_RATE / 100) * 100) / 100,
       totalDueToday: Math.round(total * (1 + TAX_RATE / 100) * 100) / 100,
       paymentMethod: paymentMethod.toUpperCase(),
@@ -691,6 +709,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
               <Field label="Address Line 1 *" placeholder="Enter street address" value={merchant.addressLine1} required error={fieldErrors.addressLine1} onChange={(v) => updateField("addressLine1", v)} />
               <Field label="Address Line 2" placeholder="Apartment, suite, etc. (optional)" value={merchant.addressLine2} onChange={(v) => updateField("addressLine2", v)} />
               <Field label="ZIP / Postal Code *" placeholder="Enter ZIP or postal code" value={merchant.postal} required error={fieldErrors.postal} onChange={(v) => updateField("postal", v)} />
+              {agentLogin ? <Select label="Assigned Agent" value={user?.id || ""} options={[{ value: user?.id || "", label: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || user?.name || user?.email || "My account" }]} onChange={() => {}} disabled /> : <Select label="Assigned Agent" value={merchant.agentUserId || ""} placeholder="Select agent (optional)" options={agents.map((agent) => ({ value: agent.id, label: `${agent.firstName || ""} ${agent.lastName || ""}`.trim() || agent.username || agent.email }))} onChange={(v) => updateField("agentUserId", v)} />}
             </div></Panel>
             {error && <div className="pch-error" role="alert">{error}</div>}
             <div className="pch-footerbar"><button type="button" disabled={submitting} onClick={cancel}>Back</button><button className="pch-primary" type="button" disabled={submitting} onClick={continueStep}>Continue</button></div>

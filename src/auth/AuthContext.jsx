@@ -14,7 +14,7 @@ import {
   setRememberMe,
   setStoredUser,
 } from "./tokenStore";
-import { can as userCan, isUnrestricted } from "./permissions";
+import { can as userCan, isPchAgent, isUnrestricted } from "./permissions";
 
 const AuthContext = createContext(null);
 
@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
         }
 
         let nextUser = getStoredUser();
-        if (nextUser && !nextUser.accountType && !isUnrestricted(nextUser)) {
+        if (nextUser && !nextUser.accountType && !isUnrestricted(nextUser) && !isPchAgent(nextUser)) {
           throw new Error("An unscoped session must sign in again");
         }
         if (nextUser?.accountType) {

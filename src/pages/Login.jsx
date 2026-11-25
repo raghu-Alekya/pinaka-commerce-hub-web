@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/http";
+import { isPchAgent } from "../auth/permissions";
 
 export default function Login() {
   const nav = useNavigate();
@@ -30,8 +31,8 @@ export default function Login() {
     setSubmitting(true);
 
     try {
-      await login(email.trim(), password, remember);
-      nav(redirectTo, { replace: true });
+      const session = await login(email.trim(), password, remember);
+      nav(isPchAgent(session?.user) ? "/merchants" : redirectTo, { replace: true });
     } catch (err) {
       const message =
         err instanceof ApiError

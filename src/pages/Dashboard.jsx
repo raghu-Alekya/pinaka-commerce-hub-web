@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { listStores } from "../api/stores";
+import { listMerchants } from "../api/merchants";
+import { isPchAgent } from "../auth/permissions";
 import { listEmployees } from "../api/employees";
 import { listSubscriptions, mapSubscriptionToRow } from "../api/subscriptions";
 import {
@@ -317,24 +319,29 @@ function SectionHeader({
    DASHBOARD
 ========================================================= */
 
-function MerchantDashboard() {
+function MerchantDashboard({ agent = false }) {
   const nav = useNavigate();
   const [counts, setCounts] = useState({});
 
   useEffect(() => {
     let active = true;
-    Promise.allSettled([listStores(), listEmployees(), listSubscriptions()]).then((results) => {
+    Promise.allSettled([
+      ...(agent ? [listMerchants()] : []),
+      listStores(), listEmployees(), listSubscriptions(),
+    ]).then((results) => {
       if (!active) return;
       const rows = results.map((result, index) => {
         if (result.status !== "fulfilled") return null;
         const value = result.value;
-        if (index === 0) return value?.stores ?? [];
-        if (index === 1) return value;
+        const sourceIndex = index - (agent ? 1 : 0);
+        if (sourceIndex === -1) return value;
+        if (sourceIndex === 0) return value?.stores ?? [];
+        if (sourceIndex === 1) return value;
         const subscriptions = Array.isArray(value) ? value : value?.subscriptions ?? value?.data?.subscriptions ?? [];
         return (Array.isArray(subscriptions) ? subscriptions : []).map((subscription) => mapSubscriptionToRow(subscription));
       });
       const next = {};
-      ["Stores", "Employees", "Subscriptions"].forEach((label, index) => {
+      [...(agent ? ["Merchants"] : []), "Stores", "Employees", "Subscriptions"].forEach((label, index) => {
         if (!Array.isArray(rows[index])) return;
         const total = rows[index].length;
         const activeCount = rows[index].filter((row) => String(row.status || "").toUpperCase() === "ACTIVE").length;
@@ -343,9 +350,10 @@ function MerchantDashboard() {
       setCounts(next);
     });
     return () => { active = false; };
-  }, []);
+  }, [agent]);
 
   const cards = [
+    ...(agent ? [{ label: "Merchants", icon: "bi-shop", tone: "purple", path: "/merchants" }] : []),
     { label: "Stores", icon: "bi-buildings", tone: "green", path: "/stores" },
     { label: "Employees", icon: "bi-people", tone: "orange", path: "/employees" },
     { label: "Subscriptions", icon: "bi-credit-card-2-front", tone: "purple", path: "/subscriptions" },
@@ -354,7 +362,7 @@ function MerchantDashboard() {
   return (
     <div className="page-content super-admin-dashboard merchant-dashboard">
       <div className="super-dashboard-head">
-        <div><h1>Merchant Dashboard</h1><p>Overview of your stores, employees, and subscriptions</p></div>
+        <div><h1>{agent ? "Agent Dashboard" : "Merchant Dashboard"}</h1><p>{agent ? "Overview of your assigned merchants, stores, employees, and subscriptions" : "Overview of your stores, employees, and subscriptions"}</p></div>
       </div>
       <section className="dashboard-kpis">
         {cards.map((card) => (
@@ -380,7 +388,7 @@ function MerchantDashboard() {
 export default function Dashboard() {
   const nav = useNavigate();
   const { user } = useAuth();
-  const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee";
+  const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee" || isPchAgent(user);
 
   const [health, setHealth] = useState(defaultHealth);
   const [features, setFeatures] = useState(defaultFeatures);
@@ -456,7 +464,7 @@ export default function Dashboard() {
   const kpis = buildKpis(administrationOverview).filter((item) => !scopedToMerchant || item.label !== "Merchants");
   const adminModules = buildAdminModules(administrationOverview).filter((module) => !scopedToMerchant || module.path !== "/merchants");
 
-  if (scopedToMerchant) return <MerchantDashboard />;
+  if (scopedToMerchant) return <MerchantDashboard agent={isPchAgent(user)} />;
 
   return (
     <div className="page-content super-admin-dashboard">

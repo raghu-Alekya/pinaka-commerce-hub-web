@@ -46,7 +46,7 @@ function applyAuthResponse(data, remember = getRememberMe()) {
 
 export async function login(email, password, remember = false) {
   const attempts = [
-    "/api/v1/pos/auth/merchant-login",
+    "/api/v1/pos/auth/pch-merchant-login",
     "/api/v1/pos/auth/employee-console-login",
     endpoints.login,
   ];
@@ -62,13 +62,18 @@ export async function login(email, password, remember = false) {
       if (path === endpoints.login) {
         const fallbackUser = unwrapAuthPayload(data)?.user;
         const role = String(fallbackUser?.role || "").toUpperCase();
-        if (!fallbackUser?.accountType && !["OWNER", "ADMIN", "SUPER_ADMIN"].includes(role)) {
+        const platformAgent = role === "AGENT" && !fallbackUser?.accountId && !fallbackUser?.merchantId && !fallbackUser?.employeeId;
+        if (!fallbackUser?.accountType && !["OWNER", "ADMIN", "SUPER_ADMIN"].includes(role) && !platformAgent) {
           throw new ApiError("Use your merchant or employee console login.", 403, data);
         }
       }
       return applyAuthResponse(data, remember);
     } catch (error) {
-      if (error instanceof ApiError && (error.status === 401 || error.status === 404)) {
+      const employeeLoginRequired = path === attempts[0]
+        && error instanceof ApiError
+        && error.status === 403
+        && /use employee console login/i.test(error.message || "");
+      if (error instanceof ApiError && (error.status === 401 || error.status === 404 || employeeLoginRequired)) {
         lastError = error;
         continue;
       }

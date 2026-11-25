@@ -107,14 +107,6 @@ export async function apiRequest(
   const payload = body !== undefined ? body : undefined;
   const isFormData = payload instanceof FormData;
 
-  console.log("[API REQUEST]", {
-    method,
-    url: requestUrl,
-    path,
-    payload,
-    authenticated: Boolean(token),
-  });
-
   const response = await fetch(requestUrl, {
     method,
     credentials: "include",
@@ -130,14 +122,6 @@ export async function apiRequest(
   });
 
   const data = await parseBody(response);
-
-  console.log("[API RESPONSE]", {
-    method,
-    url: requestUrl,
-    status: response.status,
-    ok: response.ok,
-    data,
-  });
 
   if (
     response.status === 401 &&
@@ -163,12 +147,6 @@ export async function apiRequest(
     const message =
       (data && (data.message || data.error)) ||
       `Request failed with status ${response.status}`;
-    console.error("[API ERROR DETAILS]", {
-      method,
-      url: requestUrl,
-      status: response.status,
-      body: data,
-    });
     throw new ApiError(
       Array.isArray(message) ? message.join(", ") : message,
       response.status,
