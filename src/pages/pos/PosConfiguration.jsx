@@ -17,6 +17,7 @@ import { PrinterSettings } from "./printer-settings/PrinterSettings";
 import { CustomerDisplayPromotionalImages } from "./customer-display-promotional-images/promotional_images";
 import { LoyaltySettings } from "./loyalty/LoyaltySettings";
 import { FunctionalitySettings } from "./pos/functionality-settings/FunctionalitySettings";
+import EmailSettings from "./email-settings/EmailSettings";
 import { getPosCashRegisters } from "./cash-registers/api";
 import { getPosTerminalMappings } from "./terminal-mappings/api";
  
@@ -145,6 +146,15 @@ const configurationCards = [
         title: "Functionality Settings",
         description: "Enable or disable POS functions for this store.",
         component: "functionality-settings",
+        enabled: true,
+    },
+    {
+        id: "email-settings",
+        icon: "envelope",
+        iconClass: "purple",
+        title: "Email Settings",
+        description: "Configure email notifications and delivery settings for this store.",
+        component: "email-settings",
         enabled: true,
     },
 ];
@@ -308,6 +318,9 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
  
             case "functionality-settings":
                 return <FunctionalitySettings />;
+
+            case "email-settings":
+                return <EmailSettings />;
  
             default:
                 return null;
@@ -329,7 +342,7 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
         </PosSettingsContext.Provider>
     );
 }
- 
+
     return (
         <div className="page-content pos-page-content">
             <div className="page-header pos-config-page-header">
