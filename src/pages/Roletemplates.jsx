@@ -89,7 +89,24 @@ export default function RoleTemplates() {
     try {
       const response = await roleTemplatesApi.getAll();
       const items = readRoleTemplatesList(response);
-      const validItems = items.filter((item) => item?.id != null);
+      const validItems = items
+        .filter((item) => item?.id != null || item?.role_template_id != null)
+        .map((item) => ({
+          ...item,
+          id: item.id ?? item.role_template_id,
+          roleCode: item.roleCode ?? item.role_code ?? item.code ?? "",
+          name: item.name ?? item.role_name ?? item.template_name ?? "",
+          description: item.description ?? item.role_description ?? "",
+          status:
+            item.status ??
+            (typeof item.is_active === "boolean"
+              ? item.is_active
+                ? "ACTIVE"
+                : "INACTIVE"
+              : item.is_active ?? "ACTIVE"),
+          createdAt: item.createdAt ?? item.created_at ?? item.created_date,
+          updatedAt: item.updatedAt ?? item.updated_at ?? item.updated_date,
+        }));
       setTemplates(validItems);
 
       // When we are not editing, generate the next code for the blank form

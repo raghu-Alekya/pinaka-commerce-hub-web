@@ -58,12 +58,23 @@ function merchantDetailToDraft(result, fallback = {}) {
   const field = (...values) => values.find((value) => value !== undefined && value !== null && value !== "") ?? "";
   const addressField = (...values) => field(...values, typeof address === "string" ? address : "");
   const phone = [
-    raw.phone, raw.phoneNumber, raw.phone_number, raw.merchantPhoneNumber, raw.merchant_phone_number,
-    raw.merchant_phone, raw.contactNo, raw.contact_no, raw.contactNumber,
-    contact.phone, contact.phoneNumber, contact.phone_number, fallback.phone, fallback.phoneNumber,
+    raw.merchantPhoneNumber, raw.merchant_phone_number, raw.merchant_phone,
+    contact.phone, contact.phoneNumber, contact.phone_number, contact.contactNo, contact.contact_no,
+    raw.phone, raw.phoneNumber, raw.phone_number, raw.contactNo, raw.contact_no, raw.contactNumber,
+    fallback?._onboarding?.merchant?.phone, fallback.phone, fallback.phoneNumber,
     fallback.merchantPhoneNumber, fallback.merchant_phone_number, fallback.contactNumber,
   ].filter((value) => value != null && String(value).trim() !== "")
     .sort((left, right) => String(right).replace(/\D/g, "").length - String(left).replace(/\D/g, "").length)[0] || "";
+  const phoneDialCode = field(
+    raw.phoneDialCode, raw.phone_dial_code, raw.dialCode, raw.dial_code,
+    contact.phoneDialCode, contact.phone_dial_code, contact.dialCode, contact.dial_code,
+    fallback?._onboarding?.merchant?.phoneDialCode, fallback.phoneDialCode, fallback.phone_dial_code,
+  );
+  const phoneCountry = field(
+    raw.phoneCountry, raw.phone_country, raw.phoneCountryCode, raw.phone_country_code,
+    contact.phoneCountry, contact.phone_country, contact.phoneCountryCode, contact.phone_country_code,
+    fallback?._onboarding?.merchant?.phoneCountry, fallback.phoneCountry, fallback.phone_country,
+  );
   return {
     merchant: {
       ...blankMerchant(),
@@ -85,6 +96,8 @@ function merchantDetailToDraft(result, fallback = {}) {
       postal: field(raw.postalCode, raw.postal_code, raw.pinCode, raw.pin_code, address.zipCode, address.zip_code, address.postalCode),
       country: field(raw.country, address.country),
     },
+    phoneDialCode: String(phoneDialCode || "").replace(/\D/g, ""),
+    phoneCountry: String(phoneCountry || "").toLowerCase(),
     planId,
     planName: field(subscription.planName, subscription.plan_name, subscription.planCode, subscription.plan_code, subscription.plan?.name, raw.plan, fallback.plan),
     cycle: normalizeCycle(subscription.billingCycle || subscription.billing_cycle || raw.billingCycle || raw.billing_cycle),
@@ -222,9 +235,10 @@ function phoneInputValue(value, phoneCode) {
   return `${callingCode}${internationalDigits}`;
 }
 
-// New records carry an explicit international prefix. For older national-only
-// values, use the saved merchant country as the fallback phone country.
-function resolvePhoneDetails(value, countries = [], merchantCountry = "") {
+// Merchant APIs may return a national `phone` and an international `contact_no`
+// without a leading '+'. Resolve the phone country from the international prefix,
+// independently of the merchant's business-address country.
+function resolvePhoneDetails(value, countries = [], preferredDialCode = "") {
   const raw = String(value || "").trim();
   const digits = raw.replace(/\D/g, "");
   const hasInternationalForm = raw.startsWith("+") || raw.startsWith("00");
@@ -245,12 +259,17 @@ function resolvePhoneDetails(value, countries = [], merchantCountry = "") {
     }
   }
 
-  const country = countries.find((item) => [item.name, item.iso2, item.iso3]
-    .some((value) => String(value || "").toLowerCase() === String(merchantCountry || "").toLowerCase()));
-  if (!hasInternationalForm && country) {
-    const dialCode = String(country.phoneCode || country.phone_code || country.dialCode || "").replace(/\D/g, "");
-    if (dialCode) return { country, dialCode, nationalNumber: digits };
+  const preferred = String(preferredDialCode || "").replace(/\D/g, "");
+  if (preferred) {
+    const country = countries.find((item) =>
+      String(item.phoneCode || item.phone_code || item.dialCode || "").replace(/\D/g, "") === preferred,
+    );
+    if (country) return { country, dialCode: preferred, nationalNumber: digits };
   }
+
+  // Never infer the phone country from the merchant's address country.
+  // A national-only number has no reliable country prefix, so leave its
+  // country unresolved instead of displaying a potentially incorrect flag.
   return { country: null, dialCode: "", nationalNumber: digits };
 }
 
@@ -332,8 +351,12 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const [fieldErrors, setFieldErrors] = useState({});
   // For edit mode, wait for the saved international phone value to identify
   // the phone country. Do not default every merchant to India.
-  const [phoneCountry, setPhoneCountry] = useState(merchantId ? "" : "in");
-  const [phoneDialCode, setPhoneDialCode] = useState(merchantId ? "" : "91");
+  const [phoneCountry, setPhoneCountry] = useState(
+    selected?._onboarding?.merchant?.phoneCountry || selected?.phoneCountry || (merchantId ? "" : "in"),
+  );
+  const [phoneDialCode, setPhoneDialCode] = useState(
+    selected?._onboarding?.merchant?.phoneDialCode || selected?.phoneDialCode || (merchantId ? "" : "91"),
+  );
   const [submitting, setSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [saved, setSaved] = useState(null);
@@ -341,7 +364,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
   const phoneCountryInitializedRef = useRef(false);
   useEffect(() => {
     if (locationOptions.loading || !locationOptions.locationRecords.length || loading || phoneCountryInitializedRef.current) return;
-    const resolved = resolvePhoneDetails(merchant.phone, locationOptions.locationRecords, merchant.country);
+    const resolved = resolvePhoneDetails(merchant.phone, locationOptions.locationRecords, phoneDialCode);
     if (resolved.country?.iso2) setPhoneCountry(resolved.country.iso2.toLowerCase());
     if (resolved.dialCode) setPhoneDialCode(resolved.dialCode);
     if (resolved.country?.name && resolved.country.name !== merchant.country) {
@@ -351,13 +374,14 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       setMerchant((current) => ({ ...current, phone: resolved.nationalNumber }));
     }
     phoneCountryInitializedRef.current = true;
-  }, [locationOptions.loading, locationOptions.locationRecords.length, loading]);
+  }, [locationOptions.loading, locationOptions.locationRecords.length, loading, phoneDialCode]);
   useEffect(() => {
     const canonicalCountry = locationOptions.selectedCountry?.name;
     if (!canonicalCountry || merchant.country === canonicalCountry) return;
     setMerchant((current) => current.country === canonicalCountry ? current : { ...current, country: canonicalCountry });
   }, [locationOptions.selectedCountry?.name, merchant.country]);
   const editing = Boolean(merchantId);
+  const currentDraftSnapshot = JSON.stringify({ merchant, phoneCountry, phoneDialCode, planId, cycle, start, paymentMethod });
   const cancel = () => {
     if (submitting) return;
     navigate("/merchants");
@@ -437,10 +461,18 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       const draft = merchantDetailToDraft(result, selected || result.merchant);
       // Use the detailed API phone value. List-row phone values may be
       // national-only and must not overwrite the international number.
-      const resolvedPhone = resolvePhoneDetails(draft.merchant.phone, locationOptions.locationRecords, draft.merchant.country);
-      if (resolvedPhone.country?.iso2) setPhoneCountry(resolvedPhone.country.iso2.toLowerCase());
-      if (resolvedPhone.dialCode) setPhoneDialCode(resolvedPhone.dialCode);
-      if (resolvedPhone.country?.name) draft.merchant.country = resolvedPhone.country.name;
+      const resolvedPhone = resolvePhoneDetails(draft.merchant.phone, locationOptions.locationRecords, draft.phoneDialCode);
+      const savedCountryKey = String(draft.phoneCountry || "").trim().toLowerCase();
+      const savedDialDigits = savedCountryKey.replace(/\D/g, "");
+      const metadataCountry = locationOptions.locationRecords.find((country) =>
+        [country.iso2, country.iso3, country.name].some((value) => String(value || "").trim().toLowerCase() === savedCountryKey) ||
+        (savedDialDigits && String(country.phoneCode || country.phone_code || country.dialCode || "").replace(/\D/g, "") === savedDialDigits),
+      );
+      if (metadataCountry?.iso2) setPhoneCountry(metadataCountry.iso2.toLowerCase());
+      else if (/^[a-z]{2}$/i.test(savedCountryKey)) setPhoneCountry(savedCountryKey);
+      else if (resolvedPhone.country?.iso2) setPhoneCountry(resolvedPhone.country.iso2.toLowerCase());
+      const dialCode = draft.phoneDialCode || resolvedPhone.dialCode || metadataCountry?.phoneCode || metadataCountry?.phone_code || "";
+      if (dialCode) setPhoneDialCode(String(dialCode).replace(/\D/g, ""));
       if (resolvedPhone.nationalNumber) draft.merchant.phone = resolvedPhone.nationalNumber;
       phoneCountryInitializedRef.current = true;
       setMerchant(draft.merchant);
@@ -534,15 +566,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     setError("");
     setSubmitting(true);
     const data = {
-      merchant: {
-        ...merchant,
-        countryCode: locationOptions.selectedCountry?.iso3 || merchant.country,
-        phoneDialCode,
-        phone: merchant.phone && phoneDialCode
-          ? `+${phoneDialCode}${String(merchant.phone).replace(/\D/g, "")}`
-          : merchant.phone,
-        name: [merchant.firstName, merchant.lastName].filter(Boolean).join(" "),
-      },
+      merchant: { ...merchant, countryCode: locationOptions.selectedCountry?.iso3 || merchant.country, phoneDialCode, phoneCountry, name: [merchant.firstName, merchant.lastName].filter(Boolean).join(" ") },
       password: String(merchant.password || "") || undefined,
       planId: plan.id,
       planDetails: plan,
@@ -565,6 +589,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
       const code = raw?.merchantCode || raw?.merchant_code || raw?.code || merchant.code;
       const row = onboardingToRow({ ...data, merchant: { ...merchant, code } });
       const mapped = mapMerchantToRow(response);
+      const apiMerchant = response?.merchant || response?.data?.merchant || response?.data || response;
+      row.createdAt = mapped?.createdAt || apiMerchant?.createdAt || apiMerchant?.created_at || selected?.createdAt || row.createdAt;
+      row.updatedAt = apiMerchant?.updatedAt || apiMerchant?.updated_at || apiMerchant?.updatedOn || apiMerchant?.updated_on || apiMerchant?.updatedDate || apiMerchant?.updated_date || response?.updatedAt || response?.updated_at || new Date().toISOString();
+      row.phoneDialCode = phoneDialCode;
+      row.phoneCountry = phoneCountry;
       row.id = selected?.id || raw?.id || raw?.merchantId || raw?._id || response?.merchantId || code;
       row.merchantId = raw?.merchantId || raw?.id || raw?._id || response?.merchantId || row.id;
       row.name = mapped?.name || row.name;

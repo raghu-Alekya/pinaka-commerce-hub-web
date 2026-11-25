@@ -6,7 +6,10 @@ import { isPchAdmin, isPchAgent, MENU_MODULES } from "../auth/permissions";
 const sections = [
   {
     title: "",
-    items: [["/dashboard", "bi-house-fill", "Dashboard"]],
+    items: [
+      ["/dashboard", "bi-house-fill", "Dashboard"],
+      ["/merchant-dashboard", "bi-graph-up-arrow", "Sales Dashboard"],
+    ],
   },
   {
     title: "MANAGE",
@@ -80,13 +83,17 @@ export default function Sidebar({
     ? sections.filter((section) => section.title !== "MASTER SETUP").map((section) => ({
         ...section,
         items: section.items.flatMap(([path, icon, label, ...rest]) => {
+          if (path === "/merchant-dashboard" && user?.accountType !== "merchant") return [];
           if (path === "/merchants") return user?.accountType === "merchant" && merchantId
             ? [[`/merchants?view=${encodeURIComponent(merchantId)}&tab=overview`, "bi-person-gear", "Merchant Settings"]]
             : [];
           return can(MENU_MODULES[path], "view") ? [[path, icon, label, ...rest]] : [];
         }),
       })).filter((section) => section.items.length)
-    : sections;
+    : sections.map((section) => ({
+        ...section,
+        items: section.items.filter(([path]) => path !== "/merchant-dashboard"),
+      }));
   const originPath = location.state?.from?.split("?")[0] || "";
 
   function isContextActive(path, isRouteActive) {

@@ -250,7 +250,7 @@ export default function ViewPlanPricing() {
                 {" "}
                 <span> Effective Date </span>{" "}
                 <input
-                  value={formatPlanDate(plan.effectiveDate)}
+                  value={formatPlanDate(plan.effectiveFrom)}
                   readOnly
                 />{" "}
               </label>{" "}

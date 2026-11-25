@@ -22,7 +22,7 @@ const initialStoreType = {
 function getFeatureAssignments(response) {
   if (Array.isArray(response)) return response;
 
-  const containers = [response, response?.data, response?.result];
+  const containers = [response, response?.data, response?.result, response?.payload, response?.data?.result];
 
   for (const container of containers) {
     if (!container || typeof container !== "object") continue;
@@ -30,6 +30,8 @@ function getFeatureAssignments(response) {
     const assignments =
       container.features ??
       container.storeTypeFeatures ??
+      container.store_type_features ??
+      container.store_type_feature ??
       container.items ??
       container.results;
 
@@ -42,36 +44,44 @@ function getFeatureAssignments(response) {
 function toFeatureRow(assignment, index) {
   const feature =
     assignment.feature ??
+    assignment.feature_details ??
     assignment.featureDetails ??
+    assignment.feature_definition ??
     assignment.featureDefinition ??
     assignment;
-  const assignmentData = assignment.data ?? assignment.storeTypeFeature ?? {};
+  const assignmentData = assignment.data ?? assignment.storeTypeFeature ?? assignment.store_type_feature ?? {};
 
   return {
-    id: feature.id ?? assignment.featureId ?? assignment.id,
+    id: feature.id ?? feature.feature_id ?? assignment.featureId ?? assignment.feature_id ?? assignment.id,
     storeTypeFeatureId:
       assignment.featureId ??
+      assignment.feature_id ??
       feature.id ??
+      feature.feature_id ??
       assignment.id ??
       assignment.storeTypeFeatureId ??
       assignment.featureAssignmentId ??
       assignmentData.id ??
       assignmentData.storeTypeFeatureId ??
       assignmentData.featureId,
-    name: feature.name ?? feature.featureKey ?? "Unnamed feature",
+    name: feature.name ?? feature.feature_name ?? feature.featureName ?? feature.featureKey ?? "Unnamed feature",
     code:
       feature.featureKey ??
+      feature.featureCode ??
       feature.feature_code ??
       assignment.featureKey ??
+      assignment.featureCode ??
       assignment.feature_code ??
       "",
     category:
       feature.category ??
       feature.featureCategory ??
       feature.feature_category ??
+      feature.feature_type ??
       assignment.category ??
       assignment.featureCategory ??
       assignment.feature_category ??
+      assignment.feature_type ??
       "Uncategorized",
     active: assignment.defaultEnabled ?? true,
     order: assignment.displayOrder ?? index + 1,
@@ -92,7 +102,7 @@ function withCatalogCategories(assignments, catalog) {
   return assignments.map((assignment, index) => {
     const row = toFeatureRow(assignment, index);
     const master =
-      byId.get(String(assignment?.featureId ?? row.id ?? "").toLowerCase()) ??
+      byId.get(String(assignment?.featureId ?? assignment?.feature_id ?? row.id ?? "").toLowerCase()) ??
       byCode.get(String(row.code ?? "").toLowerCase()) ??
       byName.get(String(row.name ?? "").toLowerCase());
 

@@ -7,11 +7,18 @@ const unwrap = (response) => response?.data ?? response;
 export const roleTemplatesApi = {
   getAll: () => readRoleTemplate("/role-templates"),
 
-  assignToStoreType: (storeTypeId, values) =>
-    api.post(
+  assignToStoreType: (storeTypeId, values) => {
+    const { roleTemplateId, ...rest } = values || {};
+    return api.post(
       `/store-types/${encodeURIComponent(storeTypeId)}/role-templates`,
-      values,
-    ),
+      {
+        ...rest,
+        ...(roleTemplateId !== undefined
+          ? { role_template_id: roleTemplateId }
+          : {}),
+      },
+    );
+  },
 
   getForStoreType: (storeTypeId) =>
     readRoleTemplate(`/store-types/${encodeURIComponent(storeTypeId)}/role-templates`),
@@ -31,7 +38,7 @@ export const roleTemplatesApi = {
       ? storeTypeIds.filter(Boolean).join(",")
       : String(storeTypeIds ?? "");
 
-    const query = ids ? `?storeTypeIds=${encodeURIComponent(ids)}` : "";
+    const query = ids ? `?store_type_ids=${encodeURIComponent(ids)}` : "";
 
     return readRoleTemplate(
       `/role-templates/${encodeURIComponent(id)}/features${query}`,
@@ -73,22 +80,32 @@ export const roleTemplatesApi = {
 };
 
 export function readRoleTemplatesList(response) {
-  const candidates = [
-    response,
-    response?.data,
-    response?.result,
-    response?.data?.data,
-    response?.data?.result,
+  const collectionKeys = [
+    "roleTemplates",
+    "role_templates",
+    "items",
+    "results",
+    "records",
   ];
+  const envelopeKeys = ["data", "result", "payload"];
+  const queue = [response];
+  const visited = new Set();
 
-  for (const data of candidates) {
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data?.roleTemplates)) return data.roleTemplates;
-    if (Array.isArray(data?.items)) return data.items;
-    if (Array.isArray(data?.results)) return data.results;
+  while (queue.length) {
+    const value = queue.shift();
+    if (Array.isArray(value)) return value;
+    if (!value || typeof value !== "object" || visited.has(value)) continue;
+    visited.add(value);
+
+    for (const key of collectionKeys) {
+      if (Array.isArray(value[key])) return value[key];
+    }
+    for (const key of [...collectionKeys, ...envelopeKeys]) {
+      if (value[key] && typeof value[key] === "object") queue.push(value[key]);
+    }
   }
 
   throw new Error(
-    "Unexpected role templates response. Expected an array or roleTemplates array.",
+    "Unexpected role templates response. Expected an array or role_templates array.",
   );
 }

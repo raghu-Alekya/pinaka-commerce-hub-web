@@ -14,6 +14,10 @@ export default function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
+  if (location.pathname === "/merchant-dashboard" && String(user?.accountType || "").toLowerCase() !== "merchant") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (location.pathname === "/pch-users" && !isPchAdmin(user)) {
     return <Navigate to="/dashboard" replace />;
   }
