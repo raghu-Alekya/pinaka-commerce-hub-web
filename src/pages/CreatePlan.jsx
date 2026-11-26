@@ -261,7 +261,7 @@ export default function CreatePlan() {
   const [message, setMessage] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // FIELD VALIDATIONS
   const codeError = useMemo(() => {
@@ -1591,7 +1591,7 @@ export default function CreatePlan() {
             totalItems={totalPlans}
             pageSize={itemsPerPage}
             onPageChange={setCurrentPage}
-            onPageSizeChange={() => {}}
+            onPageSizeChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }}
             itemLabel="plans"
           />
         </div>

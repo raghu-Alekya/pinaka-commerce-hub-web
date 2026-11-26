@@ -842,9 +842,37 @@ function dateRangeMatch(merchant, value, from = '', to = '', now = new Date()) {
   else return true;
   return date >= start && date < end;
 }
-export function CalendarField({ label, value, onChange, min, max, showLabel = true, invalid = false, allowManualEntry = false, yearMonthSelect = false }) {
+let activeMerchantCalendarClose = null;
+let activeMerchantCalendarToken = null;
+
+export function CalendarField({ label, value, onChange, min, max, showLabel = true, invalid = false, allowManualEntry = false, nativeInput = false, yearMonthSelect = false, className = "", openAbove = false, openBeside = "" }) {
   const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
   const [open, setOpen] = useState(false);
+  const [calendarView, setCalendarView] = useState("days");
+  const calendarToken = useRef({});
+  const closeCalendar = () => {
+    setOpen(false);
+    if (activeMerchantCalendarToken === calendarToken.current) {
+      activeMerchantCalendarClose = null;
+      activeMerchantCalendarToken = null;
+    }
+  };
+  const toggleCalendar = () => {
+    if (open) {
+      closeCalendar();
+      return;
+    }
+    activeMerchantCalendarClose?.();
+    activeMerchantCalendarToken = calendarToken.current;
+    activeMerchantCalendarClose = closeCalendar;
+    setOpen(true);
+  };
+  useEffect(() => () => {
+    if (activeMerchantCalendarToken === calendarToken.current) {
+      activeMerchantCalendarClose = null;
+      activeMerchantCalendarToken = null;
+    }
+  }, []);
   const [month, setMonth] = useState(() => {
     if (selectedDate) return selectedDate;
     const today = new Date();
@@ -912,19 +940,22 @@ export function CalendarField({ label, value, onChange, min, max, showLabel = tr
     const iso = `${yearNumber}-${String(monthNumber).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
     onChange(iso);
     setMonth(date);
-    setOpen(false);
+    closeCalendar();
   }
 
-  return <div className={`merchant-date-field${showLabel ? "" : " merchant-date-field-compact"}`}>
+  return <div className={`merchant-date-field${showLabel ? "" : " merchant-date-field-compact"}${className ? ` ${className}` : ""}`}>
     {showLabel && <span>{label}</span>}
     <div className="merchant-date-picker">
-      {allowManualEntry ? <div className={`merchant-date-manual-row${invalid ? " invalid" : ""}`}>
+      {nativeInput ? <div className="merchant-date-native-row" style={{ position: "relative" }}>
+        <input type="date" value={value || ""} min={min} max={max} aria-label={label} aria-invalid={invalid} style={{ appearance: "none", paddingRight: 40 }} onChange={(event) => onChange(event.target.value)} />
+        <button type="button" className="merchant-date-trigger" aria-label={`Open ${label} calendar`} aria-expanded={open} style={{ position: "absolute", top: "50%", right: 0, width: 40, height: 34, padding: 0, border: 0, background: "transparent", transform: "translateY(-50%)" }} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setCalendarView("days"); toggleCalendar(); }}><CalendarDays size={16} aria-hidden="true" /></button>
+      </div> : allowManualEntry ? <div className={`merchant-date-manual-row${invalid ? " invalid" : ""}`}>
         <input type="text" inputMode="numeric" placeholder="mm/dd/yyyy" aria-label={`${label} (MM/DD/YYYY)`} value={manualValue} maxLength={10} onChange={handleManualDateChange} onBlur={() => { manualEditing.current = false; }} />
-        <button type="button" className="merchant-date-trigger" aria-label={`Open ${label} calendar`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setCalendarView("days"); setOpen(current => !current); }}><CalendarDays size={16} aria-hidden="true" /></button>
-      </div> : <button type="button" className={`merchant-date-trigger${value ? " has-value" : ""}${invalid ? " invalid" : ""}`} aria-label={`${label}: ${displayValue}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setCalendarView("days"); setOpen(current => !current); }}>
+        <button type="button" className="merchant-date-trigger" aria-label={`Open ${label} calendar`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setCalendarView("days"); toggleCalendar(); }}><CalendarDays size={16} aria-hidden="true" /></button>
+      </div> : <button type="button" className={`merchant-date-trigger${value ? " has-value" : ""}${invalid ? " invalid" : ""}`} aria-label={`${label}: ${displayValue}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setCalendarView("days"); toggleCalendar(); }}>
         <span>{displayValue}</span><CalendarDays size={16} aria-hidden="true" />
       </button>}
-      {open && <div className="merchant-calendar-popover" role="dialog" aria-label={`${label} calendar`}>
+      {open && <div className="merchant-calendar-popover" role="dialog" aria-label={`${label} calendar`} style={nativeInput ? { left: "auto", right: "calc(100% + 8px)", top: 0, width: 280 } : openBeside === "left" ? { left: "auto", right: "calc(100% + 6px)", top: "50%", width: 280, transform: "translateY(-50%)" } : openBeside === "right" ? { left: "calc(100% + 6px)", right: "auto", top: "50%", width: 280, transform: "translateY(-50%)" } : openAbove ? { top: "auto", bottom: "calc(100% + 6px)" } : undefined}>
         <div className="merchant-calendar-heading">
           {yearMonthSelect ? <button type="button" className="merchant-calendar-title" aria-label={calendarView === "days" ? "Choose year" : "Choose another year"} onClick={() => setCalendarView("years")}>
             {calendarView === "years" ? "Choose year" : calendarView === "months" ? month.getFullYear() : month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
@@ -943,12 +974,12 @@ export function CalendarField({ label, value, onChange, min, max, showLabel = tr
           <div className="merchant-calendar-grid">
             {dateCells.map(({ date, iso, inMonth }) => {
               const disabled = (min && iso < min) || (max && iso > max);
-              return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { manualEditing.current = false; onChange(iso); setOpen(false); }}>{date.getDate()}</button>;
+              return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { manualEditing.current = false; onChange(iso); closeCalendar(); }}>{date.getDate()}</button>;
             })}
           </div>
           <div className="merchant-calendar-footer">
-            <button type="button" onClick={() => { manualEditing.current = false; setManualValue(""); onChange(""); setOpen(false); }}>Clear</button>
-            <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { manualEditing.current = false; onChange(iso); setOpen(false); setMonth(today); } }}>Today</button>
+            <button type="button" onClick={() => { manualEditing.current = false; setManualValue(""); onChange(""); closeCalendar(); }}>Clear</button>
+            <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { manualEditing.current = false; onChange(iso); closeCalendar(); setMonth(today); } }}>Today</button>
           </div>
         </>}
       </div>}
@@ -956,33 +987,6 @@ export function CalendarField({ label, value, onChange, min, max, showLabel = tr
   </div>;
 }
 
-function storeLimitFor(merchant, masterPlans) {
-  const plan = String(merchant.plan || "").toLowerCase();
-
-  const masterPlan = masterPlans.find((item) =>
-    String(item.planName || item.name || "")
-      .toLowerCase()
-      .includes(plan),
-  );
-
-  const suppliedLimit =
-    masterPlan?.maxStores ??
-    masterPlan?.storeLimit ??
-    masterPlan?.allowedStores ??
-    masterPlan?.storeCount ??
-    masterPlan?.includedStores ??
-    masterPlan?.stores;
-
-  if (Number.isFinite(Number(suppliedLimit))) {
-    return Number(suppliedLimit);
-  }
-
-  if (plan.includes("starter")) return 1;
-  if (plan.includes("pro")) return 5;
-  if (plan.includes("enterprise")) return null;
-
-  return null;
-}
 export default function Merchants({ localMerchants = [], onLocalDelete, onSaveEmployee, onSaveDevice, masterVendors = [], vendorAssignments = {}, onSaveVendorAssignments, vendorsLoading = false, vendorsError = "", masterTenders = [], tenderAssignments = {}, onSaveTenderAssignments, tendersLoading = false, tendersError = "" }) {
   const { user, can } = useAuth();
   const scopedToMerchant = user?.accountType === 'merchant' || user?.accountType === 'employee';
@@ -1470,12 +1474,7 @@ const [statusFilter, setStatusFilter] = useState("");
                     </td>
                     <td><div className="contact-info"><strong>{m.state || "—"}</strong><span>{countryNameFor(m.country, countryRecords) || "—"}</span></div></td>
                     <td>
-                      <strong>
-                        {m.stores}
-                        {storeLimitFor(m, masterPlans)
-                          ? ` / ${storeLimitFor(m, masterPlans)}`
-                          : ""}
-                      </strong>
+                      <strong>{m.stores}</strong>
                     </td>
                     <td>
                       <div className="plan-info">

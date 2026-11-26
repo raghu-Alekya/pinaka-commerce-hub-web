@@ -232,10 +232,10 @@ function StoreSubscriptionSummary({ merchantId }) {
   const plan = subscription.plan || subscription.subscriptionPlan || {};
   return <SummaryFields title="Subscription" subtitle="Plan and billing details for this store." items={[
     ["Plan", subscription.planName || plan.name || (typeof plan === "string" ? plan : "")],
-    ["Status", subscription.status], ["Billing Cycle", subscription.billingCycle || subscription.billingPeriod || plan.billingCycle],
+    ["Status", subscription.status], ["Billing Cycle", subscription.billingCycle || subscription.billing_cycle || subscription.billingPeriod || subscription.billing_period || plan.billingCycle || plan.billing_cycle],
     ["Price", subscription.price ?? subscription.amount ?? plan.price], ["Currency", subscription.currency || plan.currency],
-    ["Start Date", subscription.startDate || subscription.startsAt],
-    ["End Date", subscription.renewalDate || subscription.endDate || subscription.expiresAt],
+    ["Start Date", subscription.startDate || subscription.start_date || subscription.startsAt || subscription.starts_at || subscription.currentPeriodStart || subscription.current_period_start || subscription.periodStart || subscription.period_start],
+    ["End Date", subscription.renewalDate || subscription.renewal_date || subscription.endDate || subscription.end_date || subscription.expiresAt || subscription.expires_at || subscription.currentPeriodEnd || subscription.current_period_end || subscription.periodEnd || subscription.period_end],
     ["Store Limit", subscription.storeLimit ?? subscription.locationLimit ?? plan.includedStores ?? plan.included_stores],
   ]} />;
 }

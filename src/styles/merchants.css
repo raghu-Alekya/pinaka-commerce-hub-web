@@ -2664,7 +2664,7 @@ dialog.merchant-delete-dialog::backdrop {
 
 .merchant-calendar-heading {
   margin-bottom: 10px;
-  color: #4e5766;
+  color: #132b4c;
   font-size: 14px;
   font-weight: 500;
 }
@@ -2675,14 +2675,23 @@ dialog.merchant-delete-dialog::backdrop {
 
 .merchant-calendar-heading button,
 .merchant-calendar-grid button,
-.merchant-calendar-footer button {
+.merchant-calendar-footer button,
+#pch-new .merchant-subscription-date .merchant-calendar-heading button,
+#pch-new .merchant-subscription-date .merchant-calendar-grid button,
+#pch-new .merchant-subscription-date .merchant-calendar-footer button {
+  min-height: 0;
+  width: auto;
+  padding: 0;
   border: 0;
+  border-radius: 6px;
   background: transparent;
   font: inherit;
+  transition: none;
   cursor: pointer;
 }
 
-.merchant-calendar-heading button {
+.merchant-calendar-heading button,
+#pch-new .merchant-subscription-date .merchant-calendar-heading button {
   display: grid;
   width: 30px;
   height: 30px;
@@ -2691,7 +2700,8 @@ dialog.merchant-delete-dialog::backdrop {
   color: #52617a;
 }
 
-.merchant-calendar-heading .merchant-calendar-title {
+.merchant-calendar-heading .merchant-calendar-title,
+#pch-new .merchant-subscription-date .merchant-calendar-heading .merchant-calendar-title {
   display: inline-flex;
   width: auto;
   min-width: 0;
@@ -2706,7 +2716,7 @@ dialog.merchant-delete-dialog::backdrop {
 
 .merchant-calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 2px;
   text-align: center;
 }
@@ -2722,23 +2732,29 @@ dialog.merchant-delete-dialog::backdrop {
   padding: 5px 0;
 }
 
-.merchant-calendar-grid button {
+.merchant-calendar-grid button,
+#pch-new .merchant-subscription-date .merchant-calendar-grid button {
+  width: 100%;
+  min-width: 0;
   height: 32px;
   border-radius: 6px;
-  color: #344054;
+  color: #132b4c;
   font-size: 12px;
 }
 
-.merchant-calendar-grid button.outside-month {
+.merchant-calendar-grid button.outside-month,
+#pch-new .merchant-subscription-date .merchant-calendar-grid button.outside-month {
   color: #a7afbd;
 }
 
-.merchant-calendar-grid button.selected {
+.merchant-calendar-grid button.selected,
+#pch-new .merchant-subscription-date .merchant-calendar-grid button.selected {
   background: #5544c5;
   color: #fff;
 }
 
-.merchant-calendar-grid button:disabled {
+.merchant-calendar-grid button:disabled,
+#pch-new .merchant-subscription-date .merchant-calendar-grid button:disabled {
   color: #c6cbd4;
   cursor: not-allowed;
 }
@@ -2763,7 +2779,10 @@ dialog.merchant-delete-dialog::backdrop {
   border-top: 1px solid #eef0f5;
 }
 
-.merchant-calendar-footer button {
+.merchant-calendar-footer button,
+#pch-new .merchant-subscription-date .merchant-calendar-footer button {
+  width: auto;
+  min-height: 0;
   padding: 5px 4px;
   color: #5544c5;
   font-size: 12px;

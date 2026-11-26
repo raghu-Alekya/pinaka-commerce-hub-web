@@ -1,5 +1,5 @@
 import { pendingStoreRead } from "../api/http";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { listMerchants } from "../api/merchants";
 import { useAuth } from "../auth/AuthContext";
 import Pagination from "../components/Pagination";
@@ -318,9 +318,36 @@ function DetailRow({ label, value }) {
 
 }
 
+let activeSubscriptionCalendarClose = null;
+let activeSubscriptionCalendarToken = null;
+
 function SubscriptionCalendarField({ label, value, onChange, min, max, showLabel = true, timeValue, onTimeChange }) {
   const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
   const [open, setOpen] = useState(false);
+  const calendarToken = useRef({});
+  const closeCalendar = () => {
+    setOpen(false);
+    if (activeSubscriptionCalendarToken === calendarToken.current) {
+      activeSubscriptionCalendarClose = null;
+      activeSubscriptionCalendarToken = null;
+    }
+  };
+  const toggleCalendar = () => {
+    if (open) {
+      closeCalendar();
+      return;
+    }
+    activeSubscriptionCalendarClose?.();
+    activeSubscriptionCalendarToken = calendarToken.current;
+    activeSubscriptionCalendarClose = closeCalendar;
+    setOpen(true);
+  };
+  useEffect(() => () => {
+    if (activeSubscriptionCalendarToken === calendarToken.current) {
+      activeSubscriptionCalendarClose = null;
+      activeSubscriptionCalendarToken = null;
+    }
+  }, []);
   const [month, setMonth] = useState(() => selectedDate || new Date());
   const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
@@ -350,7 +377,7 @@ function SubscriptionCalendarField({ label, value, onChange, min, max, showLabel
   return <div className={`subscription-date-field${showLabel ? "" : " subscription-date-field-compact"}`}>
     {showLabel && <span>{label}</span>}
     <div className="subscription-date-picker">
-      <button type="button" className="subscription-date-trigger" aria-label={`${label}: ${displayValue}${hasTime ? ` ${displayTime}` : ""}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); setOpen(current => !current); }}>
+      <button type="button" className="subscription-date-trigger" aria-label={`${label}: ${displayValue}${hasTime ? ` ${displayTime}` : ""}`} aria-expanded={open} onClick={() => { if (!open && selectedDate) setMonth(selectedDate); toggleCalendar(); }}>
         <span>{displayValue}{hasTime ? `  ${displayTime}` : ""}</span><CalendarDays size={16} aria-hidden="true" />
       </button>
       {open && <div className={`subscription-calendar-popover${hasTime ? " has-time" : ""}`} role="dialog" aria-label={`${label} calendar`}>
@@ -366,12 +393,12 @@ function SubscriptionCalendarField({ label, value, onChange, min, max, showLabel
         <div className="subscription-calendar-grid">
           {dateCells.map(({ date, iso, inMonth }) => {
             const disabled = (min && iso < min) || (max && iso > max);
-            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); setOpen(false); }}>{date.getDate()}</button>;
+            return <button key={iso} type="button" disabled={disabled} aria-pressed={value === iso} className={`${inMonth ? "" : "outside-month"}${value === iso ? " selected" : ""}`} onClick={() => { onChange(iso); closeCalendar(); }}>{date.getDate()}</button>;
           })}
         </div>
         <div className="subscription-calendar-footer">
-          <button type="button" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
-          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); setOpen(false); setMonth(today); } }}>Today</button>
+          <button type="button" onClick={() => { onChange(""); closeCalendar(); }}>Clear</button>
+          <button type="button" onClick={() => { const today = new Date(); const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`; if ((!min || iso >= min) && (!max || iso <= max)) { onChange(iso); closeCalendar(); setMonth(today); } }}>Today</button>
         </div>
         </div>
         {hasTime && <div className="subscription-calendar-time">

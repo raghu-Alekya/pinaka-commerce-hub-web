@@ -46,6 +46,7 @@ export function LoyaltySettings() {
   const [customers, setCustomers] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [query, setQuery] = useState("");
+  const [pointsFilter, setPointsFilter] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [transactionPage, setTransactionPage] = useState(1);
   const [transactionPageSize, setTransactionPageSize] = useState(5);
@@ -107,18 +108,25 @@ export function LoyaltySettings() {
 
   const filteredCustomers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return customers.filter((customer) =>
-      [customer.name, customer.contact, customer.user_id]
-        .some((value) => String(value || "").toLowerCase().includes(normalizedQuery)),
-    );
-  }, [customers, query]);
+    return customers.filter((customer) => {
+      const matchesSearch = [customer.name, customer.contact, customer.user_id]
+        .some((value) => String(value || "").toLowerCase().includes(normalizedQuery));
+      const available = Number(customer.available ?? 0);
+      const redeemed = Number(customer.redeemed ?? 0);
+      const expired = Number(customer.expired ?? 0);
+      const matchesPoints = !pointsFilter || (pointsFilter === "available" && available > 0)
+        || (pointsFilter === "redeemed" && redeemed > 0)
+        || (pointsFilter === "expired" && expired > 0);
+      return matchesSearch && matchesPoints;
+    });
+  }, [customers, query, pointsFilter]);
   const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
   const rows = filteredCustomers.slice((page - 1) * pageSize, page * pageSize);
   const transactions = Array.isArray(selectedCustomer?.transactions) ? selectedCustomer.transactions : [];
   const transactionTotalPages = Math.max(1, Math.ceil(transactions.length / transactionPageSize));
   const visibleTransactions = transactions.slice((transactionPage - 1) * transactionPageSize, transactionPage * transactionPageSize);
 
-  useEffect(() => { setPage(1); }, [query]);
+  useEffect(() => { setPage(1); }, [query, pointsFilter]);
 
   const updateField = (event) => {
     const { name, value, type, checked } = event.target;
@@ -238,17 +246,24 @@ export function LoyaltySettings() {
           {notice && <div className="loyalty-success" role="status">{notice}</div>}
           {tab === "customers" ? (
             <section className="loyalty-card">
-              <div className="loyalty-card-heading">
-                <div><h2>Loyalty Points List</h2><p>View customer balances and their loyalty points history.</p></div>
-                <FiltersBar
-                  className="loyalty-search-bar"
-                  searchValue={query}
-                  onSearchChange={setQuery}
-                  searchPlaceholder="Search by customer name or contact"
-                  searchAriaLabel="Search loyalty customers"
-                  showClear={false}
-                />
-              </div>
+              <FiltersBar
+                className="loyalty-search-bar"
+                searchValue={query}
+                onSearchChange={setQuery}
+                searchPlaceholder="Search by customer name or contact"
+                searchAriaLabel="Search loyalty customers"
+                filters={[
+                  { key: "points", label: "Filter customers by points", value: pointsFilter, onChange: setPointsFilter, options: [
+                    { value: "", label: "All customers" },
+                    { value: "available", label: "Available points" },
+                    { value: "redeemed", label: "Redeemed points" },
+                    { value: "expired", label: "Expired points" },
+                  ] },
+                ]}
+                onClear={() => { setQuery(""); setPointsFilter(""); }}
+                showClear
+                clearLabel="Reset"
+              />
               <div className="loyalty-table-scroll"><table className="loyalty-table">
                 <thead><tr><th>Customer Name</th><th>Mobile / Email</th><th>Total Points</th><th>Redeemed Pts</th><th>Expired Pts</th><th>Available Pts</th><th>Last Updated</th><th>Actions</th></tr></thead>
                 <tbody>{rows.length ? rows.map((customer, index) => (

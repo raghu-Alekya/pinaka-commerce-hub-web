@@ -564,10 +564,10 @@
 .coupon-form-cancel {
     min-height: 40px;
     padding: 0 15px;
-    border: 1px solid #d9deea;
+    border: 1px solid #5143bc;
     border-radius: 8px;
     background: #fff;
-    color: #43516a;
+    color: #5143bc;
     font: inherit;
     cursor: pointer;
 }

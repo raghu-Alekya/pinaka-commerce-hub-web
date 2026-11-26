@@ -8,6 +8,7 @@ import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
+import { CalendarField } from "./Merchants";
 import { buildDiscountPayload, catalogProductId, storedProductId, validateDiscountForm } from "./discountForm";
 import { formatCurrency } from "../utils/currency";
 import "../styles/coupons.css";
@@ -543,12 +544,12 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
                   {form.type === "multipack" && <label className="coupon-form-field"><span className="discount-field-label">Pack quantity <span className="discount-required text-red-500" data-tooltip="Required" aria-label="Required">*</span></span>
                     <input type="number" min="1" step="1" value={form.qty} onChange={(event) => updateForm("qty", event.target.value)} placeholder="e.g. 3" required />
                   </label>}
-                  <label className="coupon-form-field">Start date
-                    <input type="date" value={form.date_starts} onChange={(event) => updateForm("date_starts", event.target.value)} />
-                  </label>
-                  <label className="coupon-form-field">Expiry date
-                    <input type="date" value={form.date_expires} onChange={(event) => updateForm("date_expires", event.target.value)} />
-                  </label>
+                  <div className="coupon-form-field"><span>Start date</span>
+                    <CalendarField label="Start date" value={form.date_starts} max={form.date_expires || undefined} showLabel={false} allowManualEntry openBeside="right" onChange={(value) => updateForm("date_starts", value)} />
+                  </div>
+                  <div className="coupon-form-field"><span>Expiry date</span>
+                    <CalendarField label="Expiry date" value={form.date_expires} min={form.date_starts || undefined} showLabel={false} allowManualEntry openBeside="left" onChange={(value) => updateForm("date_expires", value)} />
+                  </div>
                   <label className="coupon-form-field">Usage limit
                     <input type="number" min="0" step="1" value={form.usage_limit} onChange={(event) => updateForm("usage_limit", event.target.value)} placeholder="Unlimited" />
                     <small>{form.type === "multipack" ? "Maximum number of orders allowed for this pack." : "Maximum total uses for this discount."}</small>

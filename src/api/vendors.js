@@ -747,7 +747,7 @@ export async function getAvailableMerchantVendors(
 | Body:
 |
 | {
-|   "vendorIds": [
+|   "vendor_ids": [
 |     "vendor-id-1",
 |     "vendor-id-2"
 |   ]
@@ -778,7 +778,7 @@ export async function addMerchantVendors(
     token,
     signal,
     body: JSON.stringify({
-      vendorIds,
+      vendor_ids: vendorIds,
     }),
   });
 }

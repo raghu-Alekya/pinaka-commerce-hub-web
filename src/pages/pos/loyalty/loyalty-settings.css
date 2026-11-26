@@ -83,6 +83,12 @@
     padding: 16px;
     box-shadow:0 2px 5px #1b2b4610
 }
+.loyalty-tabs + .loyalty-card{
+    border:0;
+    border-radius:0;
+    padding:16px 0 0;
+    box-shadow:none;
+}
 .loyalty-card-heading{
     display:flex;
     align-items:center;
@@ -100,12 +106,11 @@
     color:#7b8799;
     font-size:14px
 }
-.loyalty-card-heading .loyalty-search-bar{
-    width:min(450px,100%);
-    flex:0 1 450px;
-    margin:0;
+.loyalty-card > .loyalty-search-bar{
+    width:100%;
+    margin:0 0 18px;
 }
-.loyalty-search-bar .filter-options{display:none}
+.loyalty-search-bar .filter-options{display:flex}
 .loyalty-search-bar .filter-search{
     display:flex;
     align-items:center;
@@ -383,9 +388,8 @@
         .loyalty-detail-grid{grid-template-columns:1fr}
         .loyalty-summary-grid{grid-template-columns:1fr}
     }
-    .loyalty-card-heading .loyalty-search-bar{
+    .loyalty-card > .loyalty-search-bar{
         width:100%;
-        flex-basis:100%;
     }
     .loyalty-form-grid{
         grid-template-columns:1fr

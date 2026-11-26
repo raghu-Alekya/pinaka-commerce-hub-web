@@ -5,6 +5,7 @@ import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
+import { CalendarField } from "./Merchants";
 import { api, pendingStoreRead } from "../api/http";
 import { normalizeCatalog } from "../api/products";
 import { catalogProductId } from "./discountForm";
@@ -1002,6 +1003,8 @@ function CouponEditor({ mode, form, setForm, error, busy, products = [], catalog
                 <FilterDropdown name={name} value={form[name] || ""} onChange={change} required={options.required}>
                     {options.select.map(([value, text]) => <option key={value} value={value}>{text}</option>)}
                 </FilterDropdown>
+            ) : options.type === "date" ? (
+                <CalendarField label={label} value={form[name] || ""} showLabel={false} allowManualEntry openBeside="left" onChange={(value) => setForm((current) => ({ ...current, [name]: value }))} />
             ) : (
                 <input name={name} type={options.type || "text"} value={form[name] ?? ""} onChange={change} required={options.required} min={options.min} step={options.step} />
             )}

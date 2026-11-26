@@ -462,7 +462,7 @@ export default function MerchantTenders({
 
       const removedTender = assigned.find((tender) => tender.id === tendorId);
       setModal(null);
-      setSnackbar(`${removedTender?.name || "Tender"} was Inactive.`);
+      setSnackbar(`${removedTender?.name || "Tender"} was removed.`);
       window.clearTimeout(snackbarTimer.current);
       snackbarTimer.current = window.setTimeout(() => setSnackbar(""), 1800);
     } catch (e) {

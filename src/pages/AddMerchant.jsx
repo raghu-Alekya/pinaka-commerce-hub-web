@@ -12,6 +12,7 @@ import { useLocationOptions } from "../data/useLocationOptions";
 import { storeTypesApi } from "../api/storeTypes";
 import FilterDropdown from "../components/FilterDropdown";
 import StatusBadge from "../components/StatusBadge";
+import { CalendarField } from "./Merchants";
 import PhoneInputModule from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import "../styles/merchant-form.css";
@@ -138,8 +139,8 @@ function Select({ label, value, options, onChange, placeholder, error, ...props 
   );
 }
 
-function Panel({ title, subtitle, children, action }) {
-  return <section className="pch-panel"><div className="pch-panel-heading"><div className="pch-panel-heading-copy"><h2>{title}</h2>{subtitle && <p className="pch-panel-subtitle">{subtitle}</p>}</div>{action}</div>{children}</section>;
+function Panel({ title, subtitle, children, action, style }) {
+  return <section className="pch-panel" style={style}><div className="pch-panel-heading"><div className="pch-panel-heading-copy"><h2>{title}</h2>{subtitle && <p className="pch-panel-subtitle">{subtitle}</p>}</div>{action}</div>{children}</section>;
 }
 
 function formatPrice(amount, currency = "USD") {
@@ -467,7 +468,11 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     return () => { active = false; };
   }, [merchantId, locationOptions.loading, locationOptions.locationRecords.length]);
 
-  const plan = plans.find((item) => [item.id, item.planId, item.plan_id, item.code, item.planCode, item.plan_code, item.name].some((value) => String(value || "").toLowerCase() === String(planId || "").toLowerCase())) || null;
+  const normalizedPlanId = String(planId || "").trim().toLowerCase();
+  const plan = normalizedPlanId
+    ? plans.find((item) => [item.id, item.planId, item.plan_id, item.code, item.planCode, item.plan_code, item.name]
+      .some((value) => value != null && String(value).trim() !== "" && String(value).trim().toLowerCase() === normalizedPlanId)) || null
+    : null;
   const planGroups = useMemo(() => {
     const groups = new Map();
     plans.forEach((item) => {
@@ -507,6 +512,14 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
     else if (String(merchant.password || "") && String(merchant.password).length < 8) errors.password = "Password must be at least 8 characters.";
     errors.phone = validatePhone();
     return errors;
+  };
+
+  const canAccessStep = (index) => {
+    if (editing || index <= step) return true;
+    const merchantComplete = !Object.values(validateMerchant()).some(Boolean);
+    if (index === 1) return merchantComplete;
+    if (index === 2) return merchantComplete && Boolean(plan) && (editing || start >= today());
+    return false;
   };
 
   const continueStep = () => {
@@ -637,7 +650,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
             ["Merchant details", "Business & primary contact"],
             ["Select Plan", "Plan Pricing and Included Limits"],
             ["Review & Confirm", "Merchant, Subscription, and Billing Summary"],
-          ].map(([label, description], index) => <button key={label} type="button" disabled={!editing && index > step} className={index === step ? "pch-current" : ""} aria-current={index === step ? "step" : undefined} onClick={() => goToStep(index)}><span className="pch-number">{index < step ? "✓" : index + 1}</span><span>{label}<small className="pch-muted pch-rail-description">{description}</small></span></button>)}
+          ].map(([label, description], index) => <button key={label} type="button" disabled={!canAccessStep(index)} className={index === step ? "pch-current" : ""} aria-current={index === step ? "step" : undefined} onClick={() => goToStep(index)}><span className="pch-number">{index < step ? "✓" : index + 1}</span><span>{label}<small className="pch-muted pch-rail-description">{description}</small></span></button>)}
         </nav></aside>
         <main>
           <section hidden={step !== 0} className="pch-merchant-step">
@@ -685,7 +698,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
             <div className="pch-eyebrow">Step 2 - Plan Selection</div>
             <h1>Choose plan</h1>
             <p className="pch-muted">Select an active plan and billing details.</p>
-            <Panel title="Subscription Plan" subtitle="Choose an active plan and set its billing preferences.">
+            <Panel title="Subscription Plan" subtitle="Choose an active plan and set its billing preferences." style={{ overflow: "visible" }}>
               {plansLoading ? <p className="pch-note">Loading plansâ€¦</p> : null}
               {!plansLoading && !plans.length ? <p className="pch-note">No active plans are available.</p> : null}
               <div className="pch-plan-browser">
@@ -711,7 +724,7 @@ function MerchantEditor({ merchantId, localMerchants, onSave }) {
                   </section>
                   <section className="pch-plan-agreement" aria-label="Billing Details"><h3>Billing Details</h3><div className="pch-grid">
                     <Select label="Billing cycle" value={cycle} options={["Monthly", "Quarterly", "Annual"]} onChange={(value) => setCycle(normalizeCycle(value))} />
-                    <Field label="Start date" type="date" min={editing ? undefined : today()} value={start} onChange={(value) => setStart(!editing && value && value < today() ? today() : value)} />
+                    <label className="pch-field">Start date<CalendarField className="merchant-subscription-date" label="Start date" value={start} min={editing ? undefined : today()} showLabel={false} nativeInput onChange={(value) => setStart(!editing && value && value < today() ? today() : value)} /></label>
                     <Field label="Renewal date" type="date" value={renewalDate(start, cycle)} readOnly />
                     <Field label="Subscription Price" value={`${formatPrice(total, plan?.currency || "USD")} / ${cycleLabel}`} readOnly />
                   </div><p className="pch-note">Country-based merchant pricing. Annual amount is 12 monthly payments; tax excluded.</p></section>
