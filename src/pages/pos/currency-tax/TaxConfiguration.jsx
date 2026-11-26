@@ -9,6 +9,7 @@ import {
 } from "../shared";
 import {
     getPosCurrencyTax,
+    getStoreTaxClasses,
     updateStoreTaxSettings,
     createStoreTaxClass, updateStoreTaxClass, deleteStoreTaxClass,
     createPosCurrencyTax,
@@ -68,9 +69,18 @@ export function TaxConfiguration() {
             if (next) {
                 try {
                     const payload = result?.data || result;
-                    const classes = Array.isArray(payload?.taxClasses)
-                        ? payload.taxClasses
-                        : (await getPosCurrencyTax(settings.storeId))?.taxClasses;
+                    let classes = payload?.taxClasses || payload?.tax_classes;
+                    if (!Array.isArray(classes) || classes.length === 0) {
+                        const refreshed = await getPosCurrencyTax(settings.storeId);
+                        const refreshedClasses = refreshed?.taxClasses || refreshed?.tax_classes;
+                        if (Array.isArray(refreshedClasses) && refreshedClasses.length) classes = refreshedClasses;
+                    }
+                    if (!Array.isArray(classes) || classes.length === 0) {
+                        const listedClasses = await getStoreTaxClasses(settings.storeId).catch(() => []);
+                        if (listedClasses.length) classes = listedClasses;
+                    }
+                    if (!Array.isArray(classes) || classes.length === 0) classes = taxClasses;
+                    if (!Array.isArray(classes)) classes = [];
                     if (!Array.isArray(classes)) throw new Error("Tax classes were not returned. Please reload the page.");
                     const rows = classes.map(item => ({ ...item, clientId: newRecordId(), name: item.name || "", rate: item.rate == null ? "" : String(item.rate) }));
                     savedClasses.current = new Map(classes.filter(item => item.slug).map(item => [item.slug, item]));
@@ -91,16 +101,27 @@ export function TaxConfiguration() {
     };
 
     const applyCurrencyTax = (record) => {
-        savedId.current = record.id;
-        savedClasses.current = new Map((record.taxClasses || []).filter(item => item.slug).map(item => [item.slug, item]));
+        const enabledValue = record.taxEnabled ?? record.tax_enabled ?? record.enableTaxes ?? record.enable_taxes;
+        const normalizedRecord = {
+            ...record,
+            currency: record.currency ?? record.currencyCode ?? record.currency_code ?? settings.currency,
+            rounding: record.rounding ?? record.roundingMode ?? record.rounding_mode ?? "nearest-cent",
+            decimalPlaces: record.decimalPlaces ?? record.decimal_places ?? record.decimalPrecision ?? record.decimal_precision ?? 2,
+            taxEnabled: enabledValue === true || enabledValue === 1 || ["true", "1", "yes", "enabled"].includes(String(enabledValue).toLowerCase()),
+            defaultTaxRate: record.defaultTaxRate ?? record.default_tax_rate ?? record.default_tax_rate_percent ?? "",
+            taxCalculation: record.taxCalculation ?? record.tax_calculation ?? record.taxCalculationMethod ?? record.tax_calculation_method ?? "item-price",
+            taxClasses: record.taxClasses || record.tax_classes || [],
+        };
+        savedId.current = normalizedRecord.id;
+        savedClasses.current = new Map((normalizedRecord.taxClasses || []).filter(item => item.slug).map(item => [item.slug, item]));
         setClassesLoaded(true);
-        setCurrency(record.currency);
-        setRounding(record.rounding);
-        setDecimalPlaces(String(record.decimalPlaces));
-        setTaxEnabled(Boolean(record.taxEnabled));
-        setDefaultTaxRate(record.defaultTaxRate === null || record.defaultTaxRate === undefined ? "" : String(record.defaultTaxRate));
-        setTaxCalculation(record.taxCalculation);
-        setTaxClasses((record.taxClasses || []).map((item) => ({
+        setCurrency(normalizedRecord.currency);
+        setRounding(normalizedRecord.rounding);
+        setDecimalPlaces(String(normalizedRecord.decimalPlaces));
+        setTaxEnabled(normalizedRecord.taxEnabled);
+        setDefaultTaxRate(normalizedRecord.defaultTaxRate === null || normalizedRecord.defaultTaxRate === undefined ? "" : String(normalizedRecord.defaultTaxRate));
+        setTaxCalculation(normalizedRecord.taxCalculation);
+        setTaxClasses((normalizedRecord.taxClasses || []).map((item) => ({
             ...item,
             id: item.id,
             clientId: newRecordId(),
@@ -118,7 +139,15 @@ export function TaxConfiguration() {
         const load = async () => {
             try {
                 const record = await getPosCurrencyTax(settings.storeId);
-                if (active && record?.id) applyCurrencyTax(record);
+                if (active && record?.id) {
+                    let classes = record.taxClasses || record.tax_classes;
+                    if (!Array.isArray(classes) || classes.length === 0) {
+                        const listedClasses = await getStoreTaxClasses(settings.storeId).catch(() => []);
+                        if (listedClasses.length) classes = listedClasses;
+                    }
+                    if (!Array.isArray(classes)) classes = [];
+                    applyCurrencyTax({ ...record, taxClasses: classes });
+                }
                 else if (active) { setTaxClasses([]); setClassesLoaded(true); }
             } catch (error) {
                 if (!active) return;
@@ -234,10 +263,14 @@ export function TaxConfiguration() {
                 await createPosCurrencyTax(settings.storeId, payload);
             }
             const record = await getPosCurrencyTax(settings.storeId);
-            if (!record || !Array.isArray(record.taxClasses)) {
-                throw new Error("Settings saved, but tax classes could not be refreshed. Please reload the page.");
+            let classes = record?.taxClasses || record?.tax_classes;
+            if (!Array.isArray(classes) || classes.length === 0) {
+                const listedClasses = await getStoreTaxClasses(settings.storeId).catch(() => []);
+                if (listedClasses.length) classes = listedClasses;
             }
-            applyCurrencyTax(record);
+            if (!Array.isArray(classes) || classes.length === 0) classes = taxClasses;
+            if (!record || !Array.isArray(classes)) throw new Error("Settings saved, but tax classes could not be refreshed. Please reload the page.");
+            applyCurrencyTax({ ...record, taxClasses: classes });
             return true;
         } finally {
             setSaving(false);
