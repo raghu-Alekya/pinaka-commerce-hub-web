@@ -128,6 +128,95 @@ export async function getStoreCatalogTaxonomies(storeId, { signal } = {}) {
   );
 }
 
+export async function createStoreCategory(storeId, category) {
+  if (!storeId) throw new Error("Store ID is required.");
+  const payload = category instanceof FormData
+    ? category
+    : { ...category };
+  if (payload instanceof FormData) payload.set("field", "categories");
+  else payload.field = "categories";
+  return api.post(
+    `/stores/${encodeURIComponent(storeId)}/catalog/taxonomies`,
+    payload,
+  );
+}
+
+export async function updateStoreCategory(storeId, categoryId, category) {
+  if (!storeId || !categoryId) throw new Error("Store and category are required.");
+  const payload = category instanceof FormData ? category : { ...category };
+  if (payload instanceof FormData) {
+    payload.set("field", "categories");
+    payload.set("id", String(categoryId));
+  } else {
+    payload.field = "categories";
+    payload.id = categoryId;
+  }
+  return api.put(`/stores/${encodeURIComponent(storeId)}/catalog/taxonomies`, payload);
+}
+
+export async function deleteStoreCategory(storeId, categoryId) {
+  if (!storeId || !categoryId) throw new Error("Store and category are required.");
+  return api.delete(`/stores/${encodeURIComponent(storeId)}/catalog/taxonomies`, {
+    body: { field: "categories", id: categoryId },
+  });
+}
+
+export async function createStoreTag(storeId, tag) {
+  if (!storeId) throw new Error("Store ID is required.");
+  const payload = { ...tag, field: "tags" };
+  return api.post(
+    `/stores/${encodeURIComponent(storeId)}/catalog/taxonomies`,
+    payload,
+  );
+}
+
+export async function updateStoreTag(storeId, tagId, tag) {
+  if (!storeId || !tagId) throw new Error("Store and tag are required.");
+  return api.put(`/stores/${encodeURIComponent(storeId)}/catalog/taxonomies`, {
+    ...tag,
+    field: "tags",
+    id: tagId,
+  });
+}
+
+export async function deleteStoreTag(storeId, tagId) {
+  if (!storeId || !tagId) throw new Error("Store and tag are required.");
+  return api.delete(`/stores/${encodeURIComponent(storeId)}/catalog/taxonomies`, {
+    body: { field: "tags", id: tagId },
+  });
+}
+
+export async function createStoreAttribute(storeId, attribute) {
+  if (!storeId) throw new Error("Store ID is required.");
+  return api.post(
+    `/stores/${encodeURIComponent(storeId)}/catalog/attributes`,
+    attribute,
+  );
+}
+
+export async function updateStoreAttribute(storeId, attributeId, attribute) {
+  if (!storeId || !attributeId) throw new Error("Store and attribute are required.");
+  return api.put(
+    `/stores/${encodeURIComponent(storeId)}/catalog/attributes/${encodeURIComponent(attributeId)}`,
+    attribute,
+  );
+}
+
+export async function deleteStoreAttribute(storeId, attributeId) {
+  if (!storeId || !attributeId) throw new Error("Store and attribute are required.");
+  return api.delete(
+    `/stores/${encodeURIComponent(storeId)}/catalog/attributes/${encodeURIComponent(attributeId)}`,
+  );
+}
+
+export async function createStoreAttributeTerm(storeId, attributeId, term) {
+  if (!storeId || !attributeId) throw new Error("Store and attribute are required.");
+  return api.post(
+    `/stores/${encodeURIComponent(storeId)}/catalog/attributes/${encodeURIComponent(attributeId)}/terms`,
+    term,
+  );
+}
+
 export function syncWordpressAttributes(storeId) {
   if (!storeId) throw new Error("Store ID is required.");
   return api.post(`/api/v1/stores/${encodeURIComponent(storeId)}/catalog/sync/attributes`);

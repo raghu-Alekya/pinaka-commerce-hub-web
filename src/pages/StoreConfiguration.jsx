@@ -15,6 +15,8 @@ import Orders from "./Orders";
 import StoreCustomers from "./StoreCustomers";
 import FastKeys from "./FastKeys";
 import StoreCategories from "./StoreCategories";
+import StoreTags from "./StoreTags";
+import StoreAttributes from "./StoreAttributes";
 import StoreShifts from "./StoreShifts";
 import SafeDrops from "./SafeDrops";
 import StorePaymentRecords from "./StorePaymentRecords";
@@ -33,11 +35,6 @@ import {
   fetchWordpressConnector,
   getWordpressConnector,
   saveWordpressConnector,
-  syncWordpressAttributes,
-  syncWordpressCategories,
-  syncWordpressDiscounts,
-  syncWordpressProducts,
-  syncWordpressTags,
 } from "../api/storeConnector";
 
 
@@ -89,6 +86,8 @@ const navGroups = [
     label: "Catalog",
     items: [
       ["categories", "bi-tags", "Categories"],
+      ["tags", "bi-hash", "Tags"],
+      ["attributes", "bi-sliders", "Attributes"],
       ["products", "bi-box-seam", "Products"],
       ["fastkeys", "bi-key-fill", "Fast Keys"],
     ],
@@ -130,9 +129,11 @@ const sectionIntro = {
   attendance: ["Employee Attendance", "Review attendance records and working hours for this store."],
   customers: ["Customers", "Browse customer profiles and activity associated with this store."],
   vendors: ["Vendors", "Manage the vendors that supply this store."],
-  overview: ["Website Connection", "Manage the store website connection and sync catalog data."],
+  overview: ["Website Connection", "Manage the website URL and authentication details for this store."],
   pos: ["POS Configuration", "Configure point of sale settings used by this store."],
   categories: ["Categories", "Organize the product categories available at this store."],
+  tags: ["Tags", "Manage the tags used to organize products at this store."],
+  attributes: ["Attributes", "Manage product attributes and their available terms."],
   products: ["Products", "Manage the products listed in this store's catalog."],
   fastkeys: ["Fast Keys", "Configure quick access keys used by the store's point of sale."],
   orders: ["Orders", "Review and manage orders placed through this store."],
@@ -147,7 +148,7 @@ const sectionIntro = {
 // These embedded pages already render their own page heading and description.
 const sectionsWithPageHeading = new Set([
   "features", "roles", "users", "attendance", "customers", "vendors",
-  "overview", "pos", "categories", "products", "fastkeys", "vendorhistory",
+  "overview", "pos", "categories", "tags", "attributes", "products", "fastkeys", "vendorhistory",
   "paymentrecords", "coupons", "discounts", "shifts", "safedrops", "orders",
 ]);
 
@@ -299,8 +300,6 @@ export default function StoreConfiguration() {
   const [showToken, setShowToken] = useState(false);
 
   const [saving, setSaving] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [syncProgress, setSyncProgress] = useState(null);
 
   const [message, setMessage] = useState("");
   const [connected, setConnected] = useState(false);
@@ -458,7 +457,7 @@ export default function StoreConfiguration() {
 
   const handleSave = async (event) => {
     event.preventDefault();
-    if (!editingSection || saving || syncing) return;
+    if (!editingSection || saving) return;
 
     if (!siteUrl.trim() || !jwtToken.trim()) {
       setMessage(
@@ -498,67 +497,6 @@ export default function StoreConfiguration() {
       );
     } finally {
       setSaving(false);
-    }
-  };
-
-  /* =======================================================
-     TEST WORDPRESS CONNECTION
-     ======================================================= */
-
-  const runSyncSteps = async (steps, doneMessage) => {
-    if (syncing || saving || !connected) return;
-    setSyncing(true);
-    setMessage("");
-    try {
-      for (let index = 0; index < steps.length; index += 1) {
-        const [label, action] = steps[index];
-        setSyncProgress({
-          label,
-          percent: Math.round((index / steps.length) * 100),
-        });
-        await action(storeId);
-      }
-      setSyncProgress({ label: "Sync complete", percent: 100 });
-      setMessage(doneMessage);
-    } catch (err) {
-      setMessage(err?.message || "Unable to sync WordPress data.");
-      setSyncProgress(null);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const handleSyncProducts = () => runSyncSteps(
-    [["Syncing Products", syncWordpressProducts]],
-    "Products synced.",
-  );
-
-  const handleSyncCategories = () => runSyncSteps(
-    [
-      ["Syncing Categories", syncWordpressCategories],
-      ["Syncing Attributes", syncWordpressAttributes],
-      ["Syncing Tags", syncWordpressTags],
-    ],
-    "Categories, attributes, and tags synced.",
-  );
-
-  const handleSyncDiscounts = async () => {
-    if (syncing || saving || !connected) return;
-    setSyncing(true);
-    setMessage("");
-    setSyncProgress({ label: "Syncing Discounts", percent: 0 });
-    try {
-      const response = await syncWordpressDiscounts(storeId);
-      if (response?.success === false || ["error", "failed"].includes(String(response?.status || "").toLowerCase())) {
-        throw new Error(response.message || "Unable to sync discounts.");
-      }
-      setSyncProgress({ label: "Sync complete", percent: 100 });
-      setMessage(response?.message || "Discounts synced successfully.");
-    } catch (err) {
-      setMessage(err?.message || "Unable to sync discounts.");
-      setSyncProgress(null);
-    } finally {
-      setSyncing(false);
     }
   };
 
@@ -792,11 +730,6 @@ export default function StoreConfiguration() {
                   <div className="store-panel-heading">
                     <div><h2>Website Connection</h2><p>{editingSection ? "Update the website URL and JWT token for this store." : "View the saved JWT connection status."}</p></div>
                     <div className="store-panel-actions">
-                      {connected && <>
-                        <button type="button" className="sf-outline" onClick={handleSyncCategories} disabled={syncing || saving}>Sync Category</button>
-                        <button type="button" className="sf-outline" onClick={handleSyncProducts} disabled={syncing || saving}>Sync Product</button>
-                        <button type="button" className="sf-outline" onClick={handleSyncDiscounts} disabled={syncing || saving}>Sync Discount</button>
-                      </>}
                       {!editingSection && <button type="button" className="store-config-btn" onClick={() => {restoreConnection();setEditingSection(true);}}><i className="bi bi-pencil" aria-hidden="true" /> Edit</button>}
                     </div>
                   </div>
@@ -808,7 +741,7 @@ export default function StoreConfiguration() {
                     ]} />
                   ) : (
                     <form className="store-connection-section" onSubmit={handleSave}>
-                      <fieldset disabled={saving || syncing} style={{border:0,padding:0,margin:0,minWidth:0}}>
+                      <fieldset disabled={saving} style={{border:0,padding:0,margin:0,minWidth:0}}>
                         <label className="store-field">WordPress Site URL
                           <input type="url" placeholder="https://your-store.com" value={siteUrl} onChange={event => setSiteUrl(event.target.value)} required />
                         </label>
@@ -824,13 +757,6 @@ export default function StoreConfiguration() {
                       </fieldset>
                     </form>
                   )}
-                  {syncProgress && <div className="store-sync-progress" role="status">
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                      <span>{syncProgress.label}</span>
-                      <span>{syncProgress.percent}%</span>
-                    </div>
-                    <progress max={100} value={syncProgress.percent} style={{ width: "100%" }} />
-                  </div>}
                   {message && <div className="store-message info" role="status">{message}</div>}
                 </div>
                 <StoreCouponOverview merchantId={merchant?.id || merchant?.merchantId || merchant?.merchant_id || store?.merchantId || store?.merchant_id || store?.merchant?.id || merchantId} storeId={store?.uuid || storeId} />
@@ -867,11 +793,20 @@ export default function StoreConfiguration() {
               ) : section === "categories" ? (
 
                 <StoreCategories
+                  key={section}
                   merchantId={merchantId}
                   storeId={storeId}
                   store={store}
                   embedded
                 />
+
+              ) : section === "tags" ? (
+
+                <StoreTags key={section} merchantId={merchantId} storeId={storeId} store={store} embedded />
+
+              ) : section === "attributes" ? (
+
+                <StoreAttributes key={section} merchantId={merchantId} storeId={storeId} store={store} embedded />
 
               /* ===========================================
                  VENDORS

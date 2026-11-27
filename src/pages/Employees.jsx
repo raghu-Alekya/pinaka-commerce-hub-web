@@ -1,8 +1,7 @@
-import { listStores } from "../api/stores";
-import { pendingStoreRead } from "../api/http";
 import { EmployeeToast } from "../components/EmployeeFeedback";
 import React, { useEffect, useMemo, useState } from "react";
 import { listEmployees } from "../api/employees";
+import { listMerchants } from "../api/merchants";
 import Pagination from "../components/Pagination";
 import FiltersBar from "../components/FiltersBar";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
@@ -176,17 +175,6 @@ const employees = [
     avatar: "blue",
   },
 ];
-export async function listMerchants() {
-  const data = await api.get(endpoints.merchants);
-  const items = Array.isArray(data)
-    ? data
-    : Array.isArray(data?.merchants)
-      ? data.merchants
-      : Array.isArray(data?.data)
-        ? data.data
-        : [];
-  return items;
-}
 /* =========================================================
    STAT CARD
 ========================================================= */
@@ -241,12 +229,12 @@ export default function Employees() {
     if (location.state?.employeeMessage) navigate(location.pathname, { replace: true, state: null });
   }, [location.state, location.pathname, navigate]);
   const [employeeRows, setEmployeeRows] = useState([]);
-  const [storeOptions, setStoreOptions] = useState([]);
+  const [merchantRows, setMerchantRows] = useState([]);
   useEffect(() => {
     let active = true;
-    pendingStoreRead("employee-filter-stores", () => listStores())
-      .then(rows => { if (active) setStoreOptions(Array.isArray(rows) ? rows : rows?.stores || []); })
-      .catch(error => { if (active) setLoadError(error.message || "Unable to load stores."); });
+    listMerchants()
+      .then((rows) => { if (active) setMerchantRows(Array.isArray(rows) ? rows : []); })
+      .catch(() => { if (active) setMerchantRows([]); });
     return () => { active = false; };
   }, []);
   const [statistics, setStatistics] = useState(null);
@@ -256,7 +244,30 @@ export default function Employees() {
   const [activatingId, setActivatingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 const [statusFilter, setStatusFilter] = useState("");
-const [storeFilter, setStoreFilter] = useState("");
+const [merchantFilter, setMerchantFilter] = useState("");
+
+const merchantNamesById = useMemo(() => {
+  const index = new Map();
+  merchantRows.forEach((merchant) => {
+    const name = merchant.name || merchant.businessName || merchant.merchantName;
+    [merchant.id, merchant.merchantId, merchant.merchant_id, merchant.uuid]
+      .filter(Boolean)
+      .forEach((id) => index.set(String(id).toLowerCase(), name));
+  });
+  return index;
+}, [merchantRows]);
+
+const displayEmployeeRows = useMemo(() => employeeRows.map((employee) => {
+  const merchantValue = employee.merchantName || employee.merchant?.name || employee.merchant;
+  const merchantId = employee.merchantId || employee.merchant_id || employee.merchant?.id ||
+    (typeof merchantValue === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(merchantValue) ? merchantValue : "");
+  const merchantName = merchantNamesById.get(String(merchantId || "").toLowerCase());
+  return merchantName ? { ...employee, merchant: merchantName } : employee;
+}), [employeeRows, merchantNamesById]);
+
+const merchantOptions = useMemo(() => [...new Set(
+  displayEmployeeRows.map((employee) => String(employee.merchant || "").trim()).filter(Boolean),
+)].sort((a, b) => a.localeCompare(b)), [displayEmployeeRows]);
 
  
 async function handleDelete(employee) {
@@ -374,7 +385,7 @@ const handlePageSizeChange = (size) => {
      FILTER EMPLOYEES
   ===================================================== */
   const filteredEmployees = useMemo(() => {
-  return employeeRows.filter((employee) => {
+  return displayEmployeeRows.filter((employee) => {
     const searchValue = searchTerm.trim().toLowerCase();
 
     const matchesSearch =
@@ -388,20 +399,20 @@ const handlePageSizeChange = (size) => {
     const matchesStatus =
       !statusFilter || employee.status === statusFilter;
 
-    const matchesStore =
-      !storeFilter || employee.store === storeFilter;
+    const matchesMerchant =
+      !merchantFilter || employee.merchant === merchantFilter;
 
     return (
       matchesSearch &&
       matchesStatus &&
-      matchesStore
+      matchesMerchant
     );
   });
 }, [
-  employeeRows,
+  displayEmployeeRows,
   searchTerm,
   statusFilter,
-  storeFilter,
+  merchantFilter,
 ]);
 
   /* =====================================================
@@ -428,9 +439,9 @@ const handlePageSizeChange = (size) => {
      RESET FILTERS
   ===================================================== */
   const resetFilters = () => {
-    setSearch("");
-    setMerchant("All Merchants");
-    setRole("All Roles");
+    setSearchTerm("");
+    setStatusFilter("");
+    setMerchantFilter("");
     setPage(1);
   };
   /* =====================================================
@@ -531,28 +542,20 @@ const handlePageSizeChange = (size) => {
             },
         },
         {
-            key: "store",
-            label: "Store",
-            value: storeFilter,
+            key: "merchant",
+            label: "Merchant",
+            value: merchantFilter,
             options: [
-                { label: "All Stores", value: "" },
-                ...storeOptions.map(store => ({
-                    label: store.storeName || store.name || store.storeCode || String(store.id),
-                    value: store.storeName || store.name || store.storeCode || String(store.id),
-                })), 
+                { label: "All Merchants", value: "" },
+                ...merchantOptions.map(merchant => ({ label: merchant, value: merchant })),
             ],
             onChange: (value) => {
-                setStoreFilter(value);
+                setMerchantFilter(value);
                 setPage(1);
             },
         },
     ]}
-    onClear={() => {
-        setSearchTerm("");
-        setStatusFilter("");
-        setStoreFilter("");
-        setPage(1);
-    }}
+    onClear={resetFilters}
 />
         {/* =================================================
             TABLE

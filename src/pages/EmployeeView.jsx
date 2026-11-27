@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, User, BriefcaseBusiness, MapPin, Settings } from "lucide-react";
-import { getEmployee } from "../api/employees";
+import { getEmployee, getEmployeeImageUrl } from "../api/employees";
 import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
 import "../styles/employee-view.css";
 
@@ -67,7 +67,7 @@ export default function EmployeeView() {
     return () => { active = false; };
   }, [employeeId, retry]);
 
-  const photo = employee?.profileImageUrl || employee?.profileImage;
+  const photo = getEmployeeImageUrl(employee?.profileImageUrl || employee?.profileImage || employee?.avatarUrl || employee?.image);
   const assignments = Array.isArray(employee?.storeAssignments) ? employee.storeAssignments : [];
 
   return (
@@ -90,8 +90,11 @@ export default function EmployeeView() {
           ["Email", employee.email], ["Phone", formatPhoneDisplay(employee.phone, employee.country)],
           ["Date of Birth", employee.dateOfBirth || employee.dob], ["Gender", employee.gender],
         ]}>
-          {/* {photo && !photoError && <img className="employee-view-photo" src={photo}
-            alt="Employee profile" onError={() => setPhotoError(true)} />} */}
+          <div className="employee-view-profile">
+            {photo && !photoError
+              ? <img className="employee-view-photo" src={photo} alt={`${employee.name || "Employee"} profile`} onError={() => setPhotoError(true)} />
+              : <span className="employee-view-photo-fallback" aria-label="No profile image"><User size={34} /></span>}
+          </div>
         </Section>
         <Section title="Work Information" icon={BriefcaseBusiness} fields={[
           ["Employee Code", employee.employeeCode],

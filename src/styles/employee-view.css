@@ -14,7 +14,9 @@
 .employee-view-field { min-width: 0; }
 .employee-view-field dt { margin-bottom: 6px; color: #243e60; font-size: 12px; font-weight: 600; }
 .employee-view-field dd { margin: 0; min-height: 35px; box-sizing: border-box; padding: 9px 10px; border: 1px solid #d5e0ed; border-radius: 5px; background: #fbfcfe; color: #294668; font-size: 13px; overflow-wrap: anywhere; }
-.employee-view-photo { width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin-bottom: 18px; }
+.employee-view-profile { display: flex; align-items: center; margin: 0 0 18px; }
+.employee-view-photo { width: 88px; height: 88px; object-fit: cover; border: 2px solid #e3e8f2; border-radius: 50%; }
+.employee-view-photo-fallback { width: 88px; height: 88px; display: grid; place-items: center; border: 1px solid #e1e8f1; border-radius: 50%; background: #eeeaff; color: #6850d6; }
 .employee-view-assignments { margin-bottom: 18px; }
 .employee-view-assignments h3 { font-size: 13px; }
 .employee-view-assignments dl + dl { margin-top: 12px; }

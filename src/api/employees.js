@@ -90,7 +90,7 @@ export function deleteEmployee(employeeId) {
   return api.delete(endpoints.employee(employeeId));
 }
 
-function getFullImageUrl(url) {
+export function getEmployeeImageUrl(url) {
   if (!url || /^(https?:|blob:|data:)/i.test(url)) return url || null;
   // Relative uploaded photos use the API host; local requests use the Vite proxy.
   const apiBase = import.meta.env.VITE_API_BASE_URL || "";
@@ -177,8 +177,8 @@ export function mapEmployeeToRow(employee) {
  
     initials: toInitials(firstName, lastName, name),
 
-    profileImage: getFullImageUrl(profileImage),
-    profileImageUrl: getFullImageUrl(profileImage),
+    profileImage: getEmployeeImageUrl(profileImage),
+    profileImageUrl: getEmployeeImageUrl(profileImage),
 
     name,
  

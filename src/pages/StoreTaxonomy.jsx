@@ -1,0 +1,1855 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import FiltersBar from "../components/FiltersBar";
+import ListActions from "../components/ListActions";
+import Pagination from "../components/Pagination";
+import BentoDetailModal from "../components/BentoDetailModal";
+import {
+  createStoreCategory,
+  updateStoreCategory,
+  deleteStoreCategory,
+  createStoreTag,
+  updateStoreTag,
+  deleteStoreTag,
+  createStoreAttribute,
+  createStoreAttributeTerm,
+  updateStoreAttribute,
+  deleteStoreAttribute,
+  getStoreCatalogTaxonomies,
+  syncWordpressAttributes,
+} from "../api/storeConnector";
+import CreateStoreCategory from "./CreateStoreCategory";
+import CreateStoreTag from "./CreateStoreTag";
+import CreateStoreAttribute from "./CreateStoreAttribute";
+
+
+/* =========================================================
+   TABS
+========================================================= */
+
+const tabs = [
+  {
+    id: "categories",
+    label: "Categories",
+    icon: "bi-folder",
+  },
+  {
+    id: "tags",
+    label: "Tags",
+    icon: "bi-tags",
+  },
+  {
+    id: "attributes",
+    label: "Attributes",
+    icon: "bi-sliders",
+  },
+];
+
+function normalizeAttributeTerms(attribute) {
+  const rawTerms = attribute?.terms ?? attribute?.options ?? attribute?.values ?? [];
+  const terms = Array.isArray(rawTerms)
+    ? rawTerms
+    : Array.isArray(rawTerms?.data)
+      ? rawTerms.data
+      : [];
+
+  return terms
+    .map((term) => {
+      if (typeof term === "string" || typeof term === "number") return String(term);
+      return term?.name ?? term?.value ?? term?.slug ?? "";
+    })
+    .filter(Boolean);
+}
+
+function normalizeAttribute(item) {
+  return {
+    ...item,
+    id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+    name: item.name || item.title || "Unnamed attribute",
+    slug: item.slug || "—",
+    productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+    terms: normalizeAttributeTerms(item),
+    status: item.status || "Active",
+  };
+}
+
+function categoryImageUrl(item) {
+  const image = item?.image ?? item?.images?.[0] ?? item?.thumbnail;
+  if (typeof image === "string") return image;
+  return image?.src || image?.url || image?.sourceUrl || item?.imageUrl || item?.image_url || item?.thumbnailUrl || item?.thumbnail_url || "";
+}
+
+export default function StoreTaxonomy({
+  merchantId,
+  storeId,
+  store,
+  embedded = false,
+  initialTab = "categories",
+  ConfigureTermsComponent,
+}) {
+
+  /* =======================================================
+     TAB
+  ======================================================= */
+
+  const [activeTab, setActiveTab] =
+    useState(initialTab);
+
+
+  /* =======================================================
+     SEARCH
+  ======================================================= */
+
+  const [search, setSearch] =
+    useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+
+  /* =======================================================
+     VIEW DETAILS
+  ======================================================= */
+
+  const [selectedItem, setSelectedItem] =
+    useState(null);
+
+
+  const [selectedItemType, setSelectedItemType] =
+    useState("");
+
+
+  /* =======================================================
+     CATEGORY PAGINATION
+  ======================================================= */
+
+  const [categoryPage, setCategoryPage] =
+    useState(1);
+
+  const [categoryPageSize, setCategoryPageSize] =
+    useState(5);
+
+
+  /* =======================================================
+     TAG PAGINATION
+  ======================================================= */
+
+  const [tagPage, setTagPage] =
+    useState(1);
+
+  const [tagPageSize, setTagPageSize] =
+    useState(5);
+
+
+  /* =======================================================
+     ATTRIBUTE PAGINATION
+  ======================================================= */
+
+  const [attributePage, setAttributePage] =
+    useState(1);
+
+  const [attributePageSize, setAttributePageSize] =
+    useState(5);
+
+  const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [attributes, setAttributes] = useState([]);
+  const [taxonomyLoading, setTaxonomyLoading] = useState(Boolean(storeId));
+  const [taxonomyError, setTaxonomyError] = useState("");
+  const [attributeAction, setAttributeAction] = useState("");
+  const [attributeActionMessage, setAttributeActionMessage] = useState("");
+  const [attributeActionError, setAttributeActionError] = useState("");
+  const [createCategoryOpen, setCreateCategoryOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [createTagOpen, setCreateTagOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState(null);
+  const [createAttributeOpen, setCreateAttributeOpen] = useState(false);
+  const [editingAttribute, setEditingAttribute] = useState(null);
+  const [configuringAttribute, setConfiguringAttribute] = useState(null);
+  const [taxonomyActionError, setTaxonomyActionError] = useState("");
+
+  const applyTaxonomies = useCallback((response) => {
+    const data = response?.taxonomies || response?.data?.taxonomies || response?.data || response || {};
+    const categoryRows = Array.isArray(data.categories) ? data.categories : [];
+    const categoryId = (item) => item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name;
+    const categoryNames = new Map(categoryRows.map((item) => [String(categoryId(item)), item.name || item.title || ""]));
+    const childrenByParent = new Map();
+    categoryRows.forEach((item) => {
+      const rawParent = item.parentId ?? item.parent_id ?? item.parentCategoryId ?? item.parent_category_id ?? item.parent;
+      const parentId = rawParent && typeof rawParent === "object"
+        ? (rawParent.id ?? rawParent.wordpressId ?? rawParent.wordpress_id)
+        : rawParent;
+      if (parentId == null || parentId === 0 || parentId === "0" || parentId === "") return;
+      const key = String(parentId);
+      const children = childrenByParent.get(key) || [];
+      children.push(item.name || item.title || "Unnamed category");
+      childrenByParent.set(key, children);
+    });
+
+    setCategories(categoryRows.map((item) => {
+      const rawParent = item.parentId ?? item.parent_id ?? item.parentCategoryId ?? item.parent_category_id ?? item.parent;
+      const parentId = rawParent && typeof rawParent === "object"
+        ? (rawParent.id ?? rawParent.wordpressId ?? rawParent.wordpress_id)
+        : rawParent;
+      return {
+      ...item,
+      id: categoryId(item),
+      parentId: parentId == null || parentId === 0 || parentId === "0" ? "" : String(parentId),
+      name: item.name || item.title || "Unnamed category",
+      slug: item.slug || "—",
+      parent: (rawParent && typeof rawParent === "object" ? rawParent.name : null) || categoryNames.get(String(parentId)) || item.parent_name || "",
+      subcategories: childrenByParent.get(String(categoryId(item))) || item.subcategories || item.children || [],
+      productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+      status: item.status || "Active",
+    };}));
+    setTags((Array.isArray(data.tags) ? data.tags : []).map((item) => ({
+      ...item,
+      id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+      name: item.name || item.title || "Unnamed tag",
+      slug: item.slug || "—",
+      productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
+      status: item.status || "Active",
+    })));
+    setAttributes((Array.isArray(data.attributes) ? data.attributes : []).map(normalizeAttribute));
+  }, []);
+
+  const refreshTaxonomies = useCallback(async (signal) => {
+    const response = await getStoreCatalogTaxonomies(storeId, { signal });
+    applyTaxonomies(response);
+    return response;
+  }, [applyTaxonomies, storeId]);
+
+  const handleFetchAttributes = useCallback(async () => {
+    if (!storeId) return;
+    setAttributeAction("fetch");
+    setAttributeActionError("");
+    setAttributeActionMessage("");
+    try {
+      const response = await refreshTaxonomies();
+      const data = response?.taxonomies || response?.data?.taxonomies || response?.data || response || {};
+      const rows = Array.isArray(data.attributes) ? data.attributes : [];
+      setAttributePage(1);
+      setAttributeActionMessage(`Attributes refreshed: ${rows.length} saved for this store.`);
+    } catch (error) {
+      setAttributeActionError(error?.message || "Could not refresh this store’s attributes.");
+    } finally {
+      setAttributeAction("");
+    }
+  }, [refreshTaxonomies, storeId]);
+
+  const handleSyncAttributes = async () => {
+    if (!storeId) return;
+    setAttributeAction("sync");
+    setAttributeActionError("");
+    setAttributeActionMessage("");
+    try {
+      const response = await syncWordpressAttributes(storeId);
+      const data = response?.data || response || {};
+      const count = Number(data.attributeCount ?? data.count ?? 0);
+      await refreshTaxonomies();
+      setAttributeActionMessage(`Sync succeeded: ${count} attributes saved for this store.`);
+    } catch (error) {
+      setAttributeActionError(error?.message || "Could not sync attributes for this store.");
+    } finally {
+      setAttributeAction("");
+    }
+  };
+
+  useEffect(() => {
+    if (!storeId) {
+      setCategories([]);
+      setTags([]);
+      setAttributes([]);
+      setTaxonomyLoading(false);
+      setTaxonomyError("Select a store to view its catalog data.");
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    setTaxonomyLoading(true);
+    setTaxonomyError("");
+    refreshTaxonomies(controller.signal)
+      .catch((error) => {
+        if (error?.name !== "AbortError") {
+          setTaxonomyError(error?.message || "Could not load this store’s categories, tags, and attributes.");
+          setCategories([]);
+          setTags([]);
+          setAttributes([]);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setTaxonomyLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [refreshTaxonomies, storeId]);
+
+  /* =========================================================
+     FILTER CATEGORIES
+  ========================================================= */
+
+  const filteredCategories = useMemo(() => {
+    const value =
+      search.trim().toLowerCase();
+
+    const categoriesById = new Map(categories.map((item) => [String(item.id), item]));
+    const childrenByParent = new Map();
+    categories.forEach((item) => {
+      const parentKey = String(item.parentId || "");
+      if (!parentKey || !categoriesById.has(parentKey)) return;
+      const siblings = childrenByParent.get(parentKey) || [];
+      siblings.push(item);
+      childrenByParent.set(parentKey, siblings);
+    });
+    const ordered = [];
+    const visited = new Set();
+    const appendTree = (item, depth) => {
+      const key = String(item.id);
+      if (visited.has(key)) return;
+      visited.add(key);
+      ordered.push({ ...item, depth });
+      (childrenByParent.get(key) || []).forEach((child) => appendTree(child, depth + 1));
+    };
+    categories.filter((item) => !item.parentId || !categoriesById.has(String(item.parentId)))
+      .forEach((item) => appendTree(item, 0));
+    categories.forEach((item) => appendTree(item, item.parentId ? 1 : 0));
+
+    return ordered.filter(
+      (item) => {
+        const matchesSearch = !value || [
+          item.name,
+          item.slug,
+          item.parent,
+          item.status,
+        ].some((field) =>
+          String(field || "")
+            .toLowerCase()
+            .includes(value)
+        );
+        const matchesStatus = !statusFilter || String(item.status || "Active").toLowerCase() === statusFilter.toLowerCase();
+        return matchesSearch && matchesStatus;
+      }
+    );
+
+  }, [categories, search, statusFilter]);
+
+
+  /* =========================================================
+     FILTER TAGS
+  ========================================================= */
+
+  const filteredTags = useMemo(() => {
+
+    const value =
+      search.trim().toLowerCase();
+
+    return tags.filter(
+      (item) => {
+        const matchesSearch = !value || [
+          item.name,
+          item.slug,
+          item.status,
+        ].some((field) =>
+          String(field || "")
+            .toLowerCase()
+            .includes(value)
+        );
+        const matchesStatus = !statusFilter || String(item.status || "Active").toLowerCase() === statusFilter.toLowerCase();
+        return matchesSearch && matchesStatus;
+      }
+    );
+
+  }, [search, tags, statusFilter]);
+
+
+  /* =========================================================
+     FILTER ATTRIBUTES
+  ========================================================= */
+
+  const filteredAttributes = useMemo(() => {
+
+    const value =
+      search.trim().toLowerCase();
+
+    return attributes.filter(
+      (item) => {
+        const matchesSearch = !value || [
+          item.name,
+          item.slug,
+          item.status,
+        ].some((field) =>
+          String(field || "")
+            .toLowerCase()
+            .includes(value)
+        );
+        const matchesStatus = !statusFilter || String(item.status || "Active").toLowerCase() === statusFilter.toLowerCase();
+        return matchesSearch && matchesStatus;
+      }
+    );
+
+  }, [attributes, search, statusFilter]);
+
+
+  /* =========================================================
+     TOTAL PAGES
+  ========================================================= */
+
+  const categoryTotalPages =
+    Math.ceil(
+      filteredCategories.length /
+        categoryPageSize
+    );
+
+  const tagTotalPages =
+    Math.ceil(
+      filteredTags.length /
+        tagPageSize
+    );
+
+  const attributeTotalPages =
+    Math.ceil(
+      filteredAttributes.length /
+        attributePageSize
+    );
+
+
+  /* =========================================================
+     VISIBLE CATEGORIES
+  ========================================================= */
+
+  const visibleCategories =
+    filteredCategories.slice(
+      (categoryPage - 1) *
+        categoryPageSize,
+      categoryPage *
+        categoryPageSize
+    );
+
+
+  /* =========================================================
+     VISIBLE TAGS
+  ========================================================= */
+
+  const visibleTags =
+    filteredTags.slice(
+      (tagPage - 1) *
+        tagPageSize,
+      tagPage *
+        tagPageSize
+    );
+
+
+  /* =========================================================
+     VISIBLE ATTRIBUTES
+  ========================================================= */
+
+  const visibleAttributes =
+    filteredAttributes.slice(
+      (attributePage - 1) *
+        attributePageSize,
+      attributePage *
+        attributePageSize
+    );
+
+
+  /* =========================================================
+     TAB CHANGE
+  ========================================================= */
+
+  const handleTabChange = (tab) => {
+
+    setActiveTab(tab);
+
+    setSearch("");
+    setStatusFilter("");
+
+    setSelectedItem(null);
+    setSelectedItemType("");
+
+    setCategoryPage(1);
+    setTagPage(1);
+    setAttributePage(1);
+  };
+
+
+  /* =========================================================
+     SEARCH CHANGE
+  ========================================================= */
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
+
+    setCategoryPage(1);
+    setTagPage(1);
+    setAttributePage(1);
+  };
+
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setCategoryPage(1);
+    setTagPage(1);
+    setAttributePage(1);
+  };
+
+  const resetFilters = () => {
+    setSearch("");
+    setStatusFilter("");
+    setCategoryPage(1);
+    setTagPage(1);
+    setAttributePage(1);
+  };
+
+
+  /* =========================================================
+     OPEN VIEW MODAL
+  ========================================================= */
+
+  const openView = (
+    item,
+    type
+  ) => {
+
+    setSelectedItem(item);
+    setSelectedItemType(type);
+  };
+
+
+  /* =========================================================
+     CLOSE VIEW MODAL
+  ========================================================= */
+
+  const closeView = () => {
+
+    setSelectedItem(null);
+    setSelectedItemType("");
+  };
+
+
+  /* =========================================================
+     CATEGORY VIEW FIELDS
+  ========================================================= */
+
+  const categoryDetailsFields = [
+    {
+      label: "Category Name",
+      key: "name",
+      fullWidth: true,
+    },
+
+    {
+      label: "Category ID",
+      key: "id",
+    },
+
+    {
+      label: "Slug",
+      key: "slug",
+    },
+
+    {
+      label: "Parent Category",
+      key: "parent",
+    },
+
+    {
+      label: "Subcategories",
+      key: "subcategories",
+      fullWidth: true,
+      render: (items) => Array.isArray(items) && items.length ? items.map((item) => typeof item === "object" ? item.name : item).filter(Boolean).join(", ") : "None",
+    },
+
+    {
+      label: "Products",
+      key: "productCount",
+    },
+
+    {
+      label: "Status",
+      key: "status",
+
+      render: (value) => (
+        <span
+          className={`detail-status ${
+            String(value || "Active")
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+          }`}
+        >
+          {value || "Active"}
+        </span>
+      ),
+    },
+
+    {
+      label: "Description",
+      key: "description",
+      fullWidth: true,
+    },
+  ];
+
+
+  /* =========================================================
+     TAG VIEW FIELDS
+  ========================================================= */
+
+  const tagDetailsFields = [
+    {
+      label: "Tag Name",
+      key: "name",
+      fullWidth: true,
+    },
+
+    {
+      label: "Tag ID",
+      key: "id",
+    },
+
+    {
+      label: "Slug",
+      key: "slug",
+    },
+
+    {
+      label: "Products",
+      key: "productCount",
+    },
+
+    {
+      label: "Status",
+      key: "status",
+
+      render: (value) => (
+        <span
+          className={`detail-status ${
+            String(value || "Active")
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+          }`}
+        >
+          {value || "Active"}
+        </span>
+      ),
+    },
+  ];
+
+
+  /* =========================================================
+     ATTRIBUTE VIEW FIELDS
+  ========================================================= */
+
+  const attributeDetailsFields = [
+    {
+      label: "Attribute Name",
+      key: "name",
+      fullWidth: true,
+    },
+
+    {
+      label: "Attribute ID",
+      key: "id",
+    },
+
+    {
+      label: "Slug",
+      key: "slug",
+    },
+
+    {
+      label: "Products",
+      key: "productCount",
+    },
+
+    {
+      label: "Status",
+      key: "status",
+
+      render: (value) => (
+        <span
+          className={`detail-status ${
+            String(value || "Active")
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+          }`}
+        >
+          {value || "Active"}
+        </span>
+      ),
+    },
+
+    {
+      label: "Terms / Values",
+      key: "terms",
+      fullWidth: true,
+
+      render: (terms) =>
+        Array.isArray(terms) &&
+        terms.length > 0 ? (
+          <div className="view-details-list">
+            {terms.map(
+              (term) => (
+                <div
+                  key={term}
+                  className="view-details-list-item"
+                >
+                  <strong>
+                    {term}
+                  </strong>
+                </div>
+              )
+            )}
+          </div>
+        ) : (
+          <span>—</span>
+        ),
+    },
+  ];
+
+
+  /* =========================================================
+     MODAL HERO & ATTRIBUTES
+  ========================================================= */
+
+  const getCategoryHero = () => {
+    if (!selectedItem) return null;
+    const isCat = selectedItemType === "category";
+    const isTag = selectedItemType === "tag";
+    return {
+      icon: isCat ? "bi-folder2-open" : isTag ? "bi-tag" : "bi-sliders",
+      title: selectedItem.name || (isCat ? "Category" : isTag ? "Tag" : "Attribute"),
+      status: selectedItem.status || "Active",
+      metricLabel: "TOTAL PRODUCTS",
+      metricValue: String(selectedItem.productCount ?? 0),
+    };
+  };
+
+  const getCategoryFields = () => {
+    if (!selectedItem) return [];
+    if (selectedItemType === "category") {
+      return [
+        {
+          label: "PARENT CATEGORY",
+          value: selectedItem.parent || "None (Root Category)",
+        },
+        {
+          label: "SUBCATEGORIES",
+          value: Array.isArray(selectedItem.subcategories) && selectedItem.subcategories.length
+            ? selectedItem.subcategories.map((item) => typeof item === "object" ? item.name : item).filter(Boolean)
+            : null,
+          fullWidth: true,
+          render: (items) => Array.isArray(items) && items.length ? (
+            <div className="bento-chips-wrap">
+              {items.map((name) => <span key={name} className="bento-chip">{name}</span>)}
+            </div>
+          ) : <span className="bento-field-value empty-state">No subcategories</span>,
+        },
+        {
+          label: "VISIBILITY",
+          value:
+            selectedItem.visibility ||
+            (String(selectedItem.status || "").toLowerCase() === "inactive"
+              ? "Hidden"
+              : "Visible"),
+        },
+        {
+          label: "DISPLAY ORDER",
+          value: String(
+            selectedItem.displayOrder ??
+              selectedItem.menu_order ??
+              selectedItem.order ??
+              0
+          ),
+        },
+        {
+          label: "SLUG",
+          value:
+            selectedItem.slug && selectedItem.slug !== "—"
+              ? selectedItem.slug
+              : selectedItem.id
+              ? String(selectedItem.id)
+              : "—",
+          mono: true,
+        },
+        {
+          label: "DESCRIPTION",
+          value: selectedItem.description || "No description provided",
+          fullWidth: true,
+        },
+      ];
+    }
+
+    if (selectedItemType === "tag") {
+      return [
+        { label: "TAG NAME", value: selectedItem.name },
+        { label: "STATUS", value: selectedItem.status || "Active", isStatus: true },
+        { label: "SLUG", value: selectedItem.slug || "—", mono: true },
+        { label: "PRODUCT COUNT", value: `${selectedItem.productCount ?? 0} products` },
+        {
+          label: "DESCRIPTION",
+          value: selectedItem.description || "No description provided",
+          fullWidth: true,
+        },
+      ];
+    }
+
+    return [
+      { label: "ATTRIBUTE NAME", value: selectedItem.name },
+      { label: "STATUS", value: selectedItem.status || "Active", isStatus: true },
+      { label: "SLUG", value: selectedItem.slug || "—", mono: true },
+      { label: "PRODUCT COUNT", value: `${selectedItem.productCount ?? 0} products` },
+      {
+        label: "TERMS / VALUES",
+        value:
+          Array.isArray(selectedItem.terms) && selectedItem.terms.length
+            ? selectedItem.terms
+            : null,
+        fullWidth: true,
+        render: (terms) =>
+          Array.isArray(terms) && terms.length ? (
+            <div className="bento-chips-wrap">
+              {terms.map((term) => (
+                <span key={term} className="bento-chip">
+                  {term}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span className="bento-field-value empty-state">No terms defined</span>
+          ),
+      },
+    ];
+  };
+
+  /* =========================================================
+     MODAL TITLE
+  ========================================================= */
+
+  const getModalTitle = () => {
+    if (selectedItemType === "category") {
+      return "Category Details";
+    }
+
+    if (selectedItemType === "tag") {
+      return "Tag Details";
+    }
+
+    return "Attribute Details";
+  };
+
+
+  /* =========================================================
+     RENDER CATEGORIES
+  ========================================================= */
+
+  const renderCategories = () => (
+
+    <>
+
+      <div className="categories-table-wrap">
+
+        <table className="categories-table category-list-table">
+
+          <thead>
+
+            <tr>
+
+              <th>Image</th>
+
+              <th>
+                Category
+              </th>
+
+              <th>
+                Slug
+              </th>
+
+              <th>
+                Products
+              </th>
+
+              <th>
+                Status
+              </th>
+
+              <th>
+                Action
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            {visibleCategories.length >
+            0 ? (
+
+              visibleCategories.map(
+                (item) => (
+
+                  <tr
+                    key={item.id}
+                    style={{ cursor: "pointer" }}
+                    onClick={(event) => {
+                      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                        return;
+                      }
+                      openView(item, "category");
+                    }}
+                  >
+
+                    <td>
+                      <div className="category-list-image">
+                        {categoryImageUrl(item)
+                          ? <img src={categoryImageUrl(item)} alt={`${item.name} category`} loading="lazy" />
+                          : <i className="bi bi-image" aria-hidden="true" />}
+                      </div>
+                    </td>
+
+                    <td>
+
+                      <div className={`category-name-cell${item.depth > 0 ? " is-child-category" : " is-parent-category"}`} style={{ "--category-depth": item.depth }}>
+                        <div>
+
+                          <strong>
+                            {item.depth > 0 && <span className="category-hierarchy-dash" aria-hidden="true">{"— ".repeat(item.depth)}</span>}
+                            {item.name}
+                          </strong>
+
+                          {item.description ? (
+                            <span>
+                              {
+                                item.description
+                              }
+                            </span>
+                          ) : null}
+
+                        </div>
+
+                      </div>
+
+                    </td>
+
+
+                    <td>
+
+                      <span className="slug-text">
+                        {item.slug}
+                      </span>
+
+                    </td>
+
+
+                    <td>
+
+                      <strong className="count-value">
+                        {item.productCount ??
+                          0}
+                      </strong>
+
+                    </td>
+
+
+                    <td>
+
+                      <span
+                        className={`category-status ${
+                          String(
+                            item.status ||
+                              ""
+                          )
+                            .toLowerCase()
+                            .replace(
+                              /\s+/g,
+                              "-"
+                            )
+                        }`}
+                      >
+                        {
+                          item.status ||
+                          "Active"
+                        }
+                      </span>
+
+                    </td>
+
+
+                    <td>
+
+                      <ListActions
+                        onView={() => openView(item, "category")}
+                        viewLabel={`View ${item.name} category`}
+                        onEdit={() => { setEditingCategory(item); setCreateCategoryOpen(true); }}
+                        editLabel={`Edit ${item.name} category`}
+                        onDelete={async () => {
+                          if (!window.confirm(`Delete the ${item.name} category?`)) return;
+                          setTaxonomyActionError("");
+                          try {
+                            await deleteStoreCategory(storeId, item.id);
+                            await refreshTaxonomies();
+                          } catch (error) {
+                            setTaxonomyActionError(error?.message || "Could not delete this category.");
+                          }
+                        }}
+                        deleteLabel={`Delete ${item.name} category`}
+                      />
+
+                    </td>
+
+                  </tr>
+
+                )
+              )
+
+            ) : (
+
+              <tr>
+
+                <td colSpan="6">
+
+                  <div className="categories-empty-state">
+                    <p>
+                      No categories match your current search.
+                    </p>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            )}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <Pagination
+        currentPage={
+          categoryPage
+        }
+        totalPages={
+          categoryTotalPages
+        }
+        totalItems={
+          filteredCategories.length
+        }
+        itemLabel="categories"
+        showWhenEmpty
+        pageSize={
+          categoryPageSize
+        }
+        onPageChange={
+          setCategoryPage
+        }
+        onPageSizeChange={(
+          size
+        ) => {
+
+          setCategoryPageSize(
+            size
+          );
+
+          setCategoryPage(
+            1
+          );
+
+        }}
+        
+      />
+
+    </>
+
+  );
+
+
+  /* =========================================================
+     RENDER TAGS
+  ========================================================= */
+
+  const renderTags = () => (
+
+    <>
+
+      <div className="categories-table-wrap">
+
+        <table className="categories-table">
+
+          <thead>
+
+            <tr>
+
+              <th>
+                Tag
+              </th>
+
+              <th>
+                Slug
+              </th>
+
+              <th>
+                Products
+              </th>
+
+              <th>
+                Status
+              </th>
+
+              <th>
+                Action
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            {visibleTags.length >
+            0 ? (
+
+              visibleTags.map(
+                (item) => (
+
+                  <tr
+                    key={item.id}
+                    style={{ cursor: "pointer" }}
+                    onClick={(event) => {
+                      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                        return;
+                      }
+                      openView(item, "tag");
+                    }}
+                  >
+
+                    <td>
+
+                      <div className="category-name-cell">
+
+
+                        <div>
+
+                          <strong>
+                            {item.name}
+                          </strong>
+
+                        </div>
+
+                      </div>
+
+                    </td>
+
+
+                    <td>
+
+                      <span className="slug-text">
+                        {item.slug}
+                      </span>
+
+                    </td>
+
+
+                    <td>
+
+                      <strong className="count-value">
+                        {item.productCount ??
+                          0}
+                      </strong>
+
+                    </td>
+
+
+                    <td>
+
+                      <span
+                        className={`category-status ${
+                          String(
+                            item.status ||
+                              ""
+                          )
+                            .toLowerCase()
+                            .replace(
+                              /\s+/g,
+                              "-"
+                            )
+                        }`}
+                      >
+                        {
+                          item.status ||
+                          "Active"
+                        }
+                      </span>
+
+                    </td>
+
+
+                    <td>
+
+                      <ListActions
+                        onView={() => openView(item, "tag")}
+                        viewLabel={`View ${item.name} tag`}
+                        onEdit={() => { setEditingTag(item); setCreateTagOpen(true); }}
+                        editLabel={`Edit ${item.name} tag`}
+                        onDelete={async () => {
+                          if (!window.confirm(`Delete the ${item.name} tag?`)) return;
+                          setTaxonomyActionError("");
+                          try {
+                            await deleteStoreTag(storeId, item.id);
+                            await refreshTaxonomies();
+                          } catch (error) {
+                            setTaxonomyActionError(error?.message || "Could not delete this tag.");
+                          }
+                        }}
+                        deleteLabel={`Delete ${item.name} tag`}
+                      />
+
+                    </td>
+
+                  </tr>
+
+                )
+              )
+
+            ) : (
+
+              <tr>
+
+                <td colSpan="5">
+
+                  <div className="categories-empty-state">
+                    <h3>
+                      No tags found
+                    </h3>
+
+                    <p>
+                      No tags match your current search.
+                    </p>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            )}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <Pagination
+        currentPage={
+          tagPage
+        }
+        totalPages={
+          tagTotalPages
+        }
+        totalItems={
+          filteredTags.length
+        }
+        itemLabel="tags"
+        showWhenEmpty
+        pageSize={
+          tagPageSize
+        }
+        onPageChange={
+          setTagPage
+        }
+        onPageSizeChange={(
+          size
+        ) => {
+
+          setTagPageSize(
+            size
+          );
+
+          setTagPage(
+            1
+          );
+
+        }}
+      
+      />
+
+    </>
+
+  );
+
+
+  /* =========================================================
+     RENDER ATTRIBUTES
+  ========================================================= */
+
+  const renderAttributes = () => (
+
+    <>
+
+      <div className="categories-table-wrap">
+
+        <table className="categories-table">
+
+          <thead>
+
+            <tr>
+
+              <th>
+                Attribute
+              </th>
+
+              <th>
+                Slug
+              </th>
+
+              <th>
+                Terms / Values
+              </th>
+
+              <th>
+                Products
+              </th>
+
+              <th>
+                Status
+              </th>
+
+              <th>Configure Terms</th>
+
+              <th>
+                Action
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            {visibleAttributes.length >
+            0 ? (
+
+              visibleAttributes.map(
+                (item) => (
+
+                  <tr
+                    key={item.id}
+                    style={{ cursor: "pointer" }}
+                    onClick={(event) => {
+                      if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [contenteditable="true"]')) {
+                        return;
+                      }
+                      openView(item, "attribute");
+                    }}
+                  >
+
+                    <td>
+
+                      <div className="category-name-cell">
+                        <div>
+
+                          <strong>
+                            {item.name}
+                          </strong>
+
+                        </div>
+
+                      </div>
+
+                    </td>
+
+
+                    <td>
+
+                      <span className="slug-text">
+                        {item.slug}
+                      </span>
+
+                    </td>
+
+
+                    <td>
+
+                      <div className="attribute-terms">
+
+                        {item.terms?.length ? (
+
+                          item.terms
+                            .slice(
+                              0,
+                              3
+                            )
+                            .map(
+                              (term) => (
+                                <span
+                                  key={
+                                    term
+                                  }
+                                >
+                                  {
+                                    term
+                                  }
+                                </span>
+                              )
+                            )
+
+                        ) : (
+
+                          <span className="no-value">
+                            —
+                          </span>
+
+                        )}
+
+
+                        {item.terms?.length >
+                        3 ? (
+
+                          <span
+                            className="more-terms"
+                            data-tooltip={item.terms.slice(3).map((term) => (typeof term === "object" ? term.name || term.value || "" : String(term))).filter(Boolean).join(", ")}
+                          >
+                            +
+                            {item.terms.length -
+                              3}
+                          </span>
+
+                        ) : null}
+
+                      </div>
+
+                    </td>
+
+
+                    <td>
+
+                      <strong className="count-value">
+                        {item.productCount ??
+                          0}
+                      </strong>
+
+                    </td>
+
+
+                    <td>
+
+                      <span
+                        className={`category-status ${
+                          String(
+                            item.status ||
+                              ""
+                          )
+                            .toLowerCase()
+                            .replace(
+                              /\s+/g,
+                              "-"
+                            )
+                        }`}
+                      >
+                        {
+                          item.status ||
+                          "Active"
+                        }
+                      </span>
+
+                    </td>
+
+
+                    <td>
+
+                      <button type="button" className="attribute-configure-items" onClick={() => setConfiguringAttribute((current) => current?.id === item.id ? null : item)} aria-expanded={configuringAttribute?.id === item.id} aria-label={`Configure terms for ${item.name}`}>
+                        <i className="bi bi-list-check" aria-hidden="true" /> {configuringAttribute?.id === item.id ? "Close" : "Configure terms"}
+                      </button>
+
+                    </td>
+
+
+                    <td>
+
+                      <div className="attribute-row-actions">
+                        <ListActions
+                          onView={() => openView(item, "attribute")}
+                          viewLabel={`View ${item.name} attribute`}
+                          onEdit={() => { setEditingAttribute(item); setCreateAttributeOpen(true); }}
+                          editLabel={`Edit ${item.name} attribute`}
+                          onDelete={async () => {
+                            if (!window.confirm(`Delete the ${item.name} attribute?`)) return;
+                            setAttributeActionError("");
+                            try {
+                              await deleteStoreAttribute(storeId, item.id);
+                              await refreshTaxonomies();
+                            } catch (error) {
+                              setAttributeActionError(error?.message || "Could not delete this attribute.");
+                            }
+                          }}
+                          deleteLabel={`Delete ${item.name} attribute`}
+                        />
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                )
+              )
+
+            ) : (
+
+              <tr>
+
+                <td colSpan="7">
+
+                  <div className="categories-empty-state">
+                    <h3>
+                      No attributes found
+                    </h3>
+
+                    <p>
+                      No attributes match your current search.
+                    </p>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            )}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <Pagination
+        currentPage={
+          attributePage
+        }
+        totalPages={
+          attributeTotalPages
+        }
+        totalItems={
+          filteredAttributes.length
+        }
+        itemLabel="attributes"
+        showWhenEmpty
+        pageSize={
+          attributePageSize
+        }
+        onPageChange={
+          setAttributePage
+        }
+        onPageSizeChange={(
+          size
+        ) => {
+
+          setAttributePageSize(
+            size
+          );
+
+          setAttributePage(
+            1
+          );
+
+        }}
+       
+      />
+
+    </>
+
+  );
+
+  if (createCategoryOpen) {
+    return (
+      <div className={`store-categories-page ${embedded ? "store-categories-embedded" : ""}`}>
+        <CreateStoreCategory
+          categories={categories}
+          category={editingCategory}
+          storeId={storeId}
+          onClose={() => { setCreateCategoryOpen(false); setEditingCategory(null); }}
+          onSubmit={async (payload) => {
+            if (editingCategory) await updateStoreCategory(storeId, editingCategory.id, payload);
+            else await createStoreCategory(storeId, payload);
+            await refreshTaxonomies();
+            setCategoryPage(1);
+            setEditingCategory(null);
+            setCreateCategoryOpen(false);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (createTagOpen) {
+    return (
+      <div className={`store-categories-page ${embedded ? "store-categories-embedded" : ""}`}>
+        <CreateStoreTag
+          tag={editingTag}
+          onClose={() => { setCreateTagOpen(false); setEditingTag(null); }}
+          onSubmit={async (payload) => {
+            if (editingTag) await updateStoreTag(storeId, editingTag.id, payload);
+            else await createStoreTag(storeId, payload);
+            await refreshTaxonomies();
+            setTagPage(1);
+            setEditingTag(null);
+            setCreateTagOpen(false);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (createAttributeOpen) {
+    return (
+      <div className={`store-categories-page ${embedded ? "store-categories-embedded" : ""}`}>
+        <CreateStoreAttribute
+          attribute={editingAttribute}
+          onClose={() => { setCreateAttributeOpen(false); setEditingAttribute(null); }}
+          onSubmit={async (payload) => {
+            if (editingAttribute) await updateStoreAttribute(storeId, editingAttribute.id, payload);
+            else await createStoreAttribute(storeId, payload);
+            await refreshTaxonomies();
+            setAttributePage(1);
+            setEditingAttribute(null);
+            setCreateAttributeOpen(false);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (configuringAttribute && ConfigureTermsComponent) {
+    return <div className={`store-categories-page ${embedded ? "store-categories-embedded" : ""}`}>
+      <ConfigureTermsComponent
+        attribute={configuringAttribute}
+        onClose={() => setConfiguringAttribute(null)}
+        onAddItem={async (name) => {
+          await createStoreAttributeTerm(storeId, configuringAttribute.id, { name });
+          await refreshTaxonomies();
+          setConfiguringAttribute((current) => current ? { ...current, terms: [...current.terms, name] } : current);
+        }}
+      />
+    </div>;
+  }
+
+
+  /* =========================================================
+     MAIN UI
+  ========================================================= */
+
+  return (
+
+    <div
+      className={`store-categories-page ${
+        embedded
+          ? "store-categories-embedded"
+          : ""
+      }`}
+    >
+
+      {/* =====================================================
+         HEADER
+      ===================================================== */}
+
+      <div className="store-categories-header">
+
+        <div>
+
+          <h2>{tabs.find((tab) => tab.id === activeTab)?.label || "Categories"}</h2>
+
+          <p>
+            {activeTab === "categories" && "Organize the product categories available at this store."}
+            {activeTab === "tags" && "Manage the tags used to organize products at this store."}
+            {activeTab === "attributes" && "Manage product attributes and their available terms."}
+          </p>
+
+
+        </div>
+
+        {activeTab === "categories" && <button type="button" className="categories-create-btn" onClick={() => { setEditingCategory(null); setCreateCategoryOpen(true); }} disabled={!storeId}>
+          <i className="bi bi-plus-lg" aria-hidden="true" /> Add Category
+        </button>}
+        {activeTab === "tags" && <button type="button" className="categories-create-btn" onClick={() => { setEditingTag(null); setCreateTagOpen(true); }} disabled={!storeId}>
+          <i className="bi bi-plus-lg" aria-hidden="true" /> Add Tag
+        </button>}
+        {activeTab === "attributes" && <button type="button" className="categories-create-btn" onClick={() => { setEditingAttribute(null); setCreateAttributeOpen(true); }} disabled={!storeId}>
+          <i className="bi bi-plus-lg" aria-hidden="true" /> Add Attribute
+        </button>}
+
+      </div>
+
+
+      {/* =====================================================
+         PANEL
+      ===================================================== */}
+
+      <div className="categories-panel">
+
+
+        {/* ===================================================
+           TABS
+        =================================================== */}
+
+        {embedded ? null : <div className="categories-tabs">
+
+          {tabs.map(
+            (tab) => (
+
+              <button
+                key={tab.id}
+                type="button"
+                className={`categories-tab ${
+                  activeTab ===
+                  tab.id
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() =>
+                  handleTabChange(
+                    tab.id
+                  )
+                }
+              >
+
+                <i
+                  className={`bi ${tab.icon}`}
+                />
+
+                {tab.label}
+
+              </button>
+
+            )
+          )}
+
+        </div>}
+
+
+        {/* ===================================================
+           TOOLBAR
+        =================================================== */}
+
+        <FiltersBar
+          className="categories-toolbar"
+          searchValue={search}
+          onSearchChange={handleSearchChange}
+          searchPlaceholder={`Search ${activeTab}...`}
+          searchAriaLabel={`Search ${activeTab}`}
+          filters={[
+            {
+              key: "status",
+              label: `Filter ${activeTab} by status`,
+              value: statusFilter,
+              onChange: handleStatusFilterChange,
+              options: [
+                { label: "All Statuses", value: "" },
+                ...[...new Set((activeTab === "categories" ? categories : activeTab === "tags" ? tags : attributes)
+                  .map((item) => item.status || "Active"))]
+                  .map((status) => ({ label: status, value: status })),
+              ],
+            },
+          ]}
+          onClear={resetFilters}
+          clearLabel="Reset"
+          trailingAction={activeTab === "attributes" && (
+            <>
+              {/* <button
+                type="button"
+                className="categories-clear-btn"
+                onClick={handleFetchAttributes}
+                disabled={!storeId || Boolean(attributeAction)}
+              >
+                <i className="bi bi-cloud-download" aria-hidden="true" />
+                {attributeAction === "fetch" ? "Refreshing…" : "Reload Attributes"}
+              </button>
+              <button
+                type="button"
+                className="categories-clear-btn"
+                onClick={handleSyncAttributes}
+                disabled={!storeId || Boolean(attributeAction)}
+              >
+                <i className="bi bi-arrow-repeat" aria-hidden="true" />
+                {attributeAction === "sync" ? "Syncing…" : "Sync Attributes"}
+              </button> */}
+            </>
+          )}
+        />
+
+        {taxonomyActionError && <div className="store-attribute-sync-message error" role="alert">{taxonomyActionError}</div>}
+
+        {activeTab === "attributes" && attributeActionError && (
+          <div className="store-attribute-sync-message error" role="alert">
+            {attributeActionError}
+          </div>
+        )}
+        {activeTab === "attributes" && attributeActionMessage && (
+          <div className="store-attribute-sync-message success" role="status" aria-live="polite">
+            {attributeActionMessage}
+          </div>
+        )}
+
+
+        {/* ===================================================
+           CONTENT
+        =================================================== */}
+
+        {taxonomyLoading ? (
+          <div className="categories-empty-state" role="status">
+            Loading categories, tags, and attributes…
+          </div>
+        ) : taxonomyError ? (
+          <div className="categories-empty-state" role="alert">
+            {taxonomyError}
+          </div>
+        ) : null}
+
+        {activeTab ===
+          "categories" &&
+          renderCategories()}
+
+        {activeTab ===
+          "tags" &&
+          renderTags()}
+
+        {activeTab ===
+          "attributes" &&
+          renderAttributes()}
+
+      </div>
+
+      {/* =====================================================
+         UNIFIED MODERN MODAL
+      ===================================================== */}
+
+      <BentoDetailModal
+        open={Boolean(selectedItem)}
+        onClose={closeView}
+        headerIcon={
+          selectedItemType === "category"
+            ? "bi-folder"
+            : selectedItemType === "tag"
+            ? "bi-tags"
+            : "bi-sliders"
+        }
+        title={getModalTitle()}
+        code={
+          selectedItem?.slug && selectedItem.slug !== "—"
+            ? `Slug: ${selectedItem.slug}`
+            : selectedItem?.id
+            ? `ID: ${selectedItem.id}`
+            : ""
+        }
+        size="compact"
+        hero={getCategoryHero()}
+        fields={getCategoryFields()}
+      />
+
+    </div>
+
+  );
+}
