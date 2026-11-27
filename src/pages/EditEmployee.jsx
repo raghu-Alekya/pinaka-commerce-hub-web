@@ -23,6 +23,7 @@ import {
   Settings,
 
   Upload,
+  Trash2,
 
   ChevronDown,
 
@@ -1737,7 +1738,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
           <div className="add-employee-right">
 
-            {/* PROFILE PHOTO
+            {/* PROFILE PHOTO */}
 
             <section className="employee-card profile-photo-card">
 
@@ -1799,9 +1800,11 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
                     <Upload size={17} />
 
-                    {profileImage ? "Change Photo" : "Upload Photo"}
+                    {uploadingProfileImage ? "Uploading…" : profileImage ? "Change Photo" : "Upload Photo"}
 
                   </button>
+
+                  {profileImage && <button type="button" className="profile-photo-delete-btn" onClick={() => setConfirmPhotoDelete(true)} disabled={uploadingProfileImage || deletingProfileImage} aria-label="Delete profile photo" title="Delete profile photo"><Trash2 size={17} /></button>}
 
 
 
@@ -1827,7 +1830,7 @@ export default function EditEmployee({ employee: employeeProp, onBack: onBackPro
 
               </div>
 
-            </section> */}
+            </section>
 
 
 

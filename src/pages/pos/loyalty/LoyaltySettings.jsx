@@ -40,6 +40,19 @@ const SAMPLE_CUSTOMERS = [
   { user_id: 21, name: "Customer 5112", contact: "6025165112", credited: 4, redeemed: 0, expired: 0, available: 4, last_updated: "2026-05-26 19:20", transactions: [] },
 ];
 
+function getLoyaltyTransactionStatus(transaction) {
+  const credited = Number(transaction.credited_points ?? transaction.creditedPoints ?? transaction.points_credited ?? 0);
+  const redeemed = Number(transaction.redeemed_points ?? transaction.redeemedPoints ?? transaction.points_redeemed ?? 0) +
+    Number(transaction.order_redeem_points ?? transaction.orderRedeemPoints ?? 0);
+  const expired = Number(transaction.expired_points ?? transaction.expiredPoints ?? transaction.points_expired ?? 0);
+  if (credited > 0 && redeemed > 0) return "Gained & Used";
+  if (redeemed > 0) return "Used";
+  if (expired > 0) return "Expired";
+  if (credited > 0) return "Gained";
+  const existing = String(transaction.points_status || transaction.status || "Unknown").trim();
+  return existing ? existing.charAt(0).toUpperCase() + existing.slice(1).toLowerCase() : "Unknown";
+}
+
 export function LoyaltySettings() {
   const { currencySymbol, merchantId, storeId } = usePosSettings();
   const [tab, setTab] = useState("customers");
@@ -208,7 +221,11 @@ export function LoyaltySettings() {
                     <td>{transaction.redeemed_points ?? "—"}</td>
                     <td>{transaction.expired_points ?? "—"}</td>
                     <td>{transaction.order_redeem_points ?? "—"}</td>
-                    <td><StatusBadge className="loyalty-status-badge" status={transaction.points_status || "Unknown"} /></td>
+                    <td>{(() => {
+                      const pointsStatus = getLoyaltyTransactionStatus(transaction);
+                      const tone = pointsStatus === "Gained" ? "Active" : "Inactive";
+                      return <StatusBadge className="loyalty-status-badge" status={tone}>{pointsStatus}</StatusBadge>;
+                    })()}</td>
                     <td>{transaction.points_created_date ?? "—"}</td>
                     <td>{transaction.points_expiry_date ?? "—"}</td>
                   </tr>
