@@ -113,6 +113,20 @@ export const productsApi = {
             }
         );
     },
+
+    createProduct: (storeId, payload) => request(`${storeCatalogPath(storeId)}/products`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+    }),
+
+    updateProduct: (storeId, productId, payload) => request(`${storeCatalogPath(storeId)}/products/${encodeURIComponent(productId)}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+    }),
+
+    deleteProduct: (storeId, productId) => request(`${storeCatalogPath(storeId)}/products/${encodeURIComponent(productId)}`, {
+        method: "DELETE",
+    }),
 };
 
 // =========================================================
@@ -299,7 +313,6 @@ export function normalizeProduct(
     return {
         id:
             product?.id ??
-            product?.wordpressId ??
             rawPayload?.id ??
             "",
 
@@ -313,11 +326,6 @@ export function normalizeProduct(
 
         categoryId:
             product?.categoryId ??
-            "",
-
-        wordpressId:
-            product?.wordpressId ??
-            rawPayload?.id ??
             "",
 
         parentId:
@@ -341,11 +349,12 @@ export function normalizeProduct(
             rawPayload?.variations ??
             [],
 
-        wordpressCategoryId:
-            product?.wordpressCategoryId ??
-            "",
-
         name,
+
+        slug:
+            product?.slug ??
+            rawPayload?.slug ??
+            "",
 
         sku:
             product?.sku ??

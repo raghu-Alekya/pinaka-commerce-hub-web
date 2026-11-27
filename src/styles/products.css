@@ -294,9 +294,9 @@
 
 .products-table-wrapper {
     box-sizing: border-box;
-    width: calc(100% - 24px);
-    max-width: calc(100% - 24px);
-    margin: 0 12px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     overflow-x: auto;
     border: 1px solid #dfe9f4;
     border-radius: 8px;
@@ -318,19 +318,18 @@
 
 .products-table {
     width: 100%;
-    min-width: 1050px;
+    min-width: 1180px;
     table-layout: fixed;
     border-collapse: collapse;
 }
 
-.products-col-product { width: 19%; }
-.products-col-sku { width: 16%; }
+.products-col-product { width: 25%; }
+.products-col-sku { width: 11%; }
 .products-col-stock { width: 13%; }
-.products-col-price { width: 9%; }
+.products-col-price { width: 12%; }
 .products-col-category { width: 13%; }
-.products-col-tags { width: 12%; }
-.products-col-updated { width: 9%; }
-.products-col-status { width: 9%; }
+.products-col-tags { width: 11%; }
+.products-col-actions { width: 15%; }
 
 .products-table th {
     height: 44px;
@@ -353,6 +352,9 @@
     font-size: 13px;
     vertical-align: middle;
 }
+
+.products-table th,
+.products-table td { padding-left: 12px; padding-right: 12px; }
 
 .products-table th,
 .products-table td {
@@ -462,6 +464,12 @@
     overflow: hidden;
     color: #a2aabb;
 }
+
+.product-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.product-image > i { font-size: 18px; }
+.products-table-wrapper::-webkit-scrollbar { height: 10px; }
+.products-table-wrapper::-webkit-scrollbar-thumb { background: #b8bfcb; border-radius: 999px; }
+.products-table-wrapper::-webkit-scrollbar-track { background: #f0f2f6; }
 
 
 .product-info strong {
@@ -640,31 +648,6 @@
 }
 
 /* =========================================================
-   FOOTER
-========================================================= */
-
-.products-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 13px 17px;
-    border-top: 1px solid #e6e9ef;
-    color: #7d889a;
-    font-size: 11px;
-}
-
-.products-footer strong {
-    color: #44516a;
-}
-
-.products-source {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #7c879b;
-}
-
-/* =========================================================
    EMPTY
 ========================================================= */
 
@@ -739,19 +722,13 @@
         flex: 1;
     }
 
-    .products-footer {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 8px;
-    }
 }
 
 @media (max-width: 600px) {
     .products-table-wrapper {
-        width: calc(100% - 20px);
-        max-width: calc(100% - 20px);
-        margin-right: 10px;
-        margin-left: 10px;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
     }
 
     .products-pagination {
@@ -760,6 +737,12 @@
         margin-left: 10px;
     }
 }
+
+/* Hide legacy columns if an older product table is still mounted. */
+.products-table:has(col.products-col-updated) th:nth-last-child(3),
+.products-table:has(col.products-col-updated) td:nth-last-child(3),
+.products-table:has(col.products-col-status) th:nth-last-child(2),
+.products-table:has(col.products-col-status) td:nth-last-child(2) { display: none !important; }
 .product-tags {
     display: flex;
     flex-wrap: wrap;
@@ -966,3 +949,13 @@
     }
 
 }
+
+.product-actions-cell { overflow: visible !important; }
+.product-row-actions { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
+.product-row-actions button { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #d8e2f5; border-radius: 9px; background: #fff; color: #4263a6; font-size: 0 !important; cursor: pointer; box-shadow: 0 1px 3px #263b6210; }
+.product-row-actions button i { font-size: 17px; line-height: 1; }
+.product-row-actions button:hover { background: #f3f6ff; border-color: #aebfe2; color: #294d94; }
+.product-row-actions button.delete { color: #a43845; }
+.product-row-actions button.delete:hover { background: #fff3f3; border-color: #efc6cb; }
+.pm-form-delete { margin-right: auto; }
+@media (max-width: 900px) { .products-col-actions { min-width: 160px; } .product-row-actions { gap: 5px; } .product-row-actions button { width: 40px; height: 40px; } }

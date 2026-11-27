@@ -3,14 +3,13 @@ import FiltersBar from "../components/FiltersBar";
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "../components/Pagination";
 import BentoDetailModal from "../components/BentoDetailModal";
-import StatusBadge from "../components/StatusBadge";
 import {
     productsApi,
     normalizeCatalog,
     normalizeProduct,
 } from "../api/products";
-import { syncWordpressProducts } from "../api/storeConnector";
 import { formatCurrency } from "../utils/currency";
+import ProductManager from "./ProductManager";
 import "../styles/products.css";
 
 export const normalizeStock = (val) =>
@@ -80,12 +79,14 @@ export default function Products({
     const [expandedProductIds, setExpandedProductIds] = useState(() => new Set());
 
     // =========================================================
-    // PRODUCT SYNC STATES
+    // PRODUCT LOAD ERROR
     // =========================================================
 
-    const [syncing, setSyncing] = useState("");
-    const [syncMessage, setSyncMessage] = useState("");
-    const [syncError, setSyncError] = useState("");
+    const [loadError, setLoadError] = useState("");
+    const [showProductManager, setShowProductManager] = useState(false);
+    const [productManagerMode, setProductManagerMode] = useState("form");
+    const [actionProduct, setActionProduct] = useState(null);
+    const [productAction, setProductAction] = useState("edit");
 
     // =========================================================
     // VIEW PRODUCT MODAL
@@ -99,43 +100,23 @@ export default function Products({
     // LOAD PRODUCTS FROM API
     // =========================================================
 
-    const loadProducts = async ({
-        showMessage = false,
-        syncWebsite = false,
-    } = {}) => {
+    const loadProducts = async () => {
         if (!storeId) {
             setProducts([]);
-            setSyncError("Store ID is required to load products.");
+            setLoadError("Store ID is required to load products.");
             return;
         }
 
         try {
             setLoading(true);
 
-            if (showMessage) {
-                setSyncing("latest");
-                setSyncMessage("");
-                setSyncError("");
-            }
-
-            if (syncWebsite) await syncWordpressProducts(storeId);
-
-            const response = syncWebsite
-                ? await productsApi.getCatalog(storeId)
-                : await pendingStoreRead(`store-products:${storeId}`, () => productsApi.getCatalog(storeId));
+            setLoadError("");
+            const response = await pendingStoreRead(`store-products:${storeId}`, () => productsApi.getCatalog(storeId));
 
             const catalog =
                 normalizeCatalog(response);
 
             setProducts(catalog.products || []);
-
-            if (showMessage) {
-                setSyncMessage(
-                    syncWebsite
-                        ? "Latest product updates synced successfully."
-                        : "Latest product updates completed successfully."
-                );
-            }
         } catch (error) {
             console.error(
                 "Failed to load products:",
@@ -144,16 +125,12 @@ export default function Products({
 
             setProducts([]);
 
-            setSyncError(
+            setLoadError(
                 error?.message ||
                 "Failed to load products."
             );
         } finally {
             setLoading(false);
-
-            if (showMessage) {
-                setSyncing("");
-            }
         }
     };
 
@@ -322,20 +299,6 @@ export default function Products({
     };
 
     // =========================================================
-    // LATEST PRODUCT UPDATES
-    // =========================================================
-
-    const handleLatestProductUpdates =
-        async () => {
-            if (syncing) return;
-
-            await loadProducts({
-                showMessage: true,
-                syncWebsite: true,
-            });
-        };
-
-    // =========================================================
     // PRODUCT DETAILS FIELDS
     // =========================================================
 
@@ -456,6 +419,25 @@ export default function Products({
     // RENDER
     // =========================================================
 
+    if (showProductManager) return <ProductManager
+        key={storeId || "no-store"}
+        storeId={storeId}
+        products={products}
+        startMode={productManagerMode}
+        onSaved={loadProducts}
+        onClose={() => setShowProductManager(false)}
+    />;
+
+    if (actionProduct) return <ProductManager
+        key={`${storeId || "no-store"}-${actionProduct.id}-${productAction}`}
+        storeId={storeId}
+        products={products}
+        initialProduct={actionProduct}
+        initialAction={productAction}
+        onSaved={loadProducts}
+        onClose={() => setActionProduct(null)}
+    />;
+
     return (
         <div className="products-page">
 
@@ -471,81 +453,28 @@ export default function Products({
                         <div>
                             <h1>Products</h1>
 
-                            <p>
-                                View products available for this
-                                store.
-                            </p>
+                            <p>Create and manage this store’s products and inventory.</p>
                         </div>
 
                     </div>
                 </div>
-
                 <div className="products-header-actions">
-
-                    {/* LATEST PRODUCT UPDATES */}
-
-                    <button
-                        type="button"
-                        className="product-sync-btn product-sync-update"
-                        onClick={
-                            handleLatestProductUpdates
-                        }
-                        disabled={Boolean(syncing)}
-                    >
-                        {syncing === "latest" ? (
-                            <>
-                                <span className="sync-spinner" />
-                                Updating...
-                            </>
-                        ) : (
-                            <>
-                                <i className="bi bi-arrow-repeat" />
-                                Latest Updates
-                            </>
-                        )}
+                    <button type="button" className="product-manage-btn secondary" onClick={() => { setProductManagerMode("import"); setShowProductManager(true); }}>
+                        <i className="bi bi-upload" aria-hidden="true" /> Import
                     </button>
-
+                    <button type="button" className="product-manage-btn primary" onClick={() => { setProductManagerMode("form"); setShowProductManager(true); }}>
+                        <i className="bi bi-plus-lg" aria-hidden="true" /> Add product
+                    </button>
                 </div>
             </div>
 
-            {/* =================================================
-                API / SYNC MESSAGE
-            ================================================= */}
-
-            {(syncMessage ||
-                syncError) && (
-                <div
-                    className={
-                        syncError
-                            ? "products-sync-message error"
-                            : "products-sync-message success"
-                    }
-                >
-
-                    <i
-                        className={
-                            syncError
-                                ? "bi bi-exclamation-circle"
-                                : "bi bi-check-circle"
-                        }
-                    />
-
-                    <span>
-                        {syncError ||
-                            syncMessage}
-                    </span>
-
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setSyncMessage("");
-                            setSyncError("");
-                        }}
-                        aria-label="Close"
-                    >
+            {loadError && (
+                <div className="products-sync-message error" role="alert">
+                    <i className="bi bi-exclamation-circle" />
+                    <span>{loadError}</span>
+                    <button type="button" onClick={() => setLoadError("")} aria-label="Close">
                         <i className="bi bi-x" />
                     </button>
-
                 </div>
             )}
 
@@ -717,8 +646,7 @@ export default function Products({
                                 <col className="products-col-price" />
                                 <col className="products-col-category" />
                                 <col className="products-col-tags" />
-                                <col className="products-col-updated" />
-                                <col className="products-col-status" />
+                                <col className="products-col-actions" />
                             </colgroup>
 
                             <thead>
@@ -731,8 +659,7 @@ export default function Products({
                                     <th>Price</th>
                                     <th>Category</th>
                                     <th>Tags</th>
-                                    <th>Updated</th>
-                                    <th>Status</th>
+                                    <th>Actions</th>
 
                                 </tr>
 
@@ -757,11 +684,13 @@ export default function Products({
                                                 return next;
                                             })}
                                             onSelect={setSelectedProduct}
+                                            onEdit={(item) => { setActionProduct(item); setProductAction("edit"); }}
+                                            onDelete={(item) => { setActionProduct(item); setProductAction("delete"); }}
                                         />
                                     )
                                 ) : (
                                     <tr>
-                                        <td className="products-table-empty-cell" colSpan="8">
+                                        <td className="products-table-empty-cell" colSpan="7">
                                             <div className="products-table-empty-state">
                                                 <span>
                                                     {products.length === 0
@@ -801,26 +730,6 @@ export default function Products({
                                 }}
                                 
                             />
-                        </div>
-                    )}
-
-                {/* =================================================
-                    FOOTER
-                ================================================= */}
-
-                {!loading &&
-                    filteredProducts.length >
-                        0 && (
-                        <div className="products-footer">
-
-                            <span className="products-source">
-
-                                <i className="bi bi-arrow-repeat" />
-
-                                Synced from WooCommerce
-
-                            </span>
-
                         </div>
                     )}
 
@@ -937,6 +846,12 @@ function formatVariantAttributes(attributes) {
     }).filter(Boolean).join(" · ");
 }
 
+function getProductImageSource(image) {
+    if (typeof image === "string") return image;
+    if (image && typeof image === "object") return image.url || image.src || image.thumbnail || image.thumbnailUrl || "";
+    return "";
+}
+
 function formatUpdatedAt(value) {
     if (!value) return "—";
     const date = new Date(value);
@@ -982,7 +897,7 @@ function groupProductVariants(products) {
     const productsById = new Map();
 
     products.forEach((product) => {
-        [product.id, product.wordpressId].filter(Boolean).forEach((id) => productsById.set(String(id), product));
+        if (product.id) productsById.set(String(product.id), product);
     });
 
     const attach = (parentId, variant) => {
@@ -1052,7 +967,7 @@ function getVariantPriceRangeLabel(variants, currency, currencySymbol) {
     return `${minimumLabel}–${formatCurrency(maximum, currency, currencySymbol)}`;
 }
 
-function ProductGroupRows({ product, variants, currency, currencySymbol, expanded, onToggleVariants, onSelect }) {
+function ProductGroupRows({ product, variants, currency, currencySymbol, expanded, onToggleVariants, onSelect, onEdit, onDelete }) {
     const priceRangeLabel = variants.length
         ? getVariantPriceRangeLabel(variants, currency, currencySymbol)
         : "";
@@ -1069,6 +984,8 @@ function ProductGroupRows({ product, variants, currency, currencySymbol, expande
             expanded={expanded}
             onToggleVariants={onToggleVariants}
             onClick={() => onSelect(parentProduct)}
+            onEdit={onEdit}
+            onDelete={onDelete}
         />
         {expanded && variants.map((variant) => {
             const childName = getChildProductName(product.name, variant.name);
@@ -1081,6 +998,8 @@ function ProductGroupRows({ product, variants, currency, currencySymbol, expande
                     currencySymbol={currencySymbol}
                     variant
                     onClick={() => onSelect(childProduct)}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
                 />
             );
         })}
@@ -1106,6 +1025,8 @@ function ProductRow({
     onToggleVariants,
     onClick,
     variant = false,
+    onEdit,
+    onDelete,
 }) {
     const variantAttributes = variant ? formatVariantAttributes(product.attributes) : "";
     const normalizeLabel = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -1117,6 +1038,7 @@ function ProductRow({
 
     const normalizedStockStatus =
         getProductStockStatus(product);
+    const productImageSource = getProductImageSource(product.image);
 
     const stockClass =
         normalizedStockStatus ===
@@ -1143,6 +1065,13 @@ function ProductRow({
             <td>
 
                 <div className="product-info">
+                    <div className="product-image" aria-hidden={!productImageSource}>
+                        {productImageSource ? (
+                            <img src={productImageSource} alt={product.name ? `${product.name} product` : "Product"} loading="lazy" />
+                        ) : (
+                            <i className="bi bi-image" aria-hidden="true" />
+                        )}
+                    </div>
                     <div>
 
                         <strong>
@@ -1299,26 +1228,12 @@ function ProductRow({
 
             </td>
 
-            {/* =================================================
-                UPDATED
-            ================================================= */}
-
-            <td>
-
-                <span className="product-date">
-                    {formatUpdatedAt(product.updatedAt)}
-                </span>
-
-            </td>
-
-            {/* =================================================
-                STATUS
-            ================================================= */}
-
-            <td>
-
-                <StatusBadge status="Active">Published</StatusBadge>
-
+            <td className="product-actions-cell">
+                <div className="product-row-actions" onClick={(event) => event.stopPropagation()}>
+                    <button type="button" title="View product" aria-label={`View ${product.name || "product"}`} onClick={onClick}><i className="bi bi-eye" /></button>
+                    <button type="button" title="Edit product" aria-label={`Edit ${product.name || "product"}`} onClick={() => onEdit?.(product)}><i className="bi bi-pencil" /></button>
+                    <button type="button" className="delete" title="Delete product" aria-label={`Delete ${product.name || "product"}`} onClick={() => onDelete?.(product)}><i className="bi bi-trash" /></button>
+                </div>
             </td>
 
         </tr>
