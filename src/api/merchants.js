@@ -347,7 +347,7 @@ export function toMerchantPayload(data) {
 }
 
 export async function listMerchants() {
-  const data = await api.get(endpoints.merchants);
+  const data = await pendingStoreRead("merchants-list", () => api.get(endpoints.merchants));
   const items = findMerchantList(data);
 
   return items.map(mapMerchantToRow).filter(Boolean);
