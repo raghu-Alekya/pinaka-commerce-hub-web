@@ -1,4 +1,5 @@
-import { buildStoreSetupPayload } from "../api/storeDetails";
+import { buildStoreSetupPayload, toSnakeCaseApiPayload } from "../api/storeDetails";
+import { allocateId } from "../api/ids";
 import { useLocationOptions } from "../data/useLocationOptions";
 import { validatePhoneForCountry } from "../utils/phoneValidation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -12,6 +13,7 @@ import {
   saveStoreEmployees,
 } from "../api/employees";
 import { getMerchant, listMerchants } from "../api/merchants";
+import { useAuth } from "../auth/AuthContext";
 import { listFeatures } from "../api/features";
 import { listPlans } from "../api/plans";
 import { storeTypesApi } from "../api/storeTypes";
@@ -83,6 +85,21 @@ const COUNTRIES = {
     ],
   },
 };
+const TIME_ZONE_OPTIONS = (() => {
+  let supported = [];
+  try {
+    supported = typeof Intl.supportedValuesOf === "function"
+      ? Intl.supportedValuesOf("timeZone")
+      : [];
+  } catch {
+    // Use the country defaults below in browsers without timezone enumeration.
+  }
+  return [...new Set([
+    "UTC",
+    ...Object.values(COUNTRIES).flatMap((country) => country.zones),
+    ...supported,
+  ])];
+})();
 const POSTAL_CODE_RULES = {
   India: /^\d{6}$/,
   "United States": /^\d{5}(?:-\d{4})?$/,
@@ -109,6 +126,7 @@ function phoneInputValue(value, callingCode) {
   const dial = String(callingCode || "").replace(/\D/g, "");
   return dial && !digits.startsWith(dial) ? `${dial}${digits}` : digits;
 }
+
 const STEPS = [
   "Store Details",
   "Subscription",
@@ -126,6 +144,31 @@ const STEP_HINTS = [
   "Review and create store",
 ];
 const STANDARD_ACTIONS = ["View", "Create", "Edit", "Delete"];
+const normalizePermissionAction = (value) => {
+  const key = String(value || "").toLowerCase();
+  if (!key) return "";
+  if (/(view|read|list|get)/.test(key)) return "View";
+  if (/(create|add|insert)/.test(key)) return "Create";
+  if (/(edit|update|write|modify)/.test(key)) return "Edit";
+  if (/(delete|remove|destroy)/.test(key)) return "Delete";
+  return "";
+};
+const formatBillingLabel = (value) => {
+  const key = String(value || "").trim().toUpperCase().replace(/[\s-]+/g, "_");
+  const labels = {
+    PER_STORE: "Per store",
+    PER_DEVICE: "Per device",
+    PER_TERMINAL: "Per terminal",
+    FLAT: "Flat rate",
+    FLAT_RATE: "Flat rate",
+    MONTHLY: "Monthly",
+    QUARTERLY: "Quarterly",
+    ANNUAL: "Annual",
+    YEARLY: "Annual",
+    FREE_TRIAL: "Free trial",
+  };
+  return labels[key] || String(value || "").trim();
+};
 const listFrom = (value) => {
   if (Array.isArray(value)) return value;
   const containers = [
@@ -153,6 +196,8 @@ const featureName = (item) =>
     : (item?.name ??
       item?.featureName ??
       item?.feature_name ??
+      item?.featureLabel ??
+      item?.feature_label ??
       item?.featureKey ??
       item?.feature_key ??
       item?.code ??
@@ -163,7 +208,7 @@ const featureActions = (item) =>
         .map((action) =>
           typeof action === "string"
             ? action
-            : (action?.name ?? action?.action ?? action?.code),
+            : (action?.name ?? action?.action_name ?? action?.action ?? action?.code),
         )
         .filter(Boolean)
     : [];
@@ -171,6 +216,9 @@ const featureActions = (item) =>
 const idOf = (value) =>
   String(
     value?.merchantId ??
+      value?.merchant_id ??
+      value?.merchantCode ??
+      value?.merchant_code ??
       value?.id ??
       value?._id ??
       (typeof value === "string" || typeof value === "number" ? value : ""),
@@ -212,8 +260,34 @@ const normalizeHours = (value) => {
   });
 };
 const flattenRolePermissions = (value) => {
+  if (value && !Array.isArray(value) && typeof value === "object") {
+    const nested =
+      value.role_permissions ||
+      value.rolePermissions ||
+      value.role_permission ||
+      value.rolePermission ||
+      value.permissions ||
+      value.data ||
+      value.result ||
+      value.payload;
+    if (Array.isArray(nested) || (nested && typeof nested === "object"))
+      return flattenRolePermissions(nested);
+    return Object.entries(value).flatMap(([roleId, permissions]) =>
+      permissions && typeof permissions === "object"
+        ? flattenRolePermissions([{ role_template_id: roleId, permissions }])
+        : [],
+    );
+  }
   if (!Array.isArray(value)) return [];
-  if (value.some((row) => row?.permissionAction)) return value;
+  if (value.some((row) => row?.permission_action || row?.permissionAction)) {
+    return value.map((row) => ({
+      role_template_id: row.role_template_id || row.roleTemplateId || row.role_template?.id || "",
+      role_name: row.role_name || row.roleName || row.role_template?.name || "",
+      feature_name: row.feature_name || row.featureName || row.feature_label || row.featureLabel || row.feature_key || row.featureKey || row.feature?.name || row.feature?.feature_name || "",
+      permission_action: row.permission_action || row.permissionAction || row.action || row.permission_name || row.permissionName || row.permission_key || "",
+      allowed: row.allowed ?? row.is_allowed ?? row.isAllowed ?? row.enabled,
+    }));
+  }
   const flat = [];
   for (const role of value) {
     const matrix =
@@ -221,14 +295,15 @@ const flattenRolePermissions = (value) => {
         ? role.permissions
         : {};
     for (const [featureName, actions] of Object.entries(matrix)) {
-      for (const action of STANDARD_ACTIONS) {
-        if (actions?.[action] === undefined) continue;
+      for (const [rawAction, allowed] of Object.entries(actions || {})) {
+        const action = STANDARD_ACTIONS.includes(rawAction) ? rawAction : normalizePermissionAction(rawAction);
+        if (!action) continue;
         flat.push({
-          roleTemplateId: role.roleTemplateId || role.id || "",
-          roleName: role.name || role.roleName || "",
-          featureName,
-          permissionAction: action,
-          allowed: actions[action],
+          role_template_id: role.role_template_id || role.roleTemplateId || role.id || "",
+          role_name: role.name || role.role_name || role.roleName || "",
+          feature_name: featureName,
+          permission_action: action,
+          allowed,
         });
       }
     }
@@ -246,15 +321,15 @@ const blankStore = (merchantId = "") => ({
   email: "",
   url: "",
   logo: "",
-  currency: "",
+  currency: "INR",
   status: "Active",
   addressLine1: "",
   addressLine2: "",
   city: "",
   state: "",
   zip: "",
-  country: "",
-  timezone: "",
+  country: "India",
+  timezone: "Asia/Kolkata",
   defaultLanguage: "",
   hours: blankHours(),
 });
@@ -276,35 +351,36 @@ const unwrapMerchant = (result) => {
     raw.storeType ??
     raw.data?.storeType ??
     result?.storeType;
+  const typeName = [
+    owner.storeTypeName,
+    sub.storeTypeName,
+    plan.storeTypeName,
+    plan.storeType?.name,
+    sub.storeType?.name,
+    sub.storeType?.storeTypeName,
+    typeof sub.storeType === "string" ? sub.storeType : "",
+    typeof storeType === "string" ? storeType : "",
+    storeType?.name,
+    storeType?.storeTypeName,
+    owner.type,
+  ].find((value) => value && !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(String(value))) || "";
   return {
     owner,
     subscription: sub,
-    typeId: String(
-      owner.storeTypeId ??
-        storeType?.id ??
-        storeType?.storeTypeId ??
-        draft?.merchant?.storeTypeId ??
-        "",
-    ),
-    typeName:
-      owner.storeTypeName ||
-      (typeof storeType === "string"
-        ? storeType
-        : (storeType?.name ?? storeType?.storeTypeName)) ||
-      owner.type ||
-      "",
+    typeId: String([
+      owner.storeTypeId,
+      storeType?.id,
+      storeType?.storeTypeId,
+      sub.storeTypeId,
+      sub.storeType?.id,
+      plan.storeTypeId,
+      plan.store_type_id,
+      draft?.merchant?.storeTypeId,
+    ].find(Boolean) || ""),
+    typeName,
     roles: result?.roles || raw.roles || owner.roles || draft?.roles || [],
     plan,
   };
-};
-const normalizePermissionAction = (value) => {
-  const key = String(value || "").toLowerCase();
-  if (!key) return "";
-  if (/(view|read|list|get)/.test(key)) return "View";
-  if (/(create|add|insert)/.test(key)) return "Create";
-  if (/(edit|update|write|modify)/.test(key)) return "Edit";
-  if (/(delete|remove|destroy)/.test(key)) return "Delete";
-  return "";
 };
 const levelForRole = (role) => {
   const scope = String(role?.scopeType || role?.level || "").toUpperCase();
@@ -314,6 +390,16 @@ const levelForRole = (role) => {
   if (scope.includes("SALE") || scope.includes("CASH")) return "Sales";
   if (scope.includes("STORE")) return "Store";
   return role?.level || scope || "Custom";
+};
+const isDefaultPermissionRole = (role) => {
+  const scope = String(role?.scopeType || role?.level || "").trim().toUpperCase();
+  const identity = String(role?.name || role?.roleName || role?.roleCode || role?.code || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  if (!["admin", "merchant"].includes(identity)) return false;
+  // Admin and Merchant receive the same initial permission defaults for a store.
+  return !scope || scope.includes("STORE") || scope.includes("MERCHANT") || scope.includes("FULL");
 };
 const readMerchantSelectedTemplates = (response) => {
   const available = readAvailableRoleTemplates(response);
@@ -332,25 +418,37 @@ const readMerchantSelectedTemplates = (response) => {
       }));
     }
   }
-  const listed = Array.isArray(response?.roleTemplates)
-    ? response.roleTemplates.filter(
-        (row) => row.sourceRoleTemplateId || row.roleTemplateId,
+  const responseRoot = response?.data ?? response ?? {};
+  const listedTemplates =
+    responseRoot.roleTemplates ??
+    responseRoot.role_templates ??
+    responseRoot.items ??
+    [];
+  const listed = Array.isArray(listedTemplates)
+    ? listedTemplates.filter(
+        (row) =>
+          row.sourceRoleTemplateId ||
+          row.source_role_template_id ||
+          row.roleTemplateId ||
+          row.role_template_id,
       )
     : [];
   return listed
     .map((row, index) => {
       const id = String(
         row.sourceRoleTemplateId ||
+          row.source_role_template_id ||
           row.roleTemplateId ||
+          row.role_template_id ||
           row.id ||
           `merchant-role-${index}`,
       );
       return {
         id,
-        name: String(row.name || row.roleName || "Unnamed role").trim(),
+        name: String(row.name || row.roleName || row.role_name || "Unnamed role").trim(),
         description: String(row.description || "").trim(),
-        roleCode: String(row.roleCode || "").trim(),
-        scopeType: String(row.scopeType || "STORE"),
+        roleCode: String(row.roleCode || row.role_code || "").trim(),
+        scopeType: String(row.scopeType || row.scope_type || "STORE"),
         level: levelForRole(row),
         required: false,
         defaultEnabled: false,
@@ -359,11 +457,26 @@ const readMerchantSelectedTemplates = (response) => {
     .filter((row) => row.id && row.name);
 };
 const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
-  const features = Array.isArray(featuresPayload?.features)
-    ? featuresPayload.features
-    : Array.isArray(featuresPayload)
-      ? featuresPayload
-      : [];
+  const listedFeatures = listFrom(featuresPayload);
+  const responseContainers = [
+    featuresPayload,
+    featuresPayload?.data,
+    featuresPayload?.result,
+    featuresPayload?.roleTemplate,
+    featuresPayload?.role_template,
+    featuresPayload?.data?.roleTemplate,
+    featuresPayload?.data?.role_template,
+  ].filter(Boolean);
+  const features = listedFeatures.length
+    ? listedFeatures
+    : responseContainers
+        .flatMap((container) => [
+          container?.featurePermissions,
+          container?.feature_permissions,
+          container?.roleTemplateFeatures,
+          container?.role_template_features,
+        ])
+        .find(Array.isArray) || [];
   const enabled = new Set(
     (enabledNames || []).map((name) => String(name).toLowerCase()),
   );
@@ -371,7 +484,15 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
   const availability = {};
   const rows = [];
   for (const item of features) {
-    const feature = item?.feature || item?.featureDetails || item;
+    const feature =
+      item?.feature ||
+      item?.featureDetails ||
+      item?.feature_definition ||
+      item?.featureDefinition ||
+      item?.store_type_feature?.feature ||
+      item?.storeTypeFeature?.feature ||
+      item?.data?.feature ||
+      item;
     const name = featureName(feature) || featureName(item);
     if (!name) continue;
     if (enabled.size && !enabled.has(name.toLowerCase())) continue;
@@ -393,16 +514,17 @@ const buildRolePermissionState = (featuresPayload, enabledNames = []) => {
     matrix[name] = actions;
     availability[name] = available;
     rows.push({
-      id: item?.featureId || item?.feature_id || feature.id || name,
+      id: item?.featureId || item?.feature_id || feature.id || feature.feature_id || name,
       name,
-      description: feature.description || "",
-      category: feature.category || "More",
+      description: feature.description || feature.feature_description || "",
+      category: feature.category || feature.category_name || feature.feature_category || "More",
     });
   }
   return { matrix, availability, rows };
 };
 const permissionAllowed = (value) =>
-  value === true || value === "true" || value === "t" || value === 1;
+  value === true || value === "true" || value === "t" || value === 1 || value === "1" || value === "yes";
+const permissionFeatureKey = (value) => String(value || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
 const roleTemplateKeys = (role) => [
   role?.id,
   role?.roleTemplateId,
@@ -432,22 +554,46 @@ const applySavedRolePermissions = (
     ]),
   );
   for (const row of savedRows) {
-    const templateId = String(row.roleTemplateId || "").toLowerCase();
-    const rowName = String(row.roleName || "")
+    const templateId = String(row.role_template_id || row.roleTemplateId || row.role_template?.id || row.role_id || "").toLowerCase();
+    const rowName = String(row.role_name || "")
+      .trim()
+      .toLowerCase();
+    const normalizedRowName = String(row.role_name || row.roleName || row.name || row.role_template?.name || "")
       .trim()
       .toLowerCase();
     const idMatch = Boolean(templateId) && templateId === roleKey;
-    const nameMatch = Boolean(nameKey) && rowName === nameKey;
+    const nameMatch = Boolean(nameKey) && (rowName === nameKey || normalizedRowName === nameKey);
     if (!idMatch && !nameMatch) continue;
-    if (!STANDARD_ACTIONS.includes(row.permissionAction)) continue;
-    const featureName = String(row.featureName || "");
+    const rawAction = row.permission_action || row.permissionAction || row.action || row.permission_name || row.permissionName || row.permission_key;
+    const action = STANDARD_ACTIONS.includes(rawAction) ? rawAction : normalizePermissionAction(rawAction);
+    if (!action) continue;
+    const savedFeatureName = String(row.feature_name || row.featureName || row.feature_label || row.featureLabel || row.feature_key || row.featureKey || row.feature?.name || row.feature?.feature_name || "");
     const match = Object.keys(next).find(
-      (name) => name.toLowerCase() === featureName.toLowerCase(),
+      (name) => permissionFeatureKey(name) === permissionFeatureKey(savedFeatureName),
     );
     if (!match) continue;
-    next[match][row.permissionAction] = permissionAllowed(row.allowed);
+    next[match][action] = permissionAllowed(row.allowed ?? row.is_allowed ?? row.isAllowed ?? row.enabled);
   }
   return next;
+};
+const savedPermissionMatrixForRole = (savedRows, roleId, roleName = "") => {
+  const matrix = {};
+  const roleKey = String(roleId || "").toLowerCase();
+  const nameKey = String(roleName || "").trim().toLowerCase();
+  for (const row of Array.isArray(savedRows) ? savedRows : []) {
+    const rowRoleId = String(row.role_template_id || row.roleTemplateId || row.role_template?.id || row.role_id || "").toLowerCase();
+    const rowRoleName = String(row.role_name || row.roleName || row.name || row.role_template?.name || "").trim().toLowerCase();
+    if (!(rowRoleId && rowRoleId === roleKey) && !(nameKey && rowRoleName === nameKey)) continue;
+    const feature = String(row.feature_name || row.featureName || row.feature_label || row.featureLabel || row.feature_key || row.featureKey || row.feature?.name || row.feature?.feature_name || "");
+    const rawAction = row.permission_action || row.permissionAction || row.action || row.permission_name || row.permissionName || row.permission_key;
+    const action = STANDARD_ACTIONS.includes(rawAction) ? rawAction : normalizePermissionAction(rawAction);
+    if (!feature || !action) continue;
+    matrix[feature] = {
+      ...(matrix[feature] || {}),
+      [action]: permissionAllowed(row.allowed ?? row.is_allowed ?? row.isAllowed ?? row.enabled),
+    };
+  }
+  return matrix;
 };
 const renderFieldLabel = (label) => { if (label == null || typeof label !== "string") return label; if (!label.includes("*")) return label; const parts = label.split("*"); return (<>{parts.map((part, index) => (<span key={index}>{part}{index < parts.length - 1 && (<span className="text-red-500" style={{ color: "#dc2626" }}>*</span>)}</span>))}</>); };
 
@@ -577,11 +723,14 @@ const Detail = ({ label, children }) => (
 );
 
 export default function AddStore({ embeddedStep = null, readOnly = false, onEdit, onDone, existingStore = null, merchantContext = null } = {}) {
+  const { user } = useAuth();
+  const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee";
+  const ownMerchantId = scopedToMerchant ? String(user?.merchantId || "") : "";
   const navigate = useNavigate();
   const location = useLocation();
   const { merchantId: routeMerchantId, storeId } = useParams();
   const editing = Boolean(storeId);
-  const [store, setStore] = useState(() => blankStore(routeMerchantId || ""));
+  const [store, setStore] = useState(() => blankStore(ownMerchantId || routeMerchantId || ""));
   const locationOptions = useLocationOptions(store);
   const [merchants, setMerchants] = useState([]);
   const [merchantInfo, setMerchantInfo] = useState(null);
@@ -591,6 +740,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
 
   const roleResponses = useRef(new Map());
   const [merchantStores, setMerchantStores] = useState([]);
+  const activeMerchantStoreCount = merchantStores.filter(
+    (item) => item.status === "ACTIVE" && !item.isDeleted && !item.is_deleted,
+  ).length;
   const [storeTypes, setStoreTypes] = useState([]);
   const [storeTypesLoading, setStoreTypesLoading] = useState(false);
   const [catalog, setCatalog] = useState([]);
@@ -608,7 +760,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   const hoursRef = useRef(blankHours());
   const permissionsRef = useRef({});
   const editedPermissionRoles = useRef(new Set());
-  const featureDefaultsScope = useRef("");
   const loadedFeatureType = useRef("");
   const imageReads = useRef(0);
   const imageGeneration = useRef(0);
@@ -678,14 +829,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     return () => cancelAnimationFrame(frame);
   }, [error, step]);
 
-  const merchantLookupId = routeMerchantId || store.merchantId;
+  const merchantLookupId = ownMerchantId || routeMerchantId || store.merchantId;
   const merchantRecord = merchants.find(
     (item) =>
       String(item.id) === String(merchantLookupId) ||
       String(item.merchantId) === String(merchantLookupId),
   );
 
-  const merchantId = idOf(routeMerchantId || store.merchantId);
+  const merchantId = idOf(ownMerchantId || routeMerchantId || store.merchantId);
   const merchantOptionValue = (item) =>
     String(item?.id || item?.merchantId || "");
   const merchantMatches = (item, value) => Boolean(value) &&
@@ -740,10 +891,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     ) || "";
 
   useEffect(() => {
-    if (!routeMerchantId && !storeId) {
+    if (!routeMerchantId && !storeId && !scopedToMerchant) {
       setStore((current) => current.merchantId ? blankStore() : current);
     }
-  }, [routeMerchantId, storeId]);
+  }, [routeMerchantId, storeId, scopedToMerchant]);
   const activeStoreTypeId =
     store.storeTypeId ||
     merchantInfo?.typeId ||
@@ -768,11 +919,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     plan?.planName ||
     merchant?.plan ||
     "No active plan";
-  const billing =
-    subscription?.billingCycle ||
-    subscription?.billingType ||
-    plan?.billingCycle ||
-    "—";
   const planPrice =
     subscription?.price ??
     subscription?.agreementPrice ??
@@ -813,6 +959,26 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       ) || null
     );
   }, [masterPlans, subscription, plan, merchant]);
+
+  const billingModel = formatBillingLabel(
+    subscription?.billingModel ||
+      subscription?.billing_model ||
+      subscription?.billingType ||
+      plan?.billingModel ||
+      plan?.billing_model ||
+      matchedPlan?.billingModel ||
+      matchedPlan?.billing_model,
+  );
+  const billingCycle = formatBillingLabel(
+    subscription?.billingCycle ||
+      subscription?.billing_cycle ||
+      plan?.billingCycle ||
+      plan?.billing_cycle ||
+      matchedPlan?.billingCycle ||
+      matchedPlan?.billing_cycle,
+  );
+  const billing = billingCycle || billingModel || "—";
+  const billingType = billingModel || billingCycle || "—";
 
   // Prefer the selected master plan. Subscription entitlements can be stale,
   // and store-type feature flags describe availability rather than plan access.
@@ -856,6 +1022,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         feature?.feature_id,
         feature?.featureKey,
         feature?.feature_key,
+        feature?.feature_code,
         feature?.code,
         feature?.featureCode,
       ]
@@ -923,12 +1090,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           name,
           actions: featureActions(nested),
           category:
-            nested.category || nested.categoryName || row.category || "More",
-          description: nested.description || nested.featureDescription || "",
+            nested.category || nested.category_name || nested.feature_category || nested.categoryName || row.category || row.category_name || "More",
+          description: nested.description || nested.feature_description || nested.featureDescription || "",
           included: nested.included ?? row.included,
-          planAccess: nested.planAccess ?? row.planAccess,
-          enabledForStore: nested.enabledForStore ?? row.enabledForStore,
-          defaultEnabled: row.defaultEnabled !== false,
+          planAccess: nested.planAccess ?? nested.plan_access ?? row.planAccess ?? row.plan_access,
+          enabledForStore: nested.enabledForStore ?? nested.enabled_for_store ?? row.enabledForStore ?? row.enabled_for_store,
+          defaultEnabled: (row.defaultEnabled ?? row.default_enabled) !== false,
         });
     });
     return [...unique.values()];
@@ -945,10 +1112,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     );
   };
   const roleName = (id) => roleById[id]?.name || id;
-  const categories = [
-    "All Features",
-    ...new Set(featureRows.map((row) => row.category).filter((category) => String(category).toLowerCase() !== "more")),
-  ];
   const entitled = (name) => {
     const target = String(name || "")
       .trim()
@@ -1000,7 +1163,55 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       return true;
     return false;
   };
-  const filteredFeatures = featureRows.filter((row) => {
+  const planFeatureRows = featureRows.filter((row) => entitled(row.name));
+  useEffect(() => {
+    if (
+      !editing ||
+      loading ||
+      merchantLoading ||
+      subscriptionLoading ||
+      mastersLoading ||
+      featuresLoading ||
+      !activeStoreTypeId ||
+      loadedFeatureType.current !== JSON.stringify([merchantId, activeStoreTypeId]) ||
+      (planFeatureList == null && !matchedPlan)
+    ) return;
+
+    // Older store records may retain features that were later removed from
+    // the merchant's plan. Keep the editable selection aligned with the
+    // features currently available to this merchant.
+    const available = new Map();
+    planFeatureRows.forEach((row) => {
+      [row.name, row.id, row.code, row.featureKey]
+        .filter((value) => value != null && value !== "")
+        .forEach((value) => available.set(String(value).trim().toLowerCase(), row.name));
+    });
+    setEnabledFeatures((current) => {
+      const next = [...new Set(current
+        .map((value) => available.get(String(value || "").trim().toLowerCase()))
+        .filter(Boolean))];
+      return next.length === current.length && next.every((value, index) => value === current[index])
+        ? current
+        : next;
+    });
+  }, [
+    editing,
+    loading,
+    merchantLoading,
+    subscriptionLoading,
+    mastersLoading,
+    featuresLoading,
+    activeStoreTypeId,
+    merchantId,
+    planFeatureList,
+    matchedPlan,
+    planFeatureRows,
+  ]);
+  const categories = [
+    "All Features",
+    ...new Set(planFeatureRows.map((row) => row.category).filter((category) => String(category).toLowerCase() !== "more")),
+  ];
+  const filteredFeatures = planFeatureRows.filter((row) => {
     const matchesCategory =
       featureCategory === "All Features" || row.category === featureCategory;
     return (
@@ -1082,8 +1293,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       try {
         const [result, featuresResult, plansResult] = await Promise.all([
           editing || embeddedStep !== null ? Promise.resolve([]) : pendingStoreRead("store-setup-merchants", () => listMerchants()).catch(() => []),
-          editing || embeddedAccess ? Promise.resolve([]) : pendingStoreRead("store-setup-features", () => listFeatures()).catch(() => []),
-          embeddedAccess ? Promise.resolve([]) : pendingStoreRead("store-setup-plans", () => listPlans()).catch(() => []),
+          editing || embeddedAccess || scopedToMerchant ? Promise.resolve([]) : pendingStoreRead("store-setup-features", () => listFeatures()).catch(() => []),
+          embeddedAccess || scopedToMerchant ? Promise.resolve([]) : pendingStoreRead("store-setup-plans", () => listPlans()).catch(() => []),
         ]);
         if (!cancelled) {
           setMerchants(
@@ -1106,44 +1317,49 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           const response = existingStore || await pendingStoreRead(`store:${storeId}`, () => api.get(endpoints.store(encodeURIComponent(storeId))));
           const saved = response?.store || response;
           if (!cancelled) {
+            const normalizedStore = normalizeStore(saved);
             const address =
               saved.address && typeof saved.address === "object"
                 ? saved.address
                 : {};
             const savedStore = {
               ...blankStore(
-                routeMerchantId || saved.merchantId || saved.merchant,
+                routeMerchantId || normalizedStore.merchantId || saved.merchant,
               ),
               ...saved,
               merchantId:
-                routeMerchantId || idOf(saved.merchantId || saved.merchant),
-              id: saved.storeID || saved.storeId || saved.id || "",
-              name: saved.storeName || saved.name || "",
+                routeMerchantId || idOf(normalizedStore.merchantId || saved.merchant),
+              id: normalizedStore.id || saved.storeID || saved.storeId || saved.store_id || saved.id || "",
+              name: normalizedStore.storeName || saved.store_name || saved.name || "",
               type:
                 saved.storeType?.storeTypeCode || saved.storeType?.code ||
-                saved.storeTypeCode || saved.storeTypeName ||
-                (typeof saved.storeType === "string" ? saved.storeType : "") || saved.type || "",
+                saved.store_type?.store_type_code || saved.store_type?.code ||
+                saved.storeTypeCode || saved.store_type_code ||
+                normalizedStore.storeTypeName || saved.store_type_name ||
+                (typeof saved.storeType === "string" ? saved.storeType : "") ||
+                (typeof saved.store_type === "string" ? saved.store_type : "") || saved.type || "",
               storeTypeId: String(
-                saved.storeTypeId || saved.storeType?.id || "",
+                normalizedStore.storeTypeId || saved.store_type_id || saved.storeType?.id || saved.store_type?.id || "",
               ),
-              storeCode: saved.storeCode || saved.code || "",
-              phone: saved.phone || "",
-              email: saved.email || saved.storeEmail || "",
-              url: saved.baseUrl || saved.url || saved.websiteUrl || "",
-              logo: saved.logoUrl || saved.logo || "",
+              storeCode: normalizedStore.storeCode || saved.code || "",
+              phone: normalizedStore.phone || "",
+              email: normalizedStore.email || "",
+              url: normalizedStore.url || "",
+              logo: saved.logoUrl || saved.logo_url || saved.logo || "",
               addressLine1:
-                saved.addressLine1 ||
+                normalizedStore.addressLine1 || saved.address_line1 ||
                 address.addressLine1 ||
+                address.address_line1 ||
                 address.street ||
                 (typeof saved.address === "string" ? saved.address : ""),
-              addressLine2: saved.addressLine2 || address.addressLine2 || "",
-              city: saved.city || address.city || "",
-              state: saved.state || address.state || "",
-              zip: saved.zip || saved.postalCode || address.zipCode || "",
-              country: saved.country || address.country || "",
-              timezone: saved.timezone || "",
-              currency: saved.currency || "",
-              defaultLanguage: saved.defaultLanguage || "",
+              addressLine2: normalizedStore.addressLine2 || saved.address_line2 || address.addressLine2 || address.address_line2 || "",
+              city: normalizedStore.city || address.city || "",
+              state: normalizedStore.state || address.state || "",
+              zip: normalizedStore.zip || saved.postal_code || address.zipCode || address.zip_code || "",
+              country: normalizedStore.country || address.country || "",
+              timezone: normalizedStore.timezone || "",
+              currency: normalizedStore.currency || "",
+              defaultLanguage: normalizedStore.defaultLanguage || "",
               status: String(saved.status || "ACTIVE").toUpperCase() === "INACTIVE"
                 ? "Inactive"
                 : "Active",
@@ -1156,8 +1372,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             setEnabledFeatures(
               (
                 saved.features ||
+                saved.enabled_features ||
                 saved.enabledFeatures ||
                 saved.onboardingSetup?.features ||
+                saved.onboarding_setup?.features ||
                 []
               )
                 .map(featureName)
@@ -1165,7 +1383,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             );
             setSavedRolePermissions(
               flattenRolePermissions(
-                saved.rolePermissions || saved.onboardingSetup?.rolePermissions,
+                saved.role_permissions || saved.rolePermissions ||
+                  saved.onboarding_setup?.role_permissions ||
+                  saved.onboardingSetup?.rolePermissions,
               ),
             );
           }
@@ -1184,7 +1404,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     return () => {
       cancelled = true;
     };
-  }, [routeMerchantId, storeId, reload]);
+  }, [routeMerchantId, storeId, reload, scopedToMerchant]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1196,6 +1416,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
 
     async function loadStoreTypes() {
       try {
+        if (scopedToMerchant) {
+          const typeId = merchantInfo?.typeId || store.storeTypeId;
+          const typeName = merchantInfo?.typeName ||
+            (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(String(store.type)) ? store.type : "") ||
+            "Store type";
+          if (!cancelled) setStoreTypes(typeId ? [{ id: typeId, name: typeName, storeTypeName: typeName, status: "Active" }] : []);
+          return;
+        }
         const masterRes = await pendingStoreRead("store-setup-store-types", () => storeTypesApi.getAll())
           .catch(() => ({ storeTypes: [] }));
         const masterTypes = (
@@ -1221,10 +1449,14 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 String(item.status || "ACTIVE").toUpperCase() !== "INACTIVE",
             );
             if (!cancelled)
-              setStoreTypes(merchantTypes.length ? merchantTypes : masterTypes);
+              // The Add Store selector should offer every active store type.
+              // The merchant-scoped endpoint can be narrower (for example,
+              // returning only one assigned type), so use it only if the
+              // global active list is unavailable.
+              setStoreTypes(masterTypes.length ? masterTypes : merchantTypes);
             return;
           } catch {
-            // Fall back to the master store-type list.
+            // Fall back to the master store-type list for platform admins.
           }
         }
         if (!cancelled) setStoreTypes(masterTypes);
@@ -1242,7 +1474,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     return () => {
       cancelled = true;
     };
-  }, [merchantId, reload, featuresOnly, embeddedAccess && loading, embeddedAccess && merchantLoading, embeddedAccess && activeStoreTypeId]);
+  }, [merchantId, merchantInfo?.typeId, merchantInfo?.typeName, store.storeTypeId, store.type, reload, featuresOnly, scopedToMerchant, embeddedAccess && loading, embeddedAccess && merchantLoading, embeddedAccess && activeStoreTypeId]);
 
   useEffect(() => {
     if (!storeTypes.length) return;
@@ -1327,9 +1559,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             merchantId,
             type: info.typeName,
             storeTypeId: info.typeId,
-            country: "",
-            currency: "",
-            timezone: "",
+            country: "India",
+            currency: "INR",
+            timezone: "Asia/Kolkata",
             defaultLanguage: info.owner.defaultLanguage || "",
           }));
           setRoles([]);
@@ -1402,11 +1634,17 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     }
     setStoreTypeRolesLoading(true);
     setRolesError("");
-    pendingStoreRead(`store-type-roles:${activeStoreTypeId}`, () => roleTemplatesApi.getForStoreType(activeStoreTypeId))
+    pendingStoreRead(`store-type-roles:${activeStoreTypeId}:${scopedToMerchant ? merchantId : "platform"}`, () => scopedToMerchant
+      ? merchantRoleTemplatesApi.getAvailable(merchantId)
+      : roleTemplatesApi.getForStoreType(activeStoreTypeId))
       .then((response) => {
         if (cancelled) return;
         lastLoadedStoreTypeRolesRef.current = cacheKey;
-        const ids = readRoleTemplatesList(response)
+        const rows = scopedToMerchant
+          ? readAvailableRoleTemplates(response).roleTemplates.filter((row) =>
+              row.selected && String(row.storeTypeId).toLowerCase() === String(activeStoreTypeId).toLowerCase())
+          : readRoleTemplatesList(response);
+        const ids = rows
           .filter((row) => {
             const status = String(
               row.status || row.roleTemplate?.status || "ACTIVE",
@@ -1434,7 +1672,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     return () => {
       cancelled = true;
     };
-  }, [activeStoreTypeId, reload, needsRoles]);
+  }, [activeStoreTypeId, merchantId, reload, needsRoles, scopedToMerchant]);
 
   useEffect(() => {
     if (storeTypeRoleIds === null || storeTypeRolesLoading || !activeStoreTypeId || storeTypeRoleIds.size === 0) return;
@@ -1513,12 +1751,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     pendingStoreRead(`store-role-permissions:${merchantId}:${storeId}`, () => listStoreRolePermissions(merchantId, storeId))
       .then((response) => {
         if (cancelled) return;
-        const rows =
-          response?.rolePermissions ?? response?.data?.rolePermissions ?? [];
-        setSavedRolePermissions(Array.isArray(rows) ? rows : []);
+        const rows = flattenRolePermissions(response);
+        if (rows.length) setSavedRolePermissions(rows);
       })
       .catch(() => {
-        if (!cancelled) setSavedRolePermissions([]);
+        // Keep permissions already hydrated from store detail if this optional
+        // flat permissions read is unavailable.
       });
     return () => {
       cancelled = true;
@@ -1543,6 +1781,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         setRoles(assigned);
         setActiveRole(assigned[0] || "");
         loadedRolePermissions.current = new Set();
+        // A role may have been edited earlier in this mounted wizard. Clear
+        // that local-edit guard before hydrating the persisted permission
+        // rows, or the edit screen will keep stale unchecked/default values.
+        editedPermissionRoles.current = new Set();
       })
       .catch((err) => {
         if (!cancelled)
@@ -1587,21 +1829,31 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     const roleScope = JSON.stringify([activeRole, store.storeTypeId, reload]);
     if (!roleResponses.current.has(roleScope)) {
       roleResponses.current.set(roleScope,
-        pendingStoreRead(`role-features:${roleScope}`, () => roleTemplatesApi.getFeatures(activeRole, store.storeTypeId ? [store.storeTypeId] : []))
+        pendingStoreRead(`role-features:${roleScope}:${scopedToMerchant ? merchantId : "platform"}`, () => scopedToMerchant
+          ? merchantRoleTemplatesApi.getFeatures(merchantId, activeRole, store.storeTypeId)
+          : roleTemplatesApi.getFeatures(activeRole, store.storeTypeId ? [store.storeTypeId] : []))
           .catch(error => { roleResponses.current.delete(roleScope); throw error; }));
     }
     roleResponses.current.get(roleScope)
       .then((response) => {
         if (cancelled) return;
         const built = buildRolePermissionState(response, enabledFeatures);
-        const roleName =
-          roleDefinitions.find((role) => role.id === activeRole)?.name || "";
+        const roleDefinition = roleDefinitions.find((role) => role.id === activeRole);
+        const roleName = roleDefinition?.name || "";
         const matrix = applySavedRolePermissions(
           built.matrix,
           savedRolePermissions,
           activeRole,
           roleName,
         );
+        if (isDefaultPermissionRole(roleDefinition)) {
+          for (const feature of built.rows) {
+            if (!enabledFeatures.includes(feature.name) || !entitled(feature.name)) continue;
+            matrix[feature.name] = Object.fromEntries(
+              STANDARD_ACTIONS.map((action) => [action, true]),
+            );
+          }
+        }
         loadedRolePermissions.current.add(activeRole);
         setPermissions((current) => {
           if (current[activeRole]) return current;
@@ -1635,6 +1887,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     enabledFeatures,
     savedRolePermissions,
     roleDefinitions,
+    merchantId,
+    scopedToMerchant,
   ]);
 
   useEffect(() => {
@@ -1648,12 +1902,17 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     }
     setFeaturesLoading(true);
     const featureScope = JSON.stringify([merchantId, activeStoreTypeId]);
-    pendingStoreRead(`merchant-store-type-features:${merchantId}:${activeStoreTypeId}`, () => storeTypesApi.getMerchantFeatures(merchantId, activeStoreTypeId).catch(() => storeTypesApi.getFeatures(activeStoreTypeId)))
+    pendingStoreRead(`merchant-store-type-features:${merchantId}:${activeStoreTypeId}`, () => scopedToMerchant
+      ? storeTypesApi.getMerchantFeatures(merchantId, activeStoreTypeId)
+      : storeTypesApi.getMerchantFeatures(merchantId, activeStoreTypeId).catch(() => storeTypesApi.getFeatures(activeStoreTypeId)))
       .then((data) => {
         if (!cancelled) {
           loadedFeatureType.current = featureScope;
-          const rows = listFrom(data);
-          setTypeFeatures(rows.length ? rows : listFrom(data?.all));
+          // This endpoint returns the merchant's selected feature assignments.
+          // An empty selection is meaningful: do not substitute the full
+          // store-type catalog (`all`) or the screen will expose unselected
+          // features as if the merchant had enabled them.
+          setTypeFeatures(listFrom(data));
         }
       })
       .catch((err) => {
@@ -1667,11 +1926,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     return () => {
       cancelled = true;
     };
-  }, [merchantId, activeStoreTypeId, reload, needsFeatures]);
+  }, [merchantId, activeStoreTypeId, reload, needsFeatures, scopedToMerchant]);
 
   // Embedded Features only needs the plan catalog when entitlement data is absent.
   useEffect(() => {
-    if ((!embeddedAccess && !editing) || !needsFeatures || loading || merchantLoading || !merchantInfo) return;
+    if (scopedToMerchant || ((!embeddedAccess && !editing) || !needsFeatures || loading || merchantLoading || !merchantInfo)) return;
     const selectedPlanKey = String(
       subscription?.planId || subscription?.plan_id || subscription?.planCode ||
       subscription?.plan_code || subscription?.planName || subscription?.plan_name ||
@@ -1685,40 +1944,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     pendingStoreRead("store-setup-plans", () => listPlans())
       .then(rows => setMasterPlans(Array.isArray(rows) ? rows : []))
       .catch(error => setLoadError(error.message || "Unable to load plan entitlements."));
-  }, [featuresOnly, needsFeatures, loading, merchantLoading, merchantInfo, subscription, plan, merchant, matchedPlan, masterPlans.length, merchantId]);
-  // Default Enable Entitled Features
-  useEffect(() => {
-    if (
-      editing ||
-      loading ||
-      merchantLoading ||
-      featuresLoading ||
-      !merchantInfo ||
-      !activeStoreTypeId ||
-      loadedFeatureType.current !==
-        JSON.stringify([merchantId, activeStoreTypeId])
-    )
-      return;
-    const scope = JSON.stringify([merchantId, activeStoreTypeId]);
-    if (featureDefaultsScope.current === scope) return;
-    featureDefaultsScope.current = scope;
-    setEnabledFeatures(
-      featureRows.filter((row) => entitled(row.name)).map((row) => row.name),
-    );
-  }, [
-    editing,
-    loading,
-    merchantLoading,
-    featuresLoading,
-    merchantInfo,
-    merchantId,
-    activeStoreTypeId,
-    featureRows,
-  ]);
-
+  }, [featuresOnly, needsFeatures, loading, merchantLoading, merchantInfo, subscription, plan, merchant, matchedPlan, masterPlans.length, merchantId, scopedToMerchant]);
   const changeMerchant = (id) => {
     if (saveLock.current) return;
-    featureDefaultsScope.current = "";
     imageGeneration.current += 1;
     loadedRolePermissions.current = new Set();
     setStore(blankStore(id));
@@ -1754,8 +1982,8 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   };
 
   useEffect(() => {
-    if (!editing) changeMerchant(routeMerchantId || "");
-  }, [routeMerchantId, storeId]);
+    if (!editing) changeMerchant(ownMerchantId || routeMerchantId || "");
+  }, [routeMerchantId, storeId, ownMerchantId]);
 
   const clearStoreValidation = () => setError((current) =>
     current.includes("FIELD::") ? "" : current,
@@ -2122,7 +2350,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         !editing &&
         Number.isFinite(subStoreLimit) &&
         subStoreLimit >= 0 &&
-        merchantStores.length >= subStoreLimit
+        activeMerchantStoreCount >= subStoreLimit
       )
         return "This merchant has reached its store limit.";
     }
@@ -2266,17 +2494,37 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
     setSaving(true);
     setError("");
     try {
-      const generatedStoreId =
-        `STR-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`.slice(
-          0,
-          50,
-        );
+      const suppliedStoreCode = String(store.storeCode || "").trim();
+      const allocatedStoreCode = !editing && !/^STR-\d{5}$/.test(suppliedStoreCode)
+        ? await allocateId("store")
+        : "";
+      const usedStoreCodes = new Set(
+        merchantStores
+          .map((item) => item.storeCode || item.store_code || item.code || "")
+          .map((code) => String(code).trim().toUpperCase())
+          .filter(Boolean),
+      );
+      const validUnusedCode = (code) =>
+        /^STR-\d{5}$/.test(String(code || "").trim().toUpperCase()) &&
+        !usedStoreCodes.has(String(code).trim().toUpperCase());
+      let generatedStoreId = validUnusedCode(suppliedStoreCode)
+        ? suppliedStoreCode
+        : validUnusedCode(allocatedStoreCode)
+          ? String(allocatedStoreCode).trim().toUpperCase()
+          : "";
+      for (let attempt = 0; !editing && !generatedStoreId && attempt < 100; attempt += 1) {
+        const candidate = `STR-${10000 + Math.floor(Math.random() * 90000)}`;
+        if (validUnusedCode(candidate)) generatedStoreId = candidate;
+      }
+      if (!editing && !generatedStoreId) {
+        throw new Error("Unable to generate an unused store code. Please try again.");
+      }
       // The onboarding store API keys updates by the immutable store code in
       // the request body/path. The router parameter is the UI/database UUID.
       const storeCode =
         (editing
           ? String(store.storeCode || store.id || storeId || "")
-          : String(store.storeCode || "")
+          : generatedStoreId
         )
           .trim()
           .slice(0, 50) || generatedStoreId;
@@ -2293,7 +2541,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       const storePayload = buildStoreSetupPayload(store, {
         merchantId,
         storeId: storeCode,
-        type: String(selectedType?.storeTypeCode || selectedType?.code || store.type || typeName || "Retail").slice(0, 50),
+        storeTypeId: selectedType?.id || selectedType?.storeTypeId || selectedType?.store_type_id || activeStoreTypeId || selectedType?.storeTypeCode || selectedType?.code || store.type || typeName || "Retail",
         currency: currencyCode,
         status: saveDraft ? "PENDING" : String(store.status || "Active").toUpperCase(),
         hours,
@@ -2302,17 +2550,37 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         rolePermissions: roles.map(roleId => ({
           roleTemplateId: roleId,
           name: roleName(roleId),
-          permissions: permissionState[roleId] || {},
+          permissions: permissionState[roleId] && Object.keys(permissionState[roleId]).length
+            ? permissionState[roleId]
+            : savedPermissionMatrixForRole(savedRolePermissions, roleId, roleName(roleId)),
         })),
       });
+      // Keep the write contract snake_case even if a form value or future
+      // override adds the UI's camelCase merchantId back into the payload.
+      const { merchantId: _uiMerchantId, ...storeRequest } = storePayload;
+      const apiStorePayload = toSnakeCaseApiPayload({
+        ...storeRequest,
+        merchant_id: merchantId || storePayload.merchant_id,
+      });
+      if (storePayload.rolePermissions !== undefined) {
+        apiStorePayload.role_permissions = Array.isArray(storePayload.rolePermissions)
+          ? storePayload.rolePermissions.map((role) => ({
+              role_template_id: role.roleTemplateId || role.role_template_id || role.id,
+              name: role.name || role.roleName || role.role_name,
+              // Keep permission actions in their API-defined case.
+              permissions: role.permissions ?? {},
+            }))
+          : storePayload.rolePermissions;
+        delete apiStorePayload.rolePermissions;
+      }
       const path = editing
         ? endpoints.store(encodeURIComponent(storeCode))
         : merchantId
           ? endpoints.merchantStores(merchantId)
           : endpoints.stores;
       const saved = editing
-        ? await api.put(path, storePayload)
-        : await api.post(path, storePayload);
+        ? await api.put(path, apiStorePayload)
+        : await api.post(path, apiStorePayload);
       const createdStore =
         saved?.store || saved?.data?.store || saved?.data || saved;
       const persistedStoreId = editing
@@ -2395,7 +2663,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           defaultLanguage: current?.defaultLanguage || previous.defaultLanguage,
           hours: normalizeHours(current?.hours || previous.hours),
         }));
-        const refreshedFeatures = current?.features || current?.enabledFeatures;
+        const refreshedFeatures = current?.features || current?.enabled_features || current?.enabledFeatures || current?.onboarding_setup?.features || current?.onboardingSetup?.features;
         if (Array.isArray(refreshedFeatures))
           setEnabledFeatures(
             refreshedFeatures.map(featureName).filter(Boolean),
@@ -2432,7 +2700,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           defaultLanguage: current?.defaultLanguage || previous.defaultLanguage,
           hours: normalizeHours(current?.hours || previous.hours),
         }));
-        const refreshedFeatures = current?.features || current?.enabledFeatures;
+        const refreshedFeatures = current?.features || current?.enabled_features || current?.enabledFeatures || current?.onboarding_setup?.features || current?.onboardingSetup?.features;
         if (Array.isArray(refreshedFeatures)) setEnabledFeatures(refreshedFeatures.map(featureName).filter(Boolean));
       }
       saveLock.current = false;
@@ -2451,7 +2719,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   }
 
   const subscriptionScreen = () => {
-    const used = merchantStores.length;
+    const used = activeMerchantStoreCount;
     const limit = Number.isFinite(storeLimit) ? storeLimit : "—";
     const planTypeValue =
       matchedPlan?.applicableStoreType ??
@@ -2544,9 +2812,9 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <table className="sf-plan-details-table">
               <thead><tr><th>Plan</th><th>Price</th><th>Billing Type</th><th>Stores Used</th><th>Remaining to Map</th><th>Status</th><th>Key Features</th></tr></thead>
               <tbody><tr>
-                <td><span className="sf-plan-details-name"><span className="" /><strong>{planName}</strong></span></td>
+                <td><span className="sf-plan-details-name"><span className="" /><strong title={planName} data-tooltip={planName}>{planName}</strong></span></td>
                 <td>{planPrice == null ? "—" : `${subscription?.currency || currencyCode} ${planPrice}`}</td>
-                <td>{billing}</td>
+                <td>{billingType}</td>
                 <td>{used} / {limit}</td>
                 <td>{Number.isFinite(storeLimit) ? Math.max(0, storeLimit - used) : "—"}</td>
                 <td><span className={`sf-status-pill ${String(subscription?.status || "").trim().toLowerCase() === "inactive" ? "inactive" : "active"}`}>{subscription?.status || "Not provided"}</span></td>
@@ -2592,7 +2860,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                     <td>
                       {(typeof item.storeType === "string"
                         ? item.storeType
-                        : item.storeType?.name) ||
+                        : item.storeType?.name || item.storeType?.storeTypeName || item.storeType?.store_type_name) ||
+                        item.storeTypeName ||
+                        item.store_type_name ||
+                        item.type?.name ||
                         item.type ||
                         "—"}
                     </td>
@@ -2630,7 +2901,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <div className="sf-form-grid sf-basic-grid">
               <div className="sf-field sf-merchant-field">
                 <label htmlFor="sf-merchant">Merchant <span className="text-red-500" style={{ color: "#dc2626" }}>*</span></label>
-                <FilterDropdown
+                {scopedToMerchant ? <div className="form-control" id="sf-merchant">{merchantName}</div> : <FilterDropdown
                   id="sf-merchant"
                   aria-required="true"
                   value={merchantSelectValue}
@@ -2655,7 +2926,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                         idOf(item)}
                     </option>
                   ))}
-                </FilterDropdown>
+                </FilterDropdown>}
               </div>
               <Field
                 label="Store Name *"
@@ -2679,7 +2950,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       String(item.code) === value ||
                       String(item.name).toLowerCase() === value.toLowerCase(),
                   );
-                  featureDefaultsScope.current = "";
                   setStore((current) => ({
                     ...current,
                     storeTypeId: value,
@@ -2740,22 +3010,19 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             subtitle="Enter the complete address of the store."
           >
             <div className="sf-form-grid sf-address-grid">
-              <SelectField
+              <Field
                 label="Country *"
                 invalid={invalidStoreFields.has("Country")}
                 error={getFieldValidationMessage(error, "Country")}
                 value={store.country}
-                onChange={changeCountry}
-                options={[
-                  { value: "", label: "Select country" },
-                  ...locationOptions.countries.map((value) => ({
-                    value,
-                    label: value,
-                  })),
-                ]}
+                onChange={() => {}}
+                readOnly
+                aria-readonly="true"
+                disabled={saving || readOnly}
               />
               <SelectField
                 label="State / Province *"
+                searchable
                 invalid={invalidStoreFields.has("State / Province")}
                 error={getFieldValidationMessage(error, "State / Province")}
                 value={store.state}
@@ -2817,11 +3084,12 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       [
                         store.timezone,
                         ...(countrySettings?.zones || []),
+                        ...TIME_ZONE_OPTIONS,
                       ].filter(Boolean),
                     ),
                   ].map((value) => ({
                     value,
-                    label: value.replaceAll("_", " "),
+                    label: value.replaceAll("_", " ").replaceAll("/", " / "),
                   })),
                 ]}
               />
@@ -2972,14 +3240,22 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
             <div className={`sf-field sf-phone-field${invalidStoreFields.has("Store Phone") ? " sf-field-invalid" : ""}`}>
               <label htmlFor="store-phone">Store Phone <span style={{ color: "#ef3340" }}>*</span></label>
               <PhoneInput
-                key={locationOptions.selectedCountry?.iso2 || "store-phone"}
                 country={locationOptions.selectedCountry?.iso2?.toLowerCase() || "in"}
                 enableSearch
                 countryCodeEditable={false}
                 value={phoneInputValue(store.phone, locationOptions.selectedCountry?.phoneCode)}
-                onChange={(value) => {
+                onChange={(value, data) => {
+                  const nextIso2 = data?.countryCode?.toLowerCase() || locationOptions.selectedCountry?.iso2?.toLowerCase() || "in";
+                  const currentIso2 = locationOptions.selectedCountry?.iso2?.toLowerCase() || "in";
+                  const countryChanged = nextIso2 !== currentIso2;
                   const digits = value.replace(/\D/g, "");
-                  updateStore("phone", digits ? `+${digits}` : "");
+                  updateStore("phone", !countryChanged && digits ? `+${digits}` : "");
+                  const matchedCountry = locationOptions.locationRecords.find(
+                    (country) => country.iso2?.toLowerCase() === nextIso2,
+                  );
+                  if (countryChanged && matchedCountry && store.country !== matchedCountry.name) {
+                    changeCountry(matchedCountry.name);
+                  }
                 }}
                 inputProps={{ id: "store-phone", name: "store-phone", type: "tel", autoComplete: "off", "aria-invalid": invalidStoreFields.has("Store Phone") }}
                 placeholder="Enter phone number"
@@ -3015,9 +3291,6 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
   );
 
   const featuresScreen = () => {
-    const includedCount = featureRows.filter((row) =>
-      entitled(row.name),
-    ).length;
     return (
       <>
         <Panel className="sf-plan-summary">
@@ -3031,15 +3304,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           </div>
           <div>
             <span className="sf-feature-summary-icon green"><i className="bi bi-grid" aria-hidden="true" /></span>
-            <div><small>Total Features</small><strong>{featureRows.length}</strong></div>
+            <div><small>Total Features</small><strong>{planFeatureRows.length}</strong></div>
           </div>
           <div>
             <span className="sf-feature-summary-icon purple"><i className="bi bi-check-circle" aria-hidden="true" /></span>
-            <div><small>Included</small><strong className="sf-green">{includedCount}</strong></div>
-          </div>
-          <div>
-            <span className="sf-feature-summary-icon orange"><i className="bi bi-exclamation-circle" aria-hidden="true" /></span>
-            <div><small>Not Included</small><strong className="sf-amber">{Math.max(0, featureRows.length - includedCount)}</strong></div>
+            <div><small>Included</small><strong className="sf-green">{planFeatureRows.length}</strong></div>
           </div>
         </Panel>
         <Panel
@@ -3062,7 +3331,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   value: featureCategory,
                   options: categories.map((category) => ({
                     value: category,
-                    label: `${category} (${category === "All Features" ? featureRows.length : featureRows.filter((row) => row.category === category).length})`,
+                    label: `${category} (${category === "All Features" ? planFeatureRows.length : planFeatureRows.filter((row) => row.category === category).length})`,
                   })),
                   onChange: (value) => {
                     setFeatureCategory(value);
@@ -3096,13 +3365,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   <th>#</th>
                   <th>Feature</th>
                   <th>Description</th>
-                  <th>Plan Access</th>
                   <th>Enable For This Store</th>
                 </tr>
               </thead>
               <tbody>
                 {pagedFeatures.map((feature, index) => {
-                  const hasPlan = entitled(feature.name);
                   const checked = enabledFeatures.includes(feature.name);
                   return (
                     <tr key={feature.id || feature.name}>
@@ -3110,19 +3377,11 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                       <td>{feature.name}</td>
                       <td>{feature.description || "—"}</td>
                       <td>
-                        <StatusBadge
-                          status={hasPlan ? "Active" : "Inactive"}
-                          className="sf-plan-access-badge"
-                        >
-                          {hasPlan ? "Included" : "Not included"}
-                        </StatusBadge>
-                      </td>
-                      <td>
                         <input
                           type="checkbox"
                           aria-label={`Enable ${feature.name} for this store`}
                           checked={checked}
-                          disabled={readOnly || !hasPlan || mastersLoading}
+                          disabled={readOnly || mastersLoading}
                           onChange={() => toggleFeature(feature.name)}
                         />
                       </td>
@@ -3131,7 +3390,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                 })}
                 {!pagedFeatures.length && (
                   <tr>
-                    <td colSpan="5" className="sf-empty">
+                    <td colSpan="4" className="sf-empty">
                       No features match this search.
                     </td>
                   </tr>
@@ -3747,10 +4006,10 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
           <Detail label="Subscription Plan">{planName}</Detail>
           <Detail label="Plan Billing">{billing}</Detail>
           <Detail label="Store Entitlement">
-            {merchantStores.length} /{" "}
+            {activeMerchantStoreCount} /{" "}
             {Number.isFinite(storeLimit) ? storeLimit : "Unlimited"} stores used
             {Number.isFinite(storeLimit)
-              ? `, ${Math.max(0, storeLimit - merchantStores.length)} remaining`
+              ? `, ${Math.max(0, storeLimit - activeMerchantStoreCount)} remaining`
               : ""}
           </Detail>
         </Panel>
@@ -3954,7 +4213,17 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
         const response = await api.get(endpoints.store(encodeURIComponent(storeId)));
         const saved = response?.store || response?.data?.store || response?.data || response;
         const code = store.storeCode || store.id || storeId;
-        const changes = step === 2 ? {features:enabledFeatures} : {rolePermissions:roles.map(roleId => ({roleTemplateId:roleId,name:roleName(roleId),permissions:permissionsRef.current[roleId] || {}}))};
+        const permissionState = Object.keys(permissionsRef.current).length ? permissionsRef.current : permissions;
+        const changes = {
+          features: enabledFeatures,
+          rolePermissions: roles.map(roleId => ({
+            roleTemplateId: roleId,
+            name: roleName(roleId),
+            permissions: permissionState[roleId] && Object.keys(permissionState[roleId]).length
+              ? permissionState[roleId]
+              : savedPermissionMatrixForRole(savedRolePermissions, roleId, roleName(roleId)),
+          })),
+        };
         const payload = buildStoreSetupPayload(saved, {merchantId, storeId:code, ...changes});
         await api.put(endpoints.store(encodeURIComponent(code)), payload);
         if (step === 3) await storeRoleTemplatesApi.save(merchantId,storeId,roles);
@@ -3978,7 +4247,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
       {error && <ValidationSummary error={error} summaryRef={errorBannerRef} onDismiss={() => setError("")} />}
       {failure && <div className="alert alert-danger" role="alert">{failure}<button type="button" onClick={() => setReload(v => v + 1)}>Retry</button></div>}
       {pending && <p role="status">Loading store selections…</p>}
-      <form onSubmit={saveSection}><fieldset disabled={pending || Boolean(failure) || (readOnly && step < 2)} style={{border:0,padding:0,minWidth:0}}>{screens[step]()} {!readOnly && <div className="sf-footer"><button type="button" className="sf-outline" onClick={onDone}>Cancel</button><button type="submit" className="sf-primary">{saving ? "Saving…" : step === 3 ? "Update Changes" : "Save Changes"}</button></div>}</fieldset></form>
+      <form onSubmit={saveSection} autoComplete="off"><fieldset disabled={pending || Boolean(failure) || (readOnly && step < 2)} style={{border:0,padding:0,minWidth:0}}>{screens[step]()} {!readOnly && <div className="sf-footer"><button type="button" className="sf-outline" onClick={onDone}>Cancel</button><button type="submit" className="sf-primary">{saving ? "Saving…" : step === 3 ? "Update Changes" : "Save Changes"}</button></div>}</fieldset></form>
     </div>;
   }
 
@@ -4067,7 +4336,7 @@ export default function AddStore({ embeddedStep = null, readOnly = false, onEdit
                   : "Loading merchant setup…"}
             </div>
           )}
-          <form onSubmit={submit} noValidate>
+          <form onSubmit={submit} autoComplete="off" noValidate>
             <fieldset
               disabled={
                 saving ||

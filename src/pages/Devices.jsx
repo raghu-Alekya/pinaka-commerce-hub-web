@@ -13,10 +13,14 @@ import "../styles/devices.css";
 import { devicesApi } from "../api/devices";
 import Pagination from "../components/Pagination";
 import ListActions from "../components/ListActions";
+import Permit from "../auth/Permit";
+import { useAuth } from "../auth/AuthContext";
 import FiltersBar from "../components/FiltersBar";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
  
 export default function Devices() {
+  const { user } = useAuth();
+  const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee";
  
   /* ========================================================= STATE ========================================================= */ const [
  
@@ -323,7 +327,7 @@ export default function Devices() {
  
           {" "}
  
-          <button
+          <Permit module="devices" action="create"><button
  
             type="button"
  
@@ -337,7 +341,7 @@ export default function Devices() {
  
             <span>+</span> Add Device{" "}
  
-          </button>{" "}
+          </button></Permit>{" "}
  
           <button type="button" className="devices-export-btn">
  
@@ -383,7 +387,7 @@ export default function Devices() {
           icon={<i className="bi bi-laptop-fill" aria-hidden="true" />}
           title="Total Devices"
           value={totalDevices}
-          description="Across all stores"
+          description={scopedToMerchant ? "Across your stores" : "Across all stores"}
           variant="purple"
         />{" "}
         <StatCard
@@ -424,7 +428,7 @@ export default function Devices() {
   }}
   searchPlaceholder="Search by device name or serial number..."
   filters={[
-    {
+    ...(!scopedToMerchant ? [{
       key: "merchant",
       value: merchant,
       options: [
@@ -440,7 +444,7 @@ export default function Devices() {
         setMerchant(value);
         setCurrentPage(1);
       },
-    },
+    }] : []),
     {
       key: "deviceType",
       value: deviceType,
@@ -778,6 +782,7 @@ function DeviceRow({
       {/* ACTIONS */}
       <td onClick={(event) => event.stopPropagation()}>
         <ListActions
+          module="devices"
           onView={onView}
           onEdit={onEdit}
           onDelete={device.status === "Inactive" ? undefined : onDelete}

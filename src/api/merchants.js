@@ -34,24 +34,21 @@ const COUNTRY_CODE_MAP = {
 
 function normalizeCountryCode(value) {
   if (!value) return "USA";
-  const str = String(value).trim().toLowerCase();
+  const original = String(value).trim();
+  const str = original.toLowerCase();
   return (
-    COUNTRY_CODE_MAP[str] || (str.length === 3 ? str.toUpperCase() : "USA")
+    COUNTRY_CODE_MAP[str] || (str.length === 3 ? str.toUpperCase() : original)
   );
 }
 
-function normalizePhoneNumber(phone, country) {
-  let raw = String(phone || "").trim();
+function normalizePhoneNumber(phone, phoneDialCode) {
+  const raw = String(phone || "").trim();
   if (!raw) return "+15552345678";
   if (raw.startsWith("+")) return raw;
   const digits = raw.replace(/\D/g, "");
-  const countryCode = normalizeCountryCode(country);
-  let dialCode = "+1";
-  if (countryCode === "IND") dialCode = "+91";
-  else if (countryCode === "GBR") dialCode = "+44";
-  else if (countryCode === "AUS") dialCode = "+61";
-  else if (countryCode === "CAN") dialCode = "+1";
-  return `${dialCode}${digits}`;
+  const dialCode = String(phoneDialCode || "").replace(/\D/g, "");
+  if (!dialCode) throw new Error("Select a phone country code.");
+  return `+${dialCode}${digits}`;
 }
 
 function computeRenewalDate(startDateStr, billingCycleStr) {
@@ -227,10 +224,10 @@ export function toFlatMerchantPayload(data) {
   const merchantEmail = m.email || m.merchantEmail || data.email || "";
 
   let rawPhone = m.phone || m.merchantPhoneNumber || data.phone || "";
-  let rawCountry = m.country || data.country || "USA";
+  let rawCountry = m.countryCode || m.country || data.country || "USA";
 
-  const country = normalizeCountryCode(rawCountry);
-  const merchantPhoneNumber = normalizePhoneNumber(rawPhone, rawCountry);
+  const country = m.countryCode || data.countryCode || normalizeCountryCode(rawCountry);
+  const merchantPhoneNumber = normalizePhoneNumber(rawPhone, m.phoneDialCode);
 
   const addressLine1 =
     m.addressLine1 ||
@@ -321,27 +318,27 @@ export function toFlatMerchantPayload(data) {
   return {
     ein: m.ein || m.EIN || "",
     ...(data.password ? { password: data.password } : {}),
-      firstName: m.firstName || "",
-      lastName: m.lastName || "",
-    merchantName,
-    merchantEmail,
-    merchantPhoneNumber,
-    businessName,
-    businessDisplayName,
-    addressLine1,
-    addressLine2,
+    first_name: m.firstName || m.first_name || "",
+    last_name: m.lastName || m.last_name || "",
+    merchant_name: merchantName,
+    merchant_email: merchantEmail,
+    merchant_phone_number: merchantPhoneNumber,
+    business_name: businessName,
+    business_display_name: businessDisplayName,
+    address_line1: addressLine1,
+    address_line2: addressLine2,
     city,
     state,
-    pinCode,
+    pin_code: pinCode,
     country,
-    planId,
-    billingCycle,
-    startDate,
-    renewalDate,
-    agreementPrice,
+    plan_id: planId,
+    billing_cycle: billingCycle,
+    start_date: startDate,
+    renewal_date: renewalDate,
+    agreement_price: agreementPrice,
     tax,
-    totalDueToday,
-    paymentMethod,
+    total_due_today: totalDueToday,
+    payment_method: paymentMethod,
   };
 }
 
@@ -483,16 +480,18 @@ export function mapMerchantToRow(item) {
   const id = uuid || merchant.id || merchant.merchantId || merchant.merchant_id || merchant.merchantCode || merchant.merchant_code || "";
   const email = merchant.merchantEmail || merchant.email || "";
   const phone = merchant.merchantPhoneNumber || merchant.phone || "";
-  const stores = Array.isArray(merchant.stores || item.stores)
-    ? (merchant.stores || item.stores).length
-    : (item.storeCount ??
-      item.store_count ??
-      subscription.storeCount ??
-      subscription.store_count ??
-      merchant.storeCount ??
-      merchant.store_count ??
-      merchant.storesCount ??
-      0);
+  const stores = item.store_count ??
+    item.storeCount ??
+    (Array.isArray(merchant.stores || item.stores)
+      ? (merchant.stores || item.stores).filter((store) =>
+          String(store.status || "").toUpperCase() === "ACTIVE" && !store.isDeleted && !store.is_deleted,
+        ).length
+      : (subscription.storeCount ??
+        subscription.store_count ??
+        merchant.storeCount ??
+        merchant.store_count ??
+        merchant.storesCount ??
+        0));
 
   const planName =
     subscription.planName ||
@@ -527,10 +526,11 @@ export function mapMerchantToRow(item) {
 
   const createdAt =
     merchant.createdAt || merchant.created_at || merchant.createdDate ||
-    merchant.created_date || merchant.joined || "";
+    merchant.created_date || merchant.joined || item.createdAt || item.created_at || item.createdDate || item.created_date || "";
   const updatedAt =
     merchant.updatedAt || merchant.updated_at || merchant.updatedDate ||
-    merchant.updated_date || createdAt;
+    merchant.updated_date || merchant.updatedOn || merchant.updated_on || merchant.lastUpdatedAt || merchant.last_updated_at ||
+    item.updatedAt || item.updated_at || item.updatedDate || item.updated_date || item.updatedOn || item.updated_on || item.lastUpdatedAt || item.last_updated_at || createdAt;
 
   const address = merchant.businessAddress || merchant.address || {};
   const firstName = merchant.firstName || merchant.first_name || "";
@@ -563,6 +563,8 @@ export function mapMerchantToRow(item) {
     name,
     email,
     phone,
+    phoneDialCode: String(merchant.phoneDialCode || merchant.phone_dial_code || merchant.dialCode || merchant.dial_code || "").replace(/\D/g, ""),
+    phoneCountry: merchant.phoneCountry || merchant.phone_country || merchant.phoneCountryCode || merchant.phone_country_code || "",
     stores,
     plan: planName,
     renewal: renewal ? formatDate(renewal) : "—",

@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getVendor } from "../api/vendors";
 import ReadOnlyDetails from "../components/ReadOnlyDetails";
+import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
 
 const fields = (entries) => entries.map(([key, label]) => ({
   key, label,
+  ...(key === "phone" ? { render: (value, record) => formatPhoneDisplay(value, record?.country) } : {}),
   ...(key === "status" ? { status: true } : {}),
   ...(key === "vendorType" ? {
     render: (value) => ["ORGANIZER", "ORGANIZATION"].includes(String(value || "").toUpperCase()) ? "Organizer" : "Supplier",

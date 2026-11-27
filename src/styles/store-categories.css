@@ -411,6 +411,59 @@
   font-size: 12px;
 }
 
+.category-name-cell .category-hierarchy-dash {
+  display: inline;
+  margin: 0 5px 0 calc(var(--category-depth, 1) * 12px);
+  color: #a0a8b6;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: pre;
+}
+
+.category-name-cell.is-parent-category strong {
+  color: #263753;
+  font-weight: 650;
+}
+
+.category-name-cell.is-child-category strong {
+  color: #536077;
+  font-weight: 500;
+}
+
+.category-subcategory-list {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 150px;
+  overflow: hidden;
+}
+
+.category-subcategory-chip,
+.category-subcategory-more {
+  display: inline-block;
+  max-width: 120px;
+  overflow: hidden;
+  padding: 4px 8px;
+  border: 1px solid #e2def7;
+  border-radius: 999px;
+  background: #f7f5ff;
+  color: #5b4bb7;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category-subcategory-more {
+  flex: 0 0 auto;
+  border-color: #e1e5ec;
+  background: #f8f9fb;
+  color: #69758a;
+}
+
+.category-no-subcategories {
+  color: #a0a8b6;
+}
+
 /* =========================================================
    SLUG
 ========================================================= */

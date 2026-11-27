@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api, pendingStoreRead } from "../api/http";
+import { useAuth } from "../auth/AuthContext";
 import { normalizeCatalog } from "../api/products";
 import { syncWordpressDiscounts } from "../api/storeConnector";
 import FilterDropdown from "../components/FilterDropdown";
@@ -76,7 +77,8 @@ const formatSystemDate = (value) => {
 };
 // Read and manage PCH's saved discount records through the app API. WooCommerce
 // changes are imported only by the explicit connector sync action below.
-const storeDiscountsPath = (storeId) => `/api/v1/stores/${encodeURIComponent(storeId)}/discounts`;
+const storeDiscountsPath = (storeId, merchantSession) =>
+  `/api/v1/stores/${encodeURIComponent(storeId)}/${merchantSession ? "merchant/" : ""}discounts`;
 
 function DiscountProductPicker({ products, value, onChange, multiple = false, disabled }) {
   const [open, setOpen] = useState(false);
@@ -113,6 +115,8 @@ function DiscountProductPicker({ products, value, onChange, multiple = false, di
   </div>;
 }
 export default function Discounts({ embedded = false, storeId: storeIdProp, store }) {
+  const { user } = useAuth();
+  const merchantSession = user?.accountType === "merchant" || user?.accountType === "employee";
   const { storeId: routeStoreId } = useParams();
   const storeId = storeIdProp || routeStoreId;
   const [discounts, setDiscounts] = useState([]);
@@ -153,7 +157,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
     setLoadError("");
     setCatalogError("");
     const apiPageSize = 100;
-    const path = `${storeDiscountsPath(storeId)}?page=1&per_page=${apiPageSize}`;
+    const path = `${storeDiscountsPath(storeId, merchantSession)}?page=1&per_page=${apiPageSize}`;
     pendingStoreRead(`discounts:${path}`, () => api.get(path, { headers: { Accept: "application/json" } }))
       .then(async response => {
         if (!active) return;
@@ -188,7 +192,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
             ? page <= lastPage
             : hasMore === true || (hasMore == null && rows.length >= (page - 1) * apiPageSize);
           if (!shouldLoadPage) break;
-          const nextPath = `${storeDiscountsPath(storeId)}?page=${page}&per_page=${apiPageSize}`;
+          const nextPath = `${storeDiscountsPath(storeId, merchantSession)}?page=${page}&per_page=${apiPageSize}`;
           const nextResponse = await pendingStoreRead(`discounts:${nextPath}`, () => api.get(nextPath, { headers: { Accept: "application/json" } }));
           if (nextResponse?.success === false || nextResponse?.status === "error") throw new Error(nextResponse.message || "Unable to load discounts.");
           const nextRows = rowsFrom(nextResponse);
@@ -282,7 +286,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
         }
       });
     return () => { active = false; };
-  }, [storeId, retry]);
+  }, [storeId, retry, merchantSession]);
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return discounts.filter((item) => {
@@ -367,13 +371,17 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
       return;
     }
     if (form.discount_type !== "percent") {
-      const productPrice = Number.parseFloat(String(selectedProductPrice).replace(/[^\d.-]/g, ""));
+      const productPrice = numericDiscountProductPrice;
       if (!Number.isFinite(productPrice) || productPrice <= 0) {
-        setFormError("The selected product price is unavailable, so the discount cannot be validated.");
+        setFormError(form.type === "mix_match"
+          ? "A discounted product price is unavailable, so the discount cannot be validated."
+          : "The selected product price is unavailable, so the discount cannot be validated.");
         return;
       }
       if (Number(form.amount) >= productPrice) {
-        setFormError("The discount amount must be less than the selected product price.");
+        setFormError(form.type === "mix_match"
+          ? "The discount amount must be less than the price of every discounted product."
+          : "The discount amount must be less than the selected product price.");
         return;
       }
     }
@@ -382,7 +390,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
       saveLock.current = true;
       setSaving(true);
       try {
-        const basePath = storeDiscountsPath(storeId);
+        const basePath = storeDiscountsPath(storeId, merchantSession);
         const response = mode === "edit"
           ? await api.put(`${basePath}/${encodeURIComponent(form.type)}/${encodeURIComponent(form.id)}`, payload)
           : await api.post(basePath, payload);
@@ -409,7 +417,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
     setDeleting(true);
     setDeleteError("");
     try {
-      const response = await api.delete(`${storeDiscountsPath(storeId)}/${encodeURIComponent(deleteTarget.type)}/${encodeURIComponent(deleteTarget.id)}`);
+      const response = await api.delete(`${storeDiscountsPath(storeId, merchantSession)}/${encodeURIComponent(deleteTarget.type)}/${encodeURIComponent(deleteTarget.id)}`);
       if (response?.success === false || ["error", "failed"].includes(response?.status)) throw new Error(response.message || "Unable to delete discount.");
       setNotice(response?.message || "Discount deleted successfully.");
       setDeleteTarget(null);
@@ -448,12 +456,29 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
   };
   const selectedProduct = catalogProducts.find(product => catalogProductId(product) === String(form.product));
   const selectedProductPrice = selectedProduct?.price ?? selectedProduct?.payload?.price ?? "";
-  const numericProductPrice = Number.parseFloat(String(selectedProductPrice).replace(/[^\d.-]/g, ""));
+  const selectedDiscountedProducts = form.type === "mix_match"
+    ? String(form.discounted_products || "").split(",").filter(Boolean)
+      .map(id => catalogProducts.find(product => catalogProductId(product) === id)).filter(Boolean)
+    : [];
+  const discountPriceProducts = form.type === "mix_match" ? selectedDiscountedProducts : [selectedProduct].filter(Boolean);
+  const discountProductPrices = discountPriceProducts.map(product => {
+    const rawPrice = product?.price ?? product?.payload?.price ?? "";
+    const price = Number.parseFloat(String(rawPrice).replace(/[^\d.-]/g, ""));
+    return { product, rawPrice, price };
+  });
+  const discountedProductPriceDisplay = discountProductPrices
+    .map(({ rawPrice }) => rawPrice === "" ? "Price unavailable" : rawPrice)
+    .join(", ");
+  const numericDiscountProductPrice = discountProductPrices.length
+    && discountProductPrices.every(({ price }) => Number.isFinite(price) && price > 0)
+    ? Math.min(...discountProductPrices.map(({ price }) => price))
+    : Number.NaN;
   const amountExceedsProductPrice = form.discount_type !== "percent"
     && form.amount !== ""
-    && Number.isFinite(numericProductPrice)
-    && numericProductPrice > 0
-    && Number(form.amount) >= numericProductPrice;
+    && Number.isFinite(numericDiscountProductPrice)
+    && Number(form.amount) >= numericDiscountProductPrice;
+  const amountPriceUnavailable = form.type === "mix_match" && form.discount_type !== "percent"
+    && form.amount !== "" && selectedDiscountedProducts.length > 0 && !Number.isFinite(numericDiscountProductPrice);
 
   if (mode) {
     return (
@@ -465,7 +490,7 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
           </div>
           <button type="button" className="coupon-form-cancel coupon-editor-back store-config-back-button" onClick={closeEditor}><i className="bi bi-arrow-left" /> Back to Discounts</button>
         </div>
-        <form className="discount-editor-layout" onSubmit={saveDiscount}>
+        <form className="discount-editor-layout" onSubmit={saveDiscount} autoComplete="off">
           <div className="discount-editor-main">
             <div className="discount-editor-body">
                 <h2>Discount details</h2>
@@ -482,9 +507,18 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
                   </label>
                   <div className="coupon-form-field discount-full-width"><span className="discount-field-label">{form.type === "mix_match" ? "Main product (trigger)" : "Product"} <span className="discount-required" data-tooltip="Required" aria-label="Required">*</span></span>
                     <DiscountProductPicker products={catalogProducts} value={form.product} onChange={value => { updateForm("product", value); setFormError(""); }} disabled={saving || !catalogProducts.length} />
-                    <small>{catalogError || (catalogProducts.length ? "Choose a product to see its price and configure a discount." : "No store products are available. Sync products before creating a discount.")}</small>
+                    <small>{catalogError || (catalogProducts.length ? (form.type === "mix_match" ? "Choose the product that triggers this discount." : "Choose a product to see its price and configure a discount.") : "No store products are available. Sync products before creating a discount.")}</small>
                   </div>
-                  {form.product && <label className="coupon-form-field"><span>Product price</span>
+                  {form.type === "mix_match" && <div className="discounted-product-selection-row">
+                    <label className="coupon-form-field"><span className="discount-field-label">Discounted products <span className="discount-required text-red-500" data-tooltip="Required" aria-label="Required">*</span></span>
+                      <DiscountProductPicker products={catalogProducts} value={form.discounted_products} onChange={value => { updateForm("discounted_products", value); setFormError(""); }} multiple disabled={saving} />
+                      <small>These products receive the discount when the trigger product is present.</small>
+                    </label>
+                    <label className="coupon-form-field"><span>Discounted product price</span>
+                      <input value={discountedProductPriceDisplay} placeholder="Select discounted products" disabled readOnly aria-label="Discounted product price" />
+                    </label>
+                  </div>}
+                  {form.product && form.type !== "mix_match" && <label className="coupon-form-field"><span>Product price</span>
                     <input value={selectedProductPrice === "" ? "Price unavailable" : selectedProductPrice} disabled readOnly aria-label="Product price" />
                   </label>}
                   {form.product && <>
@@ -494,9 +528,10 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
                     </select>
                   </label>
                   <label className="coupon-form-field"><span className="discount-field-label">Amount {form.discount_type === "percent" ? "(%)" : ""} <span className="discount-required text-red-500" data-tooltip="Required" aria-label="Required">*</span></span>
-                    <input type="number" min="0.01" max={form.discount_type === "percent" ? 100 : undefined} step="0.01" value={form.amount} aria-invalid={amountExceedsProductPrice} onChange={(event) => { updateForm("amount", event.target.value); setFormError(""); }} placeholder="0.00" required />
+                    <input type="number" min="0.01" max={form.discount_type === "percent" ? 100 : undefined} step="0.01" value={form.amount} aria-invalid={amountExceedsProductPrice || amountPriceUnavailable} onChange={(event) => { updateForm("amount", event.target.value); setFormError(""); }} placeholder="0.00" required />
                     <small>{form.discount_type === "percent" ? "Enter a percentage from 0 to 100." : "Enter the fixed discount amount."}</small>
-                    {amountExceedsProductPrice && <small className="discount-amount-error" role="alert">The discount amount must be less than the selected product price.</small>}
+                    {amountExceedsProductPrice && <small className="discount-amount-error" role="alert">{form.type === "mix_match" ? "The discount amount must be less than the price of every discounted product." : "The discount amount must be less than the selected product price."}</small>}
+                    {amountPriceUnavailable && <small className="discount-amount-error" role="alert">A discounted product price is unavailable, so the discount cannot be validated.</small>}
                   </label>
                   {form.type === "auto" && <label className="coupon-form-toggle discount-auto-toggle">
                     <input type="checkbox" checked={Boolean(form.auto_apply)} onChange={(event) => updateForm("auto_apply", event.target.checked)} />
@@ -505,10 +540,6 @@ export default function Discounts({ embedded = false, storeId: storeIdProp, stor
                   </>}
                   </> : <p className="discount-select-hint">Choose a discount type to show its name and product settings.</p>}
                   {form.type && <>
-                  {form.type === "mix_match" && <div className="coupon-form-field discount-full-width"><span className="discount-field-label">Discounted products <span className="discount-required text-red-500">*</span></span>
-                    <DiscountProductPicker products={catalogProducts} value={form.discounted_products} onChange={value => updateForm("discounted_products", value)} multiple disabled={saving} />
-                    <small>These products receive the discount when the trigger product is present.</small>
-                  </div>}
                   {form.type === "multipack" && <label className="coupon-form-field"><span className="discount-field-label">Pack quantity <span className="discount-required text-red-500" data-tooltip="Required" aria-label="Required">*</span></span>
                     <input type="number" min="1" step="1" value={form.qty} onChange={(event) => updateForm("qty", event.target.value)} placeholder="e.g. 3" required />
                   </label>}

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, } from "react";
+import PhoneInputModule from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import Pagination from "../components/Pagination";
 import FiltersBar from "../components/FiltersBar";
 import FilterDropdown from "../components/FilterDropdown";
@@ -7,6 +9,19 @@ import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
 import { useLocationOptions } from "../data/useLocationOptions";
 import { getVendor, getVendors, createVendor, updateVendor, updateVendorStatus, deleteVendor as deleteVendorApi, } from "../api/vendors";
+import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
+import { validatePhoneForCountry } from "../utils/phoneValidation";
+
+const PhoneInput = PhoneInputModule.default || PhoneInputModule;
+
+function findPhoneCountry(phone, countries = []) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return null;
+  return [...countries]
+    .filter((country) => country.phoneCode)
+    .sort((left, right) => String(right.phoneCode).length - String(left.phoneCode).length)
+    .find((country) => digits.startsWith(String(country.phoneCode).replace(/\D/g, ""))) || null;
+}
 
 const emptyForm = {
   code: "",
@@ -21,7 +36,7 @@ const emptyForm = {
   city: "",
   state: "",
   zipCode: "",
-  country: "",
+  country: "India",
   status: "Active",
 };
 
@@ -204,6 +219,12 @@ export default function Vendors({
   const [form, setForm] =
     useState(emptyForm);
   const locationOptions = useLocationOptions(form);
+  const [phoneCountry, setPhoneCountry] = useState("in");
+  const selectedPhoneCountry = locationOptions.selectedCountry;
+
+  useEffect(() => {
+    if (selectedPhoneCountry?.iso2) setPhoneCountry(selectedPhoneCountry.iso2.toLowerCase());
+  }, [selectedPhoneCountry?.iso2]);
 
   // Keeps the last saved values while editing so the Update button
   // remains disabled until the user actually changes a field.
@@ -463,12 +484,6 @@ export default function Vendors({
       |--------------------------------------------------------------------------
       */
 
-      if (name === "phone") {
-        updated.phone = value
-          .replace(/\D/g, "")
-          .slice(0, 10);
-      }
-
       /*
       |--------------------------------------------------------------------------
       | SUPPLIER
@@ -506,6 +521,7 @@ export default function Vendors({
     });
     setError("");
     setValidationErrors({});
+    setPhoneCountry("in");
     setShowForm(false);
   }
 
@@ -593,7 +609,8 @@ export default function Vendors({
       if (!String(form[field] || "").trim()) nextValidationErrors[field] = true;
     }
     if (form.vendorType === "Organizer" && !form.contactPerson.trim()) nextValidationErrors.contactPerson = true;
-    if (form.phone.trim() && !/^\d{10}$/.test(form.phone)) nextValidationErrors.phone = true;
+    const phoneError = validatePhoneForCountry(form.phone, form.country, selectedPhoneCountry?.phoneCode);
+    if (phoneError) nextValidationErrors.phone = phoneError;
     if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) nextValidationErrors.email = true;
     setValidationErrors(nextValidationErrors);
     if (Object.keys(nextValidationErrors).length) {
@@ -711,6 +728,11 @@ export default function Vendors({
       setError(error.message || "Unable to load vendor.");
       return;
     }
+    const phoneCountryRecord = findPhoneCountry(vendor.phone, locationOptions.locationRecords);
+    const addressCountryRecord = locationOptions.locationRecords.find(
+      (country) => country.name?.toLowerCase() === String(vendor.country || "").toLowerCase(),
+    );
+    const resolvedPhoneCountry = phoneCountryRecord || addressCountryRecord;
     const viewForm = {
       code: vendor.code || "",
       name: vendor.name || "",
@@ -726,7 +748,7 @@ export default function Vendors({
       city: vendor.city || "",
       state: vendor.state || "",
       zipCode: vendor.zipCode || "",
-      country: vendor.country || "",
+      country: resolvedPhoneCountry?.name || vendor.country || "",
       status: vendor.status || "Active",
     };
 
@@ -735,6 +757,7 @@ export default function Vendors({
     setEditingId(null);
     setForm(viewForm);
     setOriginalForm(viewForm);
+    if (resolvedPhoneCountry?.iso2) setPhoneCountry(resolvedPhoneCountry.iso2.toLowerCase());
     setError("");
 
     window.scrollTo({
@@ -757,6 +780,11 @@ export default function Vendors({
       setError(error.message || "Unable to load vendor.");
       return;
     }
+    const phoneCountryRecord = findPhoneCountry(vendor.phone, locationOptions.locationRecords);
+    const addressCountryRecord = locationOptions.locationRecords.find(
+      (country) => country.name?.toLowerCase() === String(vendor.country || "").toLowerCase(),
+    );
+    const resolvedPhoneCountry = phoneCountryRecord || addressCountryRecord;
     const editForm = {
       code:
         vendor.code || "",
@@ -802,7 +830,7 @@ export default function Vendors({
         "",
 
       country:
-        vendor.country ||
+        resolvedPhoneCountry?.name || vendor.country ||
         "",
 
       status:
@@ -818,6 +846,7 @@ export default function Vendors({
 
     setForm(editForm);
     setOriginalForm(editForm);
+    if (resolvedPhoneCountry?.iso2) setPhoneCountry(resolvedPhoneCountry.iso2.toLowerCase());
     setError("");
 
     window.scrollTo({
@@ -1127,21 +1156,30 @@ export default function Vendors({
               Phone Number <span className="text-red-500">*</span>
             </span>
 
-            <input
-              type="tel"
-              name="phone"
-              placeholder="Enter phone number"
-              value={form.phone}
-              onChange={handleChange}
-              inputMode="numeric"
-              pattern="[0-9]{10}"
-              maxLength={10}
-              autoComplete="off"
-              required
-              disabled={saving || viewingId !== null}
-              aria-invalid={Boolean(validationErrors.phone) || (Boolean(form.phone) && !/^\d{10}$/.test(form.phone))}
-            />
-            {validationErrors.phone && <small className="vendors-field-error">{form.phone.trim() ? "Phone Number must contain exactly 10 digits." : "Phone Number is required."}</small>}
+              {viewingId !== null ? (
+                <input type="tel" name="phone" value={formatPhoneDisplay(form.phone, form.country)} disabled />
+              ) : (
+                <div className={`vendors-phone-field${validationErrors.phone ? " is-invalid" : ""}`}>
+                  <PhoneInput
+                    country={phoneCountry}
+                    enableSearch
+                    countryCodeEditable={false}
+                    autoFormat
+                    value={form.phone}
+                    onChange={(value, data) => {
+                      const nextPhoneCountry = data?.countryCode || phoneCountry;
+                      const dialCodeChanged = nextPhoneCountry.toLowerCase() !== phoneCountry.toLowerCase();
+                      const matched = locationOptions.locationRecords.find((country) => country.iso2?.toLowerCase() === nextPhoneCountry.toLowerCase());
+                      setPhoneCountry(nextPhoneCountry);
+                      setValidationErrors((current) => ({ ...current, phone: "", ...(matched && matched.name !== form.country ? { country: "", state: "" } : {}) }));
+                      setForm((current) => ({ ...current, phone: dialCodeChanged ? "" : value, ...(matched && matched.name !== current.country ? { country: matched.name, state: "" } : {}) }));
+                    }}
+                    inputProps={{ name: "phone", placeholder: "Enter phone number", required: true, autoComplete: "tel", "aria-invalid": Boolean(validationErrors.phone) }}
+                    disabled={saving}
+                  />
+                </div>
+              )}
+              {validationErrors.phone && <small className="vendors-field-error">{typeof validationErrors.phone === "string" ? validationErrors.phone : "Phone Number is required."}</small>}
 
           </label>
 
@@ -1204,18 +1242,17 @@ export default function Vendors({
               Country <span className="text-red-500">*</span>
             </span>
 
-            <FilterDropdown
+            <input
+              type="text"
               name="country"
               value={form.country}
-              onChange={handleChange}
+              readOnly
+              aria-readonly="true"
               required
               disabled={saving || viewingId !== null}
               aria-invalid={Boolean(validationErrors.country)}
-              className={validationErrors.country ? "field-invalid" : ""}
-            >
-              <option value="">Select country</option>
-              {locationOptions.countries.map((country) => <option key={country} value={country}>{country}</option>)}
-            </FilterDropdown>
+              className={`vendors-country-readonly${validationErrors.country ? " field-invalid" : ""}`}
+            />
             {validationErrors.country && <small className="vendors-field-error">Country is required.</small>}
 
           </label>
@@ -1233,6 +1270,7 @@ export default function Vendors({
               name="state"
               value={form.state}
               onChange={handleChange}
+              searchable
               required
               disabled={saving || viewingId !== null}
               aria-invalid={Boolean(validationErrors.state)}
@@ -1712,7 +1750,7 @@ export default function Vendors({
 
                       <td>
                         <VendorCell
-                          value={vendor.phone}
+                          value={formatPhoneDisplay(vendor.phone, vendor.country)}
                         />
                       </td>
 

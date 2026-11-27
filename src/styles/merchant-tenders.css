@@ -100,10 +100,10 @@
   gap: 7px;
   min-height: 40px;
   padding: 0 16px;
-  border: 1px solid #5838f3;
+  border: 1px solid #5143bc;
   border-radius: 7px;
   background: #fff;
-  color: #4c35e8;
+  color: #5143bc;
   font: 500 14px/1.2 Inter, "Segoe UI", Arial, sans-serif;
 }
 .merchant-tenders .mt-existing-heading > button:hover:not(:disabled) { background: #f5f3ff; }

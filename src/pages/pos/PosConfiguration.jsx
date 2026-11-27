@@ -17,6 +17,7 @@ import { PrinterSettings } from "./printer-settings/PrinterSettings";
 import { CustomerDisplayPromotionalImages } from "./customer-display-promotional-images/promotional_images";
 import { LoyaltySettings } from "./loyalty/LoyaltySettings";
 import { FunctionalitySettings } from "./pos/functionality-settings/FunctionalitySettings";
+import EmailSettings from "./email-settings/EmailSettings";
 import { getPosCashRegisters } from "./cash-registers/api";
 import { getPosTerminalMappings } from "./terminal-mappings/api";
  
@@ -147,6 +148,15 @@ const configurationCards = [
         component: "functionality-settings",
         enabled: true,
     },
+    {
+        id: "email-settings",
+        icon: "envelope",
+        iconClass: "purple",
+        title: "Email Settings",
+        description: "Configure email notifications and delivery settings for this store.",
+        component: "email-settings",
+        enabled: true,
+    },
 ];
  
 const initialRegisters = [
@@ -208,7 +218,8 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
         const timeout = window.setTimeout(() => setNotice(""), 1800);
         return () => window.clearTimeout(timeout);
     }, [notice]);
-    const session = useMemo(() => ({ saved: savedScreens.current[selectedConfig] || {}, baseline: {}, draft: {}, resets: {}, save: null, editorDirty: null, resetEditor: null }), [selectedConfig]);
+    const screenKey = `${storeId || "global"}:${selectedConfig || "overview"}`;
+    const session = useMemo(() => ({ saved: savedScreens.current[screenKey] || {}, baseline: {}, draft: {}, resets: {}, save: null, editorDirty: null, resetEditor: null }), [screenKey]);
     const isDirty = () => snapshotKey(session.draft) !== snapshotKey(session.baseline) || !!session.editorDirty?.();
     const leave = (target) => { setPendingLeave(null); setNotice(""); setSelectedConfig(target); };
     const discardChanges = () => {
@@ -229,7 +240,7 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
         try {
             if (await session.save() !== true) { setPendingLeave(null); return; }
             // Newer screens already save through their existing parent setters.
-            if (!["cash-register", "terminal-mapping", "safe-drop"].includes(selectedConfig)) savedScreens.current[selectedConfig] = { ...session.draft };
+            if (!["cash-register", "terminal-mapping", "safe-drop"].includes(selectedConfig)) savedScreens.current[screenKey] = { ...session.draft };
             if (selectedConfig === "tax") {
                 setStoreCurrency(session.draft.currency);
                 onCurrencyChange?.(session.draft.currency);
@@ -307,6 +318,9 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
  
             case "functionality-settings":
                 return <FunctionalitySettings />;
+
+            case "email-settings":
+                return <EmailSettings />;
  
             default:
                 return null;
@@ -328,7 +342,7 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
         </PosSettingsContext.Provider>
     );
 }
- 
+
     return (
         <div className="page-content pos-page-content">
             <div className="page-header pos-config-page-header">

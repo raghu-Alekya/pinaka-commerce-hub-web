@@ -466,7 +466,7 @@ export default function VendorPayments({ viewMode, merchantId, storeId, store } 
       {showVendorForm && (
         <div className="vendor-modal">
 
-          <form onSubmit={addVendor} noValidate>
+          <form onSubmit={addVendor} autoComplete="off" noValidate>
 
             <h3>Add New Vendor</h3>
 
@@ -511,7 +511,7 @@ export default function VendorPayments({ viewMode, merchantId, storeId, store } 
       {showPaymentForm && (
         <div className="vendor-modal">
 
-          <form onSubmit={addPayment} noValidate>
+          <form onSubmit={addPayment} autoComplete="off" noValidate>
 
             <h3>Add New Vendor Payment</h3>
 

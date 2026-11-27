@@ -26,6 +26,7 @@ import { api, ApiError, pendingStoreRead } from "../api/http";
 import { endpoints } from "../api/endpoints";
 import { getPosCurrencyTax } from "./pos/currency-tax/api";
 import { getCurrencySymbol } from "../utils/currency";
+import { formatPhoneDisplay } from "../utils/formatPhoneDisplay";
 
 
 import {
@@ -177,11 +178,11 @@ function StoreDetailsSummary({ store, merchant }) {
     <SummaryFields title="Store Details" subtitle="Basic information about this store." items={[
       ["Store Name", store.name], ["Store Code", store.storeCode || store.id],
       ["Merchant", merchant?.name || store.merchantName],
-      ["Store Type", typeof store.type === "object" ? store.type.name || store.type.code : store.type],
+      ["Store Type", store.storeTypeName || (typeof store.type === "object" ? store.type.name || store.type.storeTypeName || store.type.code : store.type)],
       ["Status", store.status], ["Currency", store.currency ? `${store.currency} (${store.currencySymbol || getCurrencySymbol(store.currency)})` : "—"],
     ]} />
     <SummaryFields title="Contact & Location" subtitle="Contact details and the store's physical location." items={[
-      ["Phone", store.phone], ["Email", store.email || store.storeEmail], ["Website", store.url],
+      ["Phone", formatPhoneDisplay(store.phone, store.country || address.country)], ["Email", store.email || store.storeEmail], ["Website", store.url],
       ["Country", store.country || address.country], ["State / Province", store.state || address.state],
       ["City", store.city || address.city],
       ["Address", store.addressLine1 || address.street || address.addressLine1 || (typeof store.address === "string" ? store.address : "")],
@@ -838,6 +839,7 @@ export default function StoreConfiguration() {
               ) : section === "pos" ? (
 
                 <PosConfiguration
+                  key={store?.uuid || storeId}
                   merchantId={merchant?.id || merchant?.merchantId || merchant?.merchant_id || store?.merchantId || store?.merchant_id || store?.merchant?.id || merchantId}
                   storeId={store?.uuid || ""}
                   store={store}

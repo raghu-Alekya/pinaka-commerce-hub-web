@@ -141,17 +141,37 @@ export default function StoreCategories({
   const applyTaxonomies = useCallback((response) => {
     const data = response?.taxonomies || response?.data?.taxonomies || response?.data || response || {};
     const categoryRows = Array.isArray(data.categories) ? data.categories : [];
-    const categoryNames = new Map(categoryRows.map((item) => [String(item.id), item.name || ""]));
+    const categoryId = (item) => item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name;
+    const categoryNames = new Map(categoryRows.map((item) => [String(categoryId(item)), item.name || item.title || ""]));
+    const childrenByParent = new Map();
+    categoryRows.forEach((item) => {
+      const rawParent = item.parentId ?? item.parent_id ?? item.parentCategoryId ?? item.parent_category_id ?? item.parent;
+      const parentId = rawParent && typeof rawParent === "object"
+        ? (rawParent.id ?? rawParent.wordpressId ?? rawParent.wordpress_id)
+        : rawParent;
+      if (parentId == null || parentId === 0 || parentId === "0" || parentId === "") return;
+      const key = String(parentId);
+      const children = childrenByParent.get(key) || [];
+      children.push(item.name || item.title || "Unnamed category");
+      childrenByParent.set(key, children);
+    });
 
-    setCategories(categoryRows.map((item) => ({
+    setCategories(categoryRows.map((item) => {
+      const rawParent = item.parentId ?? item.parent_id ?? item.parentCategoryId ?? item.parent_category_id ?? item.parent;
+      const parentId = rawParent && typeof rawParent === "object"
+        ? (rawParent.id ?? rawParent.wordpressId ?? rawParent.wordpress_id)
+        : rawParent;
+      return {
       ...item,
-      id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
+      id: categoryId(item),
+      parentId: parentId == null || parentId === 0 || parentId === "0" ? "" : String(parentId),
       name: item.name || item.title || "Unnamed category",
       slug: item.slug || "—",
-      parent: categoryNames.get(String(item.parent)) || item.parent_name || item.parent?.name || "",
+      parent: (rawParent && typeof rawParent === "object" ? rawParent.name : null) || categoryNames.get(String(parentId)) || item.parent_name || "",
+      subcategories: childrenByParent.get(String(categoryId(item))) || item.subcategories || item.children || [],
       productCount: Number(item.productCount ?? item.product_count ?? item.count ?? 0),
       status: item.status || "Active",
-    })));
+    };}));
     setTags((Array.isArray(data.tags) ? data.tags : []).map((item) => ({
       ...item,
       id: item.id ?? item.wordpressId ?? item.wordpress_id ?? item.slug ?? item.name,
@@ -239,11 +259,32 @@ export default function StoreCategories({
   ========================================================= */
 
   const filteredCategories = useMemo(() => {
-
     const value =
       search.trim().toLowerCase();
 
-    return categories.filter(
+    const categoriesById = new Map(categories.map((item) => [String(item.id), item]));
+    const childrenByParent = new Map();
+    categories.forEach((item) => {
+      const parentKey = String(item.parentId || "");
+      if (!parentKey || !categoriesById.has(parentKey)) return;
+      const siblings = childrenByParent.get(parentKey) || [];
+      siblings.push(item);
+      childrenByParent.set(parentKey, siblings);
+    });
+    const ordered = [];
+    const visited = new Set();
+    const appendTree = (item, depth) => {
+      const key = String(item.id);
+      if (visited.has(key)) return;
+      visited.add(key);
+      ordered.push({ ...item, depth });
+      (childrenByParent.get(key) || []).forEach((child) => appendTree(child, depth + 1));
+    };
+    categories.filter((item) => !item.parentId || !categoriesById.has(String(item.parentId)))
+      .forEach((item) => appendTree(item, 0));
+    categories.forEach((item) => appendTree(item, item.parentId ? 1 : 0));
+
+    return ordered.filter(
       (item) => {
         const matchesSearch = !value || [
           item.name,
@@ -481,6 +522,13 @@ export default function StoreCategories({
     },
 
     {
+      label: "Subcategories",
+      key: "subcategories",
+      fullWidth: true,
+      render: (items) => Array.isArray(items) && items.length ? items.map((item) => typeof item === "object" ? item.name : item).filter(Boolean).join(", ") : "None",
+    },
+
+    {
       label: "Products",
       key: "productCount",
     },
@@ -653,6 +701,18 @@ export default function StoreCategories({
           value: selectedItem.parent || "None (Root Category)",
         },
         {
+          label: "SUBCATEGORIES",
+          value: Array.isArray(selectedItem.subcategories) && selectedItem.subcategories.length
+            ? selectedItem.subcategories.map((item) => typeof item === "object" ? item.name : item).filter(Boolean)
+            : null,
+          fullWidth: true,
+          render: (items) => Array.isArray(items) && items.length ? (
+            <div className="bento-chips-wrap">
+              {items.map((name) => <span key={name} className="bento-chip">{name}</span>)}
+            </div>
+          ) : <span className="bento-field-value empty-state">No subcategories</span>,
+        },
+        {
           label: "VISIBILITY",
           value:
             selectedItem.visibility ||
@@ -771,10 +831,6 @@ export default function StoreCategories({
               </th>
 
               <th>
-                Parent Category
-              </th>
-
-              <th>
                 Products
               </th>
 
@@ -812,10 +868,11 @@ export default function StoreCategories({
 
                     <td>
 
-                      <div className="category-name-cell">
+                      <div className={`category-name-cell${item.depth > 0 ? " is-child-category" : " is-parent-category"}`} style={{ "--category-depth": item.depth }}>
                         <div>
 
                           <strong>
+                            {item.depth > 0 && <span className="category-hierarchy-dash" aria-hidden="true">{"— ".repeat(item.depth)}</span>}
                             {item.name}
                           </strong>
 
@@ -840,12 +897,6 @@ export default function StoreCategories({
                         {item.slug}
                       </span>
 
-                    </td>
-
-
-                    <td>
-                      {item.parent ||
-                        "—"}
                     </td>
 
 
@@ -901,7 +952,7 @@ export default function StoreCategories({
 
               <tr>
 
-                <td colSpan="6">
+                <td colSpan="7">
 
                   <div className="categories-empty-state">
                     <p>

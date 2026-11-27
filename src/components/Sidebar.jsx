@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+import { MENU_MODULES } from "../auth/permissions";
 
 const sections = [
   {
     title: "",
-    items: [["/dashboard", "bi-house-fill", "Dashboard"]],
+    items: [
+      ["/dashboard", "bi-house-fill", "Dashboard"],
+      ["/merchant-dashboard", "bi-graph-up-arrow", "Sales Dashboard"],
+    ],
   },
   {
     title: "MANAGE",
@@ -30,6 +35,7 @@ const sections = [
           ["/role-templates", "bi-person-badge", "Role Templates"],
           ["/plans/new", "bi-credit-card", "Plans"],
           ["/tenders", "bi-cash-coin", "Tenders"],
+          ["/pch-users", "bi-people", "PCH Users"],
         ],
       ],
     ],
@@ -43,6 +49,7 @@ const sections = [
       // ["/cash-management", "bi-wallet2", "Cash Management"],
       ["/employees", "bi-people", "Employees",],
       ["/devices", "bi-display", "Devices",],
+      ["/access", "bi-shield-lock", "Access & Permissions"],
       // ["/shifts", "bi-clock", "Shifts"],
       // ["/attendance", "bi-person-check", "Attendance"],
     ],
@@ -65,6 +72,14 @@ export default function Sidebar({
   setMobileOpen,
 }) {
   const location = useLocation();
+  const { user, can } = useAuth();
+  const scopedToMerchant = user?.accountType === "merchant" || user?.accountType === "employee";
+  const visibleSections = scopedToMerchant
+    ? sections.filter((section) => section.title !== "MASTER SETUP").map((section) => ({
+        ...section,
+        items: section.items.filter(([path]) => path !== "/merchants" && can(MENU_MODULES[path], "view")),
+      })).filter((section) => section.items.length)
+    : sections;
   const originPath = location.state?.from?.split("?")[0] || "";
 
   function isContextActive(path, isRouteActive) {
@@ -85,7 +100,8 @@ export default function Sidebar({
     location.pathname.startsWith("/permissions") ||
     location.pathname.startsWith("/role-templates") ||
     location.pathname.startsWith("/plans") ||
-    location.pathname.startsWith("/tenders");
+    location.pathname.startsWith("/tenders") ||
+    location.pathname.startsWith("/pch-users");
 
   const [masterSetupOpen, setMasterSetupOpen] = useState(isMasterSetupRoute);
 
@@ -114,7 +130,7 @@ export default function Sidebar({
       </div>
 
       <nav className="sidebar-menu">
-        {sections.map((section, sectionIndex) => (
+        {visibleSections.map((section, sectionIndex) => (
           <div key={`${section.title}-${sectionIndex}`}>
             {section.title && !collapsed && (
               <div className="menu-section">{section.title}</div>

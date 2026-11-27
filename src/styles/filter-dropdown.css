@@ -18,6 +18,8 @@
 .pch-filter-dropdown > .pch-filter-trigger[aria-expanded="true"] { border-color: #5143bc !important; outline: 2px solid #5143bc22; outline-offset: 1px; }
 .pch-filter-dropdown > .pch-filter-trigger:disabled { cursor: default; opacity: .55; }
 .pch-filter-menu { position: fixed; z-index: 10000; box-sizing: border-box; overflow-x: hidden; padding: 6px; background: #fff; border: 1px solid #e1e8f1; border-radius: 8px; box-shadow: 0 6px 20px #18335426; }
+.pch-filter-search { position: sticky; top: -6px; z-index: 1; display: block; box-sizing: border-box; width: 100%; height: 34px; margin: -6px 0 5px; padding: 0 9px; border: 1px solid #dbe4ef; border-radius: 5px; background: #fff; color: #294a76; font: 12px Inter, "Segoe UI", sans-serif; outline: none; }
+.pch-filter-search:focus { border-color: #8172ef; box-shadow: 0 0 0 2px #5143bc18; }
 .pch-filter-menu > .pch-filter-option { display: block; box-sizing: border-box; width: 100%; min-height: 34px; padding: 8px 10px; border: 0; border-radius: 4px; background: #fff; color: #294a76; font: 12px/18px Inter, "Segoe UI", sans-serif; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; }
 .pch-filter-menu > .pch-filter-option:hover,
 .pch-filter-menu > .pch-filter-option:focus-visible { background: #f4f1ff; color: #5143bc; outline: none; }

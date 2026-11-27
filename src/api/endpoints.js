@@ -3,7 +3,7 @@ export const endpoints = {
   refresh: "/api/v1/auth/refresh",
   logout: "/api/v1/auth/logout",
   me: "/api/v1/auth/me",
-  generalSettings: "/connector/api/v1/settings/general-settings",
+  generalSettings: "/api/v1/settings/general-settings",
 
   merchants: "/merchants",
   createMerchant: "/merchants/create-merchant",
@@ -53,7 +53,7 @@ export const endpoints = {
 
   // Subscriptions (Connector API)
   merchantActiveSubscriptions: (merchantId) =>
-    `/connector/api/v1/merchants/subscriptions/active?merchantId=${encodeURIComponent(merchantId)}`,
+    `/connector/api/v1/merchants/subscriptions/active?merchant_id=${encodeURIComponent(merchantId)}`,
 
   // Store Types & Features
   storeTypes: "/store-types",

@@ -2758,3 +2758,57 @@
   box-shadow: 0 0 0 2px rgba(81, 67, 188, 0.08) !important;
   outline: none !important;
 }
+.vendors-create-page .vendors-phone-field,
+.vendors-form .vendors-phone-field {
+  width: 100%;
+}
+
+.vendors-create-page .vendors-phone-field .react-tel-input,
+.vendors-form .vendors-phone-field .react-tel-input {
+  width: 100%;
+  font-family: inherit;
+}
+
+.vendors-create-page .vendors-phone-field .react-tel-input .form-control,
+.vendors-form .vendors-phone-field .react-tel-input .form-control {
+  box-sizing: border-box;
+  width: 100%;
+  height: 44px;
+  padding-left: 50px;
+  border: 1px solid #d5e0ed;
+  border-radius: 6px;
+  color: #294668;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.vendors-create-page .vendors-phone-field .react-tel-input .flag-dropdown,
+.vendors-form .vendors-phone-field .react-tel-input .flag-dropdown {
+  border: 1px solid #d5e0ed;
+  border-radius: 6px 0 0 6px;
+  background: #fff;
+}
+
+.vendors-create-page .vendors-phone-field .react-tel-input .selected-flag,
+.vendors-form .vendors-phone-field .react-tel-input .selected-flag {
+  width: 46px;
+  padding-left: 12px;
+  border-radius: 6px 0 0 6px;
+}
+
+.vendors-create-page .vendors-phone-field .react-tel-input .country-list,
+.vendors-form .vendors-phone-field .react-tel-input .country-list {
+  z-index: 30;
+  max-height: 220px;
+}
+
+.vendors-create-page .vendors-phone-field.is-invalid .react-tel-input .form-control,
+.vendors-create-page .vendors-phone-field.is-invalid .react-tel-input .flag-dropdown,
+.vendors-form .vendors-phone-field.is-invalid .react-tel-input .form-control,
+.vendors-form .vendors-phone-field.is-invalid .react-tel-input .flag-dropdown {
+  border-color: #dc3545;
+}
+
+.vendors-form input.vendors-country-readonly {
+  cursor: default;
+}

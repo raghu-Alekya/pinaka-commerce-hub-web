@@ -5,6 +5,8 @@ import GuestRoute from "./auth/GuestRoute";
 import AppLayout from "./layouts/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import MerchantDashboard from "./pages/MerchantDashboard";
+import AccessPermissions from "./pages/AccessPermissions";
 import Merchants from "./pages/Merchants";
 import MerchantStores from "./pages/MerchantStores";
 import { useParams } from "react-router-dom";
@@ -16,6 +18,7 @@ function MerchantStoresRedirect() {
 import Subscriptions from "./pages/Subscriptions";
 import Stores from "./pages/Stores";
 import Users from "./pages/Users";
+import PchUsers from "./pages/PchUsers";
 import PosConfiguration from "./pages/pos/PosConfiguration";
 import AddMerchant from "./pages/AddMerchant";
 import AddStore from "./pages/AddStore";
@@ -78,6 +81,31 @@ export default function App() {
   const [localMerchants, setLocalMerchants] = useState([]);
 
   useEffect(() => {
+    const suppressFormSuggestions = (form) => {
+      if (!(form instanceof HTMLFormElement) || form.getAttribute("autocomplete")?.toLowerCase() !== "off") return;
+      form.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"])').forEach((input) => {
+        const autocomplete = input.dataset.autocomplete === "off" ? "off" : "new-password";
+        if (input.getAttribute("autocomplete") !== autocomplete) input.setAttribute("autocomplete", autocomplete);
+      });
+    };
+    document.querySelectorAll('form[autocomplete="off"]').forEach(suppressFormSuggestions);
+    const autocompleteObserver = new MutationObserver((records) => {
+      records.forEach((record) => {
+        if (record.type === "attributes") {
+          suppressFormSuggestions(record.target instanceof HTMLFormElement ? record.target : record.target.form);
+          return;
+        }
+        record.addedNodes.forEach((node) => {
+          if (!(node instanceof Element)) return;
+          if (node.matches("form[autocomplete='off']")) suppressFormSuggestions(node);
+          node.querySelectorAll?.("form[autocomplete='off']").forEach(suppressFormSuggestions);
+          const parentForm = node.closest("form[autocomplete='off']");
+          if (parentForm) suppressFormSuggestions(parentForm);
+          if (node instanceof HTMLInputElement && node.form?.getAttribute("autocomplete")?.toLowerCase() === "off") suppressFormSuggestions(node.form);
+        });
+      });
+    });
+    autocompleteObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["autocomplete"] });
     const messageFor = (input) => {
       const validity = input.validity;
       const labelNode = input.labels?.[0]?.cloneNode(true);
@@ -140,6 +168,7 @@ export default function App() {
     document.addEventListener("input", onInput, true);
     document.addEventListener("change", onInput, true);
     return () => {
+      autocompleteObserver.disconnect();
       document.removeEventListener("invalid", onInvalid, true);
       document.removeEventListener("input", onInput, true);
       document.removeEventListener("change", onInput, true);
@@ -197,6 +226,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/merchant-dashboard" element={<MerchantDashboard />} />
         {/* Merchant list, creation, and editing */}
         <Route
           path="/merchants"
@@ -277,6 +307,7 @@ export default function App() {
         <Route path="/orders/:orderId" element={<OrderDetail />} />
         {/* Users and POS */}
         <Route path="/users" element={<Users />} />
+        <Route path="/pch-users" element={<PchUsers />} />
         <Route path="/pos-configuration" element={<PosConfiguration />} />
         {/* Employees */}
         <Route path="/employees" element={<Employees />} />

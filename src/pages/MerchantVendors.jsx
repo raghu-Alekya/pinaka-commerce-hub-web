@@ -797,7 +797,7 @@ useEffect(() => {
                         searchAriaLabel="Search master vendors"
                         searchDisabled={busy || masterLoading}
                         filters={[
-                            { key: "country", label: "Filter by country", value: countryFilter, disabled: busy || masterLoading, options: [{ value: "", label: "All countries" }, ...countries.map(country => ({ value: locationKey(country), label: country }))], onChange: value => { setCountryFilter(value); setStateFilter(""); setPickerPage(1); } },
+                            { key: "country", label: "Filter by country", value: countryFilter, disabled: busy || masterLoading, searchable: true, options: [{ value: "", label: "All countries" }, ...countries.map(country => ({ value: locationKey(country), label: country }))], onChange: value => { setCountryFilter(value); setStateFilter(""); setPickerPage(1); } },
                             { key: "state", label: "Filter by state", value: stateFilter, disabled: busy || masterLoading, options: [{ value: "", label: "All states" }, ...states.map(state => ({ value: locationKey(state), label: state }))], onChange: value => { setStateFilter(value); setPickerPage(1); } },
                         ]}
                         onClear={() => { setSearch(""); setCountryFilter(""); setStateFilter(""); setPickerPage(1); }}
@@ -1148,6 +1148,7 @@ useEffect(() => {
                                 <FilterDropdown
                                     aria-label="Filter by country"
                                     value={countryFilter}
+                                    searchable
                                     onChange={(e) => {
                                         setCountryFilter(e.target.value);
                                         setStateFilter("");

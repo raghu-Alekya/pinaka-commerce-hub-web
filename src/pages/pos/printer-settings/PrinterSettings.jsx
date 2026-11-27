@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError } from "../../../api/http";
+import { getAccessToken } from "../../../auth/tokenStore";
 import {
   ConfigField,
   ConfigFooter,
@@ -9,17 +10,17 @@ import {
   useSaveAction,
 } from "../shared";
 import { getPrinterSettings, savePrinterSettings } from "./api";
-import { isStoredPosImage, posImageUrl, uploadStorePosImage } from "../storePosConfiguration";
+import { posImageUrl, storedPosImagePath, uploadStorePosImage } from "../storePosConfiguration";
 
 const DEFAULTS = { header: "", footer: "", address: "", logo: "", logoName: "" };
 
 function mapGeneralSettings(record = {}) {
-  const logo = record.logo_url || record.image_url || "";
+  const logo = record.logo_url || record.logoUrl || record.image_url || record.imageUrl || record.logo || record.image || "";
   return {
     ...DEFAULTS,
-    header: record.receipt_header || "",
-    footer: record.receipt_footer || "",
-    address: record.address || "",
+    header: record.receipt_header ?? record.receiptHeader ?? record.header ?? "",
+    footer: record.receipt_footer ?? record.receiptFooter ?? record.footer ?? "",
+    address: record.address ?? record.receipt_address ?? record.receiptAddress ?? "",
     logo,
     logoName: logo ? logo.split("/").pop() : "",
   };
@@ -45,6 +46,7 @@ export function PrinterSettings({ onBack }) {
   const [generalSettings, setGeneralSettings] = useState({});
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [downloading, setDownloading] = useState(false);
   const update = (field, value) => {
     setDraft((current) => ({ ...current, [field]: value }));
     setMessage("");
@@ -60,11 +62,13 @@ export function PrinterSettings({ onBack }) {
         setGeneralSettings(general);
         const loaded = {
           ...mapGeneralSettings(general),
-          header: general.receipt_header || "",
-          footer: general.receipt_footer ?? "",
-          address: general.address || storeReceiptAddress(settings.store) || "",
-          logo: general.logo_url || general.image_url || "",
-          logoName: (general.logo_url || general.image_url) ? (general.logo_url || general.image_url).split("/").pop() : "",
+          header: general.receipt_header ?? general.receiptHeader ?? general.header ?? "",
+          footer: general.receipt_footer ?? general.receiptFooter ?? general.footer ?? "",
+          address: general.address ?? general.receipt_address ?? general.receiptAddress ?? storeReceiptAddress(settings.store) ?? "",
+          logo: storedPosImagePath(general.logo_url || general.logoUrl || general.image_url || general.imageUrl || general.logo || general.image || ""),
+          logoName: (general.logo_url || general.logoUrl || general.image_url || general.imageUrl || general.logo || general.image)
+            ? String(general.logo_url || general.image_url || general.logo || general.image).split("/").pop()
+            : "",
         };
         setDraft(loaded);
         settings.session.saved.printerSettings = loaded;
@@ -77,7 +81,7 @@ export function PrinterSettings({ onBack }) {
         }
       });
     return () => { active = false; };
-  }, [settings.storeId]);
+  }, [settings.storeId, settings.merchantId, settings.store]);
 
   const save = useSaveAction(async () => {
     if (!settings.storeId) {
@@ -85,18 +89,18 @@ export function PrinterSettings({ onBack }) {
       return false;
     }
     setError("");
-    let logo = draft.logo || "";
+    let logo = storedPosImagePath(draft.logo || "");
     let logoName = draft.logoName || "";
     if (logoFile.current) {
       if (!/^image\/(png|jpeg|webp)$/.test(logoFile.current.type) || logoFile.current.size > 2 * 1024 * 1024) {
         setError("Choose a PNG, JPG, or WEBP logo up to 2 MB.");
         return false;
       }
-      const uploaded = await uploadStorePosImage(settings.storeId, logoFile.current);
+      const uploaded = await uploadStorePosImage(settings.storeId, logoFile.current, settings.merchantId);
       logo = uploaded.path;
       logoName = uploaded.imageName || logoName;
       logoFile.current = null;
-    } else if (logo && !isStoredPosImage(logo) && !logo.startsWith("data:image/")) {
+    } else if (logo && !logo.startsWith("/uploads/") && !logo.startsWith("data:image/")) {
       setError("Choose a PNG, JPG, or WEBP logo up to 2 MB.");
       return false;
     }
@@ -106,6 +110,11 @@ export function PrinterSettings({ onBack }) {
       receipt_footer: draft.footer,
       address: draft.address,
       logo_url: logo,
+      logoUrl: logo,
+      image_url: logo,
+      imageUrl: logo,
+      logo,
+      image: logo,
     };
     const saved = await savePrinterSettings(settings.merchantId, settings.storeId, generalPayload);
     const nextGeneral = {
@@ -145,6 +154,32 @@ export function PrinterSettings({ onBack }) {
     reader.readAsDataURL(file);
   };
 
+  const downloadLogo = async () => {
+    if (!draft.logo || downloading) return;
+    setDownloading(true);
+    setError("");
+    try {
+      const response = await fetch(posImageUrl(storedPosImagePath(draft.logo), { sameOrigin: true }), {
+        credentials: "include",
+        headers: getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {},
+      });
+      if (!response.ok) throw new Error(`Logo download failed (${response.status}).`);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = draft.logoName || String(draft.logo).split("/").pop() || "store-logo";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch (cause) {
+      setError(cause?.message || "Unable to download the store logo.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return <section className="pc-screen">
     <ConfigHeader icon="printer" title="Printer Settings" description="Customize the logo and text printed on store receipts." />
     {error && <p className="pc-error" role="alert">{error}</p>}
@@ -174,7 +209,12 @@ export function PrinterSettings({ onBack }) {
             <input type="file" accept="image/png,image/jpeg,image/webp" onChange={selectLogo} />
           </ConfigField>
           {draft.logoName && <small>{draft.logoName}</small>}
-          {draft.logo && <button type="button" className="pc-button" onClick={() => { logoFile.current = null; update("logo", ""); update("logoName", ""); }}>Remove Logo</button>}
+          {draft.logo && <div className="pc-printer-logo-actions">
+            <button type="button" className="pc-button" disabled={downloading} onClick={downloadLogo}>
+              <i className="bi bi-download" aria-hidden="true" /> {downloading ? "Downloading…" : "Download Logo"}
+            </button>
+            <button type="button" className="pc-button" onClick={() => { logoFile.current = null; update("logo", ""); update("logoName", ""); }}>Remove Logo</button>
+          </div>}
         </div>
       </div>
     </section>

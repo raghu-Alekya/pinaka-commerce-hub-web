@@ -1675,6 +1675,7 @@ export default function AddStore() {
               />
               <SelectField
                 label="Country *"
+                searchable
                 value={store.country}
                 onChange={changeCountry}
                 required
@@ -2261,7 +2262,7 @@ export default function AddStore() {
                 : "Loading merchant setup…"}
             </div>
           )}
-          <form onSubmit={submit} noValidate>
+          <form onSubmit={submit} autoComplete="off" noValidate>
             <fieldset
               disabled={
                 saving ||

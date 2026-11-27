@@ -2410,7 +2410,7 @@ dialog.merchant-delete-dialog::backdrop {
 }
 
 .merchant-timestamp { display: inline-flex; flex-direction: column; gap: 3px; line-height: 1.5; white-space: nowrap; }
-.merchant-timestamp > span { font-size: 12px; font-weight: 600; color: #10264d; }
+.merchant-timestamp > span { font-size: 12px; font-weight: 600; color: #10264d;}
 .merchant-timestamp small { font-size: 12px; font-weight: 400; color:#5f728e; }
 
 .merchant-notice { display: flex; align-items: center; }
@@ -2443,6 +2443,11 @@ dialog.merchant-delete-dialog::backdrop {
   color: #344054;
   font-size: 13px;
   font-weight: 600;
+}
+
+.merchant-date-field-compact {
+  min-width: 0;
+  gap: 0;
 }
 
 .merchant-date-field input {
@@ -2555,6 +2560,55 @@ dialog.merchant-delete-dialog::backdrop {
   position: relative;
 }
 
+.merchant-date-manual-row {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid #d7dced;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.merchant-date-manual-row:focus-within {
+  border-color: #7256df;
+  box-shadow: 0 0 0 2px rgba(101, 69, 218, 0.08);
+}
+
+.merchant-date-manual-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 42px;
+  border: 0 !important;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none !important;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+}
+
+.merchant-date-manual-row .merchant-date-trigger {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent;
+}
+
+.merchant-date-manual-row.invalid {
+  border-color: #ef4456;
+  box-shadow: none;
+}
+
+.merchant-date-manual-row.invalid:focus-within {
+  border-color: #ef4456;
+  box-shadow: 0 0 0 2px rgba(239, 68, 86, 0.08);
+}
+
 .merchant-date-trigger {
   display: flex;
   align-items: center;
@@ -2568,14 +2622,19 @@ dialog.merchant-delete-dialog::backdrop {
   background: #fff;
   color: #52617a;
   font: inherit;
-  font-size: 14px;
-  font-weight: 400;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
 }
 
 .merchant-date-trigger:hover,
 .merchant-date-trigger[aria-expanded="true"] {
   border-color: #a8a0df;
+}
+
+.merchant-date-trigger.invalid {
+  border-color: #ef4456;
+  background: #fffafb;
 }
 
 .merchant-date-trigger svg {
@@ -2632,6 +2691,14 @@ dialog.merchant-delete-dialog::backdrop {
   color: #52617a;
 }
 
+.merchant-calendar-heading .merchant-calendar-title {
+  display: inline-flex;
+  width: auto;
+  min-width: 0;
+  padding: 0 6px;
+  font-weight: 600;
+}
+
 .merchant-calendar-heading button:hover,
 .merchant-calendar-grid button:not(:disabled):hover {
   background: #f0effa;
@@ -2674,6 +2741,20 @@ dialog.merchant-delete-dialog::backdrop {
 .merchant-calendar-grid button:disabled {
   color: #c6cbd4;
   cursor: not-allowed;
+}
+
+.merchant-calendar-choice-grid {
+  max-height: 220px;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.merchant-calendar-year-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.merchant-calendar-month-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .merchant-calendar-footer {

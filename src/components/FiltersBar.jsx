@@ -45,6 +45,7 @@ export default function FiltersBar({
                 <FilterDropdown
                     aria-label={filter.label}
                     disabled={filter.disabled}
+                    searchable={filter.searchable}
                     value={filter.value ?? ""}
                     onChange={(e) =>
                         filter.onChange(e.target.value)
