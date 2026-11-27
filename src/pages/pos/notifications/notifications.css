@@ -1,0 +1,244 @@
+.notifications-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: #33435f;
+}
+
+.notifications-preview-note {
+  margin: 0;
+  padding: 12px 15px;
+  border: 1px solid #e1e6ef;
+  border-radius: 8px;
+  background: #f7f8fc;
+  color: #61718a;
+  font-size: 13px;
+}
+
+.notifications-channel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.notifications-channel-card,
+.notifications-editor {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #dce3ee;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 5px #1b2b4610;
+}
+
+.notifications-channel-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.notifications-channel-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 12px;
+  background: #f0edff;
+  color: #5948c6;
+  font-size: 20px;
+}
+
+.notifications-channel-icon.whatsapp {
+  background: #e9f8ef;
+  color: #16864b;
+}
+
+.notifications-channel-heading > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.notifications-channel-heading h3,
+.notifications-editor h3 {
+  margin: 0 0 4px;
+  color: #1d2d4c;
+  font-size: 16px;
+}
+
+.notifications-channel-heading p,
+.notifications-editor header p {
+  margin: 0;
+  color: #7888a1;
+  font-size: 13px;
+}
+
+.notifications-edit-button,
+.notifications-cancel-button,
+.notifications-save-button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid #d3dced;
+  border-radius: 7px;
+  background: #fff;
+  color: #33435f;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.notifications-edit-button:hover,
+.notifications-cancel-button:hover {
+  border-color: #7869d7;
+  color: #5948c6;
+}
+
+.notifications-message-preview {
+  min-height: 118px;
+  padding: 14px;
+  border: 1px solid #e0e7ef;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.notifications-message-preview.sms {
+  background: #f7f8fc;
+}
+
+.notifications-message-preview.whatsapp {
+  border-color: #d4ebdc;
+  background: #eff8f1;
+}
+
+.notifications-preview-label {
+  display: block;
+  margin-bottom: 10px;
+  color: #77869d;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.notifications-message-preview p {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid #e5e9ef;
+  border-radius: 4px 12px 12px 12px;
+  background: #fff;
+  color: #26354e;
+  font-size: 14px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.notifications-message-preview.whatsapp p {
+  border-color: #d9eadf;
+}
+
+.notifications-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.notifications-enable-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #33435f;
+  font-size: 14px;
+}
+
+.notifications-enable-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #5948c6;
+}
+
+.notifications-message-field {
+  color: #253351;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.notifications-editor textarea,
+.notifications-store-name-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 12px;
+  border: 1px solid #d8e0ed;
+  border-radius: 7px;
+  color: #283650;
+  font: inherit;
+}
+
+.notifications-editor textarea {
+  min-height: 120px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.notifications-editor textarea:focus,
+.notifications-store-name-input:focus {
+  border-color: #8176dc;
+  outline: 2px solid #5143bc22;
+}
+
+.notifications-placeholder-hint {
+  margin: 0;
+  color: #7888a1;
+  font-size: 12px;
+}
+
+.notifications-placeholder-hint code {
+  margin: 0 2px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: #f1f3f8;
+  color: #5948c6;
+}
+
+.notifications-editor footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding-top: 4px;
+}
+
+.notifications-save-button {
+  border-color: #5948c6;
+  background: #5948c6;
+  color: #fff;
+}
+
+.notifications-save-button:hover {
+  background: #4939b2;
+}
+
+.notifications-notice {
+  margin: 0;
+  color: #26754a;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .notifications-channel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .notifications-channel-card,
+  .notifications-editor {
+    padding: 14px;
+  }
+}

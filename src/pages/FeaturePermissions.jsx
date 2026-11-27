@@ -5,8 +5,8 @@ import Pagination from "../components/Pagination";
 import DeleteConfirmationDialog from "../components/DeleteConfirmationDialog";
 import ListActions from "../components/ListActions";
 import { listFeatures } from "../api/features";
+import { listPermissions } from "../api/permissions";
 import {
-  listFeaturePermissions,
   getFeaturePermissionById,
   createFeaturePermission,
   updateFeaturePermission,
@@ -339,51 +339,20 @@ const [deleteError, setDeleteError] = useState("");
     setLoading(true);
 
     try {
-      const featureList =
-        await listFeatures();
+      const [featureList, permissionList] = await Promise.all([
+        listFeatures(),
+        listPermissions(),
+      ]);
 
       setFeatures(featureList);
-
-      const permissionGroups =
-        await Promise.all(
-          featureList
-            .filter(
-              (feature) =>
-                feature?.id !==
-                  undefined &&
-                feature?.id !== null,
-            )
-            .map(async (feature) => {
-              try {
-                const list =
-                  await listFeaturePermissions(
-                    feature.id,
-                  );
-
-                return (
-                  Array.isArray(list)
-                    ? list
-                    : []
-                ).map((item) =>
-                  normalizePermission(
-                    item,
-                    feature,
-                  ),
-                );
-              } catch (error) {
-                console.error(
-                  `Failed to load permissions for feature ${feature.name}:`,
-                  error,
-                );
-
-                return [];
-              }
-            }),
-        );
-
-      setPermissions(
-        permissionGroups.flat(),
+      const featureById = new Map(
+        featureList.map((feature) => [String(feature.id), feature]),
       );
+      setPermissions(permissionList.map((item) => {
+        const featureId = item?.featureId ?? item?.feature_id ?? item?.feature?.id;
+        const feature = featureById.get(String(featureId)) || item?.feature;
+        return normalizePermission(item, feature);
+      }));
     } catch (error) {
       console.error(
         "Feature permissions load failed:",

@@ -1,4 +1,4 @@
-import { api } from "../../../api/http";
+import { api, pendingStoreRead } from "../../../api/http";
 
 const EMAIL_SETTINGS = "/api/v1/settings/email-settings";
 const TEST_EMAIL = `${EMAIL_SETTINGS}/test-email`;
@@ -18,9 +18,10 @@ function unwrap(response) {
 
 export async function getEmailSettings(merchantId, storeId, templateId) {
   const query = templateId ? `?template_id=${encodeURIComponent(templateId)}` : "";
-  const response = await api.get(`${EMAIL_SETTINGS}${query}`, {
+  const requestKey = `email-settings:${merchantId || ""}:${storeId || ""}:${templateId || "all"}`;
+  const response = await pendingStoreRead(requestKey, () => api.get(`${EMAIL_SETTINGS}${query}`, {
     headers: scopeHeaders(merchantId, storeId),
-  });
+  }));
   return unwrap(response);
 }
 

@@ -3,10 +3,7 @@ import { Link, useLocation, useParams, useSearchParams } from "react-router-dom"
 import { ArrowLeft, ShoppingBag, CreditCard, CircleDollarSign, Package, ReceiptText, Award } from "lucide-react";
 import { formatMoney, getOrder, normalizeOrderStatus } from "../api/orders";
 import { getCurrencySymbol } from "../utils/currency";
-import { listStorePosPayments } from "../api/storePosPayments";
-import { listStoreEmployees } from "../api/employees";
-import { apiRequest } from "../api/http";
-import { extractProducts, normalizeProduct, productsApi } from "../api/products";
+import { pendingStoreRead } from "../api/http";
 import "../styles/orders.css";
 import "../styles/employee-view.css";
 
@@ -112,74 +109,10 @@ function lineItemSku(item) {
     || "";
 }
 
-function productCatalogMap(response) {
-  const productByKey = new Map();
-  extractProducts(response).forEach((raw) => {
-    const product = normalizeProduct(raw);
-    const catalogProduct = { ...product, raw, rawPayload: asObject(raw.payload) };
-    [product.id, product.wordpressId, product.sku].filter(Boolean).forEach((key) => {
-      productByKey.set(String(key).trim().toLowerCase(), catalogProduct);
-    });
-  });
-  return productByKey;
-}
-
-function employeeNameMap(response) {
-  const rows = findEmployeeRows(response);
-  const names = {};
-  for (const row of Array.isArray(rows) ? rows : []) {
-    const person = row?.employee || row?.user || row;
-    const name = person?.name || person?.fullName || person?.full_name || person?.displayName || person?.display_name ||
-      [person?.firstName ?? person?.first_name, person?.lastName ?? person?.last_name].filter(Boolean).join(" ");
-    if (!name) continue;
-    for (const id of [person.id, person.employeeId, person.employeeCode, person.userId, person.user_id, person.uuid,
-      row.id, row.employeeId, row.employeeCode, row.userId, row.user_id, row.uuid]) {
-      if (id !== undefined && id !== null && id !== "") {
-        const value = String(id).trim().toLowerCase();
-        names[value] = name;
-        const numericSuffix = value.match(/(?:^|\D)(\d+)$/)?.[1];
-        if (numericSuffix) names[String(Number(numericSuffix))] = name;
-      }
-    }
-  }
-  return names;
-}
-
-function findEmployeeRows(value, depth = 0) {
-  if (Array.isArray(value)) return value;
-  if (!value || typeof value !== "object" || depth > 5) return [];
-  for (const key of ["employees", "items", "results", "records", "content", "data"]) {
-    const rows = findEmployeeRows(value[key], depth + 1);
-    if (rows.length) return rows;
-  }
-  return [];
-}
-
-function displayPlacedBy(value, names) {
+function displayPlacedBy(value) {
   if (!value || value === "—") return "—";
   if (typeof value === "object") return value.name || value.fullName || value.full_name || "—";
-  const text = String(value).trim();
-  return names[text.toLowerCase()] || names[text.replace(/\D/g, "").replace(/^0+/, "").toLowerCase()] || text;
-}
-
-function catalogProductForLineItem(item, productByKey) {
-  const product = item.product || item.productDetails || item.product_details || {};
-  const ids = [
-    item.productId,
-    item.product_id,
-    product.id,
-    product.productId,
-    product.product_id,
-    item.variationId,
-    item.variation_id,
-  ];
-  for (const id of ids) {
-    if (id !== undefined && id !== null && productByKey.has(String(id).trim().toLowerCase())) {
-      return productByKey.get(String(id).trim().toLowerCase());
-    }
-  }
-  const sku = lineItemSku(item);
-  return sku ? productByKey.get(String(sku).trim().toLowerCase()) : undefined;
+  return String(value).trim();
 }
 
 function numericPrice(...values) {
@@ -487,49 +420,14 @@ function buildView(payload, fallbackCurrency = "USD", fallbackCurrencySymbol) {
   };
 }
 
-function findTotalOrder(payload, orderKeys) {
-  const root = asObject(payload);
-  const data = asObject(root.data);
-  const rows = Array.isArray(root.orders_data) ? root.orders_data
-    : Array.isArray(data.orders_data) ? data.orders_data
-      : Array.isArray(root.orders) ? root.orders
-        : Array.isArray(data.orders) ? data.orders
-          : Array.isArray(root.data) ? root.data : [];
-  return rows.find((row) => [
-    row?.id, row?.order_id, row?.client_order_id, row?.clientOrderId,
-    row?.woo_order_id, row?.order_number, row?.number,
-  ].some((value) => value !== undefined && value !== null && orderKeys.has(String(value).trim().replace(/^#/, "").toLowerCase())));
-}
-
-async function getTotalOrderByKeys(orderKeys, storeId) {
-  const perPage = 100;
-  for (let page = 1; page <= 100; page += 1) {
-    const query = new URLSearchParams({ page: String(page), per_page: String(perPage) });
-    if (storeId) query.set("storeId", storeId);
-    const payload = await apiRequest(`/orders/total-orders?${query}`, {
-      headers: storeId ? { "x-store-id": storeId } : undefined,
-    });
-    const match = findTotalOrder(payload, orderKeys);
-    if (match) return match;
-    const root = asObject(payload);
-    const data = asObject(root.data);
-    const total = Number(root.order_total_count ?? data.order_total_count ?? 0);
-    const perPageValue = Number(root.per_page ?? data.per_page ?? perPage);
-    if (!total || page * perPageValue >= total) break;
-  }
-  return null;
-}
-
-export default function OrderDetail({ embedded = false, orderId: providedOrderId, storeId: providedStoreId, merchantId, orderNumber: providedOrderNumber, currency: providedCurrency, currencySymbol: providedCurrencySymbol, onBack }) {
+export default function OrderDetail({ embedded = false, orderId: providedOrderId, storeId: providedStoreId, orderNumber: providedOrderNumber, currency: providedCurrency, currencySymbol: providedCurrencySymbol, onBack }) {
   const { orderId: routeOrderId } = useParams();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const orderId = providedOrderId || routeOrderId;
   const storeId = providedStoreId || searchParams.get("store") || "";
-  const employeeMerchantId = merchantId || searchParams.get("merchant") || "";
   const orderNumber = providedOrderNumber || searchParams.get("number") || "";
   const [view, setView] = useState(null);
-  const [employeeNames, setEmployeeNames] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -540,217 +438,17 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
 
   useEffect(() => {
     let active = true;
-    if (!employeeMerchantId || !storeId) { setEmployeeNames({}); return undefined; }
-    listStoreEmployees(employeeMerchantId, storeId)
-      .then((response) => { if (active) setEmployeeNames(employeeNameMap(response)); })
-      .catch(() => { if (active) setEmployeeNames({}); });
-    return () => { active = false; };
-  }, [employeeMerchantId, storeId]);
-
-  useEffect(() => {
-    let active = true;
     setLoading(true);
     setError("");
-    Promise.all([
-      getOrder(orderId, storeId),
-      storeId ? listStorePosPayments(storeId).catch(() => null) : Promise.resolve(null),
-    ])
-      .then(async ([payload, paymentPayload]) => {
+    pendingStoreRead(`order-detail:${storeId}:${orderId}`, () => getOrder(orderId, storeId))
+      .then((payload) => {
         if (!active) return;
-        let nextView = buildView(payload, providedCurrency || searchParams.get("currency") || "USD", providedCurrencySymbol || searchParams.get("currencySymbol"));
-        const orderKeys = new Set([
-          orderId, orderNumber, nextView.number, nextView.clientOrderId,
-          payload?.id, payload?.order?.id, payload?.woo_order_id, payload?.order?.woo_order_id,
-        ].filter(Boolean).map((value) => String(value).trim().replace(/^#/, "").toLowerCase()));
-        const totalOrder = nextView.loyalty.redeemedValue > 0 && nextView.loyalty.redeemedPoints > 0
-          ? null
-          : await getTotalOrderByKeys(orderKeys, storeId).catch(() => null);
-        if (totalOrder) {
-          const totalRedeemedPoints = Number(totalOrder.redeem_points ?? totalOrder.order_redeem_points);
-          const totalRedeemedValue = Number(totalOrder.redeem_amount ?? totalOrder.redeemed_value ?? totalOrder.loyalty_amount);
-          nextView = {
-            ...nextView,
-            loyalty: {
-              ...nextView.loyalty,
-              redeemedPoints: nextView.loyalty.redeemedPoints || (Number.isFinite(totalRedeemedPoints) ? totalRedeemedPoints : 0),
-              redeemedValue: nextView.loyalty.redeemedValue || (Number.isFinite(totalRedeemedValue) ? totalRedeemedValue : 0),
-            },
-          };
-        }
-        if (employeeMerchantId && storeId) {
-          try {
-            const loyaltyResponse = await apiRequest("/connector/api/v1/loyalty/get-all-customers", {
-              headers: { "x-merchant-id": employeeMerchantId, "x-store-id": storeId },
-            });
-            const customers = Array.isArray(loyaltyResponse?.data)
-              ? loyaltyResponse.data
-              : Array.isArray(loyaltyResponse?.customers) ? loyaltyResponse.customers : [];
-            const contactCustomer = customers.find((candidate) => {
-              const contact = String(candidate?.contact || "").trim().toLowerCase();
-              return contact && [nextView.phone, nextView.email]
-                .filter((value) => value && value !== "—")
-                .some((value) => String(value).trim().toLowerCase() === contact);
-            });
-            const loyaltyOrderKeys = new Set([orderId, nextView.number, nextView.clientOrderId]
-              .filter(Boolean).map((value) => String(value).trim().toLowerCase()));
-            const matchedCustomerTransactions = customers.flatMap((candidate) => (Array.isArray(candidate?.transactions)
-              ? candidate.transactions : [])
-              .filter((transaction) => loyaltyOrderKeys.has(String(transaction?.order_id ?? transaction?.orderId ?? "").trim().toLowerCase()))
-              .map((transaction) => ({ candidate, transaction })));
-            const customer = matchedCustomerTransactions[0]?.candidate || contactCustomer;
-            const transactions = matchedCustomerTransactions.map(({ transaction }) => transaction);
-            if (transactions.length) {
-              const creditedPoints = transactions.reduce((sum, row) => sum + (Number(row.credited_points) || 0), 0);
-              const redeemedPoints = transactions.reduce((sum, row) => sum + (Number(row.redeemed_points) || 0), 0);
-              const expiredPoints = transactions.reduce((sum, row) => sum + (Number(row.expired_points) || 0), 0);
-              const latest = transactions[transactions.length - 1];
-              nextView = {
-                ...nextView,
-                phone: nextView.phone === "—" && customer?.contact ? String(customer.contact) : nextView.phone,
-                loyalty: {
-                  creditedPoints,
-                  redeemedPoints,
-                  expiredPoints,
-                  availablePoints: Math.max(0, creditedPoints - redeemedPoints - expiredPoints),
-                  overallCreditedPoints: Number(customer?.credited ?? customer?.credited_points) || creditedPoints,
-                  overallRedeemedPoints: Number(customer?.redeemed ?? customer?.redeemed_points) || redeemedPoints,
-                  overallExpiredPoints: Number(customer?.expired ?? customer?.expired_points) || expiredPoints,
-                  overallAvailablePoints: Number(customer?.available_points ?? customer?.available) || Math.max(0, creditedPoints - redeemedPoints - expiredPoints),
-                  redeemedValue: nextView.loyalty.redeemedValue,
-                  status: latest.points_status || nextView.loyalty.status,
-                  createdDate: latest.points_created_date || nextView.loyalty.createdDate,
-                  expiryDate: latest.points_expiry_date || nextView.loyalty.expiryDate,
-                },
-              };
-            }
-            if (customer && !transactions.length) {
-              nextView = {
-                ...nextView,
-                phone: nextView.phone === "—" && customer?.contact ? String(customer.contact) : nextView.phone,
-                loyalty: {
-                  ...nextView.loyalty,
-                  overallCreditedPoints: Number(customer.credited ?? customer.credited_points) || 0,
-                  overallRedeemedPoints: Number(customer.redeemed ?? customer.redeemed_points) || 0,
-                  overallExpiredPoints: Number(customer.expired ?? customer.expired_points) || 0,
-                  overallAvailablePoints: Number(customer.available_points ?? customer.available) || 0,
-                },
-              };
-            }
-          } catch {
-            // Keep the order-local loyalty metadata as a fallback.
-          }
-        }
-        if (!nextView.payments.length) {
-          const paymentRows = Array.isArray(paymentPayload?.payments)
-            ? paymentPayload.payments
-            : Array.isArray(paymentPayload?.data?.payments) ? paymentPayload.data.payments : [];
-          const orderKeys = new Set([orderId, nextView.number, nextView.clientOrderId]
-            .filter(Boolean).map((value) => String(value).trim().toLowerCase()));
-          const matchingPayments = paymentRows.filter((payment) => [
-            payment.order_id, payment.orderId, payment.order_number, payment.orderNumber,
-            payment.client_order_id, payment.clientOrderId,
-          ].filter((value) => value !== undefined && value !== null && value !== "")
-            .some((value) => orderKeys.has(String(value).trim().toLowerCase())));
-          nextView = { ...nextView, payments: matchingPayments };
-        }
-        if (storeId && (nextView.hasDiscount || nextView.lineItems.some((item) => !item.sku))) {
-          try {
-            const [catalog, discountsResponse] = await Promise.all([
-              productsApi.getCatalog(storeId),
-              nextView.hasDiscount
-                ? apiRequest(`/api/v1/stores/${encodeURIComponent(storeId)}/discounts?per_page=100`)
-                : Promise.resolve(null),
-            ]);
-            const productByKey = productCatalogMap(catalog);
-            const discountData = asObject(discountsResponse?.data ?? discountsResponse);
-            const discountRows = asArray(discountsResponse?.data ?? discountsResponse).length
-              ? asArray(discountsResponse?.data ?? discountsResponse)
-              : ["auto", "mix_match", "multipack"].flatMap((type) =>
-                asArray(discountData[type]).map((discount) => ({ ...discount, type })),
-              );
-            const discountByRuleId = new Map();
-            discountRows.forEach((discount) => {
-              const id = discount.id ?? discount.discount_id ?? discount.rule_id;
-              if (id != null) {
-                const keys = [String(id), `${discount.type === "mix_match" ? "MM" : ""}_${id}`];
-                keys.forEach((key) => discountByRuleId.set(key.toLowerCase(), discount));
-              }
-              if (discount.code) discountByRuleId.set(String(discount.code).toLowerCase(), discount);
-            });
-            const discountLines = nextView.discountLines.map((line) => {
-              if (!/mix[\s_-]*match/i.test(line.type)) return line;
-              const item = nextView.lineItems.find((candidate) => candidate.name === line.name
-                && /mix[\s_-]*match/i.test(String(candidate.discountType || candidate.discount_type
-                  || metaValueFrom(candidate.meta_data || candidate.metaData, ["_pos_discount_type", "pos_discount_type"]) || "")));
-              const meta = item?.meta_data || item?.metaData;
-              const ruleId = metaValueFrom(meta, ["_pos_discount_rule_id", "pos_discount_rule_id"]);
-              const rule = discountByRuleId.get(String(ruleId || "").toLowerCase());
-              const productIds = rule?.discount_product_ids ?? rule?.discounted_products ?? rule?.discount_products;
-              const targetIds = (Array.isArray(productIds) ? productIds : String(productIds || "").split(/[,\s]+/))
-                .map((product) => typeof product === "object" ? product.product_id ?? product.id : product)
-                .filter((id) => id != null && id !== "");
-              const targetProduct = targetIds.map((id) => productByKey.get(String(id).toLowerCase())).find(Boolean);
-              return targetProduct?.name ? { ...line, name: targetProduct.name } : line;
-            });
-            nextView = {
-              ...nextView,
-              discountLines,
-              lineItems: nextView.lineItems.map((item) => ({
-                item,
-                catalogProduct: catalogProductForLineItem(item, productByKey),
-              })).map(({ item, catalogProduct }) => {
-                const quantity = Number(item.quantity);
-                const divisor = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
-                const rawProduct = catalogProduct?.raw || {};
-                const productPayload = catalogProduct?.rawPayload || {};
-                const itemProduct = asObject(item.product || item.productDetails || item.product_details);
-                const itemMeta = asArray(item.meta_data || item.metaData);
-                const subtotal = numericPrice(item.subtotal, item.total);
-                const total = numericPrice(item.total, item.subtotal);
-                const discountAmount = numericPrice(
-                  item.discountAmount,
-                  item.discount_amount,
-                  item.discount,
-                  metaValueFrom(itemMeta, ["_pos_auto_discount", "pos_auto_discount", "discount_amount"]),
-                );
-                let originalUnitPrice = numericPrice(
-                  item.regularPrice,
-                  item.regular_price,
-                  item.originalPrice,
-                  item.original_price,
-                  itemProduct.regularPrice,
-                  itemProduct.regular_price,
-                  metaValueFrom(itemMeta, ["regular_price", "_regular_price", "original_price"]),
-                  rawProduct.regularPrice,
-                  rawProduct.regular_price,
-                  productPayload.regularPrice,
-                  productPayload.regular_price,
-                  item.price,
-                  itemProduct.price,
-                );
-                if (originalUnitPrice === undefined && subtotal !== undefined) {
-                  originalUnitPrice = subtotal / divisor;
-                }
-                const discountedUnitPrice = total === undefined ? undefined : total / divisor;
-                if (discountAmount !== undefined && discountedUnitPrice !== undefined
-                  && (originalUnitPrice === undefined || originalUnitPrice <= discountedUnitPrice)) {
-                  originalUnitPrice = discountedUnitPrice + discountAmount / divisor;
-                }
-                return {
-                  ...item,
-                  sku: item.sku || catalogProduct?.sku || "",
-                  originalUnitPrice,
-                  discountedUnitPrice,
-                };
-              }),
-            };
-          } catch {
-            // Keep the order details available when the catalog cannot be read.
-          }
-        }
-        if (active) {
-          setView(orderNumber ? { ...nextView, number: orderNumber.replace(/^#/, "") } : nextView);
-        }
+        const nextView = buildView(
+          payload,
+          providedCurrency || searchParams.get("currency") || "USD",
+          providedCurrencySymbol || searchParams.get("currencySymbol"),
+        );
+        setView(orderNumber ? { ...nextView, number: orderNumber.replace(/^#/, "") } : nextView);
       })
       .catch((loadError) => {
         if (!active) return;
@@ -799,7 +497,7 @@ export default function OrderDetail({ embedded = false, orderId: providedOrderId
           </DetailBlock>
 
           <DetailBlock title="Payment and device">
-            <Fields items={[["Payment", view.paymentMethod], ["Pay later", view.payLater], ["Device ID", view.deviceId], ["Placed by", displayPlacedBy(view.placedBy, employeeNames)], ["Shift", view.shiftId]]} />
+            <Fields items={[["Payment", view.paymentMethod], ["Pay later", view.payLater], ["Device ID", view.deviceId], ["Placed by", displayPlacedBy(view.placedBy)], ["Shift", view.shiftId]]} />
           </DetailBlock>
 
           <DetailBlock title="Totals">

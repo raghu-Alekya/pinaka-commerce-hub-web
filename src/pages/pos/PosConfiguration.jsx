@@ -20,6 +20,7 @@ import { FunctionalitySettings } from "./pos/functionality-settings/Functionalit
 import EmailSettings from "./email-settings/EmailSettings";
 import { getPosCashRegisters } from "./cash-registers/api";
 import { getPosTerminalMappings } from "./terminal-mappings/api";
+import { Notifications } from "./notifications/Notifications";
  
 const configurationCards = [
     {
@@ -155,6 +156,15 @@ const configurationCards = [
         title: "Email Settings",
         description: "Configure email notifications and delivery settings for this store.",
         component: "email-settings",
+        enabled: true,
+    },
+    {
+        id: "notifications",
+        icon: "bell",
+        iconClass: "purple",
+        title: "Notifications",
+        description: "View notifications and updates.",
+        component: "notifications",
         enabled: true,
     },
 ];
@@ -321,6 +331,9 @@ export default function PosConfiguration({ merchantId, storeId, store, onCurrenc
 
             case "email-settings":
                 return <EmailSettings />;
+
+            case "notifications":
+                return <Notifications />;
  
             default:
                 return null;
