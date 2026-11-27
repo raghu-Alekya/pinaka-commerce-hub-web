@@ -3936,17 +3936,21 @@ body:has(.store-workspace-page),
 .store-workspace-card .products-table td:last-child,
 .store-workspace-page .store-workspace-card .products-table th:last-child,
 .store-workspace-page .store-workspace-card .products-table td:last-child {
-  width: 140px !important;
-  min-width: 140px !important;
-  padding-right: 20px !important;
+  width: 16% !important;
+  min-width: 150px !important;
+  padding-right: 12px !important;
   box-sizing: border-box !important;
 }
 
 .store-workspace-card .products-table .products-col-status,
 .store-workspace-page .store-workspace-card .products-table .products-col-status {
-  width: 140px !important;
-  min-width: 140px !important;
+  display: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
 }
+
+.store-workspace-card .products-table .products-col-updated,
+.store-workspace-page .store-workspace-card .products-table .products-col-updated { display: none !important; width: 0 !important; min-width: 0 !important; }
 
 .store-workspace-card .products-table td:last-child,
 .store-workspace-page .store-workspace-card .products-table td:last-child {
@@ -3955,15 +3959,8 @@ body:has(.store-workspace-page),
   white-space: nowrap !important;
 }
 
-.store-workspace-card .products-table td:last-child :is(.product-status, .status-badge),
-.store-workspace-page .store-workspace-card .products-table td:last-child :is(.product-status, .status-badge) {
-  width: auto !important;
-  min-width: 105px !important;
-  max-width: none !important;
-  white-space: nowrap !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
-}
+.store-workspace-card .products-table td:last-child .product-row-actions,
+.store-workspace-page .store-workspace-card .products-table td:last-child .product-row-actions { width: max-content; max-width: 100%; }
 .store-workspace-page .store-workspace-card .products-pagination {
   width: 100%;
   margin: 0;

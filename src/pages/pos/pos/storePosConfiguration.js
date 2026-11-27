@@ -1,6 +1,6 @@
-import { api } from "../../api/http";
-import { endpoints } from "../../api/endpoints";
-import { getStoredUser } from "../../auth/tokenStore";
+import { api } from "../../../api/http";
+import { endpoints } from "../../../api/endpoints";
+import { getStoredUser } from "../../../auth/tokenStore";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
