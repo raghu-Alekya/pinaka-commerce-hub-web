@@ -1,4 +1,4 @@
-import { api } from "./http";
+import { api, pendingStoreRead } from "./http";
 import { endpoints } from "./endpoints";
 
 const permissionFrom = (response) =>
@@ -20,7 +20,8 @@ export async function listPermissions(params = {}) {
     }
   });
   const suffix = query.toString();
-  const response = await api.get(suffix ? `${endpoints.permissions}?${suffix}` : endpoints.permissions);
+  const path = suffix ? `${endpoints.permissions}?${suffix}` : endpoints.permissions;
+  const response = await pendingStoreRead(`permissions-list:${path}`, () => api.get(path));
   return permissionsFrom(response);
 }
 

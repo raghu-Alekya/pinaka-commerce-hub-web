@@ -8,7 +8,6 @@ import { useAuth } from "../auth/AuthContext";
 import { listMerchants } from "../api/merchants";
 import { listMerchantStores, listStores } from "../api/stores";
 import { listScopedOrders } from "../api/orders";
-import { loadStorePosConfiguration } from "./pos/storePosConfiguration";
 import { formatCurrency, getCurrencySymbol } from "../utils/currency";
 import OrderDetail from "./OrderDetail";
 import "../styles/orders.css";
@@ -43,19 +42,19 @@ async function applyStorePosCurrencies(orders) {
     if (configStoreId) relevantStores.set(String(configStoreId), configStoreId);
   });
 
-  const currencyByStore = new Map();
-  await Promise.all([...relevantStores].map(async ([key, id]) => {
-    try {
-      const config = await pendingStoreRead(`pos-currency:${id}`, () => loadStorePosConfiguration(id, "currency_taxes"));
-      const currency = config?.currency || config?.currencyCode || config?.currency_code;
-      if (currency) currencyByStore.set(key, {
-        currency,
-        currencySymbol: config.currencySymbol || config.currency_symbol || getCurrencySymbol(currency),
-      });
-    } catch {
-      // Keep the order's API currency when the store's POS setting is unavailable.
-    }
-  }));
+  // const currencyByStore = new Map();
+  // await Promise.all([...relevantStores].map(async ([key, id]) => {
+  //   try {
+  //     const config = await pendingStoreRead(`pos-currency:${id}`, () => loadStorePosConfiguration(id, "currency_taxes"));
+  //     const currency = config?.currency || config?.currencyCode || config?.currency_code;
+  //     if (currency) currencyByStore.set(key, {
+  //       currency,
+  //       currencySymbol: config.currencySymbol || config.currency_symbol || getCurrencySymbol(currency),
+  //     });
+  //   } catch {
+  //     // Keep the order's API currency when the store's POS setting is unavailable.
+  //   }
+  // }));
 
   return orders.map((order) => {
     const store = aliases.get(String(order.storeId || ""));
@@ -139,12 +138,15 @@ export default function Orders({
   }, [embedded, scopedToMerchant]);
 
   useEffect(() => {
-    if (!selectedMerchant || embedded) {
-      if (!embedded) setStores([]);
-      return undefined;
-    }
+    if (embedded) return undefined;
     let active = true;
-    listMerchantStores(selectedMerchant)
+    const storesRequest = selectedMerchant
+      ? listMerchantStores(selectedMerchant)
+      : listStores().then(({ stores: rows = [] }) => rows.map((store) => ({
+        value: String(store.id || store.storeId || store.storeCode || ""),
+        label: store.storeName || store.name || store.storeCode || "",
+      })).filter((store) => store.value && store.label));
+    storesRequest
       .then((rows) => {
         if (!active) return;
         setStores(rows);
@@ -180,14 +182,9 @@ export default function Orders({
       () => listScopedOrders({ merchantId: selectedMerchant, storeId: selectedStore, page: currentPage, perPage: pageSize, search: search.trim(), status: statusFilter, author: authorFilter, createdAfter }),
     )
       .then(async ({ orders: rows, total }) => {
-        let ordersWithCurrencies = rows;
-        try {
-          ordersWithCurrencies = await applyStorePosCurrencies(rows);
-        } catch {
-          // Store lookup failures should not prevent the orders list from loading.
-        }
         if (!active) return;
-        setOrders(ordersWithCurrencies);
+
+        setOrders(rows);
         setOrderTotal(total);
       })
       .catch((loadError) => {
